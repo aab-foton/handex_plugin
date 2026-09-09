@@ -7,29 +7,42 @@
      o conteúdo principal desta view. -->
 <main id="view-specifications" class="view flex p-0 flex-col h-full overflow-hidden">
   <!-- Header -->
+  <!-- Título dinâmico (a11y-header-title): "Documentando projeto Web/Mobile"
+       quando a plataforma já é conhecida (escolhida na Home ou em arquivo
+       legado que ainda não passou pela Home com esta feature — nesse caso
+       cai no fallback "Acessibilidade" via _applyA11yHeaderOriginTitle,
+       accessibility.js). Só "Voltar" e "Marcar Área" ficam diretos no
+       header — os demais controles (onboarding, guia de categorias,
+       recolher/expandir) entraram no dropdown "Mais ações" ao lado, pra
+       dar mais respiro ao título mais longo. -->
   <div class="subheader-brand px-4 py-3 bg-[#0070af] dark:bg-[#00335c] flex flex-col shrink-0 shadow-md">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-2 min-w-0">
         <button onclick="navigate('view-home')" aria-label="Voltar para a página inicial" class="w-10 h-10 flex items-center justify-center bg-white/10 dark:bg-white/10 rounded-xl hover:bg-white/20 dark:hover:bg-white/20 transition-colors shrink-0">
           <i data-lucide="arrow-left" class="w-5 h-5 text-white" aria-hidden="true"></i>
         </button>
-        <h2 class="text-white font-bold text-[18px] truncate min-w-0">Acessibilidade</h2>
-        <button type="button" onclick="openOnboarding('especificar')"
-          class="w-10 h-10 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-colors shrink-0"
-          title="Rever passo a passo" aria-label="Rever passo a passo do fluxo de acessibilidade">
-          <i data-lucide="graduation-cap" class="w-5 h-5"></i>
-        </button>
-        <button type="button" onclick="openA11yCategoriesHelp()"
-          class="w-10 h-10 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-colors shrink-0"
-          title="Ver guia de categorias" aria-label="Ver guia de categorias de especificação">
-          <i data-lucide="circle-help" class="w-5 h-5"></i>
-        </button>
+        <h2 id="a11y-header-title" class="text-white font-bold text-[18px] truncate min-w-0">Acessibilidade</h2>
       </div>
       <div class="flex items-center gap-1.5 shrink-0">
-        <button data-collapse-toggle onclick="collapseAllAccordions(document.getElementById('specs-scroll-container'))" title="Recolher/expandir todos" aria-label="Recolher ou expandir todos os accordions"
-          class="w-10 h-10 flex items-center justify-center hover:bg-white/20 rounded-xl transition-colors text-white/80 hover:text-white">
-          <i data-lucide="chevrons-up-down" class="w-5 h-5" aria-hidden="true"></i>
-        </button>
+        <div class="relative">
+          <button type="button" id="btn-a11y-more-actions" onclick="toggleA11yMoreActionsMenu()"
+            class="w-10 h-10 flex items-center justify-center hover:bg-white/20 rounded-xl transition-colors text-white/80 hover:text-white"
+            title="Mais ações" aria-label="Mais ações" aria-haspopup="true" aria-expanded="false">
+            <i data-lucide="ellipsis-vertical" class="w-5 h-5" aria-hidden="true"></i>
+          </button>
+          <div id="a11y-more-actions-menu" class="hidden absolute right-0 top-full mt-1 w-56 py-1.5 bg-white dark:bg-dark-surface rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line z-50">
+            <button type="button" onclick="closeA11yMoreActionsMenu(); openOnboarding('especificar')"
+              class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] font-semibold text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-dark-line transition-colors text-left">
+              <i data-lucide="graduation-cap" class="w-4 h-4 text-slate-500 dark:text-dark-muted shrink-0" aria-hidden="true"></i>
+              Rever passo a passo
+            </button>
+            <button type="button" onclick="closeA11yMoreActionsMenu(); openA11yCategoriesHelp()"
+              class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] font-semibold text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-dark-line transition-colors text-left">
+              <i data-lucide="circle-help" class="w-4 h-4 text-slate-500 dark:text-dark-muted shrink-0" aria-hidden="true"></i>
+              Ver guia de categorias
+            </button>
+          </div>
+        </div>
         <button type="button" onclick="openA11yAreaModal()" class="fab-inline" title="Marcar área da tela" aria-label="Marcar área da tela">
           <i data-lucide="map-pin" class="w-4 h-4 shrink-0"></i>
           <span>Marcar Área</span>
@@ -59,10 +72,10 @@
 
       <div>
         <div class="flex items-center justify-between mb-3">
-          <h4 class="text-[11px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-[0.15em]">Áreas Marcadas</h4>
+          <h4 class="text-[11px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-[0.15em]">Frames Documentados</h4>
         </div>
         <p class="text-[10px] text-slate-400 dark:text-dark-muted mb-2 leading-tight">
-          Marque uma área da tela (selo numerado) e crie as especificações dentro dela, usando o botão "+ Nova spec" no cabeçalho de cada área.
+          Marque uma área da tela (selo numerado) e clique no card para abrir o espaço de trabalho dela.
         </p>
 
         <!-- Busca + filtro por categoria — filtro só de exibição sobre a
@@ -95,4 +108,118 @@
     </div>
   </div>
 
+</main>
+
+<!-- VIEW: WORKSPACE DE UMA ÁREA (2026-09-04) -->
+<!-- Primeira sub-navegação real do hac — antes só existiam 2 views
+     top-level (view-home/view-specifications). Aberta por
+     openA11yAreaWorkspace(areaId) (accessibility.js), que guarda
+     window._a11yWorkspaceAreaId ANTES de navigate('view-area-workspace') —
+     navigate() não aceita parâmetro extra, então o contexto (qual área)
+     viaja por essa variável, lida por _renderA11yWorkspace ao entrar na
+     view. "Voltar" chama navigateBackToA11yList(), nunca a Home.
+
+     4 tabs, na ordem do fluxo real de trabalho (mapeamento final, depois
+     de várias rodadas de correção do usuário — inclusive uma inversão
+     posterior à primeira versão desta view, registrada em
+     docs/architecture-state.md seção 8b): Tabulação → Swipe →
+     Leitor de Tela → Handoff. Sem aba "Geral" — metadados básicos ficam
+     só no card da listagem e no título deste header. Leitor de Tela é a
+     tab de TRABALHO (criar/editar specs, como o antigo accordion de
+     categorias fazia). Handoff é um DASHBOARD de consolidação (status de
+     Tabulação/Swipe/specs + botão "Gerar handoff", ainda placeholder
+     nesta entrega — a geração real de uma Ficha de Handoff exportável é
+     módulo apartado, entrega futura própria); o botão "Editar" do resumo
+     de specs dentro do dashboard leva pra Leitor de Tela — nunca duplica
+     lógica de edição. Swipe é funcionalidade nova exclusiva mobile,
+     "em fase de testes" (badge visível) — reformulada em 2026-09-04 de
+     "sequência de elementos dentro da área" (pipeline antigo, removido)
+     para "conexão de navegação entre 2 Áreas Marcadas" (seleciona a área
+     de destino e o hac desenha uma seta ligando os 2 selos no canvas,
+     mesmo espírito de "Fluxos de Tela" do Handex). Não existe mais aba
+     "Resumo do handoff" (removida — seu papel foi absorvido pelo
+     dashboard da tab Handoff). -->
+<main id="view-area-workspace" class="view flex p-0 flex-col h-full overflow-hidden">
+  <div class="subheader-brand px-4 py-3 bg-[#0070af] dark:bg-[#00335c] flex items-center justify-between shrink-0 shadow-md">
+    <div class="flex items-center gap-2 min-w-0">
+      <button onclick="navigateBackToA11yList()" aria-label="Voltar para a lista de áreas" class="w-10 h-10 flex items-center justify-center bg-white/10 dark:bg-white/10 rounded-xl hover:bg-white/20 dark:hover:bg-white/20 transition-colors shrink-0">
+        <i data-lucide="arrow-left" class="w-5 h-5 text-white" aria-hidden="true"></i>
+      </button>
+      <h2 id="a11y-workspace-title" class="text-white font-bold text-[16px] truncate min-w-0">Área</h2>
+    </div>
+    <div class="flex items-center gap-1.5 shrink-0">
+      <div class="relative">
+        <button type="button" id="btn-a11y-workspace-more-actions" onclick="toggleA11yWorkspaceMoreActionsMenu()"
+          class="w-10 h-10 flex items-center justify-center hover:bg-white/20 rounded-xl transition-colors text-white/80 hover:text-white"
+          title="Mais ações" aria-label="Mais ações" aria-haspopup="true" aria-expanded="false">
+          <i data-lucide="ellipsis-vertical" class="w-5 h-5" aria-hidden="true"></i>
+        </button>
+        <div id="a11y-workspace-more-actions-menu" class="hidden absolute right-0 top-full mt-1 w-52 py-1.5 bg-white dark:bg-dark-surface rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line z-50">
+          <button type="button" onclick="closeA11yWorkspaceMoreActionsMenu(); focusNode(window._a11yWorkspaceAreaId)"
+            class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] font-semibold text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-dark-line transition-colors text-left">
+            <i data-lucide="locate" class="w-4 h-4 text-slate-500 dark:text-dark-muted shrink-0" aria-hidden="true"></i>
+            Focar no canvas
+          </button>
+          <button type="button" id="btn-a11y-workspace-toggle-visibility" onclick="closeA11yWorkspaceMoreActionsMenu(); toggleAreaGroupVisibility(window._a11yWorkspaceAreaId); _renderA11yWorkspaceHeader()"
+            class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] font-semibold text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-dark-line transition-colors text-left">
+            <i data-lucide="eye-off" class="w-4 h-4 text-slate-500 dark:text-dark-muted shrink-0" aria-hidden="true"></i>
+            Ocultar/Mostrar no canvas
+          </button>
+          <button type="button" onclick="closeA11yWorkspaceMoreActionsMenu(); _deleteA11yAreaFromWorkspace()"
+            class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors text-left">
+            <i data-lucide="trash-2" class="w-4 h-4 shrink-0" aria-hidden="true"></i>
+            Remover área
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab-switcher — seção PRÓPRIA, separada da barra azul do header
+       (2026-09-04-d, pedido do usuário com screenshot real: as 4 tabs
+       ficavam espremidas dentro do header, texto pequeno demais, mal
+       distribuídas na largura do plugin). Cada tab agora divide o espaço
+       igualmente (grid de 4 colunas — o número de tabs é fixo, sempre 4,
+       nunca varia em runtime, então uma grade fixa é segura aqui, ao
+       contrário de uma lista de tamanho variável) e tem mais respiro
+       vertical/horizontal. switchA11yWorkspaceTab troca só o conteúdo
+       abaixo, nunca esta barra em si. Swipe leva um badge "Em fase de
+       testes" (funcionalidade nova, exclusiva mobile, ainda não validada
+       em campo). -->
+  <div id="a11y-workspace-tabs-bar" class="bg-white dark:bg-dark-surface border-b border-gray-100 dark:border-dark-line shrink-0 px-2" style="border-radius:0!important;box-shadow:none!important;">
+    <!-- Linha de tabs compacta, ícone+label na horizontal, sem cantos
+         arredondados (2026-09-04-t, pedido do usuário — versão anterior
+         era mais alta, com ícone empilhado sobre o texto). -->
+    <div id="a11y-workspace-tabs" class="grid grid-cols-4">
+      <button type="button" data-a11y-workspace-tab="tabulacao" onclick="switchA11yWorkspaceTab('tabulacao')"
+        class="a11y-workspace-tab-btn flex items-center justify-center gap-1.5 py-2 text-[11px] font-bold text-slate-400 dark:text-dark-muted border-b-2 border-transparent transition-colors rounded-none">
+        <i data-lucide="list-ordered" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i>
+        <span class="truncate">Tabulação</span>
+      </button>
+      <button type="button" data-a11y-workspace-tab="swipe" onclick="switchA11yWorkspaceTab('swipe')"
+        class="a11y-workspace-tab-btn flex items-center justify-center gap-1.5 py-2 text-[11px] font-bold text-slate-400 dark:text-dark-muted border-b-2 border-transparent transition-colors rounded-none">
+        <i data-lucide="move-horizontal" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i>
+        <span class="truncate">Swipe</span>
+        <span class="shrink-0 px-1 py-0.5 rounded-full bg-amber-400/90 text-[6.5px] font-extrabold uppercase tracking-wide text-amber-950 leading-none">Teste</span>
+      </button>
+      <button type="button" data-a11y-workspace-tab="leitor" onclick="switchA11yWorkspaceTab('leitor')"
+        class="a11y-workspace-tab-btn flex items-center justify-center gap-1.5 py-2 text-[11px] font-bold text-slate-400 dark:text-dark-muted border-b-2 border-transparent transition-colors rounded-none">
+        <i data-lucide="ear" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i>
+        <span class="truncate">Leitor de Tela</span>
+      </button>
+      <button type="button" data-a11y-workspace-tab="handoff" onclick="switchA11yWorkspaceTab('handoff')"
+        class="a11y-workspace-tab-btn flex items-center justify-center gap-1.5 py-2 text-[11px] font-bold text-slate-400 dark:text-dark-muted border-b-2 border-transparent transition-colors rounded-none">
+        <i data-lucide="layout-dashboard" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i>
+        <span class="truncate">Handoff</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="a11y-workspace-scroll-container" class="flex-1 overflow-y-auto p-4" onscroll="handleScroll(this)">
+    <div id="a11y-workspace-tab-content" class="space-y-3 w-full mx-auto">
+      <!-- Preenchido por _renderA11yWorkspaceTab() (accessibility.js) —
+           uma função de render por tab, chamada sob demanda (só a tab
+           ativa é montada no DOM). -->
+    </div>
+  </div>
 </main>

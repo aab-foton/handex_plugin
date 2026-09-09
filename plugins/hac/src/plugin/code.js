@@ -27,27 +27,89 @@ figma.showUI(__html__, { width: 480, height: 750 });
 
 let activeHighlightNode = null;
 
-// Cópia "rascunho" do frame da Área Marcada, criada já ao clicar "Iniciar
-// Ordem de Tabulação" (start-tab-order-copy), antes de qualquer selo ser
-// desenhado. Mantida em memória do módulo (não só via pluginData no canvas)
-// porque o highlight temporário de cada clique do fluxo manual precisa
-// resolver o nó ORIGINAL clicado para o nó EQUIVALENTE dentro da cópia sem
-// reconstruir o mapa a cada clique. Mapa nodeId-original → node real do
-// Figma, nunca serializado como tal para o frontend (que só recebe ids
-// planos). Zerado ao aplicar no canvas (apply-tab-order-to-canvas) ou ao
-// cancelar o fluxo (delete-tab-order-draft-copy).
-let _activeTabOrderCloneMap = null;
-let _activeTabOrderCloneAreaId = null;
+// Gap entre a faixa ocupada (áreas/specs/cópias já existentes) e a nova
+// linha de cópias de Ordem de Tabulação — mesmo valor de _SPEC_GAP por
+// consistência visual com o restante do canvas injetado pelo hac. Gap
+// horizontal entre cópias que dividem a mesma faixa reaproveita
+// _SPEC_COL_GAP (~64) pelo mesmo motivo. Declaradas aqui no escopo de
+// módulo (não dentro de figma.ui.onmessage) porque são `const` — declará-las
+// no meio do corpo do handler as deixa presas à temporal dead zone até a
+// linha da declaração realmente executar, e qualquer branch anterior do
+// handler (como generate-tab-order-from-layers) que as use antes disso
+// lança ReferenceError (bug real reproduzido em arquivo de produção,
+// 2026-09-03).
+const _TAB_ORDER_ROW_GAP = 32;
+const _TAB_ORDER_COL_GAP = 64;
 
-// Contador de geração da prévia visual da Ordem de Tabulação
-// (preview-tab-order-numbers) — reordenações rápidas em sequência disparam
-// múltiplas chamadas fire-and-forget sem fila; sem isso, a resposta mais
-// ANTIGA pode terminar de desenhar DEPOIS da mais NOVA (cada await dentro do
-// loop cede o event loop), deixando numeração obsoleta até a próxima
-// mudança. Cada chamada incrementa e captura seu próprio número; antes de
-// cada selo desenhado, confirma que ainda é a geração mais recente — se uma
-// chamada mais nova já começou, aborta o loop da antiga imediatamente.
-let _tabOrderPreviewGeneration = 0;
+// Cópia "rascunho" do frame da Área Marcada, criada já ao clicar "Iniciar
+// Ordem de Tabulação" (start-tab-order-copy) ou "Gerar Automaticamente"
+// (generate-tab-order-from-layers), antes de qualquer selo ser desenhado.
+// Mantida em memória do módulo (não só via pluginData no canvas) porque
+// tanto o highlight temporário de cada clique quanto cada novo selo
+// desenhado (draw-tab-order-badge) precisam resolver o nó ORIGINAL pro nó
+// EQUIVALENTE dentro da cópia sem reconstruir o mapa a cada chamada. Mapa
+// nodeId-original → node real do Figma, nunca serializado como tal para o
+// frontend (que só recebe ids planos).
+//
+// Bug real corrigido (2026-09-08): antes era 1 ÚNICO par de variáveis
+// globais (_activeTabOrderCloneMap + _activeTabOrderCloneAreaId), então só
+// UMA área por vez podia ter uma cópia "lembrada" em memória. Trocar de
+// área (abrir o card de outra Área Marcada) sobrescrevia essas variáveis
+// com o clone da nova área — ao voltar pra área original e continuar a
+// Tabulação (ex.: "Adicionar itens"), o backend não reconhecia mais o
+// clone certo: recriava tudo do zero (apagando os selos já desenhados,
+// removidos por _removeExistingTabOrderCopiesForArea dentro de
+// _createTabOrderCloneForArea) e a resolução de nós clicados
+// (highlight-tab-order-copy-node) parava de achar o node no Map errado,
+// caindo no fallback que resolve contra o elemento ORIGINAL em vez do
+// clone — sintoma real reportado: "puxa o componente errado e parece
+// aplicar tudo de novo". Migrado pra Map<areaId, nodeMap> — cada área
+// mantém seu próprio clone ativo em memória, sem colisão nenhuma entre
+// áreas diferentes trabalhadas na mesma sessão, mesmo alternando entre
+// elas livremente.
+const _activeTabOrderCloneMaps = new Map();
+
+// Mesmo raciocínio, espelhado pra Trilha de Swipe (2026-09-04-ac): a
+// linha direcional com setas precisa ser desenhada sobre uma CÓPIA da
+// Área, nunca sobre o frame original do design — mesmo requisito que
+// Ordem de Tabulação já cumpre. Nunca compartilha o Map com Tabulação:
+// cada feature tem sua própria cópia ativa por área, podem coexistir se
+// o designer abrir as 2 tabs em sequência sem confirmar nenhuma. Mesma
+// migração pra Map<areaId, nodeMap> (2026-09-08) e mesmo motivo de
+// _activeTabOrderCloneMaps acima.
+const _activeSwipePathCloneMaps = new Map();
+
+// Mesmo raciocínio e mesma migração pra Map<areaId, nodeMap> (2026-09-08),
+// espelhado pra Especificações (Leitor de Tela): create-unified-spec
+// passou a desenhar sobre uma CÓPIA da área (antes desenhava direto sobre
+// o frame ORIGINAL) — mesma garantia de nunca tocar o design original que
+// Tabulação/Swipe já davam. Nunca compartilha Map com as outras duas
+// features (cada uma tem seu próprio clone ativo por área).
+const _activeSpecCloneMaps = new Map();
+
+// Bug real corrigido (2026-09-08): "Gerar automaticamente" do Swipe
+// (startSwipePathFromTabOrder, accessibility.js) reaproveita a sequência já
+// mapeada na Ordem de Tabulação — mas os itens de Tabulação guardam
+// targetNodeId como o id do node DENTRO DA CÓPIA CLONADA de Tabulação
+// (_createTabOrderBadge recebe o node já mapeado pelo nodeMap de
+// Tabulação, e usa node.id — não o id original), enquanto insert-swipe-path
+// sempre esperou o id ORIGINAL da área (pra traduzir pro clone PRÓPRIO do
+// Swipe, um clone diferente do de Tabulação). Os dois clones nunca
+// compartilham id de node — o resultado, sem esta tradução, é sempre
+// "elemento não existe mais na cópia da área", mesmo a trilha nunca tendo
+// sido desenhada. Resolve traduzindo de volta: se o id recebido bate com
+// algum valor do Map ATIVO de Tabulação desta área, devolve a chave
+// correspondente (o id original) em vez do id recebido; senão, assume que
+// já é original (fluxo manual/marquee, nunca passou pelo clone de
+// Tabulação) e devolve sem alterar.
+function _resolveOriginalNodeIdFromTabOrderClone(areaId, nodeId) {
+  const tabOrderMap = areaId ? _activeTabOrderCloneMaps.get(areaId) : null;
+  if (!tabOrderMap) return nodeId;
+  for (const [originalId, clonedNode] of tabOrderMap.entries()) {
+    if (clonedNode && clonedNode.id === nodeId) return originalId;
+  }
+  return nodeId;
+}
 
 // Remove (se existir) a cópia rascunho de Ordem de Tabulação da área
 // informada e zera o estado em memória correspondente — mesma lógica usada
@@ -60,10 +122,7 @@ let _tabOrderPreviewGeneration = 0;
 // Promises pendentes, então nada aqui pode depender de await.
 function _deleteTabOrderDraftCopy(areaId) {
   _removeExistingTabOrderCopiesForArea(areaId);
-  if (_activeTabOrderCloneAreaId === areaId) {
-    _activeTabOrderCloneMap = null;
-    _activeTabOrderCloneAreaId = null;
-  }
+  _activeTabOrderCloneMaps.delete(areaId);
 }
 
 figma.on('close', () => {
@@ -74,9 +133,16 @@ figma.on('close', () => {
   // Gap pré-existente: se o designer fechar o plugin/Figma com uma cópia
   // rascunho de Ordem de Tabulação ainda ativa (nunca aplicou nem
   // cancelou), ela ficava órfã e permanente no .fig, sem handler de
-  // limpeza algum. Reaproveita a mesma remoção de sempre.
-  if (_activeTabOrderCloneAreaId) {
-    _deleteTabOrderDraftCopy(_activeTabOrderCloneAreaId);
+  // limpeza algum. Reaproveita a mesma remoção de sempre — agora para
+  // TODAS as áreas com clone ativo em memória (Map, 2026-09-08), não só
+  // a última tocada.
+  for (const areaId of Array.from(_activeTabOrderCloneMaps.keys())) {
+    _deleteTabOrderDraftCopy(areaId);
+  }
+  // Mesmo raciocínio pra Trilha de Swipe (2026-09-04-ac).
+  for (const areaId of Array.from(_activeSwipePathCloneMaps.keys())) {
+    _removeExistingSwipePathCopiesForArea(areaId);
+    _activeSwipePathCloneMaps.delete(areaId);
   }
 });
 
@@ -87,38 +153,185 @@ figma.on('currentpagechange', () => {
   }
 });
 
-// "Ordem de Tabulação": modo de clique sequencial — liga/desliga via
-// start-tab-order-mode/stop-tab-order-mode (vindos do frontend); quando
-// ativo e há exatamente 1 elemento selecionado, posta
-// tab-order-selection-changed. Seleção vazia ou múltipla é ignorada nesse modo.
+// "Ordem de Tabulação": modo de clique — liga/desliga via
+// start-tab-order-mode/stop-tab-order-mode (vindos do frontend). Modelo de
+// LEITURA LITERAL (2026-09-04-af, substituindo a acumulação em memória
+// anterior — ver motivo completo no listener de selectionchange abaixo):
+// o backend NÃO guarda nenhum estado de seleção entre eventos. Enquanto
+// ativo, cada selectionchange só atualiza a contagem ao vivo (pro número
+// da barra mini) e o highlight do último clique — nada mais. Ao "Concluir
+// seleção" (get-tab-order-accumulated-selection), o backend lê
+// figma.currentPage.selection NAQUELE INSTANTE, literalmente — é essa
+// leitura que vira a lista final, nunca um histórico acumulado.
 let _tabOrderModeActive = false;
+
+// "Trilha de Swipe": modo de clique análogo ao de Ordem de Tabulação —
+// liga/desliga via start-swipe-path-mode/stop-swipe-path-mode. Mesmo
+// modelo de leitura literal (2026-09-04-af) — sem estado próprio entre
+// eventos, só lê a seleção atual no momento de "Concluir seleção"
+// (get-swipe-path-accumulated-selection).
+let _swipePathModeActive = false;
 
 // O designer clica fisicamente na CÓPIA rascunho (é o que está focado na
 // tela desde start-tab-order-copy — a instrução de UI já diz "clique nos
 // elementos dela"), então figma.currentPage.selection sempre traz um node
 // que vive DENTRO do clone, nunca o original. Todo o resto do fluxo (o
-// nodeMap guardado pra "Aplicar no Canvas", que é Map<originalId,
+// nodeMap guardado pra draw-tab-order-badge, que é Map<originalId,
 // cloneNode>) espera receber o id do ORIGINAL — sem esta tradução aqui,
 // nodeMap.get(idDoClone) nunca acha nada e TODOS os itens da lista viravam
-// "não encontrado" ao aplicar (bug real confirmado em arquivo de produção,
+// "não encontrado" ao desenhar (bug real confirmado em arquivo de produção,
 // 23 de 23 itens, 2026-09-02). Busca linear no Map ativo (chave=original,
 // valor=node do clone) porque é o único sentido em que ele existe hoje —
 // aceitável para o volume real de nodes de uma Área Marcada.
+// Bug real corrigido (2026-09-08): recebe só cloneNodeId, sem areaId — com
+// o Map por área (_activeTabOrderCloneMaps), a área de origem do clique
+// não é conhecida aqui, então varre TODOS os nodeMaps ativos (uma área por
+// vez sendo capturada na prática, mas nada impede o designer de alternar
+// entre áreas com captura em andamento).
 function _resolveTabOrderCloneSelectionToOriginalId(cloneNodeId) {
-  if (!_activeTabOrderCloneMap) return cloneNodeId;
-  for (const [originalId, clonedNode] of _activeTabOrderCloneMap) {
-    if (clonedNode.id === cloneNodeId) return originalId;
+  for (const nodeMap of _activeTabOrderCloneMaps.values()) {
+    for (const [originalId, clonedNode] of nodeMap) {
+      if (clonedNode.id === cloneNodeId) return originalId;
+    }
   }
   return cloneNodeId;
 }
 
+// Espelha _resolveTabOrderCloneSelectionToOriginalId pra Trilha de Swipe
+// (2026-09-04-ac) — agora que Swipe também clica sobre uma CÓPIA, precisa
+// da mesma tradução clone→original antes de acumular/desenhar. Mesma
+// migração pra varrer todos os Maps ativos (2026-09-08).
+function _resolveSwipePathCloneSelectionToOriginalId(cloneNodeId) {
+  for (const nodeMap of _activeSwipePathCloneMaps.values()) {
+    for (const [originalId, clonedNode] of nodeMap) {
+      if (clonedNode.id === cloneNodeId) return originalId;
+    }
+  }
+  return cloneNodeId;
+}
+
+// Reordena candidatos já coletados (DFS de generate-tab-order-from-layers,
+// OU seleção múltipla no modo de captura de Trilha de Swipe) seguindo um
+// padrão de leitura visual em zigue-zague ("boustrophedon"): linha 1
+// esquerda→direita, linha 2 direita→esquerda, linha 3 esquerda→direita, e
+// assim por diante. Esse é o critério confirmado pela vertical de
+// acessibilidade do produto como referência real de reading order para
+// Ordem de Tabulação em telas com múltiplas colunas (ex: extrato bancário,
+// grids de cards) — NÃO é convenção nativa de leitor de tela (que lê
+// top-to-bottom/DOM order) nem ordem de camadas do Figma; é um critério de
+// produto documentado pela vertical de a11y. Não "simplificar" de volta
+// para top-to-bottom ou ordem de DFS.
+//
+// Agrupamento em linhas: dois nós pertencem à mesma linha visual quando
+// suas faixas verticais (absoluteBoundingBox.y → y+height) SE SOBREPÕEM —
+// não é uma tolerância fixa em pixels, porque elementos de alturas
+// diferentes na mesma linha (ex: label pequeno ao lado de um input maior)
+// não teriam o mesmo y exato. Comparação contra QUALQUER nó já acumulado
+// na linha atual (não só o último) para tolerar leve desalinhamento
+// vertical entre elementos da mesma linha.
+//
+// Movida para escopo de nível superior (2026-09-04) — antes vivia só
+// dentro do closure de figma.ui.onmessage (usada por generate-tab-order-
+// from-layers); a Trilha de Swipe precisa dela também a partir do listener
+// de seleção do canvas abaixo, que roda fora daquele closure. Corpo
+// inalterado, reaproveitada tal como estava.
+function _orderNodesInZigzagReadingOrder(nodes) {
+  const sortedByY = nodes.slice().sort((a, b) => a.absoluteBoundingBox.y - b.absoluteBoundingBox.y);
+
+  const rows = [];
+  let currentRow = [];
+  function _overlapsRow(node, row) {
+    const nodeTop = node.absoluteBoundingBox.y;
+    const nodeBottom = nodeTop + node.absoluteBoundingBox.height;
+    return row.some(other => {
+      const otherTop = other.absoluteBoundingBox.y;
+      const otherBottom = otherTop + other.absoluteBoundingBox.height;
+      return nodeTop < otherBottom && otherTop < nodeBottom;
+    });
+  }
+  for (const node of sortedByY) {
+    if (currentRow.length === 0 || _overlapsRow(node, currentRow)) {
+      currentRow.push(node);
+    } else {
+      rows.push(currentRow);
+      currentRow = [node];
+    }
+  }
+  if (currentRow.length > 0) rows.push(currentRow);
+
+  rows.sort((rowA, rowB) => {
+    const minYA = Math.min(...rowA.map(n => n.absoluteBoundingBox.y));
+    const minYB = Math.min(...rowB.map(n => n.absoluteBoundingBox.y));
+    return minYA - minYB;
+  });
+
+  const ordered = [];
+  rows.forEach((row, rowIndex) => {
+    const sortedRow = row.slice().sort((a, b) => a.absoluteBoundingBox.x - b.absoluteBoundingBox.x);
+    if (rowIndex % 2 === 1) sortedRow.reverse();
+    ordered.push(...sortedRow);
+  });
+  return ordered;
+}
+
+// Listener único de seleção do canvas para os modos de captura de Ordem de
+// Tabulação e Trilha de Swipe — LEITURA LITERAL (2026-09-04-af).
+//
+// Histórico: 2 tentativas anteriores nesta mesma sessão tentaram resolver
+// "seleção múltipla trazendo itens errados" com streaming em tempo real
+// (insuficiente — processava estados intermediários do próprio gesto) e
+// depois com um acumulador em memória que somava tudo que já passou pela
+// seleção durante a captura, sem nunca esquecer (insuficiente também —
+// cliques de teste/engano continuavam contando pra sempre; usuário
+// reportou "6 itens marcados" com só 1 elemento realmente selecionado).
+// O usuário esclareceu o modelo correto: o FIGMA já resolve composição de
+// seleção sozinho (shift+clique mantém, soltar e clicar de novo com shift
+// continua de onde parou) — o plugin não precisa nem deve ter memória
+// própria. Aqui, cada evento só faz 2 coisas, SEM guardar nada entre
+// chamadas: desenha o highlight do último clique (feedback visual) e
+// posta a contagem ao vivo (sel.length puro). A leitura que de fato vira
+// a lista final só acontece em get-tab-order-accumulated-selection/
+// get-swipe-path-accumulated-selection (handlers mais abaixo), lendo
+// figma.currentPage.selection NAQUELE INSTANTE — nunca um histórico.
+// Debounce só da CONTAGEM ao vivo (2026-09-04-ah) — não da leitura final
+// (que continua síncrona/literal em get-tab-order-accumulated-selection/
+// get-swipe-path-accumulated-selection, sem nenhuma mudança). Motivo:
+// alcançar um elemento aninhado em vários níveis de auto-layout exige
+// "entrar" (drill-in) camada por camada no Figma, e CADA passo
+// intermediário desse drill-in também dispara selectionchange — sem
+// debounce, a contagem da barra mini sobia/descia a cada passo de
+// navegação, mesmo sendo só trânsito até o elemento realmente desejado
+// (ruído visual, não erro de dado: "Concluir seleção" já é uma ação
+// explícita que só acontece depois que o designer solta o drill-in e move
+// o mouse até o botão da barra mini — deslocamento físico que já
+// ultrapassa qualquer debounce razoável, então a lista final nunca foi o
+// problema). O highlight continua INSTANTÂNEO, sem debounce — é feedback
+// visual de "o que está selecionado agora", precisa ser imediato.
+let _tabOrderCountDebounceTimer = null;
+let _swipePathCountDebounceTimer = null;
+
+// Highlight temporário de clique durante a captura de Tabulação/Swipe
+// REMOVIDO (2026-09-08, pedido do usuário: "gerando ruído e mantendo
+// alguns ativos após o uso" — o retângulo [HighlightStroke] tinha um
+// histórico real de sobreviver órfão no canvas em mais de uma janela de
+// corrida assíncrona ao longo desta sessão, mesmo depois de 2 rodadas de
+// correção). O feedback de "isto foi selecionado" agora vem só da própria
+// seleção nativa do Figma (o node já fica selecionado/com o contorno azul
+// padrão do Figma ao clicar) — sem desenhar nenhum retângulo próprio.
 figma.on('selectionchange', () => {
   if (_tabOrderModeActive) {
-    const sel = figma.currentPage.selection;
-    if (sel.length === 1) {
-      const originalId = _resolveTabOrderCloneSelectionToOriginalId(sel[0].id);
-      figma.ui.postMessage({ type: 'tab-order-selection-changed', nodeId: originalId, nodeName: sel[0].name });
-    }
+    clearTimeout(_tabOrderCountDebounceTimer);
+    _tabOrderCountDebounceTimer = setTimeout(() => {
+      figma.ui.postMessage({ type: 'tab-order-accumulated-count-changed', count: figma.currentPage.selection.length });
+    }, 500);
+    return;
+  }
+
+  if (_swipePathModeActive) {
+    clearTimeout(_swipePathCountDebounceTimer);
+    _swipePathCountDebounceTimer = setTimeout(() => {
+      figma.ui.postMessage({ type: 'swipe-path-accumulated-count-changed', count: figma.currentPage.selection.length });
+    }, 500);
   }
 });
 
@@ -1416,6 +1629,77 @@ async function _tryImportA11yConectorLinha(opts) {
 // spec se misturem visualmente, no Layers, com cópias inteiras de tela.
 const A11Y_SECTION_NAME = 'hac — Especificações de Acessibilidade';
 const A11Y_TAB_ORDER_SECTION_NAME = 'hac — Ordem de Tabulação';
+// Section própria para as trilhas de Swipe (linha direcional com N pontos)
+// — nunca compartilha a Section de Ordem de Tabulação, mesmo quando os dois
+// artefatos existem para a MESMA área: são conceitos independentes (uma é
+// sequência de foco DENTRO da área, a outra é uma trilha de navegação por
+// gesto que pode atravessar vários pontos/áreas), ver bloco "Trilha de
+// Swipe" mais abaixo. 3ª reformulação (2026-09-04): a constante mantém o
+// nome (só o VALOR mudou, de "Fluxos" pra "Trilhas") pra não duplicar todo
+// o código que já a referencia.
+const A11Y_SWIPE_FLOW_SECTION_NAME = 'hac — Trilhas de Swipe';
+
+// Identifica qualquer node que seja artefato do PRÓPRIO hac — a Section
+// organizadora (specs ou Ordem de Tabulação, qualquer versão/sufixo) ou
+// qualquer node marcado com hacCategory (selos, conectores, cópias de área)
+// já reparentado dentro delas. Usado pra recusar esses nodes como seleção
+// válida de "Marcar Área"/scan — sem essa checagem, uma seleção "presa" na
+// Section (ex.: o selo recém-criado, que create-a11y-area seleciona ao
+// final, ainda ativo se o próximo clique do designer for mal direcionado)
+// virava uma nova Área apontando pra própria Section, e reescanear essa
+// Área redetectava as specs já existentes como se fossem componentes novos
+// do design (bug real, 2026-09-03).
+function _isHacOwnedNode(node) {
+  if (!node) return false;
+  if (node.type === 'SECTION' && typeof node.name === 'string' &&
+    (node.name === A11Y_SECTION_NAME || node.name.startsWith(A11Y_SECTION_NAME + ' v') ||
+      node.name === A11Y_TAB_ORDER_SECTION_NAME || node.name.startsWith(A11Y_TAB_ORDER_SECTION_NAME + ' v') ||
+      node.name === A11Y_SWIPE_FLOW_SECTION_NAME || node.name.startsWith(A11Y_SWIPE_FLOW_SECTION_NAME + ' v'))) {
+    return true;
+  }
+  try {
+    // Checagem por pluginData além dos prefixos de nome acima: a Section de
+    // sessão (_getOrCreateA11ySessionSection) tem nome VARIÁVEL (timestamp +
+    // designer), então nenhum prefixo literal a reconheceria. De quebra
+    // resolve o bug latente da Section de Ficha de Handoff, que nunca
+    // constou da lista de prefixos e por isso nunca era reconhecida como
+    // artefato do hac.
+    if (node.getPluginData && node.getPluginData('hacSessionSection') === 'true') return true;
+    if (node.getPluginData && node.getPluginData('hacCategory')) return true;
+  } catch (e) { }
+  return false;
+}
+
+// Extrai o sufixo de versão (" v2", " v3"...) de um nome de Section de specs
+// ativo — "" quando sectionName é o nome fixo original (ou vazio/ausente,
+// arquivo sem activeSectionName definido ainda). Usado por
+// _getOrCreateTabOrderSection pra aplicar o MESMO sufixo à Section de Ordem
+// de Tabulação da mesma geração de documentação.
+function _extractA11ySectionVersionSuffix(sectionName) {
+  if (!sectionName || sectionName === A11Y_SECTION_NAME) return '';
+  const m = sectionName.match(new RegExp('^' + A11Y_SECTION_NAME.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '( v\\d+)$'));
+  return m ? m[1] : '';
+}
+
+// Varre a página por Sections de specs já existentes com o prefixo base
+// (A11Y_SECTION_NAME) e devolve o próximo nome versionado livre — sem
+// sufixo = v1 implícito (a Section original, de sempre); a primeira nova
+// geração recebe " v2", a próxima " v3", etc. Usada pelo handler
+// get-a11y-documentation-status ao abrir "Marcar Área" com documentação já
+// existente no arquivo.
+function _computeNextA11ySectionName() {
+  let maxVersion = 1;
+  for (const n of figma.currentPage.children) {
+    if (n.type !== 'SECTION') continue;
+    if (n.name === A11Y_SECTION_NAME) {
+      maxVersion = Math.max(maxVersion, 1);
+      continue;
+    }
+    const m = n.name.match(new RegExp('^' + A11Y_SECTION_NAME.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ' v(\\d+)$'));
+    if (m) maxVersion = Math.max(maxVersion, parseInt(m[1], 10));
+  }
+  return `${A11Y_SECTION_NAME} v${maxVersion + 1}`;
+}
 
 function _getOrCreateNamedSection(sectionName) {
   let section = figma.currentPage.children.find(
@@ -1445,12 +1729,82 @@ function _getOrCreateNamedSection(sectionName) {
   return section;
 }
 
-function _getOrCreateA11ySection() {
-  return _getOrCreateNamedSection(A11Y_SECTION_NAME);
+function _getOrCreateA11ySection(sectionName) {
+  return _getOrCreateNamedSection(sectionName || A11Y_SECTION_NAME);
 }
 
-function _getOrCreateTabOrderSection() {
-  return _getOrCreateNamedSection(A11Y_TAB_ORDER_SECTION_NAME);
+// Section ÚNICA por página, container de toda a documentação criada nesta
+// sessão de trabalho. Identificada SÓ por pluginData ('hacSessionSection'),
+// nunca por nome: o nome carrega timestamp + designer logado e muda a cada
+// sessão, então buscar por nome criaria uma Section nova a cada Área
+// marcada. O timestamp é gravado uma vez, na criação, e nunca mais muda —
+// não é o mecanismo de versionamento de
+// _computeNextA11ySectionName/_extractA11ySectionVersionSuffix, que
+// permanece reservado ao propósito original (versionar uma nova geração
+// completa de documentação).
+function _getOrCreateA11ySessionSection(designerName) {
+  let section = null;
+  for (const n of figma.currentPage.children) {
+    if (n.type !== 'SECTION') continue;
+    try {
+      if (n.getPluginData && n.getPluginData('hacSessionSection') === 'true') {
+        section = n;
+        break;
+      }
+    } catch (e) { }
+  }
+  if (!section) {
+    section = figma.createSection();
+    const _now = new Date();
+    const _pad = (v) => String(v).padStart(2, '0');
+    const _timestamp = `${_pad(_now.getDate())}/${_pad(_now.getMonth() + 1)}/${_now.getFullYear()} ${_pad(_now.getHours())}:${_pad(_now.getMinutes())}`;
+    section.name = `hac - Especificações de Acessibilidade - ${_timestamp} - ${designerName || 'Designer não identificado'}`;
+    section.setPluginData('hacSessionSection', 'true');
+    section.x = 0;
+    section.y = 0;
+    section.resizeWithoutConstraints(200, 200);
+  }
+  // Mesmo reforço de topo de pilha de _getOrCreateNamedSection — ver o
+  // comentário longo lá: sem isso, todo marcador visual dentro da Section
+  // acaba atrás do design original assim que um frame novo sobe acima dela.
+  const _lastIndex = figma.currentPage.children.length - 1;
+  if (figma.currentPage.children.indexOf(section) !== _lastIndex) {
+    figma.currentPage.appendChild(section);
+  }
+  return section;
+}
+
+// area.id É o GROUP da Área desde 2026-09-05 (create-a11y-area envolve o
+// selo num GROUP e devolve o id DELE) — resolver o grupo é só resolver o id.
+// Áreas criadas ANTES dessa mudança devolvem a INSTANCE solta do selo, que
+// não aceita filhos: quem chama trata null/não-grupo caindo no caminho
+// antigo (Section por tipo de artefato).
+async function _getA11yAreaGroupNode(areaId) {
+  if (!areaId) return null;
+  try {
+    const node = await figma.getNodeByIdAsync(areaId);
+    if (!node || node.removed) return null;
+    if (node.type !== 'GROUP') return null;
+    return node;
+  } catch (e) {
+    return null;
+  }
+}
+
+// Ordem de Tabulação segue o mesmo nome versionado da Section de specs
+// (mesmo sufixo " v2"/" v3"), só trocando o prefixo — mantém as duas
+// Sections de uma mesma geração de documentação juntas e coerentes. Quando
+// sectionName é o nome fixo original (ou omitido), o resultado é
+// A11Y_TAB_ORDER_SECTION_NAME de sempre, sem mudança de comportamento.
+function _getOrCreateTabOrderSection(sectionName) {
+  const suffix = _extractA11ySectionVersionSuffix(sectionName);
+  return _getOrCreateNamedSection(A11Y_TAB_ORDER_SECTION_NAME + suffix);
+}
+
+// Espelha _getOrCreateTabOrderSection pra Trilha de Swipe (2026-09-04-ac).
+function _getOrCreateSwipePathSection(sectionName) {
+  const suffix = _extractA11ySectionVersionSuffix(sectionName);
+  return _getOrCreateNamedSection(A11Y_SWIPE_FLOW_SECTION_NAME + suffix);
 }
 
 // Reparenta `node` (hoje filho direto de figma.currentPage, com x/y já
@@ -1469,16 +1823,199 @@ function _reparentIntoSection(node, getSection) {
     node.x = Math.round(_origX - section.x);
     node.y = Math.round(_origY - section.y);
   } catch (e) {
-    // organização é só cosmética — a spec/área/cópia segue existindo normalmente
+    // organização é só cosmética — a spec/área/cópia segue existindo
+    // normalmente na página — mas loga sempre: um reparenting falhando em
+    // silêncio deixa specs/áreas/cópias inteiras soltas fora da Section sem
+    // nenhum rastro (bug real, 2026-09-03).
+    console.error('[hac] _reparentIntoSection: falhou, node ficou solto na página.', e && e.message);
   }
 }
 
-function _reparentIntoA11ySection(node) {
-  _reparentIntoSection(node, _getOrCreateA11ySection);
+// Reparenta um artefato (spec, cópia de Tabulação/Swipe, linha de Swipe,
+// Ficha) pra dentro do GROUP da Área que o originou, preservando a posição
+// visual. Diferente de _reparentIntoSection, aqui NÃO dá pra subtrair o x/y
+// do novo pai: o Grupo da Área vive dentro da Section de sessão, e GROUP
+// não estabelece sistema de coordenadas próprio (os filhos herdam o do
+// container acima dele) — subtrair o bounding box do Grupo jogaria o
+// artefato pra longe. Corrige pela DIFERENÇA observada no
+// absoluteBoundingBox antes/depois do appendChild, que é a única medida
+// robusta contra qualquer profundidade/tipo de aninhamento. Best-effort,
+// mesmo espírito de _reparentIntoSection: organização é cosmética, o
+// artefato segue existindo se o reparenting falhar.
+function _reparentIntoAreaGroup(node, areaGroupNode) {
+  try {
+    const _beforeBB = node.absoluteBoundingBox;
+    areaGroupNode.appendChild(node);
+    const _afterBB = node.absoluteBoundingBox;
+    if (_beforeBB && _afterBB) {
+      node.x = Math.round(node.x + (_beforeBB.x - _afterBB.x));
+      node.y = Math.round(node.y + (_beforeBB.y - _afterBB.y));
+    }
+  } catch (e) {
+    console.error('[hac] _reparentIntoAreaGroup: falhou, node ficou solto na página.', e && e.message);
+  }
 }
 
-function _reparentIntoTabOrderSection(node) {
-  _reparentIntoSection(node, _getOrCreateTabOrderSection);
+// Reparentar DENTRO do clone (Tabulação/Swipe) foi tentado em 5 rodadas de
+// correção nesta sessão (2026-09-08) — cada uma resolveu um bug real
+// (mistura de sistema de coordenadas, Auto Layout com sizing HUG alterando
+// o pai antes da leitura, layoutPositioning setado tarde demais, e por fim
+// itemReverseZIndex invertendo o z-order de frames com Auto Layout), mas a
+// causa raiz definitiva era estrutural: `clipsContent` em algum frame no
+// caminho entre o clone-raiz e o artefato recorta qualquer filho que
+// "vaze" pra fora dos limites daquele frame — e um selo ao lado de um
+// elemento pequeno, ou uma linha de swipe cruzando a tela toda, vazam de
+// propósito. Abandonado em favor de _getOrCreateCloneOverlayGroup (grupo
+// IRMÃO do clone, nunca dentro dele — GROUP nunca tem clipsContent nem
+// Auto Layout, estruturalmente imune a todos os bugs das 5 rodadas
+// anteriores de uma vez). Ver essa função para a solução atual.
+
+// Resolve (ou cria) um GRUPO de overlay pra artefatos desenhados "sobre"
+// um clone (selos de Ordem de Tabulação, linha de Trilha de Swipe) — vive
+// IRMÃO do clone (mesmo pai — o Grupo da Área, ou figma.currentPage antes
+// do primeiro reparenting), nunca dentro dele.
+//
+// Bug real corrigido (2026-09-08, 6ª rodada): mesmo com o clone virando
+// FRAME (detachInstance) e o z-order corrigido (itemReverseZIndex),
+// artefatos desenhados DENTRO do clone continuavam sumindo — a causa real
+// é `clipsContent`: qualquer frame no caminho entre o clone-raiz e o
+// artefato (o próprio clone-raiz, ou um frame intermediário dele) pode ter
+// clipsContent=true, recortando visualmente qualquer filho posicionado
+// fora dos limites daquele frame — incluindo um selo ABSOLUTE que nasce
+// intencionalmente "vazando" pra fora de um botão pequeno, pra ficar
+// visível ao lado dele, ou uma linha de swipe que cruza toda a tela.
+// Diferente do bug de z-order (resolvido com insertChild/
+// itemReverseZIndex), aqui a solução não pode ser "ficar dentro do clone
+// de outro jeito" — precisa estar FORA da árvore com clip. Tirar o clip do
+// clone foi descartado de propósito (mudaria a aparência da própria
+// réplica — telas com carrossel/scroll dependem do clip pra ficar fiel ao
+// design original).
+//
+// Grupo simples (GROUP, nunca FRAME) porque GROUP nunca tem clipsContent
+// nem layoutMode — é estruturalmente imune a este bug, sem precisar setar/
+// lembrar de desligar nenhuma propriedade. Fica marcado com o pluginData
+// `pluginDataKey` informado, apontando pro id do clone, pra ser encontrado
+// de novo em chamadas seguintes sem recriar toda vez. `namePrefix` e
+// `pluginDataKey` diferem por chamador (selos de Tabulação vs. linha de
+// Swipe) — cada um com seu próprio grupo-overlay, nunca compartilhado,
+// mesmo quando os dois clones (Tabulação/Swipe) são o mesmo frame original.
+function _getOrCreateCloneOverlayGroup(clone, pluginDataKey, namePrefix) {
+  const cloneParent = clone.parent;
+  if (cloneParent && Array.isArray(cloneParent.children)) {
+    for (const sibling of cloneParent.children) {
+      try {
+        if (sibling.type === 'GROUP' && sibling.getPluginData &&
+          sibling.getPluginData(pluginDataKey) === clone.id &&
+          !sibling.removed) {
+          _setCloneOverlayGroupAbsolutePositioning(sibling);
+          return sibling;
+        }
+      } catch (e) { }
+    }
+  }
+
+  // figma.group() exige pelo menos 1 node — cria com um retângulo
+  // "seed" na mesma posição do clone, que fica DENTRO do grupo
+  // PERMANENTEMENTE (visible=false, sem fill/stroke, nunca removido).
+  // Bug real corrigido (2026-09-08, 7ª rodada): a versão anterior removia
+  // o seed logo após criar o grupo — mas um GROUP no Figma não pode ficar
+  // vazio: perder o ÚLTIMO filho faz o Figma apagar o grupo inteiro
+  // automaticamente. O overlay sumia no mesmo instante em que era criado,
+  // antes de qualquer selo/linha entrar nele — a variável `overlayGroup`
+  // continuava "existindo" do lado do JavaScript, mas o node por trás dela
+  // já tinha sido coletado. Cada reparenting seguinte
+  // (`_reparentIntoAreaGroup`) operava contra um grupo fantasma: o
+  // appendChild ou falhava silenciosamente (caindo no fallback pro Grupo
+  // da Área, que já não existe mais no modelo atual) ou criava
+  // implicitamente algo fora do controle desta função — em qualquer caso,
+  // o selo acabava solto na página. Manter o seed oculto resolve de vez:
+  // o grupo nunca fica vazio, então nunca é coletado pelo Figma.
+  const seed = figma.createRectangle();
+  seed.name = 'seed (não remover — mantém o grupo vivo)';
+  seed.resize(1, 1);
+  seed.x = clone.x;
+  seed.y = clone.y;
+  seed.fills = [];
+  seed.strokes = [];
+  seed.visible = false;
+  seed.locked = true;
+  (cloneParent || figma.currentPage).appendChild(seed);
+
+  const overlayGroup = figma.group([seed], cloneParent || figma.currentPage);
+  overlayGroup.name = `${namePrefix} ${clone.name}`;
+  overlayGroup.locked = false;
+  overlayGroup.setPluginData('hacCategory', 'a11y');
+  overlayGroup.setPluginData(pluginDataKey, clone.id);
+
+  // Sempre logo ACIMA do clone na pilha de filhos do pai comum — garante
+  // que o overlay fique visualmente por cima do clone inteiro (grupo sem
+  // Auto Layout/clip, então esta ordem de índice já basta, sem depender de
+  // itemReverseZIndex nenhum aqui).
+  if (cloneParent && typeof cloneParent.insertChild === 'function') {
+    try {
+      const cloneIndex = cloneParent.children.indexOf(clone);
+      cloneParent.insertChild(cloneIndex + 1, overlayGroup);
+    } catch (e) { /* ordem cosmética — grupo já existe e já está correto por baixo */ }
+  }
+
+  _setCloneOverlayGroupAbsolutePositioning(overlayGroup);
+
+  return overlayGroup;
+}
+
+// Bug real corrigido (2026-09-08, 8ª rodada): a Ficha de Handoff é o
+// PRIMEIRO lugar onde um clone (e portanto o grupo-overlay irmão dele)
+// passa a viver dentro de um pai com Auto Layout (a seção horizontal da
+// Ficha) — em todo outro caso (Ordem de Tabulação/Swipe no canvas de
+// trabalho) o clone sempre viveu solto numa Section comum, sem Auto
+// Layout, então o overlayGroup nunca precisou disso antes. Sem forçar
+// layoutPositioning = ABSOLUTE, o overlayGroup participa do FLUXO do Auto
+// Layout como mais um filho: nasce do tamanho do seed (1x1), mas assim que
+// a trilha de swipe (ou qualquer artefato com coordenadas absolutas
+// distantes, vindas do canvas original) é reparentada pra dentro dele, o
+// grupo cresce pra cobrir a distância inteira até essas coordenadas —
+// esticando a seção inteira (visto em produção: bloco de ~7081px de
+// largura) e empurrando/distorcendo visualmente as próximas seções, no
+// lugar de ficar ao lado do clone como as outras 2 réplicas. Mesmo ajuste
+// já usado no badge de Tabulação em fallback (linha ~4403), generalizado
+// aqui pra qualquer overlay, novo ou reaproveitado de uma chamada anterior.
+function _setCloneOverlayGroupAbsolutePositioning(overlayGroup) {
+  try {
+    if ('layoutPositioning' in overlayGroup && overlayGroup.parent &&
+      'layoutMode' in overlayGroup.parent && overlayGroup.parent.layoutMode !== 'NONE') {
+      overlayGroup.layoutPositioning = 'ABSOLUTE';
+    }
+  } catch (e) { }
+}
+
+// Destino padrão de todo artefato de uma Área: o Grupo dela. Áreas criadas
+// antes de 2026-09-05 não têm Grupo (area.id é a INSTANCE solta do selo,
+// que não aceita filhos) — nesses casos cai na Section por tipo de artefato
+// que o chamador já usava, via fallbackReparent. Sem migração retroativa,
+// por decisão de produto: arquivos já documentados continuam funcionando na
+// estrutura antiga.
+async function _reparentArtifactIntoArea(node, areaId, fallbackReparent) {
+  const areaGroup = await _getA11yAreaGroupNode(areaId);
+  if (areaGroup) {
+    _reparentIntoAreaGroup(node, areaGroup);
+    return;
+  }
+  if (typeof fallbackReparent === 'function') fallbackReparent();
+}
+
+function _reparentIntoA11ySection(node, sectionName) {
+  _reparentIntoSection(node, () => _getOrCreateA11ySection(sectionName));
+}
+
+function _reparentIntoTabOrderSection(node, sectionName) {
+  _reparentIntoSection(node, () => _getOrCreateTabOrderSection(sectionName));
+}
+
+// Espelha _reparentIntoTabOrderSection pra Trilha de Swipe (2026-09-04-ac)
+// — a cópia clonada da Área passa a viver na MESMA Section que a linha
+// final já usa hoje (A11Y_SWIPE_FLOW_SECTION_NAME).
+function _reparentIntoSwipePathSection(node, sectionName) {
+  _reparentIntoSection(node, () => _getOrCreateSwipePathSection(sectionName));
 }
 
 // Candidatas a "cópia de Ordem de Tabulação" hoje vivem dentro da Section
@@ -1487,16 +2024,68 @@ function _reparentIntoTabOrderSection(node) {
 // (arquivos de produção já em uso) nunca foram migradas automaticamente pra
 // dentro dela. Varre os dois níveis sempre, sem duplicar (uma cópia nunca é
 // simultaneamente filha da página e da Section).
+// Artefatos criados a partir de 2026-09-05 vivem DENTRO do Grupo da sua
+// Área, que por sua vez vive dentro da Section de sessão — dois níveis
+// abaixo da página. Toda busca por pluginData de artefato
+// (hacTabOrderCopyForArea/hacSwipePathCopyForArea/hacFichaForArea) precisa
+// varrer também esse nível, senão cópias/fichas da estrutura nova ficam
+// invisíveis pra remoção/toggle/localização e vazam órfãs no canvas.
+function _forEachA11ySessionAreaChild(fn) {
+  for (const sibling of figma.currentPage.children) {
+    if (sibling.type !== 'SECTION') continue;
+    let isSessionSection = false;
+    try {
+      isSessionSection = !!(sibling.getPluginData && sibling.getPluginData('hacSessionSection') === 'true');
+    } catch (e) { }
+    if (!isSessionSection) continue;
+    for (const areaGroup of (sibling.children || [])) {
+      if (areaGroup.type !== 'GROUP') continue;
+      for (const child of (areaGroup.children || [])) fn(child);
+    }
+  }
+}
+
+// Nova fonte de varredura (2026-09-08, simplificação de hierarquia): a
+// partir desta mudança, artefatos de uma Área (specs, clone de Tabulação,
+// clone de Swipe, frame da Ficha) nascem SOLTOS direto na Section de
+// sessão — irmãos do Grupo do selo, não mais aninhados dentro dele (ver
+// _forEachA11ySessionAreaChild acima, que continua existindo só pra
+// alcançar áreas documentadas ANTES desta mudança, na estrutura aninhada
+// antiga). Varre os filhos DIRETOS da Section de sessão (1 nível) — soma
+// a essa fonte antiga, nunca substitui (mesmo princípio já usado por todo
+// o resto do código: nunca remover uma fonte de varredura quando surge
+// uma estrutura nova, pra nunca deixar artefatos de qualquer geração
+// órfãos/invisíveis).
+function _forEachA11ySessionDirectChild(fn) {
+  for (const sibling of figma.currentPage.children) {
+    if (sibling.type !== 'SECTION') continue;
+    let isSessionSection = false;
+    try {
+      isSessionSection = !!(sibling.getPluginData && sibling.getPluginData('hacSessionSection') === 'true');
+    } catch (e) { }
+    if (!isSessionSection) continue;
+    for (const child of (sibling.children || [])) fn(child);
+  }
+}
+
 function _forEachTabOrderCopyCandidate(fn) {
   for (const sibling of figma.currentPage.children) {
     if (sibling.type === 'SECTION') continue;
     fn(sibling);
   }
-  const section = figma.currentPage.children.find(
-    n => n.type === 'SECTION' && n.name === A11Y_TAB_ORDER_SECTION_NAME
-  );
-  if (section) {
-    for (const child of (section.children || [])) fn(child);
+  _forEachA11ySessionAreaChild(fn);
+  _forEachA11ySessionDirectChild(fn);
+  // Varre TODAS as Sections de Ordem de Tabulação com o prefixo base,
+  // qualquer sufixo de versão (v2, v3...) — não só o nome fixo sem versão.
+  // A criação (_getOrCreateTabOrderSection) já aplica o sufixo da geração
+  // ativa; buscar só o nome exato sem versão deixava cópias de qualquer
+  // geração versionada permanentemente órfãs (nunca encontradas por
+  // _removeExistingTabOrderCopiesForArea/_findTabOrderCopyForArea), o que
+  // fazia clones antigos vazarem pra scans futuros como conteúdo "novo" do
+  // design (bug real, 2026-09-03).
+  for (const sibling of figma.currentPage.children) {
+    if (sibling.type !== 'SECTION' || !sibling.name.startsWith(A11Y_TAB_ORDER_SECTION_NAME)) continue;
+    for (const child of (sibling.children || [])) fn(child);
   }
 }
 
@@ -1513,14 +2102,289 @@ function _findTabOrderCopyForArea(areaId) {
   return found;
 }
 
+// Bug real corrigido (2026-09-08, junto com a 6ª rodada de correção do
+// z-order/clip dos selos): remover só o CLONE (por pluginData
+// 'hacTabOrderCopyForArea') deixava o grupo-overlay de selos
+// (_getOrCreateCloneOverlayGroup, marcado com 'hacTabOrderBadgesGroupForClone'
+// apontando pro id do clone que acabou de ser removido) órfão no canvas —
+// toda recriação da cópia de Tabulação da mesma área (start-tab-order-copy/
+// generate-tab-order-from-layers) vazava um grupo de selos "fantasma" a
+// mais. Varre a mesma lista de candidatos duas vezes: 1ª pra achar o(s)
+// clone(s) e coletar seus ids ANTES de remover (o grupo overlay aponta pro
+// id do clone, então precisa ser conhecido antes do clone sumir), 2ª pra
+// remover clone(s) e overlay(s) junto.
 function _removeExistingTabOrderCopiesForArea(areaId) {
+  const cloneIdsToRemove = [];
   _forEachTabOrderCopyCandidate(sibling => {
     try {
       if (sibling.getPluginData && sibling.getPluginData('hacTabOrderCopyForArea') === areaId) {
+        cloneIdsToRemove.push(sibling.id);
+      }
+    } catch (e) { }
+  });
+  _forEachTabOrderCopyCandidate(sibling => {
+    try {
+      const isClone = sibling.getPluginData && sibling.getPluginData('hacTabOrderCopyForArea') === areaId;
+      const isOverlayOfRemovedClone = sibling.getPluginData &&
+        cloneIdsToRemove.includes(sibling.getPluginData('hacTabOrderBadgesGroupForClone'));
+      if (isClone || isOverlayOfRemovedClone) {
         sibling.remove();
       }
     } catch (e) { }
   });
+}
+
+// Família espelhada pra Trilha de Swipe (2026-09-04-ac) — mesmo raciocínio
+// de _forEachTabOrderCopyCandidate/_findTabOrderCopyForArea/
+// _removeExistingTabOrderCopiesForArea, trocando só o pluginData
+// ('hacSwipePathCopyForArea') e a Section de destino
+// (A11Y_SWIPE_FLOW_SECTION_NAME).
+function _forEachSwipePathCopyCandidate(fn) {
+  for (const sibling of figma.currentPage.children) {
+    if (sibling.type === 'SECTION') continue;
+    fn(sibling);
+  }
+  for (const sibling of figma.currentPage.children) {
+    if (sibling.type !== 'SECTION' || !sibling.name.startsWith(A11Y_SWIPE_FLOW_SECTION_NAME)) continue;
+    for (const child of (sibling.children || [])) fn(child);
+  }
+  _forEachA11ySessionAreaChild(fn);
+  _forEachA11ySessionDirectChild(fn);
+}
+
+// Mesma correção de vazamento de _removeExistingTabOrderCopiesForArea
+// (2026-09-08), espelhada pro grupo-overlay da linha de Swipe
+// ('hacSwipePathGroupForClone').
+function _removeExistingSwipePathCopiesForArea(areaId) {
+  const cloneIdsToRemove = [];
+  _forEachSwipePathCopyCandidate(sibling => {
+    try {
+      if (sibling.getPluginData && sibling.getPluginData('hacSwipePathCopyForArea') === areaId) {
+        cloneIdsToRemove.push(sibling.id);
+      }
+    } catch (e) { }
+  });
+  _forEachSwipePathCopyCandidate(sibling => {
+    try {
+      const isClone = sibling.getPluginData && sibling.getPluginData('hacSwipePathCopyForArea') === areaId;
+      const isOverlayOfRemovedClone = sibling.getPluginData &&
+        cloneIdsToRemove.includes(sibling.getPluginData('hacSwipePathGroupForClone'));
+      if (isClone || isOverlayOfRemovedClone) {
+        sibling.remove();
+      }
+    } catch (e) { }
+  });
+}
+
+// ============================================================
+// Ficha de Handoff — Section/frame dedicados
+// ============================================================
+// Artefato de EXPORT (não é mais um pipeline de captura como Tabulação) —
+// um frame por Área Marcada, dentro de Section própria, com 3 seções
+// internas independentes (Tabulação/Swipe/Leitor de Tela) inseridas
+// incrementalmente pelos 3 botões "Inserir/Atualizar ficha" das abas de
+// trabalho. Desenha DO ZERO a partir dos itens/specs já persistidos —
+// nunca clona a cópia rascunho de Tabulação/Swipe (destruída/recriada a
+// cada "Gerar Automaticamente", ficaria órfã aqui) — sempre clona de novo o
+// frame ORIGINAL da área (area.targetNodeId). Prefixo `_ficha`/`hacFicha*`
+// em tudo (dado de canvas e funções) para não colidir com o pipeline de
+// Tabulação/Swipe.
+const A11Y_FICHA_SECTION_NAME = 'hac — Ficha de Handoff';
+
+function _getOrCreateFichaSection(sectionName) {
+  const suffix = _extractA11ySectionVersionSuffix(sectionName);
+  return _getOrCreateNamedSection(A11Y_FICHA_SECTION_NAME + suffix);
+}
+
+function _reparentIntoFichaSection(node, sectionName) {
+  _reparentIntoSection(node, () => _getOrCreateFichaSection(sectionName));
+}
+
+// Mesmo padrão defensivo de _forEachTabOrderCopyCandidate/
+// _forEachSwipeCopyCandidate: o frame da Ficha pode estar solto na página
+// (nunca chegou a ser reparentado) ou já dentro de alguma Section de Ficha
+// (qualquer geração/versão) — varre os dois níveis sempre.
+function _forEachFichaFrameCandidate(fn) {
+  for (const sibling of figma.currentPage.children) {
+    if (sibling.type === 'SECTION') continue;
+    fn(sibling);
+  }
+  for (const sibling of figma.currentPage.children) {
+    if (sibling.type !== 'SECTION' || !sibling.name.startsWith(A11Y_FICHA_SECTION_NAME)) continue;
+    for (const child of (sibling.children || [])) fn(child);
+  }
+  _forEachA11ySessionAreaChild(fn);
+  _forEachA11ySessionDirectChild(fn);
+}
+
+// Localiza o frame da Ficha de uma área — tenta primeiro o id salvo em
+// hacData (mais rápido, sem varredura), cai pra busca por pluginData
+// 'hacFichaForArea' se o id não resolver mais (frame apagado/movido
+// manualmente do canvas, dado local "mentindo" — mesmo trade-off aceito
+// pelo resto do hac com tabOrderItems/a11ySwipePaths).
+async function _findFichaFrameForArea(areaId, savedFrameId) {
+  if (savedFrameId) {
+    try {
+      const node = await figma.getNodeByIdAsync(savedFrameId);
+      if (node && !node.removed) return node;
+    } catch (e) { }
+  }
+  let found = null;
+  _forEachFichaFrameCandidate(sibling => {
+    if (found) return;
+    try {
+      if (sibling.getPluginData && sibling.getPluginData('hacFichaForArea') === areaId) {
+        found = sibling;
+      }
+    } catch (e) { }
+  });
+  return found;
+}
+
+// Cria (ou retorna, se já existir) o frame-container da Ficha de uma área —
+// Auto Layout HORIZONTAL vazio, uma seção (Tabulação/Swipe/Leitor de Tela)
+// é appendChild'ada dentro dele por vez, cada builder cuidando de remover a
+// seção antiga antes de inserir a nova (substituição completa, nunca
+// merge). Posicionado via _findFreeTabOrderCopyPosition (genérica o
+// bastante apesar do nome — aceita qualquer originBounds/dimensões)
+// usando o bounding box do frame ORIGINAL da área como origem, igual às
+// cópias de Tabulação/Swipe.
+async function _createOrGetFichaFrame(area, designerName) {
+  const savedFrameId = area.handoffFicha && area.handoffFicha.frameId;
+  const existing = await _findFichaFrameForArea(area.id, savedFrameId);
+  if (existing) return existing;
+
+  const root = area.targetNodeId ? await figma.getNodeByIdAsync(area.targetNodeId) : null;
+  const originBounds = (root && root.absoluteBoundingBox) || { x: 0, y: 0, width: 400, height: 400 };
+
+  // Posição livre calculada ANTES de criar/inserir o frame na página — mesma
+  // ordem de _createTabOrderCloneForArea (o cálculo
+  // não deve "ver" o próprio frame nasce em 0,0 com dimensões default como
+  // se fosse conteúdo real já ocupando espaço). Dimensões "de partida"
+  // pequenas: o frame ainda está vazio (Auto Layout AUTO cresce conforme
+  // seções entram) e o cálculo só precisa de um ponto de partida sem colidir
+  // com o que já existe; o frame real cresce depois sem recalcular posição.
+  const { x, y } = await _findFreeTabOrderCopyPosition(480, 480, originBounds);
+
+  const fichaFrame = figma.createFrame();
+  fichaFrame.name = `[Ficha de Handoff] ${area.label || 'Área'}`;
+  fichaFrame.layoutMode = 'HORIZONTAL';
+  fichaFrame.primaryAxisSizingMode = 'AUTO';
+  fichaFrame.counterAxisSizingMode = 'AUTO';
+  fichaFrame.itemSpacing = 40;
+  fichaFrame.paddingLeft = 40;
+  fichaFrame.paddingRight = 40;
+  fichaFrame.paddingTop = 40;
+  fichaFrame.paddingBottom = 40;
+  fichaFrame.fills = [{ type: 'SOLID', color: { r: 0.98, g: 0.98, b: 0.98 } }];
+  fichaFrame.counterAxisAlignItems = 'MIN';
+  fichaFrame.locked = false;
+  fichaFrame.setPluginData('hacCategory', 'a11y');
+  fichaFrame.setPluginData('hacFichaForArea', area.id || '');
+
+  figma.currentPage.appendChild(fichaFrame);
+  fichaFrame.x = x;
+  fichaFrame.y = y;
+
+  // Direto na Section de sessão (2026-09-08) — mesmo raciocínio de specs/
+  // Tabulação/Swipe: a Ficha não precisa mais estar aninhada no Grupo da
+  // Área, só na mesma Section (de onde será reorganizada quando a
+  // montagem final da Ficha for desenhada).
+  _reparentIntoSection(fichaFrame, () => _getOrCreateA11ySessionSection(designerName));
+
+  return fichaFrame;
+}
+
+// Remove a seção antiga (Tabulação/Swipe/Leitor de Tela) já inserida na
+// Ficha, se existir — identificada por pluginData 'hacFichaSection' no nó
+// RAIZ daquela seção (não por nome/posição, o designer pode reordenar/
+// renomear livremente dentro do frame). Substituição completa: cada
+// "Inserir/Atualizar ficha" começa sempre limpando a seção correspondente
+// antes de desenhar a nova versão.
+function _removeFichaSectionInFrame(fichaFrame, sectionKey) {
+  const children = (fichaFrame.children || []).slice();
+  for (const child of children) {
+    try {
+      if (child.getPluginData && child.getPluginData('hacFichaSection') === sectionKey) {
+        child.remove();
+      }
+    } catch (e) { }
+  }
+}
+
+// Ordem visual fixa dos 4 blocos da Ficha (2026-09-08, pedido do
+// usuário) — 1) Ordem de Tabulação, 2) Swipe, 3) Leitor de Tela,
+// 4) Handoff Review (consolidado, sem instrução/réplica própria).
+const FICHA_SECTION_ORDER = ['tabulacao', 'swipe', 'leitor', 'review'];
+
+// Bug real corrigido (2026-09-08): antes, cada builder de seção fazia
+// `fichaFrame.appendChild(section)` direto — como appendChild sempre
+// insere no ÚLTIMO índice, a posição final de cada seção no canvas
+// virava simplesmente "a ordem em que o designer clicou Inserir/
+// Atualizar pela primeira vez em cada aba", nunca uma ordem fixa. Se o
+// designer inserisse Leitor de Tela antes de Tabulação, por exemplo,
+// Leitor aparecia à ESQUERDA de Tabulação. Corrigido calculando o
+// índice correto contra FICHA_SECTION_ORDER e usando insertChild antes
+// do primeiro filho existente com ordem MAIOR que a da seção sendo
+// inserida — assim a posição final no `fichaFrame` (Auto Layout
+// HORIZONTAL, já com sizing AUTO nos dois eixos — isso já garante
+// "lado a lado, sem sobreposição, largura própria" mecanicamente,
+// sem nenhum ajuste de sizing necessário) sempre respeita 1-2-3-4,
+// não importa a ordem de clique.
+function _insertFichaSectionInOrder(fichaFrame, section, sectionKey) {
+  const orderIndex = FICHA_SECTION_ORDER.indexOf(sectionKey);
+  const children = fichaFrame.children || [];
+  let beforeChild = null;
+  for (const child of children) {
+    let otherKey = null;
+    try { otherKey = child.getPluginData && child.getPluginData('hacFichaSection'); } catch (e) { }
+    const otherIndex = otherKey ? FICHA_SECTION_ORDER.indexOf(otherKey) : -1;
+    if (otherIndex !== -1 && orderIndex !== -1 && otherIndex > orderIndex) {
+      beforeChild = child;
+      break;
+    }
+  }
+  if (beforeChild) {
+    fichaFrame.insertChild(fichaFrame.children.indexOf(beforeChild), section);
+  } else {
+    fichaFrame.appendChild(section);
+  }
+}
+
+// Coluna de legenda textual, reaproveitada pelas seções de Tabulação/Swipe
+// (mesmo texto didático curto, só o título muda) — Auto Layout VERTICAL
+// simples, sem depender de nenhum componente real da lib.
+function _buildFichaLegendColumn(title, description) {
+  const col = figma.createFrame();
+  col.name = 'Legenda';
+  col.layoutMode = 'VERTICAL';
+  col.itemSpacing = 8;
+  col.primaryAxisSizingMode = 'AUTO';
+  col.counterAxisSizingMode = 'FIXED';
+  col.resize(220, 1);
+  col.fills = [];
+
+  const titleText = figma.createText();
+  titleText.name = 'Título';
+  titleText.fontName = { family: 'Inter', style: 'Bold' };
+  titleText.fontSize = 13;
+  titleText.fills = [{ type: 'SOLID', color: { r: 0.1, g: 0.1, b: 0.1 } }];
+  titleText.characters = title;
+  titleText.textAutoResize = 'HEIGHT';
+  titleText.layoutAlign = 'STRETCH';
+  col.appendChild(titleText);
+
+  const descText = figma.createText();
+  descText.name = 'Descrição';
+  descText.fontName = { family: 'Inter', style: 'Regular' };
+  descText.fontSize = 11;
+  descText.fills = [{ type: 'SOLID', color: { r: 0.4, g: 0.4, b: 0.4 } }];
+  descText.characters = description;
+  descText.textAutoResize = 'HEIGHT';
+  descText.layoutAlign = 'STRETCH';
+  col.appendChild(descText);
+
+  return col;
 }
 
 // Reordena o specGroup recém-criado entre os demais grupos de spec da página
@@ -1570,11 +2434,50 @@ async function _a11yScanArea(rootNode) {
   const results = { components: [], icons: [], typography: [], frames: [], vectors: [], images: [] };
   let _treeVisitIndex = 0;
 
+  // Só documentamos o que é de fato VISÍVEL no handoff real. Um ancestral
+  // com clipsContent ativado recorta tudo que ultrapassa seus próprios
+  // limites — um filho posicionado fora dessa área nunca aparece pro
+  // usuário final, então não deve virar item a documentar (regra de
+  // negócio confirmada pelo usuário, 2026-09-03). Verificado contra
+  // TODOS os ancestrais com clip entre o node e a raiz do scan (não só o
+  // pai direto), já que qualquer um deles pode recortar.
+  function _isClippedByAncestor(n) {
+    const bb = n.absoluteBoundingBox;
+    if (!bb) return false;
+    let p = n.parent;
+    while (p && p !== rootNode.parent) {
+      if (p.clipsContent && p.absoluteBoundingBox) {
+        const pbb = p.absoluteBoundingBox;
+        const outside = bb.x + bb.width <= pbb.x || bb.x >= pbb.x + pbb.width ||
+          bb.y + bb.height <= pbb.y || bb.y >= pbb.y + pbb.height;
+        if (outside) return true;
+      }
+      if (p === rootNode) break;
+      p = p.parent;
+    }
+    return false;
+  }
+
   async function _extract(n, depth) {
     if ((depth || 0) > 16) return;
     if (n.visible === false) return;
+    if (n !== rootNode && _isClippedByAncestor(n)) return;
 
     try {
+      // Resolvidos aqui (escopo de toda a função, não só do bloco de
+      // categorização abaixo) porque também são consultados depois, ao
+      // decidir se a recursão nos filhos deve parar por causa de um slot
+      // exposto via componentPropertyReferences (_hasExposedSlotProperties).
+      let componentKey = null;
+      let mainComp = null;
+      let _mainCompError = null;
+      if (n.type === "INSTANCE") {
+        try { mainComp = await n.getMainComponentAsync(); } catch (e) { mainComp = null; _mainCompError = e && e.message; }
+        if (mainComp) componentKey = mainComp.key;
+      } else if (n.type === "COMPONENT" || n.type === "COMPONENT_SET") {
+        componentKey = n.key;
+      }
+
       // Preenchido só quando n é INSTANCE remota resolvida via
       // _resolveDscComponentA11yMatch — usado abaixo pra decidir se a
       // recursão nos filhos deve ser interrompida (ver bloco após o push
@@ -1588,11 +2491,67 @@ async function _a11yScanArea(rootNode) {
         (n.type === "INSTANCE" && n.width <= 32 && n.height <= 32)
       );
 
-      const hasImageFill = Array.isArray(n.fills) &&
+      // hasImageFill só se aplica a nodes que PODEM ser uma imagem de
+      // verdade (RECTANGLE/ELLIPSE/VECTOR/frames de imagem legítimos) —
+      // nunca a um FRAME/GROUP/SECTION estrutural. Um container de layout
+      // (ex.: um "Row" de botões) pode ter um fill IMAGE aplicado por
+      // engano ou como placeholder/mockup de referência sem ser, ele
+      // mesmo, uma imagem — sem essa checagem de tipo, esse container
+      // inteiro virava 1 item genérico de categoria "images" (sem
+      // componente, sem sugestão) e a recursão nos filhos reais (botões)
+      // continuava, mas o container nunca deveria ter sido tratado como
+      // candidato de a11y — só os filhos importam (bug real, 2026-09-03).
+      const _canBeImage = n.type !== 'FRAME' && n.type !== 'GROUP' && n.type !== 'SECTION';
+      const hasImageFill = _canBeImage && Array.isArray(n.fills) &&
         n.fills.some(f => f && f.type === 'IMAGE' && f.visible !== false);
 
+      // Um GROUP/FRAME "parece ícone" pelo mesmo critério de nome/tamanho
+      // usado pro nó atual — usado tanto pra decidir se O PRÓPRIO node
+      // estrutural deve virar 1 item decorativo (ver _isIconLikeContainer
+      // abaixo) quanto pra saber se um vetor/path é peça de composição de
+      // um ícone ancestral.
+      function _looksLikeIconContainer(node) {
+        const nLower = (node.name || '').toLowerCase();
+        const looksLikeBtn = nLower.includes('button');
+        return !looksLikeBtn && (
+          nLower.includes('icon') || nLower.includes('ic-') ||
+          (typeof node.width === 'number' && typeof node.height === 'number' && node.width <= 32 && node.height <= 32)
+        );
+      }
+
+      // Vetor/path que é filho de um ícone/composição maior (grupo/frame
+      // pequeno com vários vetores formando 1 desenho, ex.: "Wifi" = 2
+      // Path + 1 Rectangle) não deve virar item individual — só o ícone
+      // como um todo é a unidade relevante pra documentar (regra de
+      // negócio confirmada, 2026-09-03). Sem essa supressão, o scan pegava
+      // só UMA peça solta da composição (ex.: só o Rectangle) e ignorava
+      // as demais, um resultado incoerente — nem a peça isolada nem o
+      // ícone completo faziam sentido como candidato.
+      const parent = n.parent;
+      const parentLooksLikeIcon = !!(parent && parent !== rootNode.parent && _looksLikeIconContainer(parent));
+      const _isVectorLikeType = n.type === "VECTOR" || n.type === "BOOLEAN_OPERATION" ||
+        n.type === "ELLIPSE" || n.type === "RECTANGLE";
+      const isVectorInsideIconComposition = _isVectorLikeType && parentLooksLikeIcon;
+
+      // O GROUP/FRAME que representa o ícone como um todo (ex.: "Wifi",
+      // "Signal", "Battery") precisa continuar documentável como 1
+      // elemento decorativo — suprimir as peças internas sem preservar o
+      // grupo faria o ícone inteiro desaparecer do scan. Só se aplica
+      // quando o próprio grupo não tem match de componente DSC (senão cai
+      // no branch de INSTANCE/COMPONENT normalmente) e tem pelo menos um
+      // filho vetorial de composição (evita capturar todo GROUP pequeno
+      // sem relação nenhuma com ícone, ex.: um badge de texto compacto).
+      const _isIconGroupContainer = (n.type === "GROUP" || n.type === "FRAME") &&
+        _looksLikeIconContainer(n) &&
+        Array.isArray(n.children) &&
+        n.children.some(c => c.type === "VECTOR" || c.type === "BOOLEAN_OPERATION" || c.type === "ELLIPSE" || c.type === "RECTANGLE");
+
       let category = "frames";
-      if (hasImageFill && !isIcon) {
+      if (isVectorInsideIconComposition) {
+        category = "frames"; // nunca vira item — a composição já é capturada pelo grupo pai (_isIconGroupContainer)
+      } else if (_isIconGroupContainer) {
+        category = "icons";
+      } else if (hasImageFill && !isIcon) {
         category = "images";
       } else if (n.type === "TEXT") {
         category = isIcon ? "icons" : "typography";
@@ -1613,15 +2572,6 @@ async function _a11yScanArea(rootNode) {
       const _treeOrder = _treeVisitIndex++;
 
       if (category !== 'frames') {
-        let componentKey = null;
-        let mainComp = null;
-        if (n.type === "INSTANCE") {
-          try { mainComp = await n.getMainComponentAsync(); } catch (e) { mainComp = null; }
-          if (mainComp) componentKey = mainComp.key;
-        } else if (n.type === "COMPONENT" || n.type === "COMPONENT_SET") {
-          componentKey = n.key;
-        }
-
         let dscComponentMatch = null;
         let needsA11yTokenReview = false;
 
@@ -1629,28 +2579,37 @@ async function _a11yScanArea(rootNode) {
           dscComponentMatch = _resolveDscComponentA11yMatch(componentKey);
           _dscRemoteMatch = dscComponentMatch;
         }
-        // [DIAGNÓSTICO TEMPORÁRIO 2026-09-02] Bug do Icon Button classificado
-        // como decorativo persiste em arquivos de projetos diferentes. Log de
-        // instrumentação para descobrir, com dado real, por que o match de
-        // componente DSC não acontece. REMOVER depois de diagnosticar.
-        if (n.type === 'INSTANCE' || category === 'icons') {
-          console.log('[HAC-DIAG]', JSON.stringify({
-            layerName: n.name,
-            nodeType: n.type,
-            category,
-            size: Math.round(n.width) + 'x' + Math.round(n.height),
-            hasMainComp: !!mainComp,
-            mainCompName: mainComp ? mainComp.name : null,
-            isRemote: mainComp ? !!mainComp.remote : null,
-            componentKey: componentKey ? componentKey.slice(0, 12) + '…' : null,
-            matchTried: !!(n.type === 'INSTANCE' && mainComp && mainComp.remote && componentKey),
-            matchResult: dscComponentMatch ? (dscComponentMatch.a11yCategory || 'isUnmapped') : null,
-          }));
-        }
         if (!dscComponentMatch && (category === 'icons' || category === 'vectors')) {
           dscComponentMatch = _resolveDecorativeA11yMatch(n);
         } else if (!dscComponentMatch && category === 'images') {
           dscComponentMatch = _resolveImageA11yMatch(n);
+        } else if (!dscComponentMatch && category === 'components') {
+          // Instância real (categoria calculada acima já garante n.type ===
+          // INSTANCE/COMPONENT), mas sem match resolvido — seja porque
+          // getMainComponentAsync falhou, mainComp.remote veio false (link
+          // com a lib quebrado/pendente de resync no arquivo do usuário,
+          // cópia local de um componente originalmente remoto), ou o
+          // componentKey não bate com nenhuma das 4 libs catalogadas.
+          // Antes desta correção, um item nesse estado nunca ganhava
+          // dscComponentMatch e era descartado SEM RASTRO pelo filtro do
+          // frontend (_collectA11yDetections só aceita item com match
+          // truthy) — o designer nunca via nem "Não identificado", o
+          // componente simplesmente sumia do lote (bug real, 2026-09-03:
+          // instância confirmada real de "[dsc] Icon Button Text" nunca
+          // apareceu na Detecção Automática). Loga a causa real (nunca
+          // muda pra fallback silencioso) e ainda assim marca como
+          // candidato "não identificado" — o wizard mostra "Componente
+          // DSC: Não identificado" (mesmo texto já usado hoje pra outros
+          // casos de match ausente), permitindo ao designer documentar
+          // manualmente em vez de o item desaparecer.
+          console.error('[hac] _a11yScanArea: instância sem match DSC resolvido — não deveria ser descartada silenciosamente.', JSON.stringify({
+            layerName: n.name,
+            isRemote: mainComp ? !!mainComp.remote : null,
+            hasMainComp: !!mainComp,
+            mainCompError: _mainCompError,
+            componentKey: componentKey ? componentKey.slice(0, 12) + '…' : null,
+          }));
+          dscComponentMatch = { containingFrame: n.name, a11yCategory: null, confidence: 'baixa', source: 'unresolved-instance', isUnmapped: true };
         } else if (category === 'typography') {
           let styleName = null, styleKey = null;
           if ('textStyleId' in n && typeof n.textStyleId === "string" && n.textStyleId !== figma.mixed && n.textStyleId) {
@@ -1692,7 +2651,22 @@ async function _a11yScanArea(rootNode) {
       const _hasResolvedDscMatch = n.type === 'INSTANCE' &&
         _dscRemoteMatch && !_dscRemoteMatch.isUnmapped && !!_dscRemoteMatch.a11yCategory;
 
-      if (!_hasResolvedDscMatch && 'children' in n && n.children) {
+      // Mesmo SEM categoria de a11y própria (isUnmapped), uma instância
+      // remota real com "slot" — conteúdo interno exposto via
+      // componentPropertyReferences do componente pai (ex.: "[dsc] Value
+      // Section" expõe visibilidade/texto do Footer/Badge internos como
+      // properties do próprio componente, não como filhos soltos) — não
+      // deve ter a recursão descendo dentro dela. Sem essa checagem, o
+      // conteúdo do slot (ex.: a instância "[dsc] Badge Text" aninhada no
+      // Footer Container) virava um item SEPARADO e concorrente do
+      // componente pai, gerando ruído no lote e uma detecção fragmentada
+      // do que na prática é uma única unidade documentável (bug real,
+      // 2026-09-04). O designer documenta "Value Section" como unidade —
+      // o conteúdo do slot já é coberto por essa mesma spec.
+      const _hasExposedSlotProperties = n.type === 'INSTANCE' && mainComp && mainComp.remote &&
+        n.componentPropertyReferences && Object.keys(n.componentPropertyReferences).length > 0;
+
+      if (!_hasResolvedDscMatch && !_hasExposedSlotProperties && 'children' in n && n.children) {
         for (const child of n.children) {
           await _extract(child, (depth || 0) + 1);
         }
@@ -1856,19 +2830,25 @@ figma.ui.onmessage = async (msg) => {
   }
 
   if (msg.type === 'highlight-node') {
-    if (activeHighlightNode) {
-      try { activeHighlightNode.remove(); } catch (e) { }
-      activeHighlightNode = null;
-    }
-
+    // Bug real corrigido (2026-09-05): a remoção do highlight anterior
+    // saiu daqui de cima — ficando ANTES do único await desta função
+    // (getNodeByIdAsync), ela mesma reabria a mesma janela de corrida que
+    // a correção de 2026-09-04-ag (mover a atribuição de .selection pra
+    // depois) só resolveu parcialmente. Durante o await, o listener
+    // SÍNCRONO de selectionchange podia rodar e criar seu próprio
+    // retângulo; ao retomar, este handler sobrescrevia activeHighlightNode
+    // com o dele, órfão o do listener. Resolvendo o node PRIMEIRO, e só
+    // removendo+criando depois — sem nenhum await entre as duas
+    // operações —, fecha a janela por completo. Cor mantida customizável
+    // (msg.color, ex. '#0070af' em core.js pro highlight genérico de spec,
+    // diferente do cyan fixo de _drawAccumulatedSelectionHighlight), então
+    // não reaproveita aquela função aqui.
     const node = await figma.getNodeByIdAsync(msg.id);
     if (node && node.visible && _nodeOnCurrentPage(node)) {
-      if (msg.selectNode !== false) {
-        figma.currentPage.selection = [node];
+      if (activeHighlightNode && !activeHighlightNode.removed) {
+        try { activeHighlightNode.remove(); } catch (e) { }
       }
-      if (msg.shouldScroll !== false) {
-        figma.viewport.scrollAndZoomIntoView([node]);
-      }
+      activeHighlightNode = null;
 
       if (msg.highlight && node.absoluteBoundingBox) {
         const hexToRgbLocal = (hex) => {
@@ -1894,6 +2874,13 @@ figma.ui.onmessage = async (msg) => {
         strokeRect.cornerRadius = node.cornerRadius && typeof node.cornerRadius === 'number' ? node.cornerRadius : 0;
         figma.currentPage.appendChild(strokeRect);
         activeHighlightNode = strokeRect;
+      }
+
+      if (msg.selectNode !== false) {
+        figma.currentPage.selection = [node];
+      }
+      if (msg.shouldScroll !== false) {
+        figma.viewport.scrollAndZoomIntoView([node]);
       }
     }
     return;
@@ -1962,6 +2949,10 @@ figma.ui.onmessage = async (msg) => {
     }
     figma.ui.postMessage({
       type: "selection-name",
+      // id (2026-09-04-ae): usado pelo frontend pra checar se este nó já
+      // tem uma spec documentada antes de deixar o designer criar outra
+      // duplicada (aviso não-bloqueante em prefillA11yComponentName).
+      id: node ? node.id : null,
       name: node ? node.name : null,
       mainText: node ? _findMainTextContent(node) : null,
       dscComponentName,
@@ -1985,13 +2976,28 @@ figma.ui.onmessage = async (msg) => {
 
   if (msg.type === "get-a11y-selection-info") {
     const sel = figma.currentPage.selection;
+    // Nunca devolve um node que seja artefato do próprio hac (Section
+    // organizadora, selo, conector, cópia de área) — evita que uma seleção
+    // "presa" nesses nodes (comum logo após create-a11y-area, que seleciona
+    // o selo recém-criado ao final) vire, sem o designer perceber, o alvo
+    // de uma nova Área ou o pré-preenchimento do rótulo dela.
+    const picked = sel.length > 0 && !_isHacOwnedNode(sel[0]) ? sel[0] : null;
     figma.ui.postMessage({
       type: "a11y-selection-info",
-      id: sel.length > 0 ? sel[0].id : null,
-      name: sel.length > 0 ? sel[0].name : null,
+      id: picked ? picked.id : null,
+      name: picked ? picked.name : null,
     });
     return;
   }
+
+  // get-a11y-documentation-status (consultado por openA11yAreaModal antes
+  // de abrir "Marcar Área", pra alimentar o aviso "Continuar/Iniciar nova
+  // Section") foi REMOVIDO em 2026-09-04-k — ver comentário em
+  // accessibility.js, openA11yAreaModal. Marcar Área agora sempre entra na
+  // Section ativa, sem perguntar. _computeNextA11ySectionName (abaixo)
+  // continua existindo — é a peça que o futuro mecanismo AUTOMÁTICO de
+  // versionamento (disparado ao gerar/atualizar a Ficha de Handoff num
+  // projeto já documentado antes, não um botão manual) vai reaproveitar.
 
   // ── "Marcar Área" ──────────────────────────────────────────────────────
   // Cria um selo numerado usando o componente REAL "[a11y] Conectores"
@@ -2009,6 +3015,13 @@ figma.ui.onmessage = async (msg) => {
       const node = await figma.getNodeByIdAsync(msg.targetNodeId);
       if (!node || !node.absoluteBoundingBox) {
         figma.notify("Elemento não encontrado no canvas — selecione novamente.");
+        return;
+      }
+      // Segunda camada de defesa (get-a11y-selection-info já filtra na
+      // origem) — nunca cria Área apontando pra um artefato do próprio hac,
+      // mesmo que o targetNodeId chegue de outra fonte no futuro.
+      if (_isHacOwnedNode(node)) {
+        figma.notify("Selecione um elemento do seu design, não uma estrutura criada pelo hac.");
         return;
       }
       try { await figma.loadFontAsync({ family: "Inter", style: "Bold" }); } catch (e) { }
@@ -2066,7 +3079,11 @@ figma.ui.onmessage = async (msg) => {
         badge.y = Math.round(bb.y - badge.height - _A11Y_AREA_GAP);
       }
 
-      let group = badge;
+      // Marca o selo (e o texto de fallback) pra que update-a11y-area-conector
+      // consiga trocá-los sem tocar nos demais filhos do Grupo da Área — que
+      // desde 2026-09-05 abriga também specs, cópias e a Ficha daquela área.
+      badge.setPluginData('hacAreaBadge', 'true');
+      const badgeNodes = [badge];
       if (!usedRealComponent) {
         const labelText = figma.createText();
         labelText.name = 'Label';
@@ -2077,9 +3094,22 @@ figma.ui.onmessage = async (msg) => {
         figma.currentPage.appendChild(labelText);
         labelText.x = Math.round(badge.x + badge.width + 8);
         labelText.y = Math.round(badge.y + (badge.height / 2) - (labelText.height / 2));
-        group = figma.group([badge, labelText], figma.currentPage);
+        labelText.setPluginData('hacAreaBadge', 'true');
+        badgeNodes.push(labelText);
       }
-      group.name = `[A11yArea | ${msg.number}] ${msg.label}`;
+      // O selo SEMPRE nasce dentro de um GROUP próprio (2026-09-05), mesmo
+      // no caminho normal em que ele é uma INSTANCE única — antes o "grupo"
+      // da área era a própria instância, e não havia onde pendurar os
+      // artefatos daquela área (specs, cópias de Tabulação/Swipe, Ficha),
+      // que ficavam espalhados em Sections separadas por TIPO. Com o GROUP,
+      // area.id passa a ser um container real: tudo da área vive dentro
+      // dele, e excluir a área é uma única operação de canvas.
+      const group = figma.group(badgeNodes, figma.currentPage);
+      // Nome enxuto "N · Label": o Grupo é o item que o designer navega no
+      // painel de Layers agora, não mais uma INSTANCE técnica solta — o
+      // prefixo antigo "[A11yArea | N]" nunca foi lido por nenhum código
+      // (busca é sempre por pluginData/id), era só ruído visual.
+      group.name = `${msg.number} · ${msg.label}`;
       group.locked = false;
       group.setPluginData('hacCategory', 'a11y');
       // Guardamos o id do frame ORIGINAL (não-injetado pelo hac, então
@@ -2089,7 +3119,7 @@ figma.ui.onmessage = async (msg) => {
       // da área sendo processada no momento.
       group.setPluginData('hacAreaTargetNodeId', node.id);
 
-      _reparentIntoA11ySection(group);
+      _reparentIntoSection(group, () => _getOrCreateA11ySessionSection(msg.designerName));
 
       figma.currentPage.selection = [group];
       figma.viewport.scrollAndZoomIntoView([group]);
@@ -2114,6 +3144,176 @@ figma.ui.onmessage = async (msg) => {
     return;
   }
 
+  // ── Editar conector de uma Área já existente (2026-09-04-l, pedido do
+  // usuário: "Mais ações" do card ganha a opção de trocar a direção do
+  // selo) — edita o CONTEÚDO do grupo já existente (área.id), NUNCA
+  // apaga/recria o grupo raiz em si: o Figma não deixa "editar" um node
+  // pra trocar de componente, só apagar+criar, e um node novo sempre
+  // ganha um ID novo — como area.id é referenciado em TUDO relacionado à
+  // área (a11yAreaId de specs, tabOrderItems, a11ySwipePaths, handoffFicha),
+  // recriar o grupo quebraria todos esses vínculos. Em vez disso: remove
+  // só os FILHOS do grupo (instância antiga do selo + label de fallback,
+  // se houver), importa/cria a nova instância na direção escolhida, e
+  // insere DENTRO do mesmo grupo (mesmo id, preservado o tempo todo).
+  if (msg.type === "update-a11y-area-conector") {
+    (async () => {
+      const rootNode = await figma.getNodeByIdAsync(msg.areaId);
+      const node = await figma.getNodeByIdAsync(msg.targetNodeId);
+      // area.id pode ser um GROUP (caminho de fallback, quando a lib
+      // "Design Acessível" não estava disponível na criação — badge +
+      // label texto agrupados) OU uma INSTANCE solta (caminho normal, com
+      // a lib disponível — ver create-a11y-area acima: usedRealComponent
+      // true faz `group = badge`, ou seja, o "grupo" é a própria
+      // instância). Bug real corrigido (2026-09-04-p): o handler só
+      // aceitava GROUP e falhava silenciosamente (reason nunca chegava a
+      // aparecer porque a11y-area-conector-update-failed não tinha
+      // nenhum toast até essa mesma correção) sempre que a área foi
+      // criada com o componente real — o caso mais comum.
+      if (!rootNode || (rootNode.type !== 'GROUP' && rootNode.type !== 'INSTANCE')) {
+        figma.ui.postMessage({ type: 'a11y-area-conector-update-failed', areaId: msg.areaId, reason: 'O selo desta área não foi encontrado no canvas — pode ter sido apagado ou movido.' });
+        return;
+      }
+      if (!node || !node.absoluteBoundingBox) {
+        figma.ui.postMessage({ type: 'a11y-area-conector-update-failed', areaId: msg.areaId, reason: 'O elemento desta área não existe mais no canvas.' });
+        return;
+      }
+      try { await figma.loadFontAsync({ family: "Inter", style: "Bold" }); } catch (e) { }
+
+      const _AREA_CONECTOR_KEYS = {
+        superior:   'ff43b15ac0c078b35219984bf035c4c0f0089cf1',
+        inferior:   'b355a26c5a89aea074effe28ca6767b08e4a7f99',
+        esquerda:   'f9cd4394c0bfc48ae86d3028e836877887d23fcd',
+        direita:    '08ac04391034777646eec9395c6d221189ee6d46',
+        desativado: '71719f112ec0135b16df0deb6584fbc44af3aff2',
+      };
+      const _conector = _AREA_CONECTOR_KEYS[msg.conector] ? msg.conector : 'superior';
+      const usingMobileKeys = msg.origin === 'mobile' && A11Y_ITEM_NUMBER_KEYS_MOBILE[_conector];
+      const _conectorKey = usingMobileKeys ? A11Y_ITEM_NUMBER_KEYS_MOBILE[_conector] : _AREA_CONECTOR_KEYS[_conector];
+      const propKeys = usingMobileKeys
+        ? { number: 'número#1478:0', showLabel: 'mostrar label#733:0', label: 'label#733:6' }
+        : { number: 'number#1478:0', showLabel: 'show label#733:0', label: 'label#733:6' };
+
+      const bb = node.absoluteBoundingBox;
+      const _A11Y_AREA_GAP = 24;
+      const targetCenterX = bb.x + bb.width / 2;
+      const targetCenterY = bb.y + bb.height / 2;
+      function _positionBadge(badge) {
+        if (_conector === 'inferior') {
+          badge.x = Math.round(targetCenterX - badge.width / 2);
+          badge.y = Math.round(bb.y + bb.height + _A11Y_AREA_GAP);
+        } else if (_conector === 'esquerda') {
+          badge.x = Math.round(bb.x - badge.width - _A11Y_AREA_GAP);
+          badge.y = Math.round(targetCenterY - badge.height / 2);
+        } else if (_conector === 'direita') {
+          badge.x = Math.round(bb.x + bb.width + _A11Y_AREA_GAP);
+          badge.y = Math.round(targetCenterY - badge.height / 2);
+        } else if (_conector === 'desativado') {
+          badge.x = Math.round(targetCenterX - badge.width / 2);
+          badge.y = Math.round(bb.y - badge.height - _A11Y_AREA_GAP);
+        } else { // superior
+          badge.x = Math.round(targetCenterX - badge.width / 2);
+          badge.y = Math.round(bb.y - badge.height - _A11Y_AREA_GAP);
+        }
+      }
+
+      let finalNode = rootNode;
+      // Declarada no escopo externo (2026-09-05, bug real corrigido): o
+      // ramo INSTANCE (swapComponent, sempre bem-sucedido pra chegar até
+      // aqui) nunca lidava com fallback de lib indisponível, então
+      // sempre é o selo real nesse caminho — só o ramo GROUP abaixo pode
+      // setar false. figma.notify no final do handler lê esta variável
+      // fora dos dois ramos; declará-la só dentro do `else` (como estava)
+      // lançava ReferenceError sempre que rootNode.type === 'INSTANCE'.
+      let usedRealComponent = true;
+
+      if (rootNode.type === 'INSTANCE') {
+        // Caminho normal: troca o COMPONENTE da instância existente (a
+        // direção muda o component set inteiro, não é uma property) via
+        // swapComponent — preserva o node/id da instância (area.id nunca
+        // muda), diferente de apagar+recriar.
+        try {
+          const comp = await figma.importComponentByKeyAsync(_conectorKey);
+          rootNode.swapComponent(comp);
+          rootNode.setProperties({
+            [propKeys.number]: String(msg.number),
+            [propKeys.label]: msg.label,
+            [propKeys.showLabel]: true,
+          });
+          _positionBadge(rootNode);
+        } catch (e) {
+          console.error('[hac] update-a11y-area-conector: falha ao trocar componente da instância.', e && e.message);
+          figma.ui.postMessage({ type: 'a11y-area-conector-update-failed', areaId: msg.areaId, reason: 'Não foi possível importar o selo real da lib "Design Acessível" para a nova direção.' });
+          return;
+        }
+      } else {
+        // Caminho GROUP: desde 2026-09-05 é o caminho NORMAL (create-a11y-area
+        // sempre envolve o selo num grupo), não mais só o fallback de lib
+        // indisponível. Remove/insere apenas os nodes marcados com
+        // 'hacAreaBadge' — os demais filhos do Grupo são os artefatos da área
+        // (specs, cópias de Tabulação/Swipe, Ficha) e não podem ser tocados
+        // aqui. Grupos criados ANTES dessa marcação existir só têm selo+label
+        // como filhos, então cair pra "todos os filhos" preserva o
+        // comportamento antigo nesses casos.
+        let badge = null;
+        usedRealComponent = true;
+        try {
+          const comp = await figma.importComponentByKeyAsync(_conectorKey);
+          badge = comp.createInstance();
+          badge.setProperties({
+            [propKeys.number]: String(msg.number),
+            [propKeys.label]: msg.label,
+            [propKeys.showLabel]: true,
+          });
+        } catch (e) {
+          usedRealComponent = false;
+          badge = figma.createEllipse();
+          badge.name = 'Selo de Área';
+          badge.resize(32, 32);
+          badge.fills = [{ type: "SOLID", color: hexToRgb('#0070AF') }];
+        }
+
+        figma.currentPage.appendChild(badge);
+        _positionBadge(badge);
+        badge.setPluginData('hacAreaBadge', 'true');
+
+        let newChildren = [badge];
+        if (!usedRealComponent) {
+          const labelText = figma.createText();
+          labelText.name = 'Label';
+          labelText.fontName = { family: "Inter", style: "Bold" };
+          labelText.fontSize = 12;
+          labelText.fills = [{ type: "SOLID", color: hexToRgb('#0070AF') }];
+          labelText.characters = msg.label;
+          figma.currentPage.appendChild(labelText);
+          labelText.x = Math.round(badge.x + badge.width + 8);
+          labelText.y = Math.round(badge.y + (badge.height / 2) - (labelText.height / 2));
+          labelText.setPluginData('hacAreaBadge', 'true');
+          newChildren = [badge, labelText];
+        }
+
+        const _markedOldChildren = rootNode.children.filter(child => {
+          try { return child.getPluginData && child.getPluginData('hacAreaBadge') === 'true'; } catch (e) { return false; }
+        });
+        const oldChildren = _markedOldChildren.length > 0 ? _markedOldChildren : rootNode.children.slice();
+        newChildren.forEach(child => rootNode.appendChild(child));
+        oldChildren.forEach(child => { try { child.remove(); } catch (e) { } });
+      }
+
+      figma.currentPage.selection = [finalNode];
+      figma.viewport.scrollAndZoomIntoView([finalNode]);
+
+      figma.ui.postMessage({
+        type: 'a11y-area-conector-updated',
+        areaId: msg.areaId,
+        conector: _conector,
+      });
+      figma.notify(usedRealComponent
+        ? 'Conector atualizado.'
+        : 'Conector atualizado — não foi possível usar o selo real da lib "Design Acessível" (modo simplificado).');
+    })();
+    return;
+  }
+
   // ── Detecção Automática — scan enxuto de uma Área Marcada ───────────────
   if (msg.type === "scan-frame") {
     (async () => {
@@ -2124,6 +3324,14 @@ figma.ui.onmessage = async (msg) => {
       } else {
         selection = figma.currentPage.selection;
       }
+
+      // Nunca escaneia a Section organizadora do próprio hac (nem qualquer
+      // node marcado com hacCategory por ela) — sem esta checagem, uma Área
+      // cujo targetNodeId acabou apontando pra Section (bug de seleção
+      // contaminada, ver create-a11y-area) redetectava os próprios
+      // selos/specs já criados como se fossem componentes novos do design a
+      // cada "Gerar Automaticamente"/reescanear (bug real, 2026-09-03).
+      selection = selection.filter(n => !_isHacOwnedNode(n));
 
       if (selection.length === 0) {
         figma.ui.postMessage({
@@ -2177,6 +3385,42 @@ figma.ui.onmessage = async (msg) => {
           return;
         }
         node = selection[0];
+      }
+      // Guardado ANTES de `node` ser possivelmente trocado pro node
+      // equivalente dentro do clone (bloco abaixo) — o frontend persiste
+      // `spec.targetNodeId` em hacData e usa esse id pra correlacionar com
+      // o elemento ORIGINAL em outros fluxos (Detecção Automática marcando
+      // "já documentado", edição de spec, destaque no canvas) — nunca deve
+      // virar o id de um node que só existe dentro do clone.
+      const _originalTargetNodeId = node.id;
+
+      // Bug real corrigido (2026-09-08, pedido do usuário): specs passam a
+      // documentar sobre uma CÓPIA da área, nunca mais sobre o frame
+      // ORIGINAL — mesma garantia que Tabulação/Swipe já davam ("o design
+      // original nunca é tocado"). Só se aplica quando a spec tem uma Área
+      // Marcada de origem conhecida (opts.a11yAreaId) E essa área resolve
+      // um targetNodeId clonável — specs sem área (fluxo legado/manual sem
+      // Área Marcada) continuam apontando pro elemento original, sem
+      // clone, exatamente como sempre funcionou (nada a clonar sem saber
+      // qual é "a área"). `node` (resolvido acima, pelo id ORIGINAL vindo
+      // do formulário/seleção) é traduzido pro node EQUIVALENTE dentro do
+      // clone via nodeMap — mesma tradução que Tabulação já faz.
+      let specClone = null;
+      if (opts.a11yAreaId && opts.a11yAreaTargetNodeId) {
+        try {
+          const resolved = await _resolveActiveSpecClone(opts.a11yAreaId, opts.a11yAreaTargetNodeId, opts.sectionName, opts.designerName);
+          if (resolved) {
+            const mappedNode = resolved.nodeMap.get(node.id);
+            if (mappedNode && mappedNode.absoluteBoundingBox) {
+              node = mappedNode;
+              specClone = resolved.clone;
+            } else {
+              console.error('[hac] create-unified-spec: node não encontrado no clone da área — desenhando sobre o original.', JSON.stringify({ targetNodeId: node.id }));
+            }
+          }
+        } catch (e) {
+          console.error('[hac] create-unified-spec: falha ao resolver/criar o clone da área — desenhando sobre o original.', e && e.message);
+        }
       }
 
       try { await figma.loadFontAsync({ family: "Inter", style: "Regular" }); } catch (e) { }
@@ -2419,11 +3663,27 @@ figma.ui.onmessage = async (msg) => {
         const side = opts.guideSide || 'right';
         const _specLetter = opts.letter;
 
-        let _anchorNode = node;
-        while (_anchorNode.parent && _anchorNode.parent.type !== 'PAGE') {
-          _anchorNode = _anchorNode.parent;
+        // Bug real corrigido (2026-09-08): antes, `node` era sempre
+        // descendente direto do frame ORIGINAL (filho de figma.currentPage),
+        // então subir a árvore até "o pai de nível página" achava certo o
+        // frame-tela inteiro. Desde que specs passaram a documentar sobre
+        // um CLONE (specClone, resolvido acima — reparentado pra dentro da
+        // Section de sessão ANTES deste ponto), `node` agora é descendente
+        // do clone, que por sua vez já não é mais filho direto da página —
+        // o mesmo loop chegaria na SECTION inteira (bounds gigantes,
+        // contendo qualquer coisa já desenhada nela), não no clone. Usa
+        // `specClone` diretamente quando existir; só cai no loop antigo
+        // (subir até o pai de nível página) no caminho legado sem clone.
+        let _anchorBounds;
+        if (specClone && specClone.absoluteBoundingBox) {
+          _anchorBounds = specClone.absoluteBoundingBox;
+        } else {
+          let _anchorNode = node;
+          while (_anchorNode.parent && _anchorNode.parent.type !== 'PAGE') {
+            _anchorNode = _anchorNode.parent;
+          }
+          _anchorBounds = _anchorNode.absoluteBoundingBox || bounds;
         }
-        const _anchorBounds = _anchorNode.absoluteBoundingBox || bounds;
 
         const _letterMap = {};
         const _updateLetterMap = (l, bb) => {
@@ -2438,7 +3698,7 @@ figma.ui.onmessage = async (msg) => {
         // diferentes uma sobre a outra); cada spec de Título posiciona de
         // forma independente. Specs vivem dentro da Section organizadora, por
         // isso escaneamos os filhos dela, não a página inteira.
-        const _stackScanNodes = _getOrCreateA11ySection().children || [];
+        const _stackScanNodes = _getOrCreateA11ySection(opts.sectionName).children || [];
         if (opts.a11yType !== 'titulo') _stackScanNodes.forEach(n => {
           if (n.type !== 'GROUP') return;
           const newFmt = n.name.match(new RegExp('^\\[' + _layerTag + ' \\| ([A-Z]\\d*(?:\\.\\d+)*) \\| ([a-z]+)\\] '));
@@ -2624,14 +3884,44 @@ figma.ui.onmessage = async (msg) => {
       // cadeado na listagem destrava se precisar.
       specGroup.locked = true;
       specGroup.setPluginData('hacCategory', 'a11y');
+      // hacSpecForArea (2026-09-08): fecha uma lacuna que já existia antes
+      // desta mudança — specs nunca gravavam nenhum pluginData de área no
+      // próprio node, só no array local (a11ySpecs). Permite localizar/
+      // remover specs de uma área só pelo canvas, sem depender do estado
+      // local (mesmo padrão já usado por Tabulação/Swipe/Ficha).
+      if (opts.a11yAreaId) specGroup.setPluginData('hacSpecForArea', opts.a11yAreaId);
 
-      _reparentIntoA11ySection(specGroup);
+      // Reparenting (2026-09-08, pedido do usuário: artefatos de uma Área
+      // não precisam mais estar aninhados dentro de um Grupo específico
+      // dela — só precisam estar na MESMA Section, porque serão
+      // reorganizados dentro da Ficha de Handoff depois):
+      // - Com clone (specClone resolvido acima): grupo-overlay IRMÃO do
+      //   clone, mesmo princípio já usado por Tabulação/Swipe pra evitar o
+      //   bug de clipsContent (um elemento pequeno documentado perto da
+      //   borda do clone pode "vazar" pra fora se ficar dentro dele).
+      // - Sem clone (spec sem Área Marcada, fluxo legado): direto na
+      //   Section de sessão, como antes desta mudança já fazia via
+      //   _reparentArtifactIntoArea/_reparentIntoA11ySection (Grupo da
+      //   Área mantido só como fallback de áreas legadas).
+      let _reparentedIntoOverlay = false;
+      if (specClone && !specClone.removed) {
+        try {
+          const specOverlayGroup = _getOrCreateCloneOverlayGroup(specClone, 'hacSpecGroupForClone', '[Specs de Leitor de Tela]');
+          _reparentIntoAreaGroup(specGroup, specOverlayGroup);
+          _reparentedIntoOverlay = true;
+        } catch (e) {
+          console.error('[hac] create-unified-spec: reparenting pro grupo overlay falhou, caindo pra Section de sessão.', e && e.message);
+        }
+      }
+      if (!_reparentedIntoOverlay) {
+        _reparentIntoSection(specGroup, () => _getOrCreateA11ySessionSection(opts.designerName));
+      }
 
       figma.ui.postMessage({
         type: "spec-created",
         spec: {
           id: specGroup.id,
-          targetNodeId: node.id,
+          targetNodeId: _originalTargetNodeId,
           name: node.name,
           letter: opts.letter,
           color: opts.color,
@@ -2831,10 +4121,11 @@ figma.ui.onmessage = async (msg) => {
   // não por spec individual — diferente das specs de categoria (elemento/
   // titulo/etc.), uma Área não tem "categoria" própria, é só um agrupamento
   // espacial. O backend (aqui) não tem acesso a hacData/a11yAreas[] (isso
-  // vive só no frontend); o frontend resolve a origem da área e manda
-  // pronta em msg.a11yOrigin ao chamar apply-tab-order-to-canvas — ver
-  // accessibility.js (applyTabOrderToCanvas) e A11Y_ITEM_NUMBER_KEYS_MOBILE
-  // (topo do arquivo).
+  // vive só no frontend); o frontend resolve a origem da área uma única vez
+  // por sessão de revisão e manda pronta em msg.a11yOrigin em cada chamada
+  // de draw-tab-order-badge — ver accessibility.js
+  // (_tabOrderDrawPendingBadge) e A11Y_ITEM_NUMBER_KEYS_MOBILE (topo do
+  // arquivo).
 
   if (msg.type === "start-tab-order-mode") {
     _tabOrderModeActive = true;
@@ -2843,16 +4134,154 @@ figma.ui.onmessage = async (msg) => {
 
   if (msg.type === "stop-tab-order-mode") {
     _tabOrderModeActive = false;
+    // Limpa o highlight do último clique ao encerrar a captura
+    // (2026-09-04-ah, bug real corrigido) — nada no ciclo de vida da
+    // captura fazia isso antes, só figma.on('close')/('currentpagechange'),
+    // eventos globais não ligados a "parei de capturar".
+    if (activeHighlightNode) {
+      try { activeHighlightNode.remove(); } catch (e) { }
+      activeHighlightNode = null;
+    }
     return;
   }
 
-  // Extraída para ser reaproveitada por generate-tab-order-from-layers
-  // (geração automática) e apply-tab-order-to-canvas (fluxo manual/revisão)
-  // — as duas vias criam exatamente o mesmo selo real (ou o fallback
-  // círculo+texto). Não faz appendChild na seleção nem scroll de viewport
+  // "Iniciar trilha de swipe" dispara isto ANTES de abrir a escuta de
+  // cliques — mesmo padrão de start-tab-order-copy (2026-09-04-ac): clona
+  // o frame da Área IMEDIATAMENTE (cópia vazia, sem nenhuma linha ainda),
+  // o frame ORIGINAL fica intocado durante todo o fluxo manual, e o
+  // highlight/acumulação de cada clique passam a operar sobre o node
+  // equivalente dentro desta cópia (ver listener de selectionchange e
+  // _resolveSwipePathCloneSelectionToOriginalId acima).
+  if (msg.type === "start-swipe-path-mode") {
+    (async () => {
+      const root = await figma.getNodeByIdAsync(msg.targetNodeId);
+      if (!root || !root.absoluteBoundingBox) {
+        figma.notify("Área não encontrada no canvas — marque novamente.");
+        figma.ui.postMessage({ type: "swipe-path-copy-started", cloneId: null });
+        return;
+      }
+      if (typeof root.clone !== 'function') {
+        figma.notify("Este elemento não pode ser copiado — marque a área sobre um frame/grupo.");
+        figma.ui.postMessage({ type: "swipe-path-copy-started", cloneId: null });
+        return;
+      }
+
+      const { clone, nodeMap } = await _createSwipePathCloneForArea(root, msg.areaId, msg.sectionName, msg.designerName);
+      if (msg.areaId) _activeSwipePathCloneMaps.set(msg.areaId, nodeMap);
+
+      figma.currentPage.selection = [clone];
+      figma.viewport.scrollAndZoomIntoView([clone]);
+
+      _swipePathModeActive = true;
+      figma.ui.postMessage({ type: "swipe-path-copy-started", cloneId: clone.id });
+    })();
+    return;
+  }
+
+  if (msg.type === "stop-swipe-path-mode") {
+    _swipePathModeActive = false;
+    // Mesma limpeza de highlight ao encerrar a captura (2026-09-04-ah).
+    if (activeHighlightNode) {
+      try { activeHighlightNode.remove(); } catch (e) { }
+      activeHighlightNode = null;
+    }
+    return;
+  }
+
+  // Cancelamento do fluxo manual de Trilha de Swipe (espelha
+  // delete-tab-order-draft-copy): a cópia rascunho fica órfã se o designer
+  // desistir — remove pelo mesmo pluginData de sempre e zera o estado em
+  // memória.
+  if (msg.type === "delete-swipe-path-draft-copy") {
+    _removeExistingSwipePathCopiesForArea(msg.areaId);
+    _activeSwipePathCloneMaps.delete(msg.areaId);
+    return;
+  }
+
+  // "Concluir seleção" (frontend) pede a seleção ATUAL do canvas — lê
+  // figma.currentPage.selection LITERALMENTE neste instante (2026-09-04-af,
+  // substitui o acumulador em memória: ver comentário completo no listener
+  // de selectionchange acima), traduz cada nó clone→original, dedupe (2+
+  // nós selecionados podem resolver pro mesmo original, caso raro) e
+  // ordena em zigue-zague antes de devolver.
+  if (msg.type === "get-tab-order-accumulated-selection") {
+    (async () => {
+      const sel = figma.currentPage.selection.filter(n => !!n && !!n.absoluteBoundingBox);
+      const seen = new Set();
+      const resolved = [];
+      for (const n of sel) {
+        const originalId = _resolveTabOrderCloneSelectionToOriginalId(n.id);
+        if (seen.has(originalId)) continue;
+        seen.add(originalId);
+        resolved.push(n);
+      }
+      // Bug real corrigido (2026-09-08): _orderNodesInZigzagReadingOrder
+      // aqui reordenava a seleção múltipla (shift+clique/marquise) por
+      // heurística de leitura visual em grade — inverte linhas alternadas
+      // (1ª esquerda→direita, 2ª direita→esquerda...), certo pra "Gerar
+      // Automaticamente" (que nunca teve ordem de clique nenhuma pra
+      // preservar), mas errado aqui: o modelo de leitura literal
+      // (2026-09-04-af, ver comentário do listener de selectionchange
+      // acima) existe justamente pra respeitar a ORDEM DE CLIQUE real do
+      // designer — o Figma já preserva essa ordem em
+      // figma.currentPage.selection (shift+clique soma ao final). Reordenar
+      // por zigue-zague depois disso descartava a ordem de clique real e
+      // inseria uma inversão inesperada sempre que os elementos clicados
+      // caíam em "linhas" (por Y) que o algoritmo contava como ímpares —
+      // reportado pelo usuário numa fileira horizontal única de botões que
+      // saiu na ordem 7,6,5,4 em vez de 4,5,6,7 (a ordem real do clique).
+      // `resolved` já está na ordem de seleção — usar direto.
+      const ordered = resolved;
+      // Limpa o highlight do último clique ao ler a seleção final
+      // (2026-09-04-ah) — "Concluir seleção" fecha o ciclo de captura
+      // silenciosa, não deve sobrar nenhum retângulo residual na página.
+      if (activeHighlightNode) {
+        try { activeHighlightNode.remove(); } catch (e) { }
+        activeHighlightNode = null;
+      }
+      figma.ui.postMessage({
+        type: 'tab-order-accumulated-selection-result',
+        points: ordered.map(n => ({ nodeId: _resolveTabOrderCloneSelectionToOriginalId(n.id), nodeName: n.name })),
+      });
+    })();
+    return;
+  }
+
+  if (msg.type === "get-swipe-path-accumulated-selection") {
+    (async () => {
+      const sel = figma.currentPage.selection.filter(n => !!n && !!n.absoluteBoundingBox);
+      const seen = new Set();
+      const resolved = [];
+      for (const n of sel) {
+        const originalId = _resolveSwipePathCloneSelectionToOriginalId(n.id);
+        if (seen.has(originalId)) continue;
+        seen.add(originalId);
+        resolved.push(n);
+      }
+      // Mesma correção de _orderNodesInZigzagReadingOrder descartando a
+      // ordem de clique real (2026-09-08, ver comentário espelhado em
+      // get-tab-order-accumulated-selection acima).
+      const ordered = resolved;
+      // Mesma limpeza de highlight ao ler a seleção final (2026-09-04-ah).
+      if (activeHighlightNode) {
+        try { activeHighlightNode.remove(); } catch (e) { }
+        activeHighlightNode = null;
+      }
+      figma.ui.postMessage({
+        type: 'swipe-path-accumulated-selection-result',
+        points: ordered.map(n => ({ nodeId: _resolveSwipePathCloneSelectionToOriginalId(n.id), nodeName: n.name })),
+      });
+    })();
+    return;
+  }
+
+  // Chamada por draw-tab-order-badge uma vez por item da lista pendente
+  // (fluxo manual e automático usam o mesmo caminho) — cria exatamente o
+  // mesmo selo real (ou o fallback círculo+texto) sempre incrementalmente,
+  // nunca em lote. Não faz appendChild na seleção nem scroll de viewport
   // (quem chama decide isso). Só desenha selo de ITEM de tabulação — o selo
   // de Área (create-a11y-area) tem seu próprio código, não passa por aqui.
-  async function _createTabOrderBadge(node, number, label, conector, areaId, reparentToSection, origin, tabOrderClone, isPreview) {
+  async function _createTabOrderBadge(node, number, label, conector, areaId, reparentToSection, origin, tabOrderClone, sectionName) {
     const _conectorOptions = ['desativado', 'inferior', 'superior', 'esquerda', 'direita'];
     const _conector = _conectorOptions.includes(conector) ? conector : 'direita';
     const hasLabel = !!label;
@@ -2921,8 +4350,8 @@ figma.ui.onmessage = async (msg) => {
       const labelText = figma.createText();
       labelText.name = 'Número';
       // loadFontAsync("Inter", "Bold") já rodou no chamador (create-a11y-area/
-      // preview-tab-order-numbers/apply-tab-order-to-canvas), mas está dentro
-      // de um try/catch mudo lá — se ele tiver falhado (fonte indisponível
+      // draw-tab-order-badge), mas está dentro de um try/catch mudo lá — se
+      // ele tiver falhado (fonte indisponível
       // neste documento), esta atribuição síncrona lança fora de qualquer
       // try/catch e derruba a badge inteira sem nenhum selo, real ou
       // fallback. Tenta de novo aqui, já dentro do escopo que pode reagir.
@@ -2941,27 +4370,9 @@ figma.ui.onmessage = async (msg) => {
       labelText.y = Math.round(badge.y + badge.height / 2 - labelText.height / 2);
       group = figma.group([badge, labelText], figma.currentPage);
     }
-    group.name = isPreview ? `[Prévia de Tabulação | ${number}] ${node.name}` : `[Selo de Tabulação | ${number}] ${node.name}`;
+    group.name = `[Selo de Tabulação | ${number}] ${node.name}`;
     group.locked = false;
     group.setPluginData('hacCategory', 'a11y');
-    // Se o pai onde o grupo for reparentado (tabOrderClone ou um frame
-    // intermediário dele) tiver auto-layout ativo — comum em componentes
-    // reais do DSC —, o motor de auto-layout ignora x/y manual e empurra o
-    // item pro final da pilha do eixo primário. Forçar posicionamento
-    // absoluto antes do reparenting evita esse empilhamento indevido, tanto
-    // pro selo real (instância) quanto pro fallback procedural (group).
-    if ('layoutPositioning' in group) group.layoutPositioning = 'ABSOLUTE';
-    // Selo TEMPORÁRIO da prévia visual (lista pendente ainda sendo montada
-    // no modal, antes de "Aplicar no Canvas") — opacidade reduzida pra não
-    // ser confundido com o selo real, e marcado com pluginData próprio
-    // (hacTabOrderPreviewForArea) pra ser localizado e apagado por completo
-    // em QUALQUER caminho de saída do fluxo (reordenar, remover item,
-    // cancelar, aplicar de verdade) por _clearTabOrderPreviewBadges — nunca
-    // reaproveitado como selo real.
-    if (isPreview) {
-      group.setPluginData('hacTabOrderPreviewForArea', areaId || '');
-      if ('opacity' in group) group.opacity = 0.55;
-    }
 
     // O selo nasce em figma.currentPage (precisa de posição absoluta livre
     // pra calcular contra a bounding box do nó-alvo, que também é absoluta).
@@ -2975,35 +4386,76 @@ figma.ui.onmessage = async (msg) => {
     // Best-effort, mesmo padrão de _reparentIntoA11ySection: root da área
     // pode em tese ser um node que aceita .clone() mas não children (ex.
     // TEXT/VECTOR soltos — "Marcar Área" não restringe o tipo na UI). Sem o
-    // try/catch, um appendChild que falhasse no meio do loop de criação dos
-    // selos (apply-tab-order-to-canvas) interromperia os selos seguintes sem
+    // try/catch, um appendChild que falhasse no meio da criação de um selo
+    // (draw-tab-order-badge/apply em lote) interromperia o restante sem
     // aviso — o selo já criado e corretamente posicionado não deve se perder
     // por causa de uma falha só na organização/agrupamento.
-    if (tabOrderClone) {
+    // Bug real corrigido (2026-09-05): tabOrderClone podia ser uma
+    // referência STALE (já removida do canvas, ver checagem .removed
+    // acrescentada em _resolveActiveTabOrderClone) — appendChild num node
+    // removido lança, e o catch abaixo, quando `reparentToSection` é
+    // `false` (sempre o caso no fluxo real de draw-tab-order-badge), NÃO
+    // FAZIA NADA: o selo ficava exatamente onde nasceu
+    // (figma.currentPage.appendChild(badge), no início desta função) —
+    // solto na página, fora de qualquer clone/Grupo/Section. Agora, em
+    // qualquer falha (clone stale ou outro motivo), cai pro MESMO destino
+    // que qualquer outro artefato órfão usa: o Grupo da Área (via
+    // _reparentArtifactIntoArea, com _reparentIntoA11ySection só como
+    // último recurso se nem o Grupo existir — Área legada).
+    let _reparentedIntoClone = false;
+    if (tabOrderClone && !tabOrderClone.removed) {
       try {
-        const _origX = group.x;
-        const _origY = group.y;
-        tabOrderClone.appendChild(group);
-        group.x = Math.round(_origX - tabOrderClone.x);
-        group.y = Math.round(_origY - tabOrderClone.y);
+        // Bug real corrigido (2026-09-08, 6ª rodada): selo desenhado DENTRO
+        // do próprio clone (_reparentIntoCloneAbsolute, tentativa anterior)
+        // podia nascer corretamente posicionado e no topo do z-order, e
+        // AINDA ASSIM não aparecer — clipsContent em algum frame no
+        // caminho entre o clone-raiz e o selo recorta qualquer filho que
+        // "vaze" pra fora dos limites daquele frame, e um selo ABSOLUTE ao
+        // lado de um elemento pequeno vaza de propósito. Corrigido
+        // reparentando pra um GRUPO IRMÃO do clone (nunca dentro dele) —
+        // GROUP nunca tem clipsContent nem Auto Layout, então é
+        // estruturalmente imune a este bug. _getOrCreateCloneOverlayGroup
+        // cria/reaproveita esse grupo; _reparentIntoAreaGroup (já usada
+        // pelo Grupo da Área, mesmo princípio) faz o reparenting medindo a
+        // posição absoluta do selo antes/depois, sem depender de
+        // layoutPositioning — GROUP não tem essa propriedade porque nunca
+        // precisa dela.
+        const badgesGroup = _getOrCreateCloneOverlayGroup(tabOrderClone, 'hacTabOrderBadgesGroupForClone', '[Selos de Tabulação]');
+        _reparentIntoAreaGroup(group, badgesGroup);
+        _reparentedIntoClone = true;
       } catch (e) {
-        // Selo de PRÉVIA (isPreview=true): nunca deve sobreviver fora do
-        // clone que o originou — se o appendChild falhou (ex.: a cópia
-        // rascunho foi deletada por delete-tab-order-draft-copy enquanto
-        // este loop assíncrono ainda estava em voo), o fallback genérico de
-        // reparentar pra Section oficial (_reparentIntoA11ySection) deixaria
-        // um selo fantasma órfão e permanente lá dentro, sem nenhum código
-        // de limpeza capaz de encontrá-lo (toda limpeza de preview varre só
-        // dentro do clone). Descarta silenciosamente em vez disso.
-        if (isPreview) {
-          try { group.remove(); } catch (e2) { }
-        } else if (reparentToSection !== false) {
-          _reparentIntoA11ySection(group);
-        }
+        // Visível ao designer (2026-09-08): antes só logava no console e
+        // seguia em silêncio — foi esse silêncio que deixou o bug real
+        // (clone ainda era INSTANCE, appendChild sempre lançava) sobreviver
+        // a duas rodadas de correção anteriores sem ninguém perceber a
+        // causa. Com o detachInstance() em _createTabOrderCloneForArea este
+        // catch não deveria mais disparar no caminho normal — se disparar,
+        // é sinal de outra causa nova, e o designer precisa saber que o
+        // selo caiu num destino de fallback (Grupo da Área direto).
+        console.error('[hac] _createTabOrderBadge: reparenting pro grupo de selos falhou, caindo pro Grupo da Área.', e && e.message);
+        figma.notify('Não foi possível encaixar o selo na cópia da Ordem de Tabulação — ele foi colocado direto no grupo da área.');
       }
-    } else if (reparentToSection !== false) {
-      _reparentIntoA11ySection(group);
     }
+    if (!_reparentedIntoClone) {
+      await _reparentArtifactIntoArea(group, areaId, () => {
+        if (reparentToSection !== false) _reparentIntoA11ySection(group, sectionName);
+      });
+    }
+
+    // layoutPositioning só pode ser setado como ABSOLUTE depois que o node
+    // já é filho de um pai com Auto Layout ativo (layoutMode !== 'NONE') —
+    // setar antes do reparenting acima (com o pai ainda sendo
+    // figma.currentPage, sem Auto Layout) sempre lança
+    // "Can only set layoutPositioning = ABSOLUTE if the parent node has
+    // layoutMode !== NONE" e derrubava o selo inteiro sem desenhar nada
+    // (bug real: todo selo do fluxo incremental falhava, 2026-09-03). Sem o
+    // pai final ter Auto Layout, a instância já nasce com posicionamento
+    // absoluto por padrão — não precisa forçar nada.
+    try {
+      if ('layoutPositioning' in group && group.parent && 'layoutMode' in group.parent && group.parent.layoutMode !== 'NONE') {
+        group.layoutPositioning = 'ABSOLUTE';
+      }
+    } catch (e) { }
 
     return {
       group,
@@ -3020,83 +4472,12 @@ figma.ui.onmessage = async (msg) => {
     };
   }
 
-  // Apaga TODOS os selos de prévia temporária (isPreview=true em
-  // _createTabOrderBadge) de uma área — chamada em todo caminho de saída do
-  // fluxo de revisão da Ordem de Tabulação: reordenar/adicionar/remover item
-  // (redesenha do zero), cancelar o modal, e "Aplicar no Canvas" (os selos
-  // REAIS tomam o lugar). Varre os filhos da cópia rascunho (onde os
-  // previews nascem via tabOrderClone.appendChild) por pluginData — nunca
-  // por nome, mesmo padrão de delete-tab-order-draft-copy.
-  async function _clearTabOrderPreviewBadges(areaId) {
-    let cloneNode = null;
-    if (_activeTabOrderCloneMap && _activeTabOrderCloneAreaId === areaId) {
-      cloneNode = _findTabOrderCopyForArea(areaId);
-    }
-    if (!cloneNode) return;
-    const toRemove = cloneNode.findAll
-      ? cloneNode.findAll(n => n.getPluginData && n.getPluginData('hacTabOrderPreviewForArea') === areaId)
-      : [];
-    for (const n of toRemove) {
-      try { n.remove(); } catch (e) { }
-    }
-  }
-
-  // Reordena candidatos já coletados (DFS de generate-tab-order-from-layers)
-  // seguindo um padrão de leitura visual em zigue-zague ("boustrophedon"):
-  // linha 1 esquerda→direita, linha 2 direita→esquerda, linha 3
-  // esquerda→direita, e assim por diante. Esse é o critério confirmado pela
-  // vertical de acessibilidade do produto como referência real de reading
-  // order para Ordem de Tabulação em telas com múltiplas colunas (ex:
-  // extrato bancário, grids de cards) — NÃO é convenção nativa de leitor de
-  // tela (que lê top-to-bottom/DOM order) nem ordem de camadas do Figma; é
-  // um critério de produto documentado pela vertical de a11y. Não
-  // "simplificar" de volta para top-to-bottom ou ordem de DFS.
-  //
-  // Agrupamento em linhas: dois nós pertencem à mesma linha visual quando
-  // suas faixas verticais (absoluteBoundingBox.y → y+height) SE SOBREPÕEM —
-  // não é uma tolerância fixa em pixels, porque elementos de alturas
-  // diferentes na mesma linha (ex: label pequeno ao lado de um input maior)
-  // não teriam o mesmo y exato. Comparação contra QUALQUER nó já acumulado
-  // na linha atual (não só o último) para tolerar leve desalinhamento
-  // vertical entre elementos da mesma linha.
-  function _orderNodesInZigzagReadingOrder(nodes) {
-    const sortedByY = nodes.slice().sort((a, b) => a.absoluteBoundingBox.y - b.absoluteBoundingBox.y);
-
-    const rows = [];
-    let currentRow = [];
-    function _overlapsRow(node, row) {
-      const nodeTop = node.absoluteBoundingBox.y;
-      const nodeBottom = nodeTop + node.absoluteBoundingBox.height;
-      return row.some(other => {
-        const otherTop = other.absoluteBoundingBox.y;
-        const otherBottom = otherTop + other.absoluteBoundingBox.height;
-        return nodeTop < otherBottom && otherTop < nodeBottom;
-      });
-    }
-    for (const node of sortedByY) {
-      if (currentRow.length === 0 || _overlapsRow(node, currentRow)) {
-        currentRow.push(node);
-      } else {
-        rows.push(currentRow);
-        currentRow = [node];
-      }
-    }
-    if (currentRow.length > 0) rows.push(currentRow);
-
-    rows.sort((rowA, rowB) => {
-      const minYA = Math.min(...rowA.map(n => n.absoluteBoundingBox.y));
-      const minYB = Math.min(...rowB.map(n => n.absoluteBoundingBox.y));
-      return minYA - minYB;
-    });
-
-    const ordered = [];
-    rows.forEach((row, rowIndex) => {
-      const sortedRow = row.slice().sort((a, b) => a.absoluteBoundingBox.x - b.absoluteBoundingBox.x);
-      if (rowIndex % 2 === 1) sortedRow.reverse();
-      ordered.push(...sortedRow);
-    });
-    return ordered;
-  }
+  // _orderNodesInZigzagReadingOrder foi movida para escopo de nível
+  // superior do arquivo (perto de figma.on('selectionchange', ...), topo do
+  // arquivo) em 2026-09-04 — a Trilha de Swipe precisa chamá-la a partir do
+  // listener de seleção do canvas, que vive FORA do closure de
+  // figma.ui.onmessage onde esta função vivia antes. Corpo inalterado
+  // (reaproveitado tal como estava), só a localização mudou.
 
   // Geração automática varrendo a árvore de camadas de uma Área Marcada já
   // existente, em profundidade (ordem real de node.children, a mesma do
@@ -3110,8 +4491,9 @@ figma.ui.onmessage = async (msg) => {
   // fluxo manual: o designer não deve revisar/aplicar em cima da área
   // original cheia de selos de outras specs. Devolve {nodeId, nodeName} de
   // cada candidato (referenciando o ORIGINAL) — quem desenha de fato é
-  // apply-tab-order-to-canvas, só quando o designer confirma no modal de
-  // revisão, reaproveitando a cópia/mapa já ativos aqui.
+  // draw-tab-order-badge, chamado uma vez por candidato (sequencialmente,
+  // ver accessibility.js) assim que a lista pendente é populada no
+  // frontend, reaproveitando a cópia/mapa já ativos aqui.
   //
   // Critério de elegibilidade: só entram componentes que resolvem, via
   // catálogo DSC (_resolveDscComponentA11yMatch), para um shortName de
@@ -3141,18 +4523,17 @@ figma.ui.onmessage = async (msg) => {
         const root = await figma.getNodeByIdAsync(msg.targetNodeId);
         if (!root || !root.absoluteBoundingBox) {
           figma.notify("Área não encontrada no canvas — marque novamente.");
-          figma.ui.postMessage({ type: "tab-order-generated-from-layers", areaId: msg.areaId, items: [] });
+          figma.ui.postMessage({ type: "tab-order-generated-from-layers", areaId: msg.areaId, generation: msg.generation, items: [] });
           return;
         }
         if (typeof root.clone !== 'function') {
           figma.notify("Este elemento não pode ser copiado — marque a área sobre um frame/grupo.");
-          figma.ui.postMessage({ type: "tab-order-generated-from-layers", areaId: msg.areaId, items: [] });
+          figma.ui.postMessage({ type: "tab-order-generated-from-layers", areaId: msg.areaId, generation: msg.generation, items: [] });
           return;
         }
 
-        const { clone, nodeMap } = await _createTabOrderCloneForArea(root, msg.areaId);
-        _activeTabOrderCloneMap = nodeMap;
-        _activeTabOrderCloneAreaId = msg.areaId || null;
+        const { clone, nodeMap } = await _createTabOrderCloneForArea(root, msg.areaId, msg.sectionName, msg.designerName);
+        if (msg.areaId) _activeTabOrderCloneMaps.set(msg.areaId, nodeMap);
 
         figma.currentPage.selection = [clone];
         figma.viewport.scrollAndZoomIntoView([clone]);
@@ -3170,6 +4551,13 @@ figma.ui.onmessage = async (msg) => {
           const children = n.children || [];
           await Promise.all(children.map(async (child) => {
             if (child.visible === false) return;
+            // Nunca coleta (nem desce em) artefatos do próprio hac — clone
+            // de Ordem de Tabulação, selo, conector — caso algum tenha
+            // ficado fisicamente aninhado dentro do frame original por
+            // qualquer motivo (race de scans concorrentes já bloqueada
+            // acima, mas mantido como segunda camada de defesa; mesmo
+            // padrão já aplicado em scan-frame/create-a11y-area).
+            if (_isHacOwnedNode(child)) return;
             let isInteractiveMatch = false;
             if (child.type === 'INSTANCE' || child.type === 'COMPONENT') {
               let componentKey = null;
@@ -3196,7 +4584,7 @@ figma.ui.onmessage = async (msg) => {
         nodeMap.forEach((clonedNode, originalId) => { plainNodeMap[originalId] = clonedNode.id; });
 
         if (collected.length === 0) {
-          figma.ui.postMessage({ type: "tab-order-generated-from-layers", areaId: msg.areaId, items: [], cloneId: clone.id, nodeMap: plainNodeMap });
+          figma.ui.postMessage({ type: "tab-order-generated-from-layers", areaId: msg.areaId, generation: msg.generation, items: [], cloneId: clone.id, nodeMap: plainNodeMap });
           return;
         }
 
@@ -3208,11 +4596,12 @@ figma.ui.onmessage = async (msg) => {
         const items = _orderNodesInZigzagReadingOrder(withBounds)
           .map(node => ({ nodeId: node.id, nodeName: node.name }));
 
-        figma.ui.postMessage({ type: "tab-order-generated-from-layers", areaId: msg.areaId, items, cloneId: clone.id, nodeMap: plainNodeMap });
+        figma.ui.postMessage({ type: "tab-order-generated-from-layers", areaId: msg.areaId, generation: msg.generation, items, cloneId: clone.id, nodeMap: plainNodeMap });
         figma.notify(`${items.length} elemento${items.length === 1 ? '' : 's'} encontrado${items.length === 1 ? '' : 's'} — revise no modal antes de aplicar.`);
       } catch (e) {
+        console.error('[hac] generate-tab-order-from-layers falhou:', e && e.stack || e);
         figma.notify("Não foi possível varrer a área automaticamente — tente novamente.");
-        figma.ui.postMessage({ type: "tab-order-generated-from-layers", areaId: msg.areaId, items: [] });
+        figma.ui.postMessage({ type: "tab-order-generated-from-layers", areaId: msg.areaId, generation: msg.generation, items: [] });
       }
     })();
     return;
@@ -3229,10 +4618,25 @@ figma.ui.onmessage = async (msg) => {
           : (typeof node.findOne === 'function' ? node.findOne(n => n.type === 'INSTANCE') : null);
         if (!instance) continue;
         try {
-          instance.setProperties({ 'number#1478:0': String(entry.number) });
+          // O selo pode ser desktop ('[a11y] Item Number', property
+          // 'number#1478:0') ou mobile ('[a11y mob] Ordenação', property
+          // 'número#5265:3') — os dois nomes de property nunca coexistem na
+          // mesma instância, então basta checar qual delas existe via
+          // componentProperties (setProperties com uma key errada lança e
+          // era engolida em silêncio, deixando selos mobile sem renumerar
+          // nunca — bug real, 2026-09-03). Sem assumir origin aqui: mais
+          // simples e robusto detectar pela property real da instância.
+          const props = instance.componentProperties || {};
+          if ('number#1478:0' in props) {
+            instance.setProperties({ 'number#1478:0': String(entry.number) });
+          } else if ('número#5265:3' in props) {
+            instance.setProperties({ 'número#5265:3': String(entry.number) });
+          }
           node.name = `[Selo de Tabulação | ${entry.number}] ${node.name.replace(/^\[Selo de Tabulação \| \d+\]\s*/, '')}`;
           updated.push(entry.id);
-        } catch (e) { }
+        } catch (e) {
+          console.error('[hac] renumber-tab-order-items: falha ao renumerar', entry.id, e && e.message);
+        }
       }
       figma.ui.postMessage({ type: "tab-order-renumbered", updated });
     })();
@@ -3258,14 +4662,6 @@ figma.ui.onmessage = async (msg) => {
     })(originalRoot, clonedRoot);
     return map;
   }
-
-  // Gap entre a faixa ocupada (áreas/specs/cópias já existentes) e a nova
-  // linha de cópias de Ordem de Tabulação — mesmo valor de _SPEC_GAP (linha
-  // ~1789) por consistência visual com o restante do canvas injetado pelo
-  // hac. Gap horizontal entre cópias que dividem a mesma faixa reaproveita
-  // _SPEC_COL_GAP (~64) pelo mesmo motivo.
-  const _TAB_ORDER_ROW_GAP = 32;
-  const _TAB_ORDER_COL_GAP = 64;
 
   // Varre TODO conteúdo de topo de nível da página atual — não só o que o
   // hac já colocou/referencia. Motivo: a réplica de Ordem de Tabulação não
@@ -3300,7 +4696,40 @@ figma.ui.onmessage = async (msg) => {
       bounds.push({ left: bb.x, top: bb.y, right: bb.x + bb.width, bottom: bb.y + bb.height });
     };
 
-    figma.currentPage.children.forEach(addNode);
+    // A Section de sessão (2026-09-05) é um container que CRESCE a cada
+    // artefato novo — somar o bounding box dela como um bloco só faria a
+    // faixa livre encolher a cada Área/cópia criada, até nenhum dos 4 lados
+    // candidatos passar. Mesmo raciocínio já documentado abaixo pras Sections
+    // por tipo: nunca o container, sempre os conteúdos.
+    figma.currentPage.children.forEach(n => {
+      let isSessionSection = false;
+      try {
+        isSessionSection = !!(n.getPluginData && n.getPluginData('hacSessionSection') === 'true');
+      } catch (e) { }
+      if (isSessionSection) return;
+      addNode(n);
+    });
+
+    // Dentro da Section de sessão cada Área é um GROUP que também cresce a
+    // cada artefato (specs, cópias, Ficha) — por isso somamos os FILHOS
+    // diretos de cada Grupo, um retângulo por artefato, nunca o Grupo
+    // inteiro. Um Grupo com 3 artefatos espalhados tem bounds muito maiores
+    // que a união real ocupada por eles.
+    for (const sibling of figma.currentPage.children) {
+      if (sibling.type !== 'SECTION') continue;
+      let isSessionSection = false;
+      try {
+        isSessionSection = !!(sibling.getPluginData && sibling.getPluginData('hacSessionSection') === 'true');
+      } catch (e) { }
+      if (!isSessionSection) continue;
+      for (const areaGroup of (sibling.children || [])) {
+        if (areaGroup.type === 'GROUP' && areaGroup.children) {
+          areaGroup.children.forEach(addNode);
+        } else {
+          addNode(areaGroup);
+        }
+      }
+    }
 
     const areaTargetIds = [];
     for (const sibling of figma.currentPage.children) {
@@ -3309,12 +4738,36 @@ figma.ui.onmessage = async (msg) => {
         if (areaTargetId) areaTargetIds.push(areaTargetId);
       } catch (e) { }
     }
-    const section = _getOrCreateA11ySection();
-    for (const child of (section.children || [])) {
+    // Grupos de Área dentro da Section de sessão também guardam o id do frame
+    // ORIGINAL — sem isto o cálculo não enxergaria o frame documentado de
+    // nenhuma Área criada na estrutura nova.
+    for (const sibling of figma.currentPage.children) {
+      if (sibling.type !== 'SECTION') continue;
+      let isSessionSection = false;
       try {
-        const areaTargetId = child.getPluginData && child.getPluginData('hacAreaTargetNodeId');
-        if (areaTargetId) areaTargetIds.push(areaTargetId);
+        isSessionSection = !!(sibling.getPluginData && sibling.getPluginData('hacSessionSection') === 'true');
       } catch (e) { }
+      if (!isSessionSection) continue;
+      for (const child of (sibling.children || [])) {
+        try {
+          const areaTargetId = child.getPluginData && child.getPluginData('hacAreaTargetNodeId');
+          if (areaTargetId) areaTargetIds.push(areaTargetId);
+        } catch (e) { }
+      }
+    }
+    // Varre TODAS as Sections de specs já existentes na página (qualquer
+    // geração/versão, não só a ativa) — o cálculo de "faixa livre" precisa
+    // evitar sobrepor documentação de handoffs antigos também, não só a
+    // Section corrente.
+    const specSectionPrefix = A11Y_SECTION_NAME;
+    for (const sibling of figma.currentPage.children) {
+      if (sibling.type !== 'SECTION' || !sibling.name.startsWith(specSectionPrefix)) continue;
+      for (const child of (sibling.children || [])) {
+        try {
+          const areaTargetId = child.getPluginData && child.getPluginData('hacAreaTargetNodeId');
+          if (areaTargetId) areaTargetIds.push(areaTargetId);
+        } catch (e) { }
+      }
     }
 
     for (const areaTargetId of areaTargetIds) {
@@ -3324,52 +4777,87 @@ figma.ui.onmessage = async (msg) => {
       } catch (e) { }
     }
 
-    const tabOrderSection = _getOrCreateTabOrderSection();
-    for (const child of (tabOrderSection.children || [])) addNode(child);
+    // Mesmo raciocínio para as Sections de Ordem de Tabulação — qualquer
+    // geração/versão.
+    const tabOrderSectionPrefix = A11Y_TAB_ORDER_SECTION_NAME;
+    for (const sibling of figma.currentPage.children) {
+      if (sibling.type !== 'SECTION' || !sibling.name.startsWith(tabOrderSectionPrefix)) continue;
+      for (const child of (sibling.children || [])) addNode(child);
+    }
+
+    // Mesmo raciocínio para as Sections de Trilha de Swipe — as linhas/setas
+    // desenhadas ali não podem ser sobrepostas pela próxima cópia de
+    // tab-order calculada nesta mesma faixa livre.
+    const swipeFlowSectionPrefix = A11Y_SWIPE_FLOW_SECTION_NAME;
+    for (const sibling of figma.currentPage.children) {
+      if (sibling.type !== 'SECTION' || !sibling.name.startsWith(swipeFlowSectionPrefix)) continue;
+      for (const child of (sibling.children || [])) addNode(child);
+    }
+
+    // Mesmo raciocínio para as Sections de Ficha de Handoff — sem isto, duas
+    // Áreas diferentes gerando Ficha colidem visualmente entre si, e uma
+    // Ficha já inserida pode ser sobreposta por uma cópia de Tabulação
+    // criada depois dela (achado real de QA, 2026-09-04).
+    const fichaSectionPrefix = A11Y_FICHA_SECTION_NAME;
+    for (const sibling of figma.currentPage.children) {
+      if (sibling.type !== 'SECTION' || !sibling.name.startsWith(fichaSectionPrefix)) continue;
+      for (const child of (sibling.children || [])) addNode(child);
+    }
 
     return bounds;
   }
 
-  // Cópias de Ordem de Tabulação (e tudo mais que o hac injeta) crescem numa
-  // única "faixa" horizontal abaixo de todo o conteúdo já ocupado na página:
-  // simples, previsível, e nunca sobrepõe nada — nem o frame original de
-  // qualquer Área Marcada, nem specs, nem cópias de Ordem de Tabulação já
-  // existentes (de qualquer área). Dentro da faixa mais recente (mesmo Y,
-  // identificável pelas cópias já marcadas com hacTabOrderCopyForArea), a
-  // nova cópia entra à direita da última — mesmo raciocínio de "empilha ao
-  // lado do que já existe" usado pelas specs (_SPEC_COL_GAP), só que aqui
-  // não há sub-colunas por categoria: a faixa inteira é uma única linha.
-  // cloneWidth/cloneHeight não entram no cálculo hoje (a faixa cresce pra
-  // baixo/direita sem limite, então não há "encaixe" a verificar) — ficam no
-  // assinatura só como reserva caso um layout com quebra de linha por
-  // largura máxima seja necessário no futuro.
-  async function _findFreeTabOrderCopyPosition(cloneWidth, cloneHeight) {
-    const occupied = await _collectA11yOccupiedBounds();
-    if (occupied.length === 0) {
-      return { x: 0, y: 0 };
+  // A cópia de Ordem de Tabulação nasce perto do frame ORIGINAL que ela
+  // replica — não numa faixa global calculada contra tudo que já existe na
+  // página inteira (isso jogava a cópia pra muito longe em arquivos grandes
+  // com telas espalhadas por toda parte, bug real relatado em 2026-09-03).
+  // Tenta, em ordem, os 4 lados do frame original (direita, abaixo,
+  // esquerda, acima) e usa o primeiro que não colide com nada que esteja
+  // fisicamente PRÓXIMO (checagem contra occupied, que ainda cobre toda a
+  // página — mas aqui só descarta candidatos que colidem de verdade, não
+  // empurra pra baixo de tudo só por existir algo distante). Depois de
+  // nascer, a cópia é um frame comum — o designer arrasta pra onde quiser,
+  // sem precisar de nenhuma opção extra no plugin.
+  function _rectsOverlap(a, b) {
+    return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+  }
+
+  async function _findFreeTabOrderCopyPosition(cloneWidth, cloneHeight, originBounds) {
+    let occupied;
+    try {
+      occupied = await _collectA11yOccupiedBounds();
+    } catch (e) {
+      console.error('[hac] _findFreeTabOrderCopyPosition: falhou em _collectA11yOccupiedBounds', e && e.message);
+      throw e;
     }
 
-    const lowestBottom = occupied.reduce((max, b) => Math.max(max, b.bottom), -Infinity);
-    const leftmost = occupied.reduce((min, b) => Math.min(min, b.left), Infinity);
-    const rowY = Math.round(lowestBottom + _TAB_ORDER_ROW_GAP);
+    const ox = originBounds.x;
+    const oy = originBounds.y;
+    const ow = originBounds.width;
+    const oh = originBounds.height;
 
-    let rowRightmost = null;
-    _forEachTabOrderCopyCandidate(sibling => {
-      try {
-        if (!sibling.getPluginData || !sibling.getPluginData('hacTabOrderCopyForArea')) return;
-        const bb = sibling.absoluteBoundingBox || sibling.absoluteRenderBounds;
-        if (!bb) return;
-        if (Math.abs(bb.y - rowY) > _TAB_ORDER_ROW_GAP) return;
-        const right = bb.x + bb.width;
-        if (rowRightmost === null || right > rowRightmost) rowRightmost = right;
-      } catch (e) { }
-    });
-
-    const rowX = rowRightmost !== null
-      ? Math.round(rowRightmost + _TAB_ORDER_COL_GAP)
-      : Math.round(leftmost);
-
-    return { x: rowX, y: rowY };
+    // Sempre ABAIXO do frame original (2026-09-08, pedido do usuário) —
+    // antes tentava 4 lados em ordem (direita, abaixo, esquerda, acima),
+    // usando o primeiro sem colisão; isso fazia a réplica nascer do lado
+    // ou até por cima de outro conteúdo já existente, dependendo do que
+    // estivesse ocupado naquele momento. Agora a posição horizontal é
+    // sempre a mesma do original (x = ox) — só a posição vertical desce,
+    // em incrementos de _TAB_ORDER_ROW_GAP a partir de logo abaixo do
+    // original, até achar uma faixa livre. Sem limite de tentativas
+    // (diferente do antigo fallback de 4 lados): numa página real, sempre
+    // existe espaço mais abaixo, então não precisa de um "último recurso".
+    const x = Math.round(ox);
+    let y = Math.round(oy + oh + _TAB_ORDER_ROW_GAP);
+    for (let guard = 0; guard < 500; guard++) {
+      const rect = { left: x, top: y, right: x + cloneWidth, bottom: y + cloneHeight };
+      const collidingBounds = occupied.filter(b => _rectsOverlap(rect, b));
+      if (collidingBounds.length === 0) return { x, y };
+      // Colidiu com algo que já está mais abaixo — desce até passar do
+      // ponto mais baixo de tudo que colidiu, e tenta de novo dali.
+      const lowestConflictBottom = collidingBounds.reduce((max, b) => Math.max(max, b.bottom), y);
+      y = Math.round(lowestConflictBottom + _TAB_ORDER_ROW_GAP);
+    }
+    return { x, y };
   }
 
   // Remove qualquer cópia anterior da MESMA área (via pluginData, nunca por
@@ -3380,14 +4868,29 @@ figma.ui.onmessage = async (msg) => {
   // acontece ANTES do cálculo de posição livre de propósito: se a
   // recriação for da MESMA área, o espaço que ela ocupava deve contar como
   // livre de novo.
-  async function _createTabOrderCloneForArea(root, areaId) {
+  async function _createTabOrderCloneForArea(root, areaId, sectionName, designerName) {
     _removeExistingTabOrderCopiesForArea(areaId);
 
     const cloneWidth = root.absoluteBoundingBox.width;
     const cloneHeight = root.absoluteBoundingBox.height;
-    const { x, y } = await _findFreeTabOrderCopyPosition(cloneWidth, cloneHeight);
+    const { x, y } = await _findFreeTabOrderCopyPosition(cloneWidth, cloneHeight, root.absoluteBoundingBox);
 
-    const clone = root.clone();
+    let clone = root.clone();
+    // Bug real corrigido (2026-09-08): quando a Área é marcada sobre uma
+    // INSTANCE de tela publicada na lib (padrão comum — o designer arrasta
+    // a tela pronta da lib "DSC | Super App"), clone() devolve outra
+    // INSTANCE. A API do Figma proíbe appendChild em InstanceNode (a árvore
+    // é governada pelo main component), então cada selo desenhado dentro
+    // dela lançava silenciosamente e caía no fallback de reparenting pro
+    // Grupo da Área — virando irmão do clone em vez de filho, visualmente
+    // indistinguível de "solto" no painel de camadas. detachInstance()
+    // devolve um FRAME com estrutura/ordem/contagem de filhos idênticas
+    // (crítico: tem que rodar ANTES de _buildOriginalToCloneMap, que mapeia
+    // por índice de children). O frame ORIGINAL nunca é tocado — só esta
+    // cópia de trabalho descartável perde o vínculo com o main component.
+    if (clone.type === 'INSTANCE') {
+      try { clone = clone.detachInstance(); } catch (e) { /* segue como INSTANCE — fallback de reparenting cobre */ }
+    }
     figma.currentPage.appendChild(clone);
     clone.x = x;
     clone.y = y;
@@ -3402,11 +4905,156 @@ figma.ui.onmessage = async (msg) => {
     // de children, que appendChild/reparenting não altera) e depois de
     // calcular x/y livres (que precisam do clone ainda solto em
     // figma.currentPage, com x/y absolutos, pra bater com o bounding box
-    // calculado por _findFreeTabOrderCopyPosition). _reparentIntoTabOrderSection
-    // converte x/y pra relativo à Section preservando a posição visual.
-    _reparentIntoTabOrderSection(clone);
+    // calculado por _findFreeTabOrderCopyPosition). O reparenting converte
+    // x/y pra relativo ao novo pai preservando a posição visual.
+    // Direto na Section de sessão (2026-09-08) — não mais no Grupo da
+    // Área nem na Section por tipo antiga (_reparentIntoTabOrderSection,
+    // mantida só como referência histórica/fallback de áreas legadas via
+    // outros pontos de código que ainda a chamam).
+    _reparentIntoSection(clone, () => _getOrCreateA11ySessionSection(designerName));
 
     return { clone, nodeMap };
+  }
+
+  // Espelha _createTabOrderCloneForArea pra Trilha de Swipe (2026-09-04-ac)
+  // — mesma lógica de posicionamento livre (_findFreeTabOrderCopyPosition,
+  // já genérica e usada por ambas), trocando só nome do clone, pluginData
+  // e Section de destino.
+  async function _createSwipePathCloneForArea(root, areaId, sectionName, designerName) {
+    _removeExistingSwipePathCopiesForArea(areaId);
+
+    const cloneWidth = root.absoluteBoundingBox.width;
+    const cloneHeight = root.absoluteBoundingBox.height;
+    const { x, y } = await _findFreeTabOrderCopyPosition(cloneWidth, cloneHeight, root.absoluteBoundingBox);
+
+    let clone = root.clone();
+    // Mesmo bug/correção de _createTabOrderCloneForArea (2026-09-08): clone
+    // de uma Área marcada sobre INSTANCE de tela publicada precisa virar
+    // FRAME antes de qualquer coisa ser reparentada pra dentro dela.
+    if (clone.type === 'INSTANCE') {
+      try { clone = clone.detachInstance(); } catch (e) { /* segue como INSTANCE — fallback de reparenting cobre */ }
+    }
+    figma.currentPage.appendChild(clone);
+    clone.x = x;
+    clone.y = y;
+    clone.name = `[Trilha de Swipe] ${root.name}`;
+    clone.locked = false;
+    clone.setPluginData('hacCategory', 'a11y');
+    clone.setPluginData('hacSwipePathCopyForArea', areaId || '');
+
+    const nodeMap = _buildOriginalToCloneMap(root, clone);
+    // Direto na Section de sessão (2026-09-08) — mesmo raciocínio de
+    // _createTabOrderCloneForArea.
+    _reparentIntoSection(clone, () => _getOrCreateA11ySessionSection(designerName));
+
+    return { clone, nodeMap };
+  }
+
+  // Espelha _createTabOrderCloneForArea/_createSwipePathCloneForArea pra
+  // Especificações — Leitor de Tela (2026-09-08, pedido do usuário: specs
+  // passam a documentar sobre uma CÓPIA da área, nunca mais sobre o frame
+  // ORIGINAL, mesma garantia que Tabulação/Swipe já davam). Diferente das
+  // duas: NÃO chama nenhum "_removeExisting...CopiesForArea" ao criar —
+  // várias specs da MESMA área são criadas ao longo do tempo e todas
+  // precisam continuar apontando pro MESMO clone (removê-lo a cada nova
+  // spec apagaria/desconectaria as specs já desenhadas nas chamadas
+  // anteriores). A resolução de "já existe, reaproveita" fica inteira em
+  // _resolveActiveSpecClone (abaixo) — esta função só cria do zero quando
+  // chamada.
+  function _findSpecCloneForArea(areaId) {
+    let found = null;
+    _forEachA11ySessionDirectChild(sibling => {
+      if (found) return;
+      try {
+        if (sibling.getPluginData && sibling.getPluginData('hacSpecCloneForArea') === areaId) {
+          found = sibling;
+        }
+      } catch (e) { }
+    });
+    if (!found) {
+      _forEachA11ySessionAreaChild(sibling => {
+        if (found) return;
+        try {
+          if (sibling.getPluginData && sibling.getPluginData('hacSpecCloneForArea') === areaId) {
+            found = sibling;
+          }
+        } catch (e) { }
+      });
+    }
+    return found;
+  }
+
+  async function _createSpecCloneForArea(root, areaId, sectionName, designerName) {
+    const cloneWidth = root.absoluteBoundingBox.width;
+    const cloneHeight = root.absoluteBoundingBox.height;
+    const { x, y } = await _findFreeTabOrderCopyPosition(cloneWidth, cloneHeight, root.absoluteBoundingBox);
+
+    let clone = root.clone();
+    // Mesmo bug/correção de _createTabOrderCloneForArea (2026-09-08).
+    if (clone.type === 'INSTANCE') {
+      try { clone = clone.detachInstance(); } catch (e) { /* segue como INSTANCE — fallback de reparenting cobre */ }
+    }
+    figma.currentPage.appendChild(clone);
+    clone.x = x;
+    clone.y = y;
+    clone.name = `[Leitor de Tela] ${root.name}`;
+    clone.locked = false;
+    clone.setPluginData('hacCategory', 'a11y');
+    clone.setPluginData('hacSpecCloneForArea', areaId || '');
+
+    const nodeMap = _buildOriginalToCloneMap(root, clone);
+    _reparentIntoSection(clone, () => _getOrCreateA11ySessionSection(designerName));
+
+    return { clone, nodeMap };
+  }
+
+  // Resolve a cópia ativa de specs de uma área, ou cria do zero se não
+  // houver nenhuma em memória/canvas — mesmo padrão de
+  // _resolveActiveTabOrderClone/_resolveActiveSwipePathClone.
+  async function _resolveActiveSpecClone(areaId, targetNodeId, sectionName, designerName) {
+    const root = await figma.getNodeByIdAsync(targetNodeId);
+    if (!root || !root.absoluteBoundingBox) return null;
+    if (typeof root.clone !== 'function') return null;
+
+    const cachedNodeMap = areaId ? _activeSpecCloneMaps.get(areaId) : null;
+    if (cachedNodeMap) {
+      const existingCloneEntry = cachedNodeMap.get(root.id);
+      const existingClone = existingCloneEntry ? await figma.getNodeByIdAsync(existingCloneEntry.id) : null;
+      if (existingClone && !existingClone.removed && _nodeOnCurrentPage(existingClone)) {
+        let clone = existingClone;
+        if (clone.type === 'INSTANCE') {
+          try {
+            clone = clone.detachInstance();
+            const nodeMap = _buildOriginalToCloneMap(root, clone);
+            _activeSpecCloneMaps.set(areaId, nodeMap);
+            return { clone, nodeMap };
+          } catch (e) { /* segue com a INSTANCE — fallback de reparenting cobre */ }
+        }
+        return { clone, nodeMap: cachedNodeMap };
+      }
+    }
+
+    // Cache em memória vazio (ex.: plugin fechado/reaberto) — antes de
+    // recriar do zero, procura no CANVAS por um clone já existente desta
+    // área (via pluginData), reconstruindo o Map por índice de children.
+    // Sem isso, reabrir o plugin e criar uma nova spec na mesma área
+    // duplicaria o clone (um antigo órfão + um novo), quebrando as specs
+    // já desenhadas no clone antigo (ficam "penduradas" numa cópia que
+    // ninguém mais referencia).
+    const canvasClone = _findSpecCloneForArea(areaId);
+    if (canvasClone && !canvasClone.removed && _nodeOnCurrentPage(canvasClone)) {
+      let clone = canvasClone;
+      if (clone.type === 'INSTANCE') {
+        try { clone = clone.detachInstance(); } catch (e) { /* segue como INSTANCE */ }
+      }
+      const nodeMap = _buildOriginalToCloneMap(root, clone);
+      if (areaId) _activeSpecCloneMaps.set(areaId, nodeMap);
+      return { clone, nodeMap };
+    }
+
+    const created = await _createSpecCloneForArea(root, areaId, sectionName, designerName);
+    if (areaId) _activeSpecCloneMaps.set(areaId, created.nodeMap);
+    return created;
   }
 
   // "Iniciar Ordem de Tabulação" dispara isto ANTES de abrir a escuta de
@@ -3431,9 +5079,8 @@ figma.ui.onmessage = async (msg) => {
         return;
       }
 
-      const { clone, nodeMap } = await _createTabOrderCloneForArea(root, msg.areaId);
-      _activeTabOrderCloneMap = nodeMap;
-      _activeTabOrderCloneAreaId = msg.areaId || null;
+      const { clone, nodeMap } = await _createTabOrderCloneForArea(root, msg.areaId, msg.sectionName, msg.designerName);
+      if (msg.areaId) _activeTabOrderCloneMaps.set(msg.areaId, nodeMap);
 
       figma.currentPage.selection = [clone];
       figma.viewport.scrollAndZoomIntoView([clone]);
@@ -3448,220 +5095,246 @@ figma.ui.onmessage = async (msg) => {
 
   // Variante dedicada de highlight-node pro fluxo de Ordem de Tabulação:
   // recebe o nodeId ORIGINAL (o que o designer de fato clicou no canvas) e
-  // resolve internamente, via _activeTabOrderCloneMap, pro node equivalente
-  // dentro da cópia rascunho — só então desenha o contorno de highlight,
-  // sempre na CÓPIA, nunca no original. Sem cópia ativa cai de volta pro
-  // highlight direto no original, pra nunca deixar o clique sem NENHUM
-  // feedback visual.
+  // resolve internamente, via _activeTabOrderCloneMaps (2026-09-08: Map por
+  // área, ver comentário na declaração), pro node equivalente dentro da
+  // cópia rascunho DA ÁREA INFORMADA — sem msg.areaId, uma sessão com mais
+  // de uma área em captura simultânea não saberia qual Map usar. Highlight
+  // próprio (retângulo [HighlightStroke]) REMOVIDO (2026-09-08, mesmo
+  // pedido/motivo de figma.on('selectionchange') acima — órfãos
+  // recorrentes) — agora só seleciona o node de verdade
+  // (figma.currentPage.selection), que já dá o contorno azul nativo do
+  // Figma como feedback visual, sem nenhum node extra criado/removido.
   if (msg.type === "highlight-tab-order-copy-node") {
     (async () => {
-      if (activeHighlightNode) {
-        try { activeHighlightNode.remove(); } catch (e) { }
-        activeHighlightNode = null;
-      }
-
       let targetId = msg.id;
-      if (_activeTabOrderCloneMap && _activeTabOrderCloneMap.has(msg.id)) {
-        targetId = _activeTabOrderCloneMap.get(msg.id).id;
+      const cloneMap = msg.areaId ? _activeTabOrderCloneMaps.get(msg.areaId) : null;
+      if (cloneMap && cloneMap.has(msg.id)) {
+        targetId = cloneMap.get(msg.id).id;
       }
 
       const node = await figma.getNodeByIdAsync(targetId);
       if (!node || !node.visible || !_nodeOnCurrentPage(node) || !node.absoluteBoundingBox) return;
 
-      const hexToRgbLocal = (hex) => {
-        const h = (hex || '#0891B2').replace('#', '');
-        return {
-          r: parseInt(h.substring(0, 2), 16) / 255,
-          g: parseInt(h.substring(2, 4), 16) / 255,
-          b: parseInt(h.substring(4, 6), 16) / 255,
-        };
-      };
-      const strokeColor = hexToRgbLocal(msg.color);
-      const bb = node.absoluteBoundingBox;
-      const strokeRect = figma.createRectangle();
-      strokeRect.name = '[HighlightStroke]';
-      strokeRect.x = bb.x;
-      strokeRect.y = bb.y;
-      strokeRect.resize(Math.max(1, bb.width), Math.max(1, bb.height));
-      strokeRect.fills = [];
-      strokeRect.strokes = [{ type: 'SOLID', color: strokeColor }];
-      strokeRect.strokeWeight = 2;
-      strokeRect.strokeAlign = 'OUTSIDE';
-      strokeRect.locked = true;
-      strokeRect.cornerRadius = node.cornerRadius && typeof node.cornerRadius === 'number' ? node.cornerRadius : 0;
-      figma.currentPage.appendChild(strokeRect);
-      activeHighlightNode = strokeRect;
-    })();
-    return;
-  }
+      figma.currentPage.selection = [node];
 
-  // Prévia visual TEMPORÁRIA da Ordem de Tabulação — chamada a cada
-  // mudança na lista pendente (item adicionado/removido/reordenado) ENQUANTO
-  // o modal de revisão está aberto, refletindo a ordem ATUAL da lista.
-  // NUNCA toca o frame original: desenha o lote inteiro de selos "fantasma"
-  // (opacidade reduzida) dentro da mesma cópia rascunho já criada por
-  // start-tab-order-copy, reaproveitando _createTabOrderBadge. Redesenha do
-  // zero a cada chamada (apaga os anteriores primeiro) — mais simples e
-  // seguro do que tentar diffar a ordem, e o volume de itens de uma Ordem de
-  // Tabulação (dezenas, não centenas) não justifica otimizar isso.
-  // Requer que start-tab-order-copy já tenha rodado para esta área (fluxo
-  // manual) OU generate-tab-order-from-layers (fluxo automático, que também
-  // passa por _createTabOrderCloneForArea) — sem cópia ativa, não há onde
-  // desenhar a prévia e a chamada é ignorada silenciosamente (a lista
-  // pendente continua funcionando normalmente, só sem prévia no canvas).
-  if (msg.type === "preview-tab-order-numbers") {
-    const myGeneration = ++_tabOrderPreviewGeneration;
-    (async () => {
-      if (!_activeTabOrderCloneMap || _activeTabOrderCloneAreaId !== msg.areaId) return;
-      await _clearTabOrderPreviewBadges(msg.areaId);
-
-      const cloneNode = _findTabOrderCopyForArea(msg.areaId);
-      if (!cloneNode) return;
-
-      try { await figma.loadFontAsync({ family: "Inter", style: "Bold" }); } catch (e) { }
-
-      for (const entry of (msg.items || [])) {
-        // Duas checagens de invariante a cada iteração, não só uma vez no
-        // início do loop — este loop é assíncrono (await dentro dele cede o
-        // event loop a cada volta) e tanto o cancelamento/troca da cópia
-        // rascunho quanto uma chamada mais nova de preview podem acontecer
-        // no meio do caminho:
-        //   1. geração obsoleta — uma chamada mais recente já assumiu.
-        //   2. cópia rascunho foi deletada/trocada (delete-tab-order-draft-
-        //      copy) enquanto este loop ainda rodava.
-        // Em qualquer um dos dois casos, aborta imediatamente sem tentar
-        // criar mais selos.
-        if (myGeneration !== _tabOrderPreviewGeneration) return;
-        if (!_activeTabOrderCloneMap || _activeTabOrderCloneAreaId !== msg.areaId) return;
-        const mappedNode = _activeTabOrderCloneMap.get(entry.nodeId);
-        if (!mappedNode || !mappedNode.absoluteBoundingBox) continue;
-        try {
-          await _createTabOrderBadge(mappedNode, entry.number, '', 'direita', msg.areaId, false, msg.a11yOrigin, cloneNode, true);
-        } catch (e) {
-          // Selo de prévia individual falhou (node removido no meio do loop,
-          // etc.) — não interrompe o resto do lote, mas loga pra não ficar
-          // indiagnosticável (era um catch mudo antes).
-          console.error('[hac] preview-tab-order-numbers: falha ao desenhar selo fantasma para', entry.nodeId, e && e.message);
-        }
+      // Clicar num item da lista (pendente ou já aplicada) da Ordem de
+      // Tabulação precisa levar a viewport até o elemento — sem isso, numa
+      // área grande/muito escalada o designer via a seleção só se já
+      // estivesse olhando pro trecho certo do canvas (pedido explícito do
+      // usuário, 2026-09-03: hoje só o clique direto no canvas focava).
+      if (msg.shouldScroll) {
+        figma.viewport.scrollAndZoomIntoView([node]);
       }
     })();
     return;
   }
 
-  // Limpeza explícita da prévia — chamada ao fechar/cancelar o modal de
-  // revisão e antes de "Aplicar no Canvas" desenhar os selos REAIS (que
-  // tomam o lugar dos temporários). Sem isso os selos fantasma ficariam
-  // órfãos dentro da cópia (delete-tab-order-draft-copy já cobre o caso de
-  // cancelar, já que apaga a cópia inteira — este handler cobre o caso de
-  // "Aplicar no Canvas", onde a cópia SEGUE existindo, só sem os selos
-  // fantasma).
-  if (msg.type === "clear-tab-order-preview-numbers") {
-    (async () => { await _clearTabOrderPreviewBadges(msg.areaId); })();
-    return;
+  // Resolve a cópia "rascunho" ativa da área (criada por start-tab-order-copy
+  // ou generate-tab-order-from-layers) ou cria uma do zero se por algum
+  // motivo não houver nenhuma em memória — mesmo fallback que já existia
+  // dentro do antigo handler "aplicar em lote", agora compartilhado com
+  // draw-tab-order-badge (que precisa da mesma resolução a cada item).
+  async function _resolveActiveTabOrderClone(areaId, targetNodeId, sectionName, designerName) {
+    const root = await figma.getNodeByIdAsync(targetNodeId);
+    if (!root || !root.absoluteBoundingBox) return null;
+    if (typeof root.clone !== 'function') return null;
+
+    // Cache por área (2026-09-08, ver comentário na declaração de
+    // _activeTabOrderCloneMaps) — nunca mistura o clone ativo de uma área
+    // com o de outra, mesmo alternando entre elas na mesma sessão.
+    const cachedNodeMap = areaId ? _activeTabOrderCloneMaps.get(areaId) : null;
+    if (cachedNodeMap) {
+      const existingCloneEntry = cachedNodeMap.get(root.id);
+      const existingClone = existingCloneEntry ? await figma.getNodeByIdAsync(existingCloneEntry.id) : null;
+      // Bug real corrigido (2026-09-05): getNodeByIdAsync pode devolver um
+      // node com .removed === true (id ainda "existe" no sentido de já ter
+      // sido usado, mas o node foi desconectado da árvore) — aconteceu de
+      // verdade depois da reorganização estrutural, porque
+      // _forEachTabOrderCopyCandidate passou a alcançar clones dentro do
+      // Grupo da Área (_forEachA11ySessionAreaChild), então
+      // _removeExistingTabOrderCopiesForArea (chamada por qualquer
+      // recriação de cópia da MESMA área, em outro fluxo) passou a
+      // remover clones que este Map ainda referenciava sem nunca ser
+      // avisado. Sem a checagem .removed, o `if (existingClone)` abaixo
+      // devolvia esse clone morto; tabOrderClone.appendChild(group) em
+      // _createTabOrderBadge lançava (node removido não aceita filhos),
+      // caindo num catch mudo que deixava o selo solto na página (sem
+      // reparentar em lugar nenhum). Também confirma que o node ainda
+      // pertence à página atual — getNodeByIdAsync pode, em teoria,
+      // resolver um id de outra página.
+      if (existingClone && !existingClone.removed && _nodeOnCurrentPage(existingClone)) {
+        // Migração leve (2026-09-08): clone resolvido da memória pode ter
+        // sido criado ANTES da correção de detachInstance (áreas já em
+        // documentação no momento do fix) — ainda é uma INSTANCE, então
+        // appendChild continuaria falhando. Detacha aqui também, com
+        // re-mapeamento (o detach devolve um node novo, o Map antigo
+        // aponta pro node velho).
+        let clone = existingClone;
+        if (clone.type === 'INSTANCE') {
+          try {
+            clone = clone.detachInstance();
+            const nodeMap = _buildOriginalToCloneMap(root, clone);
+            _activeTabOrderCloneMaps.set(areaId, nodeMap);
+            return { clone, nodeMap };
+          } catch (e) { /* segue com a INSTANCE — fallback de reparenting cobre */ }
+        }
+        return { clone, nodeMap: cachedNodeMap };
+      }
+    }
+
+    const created = await _createTabOrderCloneForArea(root, areaId, sectionName, designerName);
+    if (areaId) _activeTabOrderCloneMaps.set(areaId, created.nodeMap);
+    return created;
+  }
+
+  // Espelha _resolveActiveTabOrderClone pra Trilha de Swipe (2026-09-04-ac)
+  // — fallback que recria a cópia se ela não existir mais em memória (ex.:
+  // designer fechou/reabriu o plugin), usado por insert-swipe-path.
+  async function _resolveActiveSwipePathClone(areaId, targetNodeId, sectionName, designerName) {
+    const root = await figma.getNodeByIdAsync(targetNodeId);
+    if (!root || !root.absoluteBoundingBox) return null;
+    if (typeof root.clone !== 'function') return null;
+
+    // Cache por área (2026-09-08), mesmo princípio de _resolveActiveTabOrderClone.
+    const cachedNodeMap = areaId ? _activeSwipePathCloneMaps.get(areaId) : null;
+    if (cachedNodeMap) {
+      const existingCloneEntry = cachedNodeMap.get(root.id);
+      const existingClone = existingCloneEntry ? await figma.getNodeByIdAsync(existingCloneEntry.id) : null;
+      // Mesma checagem de .removed/_nodeOnCurrentPage de
+      // _resolveActiveTabOrderClone (2026-09-05) — mesmo risco de
+      // referência morta depois que _forEachSwipePathCopyCandidate passou
+      // a alcançar clones dentro do Grupo da Área.
+      if (existingClone && !existingClone.removed && _nodeOnCurrentPage(existingClone)) {
+        // Mesma migração leve de _resolveActiveTabOrderClone (2026-09-08).
+        let clone = existingClone;
+        if (clone.type === 'INSTANCE') {
+          try {
+            clone = clone.detachInstance();
+            const nodeMap = _buildOriginalToCloneMap(root, clone);
+            _activeSwipePathCloneMaps.set(areaId, nodeMap);
+            return { clone, nodeMap };
+          } catch (e) { /* segue com a INSTANCE — fallback de reparenting cobre */ }
+        }
+        return { clone, nodeMap: cachedNodeMap };
+      }
+    }
+
+    const created = await _createSwipePathCloneForArea(root, areaId, sectionName, designerName);
+    if (areaId) _activeSwipePathCloneMaps.set(areaId, created.nodeMap);
+    return created;
   }
 
   // Cancelamento do fluxo manual: a cópia rascunho criada por
-  // start-tab-order-copy fica órfã (vazia, sem selos) se o designer desistir
-  // — remove pelo mesmo pluginData de sempre e zera o estado em memória.
+  // start-tab-order-copy fica órfã (vazia ou parcialmente desenhada) se o
+  // designer desistir — remove pelo mesmo pluginData de sempre e zera o
+  // estado em memória.
   if (msg.type === "delete-tab-order-draft-copy") {
     _deleteTabOrderDraftCopy(msg.areaId);
     return;
   }
 
-  // "Aplicar no Canvas" — única etapa do fluxo de Ordem de Tabulação que de
-  // fato desenha algo. Recebe a lista final (já revisada/reordenada no
-  // modal) com o nodeId do elemento ORIGINAL de cada item, e:
-  //   1. Localiza/recria a CÓPIA do frame da área (nunca acumula cópias
-  //      órfãs).
-  //   2. Reaproveita o mapa original→clone já calculado por
-  //      start-tab-order-copy quando ainda ativo pra ESTA área; senão clona
-  //      de novo do zero (fallback pro fluxo automático, que não passa por
-  //      "Iniciar").
-  //   3. Desenha os selos na CÓPIA, usando a mesma _createTabOrderBadge de
-  //      sempre, mas passando o node MAPEADO como alvo de posicionamento.
-  if (msg.type === "apply-tab-order-to-canvas") {
+  // "Adicionar itens" a partir do card/tab, numa área que JÁ tem Ordem de
+  // Tabulação documentada (2026-09-04-aj) — precisa garantir que
+  // _activeTabOrderCloneMaps tenha a entrada da área CORRETA antes de armar
+  // a captura de clique no frontend. Sem isto, se
+  // o plugin foi fechado/reaberto desde a última vez que a cópia foi
+  // tocada, esse estado em memória fica null — e o primeiro
+  // draw-tab-order-badge do novo item chamaria _resolveActiveTabOrderClone,
+  // que RECRIARIA a cópia do zero (removendo a existente, com todos os
+  // selos já documentados, via _removeExistingTabOrderCopiesForArea
+  // dentro de _createTabOrderCloneForArea) — apagando silenciosamente a
+  // ordem que o designer queria só COMPLEMENTAR. Resolvendo aqui, ANTES
+  // de qualquer clique, a cópia existente é reconhecida e reaproveitada
+  // (mesma checagem de _resolveActiveTabOrderClone: reusa se o clone
+  // ainda existir no canvas, só recria se genuinamente sumiu).
+  if (msg.type === "resolve-tab-order-clone") {
     (async () => {
-      const root = await figma.getNodeByIdAsync(msg.targetNodeId);
-      if (!root || !root.absoluteBoundingBox) {
-        figma.notify("Área não encontrada no canvas — marque novamente.");
-        figma.ui.postMessage({ type: "tab-order-applied-to-canvas", items: [] });
-        return;
-      }
-      if (typeof root.clone !== 'function') {
-        figma.notify("Este elemento não pode ser copiado — marque a área sobre um frame/grupo.");
-        figma.ui.postMessage({ type: "tab-order-applied-to-canvas", items: [] });
-        return;
-      }
-
-      let clone = null;
-      let nodeMap = null;
-      if (_activeTabOrderCloneMap && _activeTabOrderCloneAreaId === msg.areaId) {
-        const existingCloneEntry = _activeTabOrderCloneMap.get(root.id);
-        const existingClone = existingCloneEntry ? await figma.getNodeByIdAsync(existingCloneEntry.id) : null;
-        if (existingClone) {
-          clone = existingClone;
-          nodeMap = _activeTabOrderCloneMap;
-        }
-      }
-      if (!clone) {
-        const created = await _createTabOrderCloneForArea(root, msg.areaId);
-        clone = created.clone;
-        nodeMap = created.nodeMap;
-      }
-      _activeTabOrderCloneMap = null;
-      _activeTabOrderCloneAreaId = null;
-
-      // Os selos fantasma da prévia (se o fluxo passou por
-      // preview-tab-order-numbers) dão lugar aos selos REAIS agora — apaga
-      // pelo mesmo pluginData, direto no clone já resolvido acima (não
-      // depende de _activeTabOrderCloneAreaId, já zerado nesta linha).
-      if (clone.findAll) {
-        for (const n of clone.findAll(n => n.getPluginData && n.getPluginData('hacTabOrderPreviewForArea') === msg.areaId)) {
-          try { n.remove(); } catch (e) { }
-        }
-      }
-
-      try { await figma.loadFontAsync({ family: "Inter", style: "Bold" }); } catch (e) { }
-
-      const items = [];
-      const createdGroups = [];
-      let skipped = 0;
-      for (const entry of (msg.items || [])) {
-        const mappedNode = nodeMap.get(entry.nodeId);
-        if (!mappedNode || !mappedNode.absoluteBoundingBox) {
-          skipped++;
-          continue;
-        }
-        try {
-          const { group, item } = await _createTabOrderBadge(mappedNode, entry.number, '', 'direita', msg.areaId, false, msg.a11yOrigin, clone);
-          createdGroups.push(group);
-          items.push(item);
-        } catch (e) {
-          // Um selo REAL falhando não pode derrubar o lote inteiro (os
-          // itens já desenhados até aqui ficariam perdidos silenciosamente).
-          skipped++;
-          console.error('[hac] apply-tab-order-to-canvas: falha ao desenhar selo para', entry.nodeId, e && e.message);
-        }
-      }
-
-      if (createdGroups.length > 0) {
-        figma.currentPage.selection = [clone, ...createdGroups];
-        figma.viewport.scrollAndZoomIntoView([clone, ...createdGroups]);
-      }
-
-      figma.ui.postMessage({ type: "tab-order-applied-to-canvas", items, copyName: clone.name });
-      figma.notify(skipped > 0
-        ? `Ordem de tabulação aplicada (${items.length} de ${items.length + skipped} — ${skipped} elemento${skipped === 1 ? '' : 's'} não encontrado${skipped === 1 ? '' : 's'}).`
-        : `Ordem de tabulação aplicada em "${clone.name}".`);
+      const resolved = await _resolveActiveTabOrderClone(msg.areaId, msg.targetNodeId, msg.sectionName, msg.designerName);
+      figma.ui.postMessage({ type: "tab-order-clone-resolved", areaId: msg.areaId, ok: !!resolved });
     })();
     return;
   }
 
-  // Exclusão em cascata da área — remove a cópia do frame gerada por
-  // "Aplicar no Canvas" pra esta área, se existir. Localiza só por
-  // pluginData, nunca por nome (o designer pode ter renomeado a cópia livremente).
+  // Desenha UM selo real por vez, assim que o item entra na lista pendente
+  // do modal (clique manual ou item do scan automático) — nunca em lote,
+  // nunca redesenhando o que já existe. Reaproveita a cópia rascunho ativa
+  // (criada por start-tab-order-copy/generate-tab-order-from-layers) e
+  // resolve o node ALVO já mapeado pra dentro dela. tempId só existe do lado
+  // do frontend (identifica o item na lista pendente antes de ter um id real
+  // de canvas) — o backend só ecoa de volta pra resposta ser correlacionável.
+  if (msg.type === "draw-tab-order-badge") {
+    (async () => {
+      const resolved = await _resolveActiveTabOrderClone(msg.areaId, msg.targetNodeId, msg.sectionName, msg.designerName);
+      if (!resolved) {
+        figma.ui.postMessage({ type: "tab-order-badge-draw-failed", tempId: msg.tempId });
+        return;
+      }
+      const { clone, nodeMap } = resolved;
+      const mappedNode = nodeMap.get(msg.nodeId);
+      if (!mappedNode || !mappedNode.absoluteBoundingBox) {
+        figma.ui.postMessage({ type: "tab-order-badge-draw-failed", tempId: msg.tempId });
+        return;
+      }
+      try {
+        try { await figma.loadFontAsync({ family: "Inter", style: "Bold" }); } catch (e) { }
+        const { group, item } = await _createTabOrderBadge(mappedNode, msg.number, '', 'direita', msg.areaId, false, msg.a11yOrigin, clone, msg.sectionName);
+        figma.currentPage.selection = [clone, group];
+        figma.viewport.scrollAndZoomIntoView([clone, group]);
+        figma.ui.postMessage({ type: "tab-order-badge-drawn", tempId: msg.tempId, canvasId: group.id, item });
+      } catch (e) {
+        console.error('[hac] draw-tab-order-badge: falha ao desenhar selo para', msg.nodeId, e && e.message);
+        figma.ui.postMessage({ type: "tab-order-badge-draw-failed", tempId: msg.tempId });
+      }
+    })();
+    return;
+  }
+
+  // Exclusão em cascata da área — remove a cópia do frame da Ordem de
+  // Tabulação desta área, se existir. Localiza só por pluginData, nunca por
+  // nome (o designer pode ter renomeado a cópia livremente).
   if (msg.type === "delete-tab-order-copy-for-area") {
     _removeExistingTabOrderCopiesForArea(msg.areaId);
+    return;
+  }
+
+  // Rede de segurança pro clone de specs (Leitor de Tela, 2026-09-08) —
+  // mesmo padrão de delete-tab-order-copy-for-area/cleanup-swipe-path-
+  // for-area. O caminho principal de exclusão de specs continua sendo
+  // delete-node por id individual (o frontend já conhece os ids via
+  // a11ySpecs); este handler cobre o clone da área (que os specGroups
+  // individuais vivem dentro dele, via overlay) e qualquer spec que porventura
+  // não tenha sido removida a tempo pelo array local — localiza só por
+  // pluginData, nunca por nome/hierarquia.
+  if (msg.type === "delete-specs-for-area") {
+    _activeSpecCloneMaps.delete(msg.areaId);
+    const cloneIdsToRemove = [];
+    _forEachA11ySessionDirectChild(sibling => {
+      try {
+        if (sibling.getPluginData && sibling.getPluginData('hacSpecCloneForArea') === msg.areaId) {
+          cloneIdsToRemove.push(sibling.id);
+        }
+      } catch (e) { }
+    });
+    _forEachA11ySessionAreaChild(sibling => {
+      try {
+        if (sibling.getPluginData && sibling.getPluginData('hacSpecCloneForArea') === msg.areaId) {
+          cloneIdsToRemove.push(sibling.id);
+        }
+      } catch (e) { }
+    });
+    const removeIfMatch = sibling => {
+      try {
+        const isClone = cloneIdsToRemove.includes(sibling.id);
+        const isOverlayOfRemovedClone = sibling.getPluginData &&
+          cloneIdsToRemove.includes(sibling.getPluginData('hacSpecGroupForClone'));
+        const isSpecForArea = sibling.getPluginData && sibling.getPluginData('hacSpecForArea') === msg.areaId;
+        if (isClone || isOverlayOfRemovedClone || isSpecForArea) {
+          sibling.remove();
+        }
+      } catch (e) { }
+    };
+    _forEachA11ySessionDirectChild(removeIfMatch);
+    _forEachA11ySessionAreaChild(removeIfMatch);
     return;
   }
 
@@ -3678,6 +5351,295 @@ figma.ui.onmessage = async (msg) => {
         }
       } catch (e) { }
     });
+    return;
+  }
+
+  // ============================================================
+  // Trilha de Swipe — linha direcional com N pontos (3ª reformulação,
+  // 2026-09-04)
+  // ============================================================
+  // Histórico nesta mesma sessão: v1 era sequência de elementos DENTRO de
+  // uma Área (cópia do pipeline de Tabulação); v2 era uma conexão reta
+  // entre exatamente 2 Áreas Marcadas escolhidas por dropdown
+  // (_buildSwipeFlowConnection/_closestEdgePoints, removidas por completo
+  // nesta reformulação — imagem de referência real do usuário mostrou uma
+  // trilha ziguezagueante atravessando MUITOS pontos, não uma conexão de 2
+  // pontas fixas). O modelo real: uma única linha direcional contínua
+  // passando por N pontos em sequência (mín. 2), com seta em CADA segmento
+  // indicando a direção do trajeto. Pontos NÃO são restritos a Áreas
+  // Marcadas — qualquer nó clicado no canvas serve (mesma liberdade que a
+  // Ordem de Tabulação já tem).
+  //
+  // Captura em lote (mesmo espírito do Plano B de Ordem de Tabulação):
+  // clique único soma 1 ponto pendente no frontend; nada é desenhado até
+  // "Criar trilha de Swipe" (insert-swipe-path abaixo), que desenha tudo de
+  // uma vez.
+
+  // Ponto de conexão de cada nó na trilha: sempre o CENTRO do bounding box
+  // — nunca "a borda mais próxima entre os dois pontos" (abordagem
+  // anterior, _closestEdgePointsBetween, removida em 2026-09-08 por bug
+  // real confirmado com screenshot: em fileiras/grades de elementos
+  // parecidos, a borda geometricamente mais curta entre 2 vizinhos quase
+  // sempre são as bordas INTERNAS voltadas uma pra outra, fazendo a linha
+  // "pular" pra dentro e cruzar de forma confusa em vez de fluir na
+  // sequência real dos pontos). Centro a centro é previsível e sempre segue
+  // a ordem certa, ao custo de a linha/seta passar por cima do próprio
+  // elemento em vez de tangenciar a borda — troca aceita de propósito.
+  function _connectionPointOf(bounds) {
+    return { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 };
+  }
+
+  // Desenha UMA trilha contínua passando por `points` (lista ORDENADA de
+  // nós já resolvidos via figma.getNodeByIdAsync, cada um com
+  // absoluteBoundingBox) — um segmento reto entre cada par consecutivo,
+  // sempre CENTRO a centro (ver _connectionPointOf), com uma seta em CADA
+  // segmento (não só na ponta final, diferente da v2) e um
+  // marcador de origem só no primeiro ponto. Traço mais grosso/marcado que
+  // a v2 (pedido explícito do usuário sobre o traço fino de antes):
+  // strokeWeight 4 (era 2) e cor de destaque mais forte. Agrupa tudo,
+  // nomeia e marca via pluginData pra localizar/remover depois. Lança erro
+  // (nunca retorna null silenciosamente) se `points` tiver menos de 2 nós
+  // resolvíveis, pro handler decidir a mensagem de falha certa.
+  async function _buildSwipePathConnection(nodes) {
+    if (!nodes || nodes.length < 2) {
+      throw new Error('São necessários pelo menos 2 pontos para desenhar uma trilha de swipe.');
+    }
+
+    const strokeColor = { r: 0.03, g: 0.55, b: 0.62 }; // #0891B2, cor de destaque do hac
+    const strokeWeight = 4;
+    const arrowSize = 10;
+
+    const segments = [];
+    const parts = [];
+
+    for (let i = 0; i < nodes.length - 1; i++) {
+      const from = _connectionPointOf(nodes[i].absoluteBoundingBox);
+      const to = _connectionPointOf(nodes[i + 1].absoluteBoundingBox);
+      segments.push({ from, to });
+
+      const line = figma.createVector();
+      line.name = `Segmento ${i + 1}`;
+      figma.currentPage.appendChild(line);
+      line.x = 0; line.y = 0;
+      line.strokes = [{ type: 'SOLID', color: strokeColor }];
+      line.strokeWeight = strokeWeight;
+      line.strokeCap = 'ROUND';
+      line.vectorPaths = [{ windingRule: 'NONZERO', data: `M ${from.x} ${from.y} L ${to.x} ${to.y}` }];
+      parts.push(line);
+
+      // Seta no meio de CADA segmento (não só na ponta final) — deixa a
+      // direção do trajeto clara em qualquer ponto da trilha, mesmo em
+      // trilhas longas onde a ponta final está fora da área visível.
+      const angle = Math.atan2(to.y - from.y, to.x - from.x);
+      const midX = (from.x + to.x) / 2;
+      const midY = (from.y + to.y) / 2;
+      const arrow = figma.createVector();
+      arrow.name = `Seta ${i + 1}`;
+      figma.currentPage.appendChild(arrow);
+      arrow.x = 0; arrow.y = 0;
+      arrow.strokes = [{ type: 'SOLID', color: strokeColor }];
+      arrow.strokeWeight = strokeWeight * 0.75; arrow.strokeCap = 'ROUND'; arrow.strokeJoin = 'ROUND';
+      const ax1 = midX - arrowSize * Math.cos(angle - Math.PI / 6);
+      const ay1 = midY - arrowSize * Math.sin(angle - Math.PI / 6);
+      const ax2 = midX - arrowSize * Math.cos(angle + Math.PI / 6);
+      const ay2 = midY - arrowSize * Math.sin(angle + Math.PI / 6);
+      arrow.vectorPaths = [{ windingRule: 'NONZERO', data: `M ${ax1} ${ay1} L ${midX} ${midY} L ${ax2} ${ay2}` }];
+      parts.push(arrow);
+    }
+
+    // Marcador de origem só no primeiro ponto da trilha (mesmo raciocínio
+    // da v2: a extremidade inicial não fica "solta" visualmente).
+    const originDotR = 5;
+    const origin = segments[0].from;
+    const originDot = figma.createEllipse();
+    originDot.name = 'Origem';
+    figma.currentPage.appendChild(originDot);
+    originDot.resize(originDotR * 2, originDotR * 2);
+    originDot.x = origin.x - originDotR;
+    originDot.y = origin.y - originDotR;
+    originDot.fills = [{ type: 'SOLID', color: strokeColor }];
+    originDot.strokes = [];
+    parts.push(originDot);
+
+    const group = figma.group(parts, figma.currentPage);
+    group.name = `[hac Swipe] Trilha (${nodes.length} pontos)`;
+    group.locked = false;
+    group.setPluginData('hacCategory', 'a11y');
+
+    return group;
+  }
+
+  // Localiza (varrendo a Section de Trilha de Swipe, qualquer geração/
+  // versão, e também filhos soltos na página — mesmo padrão defensivo do
+  // resto do hac) o grupo de trilha cuja área dona é `areaId`. Só pode
+  // existir 1 por área (v1), então o primeiro achado já é o único relevante.
+  function _findSwipePathForArea(areaId) {
+    let found = null;
+    const _check = (node) => {
+      if (found) return;
+      try {
+        if (node.getPluginData && node.getPluginData('hacSwipePathAreaId') === areaId) {
+          found = node;
+        }
+      } catch (e) { }
+    };
+    for (const sibling of figma.currentPage.children) {
+      if (sibling.type === 'SECTION') continue;
+      _check(sibling);
+    }
+    for (const sibling of figma.currentPage.children) {
+      if (sibling.type !== 'SECTION' || !sibling.name.startsWith(A11Y_SWIPE_FLOW_SECTION_NAME)) continue;
+      for (const child of (sibling.children || [])) _check(child);
+    }
+    _forEachA11ySessionAreaChild(_check);
+    return found;
+  }
+
+  function _removeSwipePathForArea(areaId) {
+    const existing = _findSwipePathForArea(areaId);
+    if (existing) {
+      try { existing.remove(); } catch (e) { }
+    }
+  }
+
+  // insert-swipe-path — recebe a lista de pontos JÁ REVISADA/REORDENADA no
+  // frontend (modelo em lote, ver applyTabOrderToCanvas em accessibility.js
+  // pro padrão equivalente de Tabulação) e desenha a trilha completa numa
+  // única operação.
+  //
+  // Ordem de operações importante (achado real do QA da v2 anterior,
+  // resolvido de propósito aqui): a trilha antiga só é removida do canvas
+  // DEPOIS de confirmar que a nova foi desenhada com sucesso — nunca
+  // remove-then-draws-that-might-fail. Se _buildSwipePathConnection lançar,
+  // a trilha antiga (se havia) permanece intacta no canvas e o dado não é
+  // tocado, então hacData.a11ySwipePaths nunca afirma uma trilha que não
+  // existe mais no canvas.
+  if (msg.type === "insert-swipe-path") {
+    (async () => {
+      const areaId = msg.areaId;
+      const points = Array.isArray(msg.points) ? msg.points : [];
+      if (!areaId || points.length < 2) {
+        figma.ui.postMessage({ type: 'swipe-path-create-failed', areaId, reason: 'São necessários pelo menos 2 pontos para criar uma trilha de swipe.' });
+        return;
+      }
+      try {
+        // A linha final precisa ser desenhada DENTRO DA CÓPIA clonada da
+        // Área (2026-09-04-ac), nunca sobre o frame original — resolve o
+        // clone ativo (ou recria, se não existir mais em memória — mesmo
+        // fallback defensivo de draw-tab-order-badge/_resolveActiveTabOrderClone)
+        // e traduz cada ponto (id ORIGINAL, vindo da lista pendente já
+        // revisada) pro node EQUIVALENTE dentro dela.
+        const cloneResolved = msg.targetNodeId
+          ? await _resolveActiveSwipePathClone(areaId, msg.targetNodeId, msg.sectionName, msg.designerName)
+          : null;
+        if (!cloneResolved) {
+          throw new Error('A cópia da área não foi encontrada no canvas — refaça a trilha.');
+        }
+        const { clone, nodeMap } = cloneResolved;
+
+        const resolvedNodes = [];
+        for (const p of points) {
+          // Traduz de volta pro id ORIGINAL antes de consultar o nodeMap do
+          // Swipe — "Gerar automaticamente" (startSwipePathFromTabOrder)
+          // manda ids da CÓPIA de Tabulação, não da área original; ver
+          // _resolveOriginalNodeIdFromTabOrderClone. No-op para pontos que já
+          // chegam com id original (fluxo manual/marquee).
+          const originalNodeId = p && p.nodeId ? _resolveOriginalNodeIdFromTabOrderClone(areaId, p.nodeId) : null;
+          const mappedNode = originalNodeId ? nodeMap.get(originalNodeId) : null;
+          if (!mappedNode || !mappedNode.absoluteBoundingBox) {
+            throw new Error(`O elemento "${p && p.nodeName || 'sem nome'}" não existe mais na cópia da área — refaça a trilha.`);
+          }
+          resolvedNodes.push(mappedNode);
+        }
+
+        const group = await _buildSwipePathConnection(resolvedNodes);
+        group.setPluginData('hacSwipePathAreaId', areaId);
+
+        // A linha passa a viver num GRUPO IRMÃO da própria cópia clonada
+        // sobre a qual foi desenhada — nunca DENTRO dela (2026-09-08, 6ª
+        // rodada: essa era a intenção da correção anterior, "a trilha tem
+        // que ficar dentro do grupo da nova réplica", mas colocar a linha
+        // como filha real do clone expõe o mesmo bug de clipsContent que
+        // afetava os selos de Ordem de Tabulação — uma linha que cruza a
+        // tela toda tem ainda mais chance de "vazar" pra fora dos limites
+        // de algum frame intermediário do clone e ser recortada). O grupo
+        // overlay (_getOrCreateCloneOverlayGroup, mesma função usada pelos
+        // selos, chave de pluginData própria pra nunca compartilhar grupo
+        // com eles) continua vivendo ao lado do clone — visualmente "preso"
+        // a ele (mesmo Grupo da Área, sempre logo acima na pilha), só que
+        // como GROUP puro, imune a clip. Fallback pro Grupo da Área (e daí
+        // pra Section, Área legada) só se o clone não existir ou o
+        // reparenting falhar por outro motivo.
+        let _reparentedIntoClone = false;
+        if (clone && !clone.removed) {
+          try {
+            const swipeOverlayGroup = _getOrCreateCloneOverlayGroup(clone, 'hacSwipePathGroupForClone', '[Trilha de Swipe]');
+            _reparentIntoAreaGroup(group, swipeOverlayGroup);
+            _reparentedIntoClone = true;
+          } catch (e) {
+            console.error('[hac] insert-swipe-path: reparenting pro grupo overlay falhou, caindo pro Grupo da Área.', e && e.message);
+            figma.notify('Não foi possível encaixar a trilha na cópia de Swipe — ela foi colocada direto no grupo da área.');
+          }
+        }
+        if (!_reparentedIntoClone) {
+          await _reparentArtifactIntoArea(group, areaId, () => {
+            _reparentIntoSection(group, () => {
+              const suffix = _extractA11ySectionVersionSuffix(msg.sectionName);
+              return _getOrCreateNamedSection(A11Y_SWIPE_FLOW_SECTION_NAME + suffix);
+            });
+          });
+        }
+
+        // Só remove a trilha antiga desta área DEPOIS que a nova já foi
+        // desenhada, reparentada e marcada com sucesso — ver comentário do
+        // handler acima.
+        const existing = _findSwipePathForArea(areaId);
+        if (existing && existing.id !== group.id) {
+          try { existing.remove(); } catch (e) { }
+        }
+
+        figma.currentPage.selection = [group];
+        figma.viewport.scrollAndZoomIntoView([group]);
+        // Ecoa os MESMOS `points` recebidos no payload (não relê nenhum
+        // estado do frontend) — o handler de resposta (handleSwipePathCreated,
+        // accessibility.js) persiste exatamente esta lista, nunca
+        // window._swipePathPendingList no momento em que a resposta chega.
+        // Sem isso, reordenar/remover um item da lista pendente ENQUANTO
+        // esta mensagem está em trânsito gravaria em hacData.a11ySwipePaths
+        // uma trilha diferente da que foi de fato desenhada aqui (achado
+        // real de QA, 2026-09-04).
+        figma.ui.postMessage({
+          type: 'swipe-path-created',
+          areaId,
+          pathNodeId: group.id,
+          points,
+        });
+      } catch (e) {
+        console.error('[hac] insert-swipe-path falhou:', e && e.stack || e);
+        figma.ui.postMessage({
+          type: 'swipe-path-create-failed',
+          areaId,
+          reason: e && e.message ? e.message : 'Não foi possível criar a trilha de swipe.',
+        });
+      }
+    })();
+    return;
+  }
+
+  // Exclusão de uma Área precisa limpar a trilha de swipe cuja área DONA é
+  // ela (hacSwipePathAreaId === areaId) — cascata natural, ver
+  // deleteA11yArea em accessibility.js. Pontos individuais que apontem pra
+  // dentro de OUTRA área que foi excluída são um caso mais raro (a trilha
+  // continua existindo, só com um ponto "quebrado" se o nó também for
+  // removido do canvas por fora do hac) — tratado com o mesmo espírito
+  // best-effort já usado em outros lugares do hac, não coberto 100% nesta
+  // entrega (limitação conhecida, documentada aqui de propósito).
+  if (msg.type === "cleanup-swipe-path-for-area") {
+    (async () => {
+      const areaId = msg.areaId;
+      _removeSwipePathForArea(areaId);
+      figma.ui.postMessage({ type: 'swipe-path-cleaned-up', areaId });
+    })();
     return;
   }
 
@@ -3730,6 +5692,611 @@ figma.ui.onmessage = async (msg) => {
         await _walkLayerOrder(root);
       }
       figma.ui.postMessage({ type: "layer-order-resolved", areaId, areaTargetNodeId, order });
+    })();
+    return;
+  }
+
+  // ============================================================
+  // Ficha de Handoff — handlers
+  // ============================================================
+  // Clona o frame ORIGINAL da área (nunca a cópia rascunho de Tabulação,
+  // que é descartável) para dentro da própria seção da Ficha, e devolve o
+  // mapa original→clone (_buildOriginalToCloneMap, já existente) — mesmo
+  // raciocínio de _createTabOrderCloneForArea, mas SEM reparentar na
+  // Section de Tabulação (o clone nasce direto dentro do frame da Ficha,
+  // que quem chama passa como `parentFrame`).
+  async function _cloneAreaRootIntoFicha(area, parentFrame, labelPrefix) {
+    const root = area.targetNodeId ? await figma.getNodeByIdAsync(area.targetNodeId) : null;
+    if (!root || !root.absoluteBoundingBox || typeof root.clone !== 'function') return null;
+
+    const clone = root.clone();
+    figma.currentPage.appendChild(clone);
+    clone.name = `[${labelPrefix}] ${root.name}`;
+    clone.locked = false;
+    clone.setPluginData('hacCategory', 'a11y');
+
+    const nodeMap = _buildOriginalToCloneMap(root, clone);
+
+    // parentFrame (a seção da Ficha) é sempre Auto Layout HORIZONTAL — ao
+    // contrário do reparenting de _createTabOrderBadge (que precisa de
+    // posicionamento ABSOLUTE porque o pai é o design clonado, não um
+    // container de layout), aqui queremos exatamente o oposto: o clone deve
+    // ENTRAR NO FLUXO do Auto Layout, lado a lado com a coluna de legenda,
+    // sem x/y manual algum.
+    parentFrame.appendChild(clone);
+
+    return { clone, nodeMap };
+  }
+
+  // Seção "Tabulação" da Ficha — clona o frame original da área, desenha um
+  // selo por item já persistido em tabOrderItems (reaproveitando
+  // _createTabOrderBadge numa chamada "fria": nunca depende de
+  // _activeTabOrderCloneMaps, só do nodeMap recém-calculado acima) e monta a
+  // coluna de legenda ao lado. `items` chega já filtrado/ordenado pela área
+  // pelo frontend (mesmo _currentTabOrderItems que a aba de trabalho usa).
+  async function _buildFichaTabulacaoSection(fichaFrame, area, items) {
+    _removeFichaSectionInFrame(fichaFrame, 'tabulacao');
+
+    const section = figma.createFrame();
+    section.name = 'Ficha — Tabulação';
+    section.layoutMode = 'HORIZONTAL';
+    section.primaryAxisSizingMode = 'AUTO';
+    section.counterAxisSizingMode = 'AUTO';
+    section.itemSpacing = 24;
+    section.fills = [];
+    section.setPluginData('hacFichaSection', 'tabulacao');
+    _insertFichaSectionInOrder(fichaFrame, section, 'tabulacao');
+
+    const legend = _buildFichaLegendColumn(
+      'Ordem de Tabulação',
+      'Sequência de foco do teclado (tecla Tab) desta tela — cada selo numerado indica a ordem em que o elemento recebe foco.'
+    );
+    section.appendChild(legend);
+
+    const cloneResult = await _cloneAreaRootIntoFicha(area, section, 'Ficha — Tabulação');
+    let itemCount = 0;
+    if (cloneResult) {
+      const { clone, nodeMap } = cloneResult;
+      try { await figma.loadFontAsync({ family: 'Inter', style: 'Bold' }); } catch (e) { }
+      for (const item of (items || [])) {
+        const mappedNode = item && item.targetNodeId ? nodeMap.get(item.targetNodeId) : null;
+        if (!mappedNode || !mappedNode.absoluteBoundingBox) continue;
+        try {
+          await _createTabOrderBadge(
+            mappedNode, item.number, item.label || '', item.conector || 'direita',
+            area.id, false, area.a11yOrigin, clone, area.sectionName
+          );
+          itemCount++;
+        } catch (e) {
+          console.error('[hac] _buildFichaTabulacaoSection: falha ao desenhar selo.', e && e.message);
+        }
+      }
+    }
+
+    return itemCount;
+  }
+
+  // Seção "Swipe" da Ficha — restaurada com réplica visual real
+  // (2026-09-08, pedido do usuário: "definitivamente é pra se ter uma
+  // réplica" — a versão anterior só desenhava texto "1. X → 2. Y...",
+  // regressão de uma entrega anterior). Mesmo padrão de
+  // _buildFichaTabulacaoSection: clona a área via _cloneAreaRootIntoFicha,
+  // traduz cada ponto (id ORIGINAL, vindo de hacData.a11ySwipePaths) pro
+  // node equivalente dentro do clone via nodeMap, e desenha a trilha real
+  // (linha + setas) com _buildSwipePathConnection — a mesma função já
+  // usada no canvas de trabalho, não duplicada aqui. Só é acionada pelo
+  // handler quando o projeto é mobile (Swipe é exclusivo mobile).
+  async function _buildFichaSwipeSection(fichaFrame, area, points) {
+    _removeFichaSectionInFrame(fichaFrame, 'swipe');
+
+    const section = figma.createFrame();
+    section.name = 'Ficha — Swipe';
+    section.layoutMode = 'HORIZONTAL';
+    section.primaryAxisSizingMode = 'AUTO';
+    section.counterAxisSizingMode = 'AUTO';
+    section.itemSpacing = 24;
+    section.fills = [];
+    section.setPluginData('hacFichaSection', 'swipe');
+    _insertFichaSectionInOrder(fichaFrame, section, 'swipe');
+
+    const legend = _buildFichaLegendColumn(
+      'Trilha de Swipe',
+      'Navegação por gesto de deslizar (swipe), exclusiva do leitor de tela mobile — trilha direcional de pontos, na ordem em que o gesto percorre a tela.'
+    );
+    section.appendChild(legend);
+
+    try { await figma.loadFontAsync({ family: 'Inter', style: 'Bold' }); } catch (e) { }
+    try { await figma.loadFontAsync({ family: 'Inter', style: 'Regular' }); } catch (e) { }
+
+    const hasPoints = Array.isArray(points) && points.length >= 2;
+    if (!hasPoints) {
+      // Sem pontos suficientes pra desenhar uma trilha real (0 ou 1
+      // ponto) — mesmo fallback textual de antes, só que como aviso, não
+      // mais como caminho normal.
+      const card = figma.createFrame();
+      card.name = 'Trilha de Swipe';
+      card.layoutMode = 'VERTICAL';
+      card.paddingLeft = 12; card.paddingRight = 12; card.paddingTop = 12; card.paddingBottom = 12;
+      card.itemSpacing = 4;
+      card.cornerRadius = 8;
+      card.fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }];
+      card.strokes = [{ type: 'SOLID', color: { r: 0.537, g: 0.537, b: 0.537 } }];
+      card.strokeWeight = 1;
+      card.primaryAxisSizingMode = 'AUTO';
+      card.counterAxisSizingMode = 'FIXED';
+      card.resize(260, 1);
+
+      const text = figma.createText();
+      text.name = 'Texto';
+      text.fontName = { family: 'Inter', style: 'Regular' };
+      text.fontSize = 11.5;
+      text.fills = [{ type: 'SOLID', color: { r: 0.15, g: 0.15, b: 0.15 } }];
+      text.characters = 'Nenhuma trilha de swipe definida para esta área.';
+      text.textAutoResize = 'HEIGHT';
+      text.layoutAlign = 'STRETCH';
+      card.appendChild(text);
+
+      section.appendChild(card);
+      return 0;
+    }
+
+    const cloneResult = await _cloneAreaRootIntoFicha(area, section, 'Ficha — Swipe');
+    if (!cloneResult) {
+      // Frame original não resolve mais (área apagada/movida) — mesmo
+      // fallback textual, agora como erro em vez de estado normal.
+      const errorText = figma.createText();
+      errorText.name = 'Erro';
+      errorText.fontName = { family: 'Inter', style: 'Regular' };
+      errorText.fontSize = 11.5;
+      errorText.fills = [{ type: 'SOLID', color: { r: 0.7, g: 0.2, b: 0.2 } }];
+      errorText.characters = 'Não foi possível clonar a área original para desenhar a trilha — marque a área novamente.';
+      figma.currentPage.appendChild(errorText);
+      section.appendChild(errorText);
+      return 0;
+    }
+
+    const { clone, nodeMap } = cloneResult;
+    const resolvedNodes = [];
+    for (const p of points) {
+      const mappedNode = p && p.nodeId ? nodeMap.get(p.nodeId) : null;
+      if (mappedNode && mappedNode.absoluteBoundingBox) resolvedNodes.push(mappedNode);
+    }
+
+    if (resolvedNodes.length < 2) {
+      // Pontos existem no dado, mas não foram encontrados no clone atual
+      // (elementos renomeados/removidos do design desde a última trilha)
+      // — a réplica em si já foi inserida (fica visível), só sem a linha.
+      return 0;
+    }
+
+    const pathGroup = await _buildSwipePathConnection(resolvedNodes);
+    pathGroup.setPluginData('hacFichaSwipePathForClone', clone.id);
+
+    // Mesmo cuidado do canvas de trabalho (2026-09-08): a trilha nasce
+    // DENTRO de um grupo-overlay IRMÃO do clone (_getOrCreateCloneOverlayGroup),
+    // nunca filha direta dele — um GROUP nunca tem clipsContent nem Auto
+    // Layout, imune ao bug já corrigido de a linha "vazar" pra fora de um
+    // frame com clip no caminho (uma trilha cruzando a tela inteira tem
+    // ainda mais chance de vazar do que um selo pontual).
+    try {
+      const overlayGroup = _getOrCreateCloneOverlayGroup(clone, 'hacFichaSwipeGroupForClone', '[Trilha de Swipe]');
+      _reparentIntoAreaGroup(pathGroup, overlayGroup);
+    } catch (e) {
+      console.error('[hac] _buildFichaSwipeSection: reparenting da trilha pro overlay falhou, mantendo solta na página.', e && e.message);
+    }
+
+    return points.length;
+  }
+
+  // Seção "Leitor de Tela" da Ficha — um card por spec, Auto Layout puro
+  // (mesmo padrão visual do card procedural de fallback de
+  // create-unified-spec, sem reusar a função em si — aqui os dados já vêm
+  // resolvidos/limpos do frontend, não de um fluxo de criação ao vivo).
+  // `specs` chega do frontend já com os campos prontos pra exibição (ver
+  // _fichaBuildSpecPayload em handoff-ficha.js): descricao, nomeAcessivel,
+  // notaCodigo, notas, observacoes, componente — cada um `null`/ausente
+  // quando a categoria da spec não tem aquele campo (nunca aparece vazio).
+  async function _buildFichaLeitorSection(fichaFrame, area, specs) {
+    _removeFichaSectionInFrame(fichaFrame, 'leitor');
+
+    const section = figma.createFrame();
+    section.name = 'Ficha — Leitor de Tela';
+    section.layoutMode = 'HORIZONTAL';
+    section.primaryAxisSizingMode = 'AUTO';
+    section.counterAxisSizingMode = 'AUTO';
+    section.itemSpacing = 16;
+    section.counterAxisAlignItems = 'MIN';
+    section.fills = [];
+    section.setPluginData('hacFichaSection', 'leitor');
+    _insertFichaSectionInOrder(fichaFrame, section, 'leitor');
+
+    try { await figma.loadFontAsync({ family: 'Inter', style: 'Regular' }); } catch (e) { }
+    try { await figma.loadFontAsync({ family: 'Inter', style: 'Medium' }); } catch (e) { }
+    try { await figma.loadFontAsync({ family: 'Inter', style: 'Bold' }); } catch (e) { }
+
+    let specCount = 0;
+    for (const spec of (specs || [])) {
+      try {
+        const themeColor = hexToRgb(spec.categoryColor || '#0891B2');
+        const themeFill = hexToRgb(spec.categoryFill || spec.categoryColor || '#EBF4FB');
+
+        const card = figma.createFrame();
+        card.name = `Spec ${spec.letter || ''}`.trim();
+        card.layoutMode = 'VERTICAL';
+        card.paddingLeft = 12; card.paddingRight = 12; card.paddingTop = 12; card.paddingBottom = 12;
+        card.itemSpacing = 8;
+        card.cornerRadius = 8;
+        card.fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }];
+        card.strokes = [{ type: 'SOLID', color: themeColor }];
+        card.strokeWeight = 1.5;
+        card.primaryAxisSizingMode = 'AUTO';
+        card.counterAxisSizingMode = 'FIXED';
+        card.resize(240, 1);
+
+        const headerRow = figma.createFrame();
+        headerRow.layoutMode = 'HORIZONTAL';
+        headerRow.itemSpacing = 8;
+        headerRow.fills = [];
+        headerRow.primaryAxisSizingMode = 'AUTO';
+        headerRow.counterAxisSizingMode = 'AUTO';
+        headerRow.counterAxisAlignItems = 'CENTER';
+
+        const tagCircle = figma.createFrame();
+        tagCircle.name = 'Tag';
+        tagCircle.layoutMode = 'HORIZONTAL';
+        tagCircle.primaryAxisSizingMode = 'FIXED';
+        tagCircle.counterAxisSizingMode = 'FIXED';
+        tagCircle.resize(32, 32);
+        tagCircle.cornerRadius = 16;
+        tagCircle.fills = [{ type: 'SOLID', color: themeFill }];
+        tagCircle.strokes = [{ type: 'SOLID', color: themeColor }];
+        tagCircle.strokeWeight = 1.5;
+        tagCircle.primaryAxisAlignItems = 'CENTER';
+        tagCircle.counterAxisAlignItems = 'CENTER';
+        const tagText = figma.createText();
+        tagText.fontName = { family: 'Inter', style: 'Bold' };
+        tagText.fontSize = 14;
+        tagText.fills = [{ type: 'SOLID', color: themeColor }];
+        tagText.characters = spec.letter || '•';
+        tagCircle.appendChild(tagText);
+        headerRow.appendChild(tagCircle);
+
+        const title = figma.createText();
+        title.fontName = { family: 'Inter', style: 'Bold' };
+        title.fontSize = 11;
+        title.fills = [{ type: 'SOLID', color: { r: 0.1, g: 0.1, b: 0.1 } }];
+        title.characters = spec.targetNodeName || spec.categoryLabel || 'Elemento';
+        title.textAutoResize = 'HEIGHT';
+        title.layoutAlign = 'STRETCH';
+        headerRow.appendChild(title);
+        card.appendChild(headerRow);
+
+        if (spec.categoryLabel) {
+          const pill = figma.createFrame();
+          pill.name = `Categoria/${spec.categoryLabel}`;
+          pill.layoutMode = 'HORIZONTAL';
+          pill.paddingLeft = 8; pill.paddingRight = 8; pill.paddingTop = 4; pill.paddingBottom = 4;
+          pill.cornerRadius = 12;
+          pill.primaryAxisSizingMode = 'AUTO';
+          pill.counterAxisSizingMode = 'AUTO';
+          pill.fills = [{ type: 'SOLID', color: themeFill }];
+          pill.strokes = [{ type: 'SOLID', color: themeColor }];
+          const pillText = figma.createText();
+          pillText.fontName = { family: 'Inter', style: 'Medium' };
+          pillText.fontSize = 9;
+          pillText.fills = [{ type: 'SOLID', color: themeColor }];
+          pillText.characters = spec.categoryLabel;
+          pill.appendChild(pillText);
+          card.appendChild(pill);
+        }
+
+        // Campos por spec.fields[] — já filtrados/resolvidos no frontend
+        // (_fichaBuildSpecPayload), então um campo ausente na categoria da
+        // spec simplesmente não está no array, nunca aparece com valor vazio.
+        (spec.fields || []).forEach(f => {
+          if (!f || !f.value) return;
+          const fieldCol = figma.createFrame();
+          fieldCol.name = `Campo/${f.label}`;
+          fieldCol.layoutMode = 'VERTICAL';
+          fieldCol.itemSpacing = 2;
+          fieldCol.fills = [];
+          fieldCol.primaryAxisSizingMode = 'AUTO';
+          fieldCol.counterAxisSizingMode = 'AUTO';
+          fieldCol.layoutAlign = 'STRETCH';
+
+          const fLabel = figma.createText();
+          fLabel.fontName = { family: 'Inter', style: 'Medium' };
+          fLabel.fontSize = 9;
+          fLabel.fills = [{ type: 'SOLID', color: { r: 0.5, g: 0.5, b: 0.5 } }];
+          fLabel.characters = f.label.toUpperCase();
+          fLabel.textAutoResize = 'HEIGHT';
+          fLabel.layoutAlign = 'STRETCH';
+
+          const fVal = figma.createText();
+          fVal.fontName = { family: 'Inter', style: 'Regular' };
+          fVal.fontSize = 10.5;
+          fVal.fills = [{ type: 'SOLID', color: { r: 0.15, g: 0.15, b: 0.15 } }];
+          fVal.characters = String(f.value);
+          fVal.textAutoResize = 'HEIGHT';
+          fVal.layoutAlign = 'STRETCH';
+
+          fieldCol.appendChild(fLabel);
+          fieldCol.appendChild(fVal);
+          card.appendChild(fieldCol);
+        });
+
+        section.appendChild(card);
+        specCount++;
+      } catch (e) {
+        console.error('[hac] _buildFichaLeitorSection: falha ao montar card de spec.', e && e.message);
+      }
+    }
+
+    return specCount;
+  }
+
+  // Seção "Handoff Review" da Ficha (2026-09-08, 4º e último bloco,
+  // sempre na ponta direita — ver FICHA_SECTION_ORDER) — o CONSOLIDADO
+  // do que já foi inserido nas outras 3 seções, sem instrução didática
+  // nem réplica própria (confirmado pelo usuário: "não precisa de
+  // instrução. Ele é o consolidado de tudo"). `sectionsSummary` e
+  // `categoryBreakdown` chegam já calculados do frontend
+  // (_fichaInsertSection, handoff-ficha.js) — o backend não tem acesso a
+  // hacData, mesmo padrão já usado por items/points/specs das outras 3
+  // seções. Nunca bloqueia: se nada foi inserido ainda, mostra 1 card
+  // avisando isso, em vez de recusar a inserção.
+  async function _buildFichaReviewSection(fichaFrame, area, sectionsSummary, categoryBreakdown) {
+    _removeFichaSectionInFrame(fichaFrame, 'review');
+
+    const section = figma.createFrame();
+    section.name = 'Ficha — Handoff Review';
+    section.layoutMode = 'VERTICAL';
+    section.primaryAxisSizingMode = 'AUTO';
+    section.counterAxisSizingMode = 'AUTO';
+    section.itemSpacing = 12;
+    section.fills = [];
+    section.setPluginData('hacFichaSection', 'review');
+    _insertFichaSectionInOrder(fichaFrame, section, 'review');
+
+    try { await figma.loadFontAsync({ family: 'Inter', style: 'Regular' }); } catch (e) { }
+    try { await figma.loadFontAsync({ family: 'Inter', style: 'Medium' }); } catch (e) { }
+    try { await figma.loadFontAsync({ family: 'Inter', style: 'Bold' }); } catch (e) { }
+
+    const title = figma.createText();
+    title.name = 'Título';
+    title.fontName = { family: 'Inter', style: 'Bold' };
+    title.fontSize = 14;
+    title.fills = [{ type: 'SOLID', color: { r: 0.1, g: 0.1, b: 0.1 } }];
+    title.characters = 'Handoff Review';
+    title.textAutoResize = 'HEIGHT';
+    section.appendChild(title);
+
+    const hasAnySummary = Array.isArray(sectionsSummary) && sectionsSummary.length > 0;
+    const hasAnyBreakdown = Array.isArray(categoryBreakdown) && categoryBreakdown.length > 0;
+
+    if (!hasAnySummary && !hasAnyBreakdown) {
+      const emptyCard = figma.createFrame();
+      emptyCard.name = 'Vazio';
+      emptyCard.layoutMode = 'VERTICAL';
+      emptyCard.paddingLeft = 12; emptyCard.paddingRight = 12; emptyCard.paddingTop = 12; emptyCard.paddingBottom = 12;
+      emptyCard.cornerRadius = 8;
+      emptyCard.fills = [{ type: 'SOLID', color: { r: 0.98, g: 0.98, b: 0.98 } }];
+      emptyCard.strokes = [{ type: 'SOLID', color: { r: 0.85, g: 0.85, b: 0.85 } }];
+      emptyCard.strokeWeight = 1;
+      emptyCard.primaryAxisSizingMode = 'AUTO';
+      emptyCard.counterAxisSizingMode = 'FIXED';
+      emptyCard.resize(260, 1);
+      const emptyText = figma.createText();
+      emptyText.fontName = { family: 'Inter', style: 'Regular' };
+      emptyText.fontSize = 11;
+      emptyText.fills = [{ type: 'SOLID', color: { r: 0.5, g: 0.5, b: 0.5 } }];
+      emptyText.characters = 'Nada documentado nesta ficha ainda — insira as seções nas abas de trabalho.';
+      emptyText.textAutoResize = 'HEIGHT';
+      emptyText.layoutAlign = 'STRETCH';
+      emptyCard.appendChild(emptyText);
+      section.appendChild(emptyCard);
+      return 0;
+    }
+
+    // Cards de status por seção já inserida — mesma paleta neutra
+    // (cyan de destaque) usada pelos cards de status do dashboard
+    // (_fichaStatusCardHtml, handoff-ficha.js), só que como frames reais
+    // no canvas em vez de HTML.
+    if (hasAnySummary) {
+      const summaryRow = figma.createFrame();
+      summaryRow.name = 'Resumo por seção';
+      summaryRow.layoutMode = 'HORIZONTAL';
+      summaryRow.itemSpacing = 8;
+      summaryRow.fills = [];
+      summaryRow.primaryAxisSizingMode = 'AUTO';
+      summaryRow.counterAxisSizingMode = 'AUTO';
+      section.appendChild(summaryRow);
+
+      sectionsSummary.forEach(item => {
+        if (!item || !item.label) return;
+        const card = figma.createFrame();
+        card.name = `Status/${item.label}`;
+        card.layoutMode = 'VERTICAL';
+        card.paddingLeft = 10; card.paddingRight = 10; card.paddingTop = 8; card.paddingBottom = 8;
+        card.itemSpacing = 2;
+        card.cornerRadius = 8;
+        card.fills = [{ type: 'SOLID', color: { r: 0.925, g: 0.976, b: 0.984 } }];
+        card.strokes = [{ type: 'SOLID', color: { r: 0.03, g: 0.55, b: 0.62 } }];
+        card.strokeWeight = 1;
+        card.primaryAxisSizingMode = 'AUTO';
+        card.counterAxisSizingMode = 'AUTO';
+
+        const labelText = figma.createText();
+        labelText.fontName = { family: 'Inter', style: 'Medium' };
+        labelText.fontSize = 9;
+        labelText.fills = [{ type: 'SOLID', color: { r: 0.03, g: 0.4, b: 0.45 } }];
+        labelText.characters = item.label.toUpperCase();
+        labelText.textAutoResize = 'HEIGHT';
+        card.appendChild(labelText);
+
+        const countText = figma.createText();
+        countText.fontName = { family: 'Inter', style: 'Bold' };
+        countText.fontSize = 13;
+        countText.fills = [{ type: 'SOLID', color: { r: 0.03, g: 0.55, b: 0.62 } }];
+        countText.characters = String(item.countLabel || item.count || 0);
+        countText.textAutoResize = 'HEIGHT';
+        card.appendChild(countText);
+
+        summaryRow.appendChild(card);
+      });
+    }
+
+    // Lista compacta de specs por categoria — mesmo dado de
+    // categoryBreakdown já calculado hoje em _a11yAreaAccordionEl
+    // (accessibility.js), reaproveitado aqui só pra exibição.
+    if (hasAnyBreakdown) {
+      const breakdownCol = figma.createFrame();
+      breakdownCol.name = 'Specs por categoria';
+      breakdownCol.layoutMode = 'VERTICAL';
+      breakdownCol.itemSpacing = 4;
+      breakdownCol.fills = [];
+      breakdownCol.primaryAxisSizingMode = 'AUTO';
+      breakdownCol.counterAxisSizingMode = 'FIXED';
+      breakdownCol.resize(260, 1);
+      section.appendChild(breakdownCol);
+
+      categoryBreakdown.forEach(item => {
+        if (!item || !item.label) return;
+        const row = figma.createFrame();
+        row.layoutMode = 'HORIZONTAL';
+        row.itemSpacing = 6;
+        row.fills = [];
+        row.primaryAxisSizingMode = 'AUTO';
+        row.counterAxisSizingMode = 'AUTO';
+        row.counterAxisAlignItems = 'CENTER';
+
+        const dot = figma.createEllipse();
+        dot.resize(6, 6);
+        dot.fills = [{ type: 'SOLID', color: hexToRgb(item.color || '#0891B2') }];
+        row.appendChild(dot);
+
+        const rowText = figma.createText();
+        rowText.fontName = { family: 'Inter', style: 'Regular' };
+        rowText.fontSize = 10.5;
+        rowText.fills = [{ type: 'SOLID', color: { r: 0.15, g: 0.15, b: 0.15 } }];
+        rowText.characters = `${item.label} (${item.count || 0})`;
+        rowText.textAutoResize = 'HEIGHT';
+        row.appendChild(rowText);
+
+        breakdownCol.appendChild(row);
+      });
+    }
+
+    return (sectionsSummary || []).length + (categoryBreakdown || []).length;
+  }
+
+  // Handler único — despacha pro builder da seção pedida, sempre garantindo
+  // primeiro que o frame-container da Ficha existe. `msg.area` chega do
+  // frontend já resolvido (mesmo objeto de a11yAreas, com handoffFrameId se
+  // já existir) — o backend nunca lê hacData diretamente (só existe do lado
+  // do frontend, ver core.js).
+  if (msg.type === "insert-ficha-section") {
+    (async () => {
+      const area = msg.area;
+      const sectionKey = msg.sectionKey;
+      if (!area || !area.id || !['tabulacao', 'swipe', 'leitor', 'review'].includes(sectionKey)) {
+        figma.ui.postMessage({ type: 'ficha-section-insert-failed', areaId: area && area.id, sectionKey, reason: 'Dados inválidos.' });
+        return;
+      }
+
+      // Tabulação e Swipe (2026-09-08: Swipe voltou a clonar a área pra
+      // desenhar a trilha real, ver _buildFichaSwipeSection) precisam do
+      // frame original resolvível. Leitor de Tela clona por conta própria
+      // via _resolveActiveSpecClone (specs já resolvidas antes de chegar
+      // aqui). Review não clona nada — é o consolidado, sem depender do
+      // frame original existir.
+      const root = area.targetNodeId ? await figma.getNodeByIdAsync(area.targetNodeId) : null;
+      if ((sectionKey === 'tabulacao' || sectionKey === 'swipe') && (!root || !root.absoluteBoundingBox)) {
+        figma.ui.postMessage({
+          type: 'ficha-section-insert-failed', areaId: area.id, sectionKey,
+          reason: 'O frame original desta área não existe mais no canvas — marque a área novamente.'
+        });
+        return;
+      }
+
+      let fichaFrame;
+      try {
+        fichaFrame = await _createOrGetFichaFrame(area, msg.designerName);
+      } catch (e) {
+        console.error('[hac] insert-ficha-section: falha ao criar/obter o frame da Ficha.', e && e.message);
+        figma.ui.postMessage({ type: 'ficha-section-insert-failed', areaId: area.id, sectionKey, reason: 'Não foi possível criar o frame da Ficha.' });
+        return;
+      }
+
+      let itemCount = 0;
+      try {
+        if (sectionKey === 'tabulacao') {
+          itemCount = await _buildFichaTabulacaoSection(fichaFrame, area, msg.items || []);
+        } else if (sectionKey === 'swipe') {
+          itemCount = await _buildFichaSwipeSection(fichaFrame, area, msg.points || []);
+        } else if (sectionKey === 'leitor') {
+          itemCount = await _buildFichaLeitorSection(fichaFrame, area, msg.specs || []);
+        } else if (sectionKey === 'review') {
+          itemCount = await _buildFichaReviewSection(fichaFrame, area, msg.sectionsSummary || [], msg.categoryBreakdown || []);
+        }
+      } catch (e) {
+        console.error('[hac] insert-ficha-section: falha ao montar a seção "' + sectionKey + '".', e && e.message);
+        figma.ui.postMessage({ type: 'ficha-section-insert-failed', areaId: area.id, sectionKey, reason: e && e.message ? e.message : 'Falha ao montar a seção.' });
+        return;
+      }
+
+      figma.currentPage.selection = [fichaFrame];
+      figma.viewport.scrollAndZoomIntoView([fichaFrame]);
+
+      figma.ui.postMessage({
+        type: 'ficha-section-inserted',
+        areaId: area.id,
+        sectionKey,
+        itemCount,
+        frameId: fichaFrame.id,
+      });
+    })();
+    return;
+  }
+
+  // Exclusão em cascata — mesmo padrão de delete-tab-order-copy-for-area,
+  // localizando só por pluginData.
+  if (msg.type === "delete-ficha-for-area") {
+    _forEachFichaFrameCandidate(sibling => {
+      try {
+        if (sibling.getPluginData && sibling.getPluginData('hacFichaForArea') === msg.areaId) {
+          sibling.remove();
+        }
+      } catch (e) { }
+    });
+    return;
+  }
+
+  // Ocultar/mostrar em cascata — mesmo padrão de
+  // toggle-tab-order-copy-visibility. Fire-and-forget.
+  if (msg.type === "toggle-ficha-visibility") {
+    _forEachFichaFrameCandidate(sibling => {
+      try {
+        if (sibling.getPluginData && sibling.getPluginData('hacFichaForArea') === msg.areaId) {
+          sibling.visible = !!msg.visible;
+        }
+      } catch (e) { }
+    });
+    return;
+  }
+
+  // Foco/destaque no frame da Ficha no canvas — mesmo padrão simplificado
+  // (sem contorno de highlight, o frame inteiro já é grande o bastante pra
+  // servir de próprio destaque) usado por "Ver ficha no canvas".
+  if (msg.type === "highlight-ficha-node") {
+    (async () => {
+      const node = msg.frameId ? await figma.getNodeByIdAsync(msg.frameId) : null;
+      if (!node) {
+        figma.ui.postMessage({ type: 'ficha-node-not-found', areaId: msg.areaId });
+        return;
+      }
+      figma.currentPage.selection = [node];
+      figma.viewport.scrollAndZoomIntoView([node]);
     })();
     return;
   }

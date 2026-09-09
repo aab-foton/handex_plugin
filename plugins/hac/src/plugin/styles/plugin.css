@@ -268,6 +268,18 @@ body {
       pointer-events: none;
     }
 
+    /* Barra de captura minimizada (Ordem de Tabulação/Trilha de Swipe,
+       2026-09-04-y): a janela encolhe pra ~52px de altura — "bottom: 20px"
+       nesse estado deixa o toast quase todo fora da área visível (só a
+       borda de cima aparece, cortado). Classe alternada em body por
+       _a11yCaptureMiniBarEnter/Exit (core.js) reancora o toast logo abaixo
+       da barra em vez de perto do rodapé, que nem existe visualmente
+       nesse tamanho de janela. */
+    body.a11y-capture-mini-active #toast-container {
+      bottom: auto;
+      top: 60px;
+    }
+
     @keyframes slideUp {
       from { transform: translate(-50%, 100%); opacity: 0; }
       to { transform: translate(-50%, 0); opacity: 1; }
@@ -406,8 +418,7 @@ body {
 
     /* --- Responsive Scale Adjustments --- */
     body.scale-high header h1,
-    body.scale-high header .autosave-label,
-    body.scale-high footer .footer-signature-text {
+    body.scale-high header .autosave-label {
       display: none !important;
     }
 
@@ -553,6 +564,32 @@ body {
     }
     input.pl-9, .pl-9 {
       padding-left: 36px !important;
+    }
+
+    /* Ícone animado da Etapa 1 da Home (escolha de plataforma) — anel
+       pontilhado girando devagar em volta da figura central + halo de
+       fundo pulsando bem sutil, tudo CSS/SVG (sem GIF/arquivo externo).
+       Duração longa (14s/3s) de propósito: é uma tela de abertura, o
+       movimento precisa ser presente mas nunca chamar mais atenção que o
+       texto/botões. */
+    @keyframes a11yHomeOrbit {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @keyframes a11yHomeHaloPulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.08); opacity: 0.7; }
+    }
+    .a11y-home-icon-orbit {
+      animation: a11yHomeOrbit 14s linear infinite;
+    }
+    .a11y-home-icon-halo {
+      animation: a11yHomeHaloPulse 3s ease-in-out infinite;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .a11y-home-icon-orbit, .a11y-home-icon-halo {
+        animation: none !important;
+      }
     }
 
     /* Reset header borders and top border radius to keep it flat and aligned with the plugin window edge */

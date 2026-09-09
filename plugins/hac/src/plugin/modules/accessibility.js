@@ -501,9 +501,23 @@ function openA11yWizardCategoryPickerModal() {
   if (label) label.classList.add('hidden');
   const titleText = document.getElementById('a11y-category-picker-title-text');
   if (titleText) titleText.textContent = 'Alterar Especificação';
+  _applyA11yCategoryPickerOriginFilter();
   openModal('a11y-category-picker-modal');
 }
 window.openA11yWizardCategoryPickerModal = openA11yWizardCategoryPickerModal;
+
+// A lib mobile "Design Acessível | Super App" só publica 3 das 5 categorias
+// (Elementos e Imagens, Nível de Título, Elemento Decorativo) — Estrutura da
+// Página (sem landmark semântico mobile) e Informações Adicionais (formato
+// livre exclusivo web) não têm componente real nessa lib. Origem 'web' ou
+// ainda não definida (null) mostra as 5 normalmente.
+function _applyA11yCategoryPickerOriginFilter() {
+  const mobileOnly = getA11yProjectOrigin() === 'mobile';
+  ['estrutura', 'informacoes'].forEach((category) => {
+    const btn = document.getElementById('a11y-category-btn-' + category);
+    if (btn) btn.classList.toggle('hidden', mobileOnly);
+  });
+}
 
 // Chamado por messages.js quando o backend confirma que a lib está acessível
 // (resposta 'a11y-library-status', linked: true) — só ocorre no fluxo normal
@@ -522,6 +536,7 @@ function _openA11yCategoryPickerModalNow() {
   }
   const titleText = document.getElementById('a11y-category-picker-title-text');
   if (titleText) titleText.textContent = 'Nova especificação';
+  _applyA11yCategoryPickerOriginFilter();
   openModal('a11y-category-picker-modal');
 }
 window._openA11yCategoryPickerModalNow = _openA11yCategoryPickerModalNow;
@@ -1467,6 +1482,279 @@ function closeA11yComponenteMenu() {
 }
 window.closeA11yComponenteMenu = closeA11yComponenteMenu;
 
+// Dropdown "Mais ações" do header secundário (specifications.html) —
+// mesmo padrão de toggle/fechar-ao-clicar-fora/Escape de
+// toggleA11yComponenteMenu acima. Reúne onboarding/guia de categorias/
+// recolher-expandir, que saíram do header direto pra dar espaço ao título
+// dinâmico ("Documentando projeto Web/Mobile").
+let _a11yMoreActionsMenuCloseHandlers = null;
+
+function toggleA11yMoreActionsMenu(e) {
+  if (e) e.stopPropagation();
+  const menu = document.getElementById('a11y-more-actions-menu');
+  const trigger = document.getElementById('btn-a11y-more-actions');
+  if (!menu) return;
+  const isOpen = !menu.classList.contains('hidden');
+  if (isOpen) { closeA11yMoreActionsMenu(); return; }
+  menu.classList.remove('hidden');
+  if (trigger) trigger.setAttribute('aria-expanded', 'true');
+  const close = (ev) => {
+    const wrap = trigger ? trigger.parentElement : null;
+    if (!wrap || !wrap.contains(ev.target)) closeA11yMoreActionsMenu();
+  };
+  const onEsc = (ev) => { if (ev.key === 'Escape') closeA11yMoreActionsMenu(); };
+  _a11yMoreActionsMenuCloseHandlers = { close, onEsc };
+  setTimeout(() => {
+    document.addEventListener('click', close, true);
+    document.addEventListener('keydown', onEsc, true);
+  }, 0);
+}
+window.toggleA11yMoreActionsMenu = toggleA11yMoreActionsMenu;
+
+function closeA11yMoreActionsMenu() {
+  const menu = document.getElementById('a11y-more-actions-menu');
+  const trigger = document.getElementById('btn-a11y-more-actions');
+  if (menu) menu.classList.add('hidden');
+  if (trigger) trigger.setAttribute('aria-expanded', 'false');
+  if (_a11yMoreActionsMenuCloseHandlers) {
+    document.removeEventListener('click', _a11yMoreActionsMenuCloseHandlers.close, true);
+    document.removeEventListener('keydown', _a11yMoreActionsMenuCloseHandlers.onEsc, true);
+    _a11yMoreActionsMenuCloseHandlers = null;
+  }
+}
+window.closeA11yMoreActionsMenu = closeA11yMoreActionsMenu;
+
+// ── Workspace de uma Área Marcada (2026-09-04) ──────────────────────────
+// Primeira sub-navegação real do hac — até aqui só existiam 2 views
+// top-level (view-home/view-specifications), trocadas via
+// classList.toggle('active') dentro de navigate() (core.js). Cada Área
+// Marcada deixou de ser um accordion que expande in-line na lista principal
+// (ver _a11yAreaAccordionEl mais abaixo, agora um card clicável) e passou a
+// abrir uma "view" própria (view-area-workspace, specifications.html) com 4
+// tabs: Tabulação → Swipe → Leitor de Tela → Handoff. Leitor de Tela é a
+// aba de TRABALHO (criar/editar specs); Handoff é o dashboard de
+// consolidação (status agregado + "Gerar handoff", ver seção 8b em
+// docs/architecture-state.md). Não existe mais aba "Resumo do handoff".
+//
+// navigate() não aceita parâmetro extra, então o contexto (qual área, qual
+// tab inicial, qual spec focar) viaja fora do DOM em variáveis globais,
+// lidas uma única vez ao montar a view e limpas depois de consumidas —
+// mesmo princípio já usado por window._a11yExpandedAreaIds etc., só que
+// aqui representando "qual área estou olhando agora", não um conjunto de
+// estados persistentes.
+window._a11yWorkspaceAreaId = null;
+window._a11yWorkspaceActiveTab = 'tabulacao';
+window._a11yWorkspaceInitialTab = null;
+window._a11yWorkspaceFocusSpecId = null;
+
+// Chamada pelo clique no CORPO do card de uma Área (_a11yAreaAccordionEl) ou
+// pelo atalho "Nova spec" (que passa opts.initialTab = 'leitor', a aba de
+// trabalho). opts também aceita focusSpecId, usado pelo botão "Editar" do
+// dashboard da tab Handoff quando ele precisa abrir a workspace de uma área
+// que ainda não estava aberta (hoje sempre já está, mas a opção existe pela
+// simetria com switchA11yWorkspaceTab).
+function openA11yAreaWorkspace(areaId, opts) {
+  if (!areaId) return;
+  const o = opts || {};
+  window._a11yWorkspaceAreaId = areaId;
+  window._a11yWorkspaceActiveTab = o.initialTab || 'tabulacao';
+  window._a11yWorkspaceInitialTab = o.initialTab || null;
+  window._a11yWorkspaceFocusSpecId = o.focusSpecId || null;
+  navigate('view-area-workspace');
+}
+window.openA11yAreaWorkspace = openA11yAreaWorkspace;
+
+// "Voltar" no header da workspace — nunca leva pra Home, sempre pra
+// listagem principal de especificações.
+function navigateBackToA11yList() {
+  window._a11yWorkspaceAreaId = null;
+  window._a11yWorkspaceActiveTab = 'tabulacao';
+  window._a11yWorkspaceInitialTab = null;
+  window._a11yWorkspaceFocusSpecId = null;
+  navigate('view-specifications');
+}
+window.navigateBackToA11yList = navigateBackToA11yList;
+
+// Preenche o título dinâmico do header (número + label da área) e sincroniza
+// o item "Ocultar/Mostrar" do dropdown "Mais ações" com o estado real de
+// visibilidade (window._a11yAreaHiddenIds, mesmo Set que o card na listagem
+// já usa). Chamada ao entrar na view (navigate(), core.js) e de novo depois
+// de qualquer ação que possa mudar esses dados (toggle de visibilidade).
+function _renderA11yWorkspaceHeader() {
+  const areaId = window._a11yWorkspaceAreaId;
+  const area = (a11yAreas || []).find(a => a && a.id === areaId);
+  const titleEl = document.getElementById('a11y-workspace-title');
+  if (titleEl) {
+    titleEl.textContent = area ? `${area.number ? area.number + ' · ' : ''}${area.label || 'Área'}` : 'Área';
+  }
+
+  // Tab "Swipe" some inteira do tab-switcher em projetos web (2026-09-04-r,
+  // pedido do usuário — antes ela ficava visível com um aviso "Disponível
+  // apenas para projetos mobile" ao clicar; agora nem aparece na barra).
+  // grid-cols muda de 4 pra 3 quando ela some, pra não sobrar coluna vazia.
+  const swipeTabBtn = document.querySelector('[data-a11y-workspace-tab="swipe"]');
+  const tabsGrid = document.getElementById('a11y-workspace-tabs');
+  const isMobile = hacData.projectOrigin === 'mobile';
+  if (swipeTabBtn) swipeTabBtn.classList.toggle('hidden', !isMobile);
+  if (tabsGrid) {
+    tabsGrid.classList.toggle('grid-cols-4', isMobile);
+    tabsGrid.classList.toggle('grid-cols-3', !isMobile);
+  }
+  // Se a tab ativa era "swipe" e o projeto não é mobile (ex.: origem
+  // definida DEPOIS de já ter navegado pra essa tab, caso raro mas
+  // possível), volta pra "tabulacao" — nunca deixa a tab de conteúdo
+  // ativa apontando pra uma aba que sumiu da barra.
+  if (!isMobile && window._a11yWorkspaceActiveTab === 'swipe') {
+    window._a11yWorkspaceActiveTab = 'tabulacao';
+  }
+
+  const toggleBtn = document.getElementById('btn-a11y-workspace-toggle-visibility');
+  if (toggleBtn) {
+    const hidden = areaId ? window._a11yAreaHiddenIds.has(areaId) : false;
+    const icon = toggleBtn.querySelector('[data-lucide]');
+    if (icon) icon.setAttribute('data-lucide', hidden ? 'eye' : 'eye-off');
+    // Texto some depois do <i> no HTML fixo do dropdown (ver
+    // specifications.html) — troca o nó de texto sem depender de um span
+    // dedicado, pra não precisar editar aquele HTML (já validado/fechado).
+    const textNode = Array.from(toggleBtn.childNodes).find(n => n.nodeType === Node.TEXT_NODE && n.textContent.trim());
+    if (textNode) textNode.textContent = hidden ? ' Mostrar no canvas' : ' Ocultar/Mostrar no canvas';
+    _refreshIcons();
+  }
+}
+window._renderA11yWorkspaceHeader = _renderA11yWorkspaceHeader;
+
+// Dropdown "Mais ações" da workspace — mesmo padrão exato de
+// toggleA11yComponenteMenu/toggleA11yMoreActionsMenu acima (toggle + fechar
+// ao clicar fora/Escape).
+let _a11yWorkspaceMoreActionsMenuCloseHandlers = null;
+
+function toggleA11yWorkspaceMoreActionsMenu(e) {
+  if (e) e.stopPropagation();
+  const menu = document.getElementById('a11y-workspace-more-actions-menu');
+  const trigger = document.getElementById('btn-a11y-workspace-more-actions');
+  if (!menu) return;
+  const isOpen = !menu.classList.contains('hidden');
+  if (isOpen) { closeA11yWorkspaceMoreActionsMenu(); return; }
+  menu.classList.remove('hidden');
+  if (trigger) trigger.setAttribute('aria-expanded', 'true');
+  const close = (ev) => {
+    const wrap = trigger ? trigger.parentElement : null;
+    if (!wrap || !wrap.contains(ev.target)) closeA11yWorkspaceMoreActionsMenu();
+  };
+  const onEsc = (ev) => { if (ev.key === 'Escape') closeA11yWorkspaceMoreActionsMenu(); };
+  _a11yWorkspaceMoreActionsMenuCloseHandlers = { close, onEsc };
+  setTimeout(() => {
+    document.addEventListener('click', close, true);
+    document.addEventListener('keydown', onEsc, true);
+  }, 0);
+}
+window.toggleA11yWorkspaceMoreActionsMenu = toggleA11yWorkspaceMoreActionsMenu;
+
+function closeA11yWorkspaceMoreActionsMenu() {
+  const menu = document.getElementById('a11y-workspace-more-actions-menu');
+  const trigger = document.getElementById('btn-a11y-workspace-more-actions');
+  if (menu) menu.classList.add('hidden');
+  if (trigger) trigger.setAttribute('aria-expanded', 'false');
+  if (_a11yWorkspaceMoreActionsMenuCloseHandlers) {
+    document.removeEventListener('click', _a11yWorkspaceMoreActionsMenuCloseHandlers.close, true);
+    document.removeEventListener('keydown', _a11yWorkspaceMoreActionsMenuCloseHandlers.onEsc, true);
+    _a11yWorkspaceMoreActionsMenuCloseHandlers = null;
+  }
+}
+window.closeA11yWorkspaceMoreActionsMenu = closeA11yWorkspaceMoreActionsMenu;
+
+// "Remover área" no dropdown "Mais ações" — reaproveita a exclusão em
+// cascata já existente (deleteA11yArea) e volta pra listagem principal (a
+// área que a workspace estava mostrando deixou de existir).
+function _deleteA11yAreaFromWorkspace() {
+  const areaId = window._a11yWorkspaceAreaId;
+  const area = (a11yAreas || []).find(a => a && a.id === areaId);
+  if (!area) { navigateBackToA11yList(); return; }
+  deleteA11yArea(area.originalIndex);
+  navigateBackToA11yList();
+}
+window._deleteA11yAreaFromWorkspace = _deleteA11yAreaFromWorkspace;
+
+// Aplica o estilo visual "ativa"/"inativa" nos botões do tab-switcher —
+// extraída como função própria (2026-09-04-d) porque precisa ser chamada
+// de 2 pontos: switchA11yWorkspaceTab (troca manual de tab) e navigate()
+// (core.js, ao abrir a workspace pela 1ª vez, quando o dispatcher já
+// renderiza a tab default sem passar por switchA11yWorkspaceTab).
+function _applyA11yWorkspaceTabStyles(activeTab) {
+  document.querySelectorAll('.a11y-workspace-tab-btn').forEach(btn => {
+    const isActive = btn.getAttribute('data-a11y-workspace-tab') === activeTab;
+    btn.classList.toggle('text-cyan-700', isActive);
+    btn.classList.toggle('dark:text-cyan-400', isActive);
+    btn.classList.toggle('border-cyan-600', isActive);
+    btn.classList.toggle('text-slate-400', !isActive);
+    btn.classList.toggle('dark:text-dark-muted', !isActive);
+    btn.classList.toggle('border-transparent', !isActive);
+  });
+}
+window._applyA11yWorkspaceTabStyles = _applyA11yWorkspaceTabStyles;
+
+// Tab-switcher — primeira vez no hac que existe uma barra de tabs interna a
+// uma view. Atualiza window._a11yWorkspaceActiveTab, o estilo visual dos 4
+// botões (ativa: cor de destaque cyan (texto + ícone + sublinhado);
+// inativa: cinza neutro + borda transparente — seção própria de fundo
+// branco, separada da barra azul do header desde 2026-09-04-d) e chama o
+// dispatcher, que re-renderiza só o painel de conteúdo abaixo — a barra de
+// tabs em si nunca é reconstruída.
+function switchA11yWorkspaceTab(tabKey, opts) {
+  window._a11yWorkspaceActiveTab = tabKey || 'tabulacao';
+  if (opts && opts.focusSpecId) window._a11yWorkspaceFocusSpecId = opts.focusSpecId;
+  _applyA11yWorkspaceTabStyles(window._a11yWorkspaceActiveTab);
+  _renderA11yWorkspaceTab();
+}
+window.switchA11yWorkspaceTab = switchA11yWorkspaceTab;
+
+// Dispatcher — lê o areaId/tab ativos das variáveis globais, busca a área e
+// suas specs, e chama a função de render da tab ativa, injetando o HTML
+// resultante em #a11y-workspace-tab-content. Só a tab ativa é montada no
+// DOM por vez (nunca as 4 simultaneamente).
+function _renderA11yWorkspaceTab() {
+  const container = document.getElementById('a11y-workspace-tab-content');
+  if (!container) return;
+  const areaId = window._a11yWorkspaceAreaId;
+  const area = (a11yAreas || [])
+    .map((a, i) => (a ? Object.assign({}, a, { originalIndex: i }) : null))
+    .filter(Boolean)
+    .find(a => a.id === areaId);
+  if (!area) {
+    // Área foi excluída (ex.: em outra aba/instância) enquanto a workspace
+    // ainda estava aberta — volta pra listagem em vez de renderizar uma tab
+    // órfã sem dados.
+    navigateBackToA11yList();
+    return;
+  }
+  const areaSpecsRaw = (a11ySpecs || [])
+    .map((s, i) => (s ? Object.assign({}, s, { originalIndex: i }) : null))
+    .filter(Boolean)
+    .filter(s => s.a11yAreaId === area.id);
+  const areaSpecs = _a11ySortSpecsByLayerOrder(areaSpecsRaw, area.id);
+
+  const tab = window._a11yWorkspaceActiveTab || 'tabulacao';
+  let html = '';
+  if (tab === 'tabulacao') html = _a11yWorkspaceTabTabulacao(area);
+  else if (tab === 'swipe') html = _a11yWorkspaceTabSwipe(area);
+  else if (tab === 'leitor') html = _a11yWorkspaceTabLeitorDeTela(area, areaSpecs);
+  else if (tab === 'handoff') html = _a11yWorkspaceTabHandoffDashboard(area, areaSpecs);
+  container.innerHTML = html;
+
+  // O <ul> de Tabulação nasce vazio no template (mesmo padrão de
+  // renderA11yGroupedList) — preenche agora que já está no DOM. Trilha de
+  // Swipe não tem lista própria NESTA view (a lista pendente vive dentro do
+  // modal de revisão, #a11y-swipe-path-review-modal, aberto por
+  // startSwipePathManualMode) — o HTML retornado por _a11yWorkspaceTabSwipe
+  // é só o card de status + botões.
+  if (tab === 'tabulacao') {
+    _renderTabOrderListForArea(area.id, document.getElementById(`tab-order-list-workspace-${area.originalIndex}`));
+  }
+
+  _refreshIcons();
+}
+window._renderA11yWorkspaceTab = _renderA11yWorkspaceTab;
+
 function selectA11yComponente(value) {
   const select = document.getElementById('a11y-el-componente-select');
   if (select) {
@@ -1477,7 +1765,20 @@ function selectA11yComponente(value) {
 }
 window.selectA11yComponente = selectA11yComponente;
 
-function prefillA11yComponentName(name, mainText, dscComponentName) {
+// Botão "Editar especificação existente" do aviso de duplicidade — lê o
+// índice guardado por prefillA11yComponentName e reabre o formulário em
+// modo edição pra ela, descartando o que estava sendo preenchido na spec
+// nova (mesmo comportamento de clicar "Editar" direto na listagem).
+function _editA11yDuplicateSpecFromModal() {
+  const warningEl = document.getElementById('a11y-modal-duplicate-warning');
+  const idx = warningEl && warningEl.dataset.duplicateIndex ? parseInt(warningEl.dataset.duplicateIndex, 10) : -1;
+  if (idx < 0 || Number.isNaN(idx)) return;
+  closeA11yModal();
+  editA11ySpec(idx);
+}
+window._editA11yDuplicateSpecFromModal = _editA11yDuplicateSpecFromModal;
+
+function prefillA11yComponentName(name, mainText, dscComponentName, targetNodeId) {
   const modal = document.getElementById('a11y-spec-modal');
   if (!modal || modal.classList.contains('hidden')) return;
   // "Camada no canvas"/"Componente DSC" (read-only, comuns às 5 categorias) —
@@ -1490,6 +1791,30 @@ function prefillA11yComponentName(name, mainText, dscComponentName) {
   if (targetNodeNameEl && name) targetNodeNameEl.textContent = name;
   if (dscComponentName) {
     _renderA11yModalDscComponentName('a11y-modal-dsc-component-name', dscComponentName, modal.dataset.a11yOrigin || 'web');
+  }
+  // Aviso de spec duplicada (2026-09-04-ae, bug real corrigido: o fluxo
+  // manual "+ Nova spec" nunca checava se o elemento já tinha spec da
+  // mesma categoria antes de criar outra — 2 specs de título idênticas
+  // sobre o mesmo "Page Header" real, confirmado com screenshot). Só
+  // roda em modo CRIAÇÃO (nunca em edição — modal.dataset.editingSpecId
+  // já é a própria spec existente, não faria sentido avisar sobre ela
+  // mesma) e só quando targetNodeId veio resolvido (fluxo manual; o
+  // automático já filtra "não documentados" antes de chegar aqui, ver
+  // _collectA11yUndocumentedForArea). Não-bloqueante: só oferece um
+  // atalho pra editar a existente, o designer decide se quer mesmo criar
+  // uma segunda (ex.: categorias diferentes sobre o mesmo nó).
+  const warningEl = document.getElementById('a11y-modal-duplicate-warning');
+  if (warningEl) {
+    let duplicateIndex = -1;
+    if (!modal.dataset.editingSpecId && targetNodeId) {
+      const areaId = window._a11yPendingAreaId;
+      const category = modal.dataset.category;
+      duplicateIndex = (a11ySpecs || []).findIndex(s =>
+        s && s.a11yAreaId === areaId && s.targetNodeId === targetNodeId && s.a11yType === category
+      );
+    }
+    warningEl.classList.toggle('hidden', duplicateIndex === -1);
+    warningEl.dataset.duplicateIndex = duplicateIndex >= 0 ? String(duplicateIndex) : '';
   }
   if (modal.dataset.category !== 'elemento') return;
   // Label a partir do texto real do elemento (ver _findMainTextContent,
@@ -1829,6 +2154,12 @@ function _getA11ySelectionInfo() {
 }
 window._getA11ySelectionInfo = _getA11ySelectionInfo;
 
+// _getA11yDocumentationStatus (consultava se a Section ativa já tinha
+// documentação, pra alimentar o aviso "Continuar/Iniciar nova Section" do
+// modal de Marcar Área) foi REMOVIDA em 2026-09-04-k, junto com o aviso —
+// ver comentário em openA11yAreaModal acima. O handler de backend
+// correspondente (get-a11y-documentation-status) também foi removido.
+
 // ── Payload puro de "Elementos e Imagens" (fluxo WEB) ───────────────────
 // Usado pelo fluxo manual (confirmA11ySpec, categoria 'elemento', origem
 // web, fora do caso "Outro") — recebe os dados JÁ RESOLVIDOS (nunca lê do
@@ -2151,6 +2482,8 @@ function confirmA11ySpec() {
     fillColor: meta.fill,
     properties,
     guideSide: guideSideEl ? guideSideEl.value : 'right',
+    sectionName: getA11yActiveSectionName(),
+    designerName: getA11yDesignerName(),
     // Modo "Contorno" (default) usa o marcador real "Agrupamento" — a moldura
     // já embute o selo, não precisa de linha ligando ao card. Modo "Linha"
     // reativa o conector (real da lib quando disponível; vetor procedural
@@ -2186,6 +2519,11 @@ function confirmA11ySpec() {
     // momento da criação. O backend ecoa esse campo de volta em spec-created
     // pra spec.a11yAreaId continuar presente no objeto salvo localmente.
     a11yAreaId: areaId || null,
+    // targetNodeId do FRAME ORIGINAL da área (2026-09-08, não confundir
+    // com opts.targetNodeId acima, que é o elemento ESPECÍFICO sendo
+    // documentado) — o backend usa isto pra resolver/criar o clone da
+    // área e desenhar a spec sobre a cópia, nunca mais sobre o original.
+    a11yAreaTargetNodeId: (_findA11yAreaById(areaId) || {}).targetNodeId || null,
     // IDs das specs irmãs (mesma área + mesma categoria) já no canvas —
     // permite ao backend alinhar o card novo na mesma sub-coluna X das
     // demais specs da área+categoria, mesmo quando usam letras ou lados de
@@ -2491,16 +2829,16 @@ function _a11yCategoryAccordionEl(uid, catKey, catSpecs) {
   const meta = A11Y_CATEGORIES[catKey] || { label: _capitalizeFirst(catKey), icon: 'accessibility', color: '#0891B2', fill: '#E0F5FA' };
   const expand = window._a11yExpandedCategoryIds.has(uid);
   return `
-    <div class="rounded-lg border border-gray-100 dark:border-dark-line overflow-hidden ml-1" data-a11y-subcat="${escapeHtml(catKey)}">
-      <div class="flex items-center gap-2 px-2 py-1.5 cursor-pointer select-none bg-gray-50/60 dark:bg-dark-bg/30 hover:bg-gray-100/60 dark:hover:bg-dark-line/20 transition-colors"
+    <div class="rounded-lg border border-gray-100 dark:border-dark-line overflow-hidden ml-1 bg-white dark:bg-dark-surface" data-a11y-subcat="${escapeHtml(catKey)}">
+      <div class="flex items-center gap-2 px-2.5 py-2 cursor-pointer select-none hover:bg-gray-50 dark:hover:bg-dark-line/20 transition-colors"
         onclick="toggleA11yCategoryAccordion('${uid}')">
         <div class="w-4.5 h-4.5 rounded-full flex items-center justify-center shrink-0" style="background-color:${meta.fill}">
           <i data-lucide="${meta.icon}" class="w-2.5 h-2.5" style="color:${meta.color}"></i>
         </div>
-        <p class="flex-1 min-w-0 text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wide truncate">${escapeHtml(meta.label)} (${catSpecs.length})</p>
+        <p class="flex-1 min-w-0 text-[10px] font-bold text-slate-600 dark:text-dark-muted uppercase tracking-wide truncate">${escapeHtml(meta.label)} (${catSpecs.length})</p>
         <i data-lucide="chevron-down" id="chevron-${uid}" class="w-3.5 h-3.5 text-gray-400 transition-transform shrink-0" style="transform:${expand ? 'rotate(180deg)' : 'rotate(0deg)'}"></i>
       </div>
-      <div id="body-${uid}" class="accordion-content ${expand ? '' : 'hidden'} border-t border-gray-50 dark:border-dark-line p-1.5 space-y-1.5">
+      <div id="body-${uid}" class="accordion-content ${expand ? '' : 'hidden'} border-t border-gray-100 dark:border-dark-line p-1.5 space-y-1.5">
         ${catSpecs.map(_a11ySpecItemHtml).join('')}
       </div>
     </div>
@@ -2553,18 +2891,26 @@ function _tabOrderSectionHtml(uid, area) {
       <div id="tab-order-body-${uid}" class="accordion-content ${bodyHiddenClass} border-t border-gray-50 dark:border-dark-line p-1.5 space-y-1.5">
         <!-- Os 2 botões abaixo não desenham nada diretamente no canvas de
              trabalho: ambos abrem o MESMO modal de revisão
-             (#a11y-tab-order-review-modal), que só desenha os selos numa
-             CÓPIA do frame ao clicar "Aplicar no Canvas". -->
+             (#a11y-tab-order-review-modal), que monta a lista pendente
+             (modo em lote, 2026-09-04-e — desenha só ao confirmar).
+             Hierarquia visual (2026-09-04-e, pedido explícito): Manual é o
+             caminho PRIMÁRIO (botão preenchido) — o automático vira um
+             link secundário abaixo, de propósito, pra que o designer
+             aprenda o fluxo manual primeiro. Renomeado de "Gerar
+             Automaticamente" pra "Mapeamento Automático" (mesmo motivo da
+             correção em "Mapeamento Automatizado" — não é geração final,
+             o resultado ainda passa por revisão). -->
         <button type="button" onclick="event.stopPropagation(); startTabOrderManualMode('${escapeHtml(areaIdAttr)}', '${escapeHtml(area.targetNodeId || '')}')"
-          class="w-full flex items-center justify-center gap-2 h-8 rounded-xl text-[10.5px] font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
+          class="w-full flex items-center justify-center gap-2 h-8 rounded-2xl text-[10.5px] font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
           <i data-lucide="list-ordered" class="w-3.5 h-3.5" aria-hidden="true"></i>
           Iniciar Ordem de Tabulação
         </button>
+        ${(typeof _currentTabOrderItems === 'function' && _currentTabOrderItems(area.id).length > 0) ? '' : `
         <button type="button" onclick="event.stopPropagation(); _confirmGenerateTabOrderFromLayers('${escapeHtml(areaIdAttr)}', '${escapeHtml(area.targetNodeId || '')}')"
-          class="w-full flex items-center justify-center gap-2 h-8 rounded-xl text-[10.5px] font-bold transition-all border border-cyan-200 dark:border-cyan-800/40 text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99]">
-          <i data-lucide="sparkles" class="w-3.5 h-3.5" aria-hidden="true"></i>
-          Gerar Automaticamente
-        </button>
+          class="w-full flex items-center justify-center gap-1.5 h-6 mt-0.5 rounded-lg text-[10px] font-bold text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99] transition-all">
+          <i data-lucide="sparkles" class="w-3 h-3" aria-hidden="true"></i>
+          ou usar Mapeamento Automático
+        </button>`}
         <!-- Lista abaixo mostra os itens JÁ APLICADOS no canvas (na cópia do
              frame) nesta área, se houver uma cópia gerada anteriormente —
              não a lista pendente (essa vive só dentro do modal enquanto não
@@ -2673,80 +3019,656 @@ function _a11yUndocumentedAccordionEl(uid, areaId, entries) {
   `;
 }
 
+// ── Tabs da workspace de uma Área (view-area-workspace) ─────────────────
+// Ver bloco "Workspace de uma Área Marcada" acima (openA11yAreaWorkspace/
+// _renderA11yWorkspaceTab) para o dispatcher que escolhe qual destas 5
+// funções chamar.
+
+// Tab "Tabulação" — reaproveita o CONTEÚDO de _tabOrderSectionHtml, mas sem
+// o wrapper de accordion (a própria tab já cumpre esse papel; um accordion
+// dentro de uma tab de conteúdo único seria redundante). Constrói o mesmo
+// corpo inline em vez de chamar _tabOrderSectionHtml diretamente porque
+// aquela função sempre embrulha num header clicável de accordion — mais
+// simples reescrever o corpo aqui (poucos elementos) do que fatorar um
+// terceiro parâmetro "sem wrapper" numa função já usada pelo card antigo.
+function _a11yWorkspaceTabTabulacao(area) {
+  const uid = `workspace-${area.originalIndex}`;
+  const ulId = `tab-order-list-${uid}`;
+  const areaIdAttr = area.id;
+  // Mapeamento Automático some assim que já existe documentação MANUAL
+  // nesta área (2026-09-04-x, pedido do usuário) — Manual sempre fica
+  // disponível; o automático é só uma alternativa de partida, não faz
+  // sentido oferecê-lo depois que o designer já começou a trilha manual
+  // (evita a confusão de "gerar automaticamente" sobrepor/duplicar itens
+  // já documentados à mão). Mesmo critério usado por
+  // _renderTabOrderListForArea pra saber se a área já tem itens.
+  const hasManualItems = typeof _currentTabOrderItems === 'function' && _currentTabOrderItems(area.id).length > 0;
+  return `
+    <div class="space-y-2">
+      <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">
+        Documente a sequência de foco do teclado (tecla Tab) desta área — segure shift e clique (ou use marquise) para marcar todos os elementos de uma vez, na ordem visual, e confirme ao final.
+      </p>
+      <div class="flex items-center gap-2">
+        ${hasManualItems ? `
+        <!-- Área já documentada (manual ou Mapeamento Automático,
+             2026-09-04-aj, pedido do usuário): não faz sentido "Iniciar"
+             de novo (recriaria a cópia do zero) — o botão vira "Adicionar
+             itens", que abre o modal já populado com a ordem existente e
+             arma a captura de novo(s) elemento(s), reaproveitando a MESMA
+             cópia clonada (nenhum selo já desenhado é tocado). -->
+        <button type="button" onclick="startTabOrderAddItemsFromCard('${escapeHtml(areaIdAttr)}')"
+          class="flex-1 flex items-center justify-center gap-2 h-9 rounded-2xl text-[11px] font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
+          <i data-lucide="plus" class="w-3.5 h-3.5" aria-hidden="true"></i>
+          Adicionar itens
+        </button>` : `
+        <button type="button" onclick="startTabOrderManualMode('${escapeHtml(areaIdAttr)}', '${escapeHtml(area.targetNodeId || '')}')"
+          class="flex-1 flex items-center justify-center gap-2 h-9 rounded-2xl text-[11px] font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
+          <i data-lucide="list-ordered" class="w-3.5 h-3.5" aria-hidden="true"></i>
+          Iniciar Ordem de Tabulação
+        </button>`}
+        ${hasManualItems ? `
+        <button type="button" onclick="deleteAllTabOrderForArea('${escapeHtml(areaIdAttr)}')"
+          title="Apagar toda a ordem de tabulação" aria-label="Apagar toda a ordem de tabulação desta área"
+          class="shrink-0 w-9 h-9 flex items-center justify-center rounded-2xl border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 active:scale-[0.99] transition-all">
+          <i data-lucide="trash-2" class="w-3.5 h-3.5" aria-hidden="true"></i>
+        </button>` : ''}
+      </div>
+      ${hasManualItems ? '' : `
+      <!-- Hierarquia visual (2026-09-04-e, pedido explícito com
+           screenshot): Manual é o caminho PRIMÁRIO — o automático vira um
+           link secundário abaixo, de propósito, pra que o designer
+           aprenda o fluxo manual primeiro neste momento inicial.
+           Renomeado de "Gerar Automaticamente" pra "Mapeamento
+           Automático" (mesmo motivo da correção em "Mapeamento
+           Automatizado" — não é geração final, o resultado ainda passa
+           por revisão). -->
+      <button type="button" onclick="_confirmGenerateTabOrderFromLayers('${escapeHtml(areaIdAttr)}', '${escapeHtml(area.targetNodeId || '')}')"
+        class="w-full flex items-center justify-center gap-1.5 h-7 mt-0.5 rounded-lg text-[10.5px] font-bold text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99] transition-all">
+        <i data-lucide="sparkles" class="w-3.5 h-3.5" aria-hidden="true"></i>
+        ou usar Mapeamento Automático
+      </button>`}
+      <ul id="${ulId}" class="flex flex-col gap-1.5 min-h-[10px]"></ul>
+      <button type="button" onclick="updateTabOrderNumbering('${escapeHtml(areaIdAttr)}')"
+        class="w-full flex items-center justify-center gap-2 h-8 mt-1 rounded-2xl text-[11px] font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm hover:shadow transition-all">
+        <i data-lucide="refresh-cw" class="w-3.5 h-3.5" aria-hidden="true"></i>
+        Atualizar
+      </button>
+      ${typeof _fichaInsertButtonHtml === 'function' ? _fichaInsertButtonHtml(area, 'tabulacao') : ''}
+    </div>
+  `;
+}
+
+// Tab "Swipe" — 3ª REFORMULAÇÃO (2026-09-04): deixou de ser uma conexão
+// reta entre EXATAMENTE 2 Áreas Marcadas escolhidas por dropdown (v2,
+// removida por completo — imagem de referência real do usuário mostrou uma
+// trilha ziguezagueante com MUITOS pontos) e passou a ser uma TRILHA
+// DIRECIONAL DE N PONTOS, capturados por clique sequencial no canvas OU
+// seleção múltipla de uma vez — mesmo modelo em lote já usado por Ordem de
+// Tabulação, e nada é desenhado até "Criar trilha de swipe". CLONA o
+// frame da Área ao iniciar (2026-09-04-ac, correção real: a linha nunca
+// pode ser desenhada sobre o design original) — os pontos ficam
+// restritos ao conteúdo da cópia, mesma regra de Ordem de Tabulação
+// (perdeu a liberdade anterior de "qualquer nó da tela", que só fazia
+// sentido operando sobre nós reais). Exclusivamente mobile — em projetos
+// web mostra só o aviso, sem registrar nenhum handler de clique. Sem
+// "Mapeamento Automático" nesta entrega (fora de escopo, ver plano).
+function _a11yWorkspaceTabSwipe(area) {
+  const badgeHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-[9px] font-extrabold uppercase tracking-wide">Em fase de testes</span>`;
+
+  if (hacData.projectOrigin !== 'mobile') {
+    return `
+      <div class="space-y-2">
+        <div class="flex items-center gap-2">${badgeHtml}</div>
+        <div class="flex flex-col items-center justify-center py-8 text-center">
+          <i data-lucide="smartphone" class="w-8 h-8 text-slate-200 dark:text-slate-700 mb-2" style="opacity:0.5" aria-hidden="true"></i>
+          <p class="text-[11px] font-semibold text-slate-500 dark:text-dark-muted">Disponível apenas para projetos mobile</p>
+          <p class="text-[10px] text-slate-400 dark:text-dark-muted mt-1 px-6">Trilha de Swipe documenta a navegação por gesto de deslizar, exclusiva do leitor de tela mobile.</p>
+        </div>
+      </div>
+    `;
+  }
+
+  const existingPath = (hacData.a11ySwipePaths || []).find(p => p && p.areaId === area.id) || null;
+  const pointCount = existingPath && Array.isArray(existingPath.points) ? existingPath.points.length : 0;
+  const startLabel = existingPath ? 'Refazer trilha de swipe' : 'Iniciar trilha de swipe';
+  const areaIdAttr = area.id;
+  const targetNodeIdAttr = area.targetNodeId || '';
+
+  return `
+    <div class="space-y-2">
+      <div class="flex items-center gap-2">${badgeHtml}</div>
+      <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">
+        Marque, em ordem, os pontos que o gesto de deslizar (swipe) percorre nesta tela — segure shift e clique (ou use marquise) para marcar todos de uma vez. O hac desenha uma trilha direcional com setas ligando todos os pontos.
+      </p>
+      ${existingPath ? `
+      <div class="flex items-center gap-2 px-3 py-2 rounded-xl bg-cyan-50 dark:bg-cyan-900/10 border border-cyan-100 dark:border-cyan-900/30">
+        <i data-lucide="route" class="w-3.5 h-3.5 text-cyan-700 dark:text-cyan-400 shrink-0" aria-hidden="true"></i>
+        <span class="text-[11px] font-semibold text-cyan-700 dark:text-cyan-400">Trilha de Swipe (${pointCount} ${pointCount === 1 ? 'ponto' : 'pontos'})</span>
+      </div>` : ''}
+      <button type="button" onclick="startSwipePathManualMode('${escapeHtml(areaIdAttr)}', '${escapeHtml(targetNodeIdAttr)}')"
+        class="w-full flex items-center justify-center gap-2 h-9 rounded-2xl text-[11px] font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
+        <i data-lucide="route" class="w-3.5 h-3.5" aria-hidden="true"></i>
+        ${startLabel}
+      </button>
+      <!-- "Gerar automaticamente" do Swipe (2026-09-08, pedido do
+           usuário) — NÃO faz scan/critério próprio (zigue-zague etc.):
+           reaproveita a MESMA sequência já mapeada pela Ordem de
+           Tabulação desta área, na ordem exata dos números 1,2,3...
+           já confirmados ali. Só existe reaproveitamento porque a
+           captura de seleção múltipla (shift+clique/marquise) não tem
+           ordem garantida pela Plugin API do Figma ("The ordering of
+           nodes in the selection is unspecified" — doc oficial) — a
+           Ordem de Tabulação já resolve isso corretamente hoje (não
+           mexida aqui), então o Swipe correspondente aproveita esse
+           trabalho já feito em vez de tentar resolver ordem de novo por
+           conta própria. Sem itens de Tabulação nesta área,
+           startSwipePathFromTabOrder cai no fluxo manual normal (mesmo
+           startSwipePathManualMode do botão acima) — nunca bloqueia. -->
+      <button type="button" onclick="startSwipePathFromTabOrder('${escapeHtml(areaIdAttr)}', '${escapeHtml(targetNodeIdAttr)}')"
+        class="w-full flex items-center justify-center gap-1.5 h-7 mt-0.5 rounded-lg text-[10.5px] font-bold text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99] transition-all">
+        <i data-lucide="sparkles" class="w-3.5 h-3.5" aria-hidden="true"></i>
+        ou usar a Ordem de Tabulação já mapeada
+      </button>
+      ${existingPath ? `
+      <button type="button" onclick="deleteSwipePathForArea('${escapeHtml(areaIdAttr)}')"
+        class="w-full flex items-center justify-center gap-2 h-8 mt-1 rounded-2xl text-[11px] font-bold border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-all">
+        <i data-lucide="trash-2" class="w-3.5 h-3.5" aria-hidden="true"></i>
+        Remover trilha
+      </button>` : ''}
+      ${typeof _fichaInsertButtonHtml === 'function' ? _fichaInsertButtonHtml(area, 'swipe') : ''}
+    </div>
+  `;
+}
+
+// Resumo consolidado de specs por Accessibility Label + Descrição — usado
+// DENTRO do dashboard da tab "Handoff" (não é mais uma tab própria desde
+// 2026-09-04-b: "Leitor de Tela" virou a aba de TRABALHO, e este resumo
+// enxuto passou a ser só uma seção do dashboard de consolidação). O botão
+// "Editar" NUNCA duplica lógica: leva direto pra tab Leitor de Tela, com a
+// spec em foco (sub-accordion de categoria já aberto).
+function _a11yWorkspaceHandoffSpecsSummaryHtml(area, areaSpecs) {
+  // Bloco vazio removido por completo (2026-09-04-s, pedido do usuário):
+  // "Nenhuma especificação nesta área ainda" não aparece mais — quando não
+  // há specs, esta seção simplesmente não renderiza nada, liberando o
+  // espaço do dashboard pra outras informações já documentadas.
+  if (!areaSpecs || areaSpecs.length === 0) return '';
+  // Listagem compacta (2026-09-04-s): 1 linha por spec, só Accessibility
+  // Label + categoria — a descrição completa saiu daqui (ainda disponível
+  // ao clicar "Editar", que leva pra tab Leitor de Tela).
+  return `
+    <div class="space-y-1">
+      ${areaSpecs.map(spec => {
+        const meta = A11Y_CATEGORIES[spec.a11yType] || { label: 'Acessibilidade', icon: 'accessibility', color: '#0891B2' };
+        const props = spec.properties || [];
+        const getProp = key => { const p = props.find(x => x.key === key); return p ? p.value : ''; };
+        const accessibilityLabel = getProp('nomeAcessivel') || spec.targetNodeName || spec.name || '';
+        return `
+        <div class="flex items-center gap-2 bg-gray-50/60 dark:bg-dark-bg/40 rounded-lg border border-gray-100 dark:border-dark-line pl-2 pr-1 py-1">
+          <div class="w-4.5 h-4.5 rounded-full flex items-center justify-center text-[8px] font-extrabold text-white shrink-0" style="background-color:${meta.color}">${escapeHtml(spec.letter || 'A')}</div>
+          <p class="flex-1 min-w-0 text-[10.5px] font-semibold text-slate-700 dark:text-white truncate" title="${escapeHtml(accessibilityLabel || '—')}">${escapeHtml(accessibilityLabel || '—')}</p>
+          <span class="shrink-0 text-[9px] text-slate-400 dark:text-dark-muted">${escapeHtml(meta.label || '')}</span>
+          <button type="button" title="Editar" aria-label="Editar especificação de acessibilidade"
+            onclick="switchA11yWorkspaceTab('leitor', {focusSpecId: '${escapeHtml(spec.id || '')}'})"
+            class="shrink-0 w-6 h-6 flex items-center justify-center rounded-full text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-95 transition-all">
+            <i data-lucide="pencil" class="w-3 h-3"></i>
+          </button>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+// Tab "Leitor de Tela" — a aba de TRABALHO real (2026-09-04-b: reafirmado
+// pelo usuário que Leitor de Tela é a etapa de criação de specs — antes
+// disso, na primeira versão da workspace, esse papel estava em "Handoff").
+// Reaproveita _a11yCategoryAccordionEl (iterando A11Y_CATEGORIES) e
+// _a11yUndocumentedAccordionEl tal como funcionavam dentro do antigo
+// accordion de área — criar/editar/excluir spec continua 100% igual, só
+// migrado de contêiner. Se chegou aqui via focusSpecId (vindo do botão
+// "Editar" do dashboard da tab Handoff), expande automaticamente o
+// sub-accordion da categoria correspondente.
+function _a11yWorkspaceTabLeitorDeTela(area, areaSpecs) {
+  const uid = `workspace-${area.originalIndex}`;
+  const undocumentedEntries = _collectA11yUndocumentedForArea(area.id);
+
+  const focusSpecId = window._a11yWorkspaceFocusSpecId;
+  let focusCatKey = null;
+  if (focusSpecId) {
+    const focusSpec = areaSpecs.find(s => s.id === focusSpecId);
+    if (focusSpec) focusCatKey = focusSpec.a11yType;
+  }
+
+  const categoryHtml = Object.keys(A11Y_CATEGORIES)
+    .map(catKey => ({ catKey, catSpecs: areaSpecs.filter(s => s.a11yType === catKey) }))
+    .filter(({ catSpecs }) => catSpecs.length > 0)
+    .map(({ catKey, catSpecs }) => {
+      const catUid = `${uid}-cat-${catKey}`;
+      // Força a expansão do sub-accordion certo antes de renderizar — mesmo
+      // Set de estado persistente que o clique manual usa
+      // (window._a11yExpandedCategoryIds), então a expansão sobrevive a
+      // re-renders subsequentes como qualquer outra.
+      if (catKey === focusCatKey) window._a11yExpandedCategoryIds.add(catUid);
+      return _a11yCategoryAccordionEl(catUid, catKey, catSpecs);
+    })
+    .join('');
+
+  // focusSpecId só serve pra ESTA renderização — consome e limpa.
+  window._a11yWorkspaceFocusSpecId = null;
+
+  // Mapeamento Automático some assim que já existe documentação MANUAL
+  // nesta área (2026-09-04-x, pedido do usuário, mesmo critério aplicado
+  // à tab Tabulação) — Manual ("Nova spec") sempre fica disponível.
+  const hasManualSpecs = areaSpecs.length > 0;
+  return `
+    <div class="space-y-2">
+      <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">Crie, edite ou remova especificações desta área, por categoria.</p>
+      <!-- Botão primário no mesmo padrão visual de "Iniciar Ordem de
+           Tabulação"/"Iniciar trilha de swipe" (2026-09-04-x, pedido do
+           usuário) — antes era um pill pequeno ao lado do texto
+           descritivo, inconsistente com as outras 2 tabs. -->
+      <button type="button" onclick="openA11yCategoryPickerModal('${area.id}')"
+        class="w-full flex items-center justify-center gap-2 h-9 rounded-2xl text-[11px] font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
+        <i data-lucide="plus" class="w-3.5 h-3.5" aria-hidden="true"></i>
+        Nova spec
+      </button>
+      ${hasManualSpecs ? '' : `
+      <!-- Mapeamento Automático migrou pra cá (2026-09-04-g, pedido do
+           usuário) — deixou de ser uma escolha feita uma única vez no
+           momento de Marcar Área (radio "Detecção Automática vs Manual"
+           no #a11y-area-modal) e virou uma ação disponível a qualquer
+           momento dentro da aba de trabalho, ao lado das outras
+           funcionalidades automáticas (mesmo espírito do "ou usar
+           Mapeamento Automático" já secundário em Tabulação). Reaproveita
+           openA11yPostAreaDetectModal(area) tal como está — mesmo caminho
+           já usado hoje por _resumeA11yBatchWizardForArea pra retomar
+           detecção numa área já existente; nenhuma lógica nova de scan. -->
+      <button type="button" onclick="_startA11yMappingFromLeitorTab('${escapeHtml(area.id)}')"
+        class="w-full flex items-center justify-center gap-1.5 h-7 mt-0.5 rounded-lg text-[10.5px] font-bold text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99] transition-all">
+        <i data-lucide="radar" class="w-3.5 h-3.5" aria-hidden="true"></i>
+        ou usar Mapeamento Automático
+      </button>`}
+      ${(areaSpecs.length > 0 || undocumentedEntries.length > 0) ? `
+      <div class="flex items-center justify-end gap-1 px-0.5 -mb-0.5">
+        <button type="button" onclick="_a11ySetAllSubaccordions(this, true)"
+          class="text-[9.5px] font-bold text-cyan-700 dark:text-cyan-400 hover:underline px-1">Expandir todos</button>
+        <span class="text-[9.5px] text-gray-300 dark:text-dark-line">·</span>
+        <button type="button" onclick="_a11ySetAllSubaccordions(this, false)"
+          class="text-[9.5px] font-bold text-slate-500 dark:text-dark-muted hover:underline px-1">Recolher todos</button>
+      </div>` : ''}
+      <div class="space-y-2">
+        ${areaSpecs.length > 0
+          ? categoryHtml
+          : (undocumentedEntries.length === 0 ? `<p class="text-[10px] text-slate-400 dark:text-dark-muted text-center py-3">Nenhuma especificação nesta área ainda. Use o botão "Nova spec" acima.</p>` : '')}
+        ${_a11yUndocumentedAccordionEl(`${uid}-undoc`, area.id, undocumentedEntries)}
+      </div>
+      ${typeof _fichaInsertButtonHtml === 'function' ? _fichaInsertButtonHtml(area, 'leitor') : ''}
+    </div>
+  `;
+}
+
+// Tab "Handoff" — DASHBOARD de consolidação (2026-09-04-b: deixou de ser a
+// aba de trabalho — isso agora é "Leitor de Tela" — e a antiga "Resumo do
+// handoff" foi removida como 5ª tab, seu papel foi absorvido aqui).
+// 2026-09-04-c: o botão único "Gerar handoff" (placeholder) saiu — a
+// geração REAL da Ficha de Handoff agora é incremental, por seção, um
+// botão em cada uma das outras 3 tabs (ver handoff-ficha.js). Este
+// dashboard vira só STATUS + link: 3 cards (um por seção, via
+// _fichaDashboardHtml) e o resumo de especificações de sempre.
+function _a11yWorkspaceTabHandoffDashboard(area, areaSpecs) {
+  // Título "Especificações desta área" some junto com a listagem quando
+  // não há specs ainda (2026-09-04-u, pedido do usuário) — nada de rótulo
+  // órfão sem conteúdo embaixo.
+  const specsSummaryHtml = _a11yWorkspaceHandoffSpecsSummaryHtml(area, areaSpecs);
+  return `
+    <div class="space-y-4">
+      <div>
+        <p class="text-[11px] text-slate-500 dark:text-dark-muted mb-2">Status da Ficha de Handoff desta área, reunindo o que já foi inserido de cada etapa.</p>
+        ${typeof _fichaDashboardHtml === 'function' ? _fichaDashboardHtml(area) : ''}
+      </div>
+
+      ${specsSummaryHtml ? `
+      <div>
+        <p class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wider mb-1.5">Especificações desta área</p>
+        ${specsSummaryHtml}
+      </div>` : ''}
+    </div>
+  `;
+}
+
+// Dropdown "⋯" do CARD da listagem (2026-09-04-f, pedido do usuário: hoje
+// não dá pra excluir uma área sem entrar na workspace primeiro, já que
+// Focar/Ocultar/Excluir migraram todos pro dropdown "Mais ações" DENTRO da
+// workspace, 2026-09-04). Devolve as 3 ações diretamente no card, sem
+// precisar abrir a área — mesmo padrão exato de toggle/fechar (clique
+// fora/Escape) de toggleA11yWorkspaceMoreActionsMenu, mas com UM menu por
+// CARD (id dinâmico via areaId) em vez de um único elemento fixo no DOM.
+//
+// Correção de corte (2026-09-04-j, achado real reportado pelo usuário):
+// o menu nasce dentro do <li> do card (overflow-hidden, necessário pro
+// rounded-2xl) e a lista inteira também tem overflow-y-auto — um
+// `position: absolute` comum fica cortado por QUALQUER um dos dois
+// ancestrais. `position: fixed` NÃO resolve aqui (diferente do padrão já
+// usado no Handex, `toggleStatusDropdown`): o body do hac roda com
+// `zoom: var(--ui-scale)` e um comentário explícito em plugin.css
+// documenta que `fixed` não escala com `zoom` (containing block continua
+// o viewport real, não o body "zoomado") — por isso todo `fixed` do hac
+// foi trocado por `absolute` resolvido contra `body` (que é
+// `position: relative`, o containing block real). Este dropdown segue o
+// mesmo princípio: ao abrir, é REPARENTADO pra `document.body` (escapando
+// dos dois overflow-hidden) com `position: absolute` calculado via
+// getBoundingClientRect() do BOTÃO gatilho relativo ao body (soma
+// scrollY/scrollX — body não rola, mas defensivo) — nunca `fixed`. Ao
+// fechar, volta pro `<li>` original (`_a11yCardMenuHomeParent`), pra não
+// acumular menus soltos em `document.body` a cada card já renderizado.
+let _a11yCardMenuCloseHandlers = null;
+let _a11yCardMenuHomeParent = null; // { menu, parent, nextSibling } do menu atualmente reparentado
+
+function _restoreA11yCardMenuToOrigin() {
+  if (!_a11yCardMenuHomeParent) return;
+  const { menu, parent, nextSibling } = _a11yCardMenuHomeParent;
+  menu.style.cssText = '';
+  if (parent) parent.insertBefore(menu, nextSibling || null);
+  _a11yCardMenuHomeParent = null;
+}
+
+function toggleA11yCardMenu(e, areaId) {
+  if (e) e.stopPropagation();
+  const menu = document.getElementById(`a11y-card-menu-${areaId}`);
+  const trigger = e && e.currentTarget;
+  if (!menu) return;
+  const isOpen = !menu.classList.contains('hidden');
+
+  // Fecha qualquer outro menu de card já aberto antes de abrir este — só
+  // um por vez, mesmo em listas longas — devolvendo-o pro lugar original.
+  document.querySelectorAll('[id^="a11y-card-menu-"]').forEach(m => { if (m !== menu) m.classList.add('hidden'); });
+  if (_a11yCardMenuHomeParent && _a11yCardMenuHomeParent.menu !== menu) _restoreA11yCardMenuToOrigin();
+  if (_a11yCardMenuCloseHandlers) {
+    document.removeEventListener('click', _a11yCardMenuCloseHandlers.close, true);
+    document.removeEventListener('keydown', _a11yCardMenuCloseHandlers.onEsc, true);
+    _a11yCardMenuCloseHandlers = null;
+  }
+
+  if (isOpen) { menu.classList.add('hidden'); _restoreA11yCardMenuToOrigin(); return; }
+
+  // Reparenta pra body ANTES de medir o trigger — o menu tem que estar
+  // fora do fluxo/overflow no momento do cálculo, senão herda a mesma
+  // largura truncada do ancestral que estamos tentando escapar.
+  if (!_a11yCardMenuHomeParent) {
+    _a11yCardMenuHomeParent = { menu, parent: menu.parentElement, nextSibling: menu.nextSibling };
+  }
+  document.body.appendChild(menu);
+  menu.classList.remove('hidden');
+  if (trigger) {
+    const r = trigger.getBoundingClientRect();
+    const menuWidth = menu.offsetWidth || 192; // w-48 = 192px, fallback antes do 1º layout
+    // Alinha a borda DIREITA do menu com a borda direita do botão (mesmo
+    // efeito visual de "right-0" que o CSS original tinha, agora calculado
+    // em px porque saiu do container relative que dava esse referencial).
+    const left = Math.max(8, r.right - menuWidth);
+    // Sem animação (2026-09-04-o, pedido do usuário: a tentativa de
+    // esmaecer estava aparecendo "subindo de baixo pra cima" — revertida,
+    // aparecimento simples e instantâneo no clique).
+    menu.style.cssText = `position:absolute;top:${r.bottom + window.scrollY + 4}px;left:${left + window.scrollX}px;width:192px;z-index:9999;`;
+  }
+
+  const close = (ev) => { if (!menu.contains(ev.target) && ev.target !== trigger) { menu.classList.add('hidden'); _closeA11yCardMenuHandlers(); } };
+  const onEsc = (ev) => { if (ev.key === 'Escape') { menu.classList.add('hidden'); _closeA11yCardMenuHandlers(); } };
+  function _closeA11yCardMenuHandlers() {
+    document.removeEventListener('click', close, true);
+    document.removeEventListener('keydown', onEsc, true);
+    _a11yCardMenuCloseHandlers = null;
+    _restoreA11yCardMenuToOrigin();
+  }
+  _a11yCardMenuCloseHandlers = { close, onEsc };
+  setTimeout(() => {
+    document.addEventListener('click', close, true);
+    document.addEventListener('keydown', onEsc, true);
+  }, 0);
+}
+window.toggleA11yCardMenu = toggleA11yCardMenu;
+
+// Wrapper de exclusão a partir do card — deleteA11yArea espera
+// originalIndex (não areaId), então resolve o índice atual antes de
+// delegar; mesma função usada pelo fluxo de exclusão de dentro da
+// workspace (_deleteA11yAreaFromWorkspace).
+function deleteA11yAreaFromCard(e, areaId) {
+  if (e) e.stopPropagation();
+  const idx = (a11yAreas || []).findIndex(a => a && a.id === areaId);
+  if (idx === -1) return;
+  deleteA11yArea(idx);
+}
+window.deleteA11yAreaFromCard = deleteA11yAreaFromCard;
+
+// "Editar conector" (2026-09-04-l) — popover com as 5 direções (mesmo
+// vocabulário/ícones do modal de Marcar Área: Topo/Base/Esq./Dir./Nenhum).
+// Reaproveita o MESMO padrão de reparentar-pra-body de toggleA11yCardMenu
+// (correção de corte, 2026-09-04-j) — o popover nasceria dentro do <li>
+// do card (overflow-hidden) e da lista (overflow-y-auto), cortado do
+// mesmo jeito que o menu "⋯" já era.
+const A11Y_CONECTOR_OPTIONS = [
+  { value: 'superior', icon: 'arrow-up', label: 'Topo' },
+  { value: 'inferior', icon: 'arrow-down', label: 'Base' },
+  { value: 'esquerda', icon: 'arrow-left', label: 'Esq.' },
+  { value: 'direita', icon: 'arrow-right', label: 'Dir.' },
+  { value: 'desativado', icon: 'ban', label: 'Nenhum' },
+];
+function openA11yConectorPicker(e, areaId) {
+  if (e) e.stopPropagation();
+  // Captura o trigger e mede a posição ANTES de fechar/restaurar o menu
+  // "⋯" — bug real corrigido (2026-09-04-p): closeA11yCardMenu_ifOpen()
+  // devolve o menu (e o próprio botão "Editar conector", que é filho
+  // dele) pro <li> original dentro da lista com overflow-y-auto; medir
+  // getBoundingClientRect() DEPOIS disso pegava a posição do botão já
+  // recolhido/fora da área visível, jogando o popover pro topo da tela.
+  const trigger = e && e.currentTarget;
+  const triggerRect = trigger ? trigger.getBoundingClientRect() : null;
+  closeA11yCardMenu_ifOpen();
+  const area = (a11yAreas || []).find(a => a && a.id === areaId);
+  if (!area) return;
+  const current = area.conector || 'superior';
+
+  const picker = document.createElement('div');
+  picker.id = 'a11y-conector-picker';
+  picker.className = 'py-2 px-2 bg-white dark:bg-dark-surface rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line';
+  picker.innerHTML = `
+    <p class="text-[9.5px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wider px-1.5 pb-1.5">Direção do selo</p>
+    <div class="grid grid-cols-5 gap-1">
+      ${A11Y_CONECTOR_OPTIONS.map(opt => `
+        <button type="button" onclick="_confirmA11yConectorChange('${escapeHtml(areaId)}', '${opt.value}')"
+          class="flex flex-col items-center gap-1 p-1.5 rounded-xl transition-all ${opt.value === current ? 'bg-blue-50 dark:bg-blue-900/30 border border-[#0070af]' : 'border border-transparent hover:bg-gray-50 dark:hover:bg-dark-line'}">
+          <i data-lucide="${opt.icon}" class="w-3.5 h-3.5 ${opt.value === current ? 'text-[#0070af]' : 'text-slate-500 dark:text-dark-muted'}" aria-hidden="true"></i>
+          <span class="text-[8px] font-bold ${opt.value === current ? 'text-[#0070af]' : 'text-slate-500 dark:text-dark-muted'}">${opt.label}</span>
+        </button>
+      `).join('')}
+    </div>
+  `;
+  document.body.appendChild(picker);
+  if (triggerRect) {
+    const pickerWidth = 230;
+    const left = Math.max(8, triggerRect.right - pickerWidth);
+    // Sem animação (2026-09-04-o, pedido do usuário) — mesmo revert de
+    // toggleA11yCardMenu, aparecimento simples e instantâneo no clique.
+    picker.style.cssText = `position:absolute;top:${triggerRect.bottom + window.scrollY + 4}px;left:${left + window.scrollX}px;width:${pickerWidth}px;z-index:9999;`;
+  }
+  if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
+
+  const close = (ev) => { if (!picker.contains(ev.target) && ev.target !== trigger) _closeA11yConectorPicker(); };
+  const onEsc = (ev) => { if (ev.key === 'Escape') _closeA11yConectorPicker(); };
+  function _closeA11yConectorPicker() {
+    document.removeEventListener('click', close, true);
+    document.removeEventListener('keydown', onEsc, true);
+    picker.remove();
+  }
+  setTimeout(() => {
+    document.addEventListener('click', close, true);
+    document.addEventListener('keydown', onEsc, true);
+  }, 0);
+}
+window.openA11yConectorPicker = openA11yConectorPicker;
+
+// Fecha o dropdown "⋯" do card antes de abrir o picker de conector — os
+// dois nascem a partir do mesmo botão de ação, não faz sentido os dois
+// abertos ao mesmo tempo.
+function closeA11yCardMenu_ifOpen() {
+  document.querySelectorAll('[id^="a11y-card-menu-"]').forEach(m => m.classList.add('hidden'));
+  if (typeof _restoreA11yCardMenuToOrigin === 'function') _restoreA11yCardMenuToOrigin();
+}
+
+// Precisa do targetNodeId/number/label/origin atuais da área — o backend
+// redesenha o CONTEÚDO do grupo (area.id nunca muda, ver
+// update-a11y-area-conector em code.js).
+function _confirmA11yConectorChange(areaId, conector) {
+  const picker = document.getElementById('a11y-conector-picker');
+  if (picker) picker.remove();
+  const area = (a11yAreas || []).find(a => a && a.id === areaId);
+  if (!area) return;
+  if (area.conector === conector) return; // mesma direção — nada a fazer
+  ensureA11yProjectOriginThen((origin) => {
+    parent.postMessage({
+      pluginMessage: {
+        type: 'update-a11y-area-conector',
+        areaId,
+        targetNodeId: area.targetNodeId,
+        number: area.number,
+        label: area.label,
+        conector,
+        origin,
+        sectionName: getA11yActiveSectionName(),
+      },
+    }, '*');
+  });
+}
+window._confirmA11yConectorChange = _confirmA11yConectorChange;
+
+// Resposta de 'a11y-area-conector-updated' — area.conector já foi
+// atualizado em hacData por messages.js antes desta função ser chamada;
+// aqui só re-renderiza a listagem pra refletir o novo estado (embora o
+// conector não apareça diretamente no resumo do card hoje, futuras
+// mudanças podem exibi-lo).
+function handleA11yAreaConectorUpdated(msg) {
+  if (typeof renderA11yGroupedList === 'function') renderA11yGroupedList();
+}
+window.handleA11yAreaConectorUpdated = handleA11yAreaConectorUpdated;
+
+// Área Marcada — CARD CLICÁVEL (deixou de ser accordion em 2026-09-04, ver
+// bloco "Workspace de uma Área Marcada" acima). Clicar no CORPO do card
+// abre a workspace dedicada (openA11yAreaWorkspace). Focar/Ocultar/Excluir
+// ficam disponíveis em DOIS lugares agora: no dropdown "⋯" do próprio
+// card (acima, 2026-09-04-f) e no dropdown "Mais ações" da workspace
+// (toggleA11yWorkspaceMoreActionsMenu) — o do card evita ter que entrar na
+// área só pra excluir/ocultar/focar.
+//
+// Ampliado em 2026-09-04-c (pedido do usuário, com screenshot real): sem
+// "Nova spec" no card — criar spec passou a ser só dentro da workspace, aba
+// Leitor de Tela (o card fica mais limpo e sem competir com o resumo); sem
+// o chevron de "abrir" (o card inteiro já é obviamente clicável, o ícone
+// era redundante). Em troca, ganhou um resumo mais rico do que já foi
+// documentado — 3 blocos: status por etapa (Tabulação/Swipe/Leitor de
+// Tela, mesmo padrão visual do dashboard da tab Handoff), breakdown por
+// categoria de spec (pills coloridas, uma por A11Y_CATEGORIES com pelo
+// menos 1 spec), e status da Ficha de Handoff (X/N seções inseridas).
+// Extraído de _a11yAreaAccordionEl (2026-09-08) — antes calculado só
+// dentro do card da listagem principal (montando HTML direto). Devolve
+// os DADOS CRUS (sem HTML), reaproveitável tanto ali quanto no payload
+// de `insert-ficha-section` pro bloco "Handoff Review" da Ficha
+// (_fichaInsertSection, handoff-ficha.js) — o backend não tem acesso a
+// A11Y_CATEGORIES nem a areaSpecs, então o resumo precisa chegar pronto.
+function _a11yComputeCategoryBreakdown(areaSpecs) {
+  return Object.keys(A11Y_CATEGORIES)
+    .map(catKey => ({ catKey, meta: A11Y_CATEGORIES[catKey], count: (areaSpecs || []).filter(s => s.a11yType === catKey).length }))
+    .filter(({ count }) => count > 0);
+}
+window._a11yComputeCategoryBreakdown = _a11yComputeCategoryBreakdown;
+
 function _a11yAreaAccordionEl(area, areaSpecs) {
   const uid = `a11y-area-${area.originalIndex}`;
-  const expand = window._a11yExpandedAreaIds.has(area.id);
-  const undocumentedEntries = _collectA11yUndocumentedForArea(area.id);
-  // Status agregado da Ordem de Tabulação, visível no header do card ao lado
-  // do contador de especificações — antes ficava só implícito, enterrada
-  // como último accordion (avaliação de design-ux + accessibility-specialist,
-  // 2026-08-25: separar em card próprio fragmentaria a Área, que é a unidade
-  // real de organização — a correção certa é dar visibilidade, não fragmentar).
-  // "Aplicada" = já existem itens no canvas para esta área (tabOrderItems),
-  // "Pendente" caso contrário. Não há estado de "rascunho" persistido — a
-  // lista fica só em memória enquanto o modal de revisão não é confirmado.
   const tabOrderCount = _currentTabOrderItems(area.id).length;
+  const isMobile = hacData.projectOrigin === 'mobile';
+  // Indicador "Swipe" reflete a CONTAGEM DE PONTOS da trilha desta área
+  // (3ª reformulação, 2026-09-04) — ver bloco "Trilha de Swipe".
+  const swipePath = isMobile ? (hacData.a11ySwipePaths || []).find(p => p && p.areaId === area.id) : null;
+  const swipePointCount = swipePath && Array.isArray(swipePath.points) ? swipePath.points.length : 0;
+
+  const statusPill = (icon, label, ok) => `
+    <span class="inline-flex items-center gap-1 text-[9.5px] font-semibold" style="color:${ok ? '#16a34a' : '#94a3b8'}">
+      <i data-lucide="${icon}" class="w-3 h-3 shrink-0"></i>${label}
+    </span>
+  `;
+
+  const categoryBreakdownData = _a11yComputeCategoryBreakdown(areaSpecs);
+  const categoryBreakdown = categoryBreakdownData
+    .map(({ meta, count }) => `
+      <span class="inline-flex items-center gap-1 h-5 px-2 rounded-full text-[9px] font-bold" style="background-color:${meta.fill};color:${meta.color}">
+        ${count} ${escapeHtml(meta.label)}
+      </span>
+    `).join('');
+
+  const fichaState = area.handoffFicha && area.handoffFicha.sections ? area.handoffFicha.sections : null;
+  const fichaSectionKeys = isMobile ? ['tabulacao', 'swipe', 'leitor', 'review'] : ['tabulacao', 'leitor', 'review'];
+  const fichaInsertedCount = fichaState ? fichaSectionKeys.filter(k => fichaState[k] && fichaState[k].insertedAt).length : 0;
+
   const li = document.createElement('li');
-  li.className = 'list-none bg-white dark:bg-dark-surface rounded-xl border border-gray-100 dark:border-dark-line overflow-hidden';
+  li.className = 'list-none bg-white dark:bg-dark-surface rounded-2xl border border-gray-100 dark:border-dark-line overflow-hidden';
   li.setAttribute('data-a11y-area', area.id);
   li.setAttribute('data-a11y-area-search', escapeHtml(_normalizeSearchText(area.label)));
   li.innerHTML = `
-    <div class="flex items-center gap-2 px-2.5 py-2 cursor-pointer select-none hover:bg-gray-50 dark:hover:bg-dark-line/20 transition-colors"
-      onclick="toggleA11yAreaAccordion('${uid}', '${area.id}')">
-      <div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-extrabold text-white shrink-0" style="background-color:#0070AF">${escapeHtml(String(area.number))}</div>
-      <div class="flex-1 min-w-0">
-        <p class="text-[11px] font-semibold text-slate-700 dark:text-white break-words leading-snug">${escapeHtml(area.label || '')}</p>
-        <div class="flex items-center gap-1.5 flex-wrap">
-          <p class="text-[9px] text-slate-400 dark:text-dark-muted">${areaSpecs.length} especificaç${areaSpecs.length === 1 ? 'ão' : 'ões'}</p>
-          <span class="text-[9px] text-gray-300 dark:text-dark-line">·</span>
-          <p class="text-[9px] font-semibold flex items-center gap-1" style="color:${tabOrderCount > 0 ? '#16a34a' : '#94a3b8'}">
-            <i data-lucide="${tabOrderCount > 0 ? 'check-circle-2' : 'circle-dashed'}" class="w-2.5 h-2.5 shrink-0"></i>
-            Tabulação${tabOrderCount > 0 ? ` (${tabOrderCount})` : ' pendente'}
-          </p>
+    <div class="flex flex-col gap-2.5 px-3.5 py-3 cursor-pointer select-none hover:bg-gray-50 dark:hover:bg-dark-line/20 transition-colors"
+      onclick="openA11yAreaWorkspace('${area.id}')" id="${uid}">
+      <div class="flex items-center gap-2.5">
+        <div class="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-extrabold text-white shrink-0" style="background-color:#0070AF">${escapeHtml(String(area.number))}</div>
+        <div class="flex-1 min-w-0">
+          <p class="text-[12px] font-semibold text-slate-700 dark:text-white break-words leading-snug">${escapeHtml(area.label || '')}</p>
+          <p class="text-[9.5px] text-slate-400 dark:text-dark-muted">${areaSpecs.length} especificaç${areaSpecs.length === 1 ? 'ão' : 'ões'}</p>
+        </div>
+        <div class="relative shrink-0" onclick="event.stopPropagation()">
+          <button type="button" title="Mais ações" aria-label="Mais ações desta área" aria-haspopup="true"
+            onclick="toggleA11yCardMenu(event, '${escapeHtml(area.id)}')"
+            class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-dark-line text-slate-400 dark:text-dark-muted transition-colors">
+            <i data-lucide="ellipsis-vertical" class="w-4 h-4" aria-hidden="true"></i>
+          </button>
+          <div id="a11y-card-menu-${escapeHtml(area.id)}" class="hidden absolute right-0 top-full mt-1 w-48 py-1.5 bg-white dark:bg-dark-surface rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line z-50">
+            <button type="button" onclick="focusNode('${escapeHtml(area.id)}')"
+              class="w-full flex items-center gap-2.5 px-3.5 py-2 text-[11.5px] font-semibold text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-dark-line transition-colors text-left">
+              <i data-lucide="locate" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted shrink-0" aria-hidden="true"></i>
+              Focar no canvas
+            </button>
+            <!-- "Editar conector" (2026-09-04-l, pedido do usuário) — abre o
+                 popover de 5 direções (openA11yConectorPicker) em vez de
+                 mudar direto, pra não trocar por engano a direção do selo
+                 sem uma escolha explícita. -->
+            <button type="button" onclick="openA11yConectorPicker(event, '${escapeHtml(area.id)}')"
+              class="w-full flex items-center gap-2.5 px-3.5 py-2 text-[11.5px] font-semibold text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-dark-line transition-colors text-left">
+              <i data-lucide="move" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted shrink-0" aria-hidden="true"></i>
+              Editar conector
+            </button>
+            <button type="button" onclick="toggleAreaGroupVisibility('${escapeHtml(area.id)}')"
+              class="w-full flex items-center gap-2.5 px-3.5 py-2 text-[11.5px] font-semibold text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-dark-line transition-colors text-left">
+              <i data-lucide="eye-off" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted shrink-0" aria-hidden="true"></i>
+              Ocultar/Mostrar no canvas
+            </button>
+            <button type="button" onclick="deleteA11yAreaFromCard(event, '${escapeHtml(area.id)}')"
+              class="w-full flex items-center gap-2.5 px-3.5 py-2 text-[11.5px] font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors text-left">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i>
+              Remover área
+            </button>
+          </div>
         </div>
       </div>
-      <button type="button" title="Nova especificação nesta área" aria-label="Nova especificação nesta área"
-        onclick="event.stopPropagation(); openA11yCategoryPickerModal('${area.id}')"
-        class="inline-flex items-center gap-1 h-7 px-2.5 rounded-full bg-[#0891B2] text-white text-[10px] font-bold hover:bg-cyan-700 active:scale-95 shadow-sm shadow-cyan-500/20 transition-all shrink-0">
-        <i data-lucide="plus" class="w-3.5 h-3.5"></i> Nova spec
-      </button>
-      <button type="button" title="Focar na área no canvas" aria-label="Focar na área no canvas"
-        onclick="event.stopPropagation(); focusNode('${area.id}')"
-        class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-[#0070af] transition-colors shrink-0">
-        <i data-lucide="locate" class="w-3.5 h-3.5"></i>
-      </button>
-      <!-- Oculta/mostra TUDO da área de uma vez (specs das 5 categorias +
-           cópia de Ordem de Tabulação, se existir). -->
-      <button type="button" title="Ocultar/Mostrar toda a área no canvas" aria-label="Ocultar/Mostrar toda a área no canvas"
-        onclick="event.stopPropagation(); toggleAreaGroupVisibility('${area.id}')"
-        class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-[#0070af] transition-colors shrink-0">
-        <i data-lucide="${window._a11yAreaHiddenIds.has(area.id) ? 'eye-off' : 'eye'}" class="w-3.5 h-3.5"></i>
-      </button>
-      <button type="button" title="Remover área" aria-label="Remover área"
-        onclick="event.stopPropagation(); deleteA11yArea(${area.originalIndex})"
-        class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors shrink-0">
-        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-      </button>
-      <i data-lucide="chevron-down" id="chevron-${uid}" class="w-4 h-4 text-gray-400 transition-transform shrink-0" style="transform:${expand ? 'rotate(180deg)' : 'rotate(0deg)'}"></i>
-    </div>
-    <div id="body-${uid}" class="accordion-content ${expand ? '' : 'hidden'} border-t border-gray-50 dark:border-dark-line p-2 space-y-2">
-      ${(areaSpecs.length > 0 || undocumentedEntries.length > 0) ? `
-      <div class="flex items-center justify-end gap-1 px-0.5 -mb-0.5">
-        <button type="button" onclick="event.stopPropagation(); _a11ySetAllSubaccordions(this, true)"
-          class="text-[9.5px] font-bold text-cyan-700 dark:text-cyan-400 hover:underline px-1">Expandir todos</button>
-        <span class="text-[9.5px] text-gray-300 dark:text-dark-line">·</span>
-        <button type="button" onclick="event.stopPropagation(); _a11ySetAllSubaccordions(this, false)"
-          class="text-[9.5px] font-bold text-slate-500 dark:text-dark-muted hover:underline px-1">Recolher todos</button>
-      </div>` : ''}
-      ${_tabOrderSectionHtml(uid, area)}
-      ${areaSpecs.length > 0
-        ? Object.keys(A11Y_CATEGORIES)
-            .map(catKey => ({ catKey, catSpecs: areaSpecs.filter(s => s.a11yType === catKey) }))
-            .filter(({ catSpecs }) => catSpecs.length > 0)
-            .map(({ catKey, catSpecs }) => _a11yCategoryAccordionEl(`${uid}-cat-${catKey}`, catKey, catSpecs))
-            .join('')
-        : (undocumentedEntries.length === 0 ? `<p class="text-[10px] text-slate-400 dark:text-dark-muted text-center py-3">Nenhuma especificação nesta área ainda. Use o botão "Nova spec" acima.</p>` : '')}
-      ${_a11yUndocumentedAccordionEl(`${uid}-undoc`, area.id, undocumentedEntries)}
+
+      <div class="flex items-center gap-3 flex-wrap pl-[38px]">
+        ${statusPill(tabOrderCount > 0 ? 'check-circle-2' : 'circle-dashed', tabOrderCount > 0 ? `Tabulação (${tabOrderCount})` : 'Tabulação pendente', tabOrderCount > 0)}
+        ${isMobile ? statusPill(swipePointCount > 0 ? 'check-circle-2' : 'circle-dashed', swipePointCount > 0 ? `Swipe (${swipePointCount} pontos)` : 'Swipe sem trilha', swipePointCount > 0) : ''}
+        ${statusPill(areaSpecs.length > 0 ? 'check-circle-2' : 'circle-dashed', areaSpecs.length > 0 ? `Leitor de Tela (${areaSpecs.length})` : 'Leitor de Tela pendente', areaSpecs.length > 0)}
+      </div>
+
+      ${categoryBreakdown ? `<div class="flex items-center gap-1 flex-wrap pl-[38px]">${categoryBreakdown}</div>` : ''}
+
+      <div class="flex items-center gap-1.5 pl-[38px]">
+        <i data-lucide="file-output" class="w-3 h-3 shrink-0" style="color:${fichaInsertedCount > 0 ? '#0891B2' : '#94a3b8'}"></i>
+        <span class="text-[9.5px] font-semibold" style="color:${fichaInsertedCount > 0 ? '#0891B2' : '#94a3b8'}">
+          Ficha de Handoff: ${fichaInsertedCount}/${fichaSectionKeys.length} seções inseridas
+        </span>
+      </div>
     </div>
   `;
   return li;
@@ -2832,6 +3754,12 @@ function _a11yQueueLayerOrderResolution(areaId, targetNodeId, specsList) {
 function renderA11yGroupedList() {
   const list = document.getElementById('a11y-groups-results');
   if (!list) return;
+  // Fecha/restaura qualquer menu "⋯" de card aberto ANTES de destruir a
+  // lista — o menu foi reparentado pra document.body ao abrir (correção de
+  // corte, 2026-09-04-j), então sobreviveria ao innerHTML='' abaixo como
+  // um elemento órfão e invisível, com _a11yCardMenuHomeParent apontando
+  // pra um <li> já desconectado do DOM.
+  if (typeof _restoreA11yCardMenuToOrigin === 'function') _restoreA11yCardMenuToOrigin();
   list.innerHTML = '';
 
   const areas = (a11yAreas || [])
@@ -2871,10 +3799,10 @@ function renderA11yGroupedList() {
     const areaSpecs = _a11ySortSpecsByLayerOrder(areaSpecsRaw, area.id);
     const areaLi = _a11yAreaAccordionEl(area, areaSpecs);
     list.appendChild(areaLi);
-    // O <ul> nasce vazio no template de _a11yAreaAccordionEl; preenche agora
-    // que já está no DOM.
-    const uid = `a11y-area-${area.originalIndex}`;
-    _renderTabOrderListForArea(area.id, document.getElementById(`tab-order-list-${uid}`));
+    // _a11yAreaAccordionEl virou card (2026-09-04) — não tem mais <ul> de
+    // Ordem de Tabulação inline (isso agora vive só dentro da workspace,
+    // tab "Tabulação", preenchido por _renderA11yWorkspaceTab). Mantém só a
+    // resolução de ordem de camadas, usada pelo card e pela workspace.
     _a11yQueueLayerOrderResolution(area.id, area.targetNodeId, areaSpecsRaw);
   });
 
@@ -2896,6 +3824,16 @@ function renderA11yGroupedList() {
 
   _refreshIcons();
   _setupA11ySearchBar();
+
+  // A workspace de uma Área (view-area-workspace) vive num container à
+  // parte de #a11y-groups-results — qualquer ação que dispare
+  // renderA11yGroupedList() (criar/editar/excluir spec, Ordem de Tabulação
+  // etc.) precisa também atualizar o conteúdo da tab ativa da workspace, se
+  // ela estiver aberta no momento, senão a workspace ficava com dado
+  // desatualizado até o designer trocar de tab manualmente.
+  if (window._a11yWorkspaceAreaId && typeof _renderA11yWorkspaceTab === 'function') {
+    _renderA11yWorkspaceTab();
+  }
 }
 window.renderA11yGroupedList = renderA11yGroupedList;
 
@@ -3027,8 +3965,183 @@ function setA11yProjectOrigin(origin, opts) {
   if (!opts || !opts.silent) {
     showToast(`Plataforma do projeto definida como ${origin === 'mobile' ? 'Mobile' : 'Web'}.`);
   }
+  _refreshUiForProjectOrigin();
 }
 window.setA11yProjectOrigin = setA11yProjectOrigin;
+
+// ── Lib específica do projeto (2026-09-04) ──────────────────────────────
+// projectOrigin (web/mobile) continua sendo a fonte de verdade pra TODA a
+// lógica binária já madura do plugin (formulário mobile/desktop, seleção
+// de componente de selo A11Y_ITEM_NUMBER_KEYS/_MOBILE, filtro de
+// categorias) — nada disso muda. projectLib é um campo MAIS granular,
+// adicionado por cima: qual das 3 libs de produto escolhíveis
+// (web-angular-react legado, super-dsc-web novo, super-app mobile) o
+// designer está de fato documentando. Motivo: o hac já reconhece e mapeia
+// as libs individualmente no matching de componente
+// (_resolveDscComponentA11yMatch, code.js, campo sourceLib) — só a UI
+// (Home, header) ainda tratava tudo como 2 categorias amplas, o que ficava
+// impreciso quando existem 2 libs web coexistindo na mesma tela (legado +
+// nova). dsc-android é reconhecida no matching mas NÃO é uma opção de
+// escolha aqui (decisão explícita do usuário, 2026-09-04).
+const A11Y_LIB_TO_ORIGIN = { 'web-angular-react': 'web', 'super-dsc-web': 'web', 'super-app': 'mobile' };
+const A11Y_LIB_LABELS = { 'web-angular-react': 'DSC Web Angular & React', 'super-dsc-web': 'Super DSC Web', 'super-app': 'Super DSC Mobile' };
+const A11Y_LIB_ICONS = { 'web-angular-react': 'monitor', 'super-dsc-web': 'monitor', 'super-app': 'smartphone' };
+
+function getA11yProjectLib() {
+  return (hacData && hacData.projectLib) || null;
+}
+window.getA11yProjectLib = getA11yProjectLib;
+
+// Sempre grava projectLib E o projectOrigin derivado (via A11Y_LIB_TO_ORIGIN)
+// juntos, num único ponto — assim a lógica binária existente (que só
+// conhece projectOrigin) nunca fica dessincronizada da escolha granular.
+// setA11yProjectOrigin já dispara _refreshUiForProjectOrigin, então não
+// duplica essa chamada aqui.
+function setA11yProjectLib(lib, opts) {
+  if (!A11Y_LIB_TO_ORIGIN[lib]) return;
+  hacData.projectLib = lib;
+  setA11yProjectOrigin(A11Y_LIB_TO_ORIGIN[lib], opts);
+}
+window.setA11yProjectLib = setA11yProjectLib;
+
+// Ponto único de atualização de UI sempre que a plataforma muda — chamado
+// tanto pela escolha inicial na Home (chooseA11yHomeOrigin) quanto pela
+// troca manual depois ("Sobre o hac" → Trocar, openA11yProjectOriginPrompt).
+// Cada elemento só se atualiza se já estiver montado no DOM (a Home e a
+// tela de Acessibilidade nunca coexistem — só uma view fica sem "hidden"
+// por vez), então é seguro chamar isto incondicionalmente em qualquer
+// momento sem checar em qual view o designer está.
+function _refreshUiForProjectOrigin() {
+  _renderA11yHomeOriginPicker();
+  _applyA11yHeaderOriginTitle();
+  _applyA11yCategoryPickerOriginFilter();
+  _applyA11yCategoriesHelpOriginFilter();
+}
+window._refreshUiForProjectOrigin = _refreshUiForProjectOrigin;
+
+// Escolha de LIB feita na PRÓPRIA Home — ver home.html (recebe o slug da
+// lib, ex: 'super-app', não mais 'web'/'mobile' direto). Navega direto pra
+// view-specifications (2026-09-08, pedido do usuário: a Etapa 2 antiga —
+// resumo de 3 passos + botão "Começar" — só informava, nunca fazia nada de
+// fato, e tinha conteúdo desatualizado, sem citar Swipe/Handoff; o
+// onboarding stepper que dispara a seguir já cobre o fluxo completo e
+// atualizado). Dispara, na sequência, o onboarding específico dessa lib
+// (Camada 2 — ver ONBOARDING_TOOLS em onboarding.js) uma única vez por
+// lib/arquivo, complementando o onboarding geral de fluxo (Camada 1, já
+// existente).
+function chooseA11yHomeOrigin(lib) {
+  setA11yProjectLib(lib, { silent: true });
+  navigate('view-specifications');
+  if (typeof openOnboarding === 'function') {
+    openOnboarding('lib-' + lib, { markSeenOnOpen: true });
+  }
+}
+window.chooseA11yHomeOrigin = chooseA11yHomeOrigin;
+
+// Alterna, na Home, entre a ETAPA 1 (pergunta de plataforma, objetiva) e a
+// ETAPA 1b (sub-escolha de lib web) — nunca as duas ao mesmo tempo. A
+// antiga ETAPA 2 (resumo do fluxo + "Voltar"/"Começar") foi removida
+// (2026-09-08): escolher a lib agora navega direto pra view-specifications
+// (ver chooseA11yHomeOrigin), então a Home sempre volta a mostrar a Etapa 1
+// quando revisitada — nunca mais existe uma "escolha já feita" pra pular
+// pra outra etapa aqui. Chamado ao entrar na Home e também por
+// openA11yProjectOriginPrompt ("Sobre o hac" → Trocar), que precisa forçar
+// a Etapa 1 de volta mesmo com hacData.projectOrigin já preenchido.
+function _renderA11yHomeOriginPicker() {
+  const step1 = document.getElementById('a11y-home-step-origin');
+  const stepWebSublib = document.getElementById('a11y-home-step-web-sublib');
+  if (!step1) return;
+
+  step1.classList.remove('hidden');
+  if (stepWebSublib) stepWebSublib.classList.add('hidden');
+
+  if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
+}
+window._renderA11yHomeOriginPicker = _renderA11yHomeOriginPicker;
+
+// Avança da Etapa 1 (Web/Mobile) pra Etapa 1b (sub-escolha de lib web) —
+// Mobile não passa por aqui, resolve direto em chooseA11yHomeOrigin('super-app')
+// já que só existe 1 lib mobile real hoje. Só troca a visibilidade das 2
+// etapas — nenhuma escolha é persistida ainda (só chooseA11yHomeOrigin
+// grava de fato, quando uma das 2 libs web é escolhida na Etapa 1b).
+function _showA11yHomeWebSublibStep() {
+  const step1 = document.getElementById('a11y-home-step-origin');
+  const stepWebSublib = document.getElementById('a11y-home-step-web-sublib');
+  if (!step1 || !stepWebSublib) return;
+  step1.classList.add('hidden');
+  stepWebSublib.classList.remove('hidden');
+}
+window._showA11yHomeWebSublibStep = _showA11yHomeWebSublibStep;
+
+// "Voltar" da Etapa 1b pra Etapa 1 — desiste da sub-escolha sem persistir
+// nada.
+function _hideA11yHomeWebSublibStep() {
+  const step1 = document.getElementById('a11y-home-step-origin');
+  const stepWebSublib = document.getElementById('a11y-home-step-web-sublib');
+  if (!step1 || !stepWebSublib) return;
+  stepWebSublib.classList.add('hidden');
+  step1.classList.remove('hidden');
+}
+window._hideA11yHomeWebSublibStep = _hideA11yHomeWebSublibStep;
+
+// Título do header secundário (specifications.html) — substitui o antigo
+// texto fixo "Acessibilidade" por "Documentando projeto Web/Mobile", já que
+// a plataforma agora é sempre conhecida antes de chegar nesta tela (exceto
+// arquivos legados que ainda não passaram pela Home com esta feature —
+// nesse caso cai no fallback "Acessibilidade" genérico, idêntico ao
+// comportamento anterior a esta mudança).
+function _applyA11yHeaderOriginTitle() {
+  const titleEl = document.getElementById('a11y-header-title');
+  if (!titleEl) return;
+  const lib = getA11yProjectLib();
+  if (lib && A11Y_LIB_LABELS[lib]) {
+    titleEl.textContent = A11Y_LIB_LABELS[lib];
+    return;
+  }
+  // Fallback: arquivo legado com projectOrigin mas sem projectLib (salvo
+  // antes desta versão) — rótulo genérico por família, nunca assume qual
+  // das 2 libs web específicas era.
+  const origin = getA11yProjectOrigin();
+  titleEl.textContent = origin === 'mobile' ? 'Acessibilidade · Mobile'
+    : origin === 'web' ? 'Acessibilidade · Web'
+    : 'Acessibilidade';
+}
+window._applyA11yHeaderOriginTitle = _applyA11yHeaderOriginTitle;
+
+// ── Section de specs ativa (2026-09-03) ──────────────────────────────────
+// Mesmo padrão de projectOrigin acima: campo simples de configuração de
+// projeto, persistido em hacData.activeSectionName, lido pelo backend em
+// TODA mensagem que cria nós dentro da Section organizadora (create-a11y-
+// area, create-unified-spec, generate-tab-order-from-layers, start-tab-
+// order-copy, draw-tab-order-badge). null = ainda não escolhida
+// explicitamente — backend resolve pro nome fixo original
+// (A11Y_SECTION_NAME, code.js) quando sectionName vem vazio/ausente, então
+// arquivos que nunca passaram por este fluxo continuam funcionando
+// exatamente como antes. Só passa a ter valor quando o designer opta por
+// "Iniciar nova Section" no aviso de documentação existente (ver
+// openA11yAreaModal abaixo).
+function getA11yActiveSectionName() {
+  return (hacData && hacData.activeSectionName) || null;
+}
+window.getA11yActiveSectionName = getA11yActiveSectionName;
+
+function setA11yActiveSectionName(sectionName) {
+  hacData.activeSectionName = sectionName || null;
+  saveToStorage();
+}
+window.setA11yActiveSectionName = setA11yActiveSectionName;
+
+// Nome do designer logado, já lido de figma.currentUser uma única vez em
+// 'ui-ready' (code.js) e guardado em hacData.currentUser. Vai no payload de
+// toda mensagem que pode criar a Section de sessão
+// (_getOrCreateA11ySessionSection, code.js) — o backend não relê
+// figma.currentUser. Só é usado de fato na PRIMEIRA criação da sessão na
+// página; as chamadas seguintes reaproveitam a Section já existente e
+// ignoram o campo.
+function getA11yDesignerName() {
+  return (hacData && hacData.currentUser && hacData.currentUser.name) || null;
+}
+window.getA11yDesignerName = getA11yDesignerName;
 
 // #a11y-post-area-origin visível / #a11y-post-area-loading escondido —
 // reaproveitado tanto pela pergunta de origem quanto pelo indicador de
@@ -3064,19 +4177,17 @@ function ensureA11yProjectOriginThen(onReady) {
 }
 window.ensureA11yProjectOriginThen = ensureA11yProjectOriginThen;
 
-// Reabre a pergunta sob demanda (botão "Trocar" na modal "Sobre o hac") —
-// única forma de mudar hacData.projectOrigin depois de já definido. Ignora
-// o valor atual (não é ensureA11yProjectOriginThen) e mostra a modal sempre.
+// Reabre a escolha sob demanda (botão "Trocar" na modal "Sobre o hac") —
+// única forma de mudar hacData.projectLib/projectOrigin depois de já
+// definido. Em vez de um modal pequeno com 2 botões fixos (Web/Mobile),
+// redireciona pra Home, que já tem a escolha real de 3 libs (Etapa 1) —
+// evita duplicar essa UI em dois lugares. Força a Etapa 1 aparecer mesmo
+// com projectLib/projectOrigin já definidos (senão a Home mostraria direto
+// a Etapa 2, já que "escolha feita" é o estado padrão dela).
 function openA11yProjectOriginPrompt() {
   if (typeof closeModal === 'function') closeModal('about-hac-modal');
-  window._a11yPendingOriginCallback = (origin) => {
-    setA11yProjectOrigin(origin, { silent: false });
-  };
-  const originTitle = document.getElementById('a11y-post-area-title');
-  if (originTitle) originTitle.innerHTML = '<i data-lucide="smartphone" class="w-4 h-4 text-[#0070af]" aria-hidden="true"></i> Plataforma do Projeto';
-  _setA11yPostAreaModalStage('origin');
-  openModal('a11y-post-area-detect-modal');
-  if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
+  window._a11yForceHomeOriginStep = true;
+  if (typeof navigate === 'function') navigate('view-home');
 }
 window.openA11yProjectOriginPrompt = openA11yProjectOriginPrompt;
 
@@ -3104,6 +4215,22 @@ window.openAboutHacModal = openAboutHacModal;
 // varredura vem de hacData.projectOrigin (ensureA11yProjectOriginThen),
 // nunca mais perguntada aqui isoladamente — ver bloco "Origem do projeto"
 // acima para o histórico da decisão.
+// Wrapper do botão "ou usar Mapeamento Automático" da tab Leitor de Tela
+// (2026-09-04-g) — resolve o objeto `area` ATUAL a partir do areaId (o
+// onclick só pode passar uma string, não o objeto completo com segurança)
+// e delega pra openA11yPostAreaDetectModal, o mesmo caminho já usado hoje
+// por _resumeA11yBatchWizardForArea pra retomar detecção numa área
+// existente.
+function _startA11yMappingFromLeitorTab(areaId) {
+  const area = _findA11yAreaById(areaId);
+  if (!area) {
+    showToast('Não foi possível localizar a área.');
+    return;
+  }
+  openA11yPostAreaDetectModal(area);
+}
+window._startA11yMappingFromLeitorTab = _startA11yMappingFromLeitorTab;
+
 function openA11yPostAreaDetectModal(area) {
   if (!area || !area.targetNodeId) return;
   window._a11yPendingDetectionArea = {
@@ -3504,7 +4631,7 @@ function handleA11yPostAreaDetectionResult(detections, tokenReviewCandidates) {
 }
 window.handleA11yPostAreaDetectionResult = handleA11yPostAreaDetectionResult;
 
-// ── Lote "Gerar Handoff Automatizado" ────────────────────────────────────
+// ── Lote "Mapeamento Automatizado" ────────────────────────────────────────
 // Processa as detecções da área corrente (alta E baixa confiança, ver
 // window._a11yLooseDetections) de uma vez: mostra um modal de resumo
 // agregado, o designer escolhe a Área de destino (pré-requisito — toda spec
@@ -3565,8 +4692,19 @@ function rescanA11yBatchArea() {
   }
   window._a11yBatchRescanBtnPending = true;
   pending.declaredOrigin = null;
-  const loadingText = document.getElementById('a11y-post-area-loading-text');
-  if (loadingText) loadingText.textContent = 'Detectando componentes…';
+  // A escolha de origem só tem efeito através de chooseA11yDetectionOrigin,
+  // que exige window._a11yPendingOriginCallback setado (mesmo contrato de
+  // ensureA11yProjectOriginThen/openA11yProjectOriginPrompt) — sem isso o
+  // clique em Web/Mobile não faz nada e a modal fica travada nessa tela
+  // (bug real: reescanear nunca setava esse callback, 2026-09-03).
+  window._a11yPendingOriginCallback = (origin) => {
+    pending.declaredOrigin = origin;
+    const loadingText = document.getElementById('a11y-post-area-loading-text');
+    if (loadingText) loadingText.textContent = 'Detectando componentes…';
+    _setA11yPostAreaModalStage('loading');
+    openModal('a11y-post-area-detect-modal');
+    runA11yPostAreaDetection();
+  };
   _setA11yPostAreaModalStage('origin');
   openModal('a11y-post-area-detect-modal');
 }
@@ -3970,6 +5108,22 @@ function _openA11yWizardItemAt(index) {
   // candidatos de 'tokenReview' (esses só aparecem como aviso informativo no
   // resumo, nunca entram no lote/wizard). 'detection' é sempre o kind aqui.
   const rawItem = state.queue[index];
+  // A fila (window._a11yBatchDetections) é montada UMA VEZ, na abertura do
+  // resumo do lote (_filterA11yBatchEligible) — nunca recalculada depois.
+  // Se o mesmo nodeId já ganhou spec confirmada por outro caminho enquanto
+  // o wizard está aberto (outro item da fila apontando pro mesmo node,
+  // edição manual concorrente), state.confirmed (só populado pelo PRÓPRIO
+  // wizard ao confirmar) não sabe disso — o botão Aplicar continuava
+  // habilitado sem nenhum feedback até o clique cair na rede de segurança
+  // de confirmA11ySpec, que só mostra um toast fugaz (bug real, 2026-09-03).
+  // Promove pra state.confirmed aqui, ao ABRIR o item, pra que UI e
+  // navegação sequencial (_findNextA11yWizardPendingIndex) tratem do mesmo
+  // jeito um item confirmado nesta sessão e um já documentado antes dela.
+  if (rawItem && rawItem.nodeId && !state.confirmed.has(index) && !state.discarded.has(index)) {
+    if (_getDocumentedNodeIdsForArea(state.areaId).has(rawItem.nodeId)) {
+      state.confirmed.add(index);
+    }
+  }
   const { category, options } = _resolveA11yFormPresetFromItem(rawItem, 'detection');
   window._a11yPendingAreaId = state.areaId;
   openA11yModal(category, options);
@@ -4225,6 +5379,12 @@ function toggleAreaGroupVisibility(areaId) {
   // Cópia de Ordem de Tabulação: fire-and-forget, o backend simplesmente
   // não encontra nada se a área nunca gerou cópia.
   parent.postMessage({ pluginMessage: { type: 'toggle-tab-order-copy-visibility', areaId, visible: !hidden } }, '*');
+  // Trilha de Swipe não tem um toggle de visibilidade próprio (é uma única
+  // linha/setas, não uma cópia inteira de frame como Tabulação tinha) —
+  // limitação conhecida, aceita de propósito (mesma decisão da v2
+  // anterior): ocultar a área não afeta a trilha desenhada no canvas.
+  // 3ª cascata: Ficha de Handoff (handoff-ficha.js), mesmo raciocínio.
+  parent.postMessage({ pluginMessage: { type: 'toggle-ficha-visibility', areaId, visible: !hidden } }, '*');
 
   saveToStorage();
   renderA11yGroupedList();
@@ -4438,6 +5598,27 @@ function openA11yAreaModal() {
 }
 window.openA11yAreaModal = openA11yAreaModal;
 
+// A pergunta "Continuar na Section atual / Iniciar nova Section" dentro
+// deste modal foi REMOVIDA (2026-09-04-k, achado real reportado pelo
+// usuário com screenshot): aparecia toda vez que "Marcar Área" era
+// aberto num arquivo já documentado, mesmo sendo só mais um frame do
+// MESMO handoff — resultado prático era cada área acabando numa Section
+// diferente (3 frames documentados viravam 2-3 Sections com 1 grupo cada,
+// em vez de 3 grupos irmãos na mesma Section). Marcar Área agora SEMPRE
+// entra na Section ativa (getA11yActiveSectionName), sem perguntar nada.
+//
+// O versionamento de Section (nova vX com réplica completa da
+// documentação) NÃO virou uma ação manual solta — o usuário descreveu o
+// gatilho real esperado: disparado AUTOMATICAMENTE ao gerar/atualizar a
+// Ficha de Handoff (hoje placeholder, "em breve") num projeto que JÁ TEM
+// uma Ficha gerada antes, com mudanças desde então — o sistema replica a
+// documentação inteira numa Section nova + as modificações, preservando a
+// versão anterior intocada como histórico. Isso pertence ao planejamento
+// futuro da geração real da Ficha de Handoff (módulo apartado, já
+// registrado como fora de escopo em `docs/architecture-state.md` seção
+// 8c) — não implementado aqui, e não deve ganhar nenhum botão solo de
+// "nova versão" antes desse planejamento acontecer.
+
 // Rebusca a seleção atual do canvas e substitui o rótulo — diferente do
 // pré-preenchimento de abertura (que só entra se o campo estiver vazio),
 // aqui é ação explícita do designer, então sempre sobrescreve.
@@ -4466,12 +5647,20 @@ function _nextA11yAreaNumber() {
 // A origem web/mobile também é necessária aqui, na criação da própria
 // Área — o selo de número da Área (A11Y_AREA_CONECTOR_KEYS no backend)
 // precisa saber se importa o componente desktop ou mobile da lib Design
-// Acessível, e esse momento é ANTES de qualquer Detecção Automática rodar
-// (ela só é disparada depois que a área já existe, se autoDetect estiver
-// ligado). Usa ensureA11yProjectOriginThen (ver bloco "Origem do projeto"
-// acima): se hacData.projectOrigin já foi respondido nesta sessão do
-// arquivo, segue direto sem perguntar de novo — decisão de produto de
-// 2026-09-02, que substitui a pergunta independente por área (2026-09-01).
+// Acessível. Usa ensureA11yProjectOriginThen (ver bloco "Origem do
+// projeto" acima): se hacData.projectOrigin já foi respondido nesta
+// sessão do arquivo, segue direto sem perguntar de novo — decisão de
+// produto de 2026-09-02, que substitui a pergunta independente por área
+// (2026-09-01).
+//
+// Marcar Área NÃO escolhe mais Automático/Manual (2026-09-04-g, pedido do
+// usuário) — a área sempre nasce "vazia" (sem varredura disparada), e o
+// Mapeamento Automático vira uma ação disponível a qualquer momento
+// dentro da tab Leitor de Tela (ver _startA11yMappingFromLeitorTab acima),
+// ao lado das outras funcionalidades automáticas do plugin. `autoDetect`
+// não é mais enviado em create-a11y-area — o backend trata a ausência
+// como falsy (`!!msg.autoDetect`) e messages.js (`a11y-area-created`)
+// simplesmente nunca dispara o modal de detecção automaticamente.
 function confirmA11yArea() {
   const input = document.getElementById('a11y-area-label-input');
   const label = input ? input.value.trim() : '';
@@ -4483,10 +5672,6 @@ function confirmA11yArea() {
   const conector = conectorInput ? conectorInput.value : 'superior';
   const numberInput = document.getElementById('a11y-area-number-input');
   const number = numberInput && numberInput.value ? parseInt(numberInput.value, 10) : _nextA11yAreaNumber();
-  // Escolha Automático/Manual feita junto com a criação da área (default
-  // 'auto', mesmo se nada vier marcado).
-  const modeInput = document.querySelector('input[name="a11y-area-detect-mode"]:checked');
-  const autoDetect = (modeInput ? modeInput.value : 'auto') === 'auto';
   closeA11yAreaModal();
   _getA11ySelectionInfo().then(sel => {
     if (!sel || !sel.id) {
@@ -4494,21 +5679,27 @@ function confirmA11yArea() {
       return;
     }
     ensureA11yProjectOriginThen((origin) => {
-      parent.postMessage({ pluginMessage: { type: 'create-a11y-area', targetNodeId: sel.id, label, number, conector, autoDetect, origin } }, '*');
+      parent.postMessage({ pluginMessage: { type: 'create-a11y-area', targetNodeId: sel.id, label, number, conector, origin, sectionName: getA11yActiveSectionName(), designerName: getA11yDesignerName() } }, '*');
     });
   });
 }
 window.confirmA11yArea = confirmA11yArea;
 
-// Excluir uma área remove o selo do canvas, a entrada do array, E TODAS AS
-// SPECS vinculadas a ela (a11yAreaId === area.id) — exclusão em cascata, sem
-// confirmação extra (decisão do usuário). Antes as specs vinculadas viravam
-// órfãs no bucket "Sem área"; isso deixava specs de canvas "mortas" (a área
-// que as contextualizava já não existe mais). Também cobre a Ordem de
-// Tabulação desta área: os itens já aplicados (selos na cópia do frame) E a
-// própria cópia (identificada só pelo pluginData
-// hacTabOrderCopyForArea, já que o nome pode ter sido editado pelo
-// designer) — senão a cópia ficava órfã no canvas.
+// Excluir uma área remove do canvas o Grupo dela e, com ele, TODOS os
+// artefatos que passaram a viver dentro desse Grupo (selo, specs
+// vinculadas, cópia+selos de Ordem de Tabulação, cópia+linha de Trilha de
+// Swipe, Ficha de Handoff) — uma única operação, sem confirmação extra
+// (decisão do usuário). Resolve de quebra o vazamento real do clone de
+// Swipe, que nunca era removido neste fluxo.
+//
+// As 3 cascatas por tipo continuam sendo disparadas ANTES do delete do
+// Grupo, e só por causa das Áreas criadas antes de 2026-09-05: nelas
+// area.id é a INSTANCE solta do selo (não aceita filhos), então os
+// artefatos continuam espalhados nas Sections por tipo e só esses handlers
+// os encontram. Em Áreas novas elas viram no-op — o Grupo já leva tudo.
+//
+// A limpeza de DADO (specs/tabOrderItems/a11ySwipePaths em hacData) é
+// local, não depende de resposta do backend.
 function deleteA11yArea(originalIndex) {
   const area = a11yAreas[originalIndex];
   if (!area) return;
@@ -4517,18 +5708,26 @@ function deleteA11yArea(originalIndex) {
   specsToRemove.forEach(spec => {
     if (spec.id) parent.postMessage({ pluginMessage: { type: 'delete-node', id: spec.id } }, '*');
   });
-  if (specsToRemove.length > 0) {
-    a11ySpecs = a11ySpecs.filter(s => !(s && s.a11yAreaId === area.id));
-  }
+  a11ySpecs = (a11ySpecs || []).filter(s => !(s && s.a11yAreaId === area.id));
+  // Rede de segurança pro clone de specs (2026-09-08) — o delete-node
+  // individual acima cobre as specs já conhecidas no array local, mas o
+  // clone da área (specs agora documentam sobre uma cópia, não mais o
+  // frame original) e qualquer spec órfã (array local dessincronizado)
+  // precisam ser localizados por pluginData direto no canvas.
+  parent.postMessage({ pluginMessage: { type: 'delete-specs-for-area', areaId: area.id } }, '*');
 
   const tabItemsToRemove = _currentTabOrderItems(area.id);
   tabItemsToRemove.forEach(it => {
     if (it.id) parent.postMessage({ pluginMessage: { type: 'delete-node', id: it.id } }, '*');
   });
-  if (tabItemsToRemove.length > 0) {
-    tabOrderItems = (tabOrderItems || []).filter(it => !(it && it.a11yAreaId === area.id));
-  }
+  tabOrderItems = (tabOrderItems || []).filter(it => !(it && it.a11yAreaId === area.id));
+
   parent.postMessage({ pluginMessage: { type: 'delete-tab-order-copy-for-area', areaId: area.id } }, '*');
+  // A limpeza local de hacData.a11ySwipePaths acontece na resposta
+  // (handleSwipePathCleanedUp, messages.js), pra não dessincronizar se o
+  // backend não achar nada.
+  parent.postMessage({ pluginMessage: { type: 'cleanup-swipe-path-for-area', areaId: area.id } }, '*');
+  parent.postMessage({ pluginMessage: { type: 'delete-ficha-for-area', areaId: area.id } }, '*');
 
   if (area.id) {
     parent.postMessage({ pluginMessage: { type: 'delete-node', id: area.id } }, '*');
@@ -4556,11 +5755,18 @@ window.deleteA11yArea = deleteA11yArea;
 // read-only.
 //
 // Arquitetura: nenhum selo é desenhado sobre os elementos de trabalho
-// reais. Clique manual e varredura automática apenas POPULAM uma LISTA
-// PENDENTE em memória (window._tabOrderPendingList) revisável no modal
-// #a11y-tab-order-review-modal — só ao clicar "Aplicar no Canvas"
-// (applyTabOrderToCanvas) é que o backend clona o frame da área e desenha
-// os selos na cópia (handler apply-tab-order-to-canvas, code.js).
+// reais — sempre sobre uma CÓPIA do frame da área (criada por start-tab-
+// order-copy/generate-tab-order-from-layers, code.js). Clique manual e
+// varredura automática POPULAM uma LISTA PENDENTE em memória
+// (window._tabOrderPendingList), revisável no modal
+// #a11y-tab-order-review-modal, e cada item já dispara o desenho do seu
+// selo REAL na cópia assim que entra na lista (draw-tab-order-badge,
+// code.js) — incremental, nunca em lote. Remover um item da lista apaga o
+// selo real correspondente (delete-node); reordenar por drag-and-drop
+// renumera os selos reais existentes (renumber-tab-order-items) — nunca
+// recria nada. "Concluir" (applyTabOrderToCanvas) não desenha mais nada:
+// só persiste os itens (já com id real de canvas) em tabOrderItems e fecha
+// o modal.
 //
 // Decisão de UX: o modal de revisão fica aberto durante TODO o fluxo
 // manual, não só ao final — abrir o modal já no início do clique
@@ -4599,6 +5805,18 @@ function startTabOrderManualMode(areaId, targetNodeId) {
     showToast('Marque uma área da tela antes de iniciar a ordem de tabulação.');
     return;
   }
+  // Exclusividade mútua com Trilha de Swipe (2026-09-04-ad, bug real
+  // corrigido): os dois modos de captura podiam ficar ativos ao mesmo
+  // tempo se o designer trocasse de tab sem cancelar/confirmar — como
+  // cada um clona e foca sua PRÓPRIA cópia da Área, clicar no canvas
+  // nesse estado clicava sobre a cópia que estava fisicamente em foco
+  // (a do modo iniciado por último), fazendo selos de Tabulação nascerem
+  // dentro da Section de Swipe (ou vice-versa). Cancela a captura de
+  // Swipe em andamento, se houver, antes de iniciar esta.
+  if (window._swipePathCaptureMode && typeof cancelSwipePathReview === 'function') {
+    cancelSwipePathReview();
+    showToast('A captura de Trilha de Swipe em andamento foi cancelada.');
+  }
   ensureA11yProjectOriginThen((origin) => {
     window._tabOrderDeclaredOrigin = origin;
     window._tabOrderPendingList = [];
@@ -4606,10 +5824,16 @@ function startTabOrderManualMode(areaId, targetNodeId) {
     window._tabOrderPendingTargetNodeId = targetNodeId;
     window._tabOrderActiveCloneId = null;
     window._tabOrderActiveCloneNodeMap = null;
-    parent.postMessage({ pluginMessage: { type: 'start-tab-order-copy', areaId, targetNodeId } }, '*');
-    openTabOrderReviewModal();
+    parent.postMessage({ pluginMessage: { type: 'start-tab-order-copy', areaId, targetNodeId, sectionName: getA11yActiveSectionName(), designerName: getA11yDesignerName() } }, '*');
+    // Modal de revisão NÃO abre mais aqui (2026-09-04-w, pedido do
+    // usuário) — a janela minimiza pra uma barra fina (mais espaço de
+    // canvas visível) e o designer clica em toda a sequência EM SILÊNCIO,
+    // sem lista/modal aparecendo em tempo real. O modal só abre depois,
+    // quando "Concluir seleção" chamar finishTabOrderCapture (abaixo),
+    // já com a lista pendente completa pronta pra revisão.
+    if (typeof _a11yCaptureMiniBarEnter === 'function') _a11yCaptureMiniBarEnter('tabOrder');
     _tabOrderSetCaptureMode('continuous');
-    showToast('Cópia da área criada — clique nos elementos dela, em sequência.');
+    showToast('Cópia da área criada — segure shift e clique (ou use marquise) pra marcar os elementos dela. A janela foi minimizada para dar espaço ao canvas.');
   });
 }
 window.startTabOrderManualMode = startTabOrderManualMode;
@@ -4626,6 +5850,39 @@ function handleTabOrderCopyStarted(cloneId, nodeMap) {
 }
 window.handleTabOrderCopyStarted = handleTabOrderCopyStarted;
 
+// Resposta de 'swipe-path-copy-started' (messages.js) — espelha
+// handleTabOrderCopyStarted (2026-09-04-ac). cloneId null significa que o
+// backend não conseguiu clonar (área não encontrada/não clonável) — a
+// captura minimizada já foi ligada no frontend nesse ponto
+// (_a11yCaptureMiniBarEnter roda antes da resposta do backend chegar),
+// então sai da captura e cancela pra não deixar o designer preso numa
+// janela minimizada sem nenhuma cópia pra clicar.
+function handleSwipePathCopyStarted(cloneId) {
+  if (!cloneId) {
+    if (typeof _a11yCaptureMiniBarExit === 'function') _a11yCaptureMiniBarExit();
+    cancelSwipePathReview();
+  }
+}
+window.handleSwipePathCopyStarted = handleSwipePathCopyStarted;
+
+// Botão "Concluir seleção" da barra de captura minimizada (chamado por
+// _a11yCaptureMiniBarFinish, core.js) — a janela já voltou ao tamanho
+// normal quando isto roda. Pede ao backend tudo que foi acumulado em
+// silêncio durante a captura (get-tab-order-accumulated-selection,
+// 2026-09-04-aa); a resposta (tab-order-accumulated-selection-result,
+// tratada por handleTabOrderAccumulatedSelectionResult) é quem de fato
+// popula a lista pendente e abre o modal — resolver/ordenar um punhado de
+// nós já em memória do Figma é síncrono o bastante pra não precisar de
+// nenhum estado de "carregando" aqui. A escuta de seleção continua ativa
+// depois disso — o designer ainda pode clicar no canvas com o modal já
+// aberto (cada clique volta a acumular, mesma lógica de sempre); só não
+// há mais push automático pra dentro da lista já renderizada — reabrir o
+// modal ("Refazer") é quem lê o acumulado de novo.
+function finishTabOrderCapture() {
+  parent.postMessage({ pluginMessage: { type: 'get-tab-order-accumulated-selection' } }, '*');
+}
+window.finishTabOrderCapture = finishTabOrderCapture;
+
 // Abre o modal de revisão vazio/pré-populado — chamado tanto pelo início do
 // fluxo manual quanto pela chegada do resultado da varredura automática
 // (addTabOrderItemsFromLayers). Idempotente: reabrir com o modal já aberto
@@ -4636,11 +5893,11 @@ function openTabOrderReviewModal() {
 }
 window.openTabOrderReviewModal = openTabOrderReviewModal;
 
-// Liga/desliga a escuta de seleção do canvas no backend. 'continuous' e
-// 'single' usam o MESMO listener/mensagem do backend
-// (start-tab-order-mode); a diferença de comportamento (adicionar 1x vs.
-// continuamente) é decidida aqui no front, em
-// handleTabOrderSelectionChanged, olhando window._tabOrderCaptureMode.
+// Liga/desliga a escuta de seleção do canvas no backend (start-tab-order-mode/
+// stop-tab-order-mode) — o backend acumula em silêncio (2026-09-04-aa)
+// enquanto ligado, independente de qualquer noção de "modo"; a única
+// distinção que sobrou no frontend é on/off (window._tabOrderCaptureMode
+// truthy ou null), não mais 'single' vs 'continuous'.
 function _tabOrderSetCaptureMode(mode) {
   const wasOff = !window._tabOrderCaptureMode;
   window._tabOrderCaptureMode = mode;
@@ -4651,80 +5908,257 @@ function _tabOrderSetCaptureMode(mode) {
   }
 }
 
-// Botão "+ Adicionar item" dentro do modal — entra em modo de escuta única:
-// o próximo clique no canvas vira item pendente e a escuta volta ao modo
-// anterior (contínuo, se o fluxo manual ainda estiver "aberto"; ou some de
-// vez, se veio do automático puro). O botão muda de rótulo/estado enquanto
-// espera, pra dar feedback claro de "modo à espera".
+// Botão "Adicionar itens" do card/tab (2026-09-04-aj, pedido do usuário)
+// — visível SÓ quando a área já tem Ordem de Tabulação documentada
+// (manual ou Mapeamento Automático). Diferente de "Iniciar Ordem de
+// Tabulação" (que sempre recria a cópia do zero via start-tab-order-copy),
+// aqui NÃO se recria nada: abre o modal de revisão já populado com os
+// itens EXISTENTES (convertidos pro formato de lista pendente, com
+// canvasId/badgeItem reais — applyTabOrderToCanvas já pula redesenhar
+// quem já tem canvasId, então confirmar depois não duplica selo nenhum) e
+// arma a captura de novo(s) elemento(s) via startTabOrderAddItemWait
+// (mesmo mecanismo do "+ Adicionar item" já usado DENTRO do modal — só
+// que aqui é a primeira vez que ele liga, com o modal recém-aberto).
+function startTabOrderAddItemsFromCard(areaId) {
+  const area = _findA11yAreaById(areaId);
+  if (!area) return;
+  const existing = _currentTabOrderItems(areaId).sort((a, b) => (a.number || 0) - (b.number || 0));
+
+  // Bug real corrigido (2026-09-08): esta era a ÚNICA das 3 entradas do
+  // fluxo de Ordem de Tabulação (manual, Mapeamento Automático, e esta —
+  // "Adicionar itens" a uma área já documentada) que nunca setava
+  // window._tabOrderDeclaredOrigin. draw-tab-order-badge manda
+  // `a11yOrigin: window._tabOrderDeclaredOrigin || 'web'` pro backend — sem
+  // declarar aqui, todo item NOVO acrescentado a uma ordem já existente
+  // caía no fallback 'web' mesmo em projeto mobile, importando o componente
+  // real errado (selo desktop "[a11y] Item Number", visualmente alongado
+  // com conector, em vez do "[hac mob base]" pequeno e redondo que os itens
+  // originais usam) — sintoma real reportado: item 17 com selo diferente
+  // dos 16 anteriores. A área já existe e já tem origem definida há muito
+  // tempo, então ensureA11yProjectOriginThen só lê o valor já persistido
+  // (hacData.projectOrigin), sem reabrir nenhum prompt ao designer.
+  ensureA11yProjectOriginThen((origin) => {
+    window._tabOrderDeclaredOrigin = origin;
+  });
+
+  window._tabOrderPendingAreaId = areaId;
+  window._tabOrderPendingTargetNodeId = area.targetNodeId || '';
+  window._tabOrderPendingList = existing.map(it => ({
+    nodeId: it.targetNodeId,
+    nodeName: it.targetNodeName || '',
+    tempId: _tabOrderNextTempId(),
+    canvasId: it.id || null,
+    drawing: false,
+    drawFailed: false,
+    badgeItem: { ...it },
+  }));
+
+  openTabOrderReviewModal();
+  // Garante que a cópia clonada existente seja reconhecida/reaproveitada
+  // ANTES de armar a captura (2026-09-04-aj) — sem isto, se o plugin foi
+  // fechado/reaberto desde a última vez que a cópia foi tocada, o
+  // primeiro item novo desenhado recriaria a cópia do zero, apagando os
+  // selos já documentados (ver comentário completo no handler
+  // resolve-tab-order-clone, code.js). startTabOrderAddItemWait só arma
+  // depois da resposta confirmar sucesso (handleTabOrderCloneResolved).
+  window._tabOrderAddItemsFromCardAreaId = areaId;
+  parent.postMessage({ pluginMessage: { type: 'resolve-tab-order-clone', areaId, targetNodeId: window._tabOrderPendingTargetNodeId, sectionName: getA11yActiveSectionName(), designerName: getA11yDesignerName() } }, '*');
+}
+window.startTabOrderAddItemsFromCard = startTabOrderAddItemsFromCard;
+
+// Resposta de 'tab-order-clone-resolved' (messages.js) — só depois de
+// confirmar que a cópia existente foi encontrada/reaproveitada com
+// sucesso é que a captura de novo(s) item(ns) é armada. Em falha (área
+// não encontrada/não clonável no canvas), avisa e fecha o modal sem
+// tentar capturar nada — evitaria um "Concluir seleção" que nunca
+// conseguiria desenhar o item novo de qualquer forma.
+function handleTabOrderCloneResolved(areaId, ok) {
+  if (areaId !== window._tabOrderAddItemsFromCardAreaId) return;
+  window._tabOrderAddItemsFromCardAreaId = null;
+  if (!ok) {
+    showToast('Não foi possível localizar a área no canvas — marque novamente.');
+    closeModal('a11y-tab-order-review-modal');
+    return;
+  }
+  startTabOrderAddItemWait();
+}
+window.handleTabOrderCloneResolved = handleTabOrderCloneResolved;
+
+// Botão "+ Adicionar item" dentro do modal JÁ ABERTO — diferente da
+// captura minimizada (que só lê o acumulado ao "Concluir seleção"), aqui o
+// designer já está vendo a lista e pediu deliberadamente 1 elemento a
+// mais: não há ambiguidade de "gesto em composição" pra justificar
+// silêncio (2026-09-04-aa) — o acumulador do backend já deve estar vazio
+// neste momento (zerado pela última leitura), então basta esperar ele
+// crescer pra 1 e ler. window._tabOrderAddItemWaiting marca essa espera;
+// handleTabOrderAccumulatedCountChanged (abaixo) intercepta e busca assim
+// que a contagem chegar a 1, em vez de só atualizar a barra mini (que nem
+// está visível aqui, o modal já está aberto).
+// Bug real corrigido (2026-09-08): até esta correção, "+ Adicionar item"
+// só aceitava 1 elemento por vez — a 1ª contagem>0 já disparava a leitura
+// do acumulado (ver handleTabOrderAccumulatedCountChanged), então um
+// shift+clique em vários elementos de uma vez perdia todos menos o
+// primeiro. Regra de produto confirmada pelo usuário: acrescentar itens a
+// uma ordem JÁ GERADA/APLICADA no canvas precisa aceitar shift+clique/
+// marquise pra vários de uma vez, com a MESMA mecânica de acumulação
+// silenciosa da captura inicial (soma, nunca sobrepõe a ordem existente) —
+// só uma forma explícita de indicar "terminei" é que muda. Reaproveita o
+// mesmo botão: o 1º clique arma a captura (mesmo texto/estado de antes);
+// enquanto ela está ativa, o botão vira "Concluir seleção" — o designer
+// clica de novo quando tiver marcado todos os elementos novos que quiser.
 function startTabOrderAddItemWait() {
   const btn = document.getElementById('btn-tab-order-add-item');
   const label = btn ? btn.querySelector('[data-tab-order-add-item-label]') : null;
-  window._tabOrderResumeCaptureMode = window._tabOrderCaptureMode;
-  _tabOrderSetCaptureMode('single');
-  if (label) label.textContent = 'Selecione um elemento no canvas…';
-  if (btn) btn.disabled = true;
+  window._tabOrderAddItemWaiting = true;
+  _tabOrderSetCaptureMode('continuous');
+  if (label) label.textContent = 'Concluir seleção';
+  if (btn) { btn.disabled = false; btn.onclick = () => finishTabOrderAddItemWait(); }
+  showToast('Segure shift e clique (ou use marquise) pra marcar quantos elementos novos precisar — clique em "Concluir seleção" quando terminar.');
 }
 window.startTabOrderAddItemWait = startTabOrderAddItemWait;
+
+// "Concluir seleção" do fluxo "+ Adicionar item" — lê tudo que foi
+// acumulado em silêncio (mesma leitura final de finishTabOrderCapture) e
+// desarma a espera. handleTabOrderAccumulatedSelectionResult já sabe
+// ANEXAR ao final da lista pendente existente (não substituir) quando o
+// modal já está aberto — nenhuma mudança necessária nesse ponto.
+function finishTabOrderAddItemWait() {
+  window._tabOrderAddItemWaiting = false;
+  parent.postMessage({ pluginMessage: { type: 'get-tab-order-accumulated-selection' } }, '*');
+}
+window.finishTabOrderAddItemWait = finishTabOrderAddItemWait;
 
 function _tabOrderResetAddItemButton() {
   const btn = document.getElementById('btn-tab-order-add-item');
   const label = btn ? btn.querySelector('[data-tab-order-add-item-label]') : null;
   if (label) label.textContent = 'Adicionar item';
-  if (btn) btn.disabled = false;
+  // onclick restaurado explicitamente (2026-09-08): startTabOrderAddItemWait
+  // reatribui onclick pra finishTabOrderAddItemWait enquanto a captura de
+  // múltiplos itens está ativa — sem restaurar aqui, cancelar/concluir uma
+  // vez deixaria o botão permanentemente preso no modo "Concluir seleção"
+  // na próxima vez que o modal fosse reaberto.
+  if (btn) { btn.disabled = false; btn.onclick = () => startTabOrderAddItemWait(); }
 }
 
-// Chamado por messages.js a cada tab-order-selection-changed recebido do
-// backend enquanto alguma escuta está ativa (contínua ou de 1 clique só).
-// NUNCA cria nada no canvas aqui — só empurra pra lista pendente e aplica o
-// highlight temporário (feedback "isso foi capturado").
-//
-// SEM BLOQUEIO (decisão de produto revertida em 2026-09-02): o reconhecimento
-// automático de "acionável" via matching DSC (_isA11yInteractiveComponentKey)
-// não é confiável o suficiente — falha em Icon Buttons de libs não mapeadas e
-// em cards customizados sem match no catálogo (ex.: "Meus cartões",
-// "Carteiras digitais", "Click to Pay"). Como não há garantia real de
-// reconhecimento, qualquer clique no modo de captura entra direto na lista
-// pendente, sem checagem nem aviso — o designer decide 100% nesse fluxo.
-function handleTabOrderSelectionChanged(nodeId, nodeName) {
-  if (!window._tabOrderCaptureMode || !nodeId) return;
+// Modelo de ACUMULAÇÃO SILENCIOSA (2026-09-04-aa, substitui 2 tentativas
+// anteriores de streaming nesta mesma sessão): durante toda a captura, o
+// backend não posta mais NENHUMA seleção em tempo real — só acumula em
+// silêncio (soma, nunca remove, permite compor a trilha em várias levas
+// de shift+clique) e desenha o highlight temporário no canvas por conta
+// própria. O frontend só sabe a CONTAGEM ao vivo (ver
+// handleTabOrderAccumulatedCountChanged abaixo) até o designer clicar
+// "Concluir seleção" — só então a lista pendente é populada de uma vez
+// (handleTabOrderAccumulatedSelectionResult), já resolvida/ordenada.
+// window._tabOrderPendingList NUNCA mais é populada incrementalmente por
+// clique — só por essa resposta final.
 
-  const wasSingle = window._tabOrderCaptureMode === 'single';
-  window._tabOrderPendingList.push({ nodeId, nodeName: nodeName || '', tempId: _tabOrderNextTempId() });
-  // Usa o handler dedicado highlight-tab-order-copy-node (code.js), que
-  // resolve o nodeId ORIGINAL pro node equivalente dentro da cópia
-  // rascunho (criada em startTabOrderManualMode) e desenha o contorno lá —
-  // o original nunca é tocado.
-  parent.postMessage({ pluginMessage: { type: 'highlight-tab-order-copy-node', id: nodeId, highlight: true, color: '#0891B2', selectNode: false, shouldScroll: false } }, '*');
+// Contagem ao vivo na barra de captura minimizada — resposta de
+// 'tab-order-accumulated-count-changed' (messages.js), disparada pelo
+// backend a cada novo nó somado ao acumulado silencioso. Também serve pro
+// fluxo de "+ Adicionar item" (modal já aberto, ver startTabOrderAddItemWait):
+// enquanto window._tabOrderAddItemWaiting estiver ligado, só atualiza o
+// texto do botão "Concluir seleção" com a contagem ao vivo — a leitura só
+// acontece quando o designer de fato clicar nele
+// (finishTabOrderAddItemWait), nunca automaticamente na 1ª contagem>0
+// (bug real corrigido 2026-09-08: isso limitava "+ Adicionar item" a 1
+// elemento por vez, quebrando shift+clique/marquise de vários de uma vez).
+function handleTabOrderAccumulatedCountChanged(count) {
+  if (window._tabOrderAddItemWaiting) {
+    const btn = document.getElementById('btn-tab-order-add-item');
+    const label = btn ? btn.querySelector('[data-tab-order-add-item-label]') : null;
+    if (label) label.textContent = count > 0 ? `Concluir seleção (${count})` : 'Concluir seleção';
+    return;
+  }
+  if (typeof _a11yCaptureMiniBarUpdateCount === 'function') _a11yCaptureMiniBarUpdateCount(count || 0);
+}
+window.handleTabOrderAccumulatedCountChanged = handleTabOrderAccumulatedCountChanged;
 
-  if (wasSingle) {
-    _tabOrderSetCaptureMode(window._tabOrderResumeCaptureMode || null);
-    window._tabOrderResumeCaptureMode = null;
+// Resposta de 'tab-order-accumulated-selection-result' (messages.js) — já
+// com TUDO que foi acumulado durante a captura resolvido ao nível de topo
+// certo, sem duplicatas, ordenado em zigue-zague. Dois chamadores:
+// finishTabOrderCapture ("Concluir seleção", modal ainda fechado — lista
+// pendente NASCE aqui, substituída do zero) e startTabOrderAddItemWait
+// ("+ Adicionar item", modal JÁ aberto — os itens recebidos são ANEXADOS
+// ao final da lista existente, não substituem nada). Diferencia os dois
+// casos por window._tabOrderAddItemWaiting já ter sido consumido (false)
+// vs. a lista pendente já existir com o modal aberto.
+function handleTabOrderAccumulatedSelectionResult(points) {
+  const incoming = (Array.isArray(points) ? points : [])
+    .filter(p => p && p.nodeId)
+    .map(p => ({ nodeId: p.nodeId, nodeName: p.nodeName || '', tempId: _tabOrderNextTempId(), canvasId: null, drawing: false, drawFailed: false, badgeItem: null }));
+
+  const modalAlreadyOpen = !document.getElementById('a11y-tab-order-review-modal').classList.contains('hidden');
+  if (modalAlreadyOpen) {
+    // "+ Adicionar item": anexa ao final, mantém o resto da lista intacto.
+    window._tabOrderPendingList = (window._tabOrderPendingList || []).concat(incoming);
     _tabOrderResetAddItemButton();
+    _renderTabOrderPendingList();
+    return;
   }
 
-  _renderTabOrderPendingList();
+  window._tabOrderPendingList = incoming;
+  openTabOrderReviewModal();
 }
-window.handleTabOrderSelectionChanged = handleTabOrderSelectionChanged;
+window.handleTabOrderAccumulatedSelectionResult = handleTabOrderAccumulatedSelectionResult;
+
+// Manda desenhar o selo REAL do item da lista pendente — chamado em lote
+// por applyTabOrderToCanvas (confirmar "Criar ordem de tabulação") e,
+// sequencialmente, por addTabOrderItemsFromLayers (Mapeamento Automático).
+// Chamadas em sequência podem ter vários desenhos em voo ao mesmo tempo
+// (aceito de propósito, ver handleTabOrderBadgeDrawn) — o `number` enviado
+// é sempre a posição ATUAL do item na lista no momento do disparo; se a
+// ordem mudar antes da resposta voltar, o flush em handleTabOrderBadgeDrawn
+// corrige.
+function _tabOrderDrawPendingBadge(tempId) {
+  const list = window._tabOrderPendingList || [];
+  const it = list.find(x => x.tempId === tempId);
+  if (!it) return;
+  const number = list.indexOf(it) + 1;
+  parent.postMessage({
+    pluginMessage: {
+      type: 'draw-tab-order-badge',
+      tempId,
+      areaId: window._tabOrderPendingAreaId,
+      targetNodeId: window._tabOrderPendingTargetNodeId,
+      nodeId: it.nodeId,
+      number,
+      a11yOrigin: window._tabOrderDeclaredOrigin || 'web',
+      sectionName: getA11yActiveSectionName(),
+      designerName: getA11yDesignerName(),
+    },
+  }, '*');
+}
 
 // Destaca um item da lista PENDENTE no canvas — usa o mesmo handler dedicado
-// highlight-tab-order-copy-node (code.js) que o clique direto no canvas em
-// handleTabOrderSelectionChanged já usa, em vez do sendHighlight genérico
-// (que dispara highlight-node contra o node ORIGINAL). A lista pendente só
+// highlight-tab-order-copy-node (code.js) que o backend usa internamente
+// pra destacar cada clique durante a captura silenciosa, em vez do
+// sendHighlight genérico (que dispara highlight-node contra o node
+// ORIGINAL). A lista pendente só
 // existe enquanto a cópia rascunho está ativa, então o destaque tem que
 // resolver original→clone como todo o resto do fluxo de Ordem de
 // Tabulação — senão o retângulo aparece no frame errado (o original, nunca
 // tocado por esse fluxo).
 function _highlightTabOrderListItem(nodeId) {
   if (!nodeId) return;
-  parent.postMessage({ pluginMessage: { type: 'highlight-tab-order-copy-node', id: nodeId, highlight: true, color: '#0891B2', selectNode: false, shouldScroll: false } }, '*');
+  // shouldScroll: true — clicar num item da LISTA precisa levar a viewport
+  // até o elemento (diferente do highlight automático ao clicar direto no
+  // canvas, onde o designer já está olhando pro ponto certo). Sem isso, numa
+  // área grande/com zoom distante o retângulo de destaque podia desenhar
+  // fora da região visível sem o designer perceber (pedido explícito do
+  // usuário, 2026-09-03).
+  // areaId incluído (2026-09-08): o cache de clone ativo virou por área
+  // (Map<areaId, nodeMap>, ver code.js) — sem isso o backend teria que
+  // adivinhar de qual área é o nodeId clicado.
+  parent.postMessage({ pluginMessage: { type: 'highlight-tab-order-copy-node', id: nodeId, areaId: window._tabOrderPendingAreaId, highlight: true, color: '#0891B2', selectNode: false, shouldScroll: true } }, '*');
 }
 window._highlightTabOrderListItem = _highlightTabOrderListItem;
 
-// Renderiza a lista PENDENTE (ainda não aplicada no canvas) dentro do modal
-// de revisão — reaproveita o mesmo padrão visual/drag-and-drop de
+// Renderiza a lista PENDENTE (ainda não concluída) dentro do modal de
+// revisão — reaproveita o mesmo padrão visual/drag-and-drop de
 // _renderTabOrderListForArea, mas opera sobre window._tabOrderPendingList
-// (tempId em vez de originalIndex/id real, já que não existe node no
-// canvas ainda pra esses itens).
+// (tempId, não originalIndex — cada item já pode ter um canvasId real
+// assim que o desenho volta, mas o tempId segue sendo a chave estável da
+// lista até "Concluir").
 function _renderTabOrderPendingList() {
   const containerEl = document.getElementById('a11y-tab-order-pending-list');
   const emptyEl = document.getElementById('a11y-tab-order-pending-empty');
@@ -4732,12 +6166,13 @@ function _renderTabOrderPendingList() {
   if (!containerEl) return;
 
   const items = window._tabOrderPendingList || [];
+  const anyDrawing = items.some(it => it.drawing);
   if (emptyEl) emptyEl.classList.toggle('hidden', items.length > 0);
-  if (applyBtn) applyBtn.disabled = items.length === 0;
+  if (applyBtn) applyBtn.disabled = items.length === 0 || anyDrawing;
 
   containerEl.innerHTML = items.map((it, listIndex) => `
-    <li class="list-none flex items-center gap-2 px-2.5 py-1.5 bg-white dark:bg-dark-surface rounded-lg border border-gray-100 dark:border-dark-line cursor-pointer"
-      title="Destacar este elemento no canvas"
+    <li class="list-none flex items-center gap-2 px-2.5 py-1.5 bg-white dark:bg-dark-surface rounded-lg border border-gray-100 dark:border-dark-line cursor-pointer ${it.drawing ? 'opacity-60' : ''}"
+      title="${it.drawFailed ? 'Falha ao desenhar o selo — remova e tente novamente' : 'Destacar este elemento no canvas'}"
       draggable="true"
       data-list-index="${listIndex}"
       onclick="_highlightTabOrderListItem('${escapeHtml(it.nodeId)}')"
@@ -4748,8 +6183,9 @@ function _renderTabOrderPendingList() {
       <span class="text-gray-300 dark:text-dark-muted cursor-grab active:cursor-grabbing shrink-0" title="Arrastar para reordenar" aria-hidden="true">
         <i data-lucide="grip-vertical" class="w-3.5 h-3.5"></i>
       </span>
-      <div class="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-extrabold text-white shrink-0" style="background-color:#0891B2">${listIndex + 1}</div>
+      <div class="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-extrabold text-white shrink-0" style="background-color:${it.drawFailed ? '#DC2626' : '#0891B2'}">${listIndex + 1}</div>
       <p class="flex-1 min-w-0 text-[11px] text-slate-700 dark:text-white truncate">${escapeHtml(it.nodeName || '')}</p>
+      ${it.drawFailed ? '<i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-red-500 shrink-0" title="Selo não desenhado"></i>' : ''}
       <button type="button" title="Remover da lista" aria-label="Remover da lista"
         onclick="event.stopPropagation(); deleteTabOrderPendingItem('${escapeHtml(it.tempId)}')"
         class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors shrink-0">
@@ -4759,31 +6195,8 @@ function _renderTabOrderPendingList() {
   `).join('');
 
   _refreshIcons();
-  _tabOrderRequestPreview();
 }
 window._renderTabOrderPendingList = _renderTabOrderPendingList;
-
-// Pede ao backend pra (re)desenhar a numeração fantasma refletindo a ordem
-// ATUAL de window._tabOrderPendingList — chamada ao final de TODA
-// re-renderização da lista pendente (adicionar item, remover item,
-// reordenar por drag-and-drop), então a prévia nunca fica dessincronizada
-// da lista. Funciona igual nos dois fluxos: tanto start-tab-order-copy
-// (manual) quanto generate-tab-order-from-layers (automático) já deixam uma
-// cópia ativa no backend (_activeTabOrderCloneMap/_activeTabOrderCloneAreaId)
-// antes da lista pendente existir. O backend ignora silenciosamente se por
-// algum motivo não houver cópia ativa pra esta área (ver
-// preview-tab-order-numbers em code.js).
-function _tabOrderRequestPreview() {
-  const areaId = window._tabOrderPendingAreaId;
-  if (!areaId) return;
-  const items = (window._tabOrderPendingList || []).map((it, i) => ({ nodeId: it.nodeId, number: i + 1 }));
-  // window._tabOrderDeclaredOrigin já foi respondido no início da revisão
-  // (ver ensureA11yProjectOriginThen, chamado por startTabOrderManualMode/
-  // _confirmGenerateTabOrderFromLayers) — não há mais area.origin calculado
-  // pra reaproveitar aqui.
-  const a11yOrigin = window._tabOrderDeclaredOrigin || 'web';
-  parent.postMessage({ pluginMessage: { type: 'preview-tab-order-numbers', areaId, items, a11yOrigin } }, '*');
-}
 
 let _tabOrderPendingDragIndex = null;
 
@@ -4803,30 +6216,132 @@ function _tabOrderPendingDrop(ev, targetListIndex) {
   const [moved] = list.splice(sourceListIndex, 1);
   list.splice(targetListIndex, 0, moved);
   _tabOrderPendingDragIndex = null;
+  _tabOrderRenumberPendingCanvas();
   _renderTabOrderPendingList();
 }
 window._tabOrderPendingDrop = _tabOrderPendingDrop;
 
+// Propaga a posição ATUAL de cada item da lista pendente pros selos reais
+// já desenhados no canvas — chamada após qualquer reordenação/remoção.
+// Só manda renumber-tab-order-items pros itens que (a) já têm canvasId
+// (selo desenhado) e (b) mudaram de número.
+//
+// No modelo EM LOTE (2026-09-04-e), durante a montagem da trilha NENHUM
+// item tem canvasId ainda (nenhum selo existe até "Criar ordem de
+// tabulação") — então o `if (it.canvasId && ...)` abaixo nunca dispara
+// mensagem nenhuma pro backend nesse momento, só atualiza `it.number` no
+// array local. A função só volta a mandar renumber-tab-order-items de
+// verdade DEPOIS que os selos já existem — ou seja, no fluxo de "Atualizar"
+// sobre uma ordem já aplicada (updateTabOrderNumbering), não durante a
+// captura em si.
+function _tabOrderRenumberPendingCanvas() {
+  const list = window._tabOrderPendingList || [];
+  const payload = [];
+  list.forEach((it, i) => {
+    const newNumber = i + 1;
+    if (it.canvasId && it.number !== newNumber) payload.push({ id: it.canvasId, number: newNumber });
+    it.number = newNumber;
+  });
+  if (payload.length > 0) {
+    parent.postMessage({ pluginMessage: { type: 'renumber-tab-order-items', items: payload } }, '*');
+  }
+}
+
 function deleteTabOrderPendingItem(tempId) {
-  window._tabOrderPendingList = (window._tabOrderPendingList || []).filter(it => it.tempId !== tempId);
+  const list = window._tabOrderPendingList || [];
+  const idx = list.findIndex(it => it.tempId === tempId);
+  if (idx === -1) return;
+  const [removed] = list.splice(idx, 1);
+  // Se o selo já estava desenhado, apaga do canvas. Se ainda estava
+  // `drawing`, não há canvasId pra apagar ainda — handleTabOrderBadgeDrawn
+  // descarta o selo órfão sozinho quando a resposta atrasada chegar (o
+  // tempId não vai mais existir na lista).
+  if (!removed.drawing && removed.canvasId) {
+    parent.postMessage({ pluginMessage: { type: 'delete-node', id: removed.canvasId } }, '*');
+  }
+  _tabOrderRenumberPendingCanvas();
   _renderTabOrderPendingList();
 }
 window.deleteTabOrderPendingItem = deleteTabOrderPendingItem;
 
-// Fecha o modal sem aplicar nada — descarta a lista pendente por completo
-// (nenhum selo foi desenhado ainda, então não há nada pra desfazer) e limpa
-// o highlight temporário, se ainda visível.
-//
-// A cópia "rascunho" do frame (criada em startTabOrderManualMode OU
-// _confirmGenerateTabOrderFromLayers, ANTES de qualquer selo) fica órfã se o
-// designer desistir aqui — sem selo nenhum, não faz sentido deixá-la no
-// canvas. Dispara 'delete-tab-order-draft-copy' pra removê-la, só quando
-// havia de fato uma cópia ativa desta área (window._tabOrderActiveCloneId)
-// — guarda de defesa pro caso raro de o backend não ter conseguido criar a
-// cópia (área não encontrada/não clonável).
+// Registro de "quem está esperando" a resposta de draw-tab-order-badge de um
+// tempId específico — usado só pelo loop sequencial do scan automático
+// (_tabOrderDrawPendingBadgeAwaitable/addTabOrderItemsFromLayers) pra saber
+// quando avançar pro próximo item do lote, sem interferir no fluxo
+// fire-and-forget normal do clique manual.
+const _tabOrderDrawWaiters = new Map();
+function _tabOrderResolveDrawWaiter(tempId) {
+  const resolve = _tabOrderDrawWaiters.get(tempId);
+  if (!resolve) return;
+  _tabOrderDrawWaiters.delete(tempId);
+  resolve();
+}
+
+// Respostas de draw-tab-order-badge (messages.js → aqui). Drawn grava o id
+// real do selo no item pendente correspondente (por tempId); se o item já
+// não existe mais na lista (foi apagado enquanto o desenho estava em voo),
+// o selo chegou órfão — apaga direto, sem passar pela lista. Quando esse
+// era o ÚLTIMO item ainda `drawing`, dispara o flush de renumeração (ver
+// _tabOrderRenumberPendingCanvas) pra corrigir qualquer número que tenha
+// saído desatualizado por causa de respostas chegando fora de ordem.
+function handleTabOrderBadgeDrawn(tempId, canvasId, item) {
+  const list = window._tabOrderPendingList || [];
+  const it = list.find(x => x.tempId === tempId);
+  if (!it) {
+    if (canvasId) parent.postMessage({ pluginMessage: { type: 'delete-node', id: canvasId } }, '*');
+    return;
+  }
+  it.canvasId = canvasId;
+  it.badgeItem = item;
+  it.drawing = false;
+  it.drawFailed = false;
+  if (!list.some(x => x.drawing)) {
+    _tabOrderRenumberPendingCanvas();
+  }
+  _renderTabOrderPendingList();
+  _tabOrderResolveDrawWaiter(tempId);
+}
+window.handleTabOrderBadgeDrawn = handleTabOrderBadgeDrawn;
+
+function handleTabOrderBadgeDrawFailed(tempId) {
+  const it = (window._tabOrderPendingList || []).find(x => x.tempId === tempId);
+  if (it) {
+    it.drawing = false;
+    it.drawFailed = true;
+    showToast('Não foi possível desenhar o selo deste item — remova e adicione novamente.');
+    _renderTabOrderPendingList();
+  }
+  _tabOrderResolveDrawWaiter(tempId);
+}
+window.handleTabOrderBadgeDrawFailed = handleTabOrderBadgeDrawFailed;
+
+// Fecha o modal descartando tudo — a cópia "rascunho" do frame (criada em
+// startTabOrderManualMode OU _confirmGenerateTabOrderFromLayers) pode ter
+// selos reais desenhados nela quando o cancelamento acontece DEPOIS de já
+// ter clicado "Criar ordem de tabulação" uma vez com falha parcial, ou
+// vier do scan automático (que já desenha em lote sequencial); no modo
+// manual em lote (2026-09-04-e), cancelar ANTES de confirmar nunca vai ter
+// nenhum selo desenhado — só a cópia rascunho vazia. Em qualquer um desses
+// casos, 'delete-tab-order-draft-copy' apaga a cópia INTEIRA de uma vez —
+// cobre selos parciais (ou nenhum) sem precisar apagar um por um. Só
+// dispara quando havia de fato uma cópia ativa desta área
+// (window._tabOrderActiveCloneId) — guarda de defesa pro caso raro de o
+// backend não ter conseguido criar a cópia (área não encontrada/não
+// clonável).
 function cancelTabOrderReview() {
   _tabOrderSetCaptureMode(null);
   window._tabOrderResumeCaptureMode = null;
+  window._tabOrderAddItemWaiting = false;
+  window._tabOrderAddItemsFromCardAreaId = null;
+  window._tabOrderScanInFlight = false;
+  window._tabOrderPendingGeneration = null;
+  // window._tabOrderActiveCloneId só é setado por handleTabOrderCopyStarted
+  // (resposta de start-tab-order-copy) — o fluxo "Adicionar itens"
+  // (2026-09-04-aj) nunca manda essa mensagem de propósito (não recria a
+  // cópia, só a reconhece via resolve-tab-order-clone), então esta guarda
+  // continua null nesse caso e delete-tab-order-draft-copy corretamente
+  // NÃO dispara — cancelar "Adicionar itens" nunca apaga a cópia/selos já
+  // existentes, só descarta o(s) item(ns) novo(s) ainda não desenhado(s).
   if (window._tabOrderActiveCloneId && window._tabOrderPendingAreaId) {
     parent.postMessage({ pluginMessage: { type: 'delete-tab-order-draft-copy', areaId: window._tabOrderPendingAreaId } }, '*');
   }
@@ -4842,74 +6357,78 @@ function cancelTabOrderReview() {
 }
 window.cancelTabOrderReview = cancelTabOrderReview;
 
-// "Aplicar no Canvas" — única ação que de fato toca o canvas neste fluxo.
-// Backend clona o frame da área, mapeia cada nodeId pendente pro node
-// equivalente dentro do clone, e desenha os selos lá. Resposta tratada em
-// handleTabOrderAppliedToCanvas (messages.js → aqui).
+// "Criar ordem de tabulação" (antigo "Concluir") — modelo EM LOTE
+// (2026-09-04-e, pedido da vertical de acessibilidade, revertendo
+// parcialmente a decisão de "selos reais incrementais" de 2026-09-03):
+// nenhum selo existe ainda quando este botão é clicado (o clique manual só
+// acumula em silêncio no backend + highlight, ver o modelo de acumulação
+// silenciosa mais acima) — este é o momento em que os selos são de fato
+// desenhados, um a
+// um em sequência, aguardando cada resposta antes do próximo
+// (_tabOrderDrawPendingBadgeAwaitable, mesmo helper já usado pelo scan
+// automático em addTabOrderItemsFromLayers — reaproveitado, não duplicado).
 //
-// window._tabOrderDeclaredOrigin já foi respondido no INÍCIO da revisão
-// (startTabOrderManualMode/_confirmGenerateTabOrderFromLayers, via
-// ensureA11yProjectOriginThen) — não pergunta de novo aqui. Ver bloco
-// "Origem do projeto" (2026-09-02) pra decisão completa de por que a
-// pergunta acontece uma única vez por arquivo, não mais por ação.
-function applyTabOrderToCanvas() {
+// Por que em lote de novo, sem reintroduzir o bug que motivou o modelo
+// incremental: aquele bug era apagar/reordenar um item ANTES de confirmar
+// não refletir nada no canvas (nenhum selo existia até "Aplicar"). Isso
+// continua verdade aqui — mas agora é esperado, não um bug: o designer
+// revisa/reordena a trilha inteira na lista pendente (que já mostra a
+// numeração correta) ANTES de qualquer selo ser desenhado; o highlight no
+// canvas a cada clique (não removido) já indica visualmente quais
+// elementos foram selecionados, sem precisar do selo real ainda.
+//
+// Fica desabilitado (ver _renderTabOrderPendingList) enquanto a lista está
+// vazia — e agora TAMBÉM durante o próprio desenho em lote (isDrawingBatch
+// abaixo), pra não permitir clique duplo enquanto os selos ainda estão
+// sendo criados um a um.
+async function applyTabOrderToCanvas() {
   const areaId = window._tabOrderPendingAreaId;
-  const targetNodeId = window._tabOrderPendingTargetNodeId;
-  const items = window._tabOrderPendingList || [];
-  if (!areaId || !targetNodeId || items.length === 0) return;
+  const list = window._tabOrderPendingList || [];
+  if (!areaId || list.length === 0) return;
 
   const applyBtn = document.getElementById('btn-tab-order-apply');
-  if (applyBtn) { applyBtn.disabled = true; applyBtn.textContent = 'Aplicando…'; }
+  if (applyBtn) applyBtn.disabled = true;
 
-  _tabOrderSetCaptureMode(null);
-  parent.postMessage({ pluginMessage: { type: 'clear-highlight' } }, '*');
-  parent.postMessage({
-    pluginMessage: {
-      type: 'apply-tab-order-to-canvas',
-      areaId,
-      targetNodeId,
-      items: items.map((it, i) => ({ nodeId: it.nodeId, nodeName: it.nodeName, number: i + 1 })),
-      a11yOrigin: window._tabOrderDeclaredOrigin || 'web',
-    },
-  }, '*');
-}
-window.applyTabOrderToCanvas = applyTabOrderToCanvas;
+  for (let i = 0; i < list.length; i++) {
+    const it = list[i];
+    if (it.canvasId) continue; // já desenhado (não deveria acontecer neste fluxo, mas idempotente)
+    if (applyBtn) applyBtn.textContent = `Desenhando ${i + 1} de ${list.length}...`;
+    it.drawing = true;
+    _renderTabOrderPendingList();
+    await _tabOrderDrawPendingBadgeAwaitable(it.tempId);
+  }
 
-// Resposta de 'tab-order-applied-to-canvas' (messages.js) — os itens já
-// vêm com id real (grupo do selo, na cópia) prontos pro mesmo tratamento de
-// addTabOrderItem (push + persistência), reaproveitado item a item. Antes
-// de inserir os novos, descarta do array de dados QUALQUER item antigo
-// desta MESMA área — o backend já apagou a cópia anterior inteira e
-// recriou do zero, então os ids antigos apontam pra nós que não existem
-// mais.
-function handleTabOrderAppliedToCanvas(items, copyName) {
-  const applyBtn = document.getElementById('btn-tab-order-apply');
-  if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = 'Aplicar no Canvas'; }
+  const items = list.filter(it => it.canvasId);
+  const failedCount = list.length - items.length;
 
-  if (!Array.isArray(items) || items.length === 0) {
-    showToast('Não foi possível aplicar a ordem de tabulação — tente novamente.');
+  if (items.length === 0) {
+    if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = 'Criar ordem de tabulação'; }
+    showToast('Não foi possível desenhar nenhum selo — tente novamente.');
     return;
   }
 
-  const areaId = window._tabOrderPendingAreaId;
-  if (areaId) {
-    tabOrderItems = (tabOrderItems || []).filter(it => it && it.a11yAreaId !== areaId);
-  }
+  tabOrderItems = (tabOrderItems || []).filter(it => it && it.a11yAreaId !== areaId);
+  items.forEach((it, i) => {
+    addTabOrderItem({ ...it.badgeItem, number: i + 1 });
+  });
 
-  items.forEach(item => addTabOrderItem(item));
+  _tabOrderSetCaptureMode(null);
+  window._tabOrderResumeCaptureMode = null;
+  window._tabOrderScanInFlight = false;
+  window._tabOrderPendingGeneration = null;
   window._tabOrderPendingList = [];
   window._tabOrderPendingAreaId = null;
   window._tabOrderPendingTargetNodeId = null;
   window._tabOrderDeclaredOrigin = null;
-  // A cópia rascunho (se havia) já foi reaproveitada/finalizada pelo
-  // backend (apply-tab-order-to-canvas zera o mapa interno); limpa o
-  // espelho local.
   window._tabOrderActiveCloneId = null;
   window._tabOrderActiveCloneNodeMap = null;
+  parent.postMessage({ pluginMessage: { type: 'clear-highlight' } }, '*');
   closeModal('a11y-tab-order-review-modal');
-  showToast(`Ordem de tabulação aplicada em "${copyName || 'cópia do frame'}".`);
+  showToast(failedCount > 0
+    ? `Ordem de tabulação concluída — ${failedCount} ${failedCount === 1 ? 'item falhou' : 'itens falharam'} ao desenhar e ${failedCount === 1 ? 'foi excluído' : 'foram excluídos'}.`
+    : 'Ordem de tabulação concluída.');
 }
-window.handleTabOrderAppliedToCanvas = handleTabOrderAppliedToCanvas;
+window.applyTabOrderToCanvas = applyTabOrderToCanvas;
 
 // Defensivo: itens salvos antes da introdução de canvasNumber (reordenação
 // via drag-and-drop) não têm o campo — assume-se sincronizado com o canvas
@@ -4955,16 +6474,36 @@ window.addTabOrderItem = addTabOrderItem;
 // no Canvas". Cada botão "Gerar Automaticamente" já nasce dentro do
 // accordion de uma área específica — chama direto com a área do próprio
 // accordion, sem modal de escolha.
+// Nenhuma trava impedia clicar "Gerar Automaticamente" de novo (ou em
+// outra área) enquanto um scan anterior ainda estava em voo — o scan é
+// lento de propósito (várias chamadas assíncronas encadeadas no backend) e
+// um segundo clique disparava uma invocação concorrente que corrompia o
+// estado global compartilhado (_activeTabOrderCloneMap/
+// window._tabOrderPendingList, ambos únicos, não por-scan): a resposta
+// tardia do primeiro scan sobrescrevia a lista/estado já populados pelo
+// segundo, deixando itens fantasmas (inclusive o próprio clone sendo
+// coletado como se fosse conteúdo do design) e selos órfãos fora do clone
+// (bug real, 2026-09-03). _tabOrderScanGeneration invalida qualquer
+// resposta que não seja da geração mais recente.
+let _tabOrderScanGeneration = 0;
+
 function _confirmGenerateTabOrderFromLayers(areaId, targetNodeId) {
   if (!areaId || !targetNodeId) return;
+  if (window._tabOrderScanInFlight) {
+    showToast('Aguarde a varredura em andamento terminar antes de iniciar outra.');
+    return;
+  }
   ensureA11yProjectOriginThen((origin) => {
+    const myGeneration = ++_tabOrderScanGeneration;
+    window._tabOrderScanInFlight = true;
     window._tabOrderDeclaredOrigin = origin;
     window._tabOrderPendingList = [];
     window._tabOrderPendingAreaId = areaId;
     window._tabOrderPendingTargetNodeId = targetNodeId;
     window._tabOrderActiveCloneId = null;
     window._tabOrderActiveCloneNodeMap = null;
-    parent.postMessage({ pluginMessage: { type: 'generate-tab-order-from-layers', areaId, targetNodeId } }, '*');
+    window._tabOrderPendingGeneration = myGeneration;
+    parent.postMessage({ pluginMessage: { type: 'generate-tab-order-from-layers', areaId, targetNodeId, sectionName: getA11yActiveSectionName(), designerName: getA11yDesignerName(), generation: myGeneration } }, '*');
     showToast('Varrendo elementos interativos da área…');
   });
 }
@@ -4974,11 +6513,25 @@ window._confirmGenerateTabOrderFromLayers = _confirmGenerateTabOrderFromLayers;
 // {nodeId, nodeName}[] (candidatos, referenciando o frame ORIGINAL, nunca
 // itens já desenhados); cloneId/nodeMap vêm porque o backend já criou e
 // focou a cópia da área ANTES de varrer (mesmo padrão do fluxo manual, ver
-// handleTabOrderCopyStarted) — guarda os dois pra que "Cancelar" e a prévia
-// de selos fantasma (preview-tab-order-numbers) funcionem igual ao fluxo
-// manual. Popula a lista pendente e abre o modal de revisão já preenchido;
-// o designer confirma explicitamente pelo botão "Aplicar no Canvas".
-function addTabOrderItemsFromLayers(items, cloneId, nodeMap) {
+// handleTabOrderCopyStarted). Popula a lista pendente, abre o modal, e
+// dispara o desenho do selo real de cada item — SEQUENCIALMENTE (aguarda
+// cada resposta antes do próximo), ao contrário do clique manual (que aceita
+// desenhos em paralelo): aqui não há cadência natural de usuário pra
+// espaçar as chamadas, então serializar evita qualquer corrida e a lista
+// populando item a item já serve de feedback visual do progresso do scan.
+async function addTabOrderItemsFromLayers(items, cloneId, nodeMap, generation) {
+  // Descarta respostas de uma geração de scan que não é mais a mais
+  // recente (clique duplo em "Gerar Automaticamente", ou clique em outra
+  // área enquanto um scan anterior ainda respondia) — sem isso, uma
+  // resposta tardia sobrescrevia window._tabOrderPendingList inteiro,
+  // trazendo de volta itens já apagados pelo designer e/ou colidindo com o
+  // loop sequencial de desenho de outra geração ainda em voo (bug real,
+  // 2026-09-03). _confirmGenerateTabOrderFromLayers já bloqueia um novo
+  // disparo enquanto _tabOrderScanInFlight é true — esta checagem cobre a
+  // resposta em si, que pode chegar fora de ordem.
+  if (generation !== undefined && generation !== window._tabOrderPendingGeneration) return;
+  window._tabOrderScanInFlight = false;
+
   window._tabOrderActiveCloneId = cloneId || null;
   window._tabOrderActiveCloneNodeMap = nodeMap || null;
 
@@ -4991,16 +6544,36 @@ function addTabOrderItemsFromLayers(items, cloneId, nodeMap) {
   }
 
   window._tabOrderPendingList = Array.isArray(items)
-    ? items.map(it => ({ nodeId: it.nodeId, nodeName: it.nodeName || '', tempId: _tabOrderNextTempId() }))
+    ? items.map(it => ({ nodeId: it.nodeId, nodeName: it.nodeName || '', tempId: _tabOrderNextTempId(), canvasId: null, drawing: true, drawFailed: false, badgeItem: null }))
     : [];
   openTabOrderReviewModal();
   if (window._tabOrderPendingList.length === 0) {
     showToast('Nenhum elemento interativo encontrado automaticamente — a cópia da área já está pronta para marcação manual ("+ Adicionar item").');
-  } else {
-    showToast(`${window._tabOrderPendingList.length} elemento${window._tabOrderPendingList.length === 1 ? '' : 's'} encontrado${window._tabOrderPendingList.length === 1 ? '' : 's'} — revise a ordem e clique em "Aplicar no Canvas".`);
+    return;
+  }
+  showToast(`${window._tabOrderPendingList.length} elemento${window._tabOrderPendingList.length === 1 ? '' : 's'} encontrado${window._tabOrderPendingList.length === 1 ? '' : 's'} — desenhando no canvas…`);
+
+  for (const it of window._tabOrderPendingList.slice()) {
+    // Aborta o loop se, no meio do caminho, uma geração mais nova assumiu
+    // (outro clique disparou um novo scan que já foi liberado por algum
+    // motivo) — nunca continua desenhando itens de uma lista que não é mais
+    // a atual.
+    if (window._tabOrderPendingGeneration !== generation) return;
+    await _tabOrderDrawPendingBadgeAwaitable(it.tempId);
   }
 }
 window.addTabOrderItemsFromLayers = addTabOrderItemsFromLayers;
+
+// Variante aguardável de _tabOrderDrawPendingBadge, usada só pelo loop
+// sequencial do scan automático — resolve assim que a resposta (sucesso ou
+// falha) daquele tempId específico chegar (ver _tabOrderDrawWaiters/
+// _tabOrderResolveDrawWaiter, declarados junto de handleTabOrderBadgeDrawn).
+function _tabOrderDrawPendingBadgeAwaitable(tempId) {
+  return new Promise(resolve => {
+    _tabOrderDrawWaiters.set(tempId, resolve);
+    _tabOrderDrawPendingBadge(tempId);
+  });
+}
 
 // Reordenação manual (drag-and-drop) é só de LISTA — a ordem visual normal
 // é sempre derivada de it.number (ver .sort abaixo), então redistribuir a
@@ -5164,11 +6737,467 @@ function deleteTabOrderItem(originalIndex) {
 }
 window.deleteTabOrderItem = deleteTabOrderItem;
 
+// Ícone "Apagar toda a ordem de tabulação" ao lado de "Iniciar Ordem de
+// Tabulação" (visível só quando a área já tem itens, 2026-09-04-ai,
+// pedido do usuário) — apaga a Ordem inteira desta área de uma vez, em
+// vez de excluir item por item via deleteTabOrderItem. Reaproveita
+// delete-tab-order-copy-for-area (mesmo handler já usado na exclusão em
+// cascata de deleteA11yArea, accessibility.js ~5667) — o backend remove a
+// CÓPIA CLONADA inteira de uma vez (todos os selos vivem dentro dela
+// desde a correção de coordenadas desta sessão), sem precisar de um
+// delete-node por item. Sem modal de confirmação, mesmo padrão já usado
+// por "Remover área"/"Remover trilha" (ação imediata, com Ctrl+Z do
+// próprio Figma como rede de segurança).
+function deleteAllTabOrderForArea(areaId) {
+  if (!areaId) return;
+  const items = _currentTabOrderItems(areaId);
+  if (items.length === 0) return;
+
+  parent.postMessage({ pluginMessage: { type: 'delete-tab-order-copy-for-area', areaId } }, '*');
+  tabOrderItems = (tabOrderItems || []).filter(it => !it || it.a11yAreaId !== areaId);
+
+  saveToStorage();
+  renderA11yGroupedList(); // já atualiza a tab da workspace aberta, se houver
+  showToast('Ordem de tabulação removida.');
+}
+window.deleteAllTabOrderForArea = deleteAllTabOrderForArea;
+
+// ── Trilha de Swipe ──────────────────────────────────────────────────────
+// 3ª REFORMULAÇÃO (2026-09-04) — a v2 (conexão reta entre EXATAMENTE 2
+// Áreas Marcadas escolhidas por dropdown) foi removida por completo. O
+// modelo real, confirmado por imagem de referência do usuário (fluxo real
+// do app CAIXA): uma TRILHA DIRECIONAL DE N PONTOS (mín. 2), capturados por
+// clique sequencial no canvas OU seleção múltipla de uma vez — mesmo modelo
+// EM LOTE de Ordem de Tabulação (ver applyTabOrderToCanvas acima e o
+// modelo de acumulação silenciosa): cada clique só acumula em silêncio no
+// backend (com highlight, sem desenhar nada ainda); a trilha inteira só é desenhada
+// numa ÚNICA operação ao confirmar "Criar trilha de swipe" —
+// insert-swipe-path (code.js). Diferente de Tabulação, aqui não há desenho
+// incremental por item (não faria sentido: a trilha é UM único grupo
+// cobrindo todos os pontos, não um selo por item), então o botão de
+// confirmar só fica desabilitado durante o processamento da mensagem, sem
+// loop de "aguardar cada resposta".
+//
+// Pontos NÃO são restritos a Áreas Marcadas nem operam sobre uma cópia
+// rascunho — diferente de Tabulação, o backend nunca traduz clone→original
+// aqui (ver listener de selectionchange em code.js): o designer clica
+// direto nos nós reais do design. Sem "Mapeamento Automático" nesta
+// entrega (fora de escopo, ver plano).
+//
+// Schema: hacData.a11ySwipePaths[] = [{ id, points: [{nodeId, nodeName}],
+// areaId, createdAt }] (aditivo, sem bump de _schemaVersion, mesmo
+// precedente de tabOrderItems/projectOrigin/handoffFicha). No máximo 1
+// trilha por área — criar uma nova trilha para a mesma área é SUBSTITUIÇÃO
+// completa.
+window._swipePathPendingList = [];
+window._swipePathPendingAreaId = null;
+// 'continuous' (escuta toda seleção enquanto o modal estiver aberto) | null
+// (parado). core.js guarda contra navegação/troca de view enquanto esta
+// flag está ativa, chamando cancelSwipePathReview() automaticamente (mesmo
+// padrão de window._tabOrderCaptureMode).
+window._swipePathCaptureMode = null;
+let _swipePathTempIdSeq = 1;
+
+function _swipePathNextTempId() {
+  return `tmp-swipe-${_swipePathTempIdSeq++}`;
+}
+
+// Botão "Iniciar trilha de swipe"/"Refazer trilha de swipe" — reinicia a
+// lista pendente (nunca acumula com uma sessão anterior não confirmada) e
+// abre o modal de revisão já em modo de escuta contínua. targetNodeId é a
+// raiz da Área Marcada, usada pelo backend pra clonar o frame ANTES de
+// ligar a escuta (2026-09-04-ac, mesmo mecanismo de Ordem de Tabulação —
+// a linha final não pode ser desenhada sobre o design original).
+function startSwipePathManualMode(areaId, targetNodeId) {
+  if (!areaId) return;
+  // Exclusividade mútua com Ordem de Tabulação (2026-09-04-ad, mesmo bug
+  // real corrigido, ver comentário completo em startTabOrderManualMode).
+  if (window._tabOrderCaptureMode && typeof cancelTabOrderReview === 'function') {
+    cancelTabOrderReview();
+    showToast('A captura de Ordem de Tabulação em andamento foi cancelada.');
+  }
+  ensureA11yProjectOriginThen(() => {
+    window._swipePathPendingList = [];
+    window._swipePathPendingAreaId = areaId;
+    window._swipePathPendingTargetNodeId = targetNodeId || null;
+    // Modal de revisão NÃO abre mais aqui (2026-09-04-w, pedido do
+    // usuário) — mesma mudança aplicada à Ordem de Tabulação: a janela
+    // minimiza pra uma barra fina e o designer clica em toda a trilha em
+    // silêncio. O modal só abre depois, via finishSwipePathCapture
+    // (chamado por "Concluir seleção" na barra mini).
+    if (typeof _a11yCaptureMiniBarEnter === 'function') _a11yCaptureMiniBarEnter('swipePath');
+    _swipePathSetCaptureMode('continuous', areaId, targetNodeId || null, getA11yActiveSectionName());
+    showToast('Cópia da área criada — segure shift e clique (ou use marquise) pra marcar os pontos dela. A janela foi minimizada para dar espaço ao canvas.');
+  });
+}
+window.startSwipePathManualMode = startSwipePathManualMode;
+
+// "Gerar automaticamente" do Swipe (2026-09-08, pedido do usuário) —
+// reaproveita a sequência já mapeada e confirmada pela Ordem de
+// Tabulação desta MESMA área, na ordem exata de `number` (1, 2, 3...),
+// em vez de calcular qualquer ordem própria (zigue-zague, posição
+// visual, ou reler figma.currentPage.selection — cuja ordem a própria
+// documentação da Plugin API do Figma declara "unspecified", não é um
+// bug corrigível, é limitação real da API). A Ordem de Tabulação já
+// resolve "captar a sequência real que o designer pretende" de forma
+// validada — não mexida aqui, só consumida.
+//
+// Sem itens de Tabulação nesta área (ainda não documentada), cai no
+// MESMO fluxo manual do botão "Iniciar/Refazer trilha de swipe" — nunca
+// bloqueia o designer só porque a Tabulação não foi feita antes.
+function startSwipePathFromTabOrder(areaId, targetNodeId) {
+  if (!areaId) return;
+  const items = _currentTabOrderItems(areaId)
+    .filter(it => it && it.targetNodeId)
+    .sort((a, b) => (a.number || 0) - (b.number || 0));
+
+  if (items.length < 2) {
+    showToast('Esta área ainda não tem Ordem de Tabulação com pelo menos 2 itens — marque a trilha manualmente.');
+    startSwipePathManualMode(areaId, targetNodeId);
+    return;
+  }
+
+  // Exclusividade mútua com Ordem de Tabulação, mesmo cuidado de
+  // startSwipePathManualMode — só por segurança, já que esta função não
+  // abre nenhum modo de captura contínua (desenha direto), mas evita
+  // colisão de estado se algo ainda estivesse em andamento.
+  if (window._tabOrderCaptureMode && typeof cancelTabOrderReview === 'function') {
+    cancelTabOrderReview();
+    showToast('A captura de Ordem de Tabulação em andamento foi cancelada.');
+  }
+
+  ensureA11yProjectOriginThen(() => {
+    window._swipePathPendingAreaId = areaId;
+    window._swipePathPendingTargetNodeId = targetNodeId || null;
+    window._swipePathPendingList = items.map(it => ({
+      nodeId: it.targetNodeId,
+      nodeName: it.targetNodeName || '',
+      tempId: _swipePathNextTempId(),
+    }));
+    showToast(`Desenhando a trilha de swipe com os ${items.length} pontos já mapeados na Ordem de Tabulação…`);
+    applySwipePathToCanvas();
+  });
+}
+window.startSwipePathFromTabOrder = startSwipePathFromTabOrder;
+
+// Botão "Concluir seleção" da barra de captura minimizada — mesma lógica
+// de finishTabOrderCapture (ver comentário lá, 2026-09-04-aa): pede ao
+// backend tudo que foi acumulado em silêncio (get-swipe-path-accumulated-selection);
+// a resposta é quem popula a lista pendente e abre o modal.
+function finishSwipePathCapture() {
+  parent.postMessage({ pluginMessage: { type: 'get-swipe-path-accumulated-selection' } }, '*');
+}
+window.finishSwipePathCapture = finishSwipePathCapture;
+
+// Abre o modal de revisão vazio/pré-populado — idempotente, reabrir com o
+// modal já aberto só re-renderiza a lista.
+function openSwipePathReviewModal() {
+  openModal('a11y-swipe-path-review-modal');
+  _renderSwipePathPendingList();
+}
+window.openSwipePathReviewModal = openSwipePathReviewModal;
+
+// Liga/desliga a escuta de seleção do canvas no backend (start-swipe-path-
+// mode/stop-swipe-path-mode, code.js) — mesmo padrão de
+// _tabOrderSetCaptureMode. areaId/targetNodeId/sectionName (2026-09-04-ac):
+// a Trilha de Swipe agora CLONA o frame da Área ao ligar a escuta (mesmo
+// mecanismo de Ordem de Tabulação — a linha final não pode ser desenhada
+// sobre o design original), então start-swipe-path-mode precisa dos
+// mesmos 3 campos que start-tab-order-copy já usa pra criar a cópia.
+function _swipePathSetCaptureMode(mode, areaId, targetNodeId, sectionName) {
+  const wasOff = !window._swipePathCaptureMode;
+  window._swipePathCaptureMode = mode;
+  if (mode && wasOff) {
+    parent.postMessage({ pluginMessage: { type: 'start-swipe-path-mode', areaId: areaId || null, targetNodeId: targetNodeId || null, sectionName: sectionName || null, designerName: getA11yDesignerName() } }, '*');
+  } else if (!mode && !wasOff) {
+    parent.postMessage({ pluginMessage: { type: 'stop-swipe-path-mode' } }, '*');
+  }
+}
+
+// Modelo de ACUMULAÇÃO SILENCIOSA (2026-09-04-aa) — mesmo modelo aplicado
+// à Ordem de Tabulação (ver comentário completo lá): durante a captura, o
+// backend só acumula em silêncio e desenha o highlight por conta própria,
+// sem postar nada em tempo real. window._swipePathPendingList só é
+// populada uma vez, ao "Concluir seleção".
+
+// Contagem ao vivo — resposta de 'swipe-path-accumulated-count-changed'.
+function handleSwipePathAccumulatedCountChanged(count) {
+  if (typeof _a11yCaptureMiniBarUpdateCount === 'function') _a11yCaptureMiniBarUpdateCount(count || 0);
+}
+window.handleSwipePathAccumulatedCountChanged = handleSwipePathAccumulatedCountChanged;
+
+// Resposta de 'swipe-path-accumulated-selection-result' — disparada por
+// finishSwipePathCapture ("Concluir seleção"), já com tudo que foi
+// acumulado durante a captura resolvido/ordenado. Substitui
+// window._swipePathPendingList do zero e só então abre o modal.
+function handleSwipePathAccumulatedSelectionResult(points) {
+  window._swipePathPendingList = (Array.isArray(points) ? points : [])
+    .filter(p => p && p.nodeId)
+    .map(p => ({ nodeId: p.nodeId, nodeName: p.nodeName || '', tempId: _swipePathNextTempId() }));
+  openSwipePathReviewModal();
+}
+window.handleSwipePathAccumulatedSelectionResult = handleSwipePathAccumulatedSelectionResult;
+
+// Destaca um item da lista PENDENTE no canvas — usa o handler genérico
+// highlight-node (code.js) direto com o nodeId real, sem tradução
+// clone→original (diferente de Tabulação): Trilha de Swipe sempre opera
+// sobre os nós reais do design.
+function _highlightSwipePathListItem(nodeId) {
+  if (!nodeId) return;
+  parent.postMessage({ pluginMessage: { type: 'highlight-node', id: nodeId, highlight: true, color: '#0891B2', selectNode: false, shouldScroll: true } }, '*');
+}
+window._highlightSwipePathListItem = _highlightSwipePathListItem;
+
+// Renderiza a lista PENDENTE dentro do modal de revisão — mesmo padrão
+// visual/drag-and-drop de _renderTabOrderPendingList.
+function _renderSwipePathPendingList() {
+  const containerEl = document.getElementById('a11y-swipe-path-pending-list');
+  const emptyEl = document.getElementById('a11y-swipe-path-pending-empty');
+  const applyBtn = document.getElementById('btn-swipe-path-apply');
+  if (!containerEl) return;
+
+  const items = window._swipePathPendingList || [];
+  if (emptyEl) emptyEl.classList.toggle('hidden', items.length > 0);
+  if (applyBtn) applyBtn.disabled = items.length < 2;
+
+  containerEl.innerHTML = items.map((it, listIndex) => `
+    <li class="list-none flex items-center gap-2 px-2.5 py-1.5 bg-white dark:bg-dark-surface rounded-lg border border-gray-100 dark:border-dark-line cursor-pointer"
+      title="Destacar este elemento no canvas"
+      draggable="true"
+      data-list-index="${listIndex}"
+      onclick="_highlightSwipePathListItem('${escapeHtml(it.nodeId)}')"
+      ondragstart="_swipePathPendingDragStart(event, ${listIndex})"
+      ondragover="_tabOrderDragOver(event)"
+      ondrop="_swipePathPendingDrop(event, ${listIndex})"
+      ondragend="_tabOrderDragEnd(event)">
+      <span class="text-gray-300 dark:text-dark-muted cursor-grab active:cursor-grabbing shrink-0" title="Arrastar para reordenar" aria-hidden="true">
+        <i data-lucide="grip-vertical" class="w-3.5 h-3.5"></i>
+      </span>
+      <div class="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-extrabold text-white shrink-0" style="background-color:#0891B2">${listIndex + 1}</div>
+      <p class="flex-1 min-w-0 text-[11px] text-slate-700 dark:text-white truncate">${escapeHtml(it.nodeName || '')}</p>
+      <button type="button" title="Remover da lista" aria-label="Remover da lista"
+        onclick="event.stopPropagation(); deleteSwipePathPendingItem('${escapeHtml(it.tempId)}')"
+        class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors shrink-0">
+        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+      </button>
+    </li>
+  `).join('');
+
+  _refreshIcons();
+}
+window._renderSwipePathPendingList = _renderSwipePathPendingList;
+
+let _swipePathPendingDragIndex = null;
+
+// Reaproveita _tabOrderDragOver/_tabOrderDragEnd (genéricos, já existem) —
+// só o dragstart/drop precisam de estado próprio (índice/lista diferentes).
+function _swipePathPendingDragStart(ev, listIndex) {
+  _swipePathPendingDragIndex = listIndex;
+  ev.dataTransfer.effectAllowed = 'move';
+  try { ev.dataTransfer.setData('text/plain', String(listIndex)); } catch (e) { }
+  ev.currentTarget.classList.add('opacity-50');
+}
+window._swipePathPendingDragStart = _swipePathPendingDragStart;
+
+function _swipePathPendingDrop(ev, targetListIndex) {
+  ev.preventDefault();
+  if (window._swipePathLocked) return; // trilha já enviada pro backend, aguardando resposta — ver applySwipePathToCanvas
+  const sourceListIndex = _swipePathPendingDragIndex;
+  if (sourceListIndex === null || sourceListIndex === targetListIndex) return;
+  const list = window._swipePathPendingList;
+  const [moved] = list.splice(sourceListIndex, 1);
+  list.splice(targetListIndex, 0, moved);
+  _swipePathPendingDragIndex = null;
+  _renderSwipePathPendingList();
+}
+window._swipePathPendingDrop = _swipePathPendingDrop;
+
+function deleteSwipePathPendingItem(tempId) {
+  if (window._swipePathLocked) return; // trilha já enviada pro backend, aguardando resposta — ver applySwipePathToCanvas
+  const list = window._swipePathPendingList || [];
+  const idx = list.findIndex(it => it.tempId === tempId);
+  if (idx === -1) return;
+  list.splice(idx, 1);
+  _renderSwipePathPendingList();
+}
+window.deleteSwipePathPendingItem = deleteSwipePathPendingItem;
+
+// Fecha o modal descartando tudo — nenhum selo/trilha real existe ainda
+// nesse ponto (modelo em lote: só desenha ao confirmar), então cancelar só
+// precisa parar a escuta e limpar o estado local, sem nenhuma chamada de
+// limpeza de canvas (diferente de cancelTabOrderReview, que pode ter uma
+// cópia rascunho pra apagar).
+function cancelSwipePathReview() {
+  _swipePathSetCaptureMode(null);
+  // Limpa a cópia rascunho órfã (2026-09-04-ac, mesmo padrão de
+  // cancelTabOrderReview/delete-tab-order-draft-copy) — precisa acontecer
+  // ANTES de zerar window._swipePathPendingAreaId, senão o backend não
+  // sabe qual área limpar.
+  if (window._swipePathPendingAreaId) {
+    parent.postMessage({ pluginMessage: { type: 'delete-swipe-path-draft-copy', areaId: window._swipePathPendingAreaId } }, '*');
+  }
+  window._swipePathPendingList = [];
+  window._swipePathPendingAreaId = null;
+  window._swipePathPendingTargetNodeId = null;
+  window._swipePathLocked = false;
+  parent.postMessage({ pluginMessage: { type: 'clear-highlight' } }, '*');
+  closeModal('a11y-swipe-path-review-modal');
+}
+window.cancelSwipePathReview = cancelSwipePathReview;
+
+// "Criar trilha de swipe" — desenha a trilha completa numa ÚNICA operação
+// (insert-swipe-path, code.js), diferente do desenho incremental item-a-
+// item de Tabulação: aqui é um único grupo Figma cobrindo todos os pontos,
+// não um selo por item, então não há necessidade de aguardar N respostas
+// sequenciais — só desabilita o botão durante o processamento.
+//
+// Trava a lista pendente (window._swipePathLocked) enquanto a resposta
+// assíncrona de insert-swipe-path está em trânsito — achado real de QA
+// (2026-09-04): sem isso, dava pra arrastar/remover um item da lista
+// pendente NESSE INTERVALO, e handleSwipePathCreated (abaixo) gravava em
+// hacData.a11ySwipePaths uma lista diferente da que o backend de fato
+// desenhou no canvas (que já tinha recebido a lista ORIGINAL, do momento
+// do clique). _renderSwipePathPendingList/_swipePathPendingDrop/
+// deleteSwipePathPendingItem respeitam essa trava.
+function applySwipePathToCanvas() {
+  const areaId = window._swipePathPendingAreaId;
+  const list = window._swipePathPendingList || [];
+  if (!areaId || list.length < 2 || window._swipePathLocked) return;
+
+  const applyBtn = document.getElementById('btn-swipe-path-apply');
+  if (applyBtn) { applyBtn.disabled = true; applyBtn.textContent = 'Desenhando trilha…'; }
+  window._swipePathLocked = true;
+
+  parent.postMessage({
+    pluginMessage: {
+      type: 'insert-swipe-path',
+      areaId,
+      // targetNodeId (2026-09-04-ac): raiz da Área, usada pelo backend só
+      // como fallback pra recriar a cópia clonada caso ela não exista mais
+      // em memória (ex.: designer fechou/reabriu o plugin no meio do
+      // fluxo) — ver _resolveActiveSwipePathClone em code.js.
+      targetNodeId: window._swipePathPendingTargetNodeId || null,
+      points: list.map(it => ({ nodeId: it.nodeId, nodeName: it.nodeName })),
+      sectionName: getA11yActiveSectionName(),
+      designerName: getA11yDesignerName(),
+    },
+  }, '*');
+}
+window.applySwipePathToCanvas = applySwipePathToCanvas;
+
+// Resposta de 'swipe-path-created' (messages.js) — a trilha foi desenhada
+// com sucesso no canvas; agora sim persiste em hacData.a11ySwipePaths,
+// substituindo (nunca somando) qualquer trilha anterior desta área. Backend
+// só remove a trilha antiga do canvas DEPOIS de confirmar que a nova foi
+// desenhada (ver insert-swipe-path, code.js) — aqui espelhamos a mesma
+// ordem: só sobrescrevemos o dado quando esta resposta de SUCESSO chega.
+//
+// Usa msg.points (ecoado pelo backend, exatamente o payload que foi
+// desenhado) — NUNCA relê window._swipePathPendingList aqui: a trava em
+// applySwipePathToCanvas já impede mutação durante o trânsito, mas usar o
+// valor ecoado é a garantia definitiva de que o dado persistido bate 1:1
+// com o que está no canvas, mesmo que a trava falhe por algum motivo.
+function handleSwipePathCreated(msg) {
+  if (!msg || !msg.areaId) return;
+  hacData.a11ySwipePaths = (hacData.a11ySwipePaths || []).filter(p => p && p.areaId !== msg.areaId);
+  hacData.a11ySwipePaths.push({
+    id: msg.pathNodeId || null,
+    points: Array.isArray(msg.points) ? msg.points : [],
+    areaId: msg.areaId,
+    createdAt: Date.now(),
+  });
+  window._swipePathLocked = false;
+  saveToStorage();
+  if (window._toastSaved) _toastSaved();
+  showToast('Trilha de swipe criada.');
+
+  _swipePathSetCaptureMode(null);
+  window._swipePathPendingList = [];
+  window._swipePathPendingAreaId = null;
+  window._swipePathPendingTargetNodeId = null;
+  parent.postMessage({ pluginMessage: { type: 'clear-highlight' } }, '*');
+  closeModal('a11y-swipe-path-review-modal');
+
+  if (typeof _renderA11yWorkspaceTab === 'function') _renderA11yWorkspaceTab();
+  renderA11yGroupedList();
+}
+window.handleSwipePathCreated = handleSwipePathCreated;
+
+// Resposta de falha — a lista pendente e a escuta continuam ativas (o
+// designer não perde o trabalho de captura já feito), só reabilita o
+// botão pra tentar de novo.
+function handleSwipePathCreateFailed(msg) {
+  window._swipePathLocked = false;
+  const applyBtn = document.getElementById('btn-swipe-path-apply');
+  if (applyBtn) { applyBtn.disabled = (window._swipePathPendingList || []).length < 2; applyBtn.textContent = 'Criar trilha de swipe'; }
+  showToast(msg && msg.reason ? msg.reason : 'Não foi possível criar a trilha de swipe.', 'error');
+}
+window.handleSwipePathCreateFailed = handleSwipePathCreateFailed;
+
+// Botão "Remover trilha" da tab Swipe (fora do modal, no card da área já
+// com trilha existente).
+function deleteSwipePathForArea(areaId) {
+  if (!areaId) return;
+  const existing = (hacData.a11ySwipePaths || []).find(p => p && p.areaId === areaId);
+  if (existing && existing.id) {
+    parent.postMessage({ pluginMessage: { type: 'delete-node', id: existing.id } }, '*');
+  }
+  hacData.a11ySwipePaths = (hacData.a11ySwipePaths || []).filter(p => p && p.areaId !== areaId);
+  saveToStorage();
+  showToast('Trilha de swipe removida.');
+  if (typeof _renderA11yWorkspaceTab === 'function') _renderA11yWorkspaceTab();
+  renderA11yGroupedList();
+}
+window.deleteSwipePathForArea = deleteSwipePathForArea;
+
+// Resposta de 'swipe-path-cleaned-up' (messages.js) — disparada pela
+// cascata de exclusão de área (ver deleteA11yArea acima). No máximo 1
+// trilha por área, então basta filtrar pela areaId excluída.
+function handleSwipePathCleanedUp(msg) {
+  if (!msg || !msg.areaId) return;
+  const before = (hacData.a11ySwipePaths || []).length;
+  hacData.a11ySwipePaths = (hacData.a11ySwipePaths || []).filter(p => p && p.areaId !== msg.areaId);
+  if (hacData.a11ySwipePaths.length !== before) {
+    saveToStorage();
+    if (typeof _renderA11yWorkspaceTab === 'function') _renderA11yWorkspaceTab();
+    renderA11yGroupedList();
+  }
+}
+window.handleSwipePathCleanedUp = handleSwipePathCleanedUp;
+
 // ── Guia de categorias ───────────────────────────────────────────────────
 function openA11yCategoriesHelp() {
+  _applyA11yCategoriesHelpOriginFilter();
   openModal('a11y-categories-help-modal');
 }
 window.openA11yCategoriesHelp = openA11yCategoriesHelp;
+
+// Mesma regra de _applyA11yCategoryPickerOriginFilter (a lib mobile "Design
+// Acessível | Super App" só publica 3 das 5 categorias) aplicada ao modal
+// educativo "Entendendo as categorias" — antes desta correção, o modal
+// mostrava as 5 categorias sempre, com o texto de cada uma mencionando as
+// duas plataformas ao mesmo tempo ("...No mobile, esta categoria não tem
+// componente equivalente..."), incoerente com o resto do app (que já filtra
+// estruturalmente por origem). Agora esconde os blocos inteiros de
+// "Estrutura da Página" e "Informações Adicionais" quando mobile — mesmas
+// duas categorias já escondidas no seletor de Nova Spec — e o texto de cada
+// categoria remanescente não precisa mais citar a outra plataforma.
+function _applyA11yCategoriesHelpOriginFilter() {
+  const mobileOnly = getA11yProjectOrigin() === 'mobile';
+  ['estrutura', 'informacoes'].forEach((category) => {
+    const block = document.getElementById('a11y-categories-help-' + category);
+    if (block) block.classList.toggle('hidden', mobileOnly);
+  });
+  // "Nível de título" e "Elementos interativos e imagens" continuam visíveis
+  // nas duas plataformas, mas com um parágrafo de explicação DIFERENTE por
+  // origem (data-a11y-help-origin="web"/"mobile") — nunca os dois ao mesmo
+  // tempo, ao contrário do texto híbrido anterior a esta correção.
+  document.querySelectorAll('#a11y-categories-help-modal [data-a11y-help-origin]').forEach((p) => {
+    const matchesOrigin = p.getAttribute('data-a11y-help-origin') === (mobileOnly ? 'mobile' : 'web');
+    p.classList.toggle('hidden', !matchesOrigin);
+  });
+}
+window._applyA11yCategoriesHelpOriginFilter = _applyA11yCategoriesHelpOriginFilter;
 
 // Stub mínimo funcional: messages.js referencia closeEditSpecConnectorModal
 // no roteamento de 'spec-connector-edited' (edição do estilo de linha de

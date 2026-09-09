@@ -28,7 +28,15 @@ const tailwindCSS = read('styles/tailwind-compiled.css');
 const css         = read('styles/plugin.css');
 const modCore    = read('modules/core.js');
 const modA11yConstantsGenerated = read('refs/_a11y-constants.generated.js');
+// Frames de instrução (2026-09-08) — imagens PNG (base64) capturadas via
+// CI da lib "Design Acessível", usadas como coluna de instrução fixa na
+// Ficha de Handoff (ver refs/fetch-instruction-frames.cjs e
+// refs/build-skeleton.cjs). Gerado, pode ainda não existir num checkout
+// limpo antes do primeiro `npm run bundle:refs` — read() já trata
+// arquivo ausente com um comentário placeholder, sem quebrar o build.
+const modInstructionFramesGenerated = read('refs/_instruction-frames.generated.js');
 const modA11y    = read('modules/accessibility.js');
+const modFicha   = read('modules/handoff-ficha.js');
 const modOnboard = read('modules/onboarding.js');
 const modMsgs    = read('modules/messages.js');
 
@@ -136,6 +144,34 @@ ${css}
         </button>
       </div>
     </div>
+
+    <!-- Barra de captura minimizada (Ordem de Tabulação / Trilha de Swipe,
+         2026-09-04-w) — irmã de #header-home, nunca as duas visíveis ao
+         mesmo tempo. Ligada por _a11yCaptureMiniBarEnter (core.js) ao
+         clicar "Iniciar" em qualquer uma das 2 features: esconde
+         #header-home e todo o conteúdo abaixo do header (div.flex-1),
+         encolhe a janela do Figma, e mostra só a contagem ao vivo + os 2
+         botões abaixo — enquanto isso, o designer clica no canvas em
+         silêncio, sem nenhum modal/lista aparecendo. -->
+    <div id="a11y-capture-mini-bar" class="hidden items-center justify-between w-full gap-2">
+      <div class="flex items-center gap-2 min-w-0">
+        <span class="w-2 h-2 rounded-full bg-[#0891B2] animate-pulse shrink-0" aria-hidden="true"></span>
+        <span id="a11y-capture-mini-bar-count" class="text-[11px] font-bold text-slate-700 dark:text-white truncate">
+          0 pontos marcados
+        </span>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <button type="button" id="a11y-capture-mini-bar-cancel" onclick="_a11yCaptureMiniBarCancel()"
+          title="Cancelar seleção e descartar pontos marcados" aria-label="Cancelar seleção e descartar pontos marcados"
+          class="px-2.5 py-1.5 text-[10.5px] font-bold text-slate-500 dark:text-dark-muted hover:bg-light-line dark:hover:bg-dark-surface rounded-xl transition-colors">
+          Cancelar
+        </button>
+        <button type="button" id="a11y-capture-mini-bar-finish" onclick="_a11yCaptureMiniBarFinish()"
+          class="px-3 py-1.5 text-[10.5px] font-bold text-white bg-[#0891B2] hover:bg-cyan-700 rounded-xl transition-colors shadow-lg shadow-cyan-500/20">
+          Concluir seleção
+        </button>
+      </div>
+    </div>
   </header>
 
   <div class="flex-1 overflow-hidden relative min-h-0">
@@ -143,13 +179,6 @@ ${viewHome}
 ${viewSpecs}
 ${modalsShared}
   </div>
-
-  <!-- SIGNATURE FOOTER -->
-  <footer id="footer-signature" class="pb-2 pt-1 text-center shrink-0 bg-light-surface dark:bg-dark-bg border-t border-light-line dark:border-dark-line">
-    <p class="text-[9px] text-gray-400 dark:text-dark-muted font-bold tracking-wider uppercase">
-      Desenvolvido por Fóton
-    </p>
-  </footer>
 
   <!--
     Plugin runtime — concatenado em um único <script> para que todos os
@@ -177,9 +206,26 @@ ${modMsgs}
 ${modA11yConstantsGenerated}
 
 // ============================================================
+// GENERATED: refs/_instruction-frames.generated.js
+// (window.__HAC_INSTRUCTION_FRAMES__ — PNGs, base64, da lib "Design
+// Acessível", consumidos pela Ficha de Handoff. Regenerar via:
+// npm run bundle:refs, depois de rodar
+// FIGMA_TOKEN=xxx node src/plugin/refs/fetch-instruction-frames.cjs)
+// ============================================================
+${modInstructionFramesGenerated}
+
+// ============================================================
 // MODULE: accessibility.js
 // ============================================================
 ${modA11y}
+
+// ============================================================
+// MODULE: handoff-ficha.js
+// (Ficha de Handoff — módulo apartado, ver comentário de topo do arquivo.
+// Precisa vir DEPOIS de accessibility.js: referencia A11Y_CATEGORIES,
+// switchA11yWorkspaceTab, a11yAreas/a11ySpecs, saveToStorage etc.)
+// ============================================================
+${modFicha}
 
 // ============================================================
 // MODULE: onboarding.js

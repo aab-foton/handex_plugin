@@ -69,6 +69,14 @@
             a11ySpecs = _migrateA11yElementoMobileVariants(a11ySpecs);
           }
           tabOrderItems = hacData.tabOrderItems || [];
+          // a11ySwipePaths é array novo (2026-09-04, 3ª reformulação —
+          // substitui o antigo a11ySwipeFlows, conexão entre 2 áreas por
+          // dropdown) — migração por ausência, mesmo padrão de tabOrderItems
+          // acima: hacData salvo antes desta versão simplesmente não tem o
+          // campo. Vive só em hacData (não tem variável solta espelhada, ao
+          // contrário de tabOrderItems/a11yAreas/a11ySpecs) — todo ponto de
+          // leitura acessa hacData.a11ySwipePaths diretamente.
+          hacData.a11ySwipePaths = hacData.a11ySwipePaths || [];
           if (typeof renderA11yGroupedList === 'function') renderA11yGroupedList();
         }
 
@@ -77,6 +85,14 @@
         // que sempre abre em view-home.
         if (typeof setOnboardingSeenState === 'function') setOnboardingSeenState(msg.onboardingSeen);
         window._a11ySpecModalInstructionShown = !!msg.specModalInstructionSeen;
+
+        // A escolha de plataforma (picker Web/Mobile) vive na própria
+        // view-home, que já nasce ativa no boot sem passar por navigate() —
+        // diferente do banner acima, precisa ser avaliada aqui, assim que
+        // hacData.projectOrigin (se já salvo) está disponível, senão a Home
+        // mostraria a pergunta por uma fração de segundo mesmo em arquivo
+        // já configurado.
+        if (typeof _renderA11yHomeOriginPicker === 'function') _renderA11yHomeOriginPicker();
 
         return;
       }
@@ -91,6 +107,7 @@
           a11yAreas: [],
           a11ySpecs: [],
           tabOrderItems: [],
+          a11ySwipePaths: [],
           currentUser: hacData.currentUser
           // projectOrigin NÃO é preservado (decisão revisada): "Limpar Cache"
           // deve resetar o projeto ao estado zero, incluindo a plataforma
@@ -98,6 +115,10 @@
           // na próxima ação. Omitido aqui de propósito; o default de
           // core.js prevalece. Diferente de currentUser, que continua
           // preservado por ser configuração de ambiente, não do projeto.
+          // activeSectionName (2026-09-03) segue o mesmo raciocínio: também
+          // omitido de propósito, volta a null — a próxima Área Marcada
+          // depois de "Limpar Cache" nasce na Section fixa original, não
+          // numa versionada que o designer possa ter escolhido antes.
         };
         a11yAreas = [];
         a11ySpecs = [];
@@ -212,7 +233,9 @@
         // msg.dscComponentName: nome cru do component set DSC (containingFrame)
         // resolvido via _getDscComponentKeyToFrameMap quando o nó selecionado é
         // uma INSTANCE remota reconhecida — null quando não há match.
-        if (typeof prefillA11yComponentName === 'function') prefillA11yComponentName(msg.name, msg.mainText, msg.dscComponentName);
+        // msg.id (2026-09-04-ae): id do nó selecionado, usado pra checar spec
+        // duplicada em prefillA11yComponentName.
+        if (typeof prefillA11yComponentName === 'function') prefillA11yComponentName(msg.name, msg.mainText, msg.dscComponentName, msg.id);
       }
 
       if (msg.type === "node-main-text") {
@@ -231,6 +254,10 @@
         }
       }
 
+      // Dispatch de 'a11y-documentation-status' removido em 2026-09-04-k
+      // junto com o aviso "Continuar/Iniciar nova Section" — ver
+      // accessibility.js, openA11yAreaModal.
+
       if (msg.type === "a11y-area-created") {
         const area = msg.area;
         if (area) {
@@ -242,25 +269,57 @@
           if (typeof renderA11yGroupedList === 'function') renderA11yGroupedList();
           saveToStorage();
           if (window._toastSaved) _toastSaved();
-          // A escolha Automático/Manual é feita no próprio modal "Marcar
-          // Área" (campo autoDetect, ecoado pelo backend em
-          // create-a11y-area). Só dispara a detecção (abre modal + varre,
-          // sem pergunta intermediária) se o designer escolheu Automático;
-          // em Manual a área já foi criada/expandida/renderizada acima.
+          // Marcar Área não dispara mais detecção automaticamente
+          // (2026-09-04-g) — `autoDetect` deixou de ser enviado por
+          // confirmA11yArea, então `area.autoDetect` nunca é truthy aqui;
+          // o Mapeamento Automático agora é uma ação dentro da tab Leitor
+          // de Tela (_startA11yMappingFromLeitorTab, accessibility.js).
+          // Guarda mantida por retrocompatibilidade: hacData salvo antes
+          // desta versão pode, em teoria, ter uma área com o campo antigo
+          // ainda marcado (nunca vai acontecer na prática, já que o campo
+          // só existia no momento de criação e nunca foi persistido em
+          // hacData além disso — mantido só como defesa inofensiva).
           if (area.autoDetect && typeof openA11yPostAreaDetectModal === 'function') {
             openA11yPostAreaDetectModal(area);
           }
         }
       }
 
+      // Resposta de update-a11y-area-conector (2026-09-04-l, "Editar
+      // conector" no dropdown do card) — area.id NUNCA muda (o backend
+      // edita o conteúdo do grupo existente, não recria), então basta
+      // atualizar o campo conector da área já presente no array.
+      if (msg.type === "a11y-area-conector-updated") {
+        const area = (a11yAreas || []).find(a => a && a.id === msg.areaId);
+        if (area) {
+          area.conector = msg.conector;
+          saveToStorage();
+          if (window._toastSaved) _toastSaved();
+        }
+        if (typeof handleA11yAreaConectorUpdated === 'function') handleA11yAreaConectorUpdated(msg);
+      }
+      if (msg.type === "a11y-area-conector-update-failed") {
+        if (typeof showToast === 'function') showToast(msg.reason || 'Não foi possível atualizar o conector.', 'error');
+      }
+
       // ── Ordem de Tabulação ──────────────────────────────────────────
-      // Depende de handlers 'start-tab-order-mode'/'generate-tab-order-from-layers'/
-      // 'apply-tab-order-to-canvas'/'renumber-tab-order-items' em code.js, e
-      // handleTabOrderSelectionChanged/addTabOrderItem/addTabOrderItemsFromLayers/
-      // handleTabOrderAppliedToCanvas em accessibility.js.
-      if (msg.type === "tab-order-selection-changed") {
-        if (typeof handleTabOrderSelectionChanged === 'function') {
-          handleTabOrderSelectionChanged(msg.nodeId, msg.nodeName);
+      // Depende de handlers 'start-tab-order-mode'/'get-tab-order-accumulated-selection'/
+      // 'generate-tab-order-from-layers'/'draw-tab-order-badge'/
+      // 'renumber-tab-order-items'/'delete-node' em code.js. Modelo de
+      // ACUMULAÇÃO SILENCIOSA (2026-09-04-aa): durante a captura, o backend
+      // NUNCA posta uma seleção isolada — só a contagem ao vivo
+      // (tab-order-accumulated-count-changed) e, sob demanda ("Concluir
+      // seleção"/"+ Adicionar item"), o resultado completo já resolvido
+      // (tab-order-accumulated-selection-result). O selo real só nasce em
+      // lote, ao confirmar "Criar ordem de tabulação" (applyTabOrderToCanvas).
+      if (msg.type === "tab-order-accumulated-count-changed") {
+        if (typeof handleTabOrderAccumulatedCountChanged === 'function') {
+          handleTabOrderAccumulatedCountChanged(msg.count);
+        }
+      }
+      if (msg.type === "tab-order-accumulated-selection-result") {
+        if (typeof handleTabOrderAccumulatedSelectionResult === 'function') {
+          handleTabOrderAccumulatedSelectionResult(msg.points);
         }
       }
 
@@ -273,6 +332,23 @@
           handleTabOrderCopyStarted(msg.cloneId, msg.nodeMap);
         }
       }
+      // Resposta de start-swipe-path-mode (2026-09-04-ac) — a Trilha de
+      // Swipe agora também clona o frame da Área antes de ligar a escuta,
+      // mesmo padrão de tab-order-copy-started acima.
+      if (msg.type === "swipe-path-copy-started") {
+        if (typeof handleSwipePathCopyStarted === 'function') {
+          handleSwipePathCopyStarted(msg.cloneId);
+        }
+      }
+      // Resposta de resolve-tab-order-clone (2026-09-04-aj) — "Adicionar
+      // itens" numa área já documentada só arma a captura de clique depois
+      // de confirmar que a cópia clonada existente foi reconhecida/
+      // reaproveitada, nunca recriada do zero por engano.
+      if (msg.type === "tab-order-clone-resolved") {
+        if (typeof handleTabOrderCloneResolved === 'function') {
+          handleTabOrderCloneResolved(msg.areaId, msg.ok);
+        }
+      }
 
       // Geração automática por varredura de camadas (generate-tab-order-
       // from-layers em code.js) — responde com os CANDIDATOS
@@ -283,25 +359,90 @@
       // pendente, guarda a cópia ativa e abre o modal de revisão.
       if (msg.type === "tab-order-generated-from-layers") {
         if (typeof addTabOrderItemsFromLayers === 'function') {
-          addTabOrderItemsFromLayers(msg.items, msg.cloneId, msg.nodeMap);
+          addTabOrderItemsFromLayers(msg.items, msg.cloneId, msg.nodeMap, msg.generation);
         }
       }
 
-      // Resposta de 'apply-tab-order-to-canvas' (code.js): a cópia do frame
-      // já foi criada e os selos já foram desenhados nela; os itens vêm com
-      // id real (grupo do selo, na cópia) prontos pro mesmo tratamento de
-      // addTabOrderItem que os fluxos antigos já usavam.
-      if (msg.type === "tab-order-applied-to-canvas") {
-        if (typeof handleTabOrderAppliedToCanvas === 'function') {
-          handleTabOrderAppliedToCanvas(msg.items, msg.copyName);
+      // Resposta de 'draw-tab-order-badge' (code.js) — o selo real do item
+      // recém-adicionado à lista pendente já foi desenhado na cópia; guarda
+      // o id real (canvasId) no item pendente correspondente (por tempId).
+      if (msg.type === "tab-order-badge-drawn") {
+        if (typeof handleTabOrderBadgeDrawn === 'function') {
+          handleTabOrderBadgeDrawn(msg.tempId, msg.canvasId, msg.item);
+        }
+      }
+      if (msg.type === "tab-order-badge-draw-failed") {
+        if (typeof handleTabOrderBadgeDrawFailed === 'function') {
+          handleTabOrderBadgeDrawFailed(msg.tempId);
         }
       }
 
       // Confirmação de renumber-tab-order-items — os números já foram
-      // atualizados otimisticamente no front (deleteTabOrderItem); esta
-      // resposta só existe para eventuais diagnósticos, sem ação adicional.
+      // atualizados otimisticamente no front; esta resposta só existe para
+      // eventuais diagnósticos, sem ação adicional.
       if (msg.type === "tab-order-renumbered") {
         // no-op
+      }
+
+      // ── Trilha de Swipe ──────────────────────────────────────────────
+      // Modelo de ACUMULAÇÃO SILENCIOSA (2026-09-04-aa, mesmo modelo de
+      // Ordem de Tabulação acima): nenhum desenho acontece por clique, e
+      // durante a captura o backend não posta nenhuma seleção isolada — só
+      // a contagem ao vivo e, sob demanda ("Concluir seleção"), o
+      // resultado completo já resolvido/ordenado. A trilha real só é
+      // desenhada de uma vez, ao confirmar "Criar trilha de swipe"
+      // (applySwipePathToCanvas → insert-swipe-path).
+      if (msg.type === "swipe-path-accumulated-count-changed") {
+        if (typeof handleSwipePathAccumulatedCountChanged === 'function') {
+          handleSwipePathAccumulatedCountChanged(msg.count);
+        }
+      }
+      if (msg.type === "swipe-path-accumulated-selection-result") {
+        if (typeof handleSwipePathAccumulatedSelectionResult === 'function') {
+          handleSwipePathAccumulatedSelectionResult(msg.points);
+        }
+      }
+      // Resposta de 'insert-swipe-path' (code.js) — a trilha completa foi
+      // desenhada no canvas numa única operação.
+      if (msg.type === "swipe-path-created") {
+        if (typeof handleSwipePathCreated === 'function') {
+          handleSwipePathCreated(msg);
+        }
+      }
+      if (msg.type === "swipe-path-create-failed") {
+        if (typeof handleSwipePathCreateFailed === 'function') {
+          handleSwipePathCreateFailed(msg);
+        }
+      }
+      // Resposta da cascata de exclusão de área (cleanup-swipe-path-for-area,
+      // code.js) — a área excluída era a "dona" da trilha (no máximo 1 por
+      // área, então não há lista de afetados como na v2 anterior).
+      if (msg.type === "swipe-path-cleaned-up") {
+        if (typeof handleSwipePathCleanedUp === 'function') {
+          handleSwipePathCleanedUp(msg);
+        }
+      }
+
+      // ── Ficha de Handoff (handoff-ficha.js) ──────────────────────────
+      // Resposta de insert-ficha-section (code.js) — mesmo padrão de
+      // dispatch acima.
+      if (msg.type === "ficha-section-inserted") {
+        if (typeof _fichaHandleSectionInserted === 'function') {
+          _fichaHandleSectionInserted(msg);
+        }
+      }
+      if (msg.type === "ficha-section-insert-failed") {
+        if (typeof _fichaHandleSectionInsertFailed === 'function') {
+          _fichaHandleSectionInsertFailed(msg);
+        }
+      }
+      // Resposta de highlight-ficha-node quando o frame não é mais
+      // encontrado no canvas (ex.: apagado manualmente) — sem isto, "Ver
+      // ficha no canvas" falha em silêncio (achado real de QA, 2026-09-04).
+      if (msg.type === "ficha-node-not-found") {
+        if (typeof _fichaHandleNodeNotFound === 'function') {
+          _fichaHandleNodeNotFound(msg);
+        }
       }
 
       // O popover de categoria vira o modal #a11y-category-picker-modal

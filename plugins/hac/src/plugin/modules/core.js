@@ -50,6 +50,21 @@ let hacData = {
   a11yAreas: [],
   a11ySpecs: [],
   tabOrderItems: [],
+  // Trilha de Swipe — 3ª reformulação (2026-09-04, substitui o antigo
+  // a11ySwipeFlows — pipeline de conexão entre EXATAMENTE 2 áreas por
+  // dropdown, removido por completo). Agora é uma trilha direcional de N
+  // pontos (mín. 2), capturados por clique sequencial no canvas ou seleção
+  // múltipla: { id, points: [{nodeId, nodeName}, ...], areaId, createdAt }.
+  // `id` é o node.id do grupo Figma da linha desenhada; `areaId` é a Área
+  // "dona" desta trilha (pontos individuais podem apontar pra fora dela,
+  // mesmo espírito de a11yAreaId em tabOrderItems). No máximo 1 trilha por
+  // área. Aditivo, sem bump de _schemaVersion, mesmo precedente de
+  // tabOrderItems/projectOrigin/activeSectionName abaixo — arquivos salvos
+  // antes desta versão simplesmente não têm o campo (migração automática
+  // por ausência, ver messages.js). NÃO tem variável global espelhada
+  // própria — todo ponto de leitura/escrita acessa hacData.a11ySwipePaths
+  // diretamente (array pequeno, sem ganho real em desnormalizar).
+  a11ySwipePaths: [],
   currentUser: null,
   // Origem (web/mobile) do PROJETO/ARQUIVO inteiro — não por-área. Decisão
   // de produto de 2026-09-02: reverte a pergunta bloqueante repetida (que
@@ -63,7 +78,18 @@ let hacData = {
   // automática por ausência, sem precisar tocar em _schemaVersion).
   // Editável a qualquer momento na modal "Sobre o hac" (ver
   // setProjectOrigin/openA11yProjectOriginPrompt em accessibility.js).
-  projectOrigin: null
+  projectOrigin: null,
+  // Nome da Section de specs de acessibilidade ATIVA neste arquivo — mesmo
+  // padrão de campo simples de configuração de projeto que projectOrigin.
+  // null = ainda não decidido explicitamente, backend resolve pro nome fixo
+  // original (A11Y_SECTION_NAME, code.js) — migração automática por
+  // ausência, arquivos salvos antes desta versão continuam funcionando sem
+  // nenhuma mudança de comportamento. Só passa a ter valor quando o
+  // designer, ao Marcar Área com documentação prévia já detectada no
+  // arquivo, escolhe explicitamente "Iniciar nova Section" em vez de
+  // continuar na Section atual (ver getA11yActiveSectionName/
+  // setA11yActiveSectionName e openA11yAreaModal em accessibility.js).
+  activeSectionName: null
 };
 
 // Expose functions to window IMMEDIATELY
@@ -98,6 +124,8 @@ function saveToStorage() {
   hacData.a11yAreas = a11yAreas;
   hacData.a11ySpecs = a11ySpecs;
   hacData.tabOrderItems = tabOrderItems;
+  // a11ySwipePaths já vive só em hacData (sem global espelhada) — nada a
+  // sincronizar aqui, mutações acontecem direto em hacData.a11ySwipePaths.
   parent.postMessage({ pluginMessage: { type: 'save-storage', data: hacData } }, '*');
 }
 
@@ -136,8 +164,18 @@ document.addEventListener('DOMContentLoaded', () => {
 let isCollapsed = false;
 const FULL_W = 480, FULL_H = 750;
 const MINI_H = 44;
+// Altura da barra de captura minimizada (Ordem de Tabulação/Trilha de
+// Swipe) — maior que MINI_H porque precisa caber contagem + 2 botões lado
+// a lado, não só o header padrão encolhido.
+const CAPTURE_MINI_H = 52;
 
 function toggleCollapse() {
+  // Captura em andamento (barra mini ativa) tem prioridade de UI — nunca
+  // deveria ser possível chamar isto nesse estado (btn-collapse fica
+  // fisicamente inacessível junto com #header-home, ver
+  // _a11yCaptureMiniBarEnter abaixo), mas o guard-clause blinda contra
+  // chamada indireta futura (atalho de teclado, etc.) sem custo nenhum.
+  if (window._a11yCaptureMiniBarActive) return;
   isCollapsed = !isCollapsed;
   const mainContent = document.querySelector('body > div.flex-1');
   const collapseBtn = document.getElementById('btn-collapse');
@@ -159,6 +197,94 @@ function toggleCollapse() {
 function ensureExpanded() {
   if (isCollapsed) toggleCollapse();
 }
+
+// ── Captura minimizada (Ordem de Tabulação / Trilha de Swipe) ──────────
+// Estado TEMPORÁRIO e automático — não confundir com isCollapsed (toggle
+// manual persistente do usuário via btn-collapse). Entra ao clicar
+// "Iniciar Ordem de Tabulação"/"Iniciar trilha de swipe"
+// (_a11yCaptureMiniBarEnter, chamado por startTabOrderManualMode/
+// startSwipePathManualMode em accessibility.js), sai ao "Concluir
+// seleção"/"Cancelar" ou por guarda de navegação (ver navigate() abaixo).
+// Motivo (2026-09-04-w, pedido do usuário): antes, o modal de revisão
+// abria IMEDIATAMENTE ao iniciar e cada clique no canvas já aparecia em
+// tempo real na lista pendente — dava a sensação de "captura instantânea"
+// mesmo sem nenhum selo/linha real sendo desenhado ainda (isso já era
+// resolvido desde 2026-09-04-e). A mudança é só de EXIBIÇÃO: o designer
+// agora clica em toda a trilha em silêncio, com a janela minimizada pra
+// dar mais espaço de canvas, e só vê a lista completa ao confirmar.
+window._a11yCaptureMiniBarActive = false;
+window._a11yCaptureMiniBarFeature = null; // 'tabOrder' | 'swipePath' | null
+
+function _a11yCaptureMiniBarEnter(feature) {
+  window._a11yCaptureMiniBarActive = true;
+  window._a11yCaptureMiniBarFeature = feature;
+  const headerHome = document.getElementById('header-home');
+  const miniBar = document.getElementById('a11y-capture-mini-bar');
+  const mainContent = document.querySelector('body > div.flex-1');
+  if (headerHome) headerHome.classList.add('hidden');
+  if (miniBar) { miniBar.classList.remove('hidden'); miniBar.classList.add('flex'); }
+  if (mainContent) mainContent.classList.add('hidden');
+  // Toast (showToast) é ancorado perto do rodapé da janela por padrão
+  // (bottom: 20px, ver plugin.css) — na altura mini (~52px) isso deixava o
+  // toast quase todo fora da área visível. Esta classe reancora o toast
+  // logo abaixo da barra mini enquanto ela estiver ativa (2026-09-04-y).
+  document.body.classList.add('a11y-capture-mini-active');
+  _a11yCaptureMiniBarUpdateCount(0);
+  const _scale = window.currentUiScale || 1;
+  const _h = Math.round(CAPTURE_MINI_H * _scale);
+  parent.postMessage({ pluginMessage: { type: 'resize-ui', width: FULL_W, height: _h } }, '*');
+}
+window._a11yCaptureMiniBarEnter = _a11yCaptureMiniBarEnter;
+
+function _a11yCaptureMiniBarExit() {
+  window._a11yCaptureMiniBarActive = false;
+  window._a11yCaptureMiniBarFeature = null;
+  const headerHome = document.getElementById('header-home');
+  const miniBar = document.getElementById('a11y-capture-mini-bar');
+  const mainContent = document.querySelector('body > div.flex-1');
+  if (headerHome) headerHome.classList.remove('hidden');
+  if (miniBar) { miniBar.classList.add('hidden'); miniBar.classList.remove('flex'); }
+  if (mainContent) mainContent.classList.remove('hidden');
+  document.body.classList.remove('a11y-capture-mini-active');
+  // Respeita o collapse manual: se o designer já estava com o plugin
+  // colapsado ANTES de iniciar a captura, sair da captura devolve pro
+  // estado colapsado manual, não força FULL_H (embora esse caso hoje seja
+  // inatingível na prática — ver nota em toggleCollapse).
+  const _scale = window.currentUiScale || 1;
+  const _h = Math.round((isCollapsed ? MINI_H : FULL_H) * _scale);
+  parent.postMessage({ pluginMessage: { type: 'resize-ui', width: FULL_W, height: _h } }, '*');
+}
+window._a11yCaptureMiniBarExit = _a11yCaptureMiniBarExit;
+
+// Rótulo específico por feature: Ordem de Tabulação fala de "itens"
+// (elementos focáveis), Trilha de Swipe fala de "pontos" (pontos de um
+// caminho) — usa window._a11yCaptureMiniBarFeature (já setado por
+// _a11yCaptureMiniBarEnter) pra escolher o termo certo.
+function _a11yCaptureMiniBarUpdateCount(n) {
+  const el = document.getElementById('a11y-capture-mini-bar-count');
+  if (!el) return;
+  const noun = window._a11yCaptureMiniBarFeature === 'tabOrder'
+    ? (n === 1 ? 'item marcado' : 'itens marcados')
+    : (n === 1 ? 'ponto marcado' : 'pontos marcados');
+  el.textContent = n + ' ' + noun;
+}
+window._a11yCaptureMiniBarUpdateCount = _a11yCaptureMiniBarUpdateCount;
+
+function _a11yCaptureMiniBarFinish() {
+  const feature = window._a11yCaptureMiniBarFeature;
+  _a11yCaptureMiniBarExit();
+  if (feature === 'tabOrder' && typeof finishTabOrderCapture === 'function') finishTabOrderCapture();
+  if (feature === 'swipePath' && typeof finishSwipePathCapture === 'function') finishSwipePathCapture();
+}
+window._a11yCaptureMiniBarFinish = _a11yCaptureMiniBarFinish;
+
+function _a11yCaptureMiniBarCancel() {
+  const feature = window._a11yCaptureMiniBarFeature;
+  _a11yCaptureMiniBarExit();
+  if (feature === 'tabOrder' && typeof cancelTabOrderReview === 'function') cancelTabOrderReview();
+  if (feature === 'swipePath' && typeof cancelSwipePathReview === 'function') cancelSwipePathReview();
+}
+window._a11yCaptureMiniBarCancel = _a11yCaptureMiniBarCancel;
 
 function toggleTheme() {
   document.documentElement.classList.toggle("dark");
@@ -348,11 +474,62 @@ function navigate(viewId) {
     btnTop.classList.remove('opacity-100', 'pointer-events-auto', 'translate-y-0');
   }
   if (window._tabOrderCaptureMode && typeof cancelTabOrderReview === 'function') {
+    // Se a barra de captura minimizada estiver ativa, restaura a janela
+    // ANTES de cancelar — sem isso, cancelTabOrderReview() só fecharia um
+    // modal que nem estava aberto, deixando a janela presa no tamanho
+    // minimizado (2026-09-04-w).
+    if (window._a11yCaptureMiniBarActive) _a11yCaptureMiniBarExit();
     cancelTabOrderReview();
+  }
+  // Trilha de Swipe (3ª reformulação, 2026-09-04) — mesmo modo em lote de
+  // Tabulação, mesma guarda: trocar de view com o modo de captura ainda
+  // ativo precisa cancelar a revisão pendente, senão o backend segue
+  // postando seleções para uma escuta que a UI já abandonou.
+  if (window._swipePathCaptureMode && typeof cancelSwipePathReview === 'function') {
+    if (window._a11yCaptureMiniBarActive) _a11yCaptureMiniBarExit();
+    cancelSwipePathReview();
   }
   if (viewId === 'view-specifications') {
     if (typeof renderA11yGroupedList === 'function') renderA11yGroupedList();
     if (typeof maybeShowOnboardingBanner === 'function') maybeShowOnboardingBanner('especificar');
+    if (typeof _applyA11yHeaderOriginTitle === 'function') _applyA11yHeaderOriginTitle();
+  }
+  if (viewId === 'view-home' && typeof _renderA11yHomeOriginPicker === 'function') {
+    _renderA11yHomeOriginPicker();
+  }
+  // Primeira sub-navegação real do hac (ver comentário no HTML de
+  // view-area-workspace, specifications.html) — o contexto (qual área, qual
+  // tab) viaja fora do DOM em window._a11yWorkspaceAreaId/
+  // _a11yWorkspaceActiveTab porque navigate() não aceita parâmetro extra.
+  // Só renderiza se openA11yAreaWorkspace já tiver setado o areaId antes de
+  // chamar navigate('view-area-workspace') — em uso normal isso sempre é
+  // verdade; a checagem é só defesa contra chamada direta indevida.
+  if (viewId === 'view-area-workspace') {
+    if (!window._a11yWorkspaceAreaId) {
+      console.warn('[hac] navigate("view-area-workspace") chamado sem _a11yWorkspaceAreaId definido — use openA11yAreaWorkspace(areaId) em vez de navigate() direto.');
+    } else {
+      if (typeof _renderA11yWorkspaceHeader === 'function') _renderA11yWorkspaceHeader();
+      // Aplica o estilo visual "ativa" na tab correta já na primeira
+      // renderização — switchA11yWorkspaceTab faz isso normalmente, mas ao
+      // ABRIR a workspace pela primeira vez o dispatcher é chamado direto
+      // (a tab-key já foi definida por openA11yAreaWorkspace), então sem
+      // isto todas as tabs nasciam com o estilo "inativa" até o designer
+      // clicar em alguma manualmente (achado ao revisar a nova barra de
+      // tabs, 2026-09-04-d — bug preexistente à mudança visual em si).
+      if (typeof switchA11yWorkspaceTab === 'function') {
+        const activeTab = window._a11yWorkspaceActiveTab || 'tabulacao';
+        document.querySelectorAll('.a11y-workspace-tab-btn').forEach(btn => {
+          const isActive = btn.getAttribute('data-a11y-workspace-tab') === activeTab;
+          btn.classList.toggle('text-cyan-700', isActive);
+          btn.classList.toggle('dark:text-cyan-400', isActive);
+          btn.classList.toggle('border-cyan-600', isActive);
+          btn.classList.toggle('text-slate-400', !isActive);
+          btn.classList.toggle('dark:text-dark-muted', !isActive);
+          btn.classList.toggle('border-transparent', !isActive);
+        });
+      }
+      if (typeof _renderA11yWorkspaceTab === 'function') _renderA11yWorkspaceTab();
+    }
   }
 }
 
