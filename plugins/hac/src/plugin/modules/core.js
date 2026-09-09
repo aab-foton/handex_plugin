@@ -491,7 +491,7 @@ function navigate(viewId) {
   }
   if (viewId === 'view-specifications') {
     if (typeof renderA11yGroupedList === 'function') renderA11yGroupedList();
-    if (typeof maybeShowOnboardingBanner === 'function') maybeShowOnboardingBanner('especificar');
+    if (typeof maybeShowOnboardingBanner === 'function') maybeShowOnboardingBanner();
     if (typeof _applyA11yHeaderOriginTitle === 'function') _applyA11yHeaderOriginTitle();
   }
   if (viewId === 'view-home' && typeof _renderA11yHomeOriginPicker === 'function') {

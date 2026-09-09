@@ -31,7 +31,7 @@
             <i data-lucide="ellipsis-vertical" class="w-5 h-5" aria-hidden="true"></i>
           </button>
           <div id="a11y-more-actions-menu" class="hidden absolute right-0 top-full mt-1 w-56 py-1.5 bg-white dark:bg-dark-surface rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line z-50">
-            <button type="button" onclick="closeA11yMoreActionsMenu(); openOnboarding('especificar')"
+            <button type="button" onclick="closeA11yMoreActionsMenu(); openOnboardingForCurrentOrigin()"
               class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] font-semibold text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-dark-line transition-colors text-left">
               <i data-lucide="graduation-cap" class="w-4 h-4 text-slate-500 dark:text-dark-muted shrink-0" aria-hidden="true"></i>
               Rever passo a passo
@@ -55,16 +55,34 @@
   <div id="specs-scroll-container" class="flex-1 overflow-y-auto pt-0 px-4 pb-4" onscroll="handleScroll(this)">
     <div class="space-y-4 w-full mx-auto">
 
-      <!-- Onboarding banner (primeira visita) -->
-      <div id="onboarding-banner-especificar" class="hidden flex items-start gap-2.5 bg-[#0891B2]/5 dark:bg-cyan-900/10 border border-[#0891B2]/20 dark:border-cyan-800/30 rounded-2xl p-3.5">
+      <!-- Onboarding banner (primeira visita) — 1 elemento por jornada
+           (web/mobile); maybeShowOnboardingBanner() (onboarding.js) só
+           deixa visível o da origem ATUAL do projeto, escondendo o outro
+           sempre. Os dois convergem pro mesmo conteúdo que o ícone de
+           chapéu abre (openOnboardingForCurrentOrigin), nunca um resumo
+           à parte (2026-09-09). -->
+      <div id="onboarding-banner-web" class="hidden flex items-start gap-2.5 bg-[#0891B2]/5 dark:bg-cyan-900/10 border border-[#0891B2]/20 dark:border-cyan-800/30 rounded-2xl p-3.5">
         <i data-lucide="sparkles" class="w-4 h-4 text-[#0891B2] dark:text-cyan-300 shrink-0 mt-0.5"></i>
         <div class="flex-1 min-w-0">
           <p class="text-[11px] font-bold text-[#0891B2] dark:text-cyan-300">Primeira vez aqui?</p>
           <p class="text-[10px] text-[#0891B2]/80 dark:text-cyan-300/80 leading-relaxed mt-0.5">Veja o passo a passo: marcar área, especificar e documentar a ordem de tabulação.</p>
         </div>
         <div class="flex items-center gap-1 shrink-0">
-          <button type="button" onclick="openOnboarding('especificar', { markSeenOnOpen: true })" class="px-2.5 py-1 bg-[#0891B2] hover:bg-cyan-700 text-white text-[10px] font-bold rounded-lg transition-colors">Ver agora</button>
-          <button type="button" onclick="dismissOnboardingBanner('especificar')" title="Dispensar" aria-label="Dispensar" class="p-1 text-[#0891B2]/60 hover:text-[#0891B2] dark:text-cyan-300/60 dark:hover:text-cyan-300 transition-colors">
+          <button type="button" onclick="openOnboardingForCurrentOrigin({ markSeenOnOpen: true })" class="px-2.5 py-1 bg-[#0891B2] hover:bg-cyan-700 text-white text-[10px] font-bold rounded-lg transition-colors">Ver agora</button>
+          <button type="button" onclick="dismissOnboardingBanner()" title="Dispensar" aria-label="Dispensar" class="p-1 text-[#0891B2]/60 hover:text-[#0891B2] dark:text-cyan-300/60 dark:hover:text-cyan-300 transition-colors">
+            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+      </div>
+      <div id="onboarding-banner-mobile" class="hidden flex items-start gap-2.5 bg-[#0891B2]/5 dark:bg-cyan-900/10 border border-[#0891B2]/20 dark:border-cyan-800/30 rounded-2xl p-3.5">
+        <i data-lucide="sparkles" class="w-4 h-4 text-[#0891B2] dark:text-cyan-300 shrink-0 mt-0.5"></i>
+        <div class="flex-1 min-w-0">
+          <p class="text-[11px] font-bold text-[#0891B2] dark:text-cyan-300">Primeira vez aqui?</p>
+          <p class="text-[10px] text-[#0891B2]/80 dark:text-cyan-300/80 leading-relaxed mt-0.5">Veja o passo a passo: marcar área, especificar e documentar a ordem de tabulação e a trilha de swipe.</p>
+        </div>
+        <div class="flex items-center gap-1 shrink-0">
+          <button type="button" onclick="openOnboardingForCurrentOrigin({ markSeenOnOpen: true })" class="px-2.5 py-1 bg-[#0891B2] hover:bg-cyan-700 text-white text-[10px] font-bold rounded-lg transition-colors">Ver agora</button>
+          <button type="button" onclick="dismissOnboardingBanner()" title="Dispensar" aria-label="Dispensar" class="p-1 text-[#0891B2]/60 hover:text-[#0891B2] dark:text-cyan-300/60 dark:hover:text-cyan-300 transition-colors">
             <i data-lucide="x" class="w-3.5 h-3.5"></i>
           </button>
         </div>

@@ -4029,12 +4029,19 @@ window._refreshUiForProjectOrigin = _refreshUiForProjectOrigin;
 // (Camada 2 — ver ONBOARDING_TOOLS em onboarding.js) uma única vez por
 // lib/arquivo, complementando o onboarding geral de fluxo (Camada 1, já
 // existente).
+// Bug real corrigido (2026-09-09): antes, escolher a lib aqui abria um
+// modal de onboarding automaticamente ("Camada 2", 3 passos específicos
+// da lib) — conteúdo DIFERENTE do que o banner "Primeira vez aqui?"/o
+// ícone de chapéu mostravam depois (7 passos genéricos), fazendo o
+// designer ver dois onboardings distintos pro mesmo momento. Não abre
+// mais modal nenhum aqui — só navega; maybeShowOnboardingBanner (chamada
+// dentro de navigate(), core.js) já mostra o banner da jornada certa
+// (web/mobile, resolvida pela origem que setA11yProjectLib acabou de
+// gravar) se ainda não tiver sido vista. Banner e chapéu agora sempre
+// abrem a MESMA fonte (ver openOnboardingForCurrentOrigin, onboarding.js).
 function chooseA11yHomeOrigin(lib) {
   setA11yProjectLib(lib, { silent: true });
   navigate('view-specifications');
-  if (typeof openOnboarding === 'function') {
-    openOnboarding('lib-' + lib, { markSeenOnOpen: true });
-  }
 }
 window.chooseA11yHomeOrigin = chooseA11yHomeOrigin;
 
@@ -5242,12 +5249,24 @@ function _renderA11yWizardPaginator(state) {
 // Centraliza/dá zoom no elemento do item atual do wizard no canvas — reusa o
 // mesmo nodeId que openA11yModal já grava em modal.dataset.pendingTargetNodeId
 // (ver _advanceA11yBatchWizard acima) em vez de duplicar estado próprio do
-// wizard. Mesma função focusNode(id) (core.js) usada na listagem de specs.
+// wizard.
+// Bug real corrigido (2026-09-09): usava focusNode(id) (core.js) — o mesmo
+// highlight-node genérico da listagem de specs — que sempre foca o nodeId
+// ORIGINAL. Isso fazia sentido antes de create-unified-spec passar a
+// clonar réplica (2026-09-08): desde essa mudança, o card da spec é
+// desenhado sobre a CÓPIA de trabalho da área, não mais sobre o design
+// original, então focar o original mostrava o frame principal, sem
+// nenhum card visível ali (o designer via a tela errada). Usa o handler
+// dedicado highlight-spec-copy-node (code.js), que traduz o nodeId
+// original pro node equivalente dentro da cópia ativa da área via
+// _activeSpecCloneMaps — mesmo padrão já usado por
+// _highlightTabOrderListItem/_highlightSwipePathListItem.
 function focusA11yWizardCurrentNode() {
   const modal = document.getElementById('a11y-spec-modal');
   const nodeId = modal ? modal.dataset.pendingTargetNodeId : '';
   if (!nodeId) return;
-  focusNode(nodeId);
+  const areaId = modal ? modal.dataset.areaId : '';
+  parent.postMessage({ pluginMessage: { type: 'highlight-spec-copy-node', id: nodeId, areaId: areaId || null, shouldScroll: true } }, '*');
 }
 window.focusA11yWizardCurrentNode = focusA11yWizardCurrentNode;
 

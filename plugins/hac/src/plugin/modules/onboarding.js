@@ -5,10 +5,7 @@
 // src/plugin/modules/onboarding.js) para o hac — 2026-08-24. No Handex,
 // o onboarding é por FERRAMENTA (6 entradas, uma por view) porque são 6
 // telas independentes. O hac é mono-funcional (só a11y, 2 views: home e
-// specifications) — não faz sentido fatiar em várias entradas, então
-// ONBOARDING_TOOLS tem uma única chave ('especificar') cobrindo o fluxo
-// inteiro de ponta a ponta: Marcar Área → Especificar → Detecção
-// Automática → Ordem de Tabulação.
+// specifications) — não faz sentido fatiar em várias entradas.
 //
 // Mesma arquitetura do Handex, preservada de propósito (não redesenhar):
 //   - banner "Primeira vez aqui?" por view, dispensável, não-bloqueante
@@ -18,19 +15,38 @@
 //     ('hac-onboarding-seen'), por instalação do plugin — não por sessão
 //     de trabalho, e fora de hacData (sobrevive a "Limpar Cache")
 //
-// Depende de: openModal/closeModal (core.js), _refreshIcons, showToast
+// Depende de: openModal/closeModal (core.js), _refreshIcons, showToast,
+// getA11yProjectOrigin (accessibility.js)
 // ============================================================
 
-// Estado "visto" por ferramenta, populado a partir de init-plugin
+// Estado "visto" por jornada, populado a partir de init-plugin
 // (onboardingSeen) em messages.js. Nunca lido diretamente por outros
 // módulos — sempre via _onboardingSeen()/markOnboardingSeen().
 let onboardingSeen = {};
 
+// UMA jornada por origem — 'web' e 'mobile' (2026-09-09, decisão de
+// produto). Antes existiam 4 entradas: 'especificar' (7 passos gerais,
+// sem diferenciação de origem, aberta pelo banner "Primeira vez aqui?"
+// e pelo ícone de chapéu) + 'lib-web-angular-react'/'lib-super-dsc-web'/
+// 'lib-super-app' (3 passos cada, específicos de LIB, disparadas
+// automaticamente e SEM ícone ao escolher a lib na Home). O designer via
+// dois onboardings diferentes pro mesmo momento de "sou novo aqui": o
+// automático (curto, específico) e o do banner/chapéu (mais longo,
+// genérico) — sentindo que existiam "dois onboardings" quando clicava no
+// chapéu depois. Pedido explícito do usuário: "Eu tenho uma jornada de
+// onboarding pra web e outra pra mobile [...] esse onboarding precisa
+// ter o mesmo conteúdo interno [...] tanto no banner, como clicando no
+// ícone." Fundido numa jornada só por origem — banner, chapéu e a
+// escolha da lib na Home (que não abre mais modal sozinha, só o banner)
+// sempre convergem pra ESTA mesma fonte, nunca mais conteúdos
+// divergentes. As 2 libs web (Web Angular&React/Super DSC Web) tinham
+// texto quase idêntico e caem na mesma jornada 'web' (o hac já reconhece
+// as duas simultaneamente, sem precisar de conteúdo por lib individual).
 const ONBOARDING_TOOLS = {
-  especificar: {
+  web: {
     view: 'view-specifications',
-    title: 'Documentação de Acessibilidade',
-    icon: 'accessibility',
+    title: 'Documentação de Acessibilidade — Web',
+    icon: 'monitor',
     color: '#0891B2',
     format: 'stepper',
     // Onboarding é só o essencial pra começar a usar — não tenta cobrir
@@ -39,13 +55,14 @@ const ONBOARDING_TOOLS = {
     // aprofundar vai direto na lib real "Design Acessível", fonte de
     // verdade de tudo que o hac referencia (mesmo link usado em
     // _renderA11yModalDscComponentName pra abrir um componente específico).
-    purpose: 'O hac documenta, direto no canvas do Figma, como cada elemento da tela deve ser interpretado por um leitor de tela e em que ordem o teclado deve navegar por ela — para o time de desenvolvimento implementar acessibilidade sem depender de especificação à parte. Os passos a seguir cobrem só o essencial para começar; para as regras completas de cada categoria, consulte a lib <a href="https://www.figma.com/design/3zdtN13YvPlCGPdXeL0Y2i" target="_blank" rel="noopener noreferrer" class="text-[#0891B2] dark:text-cyan-400 underline decoration-dotted hover:decoration-solid font-semibold">Design Acessível</a>.',
+    purpose: 'O hac documenta, direto no canvas do Figma, como cada elemento da tela deve ser interpretado por um leitor de tela e em que ordem o teclado deve navegar por ela — para o time de desenvolvimento implementar acessibilidade sem depender de especificação à parte. O hac reconhece componentes das libs <strong>DSC Web Angular & React</strong> (legado) e <strong>Super DSC Web</strong> na mesma tela, já que as duas coexistem enquanto a migração de design system não termina. Os passos a seguir cobrem só o essencial para começar; para as regras completas de cada categoria, consulte a lib <a href="https://www.figma.com/design/3zdtN13YvPlCGPdXeL0Y2i" target="_blank" rel="noopener noreferrer" class="text-[#0891B2] dark:text-cyan-400 underline decoration-dotted hover:decoration-solid font-semibold">Design Acessível</a>.',
     steps: [
       { text: 'Clique em <strong>Marcar Área</strong> no topo da tela e selecione a seção que você quer documentar — vira um selo azul numerado no canvas. Pense na área como uma "pasta": ela não carrega regra de acessibilidade nenhuma sozinha, só organiza — as especificações criadas dentro dela aparecem juntas na listagem lateral do plugin, mesmo ficando soltas ao lado no canvas.' },
       { text: 'Dentro do espaço de trabalho da área, na aba Leitor de Tela, use <strong>Mapeamento Automático</strong> para o hac sugerir a categoria de cada componente do DSC ali dentro, comparando com o catálogo da lib "Design Acessível" — ou o botão <strong>Nova spec</strong> para começar do zero, manualmente, quando o elemento não bate com nenhum componente reconhecido (por exemplo, uma composição customizada que não existe no DSC).' },
       { text: 'No resumo do Mapeamento Automático, revise os grupos sugeridos e clique em <strong>Iniciar Revisão</strong> — cada item detectado abre para você confirmar, ajustar a categoria ou descartar antes de virar especificação, um de cada vez. O hac sugere a categoria pelo tipo de componente, mas quem decide é você: revise principalmente ícones e imagens, onde decorativo vs. informativo depende do contexto de uso, não só do componente em si.' },
-      { text: 'Clique no card da área para abrir o espaço de trabalho dela, organizado em abas: <strong>Tabulação</strong> (ordem de navegação por teclado), <strong>Swipe</strong> (ordem de navegação por gesto, leitores de tela mobile), <strong>Leitor de Tela</strong> (as especificações de conteúdo/semântica) e <strong>Handoff</strong> (o painel de status que consolida tudo o que já foi documentado nessa área).' },
-      { text: 'Cada especificação cai numa das <strong>5 categorias</strong> e é criada/editada na aba <strong>Leitor de Tela</strong>: Elementos e Imagens, Estrutura da Página, Nível de Título, Elemento Decorativo ou Informações Adicionais. Toda categoria usa os mesmos dois campos de fundo — <strong>Descrição</strong> (como o elemento deve ou não ser lido em voz alta) e <strong>Notas de Código</strong> (o apontamento técnico que o dev usa para implementar, quando a variante tiver um). Veja o guia <strong>"?"</strong> no cabeçalho a qualquer momento para saber quando usar cada categoria e ver exemplos de código reais.' },
+      { text: 'Clique no card da área para abrir o espaço de trabalho dela, organizado em abas: <strong>Tabulação</strong> (ordem de navegação por teclado), <strong>Leitor de Tela</strong> (as especificações de conteúdo/semântica) e <strong>Handoff</strong> (o painel de status que consolida tudo o que já foi documentado nessa área). Web não tem a aba Swipe — esse gesto é exclusivo de leitores de tela mobile.' },
+      { text: 'Cada especificação cai numa das <strong>5 categorias</strong>, todas com componente real nesta origem, e é criada/editada na aba <strong>Leitor de Tela</strong>: Elementos e Imagens, Estrutura da Página, Nível de Título, Elemento Decorativo ou Informações Adicionais. Toda categoria usa os mesmos dois campos de fundo — <strong>Descrição</strong> (como o elemento deve ou não ser lido em voz alta) e <strong>Notas de Código</strong> (o apontamento técnico que o dev usa para implementar, quando a variante tiver um). Veja o guia <strong>"?"</strong> no cabeçalho a qualquer momento para saber quando usar cada categoria e ver exemplos de código reais.' },
+      { text: '<strong>Nível de Título</strong> segue a hierarquia H1-H6 — o H1 é o título único da página, os demais estruturam o conteúdo em ordem lógica. <strong>Elementos interativos e imagens</strong> cobre botões, links e imagens estáticas — ícones sozinhos precisam de texto alternativo descrevendo a função, não a aparência.' },
       { text: 'Componentes que o scan encontrou mas ainda não viraram especificação ficam no accordion <strong>"Não Documentados"</strong>, dentro da aba Leitor de Tela — clique em <strong>Criar spec</strong> para documentar qualquer um deles. É o jeito de garantir que nenhum componente da área fique de fora do handoff por esquecimento.' },
       { text: 'Para a <strong>Ordem de Tabulação</strong>, abra essa aba dentro do espaço de trabalho da área: clique nos elementos em sequência no canvas ou use <strong>Gerar Automaticamente</strong>. O hac cria uma cópia da área pra marcar, sem tocar no design original. Essa ordem é o que garante que quem navega só de teclado (sem mouse) passe pelos elementos numa sequência que faz sentido — normalmente a mesma ordem visual, de cima para baixo e da esquerda para a direita.' }
     ]
@@ -60,52 +77,23 @@ const ONBOARDING_TOOLS = {
     // explícito do usuário. O passo 5 acima já aponta pro guia "?" pra
     // esse aprofundamento, sem duplicar o conteúdo aqui.
   },
-
-  // Camada 2 do onboarding (2026-09-04): uma entrada por LIB específica
-  // (não mais por família web/mobile), disparada uma única vez logo após
-  // a escolha na Home (chooseA11yHomeOrigin, accessibility.js) —
-  // complementa a Camada 1 acima (fluxo geral) com as particularidades de
-  // categorias de CADA lib. Conteúdo extraído do que já existia espalhado
-  // no modal "Entendendo as categorias" (modals.html,
-  // #a11y-categories-help-modal) — não é conteúdo novo, só reorganizado
-  // por lib em vez de por família.
-  'lib-web-angular-react': {
+  mobile: {
     view: 'view-specifications',
-    title: 'DSC Web Angular & React',
-    icon: 'monitor',
-    color: '#0070AF',
-    format: 'stepper',
-    purpose: 'Você escolheu a lib <strong>DSC Web Angular & React</strong> (legado) — o hac reconhece componentes dela e também da <strong>Super DSC Web</strong> na mesma tela, já que as duas coexistem enquanto a migração de design system não termina.',
-    steps: [
-      { text: 'As <strong>5 categorias</strong> de spec têm componente real nesta lib: Elementos e Imagens, Estrutura da Página, Nível de Título, Elemento Decorativo e Informações Adicionais.' },
-      { text: '<strong>Nível de Título</strong> segue a hierarquia H1-H6 — o H1 é o título único da página, os demais estruturam o conteúdo em ordem lógica.' },
-      { text: '<strong>Elementos interativos e imagens</strong> cobre botões, links e imagens estáticas — ícones sozinhos precisam de texto alternativo descrevendo a função, não a aparência.' }
-    ]
-  },
-  'lib-super-dsc-web': {
-    view: 'view-specifications',
-    title: 'Super DSC Web',
-    icon: 'monitor',
-    color: '#0070AF',
-    format: 'stepper',
-    purpose: 'Você escolheu a <strong>Super DSC Web</strong> — sucessora da lib legada <strong>DSC Web Angular & React</strong>. O hac reconhece componentes das duas na mesma tela, já que a migração de design system ainda está em andamento.',
-    steps: [
-      { text: 'As <strong>5 categorias</strong> de spec têm componente real nesta lib: Elementos e Imagens, Estrutura da Página, Nível de Título, Elemento Decorativo e Informações Adicionais.' },
-      { text: '<strong>Nível de Título</strong> segue a hierarquia H1-H6 — o H1 é o título único da página, os demais estruturam o conteúdo em ordem lógica.' },
-      { text: '<strong>Elementos interativos e imagens</strong> cobre botões, links e imagens estáticas — ícones sozinhos precisam de texto alternativo descrevendo a função, não a aparência.' }
-    ]
-  },
-  'lib-super-app': {
-    view: 'view-specifications',
-    title: 'Super DSC Mobile',
+    title: 'Documentação de Acessibilidade — Mobile',
     icon: 'smartphone',
-    color: '#0070AF',
+    color: '#0891B2',
     format: 'stepper',
-    purpose: 'Você escolheu a <strong>Super DSC Mobile</strong> (DSC | Super App, React Native) — algumas categorias e regras são diferentes das libs web, por isso vale revisar antes de começar.',
+    purpose: 'O hac documenta, direto no canvas do Figma, como cada elemento da tela deve ser interpretado por um leitor de tela e em que ordem o teclado/gesto deve navegar por ela — para o time de desenvolvimento implementar acessibilidade sem depender de especificação à parte. O hac reconhece componentes da lib <strong>Super DSC Mobile</strong> (DSC | Super App, React Native) — algumas categorias e regras são diferentes das libs web, cobertas nos passos abaixo. Os passos a seguir cobrem só o essencial para começar; para as regras completas de cada categoria, consulte a lib <a href="https://www.figma.com/design/3zdtN13YvPlCGPdXeL0Y2i" target="_blank" rel="noopener noreferrer" class="text-[#0891B2] dark:text-cyan-400 underline decoration-dotted hover:decoration-solid font-semibold">Design Acessível</a>.',
     steps: [
-      { text: 'Só <strong>3 categorias</strong> têm componente real nesta lib: Elementos e Imagens, Nível de Título e Elemento Decorativo. Estrutura da Página e Informações Adicionais não existem no vocabulário desta lib e ficam ocultas na escolha.' },
-      { text: '<strong>Nível de Título</strong> não tem hierarquia H1-H6 como no desktop — todo título usa o mesmo marcador único "H".' },
-      { text: '<strong>Elementos e Imagens</strong> tem 3 sub-variantes aqui: <strong>Componente</strong> (com campo Link do Componente, apontando pro nome/URL do componente no DSC | Super App), <strong>Link</strong> e <strong>Texto Alternativo</strong> (alt-text de mídia).' }
+      { text: 'Clique em <strong>Marcar Área</strong> no topo da tela e selecione a seção que você quer documentar — vira um selo azul numerado no canvas. Pense na área como uma "pasta": ela não carrega regra de acessibilidade nenhuma sozinha, só organiza — as especificações criadas dentro dela aparecem juntas na listagem lateral do plugin, mesmo ficando soltas ao lado no canvas.' },
+      { text: 'Dentro do espaço de trabalho da área, na aba Leitor de Tela, use <strong>Mapeamento Automático</strong> para o hac sugerir a categoria de cada componente do DSC ali dentro, comparando com o catálogo da lib "Design Acessível" — ou o botão <strong>Nova spec</strong> para começar do zero, manualmente, quando o elemento não bate com nenhum componente reconhecido (por exemplo, uma composição customizada que não existe no DSC).' },
+      { text: 'No resumo do Mapeamento Automático, revise os grupos sugeridos e clique em <strong>Iniciar Revisão</strong> — cada item detectado abre para você confirmar, ajustar a categoria ou descartar antes de virar especificação, um de cada vez. O hac sugere a categoria pelo tipo de componente, mas quem decide é você: revise principalmente ícones e imagens, onde decorativo vs. informativo depende do contexto de uso, não só do componente em si.' },
+      { text: 'Clique no card da área para abrir o espaço de trabalho dela, organizado em abas: <strong>Tabulação</strong> (ordem de navegação por teclado), <strong>Swipe</strong> (ordem de navegação por gesto, exclusiva do leitor de tela mobile), <strong>Leitor de Tela</strong> (as especificações de conteúdo/semântica) e <strong>Handoff</strong> (o painel de status que consolida tudo o que já foi documentado nessa área).' },
+      { text: 'Só <strong>3 categorias</strong> têm componente real nesta lib: Elementos e Imagens, Nível de Título e Elemento Decorativo. Estrutura da Página e Informações Adicionais não existem no vocabulário desta lib e ficam ocultas na escolha. Toda categoria usa os mesmos dois campos de fundo — <strong>Descrição</strong> (como o elemento deve ou não ser lido em voz alta) e <strong>Notas de Código</strong> (o apontamento técnico que o dev usa para implementar). Veja o guia <strong>"?"</strong> no cabeçalho a qualquer momento para saber quando usar cada categoria e ver exemplos de código reais.' },
+      { text: '<strong>Nível de Título</strong> não tem hierarquia H1-H6 como no desktop — todo título usa o mesmo marcador único "H". <strong>Elementos e Imagens</strong> tem 3 sub-variantes aqui: <strong>Componente</strong> (com campo Link do Componente, apontando pro nome/URL do componente no DSC | Super App), <strong>Link</strong> e <strong>Texto Alternativo</strong> (alt-text de mídia).' },
+      { text: 'Componentes que o scan encontrou mas ainda não viraram especificação ficam no accordion <strong>"Não Documentados"</strong>, dentro da aba Leitor de Tela — clique em <strong>Criar spec</strong> para documentar qualquer um deles. É o jeito de garantir que nenhum componente da área fique de fora do handoff por esquecimento.' },
+      { text: 'Para a <strong>Ordem de Tabulação</strong>, abra essa aba dentro do espaço de trabalho da área: clique nos elementos em sequência no canvas ou use <strong>Gerar Automaticamente</strong>. O hac cria uma cópia da área pra marcar, sem tocar no design original. Essa ordem é o que garante que quem navega só de teclado passe pelos elementos numa sequência que faz sentido.' },
+      { text: 'Para a <strong>Trilha de Swipe</strong>, use o botão <strong>"ou usar a Ordem de Tabulação já mapeada"</strong> pra reaproveitar a sequência que você já revisou na Ordem de Tabulação, ou marque manualmente segurando shift e clicando nos elementos no canvas. É o gesto que quem usa o leitor de tela sem teclado físico percorre pra navegar pela tela.' }
     ]
   }
 };
@@ -127,23 +115,50 @@ function setOnboardingSeenState(state) {
 }
 window.setOnboardingSeenState = setOnboardingSeenState;
 
-// Mostra o banner "Primeira vez aqui?" na view atual, se a ferramenta tiver
-// onboarding cadastrado e ainda não tiver sido vista. Chamado ao navegar
-// para view-specifications (ver core.js, dentro de navigate()).
-function maybeShowOnboardingBanner(toolKey) {
-  const tool = ONBOARDING_TOOLS[toolKey];
-  const banner = document.getElementById(`onboarding-banner-${toolKey}`);
-  if (!tool || !banner) return;
-  banner.classList.toggle('hidden', _onboardingSeen(toolKey));
+// Qual jornada mostrar pra origem ATUAL do projeto (2026-09-09) — fonte
+// única usada por banner, chapéu e pela escolha de lib na Home
+// (chooseA11yHomeOrigin, accessibility.js, que não abre mais modal
+// sozinha). getA11yProjectOrigin() é definida em accessibility.js.
+function _onboardingKeyForCurrentOrigin() {
+  return (typeof getA11yProjectOrigin === 'function' && getA11yProjectOrigin() === 'mobile') ? 'mobile' : 'web';
+}
+
+// Mostra o banner "Primeira vez aqui?" da jornada da origem ATUAL —
+// mantém 1 elemento no HTML por jornada (#onboarding-banner-web/-mobile,
+// mesmo padrão já usado por toolKey), escondendo explicitamente o da
+// OUTRA origem: sem isso, trocar de origem no meio da sessão podia
+// deixar os dois banners visíveis ao mesmo tempo (um já visto que nunca
+// tinha sido escondido, outro novo). Chamado ao navegar para
+// view-specifications (ver core.js, dentro de navigate()) e depois de
+// escolher a lib na Home.
+function maybeShowOnboardingBanner() {
+  const currentKey = _onboardingKeyForCurrentOrigin();
+  for (const key of Object.keys(ONBOARDING_TOOLS)) {
+    const banner = document.getElementById(`onboarding-banner-${key}`);
+    if (!banner) continue;
+    banner.classList.toggle('hidden', key !== currentKey || _onboardingSeen(currentKey));
+  }
 }
 window.maybeShowOnboardingBanner = maybeShowOnboardingBanner;
 
-function dismissOnboardingBanner(toolKey) {
+function dismissOnboardingBanner() {
+  const toolKey = _onboardingKeyForCurrentOrigin();
   const banner = document.getElementById(`onboarding-banner-${toolKey}`);
   if (banner) banner.classList.add('hidden');
   markOnboardingSeen(toolKey);
 }
 window.dismissOnboardingBanner = dismissOnboardingBanner;
+
+// Ponto de entrada único pro banner ("Ver agora") e pro ícone de chapéu
+// ("Rever passo a passo") — os dois SEMPRE abrem a mesma jornada
+// (web/mobile) da origem atual do projeto, nunca conteúdos divergentes
+// (bug real corrigido 2026-09-09: antes, escolher a lib na Home abria um
+// onboarding curto/específico automaticamente, e o chapéu abria outro
+// mais longo/genérico — dois conteúdos diferentes pro mesmo momento).
+function openOnboardingForCurrentOrigin(opts) {
+  openOnboarding(_onboardingKeyForCurrentOrigin(), opts);
+}
+window.openOnboardingForCurrentOrigin = openOnboardingForCurrentOrigin;
 
 // Abre o modal de onboarding — chamado tanto pelo banner ("Ver agora") quanto
 // pelo botão de revisão no cabeçalho de specifications.html (a qualquer
