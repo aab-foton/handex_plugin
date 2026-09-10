@@ -2195,9 +2195,35 @@ async function _moveActiveCloneIntoFichaSection(clone, targetSection, pluginData
     overlayGroup = _rescueLegacyOverlayNestedInsideClone(clone, oldParent, pluginDataKey);
   }
 
+  // Bug real corrigido (2026-09-10, reportado com print pelo usuário): o
+  // appendChild abaixo, num pai com Auto Layout, faz o Figma recalcular
+  // AUTOMATICAMENTE x/y do clone (layoutPositioning padrão = AUTO) pra
+  // encaixá-lo no fluxo da seção — mas o overlay é marcado como ABSOLUTE
+  // logo em seguida (_setCloneOverlayGroupAbsolutePositioning), o que só
+  // tira ele do fluxo do Auto Layout, NUNCA recalcula sua posição. Sem
+  // compensar isso, o overlay mantém os x/y que tinha no pai ANTIGO (a
+  // Section de sessão do designer), agora reinterpretados como relativos ao
+  // pai NOVO (a seção da Ficha) — um sistema de coordenadas diferente do
+  // original, resultando no overlay (selos/trilha/specs) vazando pra fora
+  // da área visível, sem respeitar o Auto Layout da Ficha. Corrigido
+  // medindo o deslocamento REAL do clone (absoluteBoundingBox antes/depois
+  // do appendChild, mesmo princípio já usado por _reparentIntoAreaGroup/
+  // _reparentIntoSection acima) e aplicando o mesmo delta ao overlay —
+  // como overlayGroup é sempre um GROUP (nunca FRAME), deslocar x/y do
+  // grupo desloca todo o conteúdo interno junto, preservando as posições
+  // relativas entre os filhos (selos individuais, segmentos da trilha,
+  // specGroups), que já estavam corretas entre si.
+  const beforeBB = clone.absoluteBoundingBox;
   targetSection.appendChild(clone);
+  const afterBB = clone.absoluteBoundingBox;
   if (overlayGroup) {
     targetSection.appendChild(overlayGroup);
+    if (beforeBB && afterBB) {
+      try {
+        overlayGroup.x += Math.round(afterBB.x - beforeBB.x);
+        overlayGroup.y += Math.round(afterBB.y - beforeBB.y);
+      } catch (e) { }
+    }
     _setCloneOverlayGroupAbsolutePositioning(overlayGroup);
   }
 }
