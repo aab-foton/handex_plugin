@@ -2408,6 +2408,107 @@ hr {
     bloco para Swipe (conteúdo vazio no JSON de origem — helper retorna
     string vazia sem renderizar nada).</p>
 
+    <h2 id="s8m">8m. Isolamento de sessão por usuário, versionamento v1.0/v1.1 e detecção de handoff de outro designer (2026-09-10)</h2>
+
+    <p><strong>Bug real corrigido</strong>: dois designers usando o hac no mesmo
+    arquivo Figma ao mesmo tempo tiveram o trabalho misturado na mesma Section
+    de sessão. Causa: <code>_getOrCreateA11ySessionSection</code> (seção 8e)
+    localizava a Section pela <strong>primeira</strong> encontrada com
+    <code>pluginData('hacSessionSection') === 'true'</code> na página inteira,
+    sem nenhum filtro por dono — <code>designerName</code> era só uma string
+    cosmética usada no nome, nunca um critério de busca (dois designers podem
+    ter o mesmo nome exibido, ou o campo pode nem chegar).</p>
+
+    <p><strong>Isolamento por <code>currentUserId</code></strong>:
+    <code>_getOrCreateA11ySessionSection(designerName, currentUserId)</code>
+    ganhou um segundo parâmetro — <code>figma.currentUser.id</code> (nativo do
+    Figma, estável), propagado como <code>designerId</code> em TODO payload que
+    hoje já carrega <code>designerName</code> (mesmo padrão posicional,
+    replicado por toda a cadeia de funções internas: <code>_createOrGetFichaFrame</code>,
+    <code>_create*CloneForArea</code>, <code>_resolveActive*Clone</code>,
+    <code>_buildFicha*Section</code>). A busca por Section existente agora exige
+    <code>hacSessionOwnerId === currentUserId</code> além de
+    <code>hacSessionSection === 'true'</code>. <strong>Fallback defensivo</strong>:
+    se <code>currentUserId</code> vier vazio/null (caso raro —
+    <code>figma.currentUser</code> indisponível), cai no comportamento ANTIGO
+    (primeira Section da página, sem filtro) — nunca trava a criação de Área
+    por falta de id. <strong>Migração aditiva</strong>: uma Section com
+    <code>hacSessionSection === 'true'</code> mas SEM <code>hacSessionOwnerId</code>
+    (criada antes desta mudança) é adotada pelo usuário atual na primeira
+    chamada seguinte (grava o campo nesse momento), nunca duplicada.</p>
+
+    <p><strong>Frontend</strong>: <code>getA11yDesignerId()</code>
+    (<code>accessibility.js</code>, ao lado de <code>getA11yDesignerName()</code>) lê
+    <code>hacData.currentUser.id</code> — o <code>.id</code> já chegava do backend em
+    <code>init-plugin</code> desde sempre, mas nunca era lido antes desta mudança.
+    Todo payload que já montava <code>designerName: getA11yDesignerName()</code>
+    ganhou <code>designerId: getA11yDesignerId()</code> ao lado (10 pontos:
+    <code>create-a11y-area</code>, <code>create-unified-spec</code> (dentro de
+    <code>opts</code>), <code>start-tab-order-copy</code>, <code>resolve-tab-order-clone</code>,
+    <code>draw-tab-order-badge</code>, <code>generate-tab-order-from-layers</code>,
+    <code>resolve-swipe-path-clone</code>, <code>start-swipe-path-mode</code>,
+    <code>insert-swipe-path</code>, <code>insert-ficha-section</code>).</p>
+
+    <p><strong>Nome novo da Section de sessão</strong>: na criação (nunca ao
+    reaproveitar uma existente), o formato mudou de
+    <code>hac - Especificações de Acessibilidade - {timestamp} - {designer}</code>
+    para <code>[HAC] Handoff de Acessibilidade | {timestamp} | {designer} | v1.0</code>
+    — mesmo formato de timestamp de sempre (<code>DD/MM/AAAA HH:MM</code>).
+    Section antigas mantêm o nome antigo (nunca renomeadas retroativamente,
+    só reconhecidas por pluginData).</p>
+
+    <p><strong>Versionamento v1.0 → v1.1 → v1.2...</strong> (incremento do
+    MENOR): novo pluginData <code>hacSessionVersion</code> ("1.0" na criação).
+    Toda chamada bem-sucedida de <code>insert-ficha-section</code> localiza a
+    Section de sessão da área, faz o parse <code>major.minor</code> do valor
+    atual (default <code>"1.0"</code> em caso de campo ausente/corrompido — nunca
+    trava o handler principal), incrementa o <code>minor</code>, regrava
+    <code>hacSessionVersion</code> e substitui só o segmento
+    <code>| vN.N</code> no final do nome via regex, preservando
+    timestamp/designer intactos. Nomes de Sections antigas (sem esse formato)
+    simplesmente não batem com a regex e ficam como estão.</p>
+
+    <p><strong>Incremento do MAIOR (v1.x → v2.0) — NÃO implementado nesta
+    rodada, decisão deliberada</strong>: o plano original previa subir o
+    <code>major</code> (replicando a Section inteira como nova versão,
+    preservando a anterior) quando o designer "gerar um Handoff Completo do
+    zero sobre algo que já existia" — distinto de uma atualização incremental.
+    Investigação do fluxo real (<code>_fichaGenerateCompleteHandoff</code>,
+    <code>handoff-ficha.js</code>, seção 8h) mostrou que <strong>não existe hoje
+    nenhuma ação de UI que corresponda a isso</strong>: o único botão
+    agregador ("Gerar handoff completo") é deliberadamente incremental por
+    design — reinsere só seções pendentes/desatualizadas
+    (<code>_fichaSectionIsStale</code>), nunca as 4 incondicionalmente, e usa o
+    MESMO <code>insert-ficha-section</code> que já incrementa o menor. Inventar
+    um gatilho novo (ex.: um botão "Gerar do zero") mudaria comportamento de
+    produto já validado sem pedido explícito — fora do que foi autorizado.
+    Ver pendência na seção 11.</p>
+
+    <p><strong>Detecção de handoff de outro designer</strong>: nova função
+    <code>_findOtherDesignersSessionSections(currentUserId)</code> varre
+    <code>figma.currentPage.children</code> por Sections de sessão com
+    <code>hacSessionOwnerId</code> diferente do atual (dedupe por
+    <code>ownerId</code>; Sections sem dono — pré-migração — não contam como "de
+    outro designer"). Novo handler <code>check-other-designers-sections</code>,
+    respondendo <code>other-designers-sections-checked</code> com
+    <code>otherDesignersSections: {name, ownerId}[]</code>. <strong>Gatilho: NÃO é
+    no <code>ui-ready</code></strong> — é disparado pelo frontend dentro do
+    callback de <code>ensureA11yProjectOriginThen</code>
+    (<code>accessibility.js</code>), logo após o designer confirmar a origem
+    (Web/Mobile) pela primeira vez no arquivo (o primeiro momento em que ele
+    de fato começa a trabalhar na sessão) — nunca reavaliado depois, já que
+    <code>ensureA11yProjectOriginThen</code> só abre a modal de origem uma vez
+    por arquivo. Se a lista vier vazia, nenhuma UI aparece (fluxo normal, sem
+    interrupção). Se não, abre a modal <code>#a11y-other-designer-modal</code>
+    (novo, <code>modals.html</code>, mesmo padrão <code>role="dialog"</code> +
+    backdrop dos demais modais informativos do hac) via
+    <code>openA11yOtherDesignerModal(sections)</code>
+    (<code>accessibility.js</code>) — texto singular ("feita por {nome}") ou
+    plural ("feita por {nome} e outros N designers"), extraindo o nome do
+    designer do novo formato de nome da Section. Puramente informativo: só
+    botão "Entendi", nenhuma ação de trocar de usuário/ver histórico (fora de
+    escopo).</p>
+
     <h2 id="s9">9. Contrato de mensagens (UI ↔ backend)</h2>
 
     <p>Toda comunicação passa por <code>postMessage</code>/<code>window.onmessage</code> — o frontend
@@ -2540,6 +2641,18 @@ hr {
     <p>Pendência de processo (não técnica): não existe mecanismo formal para a
     vertical de acessibilidade receber o sinal de componentes "Outro" (seção
     6) — hoje é só um rótulo visível ao designer.</p>
+
+    <p><strong>Versionamento maior (v1.x → v2.0) da Section de sessão</strong>
+    (seção 8m): não implementado — não existe hoje, na UI real do hac, uma
+    ação que corresponda de forma segura a "gerar um Handoff Completo do zero
+    sobre uma área que já tinha documentação", distinta de "atualizar
+    incrementalmente" (o único botão agregador existente,
+    <code>_fichaGenerateCompleteHandoff</code>, é deliberadamente incremental
+    por design). Requer, quando houver um gatilho de produto real e aprovado:
+    (1) decidir a UI que dispara essa ação distinta da atualização normal, e
+    (2) a lógica de replicar a Section inteira como nova versão major,
+    preservando a anterior intacta (não só renomear/incrementar em cima da
+    mesma Section, como o menor já faz).</p>
 
     <h2 id="s12">12. Sobre esta documentação</h2>
 

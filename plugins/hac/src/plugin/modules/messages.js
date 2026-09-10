@@ -101,6 +101,18 @@
         showToast(msg.message);
       }
 
+      // Resposta de check-other-designers-sections (2026-09-10), disparada
+      // logo após a confirmação de origem (ver ensureA11yProjectOriginThen,
+      // accessibility.js) — só abre o modal informativo se a varredura
+      // encontrou handoff de outro designer; lista vazia não faz nada,
+      // fluxo segue normal sem interrupção visual.
+      if (msg.type === 'other-designers-sections-checked') {
+        const otherSections = msg.otherDesignersSections || [];
+        if (otherSections.length > 0 && typeof openA11yOtherDesignerModal === 'function') {
+          openA11yOtherDesignerModal(otherSections);
+        }
+      }
+
       if (msg.type === 'cache-cleared') {
         hacData = {
           _schemaVersion: 1,

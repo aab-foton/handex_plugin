@@ -186,7 +186,7 @@ function startTabOrderManualMode(areaId, targetNodeId) {
     window._tabOrderPendingTargetNodeId = targetNodeId;
     window._tabOrderActiveCloneId = null;
     window._tabOrderActiveCloneNodeMap = null;
-    parent.postMessage({ pluginMessage: { type: 'start-tab-order-copy', areaId, targetNodeId, sectionName: getA11yActiveSectionName(), designerName: getA11yDesignerName() } }, '*');
+    parent.postMessage({ pluginMessage: { type: 'start-tab-order-copy', areaId, targetNodeId, sectionName: getA11yActiveSectionName(), designerName: getA11yDesignerName(), designerId: getA11yDesignerId() } }, '*');
     // Modal de revisão NÃO abre mais aqui (2026-09-04-w, pedido do
     // usuário) — a janela minimiza pra uma barra fina (mais espaço de
     // canvas visível) e o designer clica em toda a sequência EM SILÊNCIO,
@@ -309,7 +309,7 @@ function startTabOrderAddItemsFromCard(areaId) {
   // resolve-tab-order-clone, code.js). startTabOrderAddItemWait só arma
   // depois da resposta confirmar sucesso (handleTabOrderCloneResolved).
   window._tabOrderAddItemsFromCardAreaId = areaId;
-  parent.postMessage({ pluginMessage: { type: 'resolve-tab-order-clone', areaId, targetNodeId: window._tabOrderPendingTargetNodeId, sectionName: getA11yActiveSectionName(), designerName: getA11yDesignerName() } }, '*');
+  parent.postMessage({ pluginMessage: { type: 'resolve-tab-order-clone', areaId, targetNodeId: window._tabOrderPendingTargetNodeId, sectionName: getA11yActiveSectionName(), designerName: getA11yDesignerName(), designerId: getA11yDesignerId() } }, '*');
 }
 window.startTabOrderAddItemsFromCard = startTabOrderAddItemsFromCard;
 
@@ -472,6 +472,7 @@ function _tabOrderDrawPendingBadge(tempId) {
       a11yOrigin: window._tabOrderDeclaredOrigin || 'web',
       sectionName: getA11yActiveSectionName(),
       designerName: getA11yDesignerName(),
+      designerId: getA11yDesignerId(),
     },
   }, '*');
 }
@@ -850,7 +851,7 @@ function _confirmGenerateTabOrderFromLayers(areaId, targetNodeId) {
     window._tabOrderActiveCloneId = null;
     window._tabOrderActiveCloneNodeMap = null;
     window._tabOrderPendingGeneration = myGeneration;
-    parent.postMessage({ pluginMessage: { type: 'generate-tab-order-from-layers', areaId, targetNodeId, sectionName: getA11yActiveSectionName(), designerName: getA11yDesignerName(), generation: myGeneration } }, '*');
+    parent.postMessage({ pluginMessage: { type: 'generate-tab-order-from-layers', areaId, targetNodeId, sectionName: getA11yActiveSectionName(), designerName: getA11yDesignerName(), designerId: getA11yDesignerId(), generation: myGeneration } }, '*');
     showToast('Varrendo elementos interativos da área…');
   });
 }

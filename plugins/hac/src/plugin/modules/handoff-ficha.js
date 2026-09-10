@@ -161,6 +161,7 @@ function _fichaInsertSection(sectionKey) {
     area: Object.assign({}, area, { a11yOrigin: getA11yProjectOrigin() || 'web', sectionName: getA11yActiveSectionName() }),
     sectionKey,
     designerName: getA11yDesignerName(),
+    designerId: getA11yDesignerId(),
   };
 
   const areaSpecsRaw = (a11ySpecs || []).filter(s => s && s.a11yAreaId === area.id);

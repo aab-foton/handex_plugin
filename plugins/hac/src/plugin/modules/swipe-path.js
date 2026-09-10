@@ -207,6 +207,7 @@ function startSwipePathAddPoint() {
       targetNodeId: window._swipePathPendingTargetNodeId || null,
       sectionName: getA11yActiveSectionName(),
       designerName: getA11yDesignerName(),
+      designerId: getA11yDesignerId(),
     },
   }, '*');
 }
@@ -308,7 +309,7 @@ function _swipePathSetCaptureMode(mode, areaId, targetNodeId, sectionName) {
   const wasOff = !window._swipePathCaptureMode;
   window._swipePathCaptureMode = mode;
   if (mode && wasOff) {
-    parent.postMessage({ pluginMessage: { type: 'start-swipe-path-mode', areaId: areaId || null, targetNodeId: targetNodeId || null, sectionName: sectionName || null, designerName: getA11yDesignerName() } }, '*');
+    parent.postMessage({ pluginMessage: { type: 'start-swipe-path-mode', areaId: areaId || null, targetNodeId: targetNodeId || null, sectionName: sectionName || null, designerName: getA11yDesignerName(), designerId: getA11yDesignerId() } }, '*');
   } else if (!mode && !wasOff) {
     parent.postMessage({ pluginMessage: { type: 'stop-swipe-path-mode' } }, '*');
   }
@@ -522,6 +523,7 @@ function applySwipePathToCanvas() {
       points: list.map(it => ({ nodeId: it.nodeId, nodeName: it.nodeName })),
       sectionName: getA11yActiveSectionName(),
       designerName: getA11yDesignerName(),
+      designerId: getA11yDesignerId(),
     },
   }, '*');
 }

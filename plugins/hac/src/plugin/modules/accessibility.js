@@ -2579,6 +2579,7 @@ function confirmA11ySpec() {
     guideSide: guideSideEl ? guideSideEl.value : 'right',
     sectionName: getA11yActiveSectionName(),
     designerName: getA11yDesignerName(),
+    designerId: getA11yDesignerId(),
     // Modo "Contorno" (default) usa o marcador real "Agrupamento" — a moldura
     // já embute o selo, não precisa de linha ligando ao card. Modo "Linha"
     // reativa o conector (real da lib quando disponível; vetor procedural
@@ -3231,10 +3232,24 @@ function _a11yWorkspaceTabLeitorDeTela(area, areaSpecs) {
     .filter(({ catSpecs }) => catSpecs.length > 0)
     .map(({ catKey, catSpecs }) => {
       const catUid = `${uid}-cat-${catKey}`;
-      // Força a expansão do sub-accordion certo antes de renderizar — mesmo
-      // Set de estado persistente que o clique manual usa
-      // (window._a11yExpandedCategoryIds), então a expansão sobrevive a
-      // re-renders subsequentes como qualquer outra.
+      // Sub-accordions de categoria nascem ABERTOS por padrão (2026-09-10,
+      // pedido do usuário com print — antes só a categoria em foco, vinda
+      // de "Editar", nascia expandida; as demais precisavam de clique
+      // manual). Marca em window._a11ySeenCategoryIds (Set à parte, só
+      // "já apareceu pelo menos uma vez") na PRIMEIRA vez que o
+      // catUid é renderizado, e só então adiciona ao Set de expansão real
+      // (window._a11yExpandedCategoryIds) — sem isso, forçar .add() direto
+      // no Set de expansão a cada render reabriria uma categoria que o
+      // designer tenha recolhido manualmente (toggleA11yCategoryAccordion
+      // só mexe no DOM, não bloqueia um próximo render de mexer no Set de
+      // novo). Com o Set à parte, o estado "aberto por padrão" só vale na
+      // primeira aparição — depois disso, a escolha manual do designer
+      // (aberto ou fechado) é respeitada em todo re-render seguinte.
+      window._a11ySeenCategoryIds = window._a11ySeenCategoryIds || new Set();
+      if (!window._a11ySeenCategoryIds.has(catUid)) {
+        window._a11ySeenCategoryIds.add(catUid);
+        window._a11yExpandedCategoryIds.add(catUid);
+      }
       if (catKey === focusCatKey) window._a11yExpandedCategoryIds.add(catUid);
       return _a11yCategoryAccordionEl(catUid, catKey, catSpecs);
     })
@@ -4144,13 +4159,27 @@ window.setA11yActiveSectionName = setA11yActiveSectionName;
 // 'ui-ready' (code.js) e guardado em hacData.currentUser. Vai no payload de
 // toda mensagem que pode criar a Section de sessão
 // (_getOrCreateA11ySessionSection, code.js) — o backend não relê
-// figma.currentUser. Só é usado de fato na PRIMEIRA criação da sessão na
-// página; as chamadas seguintes reaproveitam a Section já existente e
-// ignoram o campo.
+// figma.currentUser. Cosmético: só decide o texto do nome da Section na
+// criação, nunca é usado como critério de busca/isolamento (ver
+// getA11yDesignerId abaixo, que é o critério real).
 function getA11yDesignerName() {
   return (hacData && hacData.currentUser && hacData.currentUser.name) || null;
 }
 window.getA11yDesignerName = getA11yDesignerName;
+
+// Id estável do designer logado (figma.currentUser.id, nativo do Figma) —
+// critério REAL de isolamento de sessão entre designers diferentes no mesmo
+// arquivo (2026-09-10, bug real: dois designers trabalhando ao mesmo tempo
+// tiveram o trabalho misturado na mesma Section, porque a busca no backend
+// nunca filtrava por dono). Vai lado a lado com designerName em todo
+// payload que pode criar/reaproveitar a Section de sessão
+// (_getOrCreateA11ySessionSection, code.js) — null quando figma.currentUser
+// não resolveu (caso raro), e o backend cai no comportamento antigo sem
+// filtro nesse caso.
+function getA11yDesignerId() {
+  return (hacData && hacData.currentUser && hacData.currentUser.id) || null;
+}
+window.getA11yDesignerId = getA11yDesignerId;
 
 // #a11y-post-area-origin visível / #a11y-post-area-loading escondido —
 // reaproveitado tanto pela pergunta de origem quanto pelo indicador de
@@ -4176,6 +4205,13 @@ function ensureA11yProjectOriginThen(onReady) {
   }
   window._a11yPendingOriginCallback = (origin) => {
     setA11yProjectOrigin(origin, { silent: true });
+    // Checagem de handoff de outro designer (2026-09-10) — disparada só
+    // aqui, na PRIMEIRA confirmação de origem do arquivo (nunca no
+    // ui-ready): é o primeiro momento em que o designer efetivamente
+    // começou a trabalhar nesta sessão. Resposta tratada em messages.js
+    // (other-designers-sections-checked) — abre um modal informativo só se
+    // encontrar algo; nunca bloqueia onReady, que já roda em seguida.
+    parent.postMessage({ pluginMessage: { type: 'check-other-designers-sections', currentUserId: getA11yDesignerId() } }, '*');
     onReady(origin);
   };
   const originTitle = document.getElementById('a11y-post-area-title');
@@ -4213,6 +4249,44 @@ function openAboutHacModal() {
   openModal('about-hac-modal');
 }
 window.openAboutHacModal = openAboutHacModal;
+
+// Modal informativo "Handoff já existe neste arquivo" (2026-09-10) — aberta
+// só quando a resposta de check-other-designers-sections (messages.js) traz
+// pelo menos uma Section de outro designer. `sections` é o array
+// otherDesignersSections vindo do backend ({ name, ownerId }[]). Nunca
+// bloqueia nenhuma ação — só "Entendi" pra fechar, sem nenhum botão de
+// decisão (trocar de usuário/ver histórico ficam fora de escopo).
+function openA11yOtherDesignerModal(sections) {
+  const body = document.getElementById('a11y-other-designer-body');
+  if (!body) return;
+  const list = Array.isArray(sections) ? sections : [];
+  if (list.length === 0) return;
+
+  // Nome do designer é o que sobra do formato "[HAC] Handoff de
+  // Acessibilidade | timestamp | Nome | vN.N" — Sections antigas (formato
+  // pré-2026-09-10, sem esse separador) caem no fallback genérico.
+  const extractDesignerName = (sectionName) => {
+    const parts = String(sectionName || '').split('|').map(s => s.trim());
+    return (parts.length >= 3 && parts[2]) ? parts[2] : 'outro designer';
+  };
+  const names = list.map(s => extractDesignerName(s.name));
+
+  let message;
+  if (names.length === 1) {
+    message = `Já existe documentação do HAC feita por <strong>${names[0]}</strong> neste arquivo.`;
+  } else {
+    const [first, ...rest] = names;
+    message = `Já existe documentação do HAC feita por <strong>${first}</strong> e outros ${rest.length} designer${rest.length > 1 ? 's' : ''} neste arquivo.`;
+  }
+
+  body.innerHTML = `
+    <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed">${message}</p>
+    <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed">Seu trabalho fica isolado numa Section própria — nada do que você fizer sobrescreve o handoff já existente. Combine com a equipe se o objetivo é complementar a mesma documentação.</p>
+  `;
+  openModal('a11y-other-designer-modal');
+  if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
+}
+window.openA11yOtherDesignerModal = openA11yOtherDesignerModal;
 
 // ── Detecção Automática pós-Marcar-Área ─────────────────────────────────
 // A detecção nasce escopada ao elemento que ACABOU de virar Área
@@ -5698,7 +5772,7 @@ function confirmA11yArea() {
       return;
     }
     ensureA11yProjectOriginThen((origin) => {
-      parent.postMessage({ pluginMessage: { type: 'create-a11y-area', targetNodeId: sel.id, label, number, conector, origin, sectionName: getA11yActiveSectionName(), designerName: getA11yDesignerName() } }, '*');
+      parent.postMessage({ pluginMessage: { type: 'create-a11y-area', targetNodeId: sel.id, label, number, conector, origin, sectionName: getA11yActiveSectionName(), designerName: getA11yDesignerName(), designerId: getA11yDesignerId() } }, '*');
     });
   });
 }

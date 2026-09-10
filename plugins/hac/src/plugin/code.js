@@ -1868,33 +1868,66 @@ function _getOrCreateA11ySection(sectionName) {
   return _getOrCreateNamedSection(sectionName || A11Y_SECTION_NAME);
 }
 
-// Section ÚNICA por página, container de toda a documentação criada nesta
-// sessão de trabalho. Identificada SÓ por pluginData ('hacSessionSection'),
-// nunca por nome: o nome carrega timestamp + designer logado e muda a cada
-// sessão, então buscar por nome criaria uma Section nova a cada Área
-// marcada. O timestamp é gravado uma vez, na criação, e nunca mais muda —
-// não é o mecanismo de versionamento de
+// Section ÚNICA por página E por designer, container de toda a documentação
+// criada nesta sessão de trabalho. Identificada por pluginData
+// ('hacSessionSection' + 'hacSessionOwnerId'), nunca por nome: o nome carrega
+// timestamp + designer logado e muda a cada sessão, então buscar por nome
+// criaria uma Section nova a cada Área marcada. O timestamp é gravado uma
+// vez, na criação, e nunca mais muda — não é o mecanismo de versionamento de
 // _computeNextA11ySectionName/_extractA11ySectionVersionSuffix, que
 // permanece reservado ao propósito original (versionar uma nova geração
 // completa de documentação).
-function _getOrCreateA11ySessionSection(designerName) {
+//
+// Isolamento por usuário (2026-09-10, bug real reportado: dois designers no
+// mesmo arquivo ao mesmo tempo tiveram o trabalho misturado na mesma
+// Section, porque a busca abaixo nunca filtrava por dono — pegava a
+// PRIMEIRA Section de sessão da página inteira). `currentUserId` é o
+// figma.currentUser.id (nativo do Figma, estável), não `designerName`
+// (string cosmética só usada no nome, nunca um critério de busca confiável
+// — dois designers podem ter o mesmo nome exibido, ou o nome pode nem
+// chegar). Fallback defensivo: se currentUserId vier vazio/null (caso raro,
+// mas possível — ex. figma.currentUser indisponível), cai no comportamento
+// ANTIGO (primeira Section de sessão da página, sem filtro), pra nunca
+// travar a criação de Área por falta de id.
+function _getOrCreateA11ySessionSection(designerName, currentUserId) {
   let section = null;
+  let unownedSection = null; // Section antiga (pré-migração), sem hacSessionOwnerId gravado.
   for (const n of figma.currentPage.children) {
     if (n.type !== 'SECTION') continue;
     try {
       if (n.getPluginData && n.getPluginData('hacSessionSection') === 'true') {
-        section = n;
-        break;
+        const ownerId = n.getPluginData('hacSessionOwnerId') || '';
+        if (!currentUserId) {
+          // Sem id do usuário atual — comportamento antigo, sem filtro.
+          section = n;
+          break;
+        }
+        if (ownerId === currentUserId) {
+          section = n;
+          break;
+        }
+        if (!ownerId && !unownedSection) {
+          // Section criada antes desta mudança — ainda não tem dono.
+          unownedSection = n;
+        }
       }
     } catch (e) { }
+  }
+  if (!section && unownedSection && currentUserId) {
+    // Migração aditiva: adota a Section antiga pro usuário atual em vez de
+    // criar uma nova duplicada só porque ela não tinha hacSessionOwnerId.
+    section = unownedSection;
+    try { section.setPluginData('hacSessionOwnerId', currentUserId); } catch (e) { }
   }
   if (!section) {
     section = figma.createSection();
     const _now = new Date();
     const _pad = (v) => String(v).padStart(2, '0');
     const _timestamp = `${_pad(_now.getDate())}/${_pad(_now.getMonth() + 1)}/${_now.getFullYear()} ${_pad(_now.getHours())}:${_pad(_now.getMinutes())}`;
-    section.name = `hac - Especificações de Acessibilidade - ${_timestamp} - ${designerName || 'Designer não identificado'}`;
+    section.name = `[HAC] Handoff de Acessibilidade | ${_timestamp} | ${designerName || 'Designer não identificado'} | v1.0`;
     section.setPluginData('hacSessionSection', 'true');
+    if (currentUserId) section.setPluginData('hacSessionOwnerId', currentUserId);
+    section.setPluginData('hacSessionVersion', '1.0');
     section.x = 0;
     section.y = 0;
     section.resizeWithoutConstraints(200, 200);
@@ -1907,6 +1940,36 @@ function _getOrCreateA11ySessionSection(designerName) {
     figma.currentPage.appendChild(section);
   }
   return section;
+}
+
+// Detecção de handoff já existente de OUTRO designer no mesmo arquivo
+// (2026-09-10) — varre a página inteira por Sections de sessão
+// ('hacSessionSection' === 'true') cujo 'hacSessionOwnerId' seja diferente
+// de currentUserId (e não vazio: Sections antigas sem dono ainda não
+// contam como "de outro designer", ver migração em
+// _getOrCreateA11ySessionSection). Dedupe por ownerId — não deveria haver
+// mais de uma Section por dono depois da Parte 1, mas seja defensivo (ex.:
+// arquivo com Sections órfãs de bugs antigos). Usado pelo handler
+// check-other-designers-sections, disparado pelo frontend logo após o
+// designer confirmar a origem (Web/Mobile) pela primeira vez no arquivo —
+// nunca no ui-ready, pra não competir com a checagem de storage/versão.
+function _findOtherDesignersSessionSections(currentUserId) {
+  const seenOwnerIds = new Set();
+  const result = [];
+  for (const n of figma.currentPage.children) {
+    if (n.type !== 'SECTION') continue;
+    try {
+      if (n.getPluginData && n.getPluginData('hacSessionSection') === 'true') {
+        const ownerId = n.getPluginData('hacSessionOwnerId') || '';
+        if (!ownerId) continue; // Section antiga sem dono — não conta como "outro designer".
+        if (currentUserId && ownerId === currentUserId) continue;
+        if (seenOwnerIds.has(ownerId)) continue;
+        seenOwnerIds.add(ownerId);
+        result.push({ name: n.name, ownerId });
+      }
+    } catch (e) { }
+  }
+  return result;
 }
 
 // area.id É o GROUP da Área desde 2026-09-05 (create-a11y-area envolve o
@@ -2801,7 +2864,7 @@ async function _findFreeTabOrderCopyPosition(cloneWidth, cloneHeight, originBoun
 // bastante apesar do nome — aceita qualquer originBounds/dimensões)
 // usando o bounding box do frame ORIGINAL da área como origem, igual às
 // cópias de Tabulação/Swipe.
-async function _createOrGetFichaFrame(area, designerName) {
+async function _createOrGetFichaFrame(area, designerName, currentUserId) {
   const savedFrameId = area.handoffFicha && area.handoffFicha.frameId;
   const existing = await _findFichaFrameForArea(area.id, savedFrameId);
   if (existing) {
@@ -2829,7 +2892,7 @@ async function _createOrGetFichaFrame(area, designerName) {
       ancestor = ancestor.parent;
     }
     if (!alreadyInSession) {
-      _reparentIntoSection(existing, () => _getOrCreateA11ySessionSection(designerName));
+      _reparentIntoSection(existing, () => _getOrCreateA11ySessionSection(designerName, currentUserId));
     }
     return existing;
   }
@@ -2876,7 +2939,7 @@ async function _createOrGetFichaFrame(area, designerName) {
   // Tabulação/Swipe: a Ficha não precisa mais estar aninhada no Grupo da
   // Área, só na mesma Section (de onde será reorganizada quando a
   // montagem final da Ficha for desenhada).
-  _reparentIntoSection(fichaFrame, () => _getOrCreateA11ySessionSection(designerName));
+  _reparentIntoSection(fichaFrame, () => _getOrCreateA11ySessionSection(designerName, currentUserId));
 
   return fichaFrame;
 }
@@ -3638,6 +3701,17 @@ figma.ui.onmessage = async (msg) => {
     return;
   }
 
+  // Disparado pelo frontend (não pelo ui-ready) logo APÓS o designer
+  // confirmar a origem do projeto (Web/Mobile) pela primeira vez neste
+  // arquivo — ver ensureA11yProjectOriginThen, accessibility.js. Nunca
+  // bloqueante: retorna lista vazia se não houver handoff de outro
+  // designer, e o frontend simplesmente não mostra nenhum modal nesse caso.
+  if (msg.type === 'check-other-designers-sections') {
+    const otherDesignersSections = _findOtherDesignersSessionSections(msg.currentUserId || null);
+    figma.ui.postMessage({ type: 'other-designers-sections-checked', otherDesignersSections });
+    return;
+  }
+
   if (msg.type === 'resize') {
     figma.ui.resize(msg.width, msg.height);
     return;
@@ -3975,7 +4049,7 @@ figma.ui.onmessage = async (msg) => {
       // da área sendo processada no momento.
       group.setPluginData('hacAreaTargetNodeId', node.id);
 
-      _reparentIntoSection(group, () => _getOrCreateA11ySessionSection(msg.designerName));
+      _reparentIntoSection(group, () => _getOrCreateA11ySessionSection(msg.designerName, msg.designerId));
 
       figma.currentPage.selection = [group];
       figma.viewport.scrollAndZoomIntoView([group]);
@@ -4265,7 +4339,7 @@ figma.ui.onmessage = async (msg) => {
       let specClone = null;
       if (opts.a11yAreaId && opts.a11yAreaTargetNodeId) {
         try {
-          const resolved = await _resolveActiveSpecClone(opts.a11yAreaId, opts.a11yAreaTargetNodeId, opts.sectionName, opts.designerName);
+          const resolved = await _resolveActiveSpecClone(opts.a11yAreaId, opts.a11yAreaTargetNodeId, opts.sectionName, opts.designerName, opts.designerId);
           if (resolved) {
             const mappedNode = resolved.nodeMap.get(node.id);
             if (mappedNode && mappedNode.absoluteBoundingBox) {
@@ -4570,7 +4644,7 @@ figma.ui.onmessage = async (msg) => {
         // () => _getOrCreateA11ySessionSection(...))). Trocado pra a MESMA
         // função usada pelo reparenting real, unificando os dois pontos —
         // nunca mais cria uma Section a mais.
-        const _stackScanNodes = _getOrCreateA11ySessionSection(opts.designerName).children || [];
+        const _stackScanNodes = _getOrCreateA11ySessionSection(opts.designerName, opts.designerId).children || [];
         if (opts.a11yType !== 'titulo') _stackScanNodes.forEach(n => {
           if (n.type !== 'GROUP') return;
           const newFmt = n.name.match(new RegExp('^\\[' + _layerTag + ' \\| ([A-Z]\\d*(?:\\.\\d+)*) \\| ([a-z]+)\\] '));
@@ -4786,7 +4860,7 @@ figma.ui.onmessage = async (msg) => {
         }
       }
       if (!_reparentedIntoOverlay) {
-        _reparentIntoSection(specGroup, () => _getOrCreateA11ySessionSection(opts.designerName));
+        _reparentIntoSection(specGroup, () => _getOrCreateA11ySessionSection(opts.designerName, opts.designerId));
       }
 
       figma.ui.postMessage({
@@ -4914,7 +4988,7 @@ figma.ui.onmessage = async (msg) => {
         return;
       }
 
-      const { clone, nodeMap } = await _createSwipePathCloneForArea(root, msg.areaId, msg.sectionName, msg.designerName);
+      const { clone, nodeMap } = await _createSwipePathCloneForArea(root, msg.areaId, msg.sectionName, msg.designerName, msg.designerId);
       if (msg.areaId) _activeSwipePathCloneMaps.set(msg.areaId, nodeMap);
 
       figma.currentPage.selection = [clone];
@@ -5286,7 +5360,7 @@ figma.ui.onmessage = async (msg) => {
           return;
         }
 
-        const { clone, nodeMap } = await _createTabOrderCloneForArea(root, msg.areaId, msg.sectionName, msg.designerName);
+        const { clone, nodeMap } = await _createTabOrderCloneForArea(root, msg.areaId, msg.sectionName, msg.designerName, msg.designerId);
         if (msg.areaId) _activeTabOrderCloneMaps.set(msg.areaId, nodeMap);
 
         figma.currentPage.selection = [clone];
@@ -5494,7 +5568,7 @@ figma.ui.onmessage = async (msg) => {
   // acontece ANTES do cálculo de posição livre de propósito: se a
   // recriação for da MESMA área, o espaço que ela ocupava deve contar como
   // livre de novo.
-  async function _createTabOrderCloneForArea(root, areaId, sectionName, designerName) {
+  async function _createTabOrderCloneForArea(root, areaId, sectionName, designerName, currentUserId) {
     _removeExistingTabOrderCopiesForArea(areaId);
 
     const cloneWidth = root.absoluteBoundingBox.width;
@@ -5537,7 +5611,7 @@ figma.ui.onmessage = async (msg) => {
     // Área nem na Section por tipo antiga (_reparentIntoTabOrderSection,
     // mantida só como referência histórica/fallback de áreas legadas via
     // outros pontos de código que ainda a chamam).
-    _reparentIntoSection(clone, () => _getOrCreateA11ySessionSection(designerName));
+    _reparentIntoSection(clone, () => _getOrCreateA11ySessionSection(designerName, currentUserId));
 
     return { clone, nodeMap };
   }
@@ -5546,7 +5620,7 @@ figma.ui.onmessage = async (msg) => {
   // — mesma lógica de posicionamento livre (_findFreeTabOrderCopyPosition,
   // já genérica e usada por ambas), trocando só nome do clone, pluginData
   // e Section de destino.
-  async function _createSwipePathCloneForArea(root, areaId, sectionName, designerName) {
+  async function _createSwipePathCloneForArea(root, areaId, sectionName, designerName, currentUserId) {
     _removeExistingSwipePathCopiesForArea(areaId);
 
     const cloneWidth = root.absoluteBoundingBox.width;
@@ -5571,7 +5645,7 @@ figma.ui.onmessage = async (msg) => {
     const nodeMap = _buildOriginalToCloneMap(root, clone);
     // Direto na Section de sessão (2026-09-08) — mesmo raciocínio de
     // _createTabOrderCloneForArea.
-    _reparentIntoSection(clone, () => _getOrCreateA11ySessionSection(designerName));
+    _reparentIntoSection(clone, () => _getOrCreateA11ySessionSection(designerName, currentUserId));
 
     return { clone, nodeMap };
   }
@@ -5622,7 +5696,7 @@ figma.ui.onmessage = async (msg) => {
     return found;
   }
 
-  async function _createSpecCloneForArea(root, areaId, sectionName, designerName) {
+  async function _createSpecCloneForArea(root, areaId, sectionName, designerName, currentUserId) {
     const cloneWidth = root.absoluteBoundingBox.width;
     const cloneHeight = root.absoluteBoundingBox.height;
     const { x, y } = await _findFreeTabOrderCopyPosition(cloneWidth, cloneHeight, root.absoluteBoundingBox);
@@ -5641,7 +5715,7 @@ figma.ui.onmessage = async (msg) => {
     clone.setPluginData('hacSpecCloneForArea', areaId || '');
 
     const nodeMap = _buildOriginalToCloneMap(root, clone);
-    _reparentIntoSection(clone, () => _getOrCreateA11ySessionSection(designerName));
+    _reparentIntoSection(clone, () => _getOrCreateA11ySessionSection(designerName, currentUserId));
 
     return { clone, nodeMap };
   }
@@ -5649,7 +5723,7 @@ figma.ui.onmessage = async (msg) => {
   // Resolve a cópia ativa de specs de uma área, ou cria do zero se não
   // houver nenhuma em memória/canvas — mesmo padrão de
   // _resolveActiveTabOrderClone/_resolveActiveSwipePathClone.
-  async function _resolveActiveSpecClone(areaId, targetNodeId, sectionName, designerName) {
+  async function _resolveActiveSpecClone(areaId, targetNodeId, sectionName, designerName, currentUserId) {
     const root = await figma.getNodeByIdAsync(targetNodeId);
     if (!root || !root.absoluteBoundingBox) return null;
     if (typeof root.clone !== 'function') return null;
@@ -5690,7 +5764,7 @@ figma.ui.onmessage = async (msg) => {
       return { clone, nodeMap };
     }
 
-    const created = await _createSpecCloneForArea(root, areaId, sectionName, designerName);
+    const created = await _createSpecCloneForArea(root, areaId, sectionName, designerName, currentUserId);
     if (areaId) _activeSpecCloneMaps.set(areaId, created.nodeMap);
     return created;
   }
@@ -5717,7 +5791,7 @@ figma.ui.onmessage = async (msg) => {
         return;
       }
 
-      const { clone, nodeMap } = await _createTabOrderCloneForArea(root, msg.areaId, msg.sectionName, msg.designerName);
+      const { clone, nodeMap } = await _createTabOrderCloneForArea(root, msg.areaId, msg.sectionName, msg.designerName, msg.designerId);
       if (msg.areaId) _activeTabOrderCloneMaps.set(msg.areaId, nodeMap);
 
       figma.currentPage.selection = [clone];
@@ -5801,7 +5875,7 @@ figma.ui.onmessage = async (msg) => {
   // motivo não houver nenhuma em memória — mesmo fallback que já existia
   // dentro do antigo handler "aplicar em lote", agora compartilhado com
   // draw-tab-order-badge (que precisa da mesma resolução a cada item).
-  async function _resolveActiveTabOrderClone(areaId, targetNodeId, sectionName, designerName) {
+  async function _resolveActiveTabOrderClone(areaId, targetNodeId, sectionName, designerName, currentUserId) {
     const root = await figma.getNodeByIdAsync(targetNodeId);
     if (!root || !root.absoluteBoundingBox) return null;
     if (typeof root.clone !== 'function') return null;
@@ -5869,7 +5943,7 @@ figma.ui.onmessage = async (msg) => {
       return { clone, nodeMap };
     }
 
-    const created = await _createTabOrderCloneForArea(root, areaId, sectionName, designerName);
+    const created = await _createTabOrderCloneForArea(root, areaId, sectionName, designerName, currentUserId);
     if (areaId) _activeTabOrderCloneMaps.set(areaId, created.nodeMap);
     return created;
   }
@@ -5891,7 +5965,7 @@ figma.ui.onmessage = async (msg) => {
   // Espelha _resolveActiveTabOrderClone pra Trilha de Swipe (2026-09-04-ac)
   // — fallback que recria a cópia se ela não existir mais em memória (ex.:
   // designer fechou/reabriu o plugin), usado por insert-swipe-path.
-  async function _resolveActiveSwipePathClone(areaId, targetNodeId, sectionName, designerName) {
+  async function _resolveActiveSwipePathClone(areaId, targetNodeId, sectionName, designerName, currentUserId) {
     const root = await figma.getNodeByIdAsync(targetNodeId);
     if (!root || !root.absoluteBoundingBox) return null;
     if (typeof root.clone !== 'function') return null;
@@ -5935,7 +6009,7 @@ figma.ui.onmessage = async (msg) => {
       return { clone, nodeMap };
     }
 
-    const created = await _createSwipePathCloneForArea(root, areaId, sectionName, designerName);
+    const created = await _createSwipePathCloneForArea(root, areaId, sectionName, designerName, currentUserId);
     if (areaId) _activeSwipePathCloneMaps.set(areaId, created.nodeMap);
     return created;
   }
@@ -5965,7 +6039,7 @@ figma.ui.onmessage = async (msg) => {
   // ainda existir no canvas, só recria se genuinamente sumiu).
   if (msg.type === "resolve-tab-order-clone") {
     (async () => {
-      const resolved = await _resolveActiveTabOrderClone(msg.areaId, msg.targetNodeId, msg.sectionName, msg.designerName);
+      const resolved = await _resolveActiveTabOrderClone(msg.areaId, msg.targetNodeId, msg.sectionName, msg.designerName, msg.designerId);
       figma.ui.postMessage({ type: "tab-order-clone-resolved", areaId: msg.areaId, ok: !!resolved });
     })();
     return;
@@ -5987,7 +6061,7 @@ figma.ui.onmessage = async (msg) => {
   // handleTabOrderCloneResolved/startTabOrderAddItemWait.
   if (msg.type === "resolve-swipe-path-clone") {
     (async () => {
-      const resolved = await _resolveActiveSwipePathClone(msg.areaId, msg.targetNodeId, msg.sectionName, msg.designerName);
+      const resolved = await _resolveActiveSwipePathClone(msg.areaId, msg.targetNodeId, msg.sectionName, msg.designerName, msg.designerId);
       if (resolved && resolved.clone) {
         figma.currentPage.selection = [resolved.clone];
         figma.viewport.scrollAndZoomIntoView([resolved.clone]);
@@ -6015,7 +6089,7 @@ figma.ui.onmessage = async (msg) => {
   // de canvas) — o backend só ecoa de volta pra resposta ser correlacionável.
   if (msg.type === "draw-tab-order-badge") {
     (async () => {
-      const resolved = await _resolveActiveTabOrderClone(msg.areaId, msg.targetNodeId, msg.sectionName, msg.designerName);
+      const resolved = await _resolveActiveTabOrderClone(msg.areaId, msg.targetNodeId, msg.sectionName, msg.designerName, msg.designerId);
       if (!resolved) {
         figma.ui.postMessage({ type: "tab-order-badge-draw-failed", tempId: msg.tempId });
         return;
@@ -6289,7 +6363,7 @@ figma.ui.onmessage = async (msg) => {
         // e traduz cada ponto (id ORIGINAL, vindo da lista pendente já
         // revisada) pro node EQUIVALENTE dentro dela.
         const cloneResolved = msg.targetNodeId
-          ? await _resolveActiveSwipePathClone(areaId, msg.targetNodeId, msg.sectionName, msg.designerName)
+          ? await _resolveActiveSwipePathClone(areaId, msg.targetNodeId, msg.sectionName, msg.designerName, msg.designerId)
           : null;
         if (!cloneResolved) {
           throw new Error('A cópia da área não foi encontrada no canvas — refaça a trilha.');
@@ -6481,7 +6555,7 @@ figma.ui.onmessage = async (msg) => {
   // depois de mover, reaproveitando _createTabOrderBadge — que já resolve
   // sozinha o overlay correto do clone (agora dentro da Ficha) via
   // _getOrCreateCloneOverlayGroup.
-  async function _buildFichaTabulacaoSection(fichaFrame, area, items, designerName) {
+  async function _buildFichaTabulacaoSection(fichaFrame, area, items, designerName, currentUserId) {
     let section = _findFichaSectionInFrame(fichaFrame, 'tabulacao');
     if (!section) {
       section = figma.createFrame();
@@ -6504,7 +6578,7 @@ figma.ui.onmessage = async (msg) => {
 
     let itemCount = 0;
     const resolved = area.targetNodeId
-      ? await _resolveActiveTabOrderClone(area.id, area.targetNodeId, area.sectionName, designerName)
+      ? await _resolveActiveTabOrderClone(area.id, area.targetNodeId, area.sectionName, designerName, currentUserId)
       : null;
     if (resolved) {
       const { clone, nodeMap } = resolved;
@@ -6562,7 +6636,7 @@ figma.ui.onmessage = async (msg) => {
   // desenhada no fluxo de trabalho: cada "Inserir na ficha" recriava um
   // overlay novo (e nesse ponto ainda clonava a área do zero, então nunca
   // se percebeu — bug latente exposto só agora, ao mover em vez de clonar).
-  async function _buildFichaSwipeSection(fichaFrame, area, points, designerName) {
+  async function _buildFichaSwipeSection(fichaFrame, area, points, designerName, currentUserId) {
     let section = _findFichaSectionInFrame(fichaFrame, 'swipe');
     if (!section) {
       section = figma.createFrame();
@@ -6619,7 +6693,7 @@ figma.ui.onmessage = async (msg) => {
     }
 
     const resolved = area.targetNodeId
-      ? await _resolveActiveSwipePathClone(area.id, area.targetNodeId, area.sectionName, designerName)
+      ? await _resolveActiveSwipePathClone(area.id, area.targetNodeId, area.sectionName, designerName, currentUserId)
       : null;
     if (!resolved) {
       // Frame original não resolve mais (área apagada/movida) — mesmo
@@ -6700,7 +6774,7 @@ figma.ui.onmessage = async (msg) => {
   // via _getOrCreateCloneOverlayGroup(clone, 'hacSpecGroupForClone', ...)
   // — mesma chave já usada pelo fluxo de trabalho (create-unified-spec),
   // reaproveitada sem duplicar.
-  async function _buildFichaLeitorSection(fichaFrame, area, specs, designerName) {
+  async function _buildFichaLeitorSection(fichaFrame, area, specs, designerName, currentUserId) {
     let section = _findFichaSectionInFrame(fichaFrame, 'leitor');
     if (!section) {
       section = figma.createFrame();
@@ -6723,7 +6797,7 @@ figma.ui.onmessage = async (msg) => {
     }
 
     const resolved = area.targetNodeId
-      ? await _resolveActiveSpecClone(area.id, area.targetNodeId, area.sectionName, designerName)
+      ? await _resolveActiveSpecClone(area.id, area.targetNodeId, area.sectionName, designerName, currentUserId)
       : null;
     if (resolved) {
       await _moveActiveCloneIntoFichaSection(resolved.clone, section, 'hacSpecGroupForClone');
@@ -6770,7 +6844,7 @@ figma.ui.onmessage = async (msg) => {
   // aqui no backend, direto do node real via textStyleId/getStyleByIdAsync,
   // mesmo padrão de _a11yScanArea (categoria "typography") — o nome do
   // token tipográfico vinculado ao texto, quando existir.
-  async function _buildFichaReviewSection(fichaFrame, area, sectionsSummary, categoryBreakdown, titleHierarchy, decorativeItems, designerName) {
+  async function _buildFichaReviewSection(fichaFrame, area, sectionsSummary, categoryBreakdown, titleHierarchy, decorativeItems, designerName, currentUserId) {
     _removeFichaSectionInFrame(fichaFrame, 'review');
 
     const section = figma.createFrame();
@@ -6953,7 +7027,7 @@ figma.ui.onmessage = async (msg) => {
       let titleCloneResolved = null;
       try {
         titleCloneResolved = area.targetNodeId
-          ? await _resolveActiveSpecClone(area.id, area.targetNodeId, area.sectionName, designerName)
+          ? await _resolveActiveSpecClone(area.id, area.targetNodeId, area.sectionName, designerName, currentUserId)
           : null;
       } catch (e) { titleCloneResolved = null; }
 
@@ -7176,7 +7250,7 @@ figma.ui.onmessage = async (msg) => {
 
       let fichaFrame;
       try {
-        fichaFrame = await _createOrGetFichaFrame(area, msg.designerName);
+        fichaFrame = await _createOrGetFichaFrame(area, msg.designerName, msg.designerId);
       } catch (e) {
         // Mensagem específica exposta ao designer (2026-09-09) — antes só
         // "Não foi possível criar o frame da Ficha." genérico, com a causa
@@ -7192,18 +7266,48 @@ figma.ui.onmessage = async (msg) => {
       let itemCount = 0;
       try {
         if (sectionKey === 'tabulacao') {
-          itemCount = await _buildFichaTabulacaoSection(fichaFrame, area, msg.items || [], msg.designerName);
+          itemCount = await _buildFichaTabulacaoSection(fichaFrame, area, msg.items || [], msg.designerName, msg.designerId);
         } else if (sectionKey === 'swipe') {
-          itemCount = await _buildFichaSwipeSection(fichaFrame, area, msg.points || [], msg.designerName);
+          itemCount = await _buildFichaSwipeSection(fichaFrame, area, msg.points || [], msg.designerName, msg.designerId);
         } else if (sectionKey === 'leitor') {
-          itemCount = await _buildFichaLeitorSection(fichaFrame, area, msg.specs || [], msg.designerName);
+          itemCount = await _buildFichaLeitorSection(fichaFrame, area, msg.specs || [], msg.designerName, msg.designerId);
         } else if (sectionKey === 'review') {
-          itemCount = await _buildFichaReviewSection(fichaFrame, area, msg.sectionsSummary || [], msg.categoryBreakdown || [], msg.titleHierarchy || [], msg.decorativeItems || [], msg.designerName);
+          itemCount = await _buildFichaReviewSection(fichaFrame, area, msg.sectionsSummary || [], msg.categoryBreakdown || [], msg.titleHierarchy || [], msg.decorativeItems || [], msg.designerName, msg.designerId);
         }
       } catch (e) {
         console.error('[hac] insert-ficha-section: falha ao montar a seção "' + sectionKey + '".', e && e.message);
         figma.ui.postMessage({ type: 'ficha-section-insert-failed', areaId: area.id, sectionKey, reason: e && e.message ? e.message : 'Falha ao montar a seção.' });
         return;
+      }
+
+      // Incremento de versão MENOR (Parte 4.1, 2026-09-10): toda inserção/
+      // atualização de seção do Handoff Completo processada com sucesso
+      // sobe hacSessionVersion em 0.1 (ex. "1.0" -> "1.1") e reflete no nome
+      // visível da Section de sessão. Best-effort — qualquer falha aqui
+      // (parse corrompido, Section não encontrada) nunca deve derrubar a
+      // resposta já bem-sucedida de ficha-section-inserted acima; cai em
+      // "1.0" como default só nesta rotina, sem afetar o handoff em si.
+      try {
+        const sessionSection = _getOrCreateA11ySessionSection(msg.designerName, msg.designerId);
+        let currentVersion = sessionSection.getPluginData('hacSessionVersion') || '';
+        let major = 1, minor = 0;
+        const versionMatch = currentVersion.match(/^(\d+)\.(\d+)$/);
+        if (versionMatch) {
+          major = parseInt(versionMatch[1], 10);
+          minor = parseInt(versionMatch[2], 10);
+        }
+        minor += 1;
+        const nextVersion = `${major}.${minor}`;
+        sessionSection.setPluginData('hacSessionVersion', nextVersion);
+        // Substitui só o segmento de versão do nome (" | vN.N" no final),
+        // preservando timestamp/designer intactos — nomes de Sections
+        // antigas (sem esse formato) simplesmente não batem com a regex e
+        // ficam como estão, sem versão anexada (migração aditiva).
+        if (/\|\s*v\d+\.\d+$/.test(sessionSection.name)) {
+          sessionSection.name = sessionSection.name.replace(/\|\s*v\d+\.\d+$/, `| v${nextVersion}`);
+        }
+      } catch (e) {
+        console.error('[hac] insert-ficha-section: falha ao incrementar a versão da Section de sessão (não impede o handoff).', e && e.message);
       }
 
       figma.currentPage.selection = [fichaFrame];
