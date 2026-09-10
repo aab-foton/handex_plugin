@@ -3195,44 +3195,6 @@ function _a11yWorkspaceTabSwipe(area) {
   `;
 }
 
-// Resumo consolidado de specs por Accessibility Label + Descrição — usado
-// DENTRO do dashboard da tab "Handoff" (não é mais uma tab própria desde
-// 2026-09-04-b: "Leitor de Tela" virou a aba de TRABALHO, e este resumo
-// enxuto passou a ser só uma seção do dashboard de consolidação). O botão
-// "Editar" NUNCA duplica lógica: leva direto pra tab Leitor de Tela, com a
-// spec em foco (sub-accordion de categoria já aberto).
-function _a11yWorkspaceHandoffSpecsSummaryHtml(area, areaSpecs) {
-  // Bloco vazio removido por completo (2026-09-04-s, pedido do usuário):
-  // "Nenhuma especificação nesta área ainda" não aparece mais — quando não
-  // há specs, esta seção simplesmente não renderiza nada, liberando o
-  // espaço do dashboard pra outras informações já documentadas.
-  if (!areaSpecs || areaSpecs.length === 0) return '';
-  // Listagem compacta (2026-09-04-s): 1 linha por spec, só Accessibility
-  // Label + categoria — a descrição completa saiu daqui (ainda disponível
-  // ao clicar "Editar", que leva pra tab Leitor de Tela).
-  return `
-    <div class="space-y-1">
-      ${areaSpecs.map(spec => {
-        const meta = A11Y_CATEGORIES[spec.a11yType] || { label: 'Acessibilidade', icon: 'accessibility', color: '#0891B2' };
-        const props = spec.properties || [];
-        const getProp = key => { const p = props.find(x => x.key === key); return p ? p.value : ''; };
-        const accessibilityLabel = getProp('nomeAcessivel') || spec.targetNodeName || spec.name || '';
-        return `
-        <div class="flex items-center gap-2 bg-gray-50/60 dark:bg-dark-bg/40 rounded-lg border border-gray-100 dark:border-dark-line pl-2 pr-1 py-1">
-          <div class="w-4.5 h-4.5 rounded-full flex items-center justify-center text-[8px] font-extrabold text-white shrink-0" style="background-color:${meta.color}">${escapeHtml(spec.letter || 'A')}</div>
-          <p class="flex-1 min-w-0 text-[10.5px] font-semibold text-slate-700 dark:text-white truncate" title="${escapeHtml(accessibilityLabel || '—')}">${escapeHtml(accessibilityLabel || '—')}</p>
-          <span class="shrink-0 text-[9px] text-slate-400 dark:text-dark-muted">${escapeHtml(meta.label || '')}</span>
-          <button type="button" title="Editar" aria-label="Editar especificação de acessibilidade"
-            onclick="switchA11yWorkspaceTab('leitor', {focusSpecId: '${escapeHtml(spec.id || '')}'})"
-            class="shrink-0 w-6 h-6 flex items-center justify-center rounded-full text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-95 transition-all">
-            <i data-lucide="pencil" class="w-3 h-3"></i>
-          </button>
-        </div>`;
-      }).join('')}
-    </div>
-  `;
-}
-
 // Tab "Leitor de Tela" — a aba de TRABALHO real (2026-09-04-b: reafirmado
 // pelo usuário que Leitor de Tela é a etapa de criação de specs — antes
 // disso, na primeira versão da workspace, esse papel estava em "Handoff").
@@ -3327,13 +3289,14 @@ function _a11yWorkspaceTabLeitorDeTela(area, areaSpecs) {
 // 2026-09-04-c: o botão único "Gerar handoff" (placeholder) saiu — a
 // geração REAL da Ficha de Handoff agora é incremental, por seção, um
 // botão em cada uma das outras 3 tabs (ver handoff-ficha.js). Este
-// dashboard vira só STATUS + link: 3 cards (um por seção, via
-// _fichaDashboardHtml) e o resumo de especificações de sempre.
+// dashboard é só STATUS + link: 3 cards (um por seção, via
+// _fichaDashboardHtml) — SEM listar as specs em si (2026-09-10, pedido
+// explícito do usuário com print: a lista detalhada de especificações por
+// elemento pertence só à aba Leitor de Tela, que já é a aba de trabalho
+// dessas specs; repeti-la aqui duplicava informação e confundia o que cada
+// aba mostra). areaSpecs continua recebido só porque outros chamadores desta
+// função ainda passam esse argumento — não usado mais neste corpo.
 function _a11yWorkspaceTabHandoffDashboard(area, areaSpecs) {
-  // Título "Especificações desta área" some junto com a listagem quando
-  // não há specs ainda (2026-09-04-u, pedido do usuário) — nada de rótulo
-  // órfão sem conteúdo embaixo.
-  const specsSummaryHtml = _a11yWorkspaceHandoffSpecsSummaryHtml(area, areaSpecs);
   return `
     <div class="space-y-4">
       <div>
@@ -3351,12 +3314,6 @@ function _a11yWorkspaceTabHandoffDashboard(area, areaSpecs) {
         </button>
         ${typeof _fichaDashboardHtml === 'function' ? _fichaDashboardHtml(area) : ''}
       </div>
-
-      ${specsSummaryHtml ? `
-      <div>
-        <p class="text-[10px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wider mb-1.5">Especificações desta área</p>
-        ${specsSummaryHtml}
-      </div>` : ''}
     </div>
   `;
 }
