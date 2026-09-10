@@ -233,6 +233,7 @@ hr {
     <a href="design-system.html">Design System</a>
     <a href="changelog.html">Changelog</a>
     <a href="auditoria-2026-09.html">Auditoria Geral</a>
+    <a href="proposta-arquitetura-handoff-completo.html">Proposta: Handoff sem Auto Layout</a>
   </nav>
   <button type="button" id="theme-toggle" aria-label="Alternar tema claro/escuro" title="Alternar tema claro/escuro"></button>
 </header>
@@ -271,6 +272,7 @@ hr {
         <li><a href="#s8i">Editar a Trilha de Swipe já criada</a></li>
         <li><a href="#s8j">Correções pós-auditoria (2026-09-09): aria-live nos toasts, nomenclatura Handoff Completo, contraste dos cards de status</a></li>
         <li><a href="#s8k">Extração de tab-order.js e swipe-path.js</a></li>
+        <li><a href="#s8l">Legenda rica na Ficha + telas de ajuda (2026-09-10)</a></li>
         <li><a href="#s9">Contrato de mensagens (UI ↔ backend)</a></li>
         <li><a href="#s10">Escala da UI e <code>position</code> dos modais</a></li>
         <li><a href="#s10a">Onboarding — 1 jornada por origem</a></li>
@@ -644,12 +646,38 @@ hr {
     </ul>
 
     <p><strong>Libs de componentes reais</strong> (fonte de fato dos wrappers/marcadores
-    importados pro canvas):</p>
+    importados pro canvas, EM USO hoje pelo <code>A11Y_AGRUPAMENTO_KEYS</code>/<code>A11Y_CONECTOR_LINHA_KEYS</code>/
+    <code>A11Y_ITEM_NUMBER_KEYS</code> e variantes <code>_MOBILE</code>):</p>
     <ul>
       <li>Desktop: "Design Acessível" (fileKey <code>Wy0IhXRVZMSOOr8E609UqI</code>)</li>
       <li>Mobile: "Design Acessível | Super App - React Native" (fileKey
       <code>3zdtN13YvPlCGPdXeL0Y2i</code>)</li>
     </ul>
+
+    <blockquote>
+    <p><strong>Arquivo sucessor identificado, ainda não migrado (2026-09-10)</strong> —
+    <code>[HAC] Handoff Super DSC Mobile e Web</code> (fileKey <code>HhriLSpKnCB2dHhyiU16iB</code>)
+    unifica desktop+mobile num arquivo só, com nomenclatura nova (<code>[hac]</code>/
+    <code>[hac mob]</code>/<code>[hac web]</code> em vez de <code>[a11y]</code>/<code>[a11y mob]</code>). Já foi
+    <strong>publicado como biblioteca</strong> — 6 component sets já têm <code>key</code> real e
+    importável: <code>[hac] Conectores</code>, <code>[hac] Agrupamento</code>, <code>[hac] Número da tela</code>,
+    <code>[hac] Ordenação]</code> (conceito NOVO, sem equivalente hoje — anota ordem de foco de
+    Tab com um selo quadrado + ícone de seta, distinto de "Número da tela"), e
+    <code>[hac mob/web] Box specs leitor de tela</code>. Cobre hoje só <strong>3 das 5
+    categorias</strong> (Elementos e Imagens, Títulos, Decorativo) — Estrutura da Página e
+    Informações Adicionais ainda não migraram, porque o trabalho está focado em
+    mobile primeiro; a parte web (5 categorias completas) vem depois no mesmo
+    arquivo. <strong>Achado de risco a observar antes de qualquer migração</strong>: a
+    property <code>conector</code> usa capitalização DIFERENTE entre os component sets —
+    minúscula em <code>[hac] Conectores</code>/<code>Agrupamento</code> (ex. <code>"elementos interativos e
+    imagens"</code>) vs. Title Case em <code>[hac mob/web] Box specs leitor de tela</code> (ex.
+    <code>"Elementos Interativos e Imagens"</code>) — uma comparação de string exata entre
+    os dois quebraria silenciosamente. Nenhuma migração de import foi feita ainda
+    — as constantes acima continuam apontando pras 2 libs antigas. Scans completos
+    em <code>src/plugin/refs/hac-new-reference-scan.json</code> (pré-publicação) e
+    <code>hac-published-lib-verification.json</code> (pós-publicação, com defaults e
+    properties confirmados via Figma Dev Mode).</p>
+    </blockquote>
 
     <h3>Filtro por origem</h3>
 
@@ -2292,6 +2320,81 @@ hr {
     <code>hide-spec-lines</code>, <code>edit-spec-connector</code>), cada um removido em par
     completo (handler + roteamento de resposta + stub de frontend associado,
     quando havia).</p>
+
+    <h2 id="s8l">8l. Legenda rica na Ficha + telas de ajuda (2026-09-10)</h2>
+
+    <p>Consome trabalho represado: <code>src/plugin/refs/ficha-instruction-content.json</code>
+    já continha, desde 2026-09-09, o conteúdo REAL do template oficial de
+    Handoff (extraído via MCP Figma) para as colunas de instrução de
+    Tabulação e Leitor de Tela — título, texto explicativo
+    (<code>instructionsHeading</code>/<code>instructionsBody</code>), passos numerados
+    (<code>stepsHeading</code>/<code>steps[]</code>) e seção de marcadores visuais
+    (<code>assetsHeading</code>/<code>assets[]</code>, cada um com <code>label</code>/<code>description</code>).
+    O bloco <code>swipe</code> fica vazio de propósito — a lib ainda não tem frame
+    de instrução para esse gesto (ver <code>swipeNote</code> no próprio JSON). Esse
+    JSON nunca tinha sido importado por nenhum código real; ficou represado
+    até esta sessão.</p>
+
+    <p><strong>Backend</strong>: novo import estático no topo de <code>code.js</code>
+    (<code>import FICHA_INSTRUCTION_CONTENT from './refs/ficha-instruction-content.json'</code>,
+    9º da lista, mesmo padrão dos outros 8). <code>_buildFichaLegendColumn</code>
+    trocou de assinatura — de <code>(title, description)</code> para
+    <code>(richContent, fallbackTitle, fallbackDescription)</code> — e passou a
+    ser <code>async</code> (carrega a fonte <code>Inter Medium</code>, usada pelos
+    subtítulos, além de Bold/Regular já carregadas antes). Quando
+    <code>richContent.title</code> existe, monta a versão rica: título → heading +
+    parágrafo de instrução → heading + lista numerada de passos (Auto
+    Layout HORIZONTAL por linha, número em Bold + texto com
+    <code>layoutGrow</code>) → heading + lista de assets (um <code>figma.createEllipse</code>
+    de 16×16 colorido + label em Bold + description em Regular, por item).
+    Sem <code>richContent.title</code> (hoje só o caso do Swipe), cai no
+    comportamento ORIGINAL — só <code>fallbackTitle</code>/<code>fallbackDescription</code>,
+    sem nenhuma regressão. Largura da coluna sobe de 220px para 260px só na
+    versão rica (o fallback continua em 220px). As 3 chamadas (dentro de
+    <code>_buildFichaTabulacaoSection</code>/<code>_buildFichaSwipeSection</code>/
+    <code>_buildFichaLeitorSection</code>) passam a ser <code>await</code>, com
+    <code>FICHA_INSTRUCTION_CONTENT.tabulacao</code>/<code>.swipe</code>/<code>.leitorTela</code> como
+    1º argumento — os textos curtos hardcoded permanecem no código como
+    2º/3º argumento (fallback do Swipe e rede de segurança se o JSON vier
+    corrompido/incompleto).</p>
+
+    <p><strong>Cor do marcador por categoria</strong> (<code>_fichaLegendAssetColor</code>,
+    match case-insensitive por palavra-chave no <code>label</code> do asset):
+    "interativ"/"imagens" → <code>#fcbe05</code> (amarelo); "título"/"titulo" →
+    <code>#afca0b</code> (verde-limão); "decorativ" → <code>#b22c2c</code> (vermelho); qualquer
+    outro caso → <code>#94a3b8</code> (cinza neutro), nunca trava por label
+    inesperado. Essa paleta é local a essa legenda — não altera
+    <code>A11Y_CATEGORIES</code> nem nenhuma cor do formulário de specs.</p>
+
+    <p><strong>Frontend — acesso ao mesmo conteúdo</strong>: o import estático de JSON só
+    funciona em <code>code.js</code> (via esbuild, <code>scripts/bundle-code.cjs</code>); o
+    bundle de UI (<code>ui.html</code>) é concatenação crua de texto
+    (<code>build.cjs</code>), sem <code>import</code>/<code>export</code>. Novo script
+    <code>src/plugin/refs/build-ficha-instruction-constants.cjs</code> (mesmo padrão
+    de <code>build-a11y-constants.cjs</code>) lê o JSON e gera
+    <code>refs/_ficha-instruction-content.generated.js</code>, contendo só
+    <code>const FICHA_INSTRUCTION_CONTENT_UI = {...}</code> (sem <code>export</code> — script
+    global concatenado). Novo script npm <code>refs:ficha-instruction</code>,
+    encadeado em <code>bundle:ui</code> antes de <code>node src/plugin/build.cjs</code>.
+    Em <code>build.cjs</code>, o <code>.generated.js</code> é lido e interpolado logo depois
+    de <code>_instruction-frames.generated.js</code> e ANTES de
+    <code>accessibility.js</code>/<code>onboarding.js</code> — os dois podem consumir a
+    constante.</p>
+
+    <p><strong>Onboarding</strong>: novo helper <code>_onboardingFichaStepsHTML(richContent)</code>
+    em <code>onboarding.js</code>, gera um bloco <code>&lt;details&gt;</code> fechado por padrão
+    ("Ver passo a passo do template oficial") com a lista numerada real de
+    <code>richContent.steps</code>. Incorporado dentro do texto (<code>step.text</code>, já
+    renderizado via <code>innerHTML</code>) dos passos de <strong>Leitor de Tela</strong> e
+    <strong>Ordem de Tabulação</strong> nas duas jornadas (<code>web</code> e <code>mobile</code>) de
+    <code>ONBOARDING_TOOLS</code> — decisão de UX: não reescrever a estrutura do
+    onboarding nem duplicar o texto integral do template inline (ficaria
+    poluído); o resumo escrito à mão continua sendo o conteúdo principal do
+    passo, o bloco expansível é "aprofunde se quiser". Guardado atrás de
+    <code>typeof FICHA_INSTRUCTION_CONTENT_UI !== 'undefined'</code> — nunca quebra o
+    onboarding se o bundle não tiver essa constante (ex.: build antigo). Sem
+    bloco para Swipe (conteúdo vazio no JSON de origem — helper retorna
+    string vazia sem renderizar nada).</p>
 
     <h2 id="s9">9. Contrato de mensagens (UI ↔ backend)</h2>
 

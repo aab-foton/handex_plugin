@@ -1,0 +1,221 @@
+﻿{
+  "_meta": {
+    "status": "preenchido",
+    "fileKey": "HhriLSpKnCB2dHhyiU16iB",
+    "scanDate": "2026-09-10",
+    "contexto": "Verificação pós-publicação da lib — os 6 component sets abaixo já têm key real (confirmado via REST API pelo dono do repositório). Esta verificação complementa o scan anterior (hac-new-reference-scan.json, quando a lib ainda não estava publicada) com inspeção visual via MCP e extração de defaults de propriedades a partir do código gerado pelo Dev Mode.",
+    "fonteDosDados": "get_design_context via figma-dev-mode-mcp-server (código React+Tailwind gerado pelo Dev Mode + screenshots). Keys foram fornecidas pelo dono do repositório via REST API — não relidas via MCP.",
+    "notaSobreKeys": "As keys abaixo foram fornecidas externamente pelo dono do repositório. A verificação visual e de defaults foi feita via MCP (get_design_context). Os node IDs foram confirmados via MCP."
+  },
+  "componentesPublicados": [
+    {
+      "nome": "[hac] Conectores",
+      "nodeId": "1:50",
+      "pagina": "⚙️ | Componentes Conectores Gerais",
+      "key": "ef1080dfa9...(fornecida externamente)",
+      "properties": {
+        "tipo": {
+          "tipo": "VARIANT",
+          "opcoes": ["decorativo", "títulos", "elementos interativos e imagens"]
+        },
+        "conector": {
+          "tipo": "VARIANT",
+          "opcoes": ["desativado", "inferior", "superior", "esquerda", "direita"]
+        },
+        "letraNumero": {
+          "tipo": "TEXT",
+          "nomeFigma": "letra / número#7187:0",
+          "valorDefault": "A"
+        }
+      },
+      "varianteDefault": {
+        "tipo": "elementos interativos e imagens",
+        "conector": "desativado",
+        "letraNumero": "A",
+        "fonte": "Extraído da assinatura do componente gerado pelo Dev Mode: conector=desativado, letraNumero=A, tipo=elementos interativos e imagens. Ao inserir sem propriedades explícitas, entrega o conector amarelo (#fcbe05) de 24x24px sem haste, com A."
+      },
+      "observacoesVisuais": "Bate com o scan anterior. Três grupos de variantes visíveis no screenshot: coluna amarela (elementos interativos e imagens), coluna vermelha (decorativo) e grupo verde-limão (títulos), cada um com 5 orientações de conector. Nenhuma diferença encontrada em relação ao scan anterior.",
+      "restricaoDePropertyTexto": "Property letra/número é TEXT sem restrição declarada. Default A (1 caractere). Renderizado como p dentro de div com whitespace-nowrap, circulo 24x24px. Limite visual prático: ~2 caracteres. Para tipo=decorativo a property existe mas é ignorada visualmente (o decorativo usa SVG de ícone proibido).",
+      "componentesOcultosSemKey": [
+        ".[hac] Conector elementos decorativos (node 1248:2426)",
+        ".[hac] Conector títulos (node 1248:2330)",
+        ".[hac] Conector elementos interativos e imagens (node 1248:2328)"
+      ]
+    },
+    {
+      "nome": "[hac] Agrupamento",
+      "nodeId": "1:169",
+      "pagina": "⚙️ | Componentes Conectores Gerais",
+      "key": "9ad0de5497...(fornecida externamente)",
+      "properties": {
+        "tipo": {
+          "tipo": "VARIANT",
+          "opcoes": ["elementos interativos e imagens", "decorativo", "títulos"]
+        },
+        "orientacao": {
+          "tipo": "VARIANT",
+          "nomeFigma": "orientação",
+          "opcoes": ["esquerda", "direita", "inferior", "superior"]
+        },
+        "letraNumero": {
+          "tipo": "TEXT",
+          "nomeFigma": "letra / número#7165:65",
+          "valorDefault": "A"
+        }
+      },
+      "varianteDefault": {
+        "tipo": "elementos interativos e imagens",
+        "orientacao": "esquerda",
+        "letraNumero": "A",
+        "fonte": "Extraído da assinatura: letraNumero=A, orientacao=esquerda, tipo=elementos interativos e imagens. Entrega contêiner 40x40px com círculo amarelo (#fcbe05) na posição esquerda sobreposto a borda tracejada laranja (#ca9804)."
+      },
+      "observacoesVisuais": "Bate com o scan anterior. Screenshot mostra 12 variantes (3 tipos x 4 orientações). O agrupamento usa borda tracejada colorida de 40x40px em vez de haste linear, diferenciando-o visualmente do [hac] Conectores. Círculo marker posicionado com margem negativa (-13px ou -14px) para sair do canto do box.",
+      "restricaoDePropertyTexto": "Mesma situação do [hac] Conectores: TEXT sem restrição declarada, default A. Para tipo=decorativo, a property letraNumero não é renderizada (usa SVG de ícone proibido) mas aceita qualquer string — é ignorada visualmente."
+    },
+    {
+      "nome": "[hac] Número da tela",
+      "nodeId": "13:479",
+      "pagina": "⚙️ | Componentes Conectores Gerais",
+      "key": "060f39545f...(fornecida externamente)",
+      "properties": {
+        "conector": {
+          "tipo": "VARIANT",
+          "opcoes": ["desativado", "inferior", "superior", "esquerda", "direita"]
+        },
+        "mostrarLabel": {
+          "tipo": "BOOLEAN",
+          "nomeFigma": "mostrar label#733:0",
+          "valorDefault": false
+        },
+        "label": {
+          "tipo": "TEXT",
+          "nomeFigma": "label#733:6",
+          "valorDefault": "Label"
+        },
+        "numero": {
+          "tipo": "TEXT",
+          "nomeFigma": "número#1478:0",
+          "valorDefault": "1"
+        }
+      },
+      "varianteDefault": {
+        "conector": "desativado",
+        "mostrarLabel": false,
+        "label": "Label",
+        "numero": "1",
+        "fonte": "Extraído da assinatura: conector=desativado, label=Label, mostrarLabel=false, numero=1. Ao inserir sem propriedades: círculo azul (#005ca9) de 24x24px com 1 em branco, sem haste e sem label visível."
+      },
+      "observacoesVisuais": "Bate com o scan anterior. Círculo azul (#005ca9) inconfundível — única categoria com cor azul claro. A property mostrarLabel (booleana) adiciona texto cinza (#404b52) ao lado do círculo para identificação contextual da tela.",
+      "restricaoDePropertyTexto": "Property numero é TEXT, default 1. Círculo 24x24px com padding 8px limita efetivamente a ~2 dígitos. Property label é TEXT, default Label, sem tamanho declarado — aparece externamente ao círculo com whitespace-nowrap, aceita strings maiores visualmente."
+    },
+    {
+      "nome": "[hac] Ordenação",
+      "nodeId": "5222:4270",
+      "pagina": "⚙️ | Componentes Conectores Gerais",
+      "key": "a22bae6f39...(fornecida externamente)",
+      "properties": {
+        "tamanho": {
+          "tipo": "VARIANT",
+          "opcoes": ["grande", "pequeno"]
+        },
+        "numero": {
+          "tipo": "TEXT",
+          "nomeFigma": "número#5265:3",
+          "valorDefault": "1"
+        }
+      },
+      "varianteDefault": {
+        "tamanho": "pequeno",
+        "numero": "1",
+        "fonte": "Extraído da assinatura: numero=1, tamanho=pequeno. Ao inserir: box azul-escuro (#002747) de 22x22px com 1 (11px semibold) e ícone keyboard_tab abaixo."
+      },
+      "observacoesVisuais": "Visual completamente distinto do [hac] Número da tela. Em vez de círculo, usa quadrado com arredondamento assimétrico (top-left, top-right e bottom-left arredondados, bottom-right reto — formato ticket/tag). Tem drop-shadow. Inclui ícone keyboard_tab (seta → de teclado) abaixo do número. Cores: azul-escuro (#002747, primary-130) com borda branca. Grande: 32x32px, número 16px, ícone 14px. Pequeno: 22x22px, número 11px, ícone ~9.6px.",
+      "restricaoDePropertyTexto": "Property numero é TEXT, default 1. Layout com whitespace-nowrap dentro do quadrado — limita visualmente a ~2 dígitos."
+    },
+    {
+      "nome": "[hac mob] Box specs leitor de tela",
+      "nodeId": "5413:1262",
+      "pagina": "📱 | Componentes Specs base Mobile",
+      "key": "30a1983bc9...(fornecida externamente)",
+      "properties": {
+        "conector": {
+          "tipo": "VARIANT",
+          "opcoes": ["Títulos", "Elementos Decorativos", "Elementos Interativos e Imagens"],
+          "notaCapitalizacao": "ATENÇÃO: valores com capitalização (maiúscula + espaços) diferente das properties homônimas de [hac] Conectores (minúsculas). Ex.: aqui é Elementos Interativos e Imagens, no Conectores é elementos interativos e imagens."
+        }
+      },
+      "varianteDefault": {
+        "conector": "Elementos Interativos e Imagens",
+        "fonte": "Extraído da assinatura: conector=Elementos Interativos e Imagens. Box branco com padding 12px, círculo amarelo à esquerda e bloco de texto de especificação mobile à direita."
+      },
+      "observacoesVisuais": "Bate com o scan anterior. Screenshot mostra 3 variantes: amarelo (interativos/imagens) com campos Componente, Leitor de Tela (link Default → DSC Super App), Nome Acessível, Observações; vermelho/decorativo com Não deve ser anunciado pelo Leitor de Tela; verde-limão (títulos) com Identificar como título + Notas de Código accessibilityRole=header.",
+      "conteudoTextualPorVariante": {
+        "elementosInterativosEImagens": {
+          "campos": ["Componente", "Leitor de Tela (link Default)", "Nome Acessível", "Observações"],
+          "linkLeitorDeTela": "https://www.figma.com/design/epCGtlKQxedDxQVlK3lNcN/DSC-|-Super-App?node-id=63712-64257"
+        },
+        "elementosDecorativos": {
+          "campos": ["Descrição"],
+          "descricao": "Não deve ser anunciado pelo Leitor de Tela."
+        },
+        "titulos": {
+          "campos": ["Descrição", "Notas de Código"],
+          "descricao": "Identificar como título.",
+          "notasDeCodigo": "Aplicar a propriedade accessibilityRole=header no elemento."
+        }
+      },
+      "restricaoDePropertyTexto": "Sem property de texto livre neste component set — variantes são fixas com conteúdo instrucional pré-definido. Preenchimento real ocorre nos campos editáveis dentro da instância, não via component property."
+    },
+    {
+      "nome": "[hac web] Box specs leitor de tela",
+      "nodeId": "10330:4204",
+      "pagina": "🖥️ | Componentes Specs base Web",
+      "key": "e2c3162d5c...(fornecida externamente)",
+      "properties": {
+        "conector": {
+          "tipo": "VARIANT",
+          "opcoes": ["Títulos", "Elementos Decorativos", "Elementos Interativos e Imagens"],
+          "notaCapitalizacao": "Mesma capitalização que a versão mobile."
+        }
+      },
+      "varianteDefault": {
+        "conector": "Elementos Interativos e Imagens",
+        "fonte": "Extraído da assinatura: conector=Elementos Interativos e Imagens. Mesmo padrão da versão mobile."
+      },
+      "observacoesVisuais": "Estruturalmente idêntico ao mobile. Única diferença visual confirmada na variante Títulos: o conector (círculo verde-limão) exibe H1 em vez de H — referência explícita ao nível de heading web (H1-H6) que não existe no React Native mobile. O bloco de Notas de Código na variante Títulos usa accessibilityRole=header (mesmo texto do mobile), o que pode ser revisto futuramente para diferenciar semântica web (role=heading + aria-level).",
+      "diferencaChaveEmRelacaoAoMobile": "Variante Títulos: conector mostra H1 (web) vs. H (mobile). Todos os outros campos e estrutura são idênticos.",
+      "restricaoDePropertyTexto": "Mesma situação do mobile: sem property de texto livre. Campos editáveis ficam nas instâncias."
+    }
+  ],
+  "comparacaoNumeroTelaVsOrdenacao": {
+    "conclusao": "São conceitos distintos e não redundantes — têm propósito, cor, forma e conteúdo completamente diferentes.",
+    "hacNumeroDaTela": {
+      "proposito": "Marca uma tela inteira (ou seção de tela) no handoff, identificando qual é a Tela X sendo documentada. Marcador de contexto de navegação/fluxo, não de elemento individual.",
+      "forma": "Círculo perfeito (border-radius 500px), 24x24px",
+      "cor": "Azul (#005ca9, --dsc-color-bg-highlight-5) — único azul claro da biblioteca",
+      "conteudo": "Número de tela (ex.: 1, 2...) opcionalmente acompanhado de label textual (ex.: Home, Perfil)",
+      "temConector": true,
+      "analogiaComPluginAtual": "Corresponde ao conceito Número da tela / Item Number do plugin atual"
+    },
+    "hacOrdenacao": {
+      "proposito": "Indica a ordem de foco de teclado/leitor de tela entre elementos interativos dentro de uma tela. Marcação de sequência de navegação por Tab.",
+      "forma": "Quadrado com arredondamento assimétrico (top-left, top-right e bottom-left arredondados, bottom-right reto) — formato ticket/tag. Tem drop-shadow.",
+      "cor": "Azul muito escuro/marinho (#002747, --color/bg/highlight/7-primary-130) com borda branca",
+      "conteudo": "Número de ordem de foco + ícone keyboard_tab (seta →) abaixo do número — seta indica sequência de Tab",
+      "tamanhos": "Dois tamanhos: pequeno (22x22px, default) e grande (32x32px)",
+      "temConector": false,
+      "analogiaComPluginAtual": "Conceito novo sem correspondência direta no plugin atual — mais próximo de uma anotação de Tab order"
+    },
+    "resumoDistincao": "Número da tela = qual tela é essa no fluxo (azul claro, círculo, tem conector, pode ter label de nome). Ordenação = qual a sequência de Tab entre elementos desta tela (azul-escuro, quadrado assimétrico com seta keyboard_tab, sem conector, só número + ícone). Não são redundantes."
+  },
+  "componentesNovosEncontrados": {
+    "conclusao": "Nenhum componente de acessibilidade novo encontrado além dos 6 publicados + 3 ocultos já documentados.",
+    "subComponentesInternosConfirmados": [
+      ".[hac mob base] Elementos decorativos (node 5370:1835) — interno do Box specs Mobile",
+      ".[hac mob base] Títulos (node 5514:8933) — interno do Box specs Mobile",
+      ".[hac base] Box conteúdo bloqueado (node 31:227) — base genérica com aviso no Figma: Este componente é uma peça para construir um maior. Use sempre o componente completo identificado pela tag [a11y].",
+      ".Imagem (node 10208:2559) — base para campo de texto alternativo de mídia"
+    ],
+    "novidadeNaoDocumentadaNoScanAnterior": "O [hac] Número da tela tem property booleana mostrar label (nomeFigma: mostrar label#733:0, default false) que não estava explicitamente detalhada no scan anterior. Não é componente novo, mas é property adicional relevante para o plugin ao inserir instâncias com label opcional."
+  }
+}

@@ -1,0 +1,503 @@
+{
+  "_meta": {
+    "status": "preenchido",
+    "fileKey": "HhriLSpKnCB2dHhyiU16iB",
+    "fileName": "[HAC] Handoff Super DSC Mobile e Web",
+    "scanDate": "2026-09-10",
+    "isPublishedLibrary": false,
+    "categoriasEncontradas": [
+      "elementos interativos e imagens",
+      "títulos",
+      "decorativo"
+    ],
+    "categoriasFaltantes": [
+      "Estrutura da Página",
+      "Informações Adicionais"
+    ],
+    "observacoesGerais": "Varredura visual e estrutural completa realizada via MCP do Figma. Confirmações principais: 1) Publicação da biblioteca: O arquivo NÃO está publicado como biblioteca Figma (Assets → Publicar não foi executado no Figma da organização); todos os component sets e símbolos possuem escopo local no arquivo, sem chaves (keys) públicas geradas. 2) Categorias de acessibilidade: A vertical de acessibilidade consolidou as 5 categorias antigas do hac em exatamente 3 categorias unificadas nos conectores, agrupamentos e templates: 'elementos interativos e imagens' (amarelo), 'títulos' (verde-limão, com 'H' no mobile e 'H1' no box web) e 'decorativo' (vermelho com corte diagonal de proibição). 'Estrutura da Página' e 'Informações Adicionais' não existem como conectores, agrupamentos ou templates no arquivo novo. 3) Status do arquivo: A página '🖥️ | Template de Handoff Web' (node 10150:13961) possui um banner visual explícito com a indicação 'Pendente', enquanto '📱 | Template de Handoff Mobile' (node 13:517) já possui o template V1 completo. A página '✨ | Atualizações do HAC' mantém changelog zerado (Versão 0.0.0)."
+  },
+  "componentSets": [
+    {
+      "nome": "[hac] Conectores",
+      "nodeId": "1:50",
+      "key": null,
+      "pagina": "⚙️ | Componentes Conectores Gerais",
+      "properties": [
+        {
+          "nome": "tipo",
+          "tipo": "VARIANT",
+          "opcoes": [
+            "elementos interativos e imagens",
+            "títulos",
+            "decorativo"
+          ]
+        },
+        {
+          "nome": "conector",
+          "tipo": "VARIANT",
+          "opcoes": [
+            "desativado",
+            "esquerda",
+            "direita",
+            "inferior",
+            "superior"
+          ]
+        },
+        {
+          "nome": "letra / número",
+          "tipo": "TEXT",
+          "opcoes": []
+        }
+      ],
+      "variantesFilhas": [
+        {
+          "nomeCompleto": "tipo=elementos interativos e imagens, conector=desativado",
+          "key": null,
+          "descricaoVisual": "Círculo amarelo/ouro (#fcbe05) de 24x24px com caractere alfanumérico preto centralizado ('A'). Sem haste conectora."
+        },
+        {
+          "nomeCompleto": "tipo=elementos interativos e imagens, conector=esquerda",
+          "key": null,
+          "descricaoVisual": "Círculo amarelo (#fcbe05) de 24x24px à esquerda com letra 'A', conectado a uma haste horizontal cinza (#64747a) de 88px estendendo-se para a direita (largura total 112px)."
+        },
+        {
+          "nomeCompleto": "tipo=elementos interativos e imagens, conector=direita",
+          "key": null,
+          "descricaoVisual": "Haste horizontal cinza (#64747a) de 88px à esquerda ligada a círculo amarelo (#fcbe05) com letra 'A' na extremidade direita (largura total 112px)."
+        },
+        {
+          "nomeCompleto": "tipo=elementos interativos e imagens, conector=inferior",
+          "key": null,
+          "descricaoVisual": "Haste vertical cinza (#64747a) descendo do topo até o círculo amarelo (#fcbe05) com 'A' posicionado na base (altura total 112px)."
+        },
+        {
+          "nomeCompleto": "tipo=elementos interativos e imagens, conector=superior",
+          "key": null,
+          "descricaoVisual": "Círculo amarelo (#fcbe05) com 'A' no topo ligado a uma haste vertical cinza (#64747a) que desce (altura total 104px)."
+        },
+        {
+          "nomeCompleto": "tipo=títulos, conector=desativado",
+          "key": null,
+          "descricaoVisual": "Círculo verde-limão (#afca0b) de 24x24px com letra preta 'H' centralizada em fonte semibold. Sem haste conectora."
+        },
+        {
+          "nomeCompleto": "tipo=títulos, conector=esquerda",
+          "key": null,
+          "descricaoVisual": "Círculo verde-limão (#afca0b) com 'H' na esquerda conectado a haste horizontal cinza (#64747a) que segue para a direita (largura 112px)."
+        },
+        {
+          "nomeCompleto": "tipo=títulos, conector=direita",
+          "key": null,
+          "descricaoVisual": "Haste horizontal cinza (#64747a) conectada ao círculo verde-limão (#afca0b) com 'H' na extremidade direita (largura 112px)."
+        },
+        {
+          "nomeCompleto": "tipo=títulos, conector=inferior",
+          "key": null,
+          "descricaoVisual": "Haste vertical cinza (#64747a) descendo até o círculo verde-limão (#afca0b) com 'H' na extremidade inferior (altura 112px)."
+        },
+        {
+          "nomeCompleto": "tipo=títulos, conector=superior",
+          "key": null,
+          "descricaoVisual": "Círculo verde-limão (#afca0b) com 'H' no topo ligado a uma haste vertical cinza (#64747a) que desce (altura 104px)."
+        },
+        {
+          "nomeCompleto": "tipo=decorativo, conector=desativado",
+          "key": null,
+          "descricaoVisual": "Círculo vermelho (#b22c2c) de 24x24px contendo ícone vetorial branco de proibição (corte diagonal). Sem haste conectora."
+        },
+        {
+          "nomeCompleto": "tipo=decorativo, conector=esquerda",
+          "key": null,
+          "descricaoVisual": "Círculo vermelho de proibição na esquerda ligado a uma haste horizontal cinza (#64747a) para a direita (largura 112px)."
+        },
+        {
+          "nomeCompleto": "tipo=decorativo, conector=direita",
+          "key": null,
+          "descricaoVisual": "Haste horizontal cinza (#64747a) ligada ao círculo vermelho de proibição na extremidade direita (largura 112px)."
+        },
+        {
+          "nomeCompleto": "tipo=decorativo, conector=inferior",
+          "key": null,
+          "descricaoVisual": "Haste vertical cinza (#64747a) descendo até o círculo vermelho de proibição na base (altura 112px)."
+        },
+        {
+          "nomeCompleto": "tipo=decorativo, conector=superior",
+          "key": null,
+          "descricaoVisual": "Círculo vermelho de proibição no topo ligado a uma haste vertical cinza (#64747a) que desce (altura 104px)."
+        }
+      ],
+      "correspondenteAntigo": "Substitui '[a11y mob] Conectores' (lib mobile 3zdtN13YvPlCGPdXeL0Y2i) e '[a11y] Conectores' (lib desktop Wy0IhXRVZMSOOr8E609UqI)"
+    },
+    {
+      "nome": "[hac] Agrupamento",
+      "nodeId": "1:169",
+      "key": null,
+      "pagina": "⚙️ | Componentes Conectores Gerais",
+      "properties": [
+        {
+          "nome": "tipo",
+          "tipo": "VARIANT",
+          "opcoes": [
+            "elementos interativos e imagens",
+            "decorativo",
+            "títulos"
+          ]
+        },
+        {
+          "nome": "orientação",
+          "tipo": "VARIANT",
+          "opcoes": [
+            "esquerda",
+            "direita",
+            "inferior",
+            "superior"
+          ]
+        },
+        {
+          "nome": "letra / número",
+          "tipo": "TEXT",
+          "opcoes": []
+        }
+      ],
+      "variantesFilhas": [
+        {
+          "nomeCompleto": "tipo=elementos interativos e imagens, orientação=esquerda",
+          "key": null,
+          "descricaoVisual": "Caixa delimitadora de 40x40px com contorno tracejado amarelo/dourado (#ca9804) e selo circular amarelo (#fcbe05) com letra 'A' posicionado na borda esquerda."
+        },
+        {
+          "nomeCompleto": "tipo=elementos interativos e imagens, orientação=direita",
+          "key": null,
+          "descricaoVisual": "Caixa delimitadora tracejada amarela (#ca9804) com selo circular amarelo (#fcbe05) com letra 'A' sobreposto na borda direita."
+        },
+        {
+          "nomeCompleto": "tipo=elementos interativos e imagens, orientação=inferior",
+          "key": null,
+          "descricaoVisual": "Caixa delimitadora tracejada amarela (#ca9804) com selo circular amarelo (#fcbe05) com letra 'A' sobreposto na borda inferior."
+        },
+        {
+          "nomeCompleto": "tipo=elementos interativos e imagens, orientação=superior",
+          "key": null,
+          "descricaoVisual": "Caixa delimitadora tracejada amarela (#ca9804) com selo circular amarelo (#fcbe05) com letra 'A' sobreposto na borda superior."
+        },
+        {
+          "nomeCompleto": "tipo=decorativo, orientação=esquerda",
+          "key": null,
+          "descricaoVisual": "Caixa delimitadora com contorno tracejado vermelho (#b22c2c) e selo circular vermelho de proibição sobreposto na borda esquerda."
+        },
+        {
+          "nomeCompleto": "tipo=decorativo, orientação=superior",
+          "key": null,
+          "descricaoVisual": "Caixa delimitadora tracejada vermelha (#b22c2c) com selo vermelho de proibição sobreposto na borda superior."
+        },
+        {
+          "nomeCompleto": "tipo=decorativo, orientação=direita",
+          "key": null,
+          "descricaoVisual": "Caixa delimitadora tracejada vermelha (#b22c2c) com selo vermelho de proibição sobreposto na borda direita."
+        },
+        {
+          "nomeCompleto": "tipo=decorativo, orientação=inferior",
+          "key": null,
+          "descricaoVisual": "Caixa delimitadora tracejada vermelha (#b22c2c) com selo vermelho de proibição sobreposto na borda inferior."
+        },
+        {
+          "nomeCompleto": "tipo=títulos, orientação=esquerda",
+          "key": null,
+          "descricaoVisual": "Caixa delimitadora com contorno tracejado verde-limão (#99b103) e selo circular verde (#afca0b) com 'H' preto sobreposto na borda esquerda."
+        },
+        {
+          "nomeCompleto": "tipo=títulos, orientação=superior",
+          "key": null,
+          "descricaoVisual": "Caixa delimitadora tracejada verde-limão (#99b103) com selo verde (#afca0b) com 'H' sobreposto na borda superior."
+        },
+        {
+          "nomeCompleto": "tipo=títulos, orientação=direita",
+          "key": null,
+          "descricaoVisual": "Caixa delimitadora tracejada verde-limão (#99b103) com selo verde (#afca0b) com 'H' sobreposto na borda direita."
+        },
+        {
+          "nomeCompleto": "tipo=títulos, orientação=inferior",
+          "key": null,
+          "descricaoVisual": "Caixa delimitadora tracejada verde-limão (#99b103) com selo verde (#afca0b) com 'H' sobreposto na borda inferior."
+        }
+      ],
+      "correspondenteAntigo": "Substitui '[a11y mob] Agrupamento' (lib mobile 3zdtN13YvPlCGPdXeL0Y2i) e '[a11y] Agrupamento' (lib desktop Wy0IhXRVZMSOOr8E609UqI)"
+    },
+    {
+      "nome": "[hac] Número da tela",
+      "nodeId": "13:479",
+      "key": null,
+      "pagina": "⚙️ | Componentes Conectores Gerais",
+      "properties": [
+        {
+          "nome": "conector",
+          "tipo": "VARIANT",
+          "opcoes": [
+            "desativado",
+            "esquerda",
+            "direita",
+            "inferior",
+            "superior"
+          ]
+        },
+        {
+          "nome": "número",
+          "tipo": "TEXT",
+          "opcoes": []
+        },
+        {
+          "nome": "mostrar label",
+          "tipo": "BOOLEAN",
+          "opcoes": []
+        },
+        {
+          "nome": "label",
+          "tipo": "TEXT",
+          "opcoes": []
+        }
+      ],
+      "variantesFilhas": [
+        {
+          "nomeCompleto": "conector=desativado",
+          "key": null,
+          "descricaoVisual": "Círculo azul institucional CAIXA (#005ca9) de 24x24px com número '1' centralizado em branco. Sem haste conectora."
+        },
+        {
+          "nomeCompleto": "conector=esquerda",
+          "key": null,
+          "descricaoVisual": "Círculo azul (#005ca9) com número branco '1' à esquerda, ligado a uma haste horizontal azul de 183px que avança para a direita."
+        },
+        {
+          "nomeCompleto": "conector=direita",
+          "key": null,
+          "descricaoVisual": "Haste horizontal azul (#005ca9) ligada ao círculo azul com número branco '1' posicionado na extremidade direita (largura 210px)."
+        },
+        {
+          "nomeCompleto": "conector=inferior",
+          "key": null,
+          "descricaoVisual": "Haste vertical azul (#005ca9) descendo até o círculo azul (#005ca9) com número branco posicionado na base (altura 112px)."
+        },
+        {
+          "nomeCompleto": "conector=superior",
+          "key": null,
+          "descricaoVisual": "Círculo azul (#005ca9) com número branco no topo ligado a haste vertical azul que desce (altura 104px). Opcionalmente renderiza texto 'Label' centralizado."
+        }
+      ],
+      "correspondenteAntigo": "Substitui '[a11y mob] Número da tela' (lib mobile 3zdtN13YvPlCGPdXeL0Y2i) e '[a11y] Número da tela' (lib desktop Wy0IhXRVZMSOOr8E609UqI)"
+    },
+    {
+      "nome": "[hac] Ordenação",
+      "nodeId": "5222:4270",
+      "key": null,
+      "pagina": "⚙️ | Componentes Conectores Gerais",
+      "properties": [
+        {
+          "nome": "tamanho",
+          "tipo": "VARIANT",
+          "opcoes": [
+            "pequeno",
+            "grande"
+          ]
+        },
+        {
+          "nome": "número",
+          "tipo": "TEXT",
+          "opcoes": []
+        }
+      ],
+      "variantesFilhas": [
+        {
+          "nomeCompleto": "tamanho=pequeno",
+          "key": null,
+          "descricaoVisual": "Pin/balão compacto de 22x22px em azul escuro (#002747) com contorno branco de 1px e ponta chanfrada no canto inferior direito. Exibe número branco no topo e ícone de tabulação '->|' (keyboard_tab) de 9.6px abaixo."
+        },
+        {
+          "nomeCompleto": "tamanho=grande",
+          "key": null,
+          "descricaoVisual": "Pin/balão ampliado de 32x32px em azul escuro (#002747) com contorno branco de 1.45px e sombra projetada suave. Exibe número branco em corpo 16px no topo e ícone de tabulação '->|' de 14px abaixo."
+        }
+      ],
+      "correspondenteAntigo": "Substitui '[a11y mob] Ordenação' (lib mobile 3zdtN13YvPlCGPdXeL0Y2i)"
+    },
+    {
+      "nome": ".[hac] Conector elementos decorativos",
+      "nodeId": "1248:2426",
+      "key": null,
+      "pagina": "⚙️ | Componentes Conectores Gerais",
+      "properties": [],
+      "variantesFilhas": [
+        {
+          "nomeCompleto": ".[hac] Conector elementos decorativos",
+          "key": null,
+          "descricaoVisual": "Símbolo atômico circular de 24x24px preenchido em vermelho (#b22c2c) com traço branco de proibição (corte diagonal). Utilizado como sub-componente nos conectores e legendas."
+        }
+      ],
+      "correspondenteAntigo": "Substitui '.[a11y mob] Conector elementos decorativos' (lib mobile 3zdtN13YvPlCGPdXeL0Y2i)"
+    },
+    {
+      "nome": ".[hac] Conector títulos",
+      "nodeId": "1248:2330",
+      "key": null,
+      "pagina": "⚙️ | Componentes Conectores Gerais",
+      "properties": [],
+      "variantesFilhas": [
+        {
+          "nomeCompleto": ".[hac] Conector títulos",
+          "key": null,
+          "descricaoVisual": "Símbolo atômico circular de 24x24px preenchido em verde-limão (#afca0b) com a letra preta 'H' centralizada em tipografia semibold (14px). Utilizado como sub-componente nos conectores de cabeçalho/título."
+        }
+      ],
+      "correspondenteAntigo": "Substitui '.[a11y mob] Conector títulos' (lib mobile 3zdtN13YvPlCGPdXeL0Y2i)"
+    },
+    {
+      "nome": ".[hac] Conector elementos interativos e imagens",
+      "nodeId": "1248:2328",
+      "key": null,
+      "pagina": "⚙️ | Componentes Conectores Gerais",
+      "properties": [
+        {
+          "nome": "letra / número",
+          "tipo": "TEXT",
+          "opcoes": []
+        }
+      ],
+      "variantesFilhas": [
+        {
+          "nomeCompleto": ".[hac] Conector elementos interativos e imagens",
+          "key": null,
+          "descricaoVisual": "Símbolo atômico circular de 24x24px em amarelo/ouro (#fcbe05) com letra ou número escuro (#22292e) centralizado em corpo 14px. Utilizado como sub-componente nos conectores de elementos e imagens."
+        }
+      ],
+      "correspondenteAntigo": "Substitui '.[a11y mob] Conector elementos e imagens' (lib mobile 3zdtN13YvPlCGPdXeL0Y2i)"
+    },
+    {
+      "nome": "[hac mob] Box specs leitor de tela",
+      "nodeId": "5413:1262",
+      "key": null,
+      "pagina": "⚙️ | Componentes Conectores Gerais",
+      "properties": [
+        {
+          "nome": "Conector",
+          "tipo": "VARIANT",
+          "opcoes": [
+            "Componente",
+            "Elementos decorativos",
+            "Títulos"
+          ]
+        }
+      ],
+      "variantesFilhas": [
+        {
+          "nomeCompleto": "Conector=Componente",
+          "key": null,
+          "descricaoVisual": "Card retangular branco de 372x306px contendo selo amarelo 'A' no canto superior esquerdo e campos estruturados: 'Componente: Button', 'Leitor de Tela: Default' (link azul sublinhado), 'Nome Acessível: Inserir o seguinte accessibilityLabel no elemento...', e 'Observações'."
+        },
+        {
+          "nomeCompleto": "Conector=Elementos decorativos",
+          "key": null,
+          "descricaoVisual": "Card retangular branco compacto de 372x96px com selo circular vermelho de proibição e bloco de texto informativo fixo: 'Descrição: Não deve ser anunciado pelo Leitor de Tela.'."
+        },
+        {
+          "nomeCompleto": "Conector=Títulos",
+          "key": null,
+          "descricaoVisual": "Card retangular branco de 372x160px com selo circular verde-limão exibindo a letra 'H', acompanhado de 'Descrição: Identificar como título.' e 'Notas de Código: Aplicar a propriedade accessibilityRole=\"header\" no elemento.'."
+        }
+      ],
+      "correspondenteAntigo": "Substitui '[a11y mob] Box specs leitor de tela' (lib mobile 3zdtN13YvPlCGPdXeL0Y2i)"
+    },
+    {
+      "nome": "[hac web] Box specs leitor de tela",
+      "nodeId": "10330:4204",
+      "key": null,
+      "pagina": "⚙️ | Componentes Conectores Gerais",
+      "properties": [
+        {
+          "nome": "Conector",
+          "tipo": "VARIANT",
+          "opcoes": [
+            "Componente",
+            "Elementos decorativos",
+            "Títulos"
+          ]
+        }
+      ],
+      "variantesFilhas": [
+        {
+          "nomeCompleto": "Conector=Componente",
+          "key": null,
+          "descricaoVisual": "Card retangular branco de 372x306px específico para web com selo amarelo 'A', campos estruturados para especificação de componente, link para leitor de tela, nome acessível e observações."
+        },
+        {
+          "nomeCompleto": "Conector=Elementos decorativos",
+          "key": null,
+          "descricaoVisual": "Card retangular branco de 372x96px com selo circular vermelho de proibição e texto instrucional de elemento a ser ignorado por tecnologias assistivas na web."
+        },
+        {
+          "nomeCompleto": "Conector=Títulos",
+          "key": null,
+          "descricaoVisual": "Card retangular branco de 372x160px com selo circular verde-limão exibindo 'H1' (diferenciação visual crucial em relação à versão mobile que usa 'H'), com orientações de cabeçalho web e notas de código correspondentes."
+        }
+      ],
+      "correspondenteAntigo": "Componente NOVO para Web (não existia na biblioteca anterior de handoff, que cobria apenas especificações mobile)"
+    },
+    {
+      "nome": ".[hac base] Box conteúdo bloqueado",
+      "nodeId": "31:227",
+      "key": null,
+      "pagina": "⚙️ | Componentes Specs base Mobile",
+      "properties": [],
+      "variantesFilhas": [
+        {
+          "nomeCompleto": ".[hac base] Box conteúdo bloqueado",
+          "key": null,
+          "descricaoVisual": "Bloco base retangular de 308x48px com título em CAIXA_Std:SemiBold (16px) e campo de valor pré-definido bloqueado para edição direta. Usado para construir os cards de especificações maiores."
+        }
+      ],
+      "correspondenteAntigo": "Substitui '.[a11y base] Box conteúdo bloqueado' das libs base"
+    },
+    {
+      "nome": ".[hac base] Box conteúdo editável",
+      "nodeId": "31:230",
+      "key": null,
+      "pagina": "⚙️ | Componentes Specs base Mobile",
+      "properties": [],
+      "variantesFilhas": [
+        {
+          "nomeCompleto": ".[hac base] Box conteúdo editável",
+          "key": null,
+          "descricaoVisual": "Bloco base retangular de 308x48px com título em CAIXA_Std:SemiBold e texto de instrução/placeholder editável pelo designer para customização das anotações de acessibilidade."
+        }
+      ],
+      "correspondenteAntigo": "Substitui '.[a11y base] Box conteúdo editável' das libs base"
+    },
+    {
+      "nome": ".[hac mob base] Legenda",
+      "nodeId": "1:465",
+      "key": null,
+      "pagina": "⚙️ | Componentes Specs base Mobile",
+      "properties": [
+        {
+          "nome": "variação",
+          "tipo": "VARIANT",
+          "opcoes": [
+            "web",
+            "ordem de tabulação e tabulação web"
+          ]
+        }
+      ],
+      "variantesFilhas": [
+        {
+          "nomeCompleto": "variação=web",
+          "key": null,
+          "descricaoVisual": "Faixa horizontal de legenda de 453x24px exibindo os três marcadores alinhados com seus respectivos rótulos textuais ('Elementos interativos e imagens', 'Títulos' com H, 'Elemento decorativo')."
+        },
+        {
+          "nomeCompleto": "variação=ordem de tabulação e tabulação web",
+          "key": null,
+          "descricaoVisual": "Faixa horizontal de legenda compacta de 218x22px exibindo o marcador azul de número da tela e os marcadores de ordenação/tabulação com seus rótulos."
+        }
+      ],
+      "correspondenteAntigo": "Substitui '[a11y mob] Legenda' da lib mobile"
+    }
+  ]
+}

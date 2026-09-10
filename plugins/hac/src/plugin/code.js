@@ -22,6 +22,7 @@ import DSC_A11Y_MAPPING_MOBILE from './refs/dsc-component-a11y-mapping-mobile.js
 import DSC_A11Y_MAPPING_SUPERDSCWEB from './refs/dsc-component-a11y-mapping-superdscweb.json';
 import DSC_A11Y_MAPPING_ANDROID from './refs/dsc-component-a11y-mapping-android.json';
 import REF_SKELETON from './refs/_skeleton.json';
+import FICHA_INSTRUCTION_CONTENT from './refs/ficha-instruction-content.json';
 
 figma.showUI(__html__, { width: 480, height: 750 });
 
@@ -2893,10 +2894,37 @@ function _insertFichaSectionInOrder(fichaFrame, section, sectionKey) {
   }
 }
 
-// Coluna de legenda textual, reaproveitada pelas seções de Tabulação/Swipe
-// (mesmo texto didático curto, só o título muda) — Auto Layout VERTICAL
-// simples, sem depender de nenhum componente real da lib.
-function _buildFichaLegendColumn(title, description) {
+// Mapeamento de cor do marcador visual (círculo) da seção Assets/Entendendo
+// as categorias, por palavra-chave no label do asset — case-insensitive.
+// Cinza neutro é o fallback pra qualquer label fora dessas 3 famílias
+// conhecidas (nunca trava por label inesperado vindo do JSON).
+function _fichaLegendAssetColor(label) {
+  const l = (label || '').toLowerCase();
+  if (l.includes('interativ') || l.includes('imagens')) return '#fcbe05';
+  if (l.includes('título') || l.includes('titulo')) return '#afca0b';
+  if (l.includes('decorativ')) return '#b22c2c';
+  return '#94a3b8';
+}
+
+// Coluna de legenda textual, reaproveitada pelas seções de Tabulação/Swipe/
+// Leitor de Tela — Auto Layout VERTICAL simples, sem depender de nenhum
+// componente real da lib.
+//
+// `richContent` é um bloco de src/plugin/refs/ficha-instruction-content.json
+// (FICHA_INSTRUCTION_CONTENT.tabulacao/.swipe/.leitorTela) — conteúdo REAL
+// extraído do template oficial de Handoff (título, texto explicativo, passos
+// numerados, seção de Assets com marcadores coloridos). Quando o bloco vier
+// vazio (hoje é o caso do Swipe — a lib ainda não tem frame de instrução
+// pra ele, ver swipeNote no JSON), cai no fallback de texto curto atual
+// (fallbackTitle/fallbackDescription), exatamente como a função já se
+// comportava antes desta mudança — nunca regride esse caso.
+async function _buildFichaLegendColumn(richContent, fallbackTitle, fallbackDescription) {
+  try { await figma.loadFontAsync({ family: 'Inter', style: 'Bold' }); } catch (e) { }
+  try { await figma.loadFontAsync({ family: 'Inter', style: 'Medium' }); } catch (e) { }
+  try { await figma.loadFontAsync({ family: 'Inter', style: 'Regular' }); } catch (e) { }
+
+  const hasRichContent = !!(richContent && richContent.title);
+
   const col = figma.createFrame();
   col.name = 'Legenda';
   col.layoutMode = 'VERTICAL';
@@ -2914,7 +2942,10 @@ function _buildFichaLegendColumn(title, description) {
   // "Hug". resizeWithoutConstraints ANTES de setar os sizing modes evita
   // esse conflito: define só a largura de partida, e os dois modos abaixo
   // (largura FIXED, altura AUTO/Hug) passam a valer de fato.
-  col.resizeWithoutConstraints(220, 1);
+  // Largura um pouco maior (260) que a versão só-com-texto-curto (220) —
+  // o conteúdo rico (passos numerados, Assets) fica mais confortável com
+  // mais espaço horizontal; não se aplica ao fallback, que continua leve.
+  col.resizeWithoutConstraints(hasRichContent ? 260 : 220, 1);
   col.primaryAxisSizingMode = 'AUTO';
   col.counterAxisSizingMode = 'FIXED';
   // Cor de fundo real da lib (pedido do usuário): aproximação visual de
@@ -2927,20 +2958,179 @@ function _buildFichaLegendColumn(title, description) {
   titleText.fontName = { family: 'Inter', style: 'Bold' };
   titleText.fontSize = 13;
   titleText.fills = [{ type: 'SOLID', color: { r: 0.1, g: 0.1, b: 0.1 } }];
-  titleText.characters = title;
+  titleText.characters = hasRichContent ? richContent.title : fallbackTitle;
   titleText.textAutoResize = 'HEIGHT';
   titleText.layoutAlign = 'STRETCH';
   col.appendChild(titleText);
 
-  const descText = figma.createText();
-  descText.name = 'Descrição';
-  descText.fontName = { family: 'Inter', style: 'Regular' };
-  descText.fontSize = 11;
-  descText.fills = [{ type: 'SOLID', color: { r: 0.4, g: 0.4, b: 0.4 } }];
-  descText.characters = description;
-  descText.textAutoResize = 'HEIGHT';
-  descText.layoutAlign = 'STRETCH';
-  col.appendChild(descText);
+  if (!hasRichContent) {
+    const descText = figma.createText();
+    descText.name = 'Descrição';
+    descText.fontName = { family: 'Inter', style: 'Regular' };
+    descText.fontSize = 11;
+    descText.fills = [{ type: 'SOLID', color: { r: 0.4, g: 0.4, b: 0.4 } }];
+    descText.characters = fallbackDescription;
+    descText.textAutoResize = 'HEIGHT';
+    descText.layoutAlign = 'STRETCH';
+    col.appendChild(descText);
+    return col;
+  }
+
+  // Subtítulo auxiliar (heading pequeno, Medium) reaproveitado pelos 3
+  // "cabeçalhos" do conteúdo rico: instructionsHeading, stepsHeading,
+  // assetsHeading — mesma hierarquia visual do template oficial.
+  function appendHeading(text) {
+    if (!text) return;
+    const t = figma.createText();
+    t.name = 'Subtítulo';
+    t.fontName = { family: 'Inter', style: 'Medium' };
+    t.fontSize = 11;
+    t.fills = [{ type: 'SOLID', color: { r: 0.1, g: 0.1, b: 0.1 } }];
+    t.characters = text;
+    t.textAutoResize = 'HEIGHT';
+    t.layoutAlign = 'STRETCH';
+    col.appendChild(t);
+  }
+
+  function appendParagraph(text) {
+    if (!text) return;
+    const t = figma.createText();
+    t.name = 'Parágrafo';
+    t.fontName = { family: 'Inter', style: 'Regular' };
+    t.fontSize = 11;
+    t.fills = [{ type: 'SOLID', color: { r: 0.4, g: 0.4, b: 0.4 } }];
+    t.characters = text;
+    t.textAutoResize = 'HEIGHT';
+    t.layoutAlign = 'STRETCH';
+    col.appendChild(t);
+  }
+
+  appendHeading(richContent.instructionsHeading);
+  appendParagraph(richContent.instructionsBody);
+
+  if (Array.isArray(richContent.steps) && richContent.steps.length > 0) {
+    appendHeading(richContent.stepsHeading);
+
+    const stepsList = figma.createFrame();
+    stepsList.name = 'Passos';
+    stepsList.layoutMode = 'VERTICAL';
+    stepsList.itemSpacing = 6;
+    stepsList.fills = [];
+    stepsList.resizeWithoutConstraints(1, 1);
+    stepsList.primaryAxisSizingMode = 'AUTO';
+    stepsList.counterAxisSizingMode = 'FIXED';
+    stepsList.layoutAlign = 'STRETCH';
+    col.appendChild(stepsList);
+    // layoutAlign STRETCH só passa a valer depois que o frame já está
+    // dentro de um pai com Auto Layout — setar counterAxisSizingMode antes
+    // do appendChild deixaria a largura em 1px (mesma armadilha do Hug
+    // documentada acima, mas no eixo contrário).
+    stepsList.counterAxisSizingMode = 'FIXED';
+    stepsList.resizeWithoutConstraints(col.width || 236, 1);
+
+    richContent.steps.forEach((stepText, i) => {
+      const row = figma.createFrame();
+      row.name = `Passo ${i + 1}`;
+      row.layoutMode = 'HORIZONTAL';
+      row.itemSpacing = 6;
+      row.fills = [];
+      row.counterAxisAlignItems = 'MIN';
+      row.resizeWithoutConstraints(1, 1);
+      row.primaryAxisSizingMode = 'AUTO';
+      row.counterAxisSizingMode = 'AUTO';
+      stepsList.appendChild(row);
+      row.layoutAlign = 'STRETCH';
+
+      const number = figma.createText();
+      number.name = 'Número';
+      number.fontName = { family: 'Inter', style: 'Bold' };
+      number.fontSize = 11;
+      number.fills = [{ type: 'SOLID', color: { r: 0.1, g: 0.1, b: 0.1 } }];
+      number.characters = `${i + 1}.`;
+      number.textAutoResize = 'WIDTH_AND_HEIGHT';
+      row.appendChild(number);
+
+      const text = figma.createText();
+      text.name = 'Texto';
+      text.fontName = { family: 'Inter', style: 'Regular' };
+      text.fontSize = 11;
+      text.fills = [{ type: 'SOLID', color: { r: 0.3, g: 0.3, b: 0.3 } }];
+      text.characters = stepText;
+      text.textAutoResize = 'HEIGHT';
+      text.layoutGrow = 1;
+      row.appendChild(text);
+    });
+  }
+
+  if (Array.isArray(richContent.assets) && richContent.assets.length > 0) {
+    appendHeading(richContent.assetsHeading);
+
+    const assetsList = figma.createFrame();
+    assetsList.name = 'Assets';
+    assetsList.layoutMode = 'VERTICAL';
+    assetsList.itemSpacing = 6;
+    assetsList.fills = [];
+    assetsList.resizeWithoutConstraints(1, 1);
+    assetsList.primaryAxisSizingMode = 'AUTO';
+    assetsList.counterAxisSizingMode = 'AUTO';
+    col.appendChild(assetsList);
+    assetsList.layoutAlign = 'STRETCH';
+    assetsList.counterAxisSizingMode = 'FIXED';
+    assetsList.resizeWithoutConstraints(col.width || 236, 1);
+
+    richContent.assets.forEach((asset, i) => {
+      const row = figma.createFrame();
+      row.name = `Asset ${i + 1}`;
+      row.layoutMode = 'HORIZONTAL';
+      row.itemSpacing = 6;
+      row.fills = [];
+      row.counterAxisAlignItems = 'MIN';
+      row.resizeWithoutConstraints(1, 1);
+      row.primaryAxisSizingMode = 'AUTO';
+      row.counterAxisSizingMode = 'AUTO';
+      assetsList.appendChild(row);
+      row.layoutAlign = 'STRETCH';
+
+      const marker = figma.createEllipse();
+      marker.name = 'Marcador';
+      marker.resizeWithoutConstraints(16, 16);
+      marker.fills = [{ type: 'SOLID', color: hexToRgb(_fichaLegendAssetColor(asset.label)) }];
+      row.appendChild(marker);
+
+      const textCol = figma.createFrame();
+      textCol.name = 'Texto';
+      textCol.layoutMode = 'VERTICAL';
+      textCol.itemSpacing = 2;
+      textCol.fills = [];
+      textCol.resizeWithoutConstraints(1, 1);
+      textCol.primaryAxisSizingMode = 'AUTO';
+      textCol.counterAxisSizingMode = 'AUTO';
+      row.appendChild(textCol);
+      textCol.layoutGrow = 1;
+
+      const label = figma.createText();
+      label.name = 'Label';
+      label.fontName = { family: 'Inter', style: 'Bold' };
+      label.fontSize = 11;
+      label.fills = [{ type: 'SOLID', color: { r: 0.1, g: 0.1, b: 0.1 } }];
+      label.characters = asset.label || '';
+      label.textAutoResize = 'HEIGHT';
+      label.layoutAlign = 'STRETCH';
+      textCol.appendChild(label);
+
+      if (asset.description) {
+        const desc = figma.createText();
+        desc.name = 'Descrição';
+        desc.fontName = { family: 'Inter', style: 'Regular' };
+        desc.fontSize = 10;
+        desc.fills = [{ type: 'SOLID', color: { r: 0.4, g: 0.4, b: 0.4 } }];
+        desc.characters = asset.description;
+        desc.textAutoResize = 'HEIGHT';
+        desc.layoutAlign = 'STRETCH';
+        textCol.appendChild(desc);
+      }
+    });
+  }
 
   return col;
 }
@@ -6241,7 +6431,8 @@ figma.ui.onmessage = async (msg) => {
       section.setPluginData('hacFichaSection', 'tabulacao');
       _insertFichaSectionInOrder(fichaFrame, section, 'tabulacao');
 
-      const legend = _buildFichaLegendColumn(
+      const legend = await _buildFichaLegendColumn(
+        FICHA_INSTRUCTION_CONTENT.tabulacao,
         'Ordem de Tabulação',
         'Sequência de foco do teclado (tecla Tab) desta tela — cada selo numerado indica a ordem em que o elemento recebe foco.'
       );
@@ -6321,7 +6512,8 @@ figma.ui.onmessage = async (msg) => {
       section.setPluginData('hacFichaSection', 'swipe');
       _insertFichaSectionInOrder(fichaFrame, section, 'swipe');
 
-      const legend = _buildFichaLegendColumn(
+      const legend = await _buildFichaLegendColumn(
+        FICHA_INSTRUCTION_CONTENT.swipe,
         'Trilha de Swipe',
         'Navegação por gesto de deslizar (swipe), exclusiva do leitor de tela mobile — trilha direcional de pontos, na ordem em que o gesto percorre a tela.'
       );
@@ -6459,7 +6651,8 @@ figma.ui.onmessage = async (msg) => {
       section.setPluginData('hacFichaSection', 'leitor');
       _insertFichaSectionInOrder(fichaFrame, section, 'leitor');
 
-      const legend = _buildFichaLegendColumn(
+      const legend = await _buildFichaLegendColumn(
+        FICHA_INSTRUCTION_CONTENT.leitorTela,
         'Especificações para Leitor de Tela',
         'Elementos e imagens, estrutura da página, nível de título, elemento decorativo e informações adicionais — cada marcador indica a categoria de acessibilidade documentada naquele ponto da tela.'
       );

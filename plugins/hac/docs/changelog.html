@@ -177,6 +177,7 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
     <a href="design-system.html">Design System</a>
     <a href="changelog.html" class="active">Changelog</a>
     <a href="auditoria-2026-09.html">Auditoria Geral</a>
+    <a href="proposta-arquitetura-handoff-completo.html">Proposta: Handoff sem Auto Layout</a>
   </nav>
   <button type="button" id="theme-toggle" aria-label="Alternar tema claro/escuro" title="Alternar tema claro/escuro"></button>
 </header>
@@ -1573,6 +1574,97 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
       <code>onboarding.js</code> (dentro de uma guarda <code>typeof</code>, agora checando
       <code>typeof isA11yMobileProject === 'function'</code>).</li>
     </ul>
+
+    <h2>2026-09-10 — Legenda rica na Ficha + telas de ajuda: conteúdo represado do template oficial finalmente conectado</h2>
+
+    <p>Consome trabalho represado desde 2026-09-09: <code>src/plugin/refs/ficha-instruction-content.json</code>
+    já tinha sido extraído (via MCP Figma) do template oficial de Handoff —
+    título, texto explicativo, passos numerados e seção de marcadores
+    visuais ("Assets"/"Entendendo as categorias") para Tabulação e Leitor de
+    Tela — mas nunca tinha sido importado por nenhum código real. O bloco
+    <code>swipe</code> continua vazio de propósito (a lib ainda não tem frame de
+    instrução para esse gesto).</p>
+    <ul>
+      <li><strong>Coluna de instrução da Ficha (backend)</strong>:
+      <code>_buildFichaLegendColumn</code> trocou de <code>(title, description)</code> para
+      <code>(richContent, fallbackTitle, fallbackDescription)</code> — quando o bloco
+      do JSON tem conteúdo, monta título + instruções + passos numerados +
+      lista de Assets com marcador colorido (círculo 16×16) por categoria
+      (amarelo para interativos/imagens, verde-limão para título, vermelho
+      para decorativo, cinza para qualquer outro caso). Sem conteúdo rico
+      (hoje só o Swipe), cai no texto curto de sempre — os textos hardcoded
+      originais foram mantidos no código como fallback, não removidos.
+      Coluna passa de 220px para 260px só na versão rica.</li>
+      <li><strong>Acesso do frontend ao mesmo conteúdo</strong>: novo script
+      <code>src/plugin/refs/build-ficha-instruction-constants.cjs</code> (mesmo
+      padrão de <code>build-a11y-constants.cjs</code>) gera
+      <code>refs/_ficha-instruction-content.generated.js</code>
+      (<code>FICHA_INSTRUCTION_CONTENT_UI</code>), já que o import estático de JSON só
+      funciona no backend (via esbuild) — o bundle de UI é concatenação de
+      texto puro. Novo script npm <code>refs:ficha-instruction</code>, encadeado em
+      <code>bundle:ui</code>; <code>build.cjs</code> interpola o gerado antes de
+      <code>accessibility.js</code>/<code>onboarding.js</code>.</li>
+      <li><strong>Onboarding</strong>: novo bloco expansível
+      (<code>_onboardingFichaStepsHTML</code>, um <code>&lt;details&gt;</code> fechado por
+      padrão, "Ver passo a passo do template oficial") incorporado nos
+      passos de Ordem de Tabulação e Leitor de Tela das duas jornadas
+      (web e mobile) — mostra os passos numerados reais do template sem
+      reescrever a estrutura do onboarding nem duplicar o texto inline.</li>
+    </ul>
+
+    <h2>2026-09-10 — Proposta de arquitetura: Handoff Completo sem Auto Layout consolidado</h2>
+
+    <p>O time da vertical de Acessibilidade sinalizou que o Handoff Completo
+    (o frame que reúne Tabulação/Swipe/Leitor de Tela/Consolidado lado a lado)
+    está gerando complexidade real — atrapalhando a posição dos marcadores e a
+    estruturação do handoff. Mapeamento completo do histórico desta área
+    (11 rodadas de correção desde 2026-09-04) confirmou que 3 delas (incluindo
+    as 2 mais recentes, ambas reportadas nesta mesma semana) têm a mesma causa
+    raiz: a combinação de Auto Layout automático consolidando os 4 blocos com
+    marcadores de posição "congelada" (<code>layoutPositioning: 'ABSOLUTE'</code>)
+    dentro dele.</p>
+    <ul>
+      <li>Novo documento <a href="proposta-arquitetura-handoff-completo.html">Proposta:
+      Handoff sem Auto Layout</a> — diagnóstico visual do histórico de bugs,
+      proposta de substituir o Auto Layout consolidado por posicionamento
+      calculado explicitamente pelo plugin (cada bloco vira frame solto, mas
+      permanece visualmente lado a lado, na mesma ordem de hoje), e o trade-off
+      explícito (ganho: elimina a causa raiz das rodadas mais recentes; custo:
+      o plugin passa a ser responsável por recalcular posições que o Auto
+      Layout fazia de graça).</li>
+      <li><strong>Decisão pendente</strong> — este é um documento de proposta para
+      alinhamento com a vertical, não uma mudança já aprovada ou implementada.
+      Nenhum código foi alterado por esta entrega.</li>
+    </ul>
+
+    <h2>2026-09-10 — Verificação da lib de referência nova após publicação</h2>
+
+    <p>Continuação da investigação sobre o arquivo <code>[HAC] Handoff Super DSC
+    Mobile e Web</code> (fileKey <code>HhriLSpKnCB2dHhyiU16iB</code>, ver seção 6 da
+    Documentação Técnica) — confirmado via REST API que a biblioteca já foi
+    <strong>publicada</strong> desde o último scan (antes não tinha nenhuma <code>key</code>
+    real). Um segundo scan via Gemini/MCP, agora com acesso ao Dev Mode real
+    (código gerado + screenshots), verificou os 6 component sets já
+    importáveis.</p>
+    <ul>
+      <li>Novo arquivo <code>src/plugin/refs/hac-published-lib-verification.json</code>
+      — defaults de propriedade confirmados, diferenças visuais mapeadas, e
+      confirmação de que <code>[hac] Número da tela</code> (identifica a tela no
+      fluxo) e <code>[hac] Ordenação</code> (anota ordem de foco de Tab, conceito
+      novo sem equivalente hoje no plugin) são categorias distintas, não
+      redundantes.</li>
+      <li><strong>Achado de risco registrado</strong>: a property <code>conector</code>
+      usa capitalização diferente entre <code>[hac] Conectores</code>/<code>Agrupamento</code>
+      (minúscula) e <code>[hac mob/web] Box specs leitor de tela</code> (Title Case) —
+      relevante para não quebrar silenciosamente numa eventual migração futura
+      que compare esses valores por string exata.</li>
+      <li>Nenhuma migração de importação real foi feita — as constantes
+      <code>A11Y_AGRUPAMENTO_KEYS</code>/<code>A11Y_CONECTOR_LINHA_KEYS</code>/<code>A11Y_ITEM_NUMBER_KEYS</code>
+      (e variantes <code>_MOBILE</code>) continuam apontando pras 2 libs antigas. A
+      migração fica para uma entrega separada e mais cuidadosa, por tocar a
+      área historicamente mais instável do produto.</li>
+    </ul>
+    <p>Ver Documentação Técnica, seção 6.</p>
 
     <hr>
 

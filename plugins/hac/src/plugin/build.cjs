@@ -35,6 +35,14 @@ const modA11yConstantsGenerated = read('refs/_a11y-constants.generated.js');
 // limpo antes do primeiro `npm run bundle:refs` — read() já trata
 // arquivo ausente com um comentário placeholder, sem quebrar o build.
 const modInstructionFramesGenerated = read('refs/_instruction-frames.generated.js');
+// Conteúdo rico da coluna de instrução da Ficha (título, texto explicativo,
+// passos numerados, seção de Assets) — mesmo dado consumido pelo backend
+// via ficha-instruction-content.json (import estático em code.js), exposto
+// aqui pro frontend como FICHA_INSTRUCTION_CONTENT_UI (ver
+// refs/build-ficha-instruction-constants.cjs). Precisa vir ANTES de
+// accessibility.js e onboarding.js — os dois podem consumir essa constante
+// (onboarding.js enriquece os passos de Tabulação/Leitor de Tela com ela).
+const modFichaInstructionGenerated = read('refs/_ficha-instruction-content.generated.js');
 const modA11y    = read('modules/accessibility.js');
 // Ordem de Tabulação e Trilha de Swipe (2026-09-09) — extraídos de
 // accessibility.js pra reduzir o maior arquivo do projeto. tab-order.js
@@ -221,6 +229,14 @@ ${modA11yConstantsGenerated}
 // FIGMA_TOKEN=xxx node src/plugin/refs/fetch-instruction-frames.cjs)
 // ============================================================
 ${modInstructionFramesGenerated}
+
+// ============================================================
+// GENERATED: refs/_ficha-instruction-content.generated.js
+// (FICHA_INSTRUCTION_CONTENT_UI — conteúdo rico da coluna de instrução da
+// Ficha, consumido por onboarding.js. Regenerar via:
+// npm run refs:ficha-instruction)
+// ============================================================
+${modFichaInstructionGenerated}
 
 // ============================================================
 // MODULE: accessibility.js
