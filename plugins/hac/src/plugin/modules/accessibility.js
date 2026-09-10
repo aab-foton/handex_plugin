@@ -42,6 +42,16 @@
 // closeModal, escapeHtml (todos em core.js/messages.js).
 // ============================================================
 
+// Flag temporária (2026-09-10, pedido do usuário): oculta da UI os 3 pontos
+// de entrada de mapeamento/geração automática — "ou usar Mapeamento
+// Automático" em Tabulação e Leitor de Tela, "ou usar a Ordem de Tabulação
+// já mapeada" em Swipe — enquanto o fluxo automático é refinado. Não remove
+// nenhuma lógica (_confirmGenerateTabOrderFromLayers, startSwipePathFromTabOrder,
+// _startA11yMappingFromLeitorTab continuam intactas e funcionais) — só some
+// o botão de entrada na UI. Reverter: trocar para `false` (ou remover a
+// constante e os 3 usos de A11Y_AUTO_MAPPING_HIDDEN nos templates).
+const A11Y_AUTO_MAPPING_HIDDEN = true;
+
 // Cores reais extraídas dos fills dos componentes publicados na lib "Design
 // Acessível". O selo (Tag/Chip) de cada categoria usa a cor "color" no
 // stroke/texto e "fill" como tinta de fundo.
@@ -3065,7 +3075,7 @@ function _a11yWorkspaceTabTabulacao(area) {
           <i data-lucide="trash-2" class="w-3.5 h-3.5" aria-hidden="true"></i>
         </button>` : ''}
       </div>
-      ${hasManualItems ? '' : `
+      ${A11Y_AUTO_MAPPING_HIDDEN ? '' : (hasManualItems ? '' : `
       <!-- Hierarquia visual (2026-09-04-e, pedido explícito com
            screenshot): Manual é o caminho PRIMÁRIO — o automático vira um
            link secundário abaixo, de propósito, pra que o designer
@@ -3078,7 +3088,7 @@ function _a11yWorkspaceTabTabulacao(area) {
         class="w-full flex items-center justify-center gap-1.5 h-7 mt-0.5 rounded-lg text-[10.5px] font-bold text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99] transition-all">
         <i data-lucide="sparkles" class="w-3.5 h-3.5" aria-hidden="true"></i>
         ou usar Mapeamento Automático
-      </button>`}
+      </button>`)}
       <ul id="${ulId}" class="flex flex-col gap-1.5 min-h-[10px]"></ul>
       ${hasManualItems ? `
       <div class="flex items-center gap-1.5 mt-1">
@@ -3179,11 +3189,12 @@ function _a11yWorkspaceTabSwipe(area) {
            conta própria. Sem itens de Tabulação nesta área,
            startSwipePathFromTabOrder cai no fluxo manual normal (mesmo
            startSwipePathManualMode do botão acima) — nunca bloqueia. -->
+      ${A11Y_AUTO_MAPPING_HIDDEN ? '' : `
       <button type="button" onclick="startSwipePathFromTabOrder('${escapeHtml(areaIdAttr)}', '${escapeHtml(targetNodeIdAttr)}')"
         class="w-full flex items-center justify-center gap-1.5 h-7 mt-0.5 rounded-lg text-[10.5px] font-bold text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99] transition-all">
         <i data-lucide="sparkles" class="w-3.5 h-3.5" aria-hidden="true"></i>
         ou usar a Ordem de Tabulação já mapeada
-      </button>
+      </button>`}
       ${existingPath ? `
       <button type="button" onclick="deleteSwipePathForArea('${escapeHtml(areaIdAttr)}')"
         class="w-full flex items-center justify-center gap-2 h-8 mt-1 rounded-2xl text-[11px] font-bold border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-all">
@@ -3248,7 +3259,7 @@ function _a11yWorkspaceTabLeitorDeTela(area, areaSpecs) {
         <i data-lucide="plus" class="w-3.5 h-3.5" aria-hidden="true"></i>
         Nova spec
       </button>
-      ${hasManualSpecs ? '' : `
+      ${A11Y_AUTO_MAPPING_HIDDEN ? '' : (hasManualSpecs ? '' : `
       <!-- Mapeamento Automático migrou pra cá (2026-09-04-g, pedido do
            usuário) — deixou de ser uma escolha feita uma única vez no
            momento de Marcar Área (radio "Detecção Automática vs Manual"
@@ -3263,7 +3274,7 @@ function _a11yWorkspaceTabLeitorDeTela(area, areaSpecs) {
         class="w-full flex items-center justify-center gap-1.5 h-7 mt-0.5 rounded-lg text-[10.5px] font-bold text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99] transition-all">
         <i data-lucide="radar" class="w-3.5 h-3.5" aria-hidden="true"></i>
         ou usar Mapeamento Automático
-      </button>`}
+      </button>`)}
       ${(areaSpecs.length > 0 || undocumentedEntries.length > 0) ? `
       <div class="flex items-center justify-end gap-1 px-0.5 -mb-0.5">
         <button type="button" onclick="_a11ySetAllSubaccordions(this, true)"
