@@ -6447,140 +6447,25 @@ figma.ui.onmessage = async (msg) => {
       await _moveActiveCloneIntoFichaSection(resolved.clone, section, 'hacSpecGroupForClone');
     }
 
-    // Cards de texto SEMPRE recriados do zero a cada "Atualizar" (não
-    // carregam estado como a réplica/overlay movidos acima) — remove só os
-    // cards antigos, marcados com pluginData próprio, preservando a
-    // legenda e a réplica movida intactas.
-    for (const child of (section.children || []).slice()) {
-      try {
-        if (child.getPluginData && child.getPluginData('hacFichaLeitorSpecCard') === 'true') child.remove();
-      } catch (e) { }
-    }
-
-    try { await figma.loadFontAsync({ family: 'Inter', style: 'Regular' }); } catch (e) { }
-    try { await figma.loadFontAsync({ family: 'Inter', style: 'Medium' }); } catch (e) { }
-    try { await figma.loadFontAsync({ family: 'Inter', style: 'Bold' }); } catch (e) { }
-
-    let specCount = 0;
-    for (const spec of (specs || [])) {
-      try {
-        const themeColor = hexToRgb(spec.categoryColor || '#0891B2');
-        const themeFill = hexToRgb(spec.categoryFill || spec.categoryColor || '#EBF4FB');
-
-        const card = figma.createFrame();
-        card.name = `Spec ${spec.letter || ''}`.trim();
-        card.layoutMode = 'VERTICAL';
-        card.paddingLeft = 12; card.paddingRight = 12; card.paddingTop = 12; card.paddingBottom = 12;
-        card.itemSpacing = 8;
-        card.cornerRadius = 8;
-        card.fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }];
-        card.strokes = [{ type: 'SOLID', color: themeColor }];
-        card.strokeWeight = 1.5;
-        card.primaryAxisSizingMode = 'AUTO';
-        card.counterAxisSizingMode = 'FIXED';
-        card.resize(240, 1);
-        card.setPluginData('hacFichaLeitorSpecCard', 'true');
-
-        const headerRow = figma.createFrame();
-        headerRow.layoutMode = 'HORIZONTAL';
-        headerRow.itemSpacing = 8;
-        headerRow.fills = [];
-        headerRow.primaryAxisSizingMode = 'AUTO';
-        headerRow.counterAxisSizingMode = 'AUTO';
-        headerRow.counterAxisAlignItems = 'CENTER';
-
-        const tagCircle = figma.createFrame();
-        tagCircle.name = 'Tag';
-        tagCircle.layoutMode = 'HORIZONTAL';
-        tagCircle.primaryAxisSizingMode = 'FIXED';
-        tagCircle.counterAxisSizingMode = 'FIXED';
-        tagCircle.resize(32, 32);
-        tagCircle.cornerRadius = 16;
-        tagCircle.fills = [{ type: 'SOLID', color: themeFill }];
-        tagCircle.strokes = [{ type: 'SOLID', color: themeColor }];
-        tagCircle.strokeWeight = 1.5;
-        tagCircle.primaryAxisAlignItems = 'CENTER';
-        tagCircle.counterAxisAlignItems = 'CENTER';
-        const tagText = figma.createText();
-        tagText.fontName = { family: 'Inter', style: 'Bold' };
-        tagText.fontSize = 14;
-        tagText.fills = [{ type: 'SOLID', color: themeColor }];
-        tagText.characters = spec.letter || '•';
-        tagCircle.appendChild(tagText);
-        headerRow.appendChild(tagCircle);
-
-        const title = figma.createText();
-        title.fontName = { family: 'Inter', style: 'Bold' };
-        title.fontSize = 11;
-        title.fills = [{ type: 'SOLID', color: { r: 0.1, g: 0.1, b: 0.1 } }];
-        title.characters = spec.targetNodeName || spec.categoryLabel || 'Elemento';
-        title.textAutoResize = 'HEIGHT';
-        title.layoutAlign = 'STRETCH';
-        headerRow.appendChild(title);
-        card.appendChild(headerRow);
-
-        if (spec.categoryLabel) {
-          const pill = figma.createFrame();
-          pill.name = `Categoria/${spec.categoryLabel}`;
-          pill.layoutMode = 'HORIZONTAL';
-          pill.paddingLeft = 8; pill.paddingRight = 8; pill.paddingTop = 4; pill.paddingBottom = 4;
-          pill.cornerRadius = 12;
-          pill.primaryAxisSizingMode = 'AUTO';
-          pill.counterAxisSizingMode = 'AUTO';
-          pill.fills = [{ type: 'SOLID', color: themeFill }];
-          pill.strokes = [{ type: 'SOLID', color: themeColor }];
-          const pillText = figma.createText();
-          pillText.fontName = { family: 'Inter', style: 'Medium' };
-          pillText.fontSize = 9;
-          pillText.fills = [{ type: 'SOLID', color: themeColor }];
-          pillText.characters = spec.categoryLabel;
-          pill.appendChild(pillText);
-          card.appendChild(pill);
-        }
-
-        // Campos por spec.fields[] — já filtrados/resolvidos no frontend
-        // (_fichaBuildSpecPayload), então um campo ausente na categoria da
-        // spec simplesmente não está no array, nunca aparece com valor vazio.
-        (spec.fields || []).forEach(f => {
-          if (!f || !f.value) return;
-          const fieldCol = figma.createFrame();
-          fieldCol.name = `Campo/${f.label}`;
-          fieldCol.layoutMode = 'VERTICAL';
-          fieldCol.itemSpacing = 2;
-          fieldCol.fills = [];
-          fieldCol.primaryAxisSizingMode = 'AUTO';
-          fieldCol.counterAxisSizingMode = 'AUTO';
-          fieldCol.layoutAlign = 'STRETCH';
-
-          const fLabel = figma.createText();
-          fLabel.fontName = { family: 'Inter', style: 'Medium' };
-          fLabel.fontSize = 9;
-          fLabel.fills = [{ type: 'SOLID', color: { r: 0.5, g: 0.5, b: 0.5 } }];
-          fLabel.characters = f.label.toUpperCase();
-          fLabel.textAutoResize = 'HEIGHT';
-          fLabel.layoutAlign = 'STRETCH';
-
-          const fVal = figma.createText();
-          fVal.fontName = { family: 'Inter', style: 'Regular' };
-          fVal.fontSize = 10.5;
-          fVal.fills = [{ type: 'SOLID', color: { r: 0.15, g: 0.15, b: 0.15 } }];
-          fVal.characters = String(f.value);
-          fVal.textAutoResize = 'HEIGHT';
-          fVal.layoutAlign = 'STRETCH';
-
-          fieldCol.appendChild(fLabel);
-          fieldCol.appendChild(fVal);
-          card.appendChild(fieldCol);
-        });
-
-        section.appendChild(card);
-        specCount++;
-      } catch (e) {
-        console.error('[hac] _buildFichaLeitorSection: falha ao montar card de spec.', e && e.message);
-      }
-    }
-
-    return specCount;
+    // Bug real corrigido (2026-09-10, reportado com print pelo usuário):
+    // este bloco desenhava cards de texto PROCEDURAIS (figma.createFrame/
+    // createText, um retângulo genérico por spec com selo+categoria+campos)
+    // ao lado do clone — só que as specs REAIS já vêm "de graça" dentro do
+    // overlay movido junto com o clone acima
+    // (_moveActiveCloneIntoFichaSection(..., 'hacSpecGroupForClone')): cada
+    // spec é criada como um specGroup reaproveitando o componente DSC real
+    // importado (create-unified-spec, já reparentado pro mesmo overlay
+    // 'hacSpecGroupForClone' no momento da criação, bem antes de qualquer
+    // inserção na Ficha — ver comentário em create-unified-spec). Resultado
+    // do bug: a Ficha mostrava as specs reais (corretamente sobrepostas ao
+    // clone) E, ao lado, uma segunda leva de cards fake/genéricos sem
+    // nenhuma relação com os componentes reais da lib — exatamente o que o
+    // usuário reportou ("não são as specs reais... cards que não são as que
+    // vêm da lib"). Removido por completo — a contagem usada por
+    // itemCount/detecção de "desatualizado" (ver _fichaSectionIsStale,
+    // handoff-ficha.js) já reflete o número de specs reais recebidas aqui,
+    // sem precisar desenhar nada a mais.
+    return (specs || []).length;
   }
 
   // Seção "Handoff Review" da Ficha (2026-09-08, 4º e último bloco,
