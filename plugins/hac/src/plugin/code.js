@@ -144,17 +144,72 @@ function _resolveOriginalNodeIdFromTabOrderClone(areaId, nodeId) {
 }
 
 // Remove (se existir) a cópia rascunho de Ordem de Tabulação da área
-// informada e zera o estado em memória correspondente — mesma lógica usada
-// pelo handler de mensagem "delete-tab-order-draft-copy" (cancelamento
-// manual do fluxo) e pelo handler figma.on('close', ...) logo abaixo
-// (designer fecha o plugin/Figma com a cópia rascunho ainda ativa, sem
-// nunca ter clicado em "Aplicar" ou "Cancelar" — sem isso, a cópia ficava
-// salva permanentemente no .fig). 100% síncrona (getPluginData/remove não
-// retornam Promise) de propósito: figma.on('close', ...) não espera
-// Promises pendentes, então nada aqui pode depender de await.
+// informada e zera o estado em memória correspondente — usada pelo handler
+// de mensagem "delete-tab-order-draft-copy" (cancelamento EXPLÍCITO do
+// designer, botão "Cancelar" no modal de revisão — aí sim é sempre seguro
+// remover incondicionalmente, o designer pediu). 100% síncrona
+// (getPluginData/remove não retornam Promise) de propósito.
 function _deleteTabOrderDraftCopy(areaId) {
   _removeExistingTabOrderCopiesForArea(areaId);
   _activeTabOrderCloneMaps.delete(areaId);
+}
+
+// Bug real corrigido (2026-09-10, reportado pelo usuário: "se eu fecho o
+// plugin, tudo que eu construí é apagado"). figma.on('close', ...) rodava a
+// MESMA remoção incondicional acima para TODA área com clone ativo em
+// memória (_activeTabOrderCloneMaps/_activeSwipePathCloneMaps) — mas esses
+// Maps não distinguem "cópia rascunho no meio de uma captura, nunca
+// aplicada nem cancelada" (o caso que este handler foi escrito para
+// limpar, evitando lixo órfão no .fig) de "clone de trabalho JÁ CONFIRMADO,
+// com selos/trilha/specs reais desenhados, possivelmente já movido pra
+// dentro do Handoff Completo" — que é o caso normal depois que o modelo
+// virou "1 clone por tipo por área, reaproveitado incrementalmente"
+// (2026-09-09, decisão de produto: "não precisamos da réplica da réplica").
+// Fechar a janela do plugin (sem fechar o Figma) sempre dispara este
+// handler — então todo trabalho já confirmado era apagado só por fechar a
+// UI, mesmo com o arquivo aberto o tempo todo. Corrigido checando se o
+// overlay de artefatos tem conteúdo REAL (mais que o "seed" que só existe
+// pra manter o GROUP vivo, ver _getOrCreateCloneOverlayGroup) antes de
+// remover — só descarta clones genuinamente vazios (capturas abertas e
+// nunca confirmadas).
+function _cloneOverlayHasRealContent(overlayGroup) {
+  if (!overlayGroup || !Array.isArray(overlayGroup.children)) return false;
+  return overlayGroup.children.some(child => {
+    try { return !(child.name && child.name.indexOf('seed (não remover') === 0); } catch (e) { return true; }
+  });
+}
+
+// Só remove clones de Tabulação/Swipe que ainda não têm nenhum trabalho
+// real (overlay vazio ou inexistente) — usado exclusivamente pelo
+// figma.on('close', ...) abaixo. Nunca usado pelo cancelamento explícito
+// (_deleteTabOrderDraftCopy/delete-tab-order-draft-copy), que continua
+// removendo incondicionalmente por ser um pedido direto do designer.
+function _deleteTabOrderCloneIfEmpty(areaId) {
+  _forEachTabOrderCopyCandidate(sibling => {
+    try {
+      if (sibling.getPluginData && sibling.getPluginData('hacTabOrderCopyForArea') === areaId) {
+        const overlay = _findCloneOverlaySibling(sibling, 'hacTabOrderBadgesGroupForClone');
+        if (!_cloneOverlayHasRealContent(overlay)) {
+          _removeExistingTabOrderCopiesForArea(areaId);
+        }
+      }
+    } catch (e) { }
+  });
+  _activeTabOrderCloneMaps.delete(areaId);
+}
+
+function _deleteSwipePathCloneIfEmpty(areaId) {
+  _forEachSwipePathCopyCandidate(sibling => {
+    try {
+      if (sibling.getPluginData && sibling.getPluginData('hacSwipePathCopyForArea') === areaId) {
+        const overlay = _findCloneOverlaySibling(sibling, 'hacSwipePathGroupForClone');
+        if (!_cloneOverlayHasRealContent(overlay)) {
+          _removeExistingSwipePathCopiesForArea(areaId);
+        }
+      }
+    } catch (e) { }
+  });
+  _activeSwipePathCloneMaps.delete(areaId);
 }
 
 figma.on('close', () => {
@@ -162,19 +217,14 @@ figma.on('close', () => {
     try { activeHighlightNode.remove(); } catch (e) { }
     activeHighlightNode = null;
   }
-  // Gap pré-existente: se o designer fechar o plugin/Figma com uma cópia
-  // rascunho de Ordem de Tabulação ainda ativa (nunca aplicou nem
-  // cancelou), ela ficava órfã e permanente no .fig, sem handler de
-  // limpeza algum. Reaproveita a mesma remoção de sempre — agora para
-  // TODAS as áreas com clone ativo em memória (Map, 2026-09-08), não só
-  // a última tocada.
+  // Só descarta clones sem NENHUM trabalho real (capturas abertas e nunca
+  // confirmadas) — clones com selos/trilha/specs reais são preservados,
+  // mesmo que o plugin seja fechado no meio do trabalho.
   for (const areaId of Array.from(_activeTabOrderCloneMaps.keys())) {
-    _deleteTabOrderDraftCopy(areaId);
+    _deleteTabOrderCloneIfEmpty(areaId);
   }
-  // Mesmo raciocínio pra Trilha de Swipe (2026-09-04-ac).
   for (const areaId of Array.from(_activeSwipePathCloneMaps.keys())) {
-    _removeExistingSwipePathCopiesForArea(areaId);
-    _activeSwipePathCloneMaps.delete(areaId);
+    _deleteSwipePathCloneIfEmpty(areaId);
   }
 });
 
@@ -2034,20 +2084,33 @@ function _rescueLegacyOverlayNestedInsideClone(clone, newParent, pluginDataKey) 
 // `pluginDataKey` diferem por chamador (selos de Tabulação vs. linha de
 // Swipe) — cada um com seu próprio grupo-overlay, nunca compartilhado,
 // mesmo quando os dois clones (Tabulação/Swipe) são o mesmo frame original.
-function _getOrCreateCloneOverlayGroup(clone, pluginDataKey, namePrefix) {
-  const cloneParent = clone.parent;
-  if (cloneParent && Array.isArray(cloneParent.children)) {
-    for (const sibling of cloneParent.children) {
-      try {
-        if (sibling.type === 'GROUP' && sibling.getPluginData &&
-          sibling.getPluginData(pluginDataKey) === clone.id &&
-          !sibling.removed) {
-          _setCloneOverlayGroupAbsolutePositioning(sibling);
-          return sibling;
-        }
-      } catch (e) { }
-    }
+// Busca pura (sem criar nada) do overlay-irmão de um clone — usada tanto
+// por _getOrCreateCloneOverlayGroup (que cria se não achar) quanto por
+// checagens read-only que não devem criar overlay novo (ex.: detectar se
+// há trabalho real antes de decidir remover um clone, ver
+// _cloneOverlayHasRealContent/figma.on('close')).
+function _findCloneOverlaySibling(clone, pluginDataKey) {
+  const cloneParent = clone && clone.parent;
+  if (!cloneParent || !Array.isArray(cloneParent.children)) return null;
+  for (const sibling of cloneParent.children) {
+    try {
+      if (sibling.type === 'GROUP' && sibling.getPluginData &&
+        sibling.getPluginData(pluginDataKey) === clone.id &&
+        !sibling.removed) {
+        return sibling;
+      }
+    } catch (e) { }
   }
+  return null;
+}
+
+function _getOrCreateCloneOverlayGroup(clone, pluginDataKey, namePrefix) {
+  const existing = _findCloneOverlaySibling(clone, pluginDataKey);
+  if (existing) {
+    _setCloneOverlayGroupAbsolutePositioning(existing);
+    return existing;
+  }
+  const cloneParent = clone.parent;
 
   // Dado legado (ver _rescueLegacyOverlayNestedInsideClone): antes de
   // assumir "não existe" e criar um overlay novo do zero, confirma que não

@@ -1666,6 +1666,47 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
     </ul>
     <p>Ver Documentação Técnica, seção 6.</p>
 
+    <h2>2026-09-10 — Bug crítico: fechar o plugin apagava todo o trabalho já feito</h2>
+
+    <p>Reportado pelo usuário: "se eu fecho o plugin, tudo o que eu construí é
+    apagado". Reproduzido de forma precisa — o arquivo Figma nunca era fechado,
+    só a janela/UI do plugin — e mesmo assim, ao reabrir, todos os selos de
+    Ordem de Tabulação, trilha de Swipe e specs de Leitor de Tela tinham
+    sumido do canvas, restando só a Section principal do plugin.</p>
+
+    <p><strong>Causa raiz</strong>: <code>figma.on('close', ...)</code> (dispara toda vez
+    que a janela do plugin fecha, mesmo com o Figma continuando aberto) rodava
+    uma remoção INCONDICIONAL de todo clone de trabalho ativo em memória
+    (<code>_activeTabOrderCloneMaps</code>/<code>_activeSwipePathCloneMaps</code>). O handler foi
+    escrito quando o modelo era "cópia sempre temporária, só sobrevive se o
+    designer clicar Aplicar" — mas o modelo mudou em 2026-09-09 para "1 clone
+    por tipo por área, reaproveitado incrementalmente" (nunca mais "réplica da
+    réplica"), e ninguém atualizou esse handler pra refletir isso. O mesmo Map
+    guarda tanto uma captura recém-iniciada (sem nada desenhado ainda) quanto o
+    clone de trabalho JÁ CONFIRMADO, com selos/trilha/specs reais — inclusive
+    quando já movido pra dentro do Handoff Completo — e o handler tratava os
+    dois casos como a mesma coisa: lixo a descartar.</p>
+
+    <ul>
+      <li><strong>Corrigido</strong>: nova checagem <code>_cloneOverlayHasRealContent</code>
+      — antes de remover um clone no fechamento, o handler agora confirma se o
+      overlay de artefatos (selos/trilha/specs) tem conteúdo REAL, além do
+      "seed" que só existe pra manter o grupo vivo. Só clones genuinamente
+      vazios (captura aberta e nunca confirmada) continuam sendo descartados —
+      exatamente o comportamento original que este handler pretendia ter.
+      Novas funções <code>_deleteTabOrderCloneIfEmpty</code>/
+      <code>_deleteSwipePathCloneIfEmpty</code> substituem a remoção incondicional
+      só dentro de <code>figma.on('close', ...)</code>.</li>
+      <li><strong>Não muda</strong> o cancelamento explícito (botão "Cancelar" no
+      modal de revisão, <code>delete-tab-order-draft-copy</code>) — esse continua
+      removendo incondicionalmente, porque é um pedido direto do designer, não
+      uma limpeza automática silenciosa.</li>
+      <li>Extraída <code>_findCloneOverlaySibling</code> (busca pura, sem criar
+      nada) de dentro de <code>_getOrCreateCloneOverlayGroup</code>, reaproveitada
+      pela nova checagem — nenhuma mudança de comportamento na função
+      original.</li>
+    </ul>
+
     <h2>2026-09-10 — Mapeamento/geração automática oculto temporariamente</h2>
 
     <p>Pedido do usuário: ocultar por enquanto os 3 pontos de entrada de

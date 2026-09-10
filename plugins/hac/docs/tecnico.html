@@ -1218,6 +1218,18 @@ hr {
       <code>node.y</code> crus quando o node pode estar dentro de uma
       Section ou de outro container — x/y são relativos ao PAI, não à
       página.</li>
+      <li><strong><code>figma.on('close', ...)</code> NUNCA pode remover um
+      clone incondicionalmente</strong> (bug crítico corrigido 2026-09-10:
+      fechar só a janela do plugin, sem fechar o Figma, disparava esse
+      handler e apagava todo trabalho já confirmado — selos, trilha, specs).
+      Os Maps de clone ativo (<code>_activeTabOrderCloneMaps</code>/
+      <code>_activeSwipePathCloneMaps</code>) guardam tanto uma captura recém-
+      iniciada (overlay vazio, só o seed) quanto o clone de trabalho já
+      confirmado — o handler de fechamento SEMPRE precisa checar
+      <code>_cloneOverlayHasRealContent(overlay)</code> antes de decidir
+      remover, e só descartar quando o overlay não tem nada além do seed.
+      O cancelamento EXPLÍCITO do designer (<code>delete-tab-order-draft-copy</code>)
+      é o único caminho que pode continuar removendo incondicionalmente.</li>
     </ul>
 
     <p><strong>Migração defensiva de overlay legado
