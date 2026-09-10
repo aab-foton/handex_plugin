@@ -56,16 +56,19 @@ function _clearOrphanedHighlightStrokes() {
 }
 
 // Gap entre a faixa ocupada (áreas/specs/cópias já existentes) e a nova
-// linha de cópias de Ordem de Tabulação — mesmo valor de _SPEC_GAP por
-// consistência visual com o restante do canvas injetado pelo hac. Gap
-// horizontal entre cópias que dividem a mesma faixa reaproveita
-// _SPEC_COL_GAP (~64) pelo mesmo motivo. Declaradas aqui no escopo de
-// módulo (não dentro de figma.ui.onmessage) porque são `const` — declará-las
-// no meio do corpo do handler as deixa presas à temporal dead zone até a
-// linha da declaração realmente executar, e qualquer branch anterior do
-// handler (como generate-tab-order-from-layers) que as use antes disso
-// lança ReferenceError (bug real reproduzido em arquivo de produção,
-// 2026-09-03).
+// réplica de trabalho de Ordem de Tabulação/Swipe/Leitor de Tela — mesmo
+// valor de _SPEC_GAP por consistência visual com o restante do canvas
+// injetado pelo hac. Nome mantido (_TAB_ORDER_ROW_GAP) por compatibilidade
+// com o restante do código, mas desde 2026-09-09 é usado como gap
+// HORIZONTAL: réplicas novas nascem AO LADO do frame original, não mais
+// abaixo dele (ver _findFreeTabOrderCopyPosition). _TAB_ORDER_COL_GAP
+// (~64) reaproveita o mesmo raciocínio de _SPEC_COL_GAP, mas não tem
+// consumidor ativo hoje. Declaradas aqui no escopo de módulo (não dentro
+// de figma.ui.onmessage) porque são `const` — declará-las no meio do corpo
+// do handler as deixa presas à temporal dead zone até a linha da
+// declaração realmente executar, e qualquer branch anterior do handler
+// (como generate-tab-order-from-layers) que as use antes disso lança
+// ReferenceError (bug real reproduzido em arquivo de produção, 2026-09-03).
 const _TAB_ORDER_ROW_GAP = 32;
 const _TAB_ORDER_COL_GAP = 64;
 
@@ -613,6 +616,24 @@ function _findVisibleLabelText(node, depth) {
   if ('children' in node && Array.isArray(node.children)) {
     for (const child of node.children) {
       const found = _findVisibleLabelText(child, (depth || 0) + 1);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+// Mesmo espírito de _findVisibleLabelText acima, mas retorna o NODE (não a
+// string) — usado pelo bloco "Hierarquia de títulos" da Ficha Review
+// (_buildFichaReviewSection, 2026-09-09) pra achar o TEXT real por trás de
+// uma spec de título marcada num container (frame/grupo), e então ler
+// node.textStyleId nele.
+function _findFirstTextNode(node, depth) {
+  if (!node || node.visible === false) return null;
+  if ((depth || 0) > 3) return null;
+  if (node.type === 'TEXT') return node;
+  if ('children' in node && Array.isArray(node.children)) {
+    for (const child of node.children) {
+      const found = _findFirstTextNode(child, (depth || 0) + 1);
       if (found) return found;
     }
   }
@@ -1756,9 +1777,17 @@ function _computeNextA11ySectionName() {
   return `${A11Y_SECTION_NAME} v${maxVersion + 1}`;
 }
 
-function _getOrCreateNamedSection(sectionName) {
+// legacyName (opcional, 2026-09-09): usado só pela Section-mãe da Ficha
+// (renomeada de "hac — Ficha de Handoff" pra "hac — Handoff Completo",
+// pedido de produto) — arquivos já existentes têm essa Section gravada no
+// canvas com o nome ANTIGO; sem aceitar os dois nomes na busca, ela nunca
+// seria reencontrada, e a próxima inserção criaria uma Section NOVA
+// duplicada, deixando a antiga (com todo o trabalho já documentado) órfã.
+// Migração puramente aditiva: nunca renomeia a Section antiga em si, só a
+// reconhece — decisão do usuário, evitar qualquer rename in-place por ora.
+function _getOrCreateNamedSection(sectionName, legacyName) {
   let section = figma.currentPage.children.find(
-    n => n.type === 'SECTION' && n.name === sectionName
+    n => n.type === 'SECTION' && (n.name === sectionName || (legacyName && n.name === legacyName))
   );
   if (!section) {
     section = figma.createSection();
@@ -1925,6 +1954,56 @@ function _reparentIntoAreaGroup(node, areaGroupNode) {
 // Auto Layout, estruturalmente imune a todos os bugs das 5 rodadas
 // anteriores de uma vez). Ver essa função para a solução atual.
 
+// Migração defensiva (2026-09-09): entre a introdução de
+// _getOrCreateCloneOverlayGroup e a rodada anterior (_reparentIntoCloneAbsolute,
+// ver comentário acima), o overlay de artefatos chegou a nascer AGRUPADO
+// DENTRO do próprio clone, não irmão dele — bug já corrigido na lógica de
+// criação, mas sem migração retroativa: qualquer Área cuja Ordem de
+// Tabulação/Swipe/Leitor já existia ANTES dessa correção carrega esse
+// overlay legado até hoje, aninhado dentro do clone. Isso só apareceu como
+// sintoma visível quando "Inserir/Atualizar na Ficha" passou a MOVER
+// (appendChild) a réplica de trabalho já existente pra dentro da Section
+// da Ficha (2026-09-09) — o move leva o clone inteiro, incluindo esse
+// overlay legado agarrado por dentro, resultando no grupo de selos
+// aparecendo como FILHO do clone no painel de camadas em vez de IRMÃO.
+// Busca recursiva (profundidade limitada não é necessária — árvores de
+// tela raramente passam de poucas dezenas de níveis) por um GROUP marcado
+// com `pluginDataKey` apontando pro id do PRÓPRIO clone (mesma marca que
+// _getOrCreateCloneOverlayGroup sempre usou, legado ou não) em qualquer
+// profundidade dentro dele. Se achar, resgata pra fora: appendChild no
+// `newParent` (pai do clone no destino final), compensando x/y pela
+// diferença de bounding box (mesmo princípio de _reparentIntoAreaGroup,
+// robusto contra qualquer profundidade de aninhamento removida).
+// Idempotente: clones já corrigidos (overlay nasceu/já vive como irmão)
+// não têm nada pra achar aqui e a função não faz nada.
+function _rescueLegacyOverlayNestedInsideClone(clone, newParent, pluginDataKey) {
+  let legacyOverlay = null;
+  (function walk(node) {
+    if (legacyOverlay || !node || !Array.isArray(node.children)) return;
+    for (const child of node.children) {
+      if (legacyOverlay) return;
+      try {
+        if (child.type === 'GROUP' && child.getPluginData &&
+          child.getPluginData(pluginDataKey) === clone.id && !child.removed) {
+          legacyOverlay = child;
+          return;
+        }
+      } catch (e) { }
+      walk(child);
+    }
+  })(clone);
+
+  if (!legacyOverlay) return null;
+
+  try {
+    _reparentIntoAreaGroup(legacyOverlay, newParent);
+  } catch (e) {
+    console.error('[hac] _rescueLegacyOverlayNestedInsideClone: falhou ao resgatar overlay legado, mantendo aninhado.', e && e.message);
+    return null;
+  }
+  return legacyOverlay;
+}
+
 // Resolve (ou cria) um GRUPO de overlay pra artefatos desenhados "sobre"
 // um clone (selos de Ordem de Tabulação, linha de Trilha de Swipe) — vive
 // IRMÃO do clone (mesmo pai — o Grupo da Área, ou figma.currentPage antes
@@ -1966,6 +2045,22 @@ function _getOrCreateCloneOverlayGroup(clone, pluginDataKey, namePrefix) {
           return sibling;
         }
       } catch (e) { }
+    }
+  }
+
+  // Dado legado (ver _rescueLegacyOverlayNestedInsideClone): antes de
+  // assumir "não existe" e criar um overlay novo do zero, confirma que não
+  // há um overlay antigo AGARRADO por dentro do clone — sem isso, cada
+  // clone legado acabaria com dois grupos de artefatos coexistindo (o
+  // velho, aninhado e nunca mais alcançado por nenhuma varredura por
+  // irmão; um novo, vazio, criado aqui do lado de fora), perdendo os
+  // selos/trilha já desenhados no velho.
+  if (cloneParent) {
+    const rescued = _rescueLegacyOverlayNestedInsideClone(clone, cloneParent, pluginDataKey);
+    if (rescued) {
+      rescued.name = `${namePrefix} ${clone.name}`;
+      _setCloneOverlayGroupAbsolutePositioning(rescued);
+      return rescued;
     }
   }
 
@@ -2083,6 +2178,21 @@ async function _moveActiveCloneIntoFichaSection(clone, targetSection, pluginData
         }
       } catch (e) { }
     }
+  }
+
+  // Dado legado (ver _rescueLegacyOverlayNestedInsideClone): Áreas
+  // documentadas ANTES da correção que introduziu o overlay-irmão (2026-
+  // 09-08/09) podem ter o grupo de selos/trilha AGARRADO por dentro do
+  // clone em vez de irmão dele — a busca acima nunca encontra esse caso
+  // (só olha irmãos), então sem este resgate o move abaixo levaria o
+  // overlay legado junto, DENTRO do clone, pra dentro da Ficha (bug real
+  // reportado: "[Selos de Tabulação] ... apareceu ANINHADO DENTRO do
+  // clone" no painel de camadas). Resgata pra fora, como irmão do clone no
+  // pai ATUAL (antes de mover), pra cair no mesmo caminho de código já
+  // testado logo abaixo (appendChild pro destino final + correção de
+  // layoutPositioning).
+  if (!overlayGroup && oldParent) {
+    overlayGroup = _rescueLegacyOverlayNestedInsideClone(clone, oldParent, pluginDataKey);
   }
 
   targetSection.appendChild(clone);
@@ -2302,11 +2412,16 @@ function _removeExistingSwipePathCopiesForArea(areaId) {
 // frame ORIGINAL da área (area.targetNodeId). Prefixo `_ficha`/`hacFicha*`
 // em tudo (dado de canvas e funções) para não colidir com o pipeline de
 // Tabulação/Swipe.
-const A11Y_FICHA_SECTION_NAME = 'hac — Ficha de Handoff';
+const A11Y_FICHA_SECTION_NAME = 'hac — Handoff Completo';
+// Nome antigo (pré-2026-09-09) — arquivos já existentes têm Sections
+// gravadas no canvas com este nome; ver comentário de
+// _getOrCreateNamedSection (legacyName) para o porquê de manter esta
+// constante em vez de só trocar o valor acima.
+const A11Y_FICHA_SECTION_NAME_LEGACY = 'hac — Ficha de Handoff';
 
 function _getOrCreateFichaSection(sectionName) {
   const suffix = _extractA11ySectionVersionSuffix(sectionName);
-  return _getOrCreateNamedSection(A11Y_FICHA_SECTION_NAME + suffix);
+  return _getOrCreateNamedSection(A11Y_FICHA_SECTION_NAME + suffix, A11Y_FICHA_SECTION_NAME_LEGACY + suffix);
 }
 
 function _reparentIntoFichaSection(node, sectionName) {
@@ -2323,7 +2438,8 @@ function _forEachFichaFrameCandidate(fn) {
     fn(sibling);
   }
   for (const sibling of figma.currentPage.children) {
-    if (sibling.type !== 'SECTION' || !sibling.name.startsWith(A11Y_FICHA_SECTION_NAME)) continue;
+    if (sibling.type !== 'SECTION') continue;
+    if (!sibling.name.startsWith(A11Y_FICHA_SECTION_NAME) && !sibling.name.startsWith(A11Y_FICHA_SECTION_NAME_LEGACY)) continue;
     for (const child of (sibling.children || [])) fn(child);
   }
   _forEachA11ySessionAreaChild(fn);
@@ -2521,9 +2637,9 @@ async function _collectA11yOccupiedBounds() {
   // Áreas diferentes gerando Ficha colidem visualmente entre si, e uma
   // Ficha já inserida pode ser sobreposta por uma cópia de Tabulação
   // criada depois dela (achado real de QA, 2026-09-04).
-  const fichaSectionPrefix = A11Y_FICHA_SECTION_NAME;
   for (const sibling of figma.currentPage.children) {
-    if (sibling.type !== 'SECTION' || !sibling.name.startsWith(fichaSectionPrefix)) continue;
+    if (sibling.type !== 'SECTION') continue;
+    if (!sibling.name.startsWith(A11Y_FICHA_SECTION_NAME) && !sibling.name.startsWith(A11Y_FICHA_SECTION_NAME_LEGACY)) continue;
     for (const child of (sibling.children || [])) addNode(child);
   }
 
@@ -2559,26 +2675,30 @@ async function _findFreeTabOrderCopyPosition(cloneWidth, cloneHeight, originBoun
   const ow = originBounds.width;
   const oh = originBounds.height;
 
-  // Sempre ABAIXO do frame original (2026-09-08, pedido do usuário) —
-  // antes tentava 4 lados em ordem (direita, abaixo, esquerda, acima),
-  // usando o primeiro sem colisão; isso fazia a réplica nascer do lado
-  // ou até por cima de outro conteúdo já existente, dependendo do que
-  // estivesse ocupado naquele momento. Agora a posição horizontal é
-  // sempre a mesma do original (x = ox) — só a posição vertical desce,
-  // em incrementos de _TAB_ORDER_ROW_GAP a partir de logo abaixo do
-  // original, até achar uma faixa livre. Sem limite de tentativas
-  // (diferente do antigo fallback de 4 lados): numa página real, sempre
-  // existe espaço mais abaixo, então não precisa de um "último recurso".
-  const x = Math.round(ox);
-  let y = Math.round(oy + oh + _TAB_ORDER_ROW_GAP);
+  // Sempre AO LADO do frame original (2026-09-09, pedido do usuário —
+  // antes era sempre ABAIXO, 2026-09-08). Motivo da troca: o designer pode
+  // começar a documentar por qualquer bloco (Swipe, Leitor de Tela ou
+  // Tabulação, em qualquer ordem) e cada um pode precisar criar uma
+  // réplica nova (quando não há uma já reaproveitável, ver
+  // _resolveActiveTabOrderClone/_resolveActiveSwipePathClone/
+  // _resolveActiveSpecClone — esse reaproveitamento não muda aqui, só a
+  // posição de quando uma réplica NOVA de fato precisa nascer). Mesma
+  // lógica de "tentar, colidir, empurrar mais pra longe, tentar de novo"
+  // de antes, só invertendo o eixo de busca: a posição vertical é sempre a
+  // mesma do original (y = oy) — a posição horizontal avança à direita, em
+  // incrementos de _TAB_ORDER_ROW_GAP a partir de logo depois do original,
+  // até achar uma faixa livre. Sem limite de tentativas: numa página real,
+  // sempre existe espaço mais à direita.
+  let x = Math.round(ox + ow + _TAB_ORDER_ROW_GAP);
+  const y = Math.round(oy);
   for (let guard = 0; guard < 500; guard++) {
     const rect = { left: x, top: y, right: x + cloneWidth, bottom: y + cloneHeight };
     const collidingBounds = occupied.filter(b => _rectsOverlap(rect, b));
     if (collidingBounds.length === 0) return { x, y };
-    // Colidiu com algo que já está mais abaixo — desce até passar do
-    // ponto mais baixo de tudo que colidiu, e tenta de novo dali.
-    const lowestConflictBottom = collidingBounds.reduce((max, b) => Math.max(max, b.bottom), y);
-    y = Math.round(lowestConflictBottom + _TAB_ORDER_ROW_GAP);
+    // Colidiu com algo que já está mais à direita — avança até passar do
+    // ponto mais à direita de tudo que colidiu, e tenta de novo dali.
+    const rightmostConflict = collidingBounds.reduce((max, b) => Math.max(max, b.right), x);
+    x = Math.round(rightmostConflict + _TAB_ORDER_ROW_GAP);
   }
   return { x, y };
 }
@@ -2594,7 +2714,35 @@ async function _findFreeTabOrderCopyPosition(cloneWidth, cloneHeight, originBoun
 async function _createOrGetFichaFrame(area, designerName) {
   const savedFrameId = area.handoffFicha && area.handoffFicha.frameId;
   const existing = await _findFichaFrameForArea(area.id, savedFrameId);
-  if (existing) return existing;
+  if (existing) {
+    // Migração defensiva (2026-09-09): bug real reportado — a Ficha
+    // aparecia FORA da Section principal ("hac — Especificações de
+    // Acessibilidade — ..."), em vez de dentro dela junto com as réplicas
+    // de trabalho. Causa: esta função só chama _reparentIntoSection na
+    // hora de CRIAR o frame (abaixo) — uma Ficha já existente (criada
+    // antes desta chamada existir no código, ou desalinhada por qualquer
+    // outro motivo) é sempre devolvida como está, sem nunca ser
+    // reparentada de novo em nenhum "Atualizar" seguinte. Checa se
+    // `existing` já vive dentro de uma Section de sessão (mesma marca
+    // 'hacSessionSection' que _getOrCreateA11ySessionSection sempre usa) e,
+    // se não, reparenta agora — mesma função já usada na criação,
+    // idempotente e segura de chamar de novo mesmo quando já está correta.
+    let alreadyInSession = false;
+    let ancestor = existing.parent;
+    while (ancestor) {
+      try {
+        if (ancestor.getPluginData && ancestor.getPluginData('hacSessionSection') === 'true') {
+          alreadyInSession = true;
+          break;
+        }
+      } catch (e) { }
+      ancestor = ancestor.parent;
+    }
+    if (!alreadyInSession) {
+      _reparentIntoSection(existing, () => _getOrCreateA11ySessionSection(designerName));
+    }
+    return existing;
+  }
 
   const root = area.targetNodeId ? await figma.getNodeByIdAsync(area.targetNodeId) : null;
   const originBounds = (root && root.absoluteBoundingBox) || { x: 0, y: 0, width: 400, height: 400 };
@@ -2609,7 +2757,7 @@ async function _createOrGetFichaFrame(area, designerName) {
   const { x, y } = await _findFreeTabOrderCopyPosition(480, 480, originBounds);
 
   const fichaFrame = figma.createFrame();
-  fichaFrame.name = `[Ficha de Handoff] ${area.label || 'Área'}`;
+  fichaFrame.name = `[Handoff Completo] ${area.label || 'Área'}`;
   fichaFrame.layoutMode = 'HORIZONTAL';
   fichaFrame.primaryAxisSizingMode = 'AUTO';
   fichaFrame.counterAxisSizingMode = 'AUTO';
@@ -2618,7 +2766,13 @@ async function _createOrGetFichaFrame(area, designerName) {
   fichaFrame.paddingRight = 40;
   fichaFrame.paddingTop = 40;
   fichaFrame.paddingBottom = 40;
-  fichaFrame.fills = [{ type: 'SOLID', color: { r: 0.98, g: 0.98, b: 0.98 } }];
+  // Cor de fundo real da lib (2026-09-09, pedido do usuário): aproximação
+  // visual de "color/bg/information/2" (informative 30) — variável real
+  // do Design System, mas não capturada nos dados já rastreados do hac
+  // (nomenclatura diferente das 4 libs DSC monitoradas), então usada como
+  // hex fixo em vez de setBoundVariable (o hac não usa variáveis
+  // vinculadas em nenhum lugar hoje, mesmo padrão já existente).
+  fichaFrame.fills = [{ type: 'SOLID', color: hexToRgb('#DCEEFB') }];
   fichaFrame.counterAxisAlignItems = 'MIN';
   fichaFrame.locked = false;
   fichaFrame.setPluginData('hacCategory', 'a11y');
@@ -2721,10 +2875,26 @@ function _buildFichaLegendColumn(title, description) {
   col.name = 'Legenda';
   col.layoutMode = 'VERTICAL';
   col.itemSpacing = 8;
+  col.paddingLeft = 12;
+  col.paddingRight = 12;
+  col.paddingTop = 12;
+  col.paddingBottom = 12;
+  col.cornerRadius = 8;
+  // Bug real corrigido (2026-09-09, diagnosticado numa sessão anterior):
+  // resize(w, h) explícito nos dois eixos, chamado DEPOIS de
+  // primaryAxisSizingMode = 'AUTO', fazia a API do Figma reverter
+  // silenciosamente o eixo primário (altura, aqui) de volta pra FIXED com
+  // o valor 1 passado — o painel do Figma mostrava "H 1" fixo em vez de
+  // "Hug". resizeWithoutConstraints ANTES de setar os sizing modes evita
+  // esse conflito: define só a largura de partida, e os dois modos abaixo
+  // (largura FIXED, altura AUTO/Hug) passam a valer de fato.
+  col.resizeWithoutConstraints(220, 1);
   col.primaryAxisSizingMode = 'AUTO';
   col.counterAxisSizingMode = 'FIXED';
-  col.resize(220, 1);
-  col.fills = [];
+  // Cor de fundo real da lib (pedido do usuário): aproximação visual de
+  // "color/bg/neutral/2" (grayscale 10) — mesma justificativa de hex fixo
+  // (não setBoundVariable) do fundo da Ficha acima.
+  col.fills = [{ type: 'SOLID', color: hexToRgb('#F5F5F5') }];
 
   const titleText = figma.createText();
   titleText.name = 'Título';
@@ -3373,16 +3543,6 @@ figma.ui.onmessage = async (msg) => {
       name: node ? node.name : null,
       mainText: node ? _findMainTextContent(node) : null,
       dscComponentName,
-    });
-    return;
-  }
-
-  if (msg.type === "get-node-main-text") {
-    const node = msg.nodeId ? await figma.getNodeByIdAsync(msg.nodeId) : null;
-    figma.ui.postMessage({
-      type: "node-main-text",
-      nodeId: msg.nodeId || null,
-      mainText: node ? _findMainTextContent(node) : null,
     });
     return;
   }
@@ -4407,148 +4567,12 @@ figma.ui.onmessage = async (msg) => {
     return;
   }
 
-  if (msg.type === "lock-spec") {
-    const specNode = await figma.getNodeByIdAsync(msg.specId);
-    if (specNode && specNode.name && /^\[SpecA11y \| /.test(specNode.name)) {
-      specNode.locked = true;
-      figma.ui.postMessage({ type: "spec-locked", specId: msg.specId });
-    }
-    return;
-  }
-
   if (msg.type === "unlock-spec-group") {
     const targetLocked = msg.locked !== undefined ? msg.locked : false;
     for (const specId of (msg.specIds || [])) {
       const specGroup = await figma.getNodeByIdAsync(specId);
       if (!specGroup) continue;
       specGroup.locked = targetLocked;
-    }
-    return;
-  }
-
-  if (msg.type === "hide-spec-lines") {
-    const targetVisible = msg.forceState !== undefined ? msg.forceState : false;
-    for (const specId of (msg.specIds || [])) {
-      const specGroup = await figma.getNodeByIdAsync(specId);
-      if (!specGroup || !('findChildren' in specGroup)) continue;
-      const lineNodes = specGroup.findChildren(n => n.name === 'Conector' || n.name === 'DotInicio' || n.name === 'DotFim');
-      lineNodes.forEach(n => { n.visible = targetVisible; });
-    }
-    return;
-  }
-
-  // Edita o estilo da linha (reta/curva/esquinas) de uma spec já criada —
-  // localiza Conector/DotInicio/DotFim por nome dentro do group e os
-  // recria; NÃO apaga o group inteiro, o specCard permanece intacto.
-  // Recalcula a partir da posição ATUAL do card (não das coordenadas salvas
-  // na criação).
-  if (msg.type === "edit-spec-connector") {
-    try {
-      const specGroup = await figma.getNodeByIdAsync(msg.specId);
-      const node = msg.targetNodeId ? await figma.getNodeByIdAsync(msg.targetNodeId) : null;
-      if (!specGroup || !('findChildren' in specGroup) || !node) {
-        figma.ui.postMessage({ type: 'spec-connector-edit-failed', specId: msg.specId });
-        return;
-      }
-      const specCard = specGroup.findOne(n => n.name === 'Spec Notes');
-      const bounds = node.absoluteBoundingBox || node.absoluteRenderBounds;
-      const cardBounds = specCard && (specCard.absoluteBoundingBox || specCard.absoluteRenderBounds);
-      if (!specCard || !bounds || !cardBounds) {
-        figma.ui.postMessage({ type: 'spec-connector-edit-failed', specId: msg.specId });
-        return;
-      }
-
-      const wasVisible = specGroup.findChildren(n => n.name === 'Conector' || n.name === 'DotInicio' || n.name === 'DotFim')
-        .every(n => n.visible !== false);
-
-      const side = msg.guideSide || 'right';
-      let startPt, endPt;
-      if (side === 'right') {
-        startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
-        endPt   = { x: cardBounds.x, y: cardBounds.y + cardBounds.height / 2 };
-      } else if (side === 'left') {
-        startPt = { x: bounds.x, y: bounds.y + bounds.height / 2 };
-        endPt   = { x: cardBounds.x + cardBounds.width, y: cardBounds.y + cardBounds.height / 2 };
-      } else if (side === 'bottom') {
-        startPt = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height };
-        endPt   = { x: cardBounds.x + cardBounds.width / 2, y: cardBounds.y };
-      } else { // top
-        startPt = { x: bounds.x + bounds.width / 2, y: bounds.y };
-        endPt   = { x: cardBounds.x + cardBounds.width / 2, y: cardBounds.y + cardBounds.height };
-      }
-
-      const _specConnectorStyle = msg.connectorStyle || 'straight';
-      const _specCurvature = _specConnectorStyle === 'curved' ? (msg.connectorCurvature || 0) : 0;
-
-      const themeColor = hexToRgb(msg.color || '#005ca9');
-
-      const _groupBounds = specGroup.absoluteBoundingBox || specGroup.absoluteRenderBounds;
-      const _gx = _groupBounds.x, _gy = _groupBounds.y;
-      const localStart = { x: startPt.x - _gx, y: startPt.y - _gy };
-      const localEnd = { x: endPt.x - _gx, y: endPt.y - _gy };
-
-      let connectorPath = `M ${localStart.x} ${localStart.y} L ${localEnd.x} ${localEnd.y}`;
-      if (_specConnectorStyle === 'elbow') {
-        const isHorizontal = side === 'right' || side === 'left';
-        const corner = isHorizontal ? { x: localEnd.x, y: localStart.y } : { x: localStart.x, y: localEnd.y };
-        connectorPath = `M ${localStart.x} ${localStart.y} L ${corner.x} ${corner.y} L ${localEnd.x} ${localEnd.y}`;
-      } else if (_specCurvature) {
-        const dx = localEnd.x - localStart.x, dy = localEnd.y - localStart.y;
-        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-        const px = -dy / dist, py = dx / dist;
-        const offset = (_specCurvature / 100) * dist * 0.5;
-        const midX = (localStart.x + localEnd.x) / 2, midY = (localStart.y + localEnd.y) / 2;
-        const ctrlX = midX + px * offset, ctrlY = midY + py * offset;
-        connectorPath = `M ${localStart.x} ${localStart.y} Q ${ctrlX} ${ctrlY} ${localEnd.x} ${localEnd.y}`;
-      }
-
-      const oldLineNodes = specGroup.findChildren(n => n.name === 'Conector' || n.name === 'DotInicio' || n.name === 'DotFim');
-      oldLineNodes.forEach(n => n.remove());
-
-      const connector = figma.createVector();
-      connector.name = 'Conector';
-      connector.x = 0;
-      connector.y = 0;
-      connector.vectorPaths = [{ windingRule: "NONZERO", data: connectorPath }];
-      connector.strokes = [{ type: "SOLID", color: themeColor }];
-      connector.strokeWeight = 1.5;
-      connector.dashPattern = [4, 4];
-      connector.strokeCap = "ROUND";
-      connector.visible = wasVisible;
-      connector.locked = false;
-      specGroup.appendChild(connector);
-
-      const _DOT_R = 4;
-      const startDot = figma.createEllipse();
-      startDot.name = 'DotInicio';
-      startDot.resize(_DOT_R * 2, _DOT_R * 2);
-      startDot.fills = [{ type: "SOLID", color: themeColor }];
-      startDot.strokes = [];
-      startDot.visible = wasVisible;
-      startDot.locked = true;
-      specGroup.appendChild(startDot);
-      startDot.x = localStart.x - _DOT_R;
-      startDot.y = localStart.y - _DOT_R;
-
-      const endDot = figma.createEllipse();
-      endDot.name = 'DotFim';
-      endDot.resize(_DOT_R * 2, _DOT_R * 2);
-      endDot.fills = [{ type: "SOLID", color: themeColor }];
-      endDot.strokes = [];
-      endDot.visible = wasVisible;
-      endDot.locked = true;
-      specGroup.appendChild(endDot);
-      endDot.x = localEnd.x - _DOT_R;
-      endDot.y = localEnd.y - _DOT_R;
-
-      figma.ui.postMessage({
-        type: 'spec-connector-edited',
-        specId: msg.specId,
-        connectorStyle: _specConnectorStyle,
-        connectorCurvature: _specCurvature
-      });
-    } catch (e) {
-      figma.ui.postMessage({ type: 'spec-connector-edit-failed', specId: msg.specId, message: e.message });
     }
     return;
   }
@@ -5054,6 +5078,67 @@ figma.ui.onmessage = async (msg) => {
         figma.notify("Não foi possível varrer a área automaticamente — tente novamente.");
         figma.ui.postMessage({ type: "tab-order-generated-from-layers", areaId: msg.areaId, generation: msg.generation, items: [] });
       }
+    })();
+    return;
+  }
+
+  // Simulação de leitura por voz da Ordem de Tabulação (2026-09-09) — a
+  // Web Speech API (speechSynthesis) só existe no frontend (iframe), mas o
+  // "tipo" falado por parada (ex. "Botão") depende do matching DSC→a11y,
+  // que só o backend resolve (figma.* não existe no iframe). O tipo NUNCA
+  // é persistido em tabOrderItems (schema salvo continua sem essa coluna,
+  // ver comentário de generate-tab-order-from-layers/item acima) — é
+  // recalculado ao vivo a cada simulação, mesmo princípio de "nunca mentir
+  // dado antigo" já seguido no resto do hac (a spec pode ter sido
+  // desenhada há dias; o node pode ter sido trocado por outro componente
+  // desde então). Best-effort por item: um node apagado/movido, ou que
+  // falhe getMainComponentAsync, nunca derruba o handler inteiro — só
+  // aquele item narra sem tipo (shortName: null).
+  if (msg.type === "resolve-tab-order-narration") {
+    (async () => {
+      const items = [];
+      for (const entry of (msg.items || [])) {
+        const out = { number: entry.number, targetNodeId: entry.targetNodeId, targetNodeName: entry.targetNodeName, shortName: null };
+        try {
+          const node = await figma.getNodeByIdAsync(entry.targetNodeId);
+          if (node) {
+            if (node.type === 'INSTANCE') {
+              let componentKey = null;
+              try {
+                const mainComp = await node.getMainComponentAsync();
+                componentKey = mainComp ? mainComp.key : null;
+              } catch (e) { componentKey = null; }
+              const match = _resolveDscComponentA11yMatch(componentKey);
+              if (match && !match.isUnmapped && match.a11yCategory) {
+                out.shortName = match.a11yCategory;
+              }
+            } else if (node.type === 'COMPONENT') {
+              const match = _resolveDscComponentA11yMatch(node.key || null);
+              if (match && !match.isUnmapped && match.a11yCategory) {
+                out.shortName = match.a11yCategory;
+              }
+            }
+            // Sem match DSC (isUnmapped/null) — fallback mínimo por tipo
+            // nativo do Figma, só pra distinguir texto solto de qualquer
+            // outra coisa. Nenhum outro node.type vira fala com tipo: um
+            // fallback amplo demais (ex. FRAME → "Área") soaria estranho e
+            // impreciso vindo de um leitor de tela de verdade.
+            if (!out.shortName && node.type === 'TEXT') {
+              out.shortName = 'texto';
+            }
+            // targetNodeName pode ter ficado desatualizado (renome do
+            // layer/label depois que o item foi criado) — usa o nome atual
+            // do node quando disponível, mesmo espírito de
+            // generate-tab-order-from-layers usar _findVisibleLabelText.
+            out.targetNodeName = _findVisibleLabelText(node) || node.name || entry.targetNodeName;
+          }
+        } catch (e) {
+          // node sumiu ou getMainComponentAsync falhou — item já nasceu
+          // com shortName: null acima, segue narrando só o nome salvo.
+        }
+        items.push(out);
+      }
+      figma.ui.postMessage({ type: "tab-order-narration-resolved", areaId: msg.areaId, items });
     })();
     return;
   }
@@ -5607,6 +5692,41 @@ figma.ui.onmessage = async (msg) => {
     return;
   }
 
+  // Espelha resolve-tab-order-clone pra Trilha de Swipe (2026-09-09,
+  // feature "editar trilha já criada") — reconhece/reaproveita a cópia
+  // clonada já existente da área (ou recria só se genuinamente sumiu, via
+  // _resolveActiveSwipePathClone) SEM abrir a escuta de seleção. Existe
+  // porque start-swipe-path-mode SEMPRE clona um frame novo do zero
+  // (_createSwipePathCloneForArea remove qualquer cópia anterior da área
+  // antes de clonar) — certo para "Iniciar/Refazer trilha de swipe"
+  // (captura do zero), mas errado para "+ Adicionar ponto" numa trilha já
+  // em edição: chamar start-swipe-path-mode ali apagaria a cópia com o
+  // trabalho de revisão em andamento. startSwipePathAddPoint (frontend)
+  // chama este handler primeiro para garantir o clone, e só ativa
+  // _swipePathModeActive (via start-swipe-path-listen-only, abaixo) depois
+  // da confirmação — mesma sequência de startTabOrderAddItemsFromCard/
+  // handleTabOrderCloneResolved/startTabOrderAddItemWait.
+  if (msg.type === "resolve-swipe-path-clone") {
+    (async () => {
+      const resolved = await _resolveActiveSwipePathClone(msg.areaId, msg.targetNodeId, msg.sectionName, msg.designerName);
+      if (resolved && resolved.clone) {
+        figma.currentPage.selection = [resolved.clone];
+        figma.viewport.scrollAndZoomIntoView([resolved.clone]);
+      }
+      figma.ui.postMessage({ type: "swipe-path-clone-resolved", areaId: msg.areaId, ok: !!resolved });
+    })();
+    return;
+  }
+
+  // Liga a escuta de seleção (contagem ao vivo/highlight) SEM clonar nada
+  // — usada só depois que resolve-swipe-path-clone já confirmou que a
+  // cópia existe (fluxo "+ Adicionar ponto"). start-swipe-path-mode
+  // continua sendo o único caminho que CLONA (fluxo de captura do zero).
+  if (msg.type === "start-swipe-path-listen-only") {
+    _swipePathModeActive = true;
+    return;
+  }
+
   // Desenha UM selo real por vez, assim que o item entra na lista pendente
   // do modal (clique manual ou item do scan automático) — nunca em lote,
   // nunca redesenhando o que já existe. Reaproveita a cópia rascunho ativa
@@ -6086,7 +6206,7 @@ figma.ui.onmessage = async (msg) => {
     let section = _findFichaSectionInFrame(fichaFrame, 'tabulacao');
     if (!section) {
       section = figma.createFrame();
-      section.name = 'Ficha — Tabulação';
+      section.name = 'Handoff Completo — Tabulação';
       section.layoutMode = 'HORIZONTAL';
       section.primaryAxisSizingMode = 'AUTO';
       section.counterAxisSizingMode = 'AUTO';
@@ -6166,7 +6286,7 @@ figma.ui.onmessage = async (msg) => {
     let section = _findFichaSectionInFrame(fichaFrame, 'swipe');
     if (!section) {
       section = figma.createFrame();
-      section.name = 'Ficha — Swipe';
+      section.name = 'Handoff Completo — Swipe';
       section.layoutMode = 'HORIZONTAL';
       section.primaryAxisSizingMode = 'AUTO';
       section.counterAxisSizingMode = 'AUTO';
@@ -6303,7 +6423,7 @@ figma.ui.onmessage = async (msg) => {
     let section = _findFichaSectionInFrame(fichaFrame, 'leitor');
     if (!section) {
       section = figma.createFrame();
-      section.name = 'Ficha — Leitor de Tela';
+      section.name = 'Handoff Completo — Leitor de Tela';
       section.layoutMode = 'HORIZONTAL';
       section.primaryAxisSizingMode = 'AUTO';
       section.counterAxisSizingMode = 'AUTO';
@@ -6470,14 +6590,24 @@ figma.ui.onmessage = async (msg) => {
   // instrução. Ele é o consolidado de tudo"). `sectionsSummary` e
   // `categoryBreakdown` chegam já calculados do frontend
   // (_fichaInsertSection, handoff-ficha.js) — o backend não tem acesso a
-  // hacData, mesmo padrão já usado por items/points/specs das outras 3
-  // seções. Nunca bloqueia: se nada foi inserido ainda, mostra 1 card
-  // avisando isso, em vez de recusar a inserção.
-  async function _buildFichaReviewSection(fichaFrame, area, sectionsSummary, categoryBreakdown) {
+  // hacData/A11Y_CATEGORIES, mesmo padrão já usado por items/points/specs
+  // das outras 3 seções. Nunca bloqueia: se nada foi inserido ainda, mostra
+  // 1 card avisando isso, em vez de recusar a inserção.
+  // 2026-09-09: mais 2 blocos, mesmo padrão — `titleHierarchy` (specs
+  // "titulo" ordenadas por camada, com letter H1-H6/H e cor já resolvida —
+  // só existe pra área web, ver checagem `if (!isMobile)` em
+  // _fichaInsertSection) e `decorativeItems` (specs "decorativo", com cor e
+  // badge "Ø" já resolvidos, web+mobile) — dado 100% real de a11ySpecs, sem
+  // checklist inventado. `titleHierarchy` também traz, por item, o nome do
+  // componente DSC (`componentName`, já limpo no frontend) e — resolvido
+  // aqui no backend, direto do node real via textStyleId/getStyleByIdAsync,
+  // mesmo padrão de _a11yScanArea (categoria "typography") — o nome do
+  // token tipográfico vinculado ao texto, quando existir.
+  async function _buildFichaReviewSection(fichaFrame, area, sectionsSummary, categoryBreakdown, titleHierarchy, decorativeItems, designerName) {
     _removeFichaSectionInFrame(fichaFrame, 'review');
 
     const section = figma.createFrame();
-    section.name = 'Ficha — Handoff Review';
+    section.name = 'Handoff Completo — Handoff Review';
     section.layoutMode = 'VERTICAL';
     section.primaryAxisSizingMode = 'AUTO';
     section.counterAxisSizingMode = 'AUTO';
@@ -6501,8 +6631,10 @@ figma.ui.onmessage = async (msg) => {
 
     const hasAnySummary = Array.isArray(sectionsSummary) && sectionsSummary.length > 0;
     const hasAnyBreakdown = Array.isArray(categoryBreakdown) && categoryBreakdown.length > 0;
+    const hasAnyTitles = Array.isArray(titleHierarchy) && titleHierarchy.length > 0;
+    const hasAnyDecorative = Array.isArray(decorativeItems) && decorativeItems.length > 0;
 
-    if (!hasAnySummary && !hasAnyBreakdown) {
+    if (!hasAnySummary && !hasAnyBreakdown && !hasAnyTitles && !hasAnyDecorative) {
       const emptyCard = figma.createFrame();
       emptyCard.name = 'Vazio';
       emptyCard.layoutMode = 'VERTICAL';
@@ -6615,7 +6747,235 @@ figma.ui.onmessage = async (msg) => {
       });
     }
 
-    return (sectionsSummary || []).length + (categoryBreakdown || []).length;
+    // Hierarquia de títulos (2026-09-09) — lista das specs "titulo" já
+    // ordenadas por ordem de leitura real (mesmo dado de _fichaInsertSection,
+    // handoff-ficha.js). Indenta visualmente por nível (H1 sem indent, H2 um
+    // tico, H3 mais um...) pra reforçar a hierarquia lógica. Só existe de
+    // fato na origem web (lib "Design Acessível" só distingue H1-H6 nesse
+    // fluxo) — pra área mobile o frontend já nem envia titleHierarchy
+    // (hasAnyTitles fica false), então este bloco simplesmente não desenha
+    // nada, mesmo padrão de "sem bloco vazio" do resto do card.
+    if (hasAnyTitles) {
+      const titlesCol = figma.createFrame();
+      titlesCol.name = 'Hierarquia de títulos';
+      titlesCol.layoutMode = 'VERTICAL';
+      titlesCol.itemSpacing = 6;
+      titlesCol.fills = [];
+      titlesCol.primaryAxisSizingMode = 'AUTO';
+      titlesCol.counterAxisSizingMode = 'FIXED';
+      titlesCol.resize(260, 1);
+      section.appendChild(titlesCol);
+
+      const titlesHeading = figma.createText();
+      titlesHeading.fontName = { family: 'Inter', style: 'Medium' };
+      titlesHeading.fontSize = 10;
+      titlesHeading.fills = [{ type: 'SOLID', color: { r: 0.4, g: 0.4, b: 0.4 } }];
+      titlesHeading.characters = 'HIERARQUIA DE TÍTULOS';
+      titlesHeading.textAutoResize = 'HEIGHT';
+      titlesCol.appendChild(titlesHeading);
+
+      // Token tipográfico real (2026-09-09) — nome do text style vinculado
+      // ao node do título, mesmo padrão já usado em _a11yScanArea (categoria
+      // "typography": textStyleId + figma.getStyleByIdAsync). Resolve o
+      // clone ativo da área UMA vez (mesmo mecanismo de tradução
+      // original→clone já usado por Leitor de Tela/Tabulação/Swipe, evita
+      // reintroduzir o bug de nodeId não traduzido entre clones) — se não
+      // houver clone/área resolvível, cai pro node original via
+      // figma.getNodeByIdAsync. Nunca impeditivo: falha em achar o node ou
+      // o token de UM item só omite essa informação extra naquele item.
+      let titleCloneResolved = null;
+      try {
+        titleCloneResolved = area.targetNodeId
+          ? await _resolveActiveSpecClone(area.id, area.targetNodeId, area.sectionName, designerName)
+          : null;
+      } catch (e) { titleCloneResolved = null; }
+
+      for (const item of titleHierarchy) {
+        if (!item) continue;
+        let typographyTokenName = null;
+        try {
+          let targetNode = null;
+          if (item.targetNodeId && titleCloneResolved && titleCloneResolved.nodeMap) {
+            targetNode = titleCloneResolved.nodeMap.get(item.targetNodeId) || null;
+          }
+          if (!targetNode && item.targetNodeId) {
+            targetNode = await figma.getNodeByIdAsync(item.targetNodeId);
+          }
+          if (targetNode && targetNode.type !== 'TEXT') {
+            targetNode = _findFirstTextNode(targetNode, 0);
+          }
+          if (targetNode && targetNode.type === 'TEXT' && 'textStyleId' in targetNode &&
+            typeof targetNode.textStyleId === 'string' && targetNode.textStyleId !== figma.mixed && targetNode.textStyleId) {
+            const style = await figma.getStyleByIdAsync(targetNode.textStyleId);
+            if (style) typographyTokenName = style.name;
+          }
+        } catch (e) { typographyTokenName = null; }
+
+        const letter = item.letter || 'H';
+        const levelMatch = /^H(\d)$/.exec(letter);
+        const level = levelMatch ? parseInt(levelMatch[1], 10) : 1;
+        const indent = Math.max(0, (level - 1)) * 12;
+
+        const row = figma.createFrame();
+        row.layoutMode = 'HORIZONTAL';
+        row.itemSpacing = 6;
+        row.fills = [];
+        row.primaryAxisSizingMode = 'AUTO';
+        row.counterAxisSizingMode = 'AUTO';
+        row.counterAxisAlignItems = 'CENTER';
+        if (indent > 0) { row.paddingLeft = indent; }
+
+        const badge = figma.createFrame();
+        badge.layoutMode = 'HORIZONTAL';
+        badge.primaryAxisAlignItems = 'CENTER';
+        badge.counterAxisAlignItems = 'CENTER';
+        badge.paddingLeft = 5; badge.paddingRight = 5; badge.paddingTop = 2; badge.paddingBottom = 2;
+        badge.cornerRadius = 4;
+        badge.fills = [{ type: 'SOLID', color: hexToRgb(item.color || '#AFCA0B') }];
+        badge.primaryAxisSizingMode = 'AUTO';
+        badge.counterAxisSizingMode = 'AUTO';
+
+        const badgeText = figma.createText();
+        badgeText.fontName = { family: 'Inter', style: 'Bold' };
+        badgeText.fontSize = 9;
+        badgeText.fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }];
+        badgeText.characters = letter;
+        badgeText.textAutoResize = 'WIDTH_AND_HEIGHT';
+        badge.appendChild(badgeText);
+        row.appendChild(badge);
+
+        // Coluna nome do elemento + (opcional) nome do componente DSC real
+        // por trás da spec — mesmo padrão label/valor pequeno-cinza-embaixo
+        // já usado nos campos de spec.fields em _buildFichaLeitorSection.
+        const textCol = figma.createFrame();
+        textCol.layoutMode = 'VERTICAL';
+        textCol.itemSpacing = 1;
+        textCol.fills = [];
+        textCol.primaryAxisSizingMode = 'AUTO';
+        textCol.counterAxisSizingMode = 'AUTO';
+
+        const rowText = figma.createText();
+        rowText.fontName = { family: 'Inter', style: 'Regular' };
+        rowText.fontSize = 10.5;
+        rowText.fills = [{ type: 'SOLID', color: { r: 0.15, g: 0.15, b: 0.15 } }];
+        rowText.characters = item.targetNodeName || '(sem nome)';
+        rowText.textAutoResize = 'HEIGHT';
+        textCol.appendChild(rowText);
+
+        if (item.componentName) {
+          const componentText = figma.createText();
+          componentText.fontName = { family: 'Inter', style: 'Regular' };
+          componentText.fontSize = 9;
+          componentText.fills = [{ type: 'SOLID', color: { r: 0.55, g: 0.55, b: 0.55 } }];
+          componentText.characters = item.componentName;
+          componentText.textAutoResize = 'HEIGHT';
+          textCol.appendChild(componentText);
+        }
+
+        // Token tipográfico real vinculado ao TEXT (textStyleId), resolvido
+        // acima — omitido quando o texto não tem token vinculado (sinal
+        // por si só de falta de conformidade declarada com a lib DSC, mas
+        // não bloqueia a montagem do item).
+        if (typographyTokenName) {
+          const tokenText = figma.createText();
+          tokenText.fontName = { family: 'Inter', style: 'Regular' };
+          tokenText.fontSize = 9;
+          tokenText.fills = [{ type: 'SOLID', color: { r: 0.55, g: 0.55, b: 0.55 } }];
+          tokenText.characters = `Token: ${typographyTokenName}`;
+          tokenText.textAutoResize = 'HEIGHT';
+          textCol.appendChild(tokenText);
+        }
+
+        row.appendChild(textCol);
+
+        titlesCol.appendChild(row);
+      }
+    }
+
+    // Itens decorativos (2026-09-09) — lista das specs "decorativo", com o
+    // badge fixo dessa categoria (Ø, A11Y_CATEGORIES.decorativo.badge).
+    if (hasAnyDecorative) {
+      const decorativeCol = figma.createFrame();
+      decorativeCol.name = 'Itens decorativos';
+      decorativeCol.layoutMode = 'VERTICAL';
+      decorativeCol.itemSpacing = 6;
+      decorativeCol.fills = [];
+      decorativeCol.primaryAxisSizingMode = 'AUTO';
+      decorativeCol.counterAxisSizingMode = 'FIXED';
+      decorativeCol.resize(260, 1);
+      section.appendChild(decorativeCol);
+
+      const decorativeHeading = figma.createText();
+      decorativeHeading.fontName = { family: 'Inter', style: 'Medium' };
+      decorativeHeading.fontSize = 10;
+      decorativeHeading.fills = [{ type: 'SOLID', color: { r: 0.4, g: 0.4, b: 0.4 } }];
+      decorativeHeading.characters = 'ITENS DECORATIVOS';
+      decorativeHeading.textAutoResize = 'HEIGHT';
+      decorativeCol.appendChild(decorativeHeading);
+
+      decorativeItems.forEach(item => {
+        if (!item) return;
+        const row = figma.createFrame();
+        row.layoutMode = 'HORIZONTAL';
+        row.itemSpacing = 6;
+        row.fills = [];
+        row.primaryAxisSizingMode = 'AUTO';
+        row.counterAxisSizingMode = 'AUTO';
+        row.counterAxisAlignItems = 'CENTER';
+
+        const badge = figma.createFrame();
+        badge.layoutMode = 'HORIZONTAL';
+        badge.primaryAxisAlignItems = 'CENTER';
+        badge.counterAxisAlignItems = 'CENTER';
+        badge.paddingLeft = 5; badge.paddingRight = 5; badge.paddingTop = 2; badge.paddingBottom = 2;
+        badge.cornerRadius = 4;
+        badge.fills = [{ type: 'SOLID', color: hexToRgb(item.color || '#D93636') }];
+        badge.primaryAxisSizingMode = 'AUTO';
+        badge.counterAxisSizingMode = 'AUTO';
+
+        const badgeText = figma.createText();
+        badgeText.fontName = { family: 'Inter', style: 'Bold' };
+        badgeText.fontSize = 9;
+        badgeText.fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }];
+        badgeText.characters = item.badge || 'Ø';
+        badgeText.textAutoResize = 'WIDTH_AND_HEIGHT';
+        badge.appendChild(badgeText);
+        row.appendChild(badge);
+
+        // Coluna nome do elemento + (opcional) nome do componente DSC real —
+        // mesmo padrão da lista de hierarquia de títulos acima.
+        const textCol = figma.createFrame();
+        textCol.layoutMode = 'VERTICAL';
+        textCol.itemSpacing = 1;
+        textCol.fills = [];
+        textCol.primaryAxisSizingMode = 'AUTO';
+        textCol.counterAxisSizingMode = 'AUTO';
+
+        const rowText = figma.createText();
+        rowText.fontName = { family: 'Inter', style: 'Regular' };
+        rowText.fontSize = 10.5;
+        rowText.fills = [{ type: 'SOLID', color: { r: 0.15, g: 0.15, b: 0.15 } }];
+        rowText.characters = item.targetNodeName || '(sem nome)';
+        rowText.textAutoResize = 'HEIGHT';
+        textCol.appendChild(rowText);
+
+        if (item.componentName) {
+          const componentText = figma.createText();
+          componentText.fontName = { family: 'Inter', style: 'Regular' };
+          componentText.fontSize = 9;
+          componentText.fills = [{ type: 'SOLID', color: { r: 0.55, g: 0.55, b: 0.55 } }];
+          componentText.characters = item.componentName;
+          componentText.textAutoResize = 'HEIGHT';
+          textCol.appendChild(componentText);
+        }
+
+        row.appendChild(textCol);
+
+        decorativeCol.appendChild(row);
+      });
+    }
+
+    return (sectionsSummary || []).length + (categoryBreakdown || []).length + (titleHierarchy || []).length + (decorativeItems || []).length;
   }
 
   // Handler único — despacha pro builder da seção pedida, sempre garantindo
@@ -6654,10 +7014,10 @@ figma.ui.onmessage = async (msg) => {
         // Mensagem específica exposta ao designer (2026-09-09) — antes só
         // "Não foi possível criar o frame da Ficha." genérico, com a causa
         // real só no console do Figma (invisível pra quem reporta o bug).
-        console.error('[hac] insert-ficha-section: falha ao criar/obter o frame da Ficha.', e && (e.stack || e.message));
+        console.error('[hac] insert-ficha-section: falha ao criar/obter o frame do Handoff Completo.', e && (e.stack || e.message));
         figma.ui.postMessage({
           type: 'ficha-section-insert-failed', areaId: area.id, sectionKey,
-          reason: `Não foi possível criar o frame da Ficha: ${(e && e.message) || 'erro desconhecido'}`
+          reason: `Não foi possível criar o frame do Handoff Completo: ${(e && e.message) || 'erro desconhecido'}`
         });
         return;
       }
@@ -6671,7 +7031,7 @@ figma.ui.onmessage = async (msg) => {
         } else if (sectionKey === 'leitor') {
           itemCount = await _buildFichaLeitorSection(fichaFrame, area, msg.specs || [], msg.designerName);
         } else if (sectionKey === 'review') {
-          itemCount = await _buildFichaReviewSection(fichaFrame, area, msg.sectionsSummary || [], msg.categoryBreakdown || []);
+          itemCount = await _buildFichaReviewSection(fichaFrame, area, msg.sectionsSummary || [], msg.categoryBreakdown || [], msg.titleHierarchy || [], msg.decorativeItems || [], msg.designerName);
         }
       } catch (e) {
         console.error('[hac] insert-ficha-section: falha ao montar a seção "' + sectionKey + '".', e && e.message);

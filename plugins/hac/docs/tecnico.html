@@ -232,6 +232,7 @@ hr {
     <a href="institucional.html">Regras de Negócio</a>
     <a href="design-system.html">Design System</a>
     <a href="changelog.html">Changelog</a>
+    <a href="auditoria-2026-09.html">Auditoria Geral</a>
   </nav>
   <button type="button" id="theme-toggle" aria-label="Alternar tema claro/escuro" title="Alternar tema claro/escuro"></button>
 </header>
@@ -265,6 +266,11 @@ hr {
         <li><a href="#s8d">Swipe V3 — trilha direcional multi-ponto</a></li>
         <li><a href="#s8e">Reorganização estrutural — artefatos soltos, specs com réplica</a></li>
         <li><a href="#s8f">Ficha com 4 blocos horizontais</a></li>
+        <li><a href="#s8g">Simulação de leitura por voz da Ordem de Tabulação</a></li>
+        <li><a href="#s8h">Alerta de desatualizado + "Gerar handoff completo"; renomeação "Ficha" → "Handoff Completo"</a></li>
+        <li><a href="#s8i">Editar a Trilha de Swipe já criada</a></li>
+        <li><a href="#s8j">Correções pós-auditoria (2026-09-09): aria-live nos toasts, nomenclatura Handoff Completo, contraste dos cards de status</a></li>
+        <li><a href="#s8k">Extração de tab-order.js e swipe-path.js</a></li>
         <li><a href="#s9">Contrato de mensagens (UI ↔ backend)</a></li>
         <li><a href="#s10">Escala da UI e <code>position</code> dos modais</a></li>
         <li><a href="#s10a">Onboarding — 1 jornada por origem</a></li>
@@ -379,7 +385,7 @@ hr {
     <table>
       <tr><th>Categoria (<code>a11yType</code>)</th><th>Label</th><th>Tag manual?</th><th>Equivalente mobile real?</th></tr>
       <tr><td><code>elemento</code></td><td>Elementos e Imagens</td><td>Sim</td><td>Sim — 3 sub-variantes (seção 5)</td></tr>
-      <tr><td><code>estrutura</code></td><td>Estrutura da Página</td><td>Sim</td><td><strong>Não</strong> — sem landmark semântico na lib mobile</td></tr>
+      <tr><td><code>estrutura</code></td><td>Estrutura da Página</td><td>Sim</td><td>Marcador visual: <strong>não</strong> — sem landmark semântico na lib mobile (usa wrapper desktop). Nota de Código: <strong>sim</strong> (2026-09-09), ver seção 3</td></tr>
       <tr><td><code>titulo</code></td><td>Nível de Título</td><td>Não (usa nível como tag)</td><td>Sim — marcador único "H", sem hierarquia</td></tr>
       <tr><td><code>decorativo</code></td><td>Elemento Decorativo</td><td>Não (badge fixo)</td><td>Sim</td></tr>
       <tr><td><code>informacoes</code></td><td>Informações Adicionais</td><td>Sim</td><td><strong>Não</strong> — formato livre, web-only</td></tr>
@@ -409,11 +415,21 @@ hr {
     <ul>
       <li><strong>Nível de Título</strong>: web usa H1-H6 (hierarquia real); mobile usa um
       identificador único "H", sem distinção de nível, porque React Native não
-      tem o conceito de hierarquia de heading do HTML.</li>
-      <li><strong>Estrutura da Página</strong>: sem equivalente mobile publicado — a lib
-      "Design Acessível | Super App" não modela landmarks semânticos. Specs
-      dessa categoria em projeto mobile continuam usando o wrapper desktop
-      (comportamento aceito, não é bug).</li>
+      tem o conceito de hierarquia de heading do HTML. Desde 2026-09-09 o
+      <code>&lt;select&gt;</code> de nível (<code>#a11y-titulo-nivel-select</code>) trava as
+      opções pela origem da área — só H1-H6 ficam habilitadas em web, só
+      "H (mobile)" fica habilitada em mobile (<code>_applyA11yTituloOriginLock</code>
+      em <code>accessibility.js</code>, chamada de dentro de <code>updateA11yTituloFields</code>).</li>
+      <li><strong>Estrutura da Página</strong>: sem componente mobile publicado — a lib
+      "Design Acessível | Super App" não modela landmarks semânticos, então o
+      marcador visual continua usando o wrapper desktop (comportamento
+      aceito, não é bug). A partir de 2026-09-09, porém, a <strong>Nota de
+      Código do subtipo "Marco de Navegação" diferencia por origem</strong>: em
+      área web usa as tags HTML reais (<code>&lt;header&gt;</code>, <code>&lt;nav&gt;</code>,
+      <code>&lt;main&gt;</code>, <code>&lt;aside&gt;</code>, <code>&lt;footer&gt;</code>); em área mobile usa
+      <code>accessibilityRole</code> (React Native não tem essas tags) — mesmo
+      princípio já aplicado em Nível de Título. Ver <code>A11Y_CONTENT.estrutura.marcoMobile</code>
+      em <code>accessibility.js</code>.</li>
       <li><strong>Elementos e Imagens</strong>: mobile tem 3 sub-variantes (Componente, Link,
       Texto Alternativo) com campos próprios — seção 5. Web usa o catálogo de
       16 componentes curados da lib "Design Acessível" desktop.</li>
@@ -474,7 +490,12 @@ hr {
     mobile"). Implementação:</p>
 
     <ul>
-      <li><code>getA11yProjectOrigin()</code> lê <code>hacData.projectOrigin</code>.</li>
+      <li><code>getA11yProjectOrigin()</code> lê <code>hacData.projectOrigin</code>.
+      <code>isA11yMobileProject()</code> (2026-09-09, ao lado dela) é o atalho para
+      <code>getA11yProjectOrigin() === 'mobile'</code> — usado sempre que a pergunta é
+      só "este projeto é mobile?", nunca substitui checagens de
+      <code>modal.dataset.a11yOrigin</code> (origem de uma spec/elemento individual,
+      conceito diferente e não relacionado à origem do arquivo inteiro).</li>
       <li><code>ensureA11yProjectOriginThen(onReady)</code> é o <strong>ponto único</strong> que toda ação
       que precisa da origem deve chamar: se já definida, chama <code>onReady(origin)</code>
       direto, sem abrir modal; se não, abre a modal bloqueante uma única vez,
@@ -671,6 +692,45 @@ hr {
     spec formal na lib, mas hoje não existe processo institucional
     automatizado que capte esse sinal; é só um rótulo visível na tela de
     revisão do designer.</p>
+
+    <h3>Curadoria pontual de matching a partir de <code>dsc-structural-review.json</code> (2026-09-09)</h3>
+
+    <p><code>dsc-structural-review.json</code> reúne 87 candidatos de confiança baixa
+    revisados estruturalmente (árvore real de filhos via MCP do Figma, não só
+    nome). 4 achados dessa curadoria já preenchida foram aplicados diretamente
+    nos JSONs de mapeamento consumidos em runtime (<code>build-dsc-a11y-mapping.cjs</code>
+    não foi alterado — os 2 arquivos gerados foram editados pontualmente):</p>
+    <ul>
+      <li><strong><code>[dsc] Alert</code></strong> (lib <code>web-angular-react</code>): estava em
+      <code>semMatch</code> (<code>match: null</code>) apesar de ter papel ARIA
+      (<code>role="alert"</code>) muito próximo de "snackbar". Movido para
+      <code>baixaConfianca</code> com <code>match.shortName = "snackbar"</code> — confiança
+      baixa (não alta) porque a aproximação é semântica, não literal pelo nome.
+      Não existe <code>[dsc] Alert</code> exato nas outras 3 libs (só variações
+      diferentes como <code>[dsc] Card Alert</code>, que é outra categoria, e nomes
+      de ícone como <code>shield-alert</code>/<code>message-alert</code>, corretamente
+      filtrados como ruído) — a correção não foi replicada nelas.</li>
+      <li><strong><code>[dsc-tc] Avatar Hero</code></strong> (lib <code>super-app</code>): já mapeado
+      como <code>imagem</code>/confiança baixa; a revisão estrutural confirmou que é
+      um componente composto (avatar + nome do usuário + mensagem de
+      boas-vindas) que deve ser entendido como "imagem acompanhada de
+      cabeçalho". <code>shortName</code> mantido (<code>imagem</code> continua a categoria
+      correta), só a <code>reason</code> do match foi reescrita para registrar essa
+      nuance.</li>
+      <li><strong><code>[dsc-ts] Screen Input Money</code></strong> e
+      <strong><code>[dsc-ts] Screen Item Select List</code></strong> (lib <code>super-app</code>):
+      eram tratados como match único de baixa confiança (<code>inputs</code> e
+      <code>listas</code>, respectivamente), mas são <em>templates de tela completos</em>
+      (teclado virtual + campo de valor monetário; modal de busca + lista +
+      ações), não componentes atômicos. Removidos de <code>baixaConfianca</code> e
+      movidos para <code>semMatch</code> (<code>match: null</code>) — deixam de aparecer
+      como sugestão enganosa de categoria única na Detecção Automática.
+      Decompor esses templates em subcomponentes reais fica fora de escopo
+      desta correção pontual (não implementado).</li>
+    </ul>
+    <p>As demais 83 entradas de <code>dsc-structural-review.json</code> (80 que
+    confirmam o match atual sem mudança de categoria, mais os candidatos não
+    citados acima) não foram alteradas nesta correção.</p>
 
     <h3>Ícones decorativos dentro de componentes já reconhecidos (2026-09-09)</h3>
 
@@ -1132,6 +1192,74 @@ hr {
       página.</li>
     </ul>
 
+    <p><strong>Migração defensiva de overlay legado
+    (<code>_rescueLegacyOverlayNestedInsideClone</code>, 2026-09-09)</strong>:
+    bug real reportado com print — ao "Inserir/Atualizar" a Ordem de
+    Tabulação na Ficha, o grupo <code>[Selos de Tabulação] ...</code>
+    aparecia ANINHADO DENTRO do clone <code>[Ordem de Tabulação] ...</code>
+    no painel de camadas, em vez de irmão dele. Causa raiz confirmada (não
+    suposição): entre a introdução do overlay-irmão e a rodada de correção
+    anterior na mesma sessão, uma versão intermediária do código
+    (<code>_reparentIntoCloneAbsolute</code>, introduzida e removida no
+    mesmo commit) chegou a reparentar selos/trilha PARA DENTRO do clone —
+    qualquer Área documentada nessa janela carrega esse overlay legado até
+    hoje, sem nenhuma migração retroativa. <code>_getOrCreateCloneOverlayGroup</code>
+    e <code>_moveActiveCloneIntoFichaSection</code> só procuravam o overlay
+    como IRMÃO do clone; contra um overlay legado aninhado por dentro, essa
+    busca sempre falhava — <code>_moveActiveCloneIntoFichaSection</code>
+    então movia só o clone (levando o overlay legado junto, agarrado por
+    dentro, pra dentro da Ficha), e <code>_getOrCreateCloneOverlayGroup</code>
+    criava um segundo overlay novo e vazio do lado de fora, deixando os
+    selos antigos órfãos dentro do clone. Corrigido com uma função
+    compartilhada pelos 3 fluxos (Tabulação/Swipe/Leitor): busca recursiva
+    por um GROUP marcado com o <code>pluginDataKey</code> esperado em
+    qualquer profundidade dentro do clone e, se achar, resgata pra fora via
+    <code>_reparentIntoAreaGroup</code> (mesma compensação de x/y por
+    diferença de bounding box já usada no resto do subsistema) ANTES de
+    prosseguir com a lógica normal de busca-por-irmão/move/criação.
+    Idempotente: clones já corrigidos (overlay já irmão, ou nunca teve
+    overlay algum) não encontram nada a resgatar e seguem o caminho de
+    sempre.</p>
+
+    <p><strong>Réplicas de trabalho nascem AO LADO do original, não mais
+    abaixo (2026-09-09)</strong>: <code>_findFreeTabOrderCopyPosition</code>
+    decidia sempre <code>y = oy + oh + gap</code> (empurra pra baixo ao
+    colidir) — trocado por <code>x = ox + ow + gap</code>, mesma altura do
+    original (<code>y = oy</code>), empurrando mais pra DIREITA ao colidir
+    em vez de mais pra baixo. Motivo: o designer pode começar a documentar
+    por qualquer um dos 3 blocos (Swipe, Leitor de Tela, Tabulação), em
+    qualquer ordem — cada um pode precisar criar uma réplica NOVA (quando
+    não há uma já reaproveitável pela Área, reaproveitamento que não muda
+    aqui) e ela precisa nascer num espaço livre sem sobrepor nada que já
+    exista, independente de qual bloco foi criado primeiro. A fonte de
+    colisão continua <code>_collectA11yOccupiedBounds()</code> +
+    <code>_rectsOverlap</code>, sem nenhuma reimplementação — só a direção
+    de avanço mudou. Confirmado por leitura completa de
+    <code>_collectA11yOccupiedBounds</code>: ela já soma, recalculado a
+    cada chamada, o bounding box do <code>fichaFrame</code> inteiro (Auto
+    Layout que cresce conforme seções/cards entram) como um bloco ocupado
+    único — cobre também os cards de specs do Leitor de Tela dentro dela
+    sem precisar de um bound por card (mesmo princípio conservador já usado
+    pra Grupos de Área/Section de sessão: nunca soma o container vazio de
+    antemão, sempre o tamanho real no momento da chamada). Nenhuma lacuna
+    real encontrada nessa função — não foi alterada.</p>
+
+    <p><strong>Ficha reparentada de volta pra Section principal se estiver
+    fora dela (2026-09-09)</strong>: bug real — a Ficha podia aparecer FORA
+    da Section de sessão ("hac — Especificações de Acessibilidade — ...").
+    Causa: <code>_createOrGetFichaFrame</code> só chamava
+    <code>_reparentIntoSection</code> no caminho de CRIAÇÃO do frame; uma
+    Ficha já existente (<code>existing</code>, achada por
+    <code>_findFichaFrameForArea</code>) era sempre devolvida como estava,
+    sem nenhuma checagem de que ainda vivia dentro da Section — qualquer
+    Ficha criada antes dessa chamada existir no código, ou desalinhada por
+    outro motivo, ficava fora para sempre, mesmo depois de repetidos
+    "Atualizar". Corrigido: ao resolver uma Ficha já existente, sobe pela
+    árvore de ancestrais checando <code>hacSessionSection === 'true'</code>;
+    se nenhum ancestral tiver essa marca, reparenta agora, com a mesma
+    função já usada na criação (idempotente e segura de chamar de novo
+    quando já está correta).</p>
+
     <p><strong>Antes de adicionar um 5º consumidor</strong> deste
     subsistema: confirme explicitamente se o pai do clone terá Auto Layout
     (se sim, <code>_setCloneOverlayGroupAbsolutePositioning</code> já
@@ -1329,9 +1457,10 @@ hr {
     está mais lá.</p>
 
     <p><strong>Modal de revisão</strong> (<code>views/modals.html</code>):
-    <code>#a11y-swipe-path-review-modal</code>, novo, estrutura análoga ao
-    <code>#a11y-tab-order-review-modal</code> (lista pendente + drag-and-drop), sem
-    botão "Adicionar item" (sem scan automático nesta entrega).</p>
+    <code>#a11y-swipe-path-review-modal</code>, estrutura análoga ao
+    <code>#a11y-tab-order-review-modal</code> (lista pendente + drag-and-drop). Desde
+    2026-09-09 também tem botão "Adicionar ponto" (ver seção 8i) — texto acima
+    desatualizado corrigido: não é mais verdade que o modal não tenha esse botão.</p>
 
     <p><strong>Ficha de Handoff, seção Swipe</strong>: mostra a trilha completa em ordem
     ("1. X → 2. Y → 3. Z"), não mais "leva para X" (texto da V2).</p>
@@ -1341,6 +1470,90 @@ hr {
     uma cópia de frame por área como Tabulação, é uma única linha/setas) — mesma
     decisão já tomada na V2, documentada explicitamente no código
     (<code>toggleAreaGroupVisibility</code>).</p>
+
+    <h2 id="s8i">8i. Editar a Trilha de Swipe já criada (2026-09-09)</h2>
+
+    <p>Até esta entrega, uma Trilha de Swipe já criada só oferecia duas ações no
+    card da tab "Swipe": "Refazer trilha de swipe" (reabre a captura inteira do
+    zero) ou "Remover trilha" (apaga tudo). Não havia como adicionar 1 ponto,
+    remover 1 ponto específico, ou reordenar sem recomeçar a captura inteira —
+    diferente da Ordem de Tabulação, que já tinha edição item-a-item
+    ("Adicionar itens" numa área já documentada, seção 8/8b). Esta entrega dá à
+    Trilha de Swipe o mesmo nível de edição, inclusive quando ela nasceu do
+    atalho "usar a Ordem de Tabulação já mapeada".</p>
+
+    <p><strong>A mecânica de edição (drag-and-drop, remover por item, destacar ao
+    clicar) já existia</strong> no modal de revisão — só nunca era aberta a partir de
+    uma trilha JÁ SALVA. <code>openSwipePathEditMode(areaId, targetNodeId)</code>
+    (novo, <code>accessibility.js</code>) resolve a trilha salva em
+    <code>hacData.a11ySwipePaths</code>, popula
+    <code>window._swipePathPendingList</code> a partir de <code>existingPath.points</code>
+    (mesmo formato de <code>startSwipePathFromTabOrder</code>) e chama
+    <code>openSwipePathReviewModal()</code> — sem nenhum caminho novo de desenho:
+    confirmar ("Salvar alterações") cai no mesmo <code>applySwipePathToCanvas</code> →
+    <code>insert-swipe-path</code> que já existia, que sempre apaga a trilha antiga
+    inteira e redesenha do zero a partir da lista enviada (a trilha é 1 grupo
+    indivisível no canvas, sem id persistido por segmento/ponto — qualquer
+    edição, mesmo de 1 ponto, sempre foi "redesenhar tudo", igual ao "Refazer"
+    de sempre).</p>
+
+    <p><strong>Botão "Editar pontos"</strong> no card já-criado (visível junto do
+    resumo "Trilha de Swipe (N pontos)"), estilo secundário (mesmo padrão do
+    botão "Atualizar" de outras abas de trabalho).</p>
+
+    <p><strong>Modal distingue criar de editar</strong> via
+    <code>window._swipePathEditingExisting</code> (novo flag, default
+    <code>false</code>): <code>openSwipePathReviewModal()</code> troca 3 textos por
+    JS conforme o flag — título ("Trilha de Swipe" vs. "Editar Trilha de
+    Swipe"), instrução, e texto do botão de confirmar ("Criar trilha de swipe"
+    vs. "Salvar alterações"). Os 3 elementos ganharam ids endereçáveis
+    (<code>#a11y-swipe-path-review-title-text</code>,
+    <code>#a11y-swipe-path-review-instruction</code>,
+    <code>#a11y-swipe-path-review-confirm-text</code>) — o botão de confirmar em si
+    (<code>#btn-swipe-path-apply</code>) passou a ter um <code>&lt;span&gt;</code>
+    interno em vez de <code>textContent</code> direto, porque
+    <code>applySwipePathToCanvas</code>/<code>handleSwipePathCreateFailed</code> já
+    reescreviam o texto do botão durante o processamento ("Desenhando
+    trilha…") e precisavam continuar fazendo isso sem perder o rótulo
+    correto do modo. O flag é resetado em <code>cancelSwipePathReview</code> e
+    <code>handleSwipePathCreated</code> para nunca vazar entre sessões do modal.</p>
+
+    <p><strong>"+ Adicionar ponto" dentro do modal</strong> (sempre visível, não só
+    no modo edição — também útil ao revisar uma trilha recém-capturada antes da
+    1ª confirmação). Espelha "+ Adicionar item" de Tabulação
+    (<code>startTabOrderAddItemsFromCard</code>/<code>startTabOrderAddItemWait</code>),
+    com uma diferença crítica de backend: <strong><code>start-swipe-path-mode</code>
+    SEMPRE clona um frame novo do zero</strong> (<code>_createSwipePathCloneForArea</code>
+    remove qualquer cópia anterior da área antes de clonar) — certo para
+    "Iniciar/Refazer trilha de swipe" (captura do zero), mas catastrófico para
+    "+ Adicionar ponto" numa trilha em edição: chamá-lo apagaria a cópia com o
+    trabalho de revisão em andamento. Por isso esta entrega separa em dois
+    handlers novos:</p>
+    <ul>
+      <li><code>resolve-swipe-path-clone</code> (código.js) — espelha
+      <code>resolve-tab-order-clone</code>: reconhece/reaproveita o clone
+      existente via <code>_resolveActiveSwipePathClone</code> (só recria se
+      genuinamente sumiu), SEM abrir escuta de seleção. Responde
+      <code>swipe-path-clone-resolved</code>.</li>
+      <li><code>start-swipe-path-listen-only</code> — liga
+      <code>_swipePathModeActive = true</code> (contagem ao vivo/highlight) sem
+      clonar nada. <code>start-swipe-path-mode</code> continua sendo o único
+      caminho que clona (fluxo de captura do zero).</li>
+    </ul>
+    <p><code>startSwipePathAddPoint()</code> chama <code>resolve-swipe-path-clone</code>
+    primeiro; só na resposta de sucesso (<code>handleSwipePathCloneResolved</code>)
+    é que a captura é de fato armada (<code>_swipePathStartAddPointWait</code>,
+    que dispara <code>start-swipe-path-listen-only</code> e transforma o botão em
+    "Concluir seleção" — aceita shift+clique/marquise para vários pontos novos
+    de uma vez, mesmo padrão de <code>startTabOrderAddItemWait</code>).</p>
+
+    <p><strong><code>handleSwipePathAccumulatedSelectionResult</code> passou a
+    diferenciar</strong> "captura inicial" de "+ Adicionar ponto" pelo modal já
+    estar visível ou não (mesmo critério de
+    <code>handleTabOrderAccumulatedSelectionResult</code>): modal fechado
+    substitui <code>_swipePathPendingList</code> do zero (comportamento
+    inalterado de "Iniciar"/"Refazer"); modal já aberto ANEXA os pontos novos
+    ao final da lista existente, sem duplicar renderização/abertura.</p>
 
     <h2 id="s8c">8c. Ficha de Handoff (2026-09-04): módulo apartado, inserção incremental por seção</h2>
 
@@ -1709,6 +1922,377 @@ hr {
     tem "Editar" — não existe uma aba "review" pra editar, o conteúdo é só
     o consolidado. O botão já é "Inserir"/"Atualizar" direto.</p>
 
+    <h3>Handoff Review — mais 2 blocos (2026-09-09): hierarquia de títulos e itens decorativos</h3>
+
+    <p>Expansão do 4º bloco com mais 2 listas, ambas montadas a partir de
+    dado 100% real já rastreado em <code>a11ySpecs</code> — sem inventar
+    checklist fixo de contraste/toque/valores (não existe como dado real
+    no hac hoje):</p>
+    <ul>
+      <li><strong>Hierarquia de títulos</strong> (<code>payload.titleHierarchy</code>,
+      <em>só origem web</em>): todas as specs da área com <code>a11yType ===
+      'titulo'</code>, ordenadas por ordem de leitura real (mesma
+      <code>_a11ySortSpecsByLayerOrder</code> já usada pela seção Leitor de Tela),
+      mostrando o selo do nível (<code>spec.letter</code>, H1-H6) com indentação
+      visual crescente por nível. Restrito à origem web porque a lib "Design
+      Acessível" só distingue H1-H6 (property <code>nivel</code>) nesse fluxo — no
+      mobile o selo de título é sempre "H" fixo sem sub-nível
+      (<code>spec.letter</code> nunca vem como "H1"/"H2"), então não existe
+      hierarquia real pra mostrar; em área mobile o frontend nem monta o
+      array (<code>if (!isMobile)</code> em <code>_fichaInsertSection</code>), e o bloco
+      inteiro fica omitido no backend (mesmo padrão de "sem bloco vazio" do
+      resto do card).</li>
+      <li><strong>Itens decorativos</strong> (<code>payload.decorativeItems</code>,
+      web + mobile): todas as specs com <code>a11yType === 'decorativo'</code>,
+      mesma ordenação por camada, com o badge fixo dessa categoria (Ø,
+      <code>A11Y_CATEGORIES.decorativo.badge</code>). Sem restrição de origem —
+      existe igual nas duas.</li>
+    </ul>
+    <p>Cada item de ambas as listas também mostra, quando existir, o
+    <strong>nome do componente DSC real</strong> por trás da spec
+    (<code>spec.a11yDscComponentName</code>, limpo via
+    <code>_cleanDscContainingFrameName</code> — mesmo campo já usado no card
+    "Componente" da seção Leitor de Tela) como uma segunda linha discreta
+    abaixo do nome do elemento.</p>
+    <p>Só no bloco de títulos, cada item também mostra o
+    <strong>token tipográfico real</strong> vinculado ao texto, quando
+    existir — mas isso <em>não pode</em> vir pronto do frontend
+    (<code>hacData</code> não guarda propriedades tipográficas do node), então é
+    resolvido no <strong>backend</strong>, no momento em que a seção Review é
+    montada: <code>_buildFichaReviewSection</code> resolve o node real do
+    título via o mesmo mecanismo de tradução original→clone já usado pelas
+    outras seções (<code>_resolveActiveSpecClone</code> + <code>nodeMap.get(targetNodeId)</code>,
+    com fallback pro node original via <code>figma.getNodeByIdAsync</code> quando
+    não há clone ativo), desce até o primeiro filho <code>TEXT</code> quando a
+    spec foi marcada num container (<code>_findFirstTextNode</code>, mesmo
+    espírito de <code>_findVisibleLabelText</code> mas retornando o node em vez
+    da string), e lê <code>textStyleId</code> +
+    <code>figma.getStyleByIdAsync</code> — mesmo padrão já usado em
+    <code>_a11yScanArea</code> (categoria <code>typography</code>) pra resolver nome/key
+    de text style. <strong>Nunca impeditivo</strong>: texto sem
+    <code>textStyleId</code>, com <code>figma.mixed</code>, ou node não resolvível
+    (apagado do canvas) simplesmente omite essa linha extra naquele item —
+    não bloqueia a montagem do card inteiro.</p>
+
+    <h2 id="s8g">8g. Simulação de leitura por voz da Ordem de Tabulação (2026-09-09)</h2>
+
+    <p>Ferramenta interativa nova dentro da aba de Tabulação (fica só ali —
+    <strong>não</strong> vira bloco na Ficha de Handoff): um botão "Simular
+    leitura" narra em voz real, via <strong>Web Speech API nativa do
+    navegador/Chromium do Figma Desktop</strong> (<code>speechSynthesis</code> —
+    sem serviço externo, sem token novo, sem dependência nova), cada parada da
+    Ordem de Tabulação já criada, com destaque sincronizado no canvas
+    (<code>highlight-node</code>, mesmo mecanismo de <code>focusNode</code>) — como um
+    leitor de tela faria de fato. Objetivo: dar ao designer um jeito rápido de
+    "ouvir" a experiência que está documentando.</p>
+
+    <p><strong>O tipo falado não é persistido</strong>: <code>tabOrderItems</code>
+    (schema salvo) continua sem nenhuma coluna de tipo/role/categoria — só tem
+    <code>{id, number, label, conector, targetNodeId, targetNodeName, a11yAreaId}</code>.
+    O "tipo" de cada parada (ex. "Botão" antes do nome) é <strong>recalculado ao
+    vivo a cada simulação</strong>, mesmo princípio de "nunca mentir dado antigo"
+    já seguido no resto do hac: a spec pode ter sido criada há dias, e o node
+    pode até ter trocado de componente desde então.</p>
+
+    <p><strong>Arquitetura backend→frontend</strong> (Web Speech API só existe no
+    iframe; o matching DSC→a11y só o backend resolve):</p>
+    <ol>
+      <li>Frontend (<code>toggleTabOrderNarration</code>,
+      <code>accessibility.js</code>) manda <code>resolve-tab-order-narration</code>
+      com <code>areaId</code> + a lista já ordenada
+      (<code>{targetNodeId, targetNodeName, number}</code> de cada item, via
+      <code>_currentTabOrderItems</code>).</li>
+      <li>Backend (<code>code.js</code>), best-effort por item (try/catch nunca
+      derruba o loop inteiro): resolve <code>figma.getNodeByIdAsync</code> →
+      se <code>INSTANCE</code>/<code>COMPONENT</code>, extrai <code>componentKey</code>
+      (mesmo padrão de <code>generate-tab-order-from-layers</code>) →
+      <code>_resolveDscComponentA11yMatch</code> → usa <code>match.a11yCategory</code>
+      (shortName) como tipo quando há match não-<code>isUnmapped</code>. Sem match
+      DSC mas node ainda existe: fallback mínimo por <code>node.type</code> nativo
+      (só <code>TEXT</code> → shortName sintético <code>'texto'</code>; qualquer outro tipo
+      nativo fica sem tipo falado, de propósito — um fallback amplo demais
+      soaria impreciso vindo de um leitor de tela simulado). Node apagado/
+      movido: <code>shortName: null</code>, narra só o nome salvo.</li>
+      <li>Backend responde <code>tab-order-narration-resolved</code> com
+      <code>{areaId, items: [{number, targetNodeId, targetNodeName, shortName}]}</code>,
+      na mesma ordem recebida (<code>targetNodeName</code> também é atualizado para
+      o nome/label atual do node, via <code>_findVisibleLabelText</code>, caso tenha
+      mudado desde a criação do item).</li>
+      <li>Frontend traduz <code>shortName</code> → fala via o novo léxico
+      <code>A11Y_NARRATION_TYPE_LABELS</code> (português) ou
+      <code>A11Y_NARRATION_TYPE_LABELS_EN</code> (inglês), conforme o idioma
+      escolhido no <code>&lt;select id="tab-order-narration-lang-{uid}"&gt;</code>
+      ao lado do botão (<code>accessibility.js</code>) — deliberadamente SEPARADO de
+      <code>A11Y_COMPONENTE_LABELS</code>, que tem nomes técnicos em inglês/misto
+      (ex. "Radio Button") inadequados pra fala em português. Frase por parada:
+      <code>"{Tipo}, {Nome}"</code> quando há tipo (ex. "Botão, Enviar" / "Button,
+      Enviar"), só <code>"{Nome}"</code> quando <code>shortName</code> é
+      <code>null</code>. Importante: só o TIPO e a pronúncia da síntese mudam de
+      idioma — o NOME do elemento nunca é traduzido, vem sempre como está
+      gravado no Figma (pedido explícito do usuário, 2026-09-09: "EN e PT só
+      pela nomenclatura dos itens").</li>
+    </ol>
+
+    <p><strong>Percurso automático</strong> (<code>_tabOrderNarrationAdvance</code>):
+    aperta uma vez, narra a fila inteira em sequência. Cada parada destaca o
+    node ORIGINAL no canvas (<code>focusNode</code> — a Ordem de Tabulação opera
+    sobre o canvas real, não a réplica da Ficha) e fala via
+    <code>SpeechSynthesisUtterance</code>, com <code>utterance.lang</code> igual a
+    <code>'pt-BR'</code> ou <code>'en-US'</code> conforme o idioma escolhido no
+    seletor (lido uma única vez ao clicar em "Simular leitura", guardado em
+    <code>window._tabOrderNarration.lang</code> — trocar o <code>&lt;select&gt;</code> no meio
+    de uma simulação em curso não afeta a fila já em andamento). O avanço para
+    a próxima parada usa o evento <code>onend</code> da utterance (nunca um
+    <code>setTimeout</code> arbitrário estimando a duração da fala), com uma
+    pausa fixa de 400ms depois, simulando o intervalo natural entre elementos
+    de um leitor de tela real. <code>onerror</code> da utterance também avança
+    (nunca trava a fila por uma voz indisponível/engine instável).</p>
+
+    <p><strong>Botão com estado</strong>: enquanto ativo, "Simular leitura" (ícone
+    <code>play</code>) vira "Parar simulação" (ícone <code>square</code>,
+    <code>_setTabOrderNarrationButtonState</code>, troca ícone/cor por
+    <code>id="tab-order-narration-btn-{uid}"</code>) — clicar chama
+    <code>speechSynthesis.cancel()</code> e interrompe o percurso imediatamente
+    (<code>_stopTabOrderNarration</code>, único caminho de encerramento, também
+    usado no fim natural do percurso — nunca deixa o botão preso nem o
+    highlight aceso). Suporte a <code>speechSynthesis</code> é checado antes de
+    iniciar; sem suporte, mostra toast explicando e não faz nada mais — nunca
+    impeditivo pro resto da aba. Botão (e o seletor de idioma PT/EN ao lado)
+    só aparecem quando a área já tem itens manuais (<code>hasManualItems</code>,
+    mesmo critério dos outros botões de ação dessa aba).</p>
+
+    <h2 id="s8h">8h. Alerta de desatualizado + "Gerar handoff completo" (2026-09-09); renomeação "Ficha" → "Handoff Completo"</h2>
+
+    <p><strong>Problema real mapeado pelo usuário</strong>: os cards de status na aba
+    Handoff (dashboard) só mostravam se uma seção já tinha sido inserida no
+    canvas alguma vez (<code>insertedAt</code>) — nunca se ela ficou
+    <strong>desatualizada</strong> depois disso. Cenário: o designer insere a Ordem de
+    Tabulação, depois volta à aba de trabalho e edita/adiciona itens, mas
+    esquece de clicar em "Atualizar" de novo — o canvas fica com dado velho,
+    sem nenhum aviso visível.</p>
+
+    <p><strong>Detecção por COMPARAÇÃO DE CONTAGEM, não por timestamp de edição</strong>
+    (<code>_fichaSectionIsStale</code>, <code>handoff-ficha.js</code>): compara o
+    <code>itemCount</code>/<code>specCount</code> gravado no momento da última inserção
+    (<code>area.handoffFicha.sections[key]</code>) contra a contagem ATUAL, lida
+    ao vivo das mesmas fontes já usadas por <code>_fichaInsertSection</code>
+    (<code>_currentTabOrderItems</code> para Tabulação, <code>hacData.a11ySwipePaths</code>
+    para Swipe, <code>a11ySpecs</code> filtrado por área para Leitor de Tela). Limitação
+    aceita e intencional: editar o CONTEÚDO de um item já contado, sem mudar a
+    quantidade, não dispara o alerta — mais simples, sem persistir nenhum campo
+    novo. O card do <strong>Handoff Review</strong> herda o alerta por tabela
+    (<code>_fichaReviewIsStale</code>): fica stale se qualquer seção-fonte
+    (<code>tabulacao</code>/<code>leitor</code>, e <code>swipe</code> só quando a origem é mobile —
+    mesmo filtro de <code>sectionKeysForReview</code> já usado em
+    <code>_fichaInsertSection</code>) estiver stale, mesmo que o Review em si tenha
+    sido inserido corretamente da última vez.</p>
+
+    <p>Visualmente, o alerta troca o ícone verde <code>check-circle-2</code> por
+    <code>alert-circle</code> em âmbar (<code>#d97706</code>, cor de ATENÇÃO — nunca vermelha,
+    não é uma falha, é pendência de sincronização) e o texto passa a mostrar
+    a contagem atual vs. a gravada (ex. <code>"3 agora — handoff tem 2, clique
+    Atualizar"</code>). O botão "Editar" de cada card não muda — já leva pra aba
+    certa, onde <code>_fichaButtonLabel</code> mostra "Atualizar Handoff Completo"
+    (texto reconciliado em 8i) com base em <code>insertedAt</code>.</p>
+
+    <p><strong>Botão "Gerar handoff completo"</strong> (<code>_fichaGenerateCompleteHandoff(areaId)</code>,
+    <code>handoff-ficha.js</code>; botão novo em <code>_a11yWorkspaceTabHandoffDashboard</code>,
+    <code>accessibility.js</code>, ícone <code>layers</code> — escolhido pra não colidir
+    visualmente com <code>sparkles</code>, já usado em "ou usar Mapeamento
+    Automático" na mesma workspace): monta a lista de chaves candidatas
+    (<code>tabulacao</code>/<code>swipe</code>/<code>leitor</code>/<code>review</code>, filtrando <code>swipe</code>
+    fora quando a origem não é mobile) e filtra só as PENDENTES
+    (sem <code>insertedAt</code>) ou STALE. Se qualquer uma de
+    <code>tabulacao</code>/<code>swipe</code>/<code>leitor</code> entrar na lista, <code>review</code> é forçado a
+    entrar também — o consolidado precisa refletir os dados que serão
+    reinseridos nesta mesma rodada, mesmo que o Review isoladamente não
+    estivesse stale. <strong>Nunca reprocessa as 4 incondicionalmente</strong> — só
+    reinsere o que está pendente/desatualizado, mais rápido e sem retrabalho
+    no canvas para seções já em dia. Lista vazia → <code>showToast('O Handoff
+    Completo já está atualizado.')</code> e para.</p>
+
+    <p><strong>Disparo SEQUENCIAL, não concorrente</strong> (uma seção por vez,
+    aguardando a resposta do backend antes da próxima) — decisão deliberada
+    depois de investigar <code>_fichaHandleSectionInserted</code>: (1) esse handler
+    já faz <code>saveToStorage()</code> + <code>_renderA11yWorkspaceTab()</code> a cada
+    resposta — disparar as 4 mensagens de uma vez faria o backend responder em
+    ordem não garantida e essas reconstruções de DOM/storage se sobreporiam
+    sem necessidade; (2) mais importante, <code>review</code> <strong>lê o estado
+    já persistido</strong> das outras 3 seções (<code>area.handoffFicha.sections</code>,
+    dentro de <code>_fichaInsertSection</code>) — se disparado em paralelo com
+    <code>tabulacao</code>/<code>leitor</code>, corre risco real de montar o resumo ANTES da
+    resposta delas ter sido persistida. Sequencial elimina esse risco por
+    construção, já que <code>review</code> só dispara depois que as seções
+    anteriores já resolveram. Implementado com uma fila de resolvers
+    (<code>_fichaPendingResolvers</code>, mapa <code>sectionKey → resolve</code>) e uma
+    versão "aguardável" de <code>_fichaInsertSection</code>
+    (<code>_fichaInsertSectionAwaitable</code>) que registra o resolver antes de
+    disparar a mensagem — <code>_fichaHandleSectionInserted</code>/
+    <code>_fichaHandleSectionInsertFailed</code> resolvem essa promise quando
+    existir, sem alterar o comportamento do clique manual de "Inserir/Atualizar
+    ficha" (que nunca registra resolver nenhum).</p>
+
+    <p><strong>Renomeação "Ficha" → "Handoff Completo" (mesmo pedido, pura, sem
+    mudança de arquitetura)</strong>: continua sendo 1 artefato por ÁREA marcada
+    (<code>_createOrGetFichaFrame</code> inalterado). Mudou todo TEXTO visível ao
+    designer (botões, toasts, labels de card, guia "Entendendo as categorias")
+    e o NOME dos frames/seções criados no canvas (<code>fichaFrame.name</code> →
+    <code>"[Handoff Completo] {label}"</code>; as 4 seções internas →
+    <code>"Handoff Completo — Tabulação/Swipe/Leitor de Tela/Handoff Review"</code>).
+    <strong>Não mudou</strong> nenhum identificador interno de código
+    (<code>_ficha*</code>, <code>handoffFicha</code>, <code>hacFichaSection</code>,
+    <code>hacFichaForArea</code> como chaves de <code>pluginData</code>) — convenção de
+    código, nunca visível, gerar diff sem benefício real. <strong>Caso especial
+    resolvido com migração aditiva</strong>: a Section organizadora que agrupa os
+    frames de todas as áreas era localizada por <strong>nome literal exato</strong>
+    em <code>_getOrCreateNamedSection</code> (<code>n.name === sectionName</code>, sem
+    <code>pluginData</code> — diferente de <code>_findFichaFrameForArea</code>/
+    <code>_findFichaSectionInFrame</code>, que já usam <code>pluginData</code> e por isso
+    puderam ser renomeados livremente). Simplesmente trocar o literal de
+    <code>A11Y_FICHA_SECTION_NAME</code> faria arquivos já existentes — com uma
+    Section <code>"hac — Ficha de Handoff"</code> real no canvas — deixarem de ser
+    encontrados, e a próxima inserção criaria uma Section NOVA duplicada, órfã
+    da antiga. Resolvido com um parâmetro opcional <code>legacyName</code> em
+    <code>_getOrCreateNamedSection</code>: a busca aceita <code>n.name === sectionName
+    || n.name === legacyName</code>, e as duas varreduras por prefixo
+    (<code>_forEachFichaFrameCandidate</code>, <code>_collectA11yOccupiedBounds</code>) passam a
+    aceitar <code>.startsWith</code> em qualquer um dos dois prefixos. Migração
+    puramente aditiva, decisão do usuário: <code>A11Y_FICHA_SECTION_NAME</code>
+    agora vale <code>'hac — Handoff Completo'</code> (usado em toda Section NOVA),
+    <code>A11Y_FICHA_SECTION_NAME_LEGACY</code> guarda o nome antigo só para
+    reconhecimento — nunca há rename in-place da Section existente no canvas,
+    arquivos antigos continuam com o nome velho indefinidamente, apenas
+    reconhecidos e reaproveitados sem duplicar.</p>
+
+    <h2 id="s8j">8j. Correções pós-auditoria (2026-09-09): aria-live nos toasts, nomenclatura Handoff Completo, contraste dos cards de status</h2>
+
+    <p>Rodada de correções pontuais a partir de 4 achados da Auditoria Geral de
+    2026-09-09 (ver documento de diagnóstico, não público). Escopo
+    deliberadamente restrito a esses 4 itens — outros achados da mesma
+    auditoria (CI, matching DSC, extração de módulos etc.) seguem como
+    pendência separada.</p>
+
+    <p><strong>1) Toasts sem <code>aria-live</code></strong>: <code>#toast-container</code>
+    (<code>build.cjs</code>) passou a ter <code>role="status" aria-live="polite"
+    aria-atomic="true"</code>. Correção de 1 ponto único resolve para toda
+    chamada de <code>showToast</code> (<code>core.js</code>) de uma vez — o container é
+    sempre o mesmo nó, <code>showToast</code> só faz <code>appendChild</code> do toast
+    dentro dele, nunca recria nem sobrescreve atributos do próprio
+    container. Antes desta correção, nenhuma confirmação/erro do plugin era
+    anunciado a quem navega a própria interface do hac com leitor de tela —
+    justamente o tipo de falha que o hac existe para ensinar a evitar em
+    produtos de terceiros.</p>
+
+    <p><strong>2) Nomenclatura "Handoff" → "Handoff Completo" (reconciliação)</strong>:
+    a renomeação original (seção 8h) não tinha chegado a 3 pontos visíveis,
+    agora corrigidos:</p>
+    <ul>
+      <li>Tab da workspace (<code>specifications.html</code>): "Handoff" →
+      "Handoff Completo" — fonte da tab reduzida para <code>text-[10px]</code>
+      (as outras 3 tabs permanecem em <code>text-[11px]</code>) e padding
+      horizontal ajustado, mantendo o grid fixo de 4 colunas e o
+      <code>truncate</code> como salvaguarda em larguras de painel muito
+      estreitas.</li>
+      <li><code>_fichaButtonLabel</code> (<code>handoff-ficha.js</code>): "Inserir no
+      handoff"/"Atualizar handoff" → "Inserir no Handoff Completo"/"Atualizar
+      Handoff Completo" — usado tanto no botão das 3 abas de trabalho quanto
+      na escolha do ícone (<code>file-plus-2</code>/<code>refresh-cw</code>).</li>
+      <li>Card do 4º bloco no dashboard (<code>_fichaReviewCardHtml</code>,
+      <code>handoff-ficha.js</code>): rótulo exibido "Handoff Review" (inglês/nome
+      de variável) → <strong>"Consolidado"</strong>, para bater com o padrão 100%
+      PT-BR do resto do produto e ficar natural ao lado dos outros 3 cards
+      (Tabulação, Swipe, Leitor de Tela). O nome interno/<code>sectionKey</code>
+      continua <code>'review'</code> (convenção de código, nunca visível) — mesmo
+      precedente já usado para <code>_ficha*</code> na renomeação original.
+      Nomes de frame/Section desenhados no canvas pelo backend
+      (<code>code.js</code>, ex. <code>"Handoff Completo — Handoff Review"</code>) não
+      foram alterados nesta rodada — fora do escopo desta correção, que foi
+      só de textos de interface do plugin.</li>
+    </ul>
+
+    <p><strong>3) Onboarding — 2 lacunas pontuais preenchidas</strong>
+    (<code>onboarding.js</code>, ambas as jornadas web/mobile): o passo que já
+    apresenta a Ordem de Tabulação ganhou 1 frase sobre <strong>"Simular
+    leitura"</strong> (com seletor de idioma PT/EN); o passo da Trilha de Swipe
+    (jornada mobile) ganhou 1 frase sobre o botão <strong>"Editar pontos"</strong>
+    de uma trilha já criada; o passo que apresenta as abas da workspace
+    (ambas as jornadas) ganhou 1 frase sobre o botão <strong>"Gerar handoff
+    completo"</strong> do dashboard. Ajustes de texto pontuais — estrutura do
+    onboarding (stepper, tela de propósito, banner) não mudou.</p>
+
+    <p><strong>4) Contraste insuficiente no tema escuro — cards de status</strong>:
+    <code>_fichaStatusCardHtml</code>/<code>_fichaReviewCardHtml</code>
+    (<code>handoff-ficha.js</code>) usavam cor hex fixa via
+    <code>style="color:${hex}"</code> (<code>#94a3b8</code> pendente, <code>#d97706</code>
+    âmbar/stale, <code>#16a34a</code> verde/inserido), sem nenhuma variante para
+    tema escuro — contraste medido abaixo do mínimo WCAG AA no dark mode
+    (âmbar ~3,9:1, verde ~3,2:1, contra o mínimo exigido de 4,5:1). Extraída
+    uma função única <code>_fichaStatusColorClass(state)</code> que devolve a
+    classe Tailwind correspondente, reutilizada nos dois cards e aplicada
+    tanto no ícone quanto no texto de status:</p>
+    <ul>
+      <li>pendente: <code>text-slate-400 dark:text-dark-muted</code></li>
+      <li>desatualizado (stale): <code>text-amber-600 dark:text-amber-400</code></li>
+      <li>inserido: <code>text-green-600 dark:text-green-400</code></li>
+    </ul>
+    <p>Vocabulário de classe idêntico ao já usado em outros pontos do mesmo
+    módulo/produto (<code>accessibility.js</code>, ex. o badge de dica em âmbar e
+    os textos secundários em <code>slate-400</code>/<code>dark-muted</code>) — nenhuma
+    cor nova introduzida, só a variante <code>dark:</code> que faltava.</p>
+
+    <h2 id="s8k">8k. Extração de tab-order.js e swipe-path.js (2026-09-09)</h2>
+
+    <p>Item de "extração de módulos" citado como pendência na seção 8j —
+    tratado como reorganização de arquivo pura, sem mudança de comportamento.
+    <code>accessibility.js</code> era o maior arquivo do projeto (7.718 linhas) e
+    concentrava, além das 5 categorias de spec, duas ferramentas inteiras com
+    identidade própria: Ordem de Tabulação e Trilha de Swipe.</p>
+
+    <p><strong><code>src/plugin/modules/tab-order.js</code></strong>: toda a seção
+    "Ordem de Tabulação" (47 funções, incluindo a subseção de Geração
+    Automática por Varredura de Camadas e a Simulação de Leitura por Voz —
+    seção 8g), mais <code>toggleA11yTabOrderAccordion</code> e
+    <code>_tabOrderSectionHtml</code>, que viviam fisicamente na área de renderização
+    de accordion, longe do resto do bloco. <code>window._a11yExpandedTabOrderIds</code>
+    ficou em <code>accessibility.js</code> porque é compartilhada com
+    <code>_a11ySetAllSubaccordions</code> (ação "Expandir/Recolher todos" de uma Área),
+    que não tem relação exclusiva com Tab Order.</p>
+
+    <p><strong><code>src/plugin/modules/swipe-path.js</code></strong>: toda a seção
+    "Trilha de Swipe" (26 funções). <code>handleSwipePathCopyStarted</code> estava
+    fisicamente intercalada no meio do bloco de Tab Order (entre
+    <code>handleTabOrderCopyStarted</code> e <code>finishTabOrderCapture</code>) — resposta a
+    <code>'swipe-path-copy-started'</code>, só fisicamente mal posicionada por
+    proximidade histórica com o código que ela espelha.</p>
+
+    <p><strong>Ordem de concatenação em <code>build.cjs</code></strong> (importa mais que a
+    ordem de leitura — ver seção 9): <code>accessibility.js</code> →
+    <code>tab-order.js</code> → <code>swipe-path.js</code> → <code>handoff-ficha.js</code> →
+    <code>onboarding.js</code>. <code>tab-order.js</code> precisa vir antes de
+    <code>handoff-ficha.js</code> porque a Ficha consome <code>_currentTabOrderItems</code>
+    (mesma dependência já documentada na seção 8c); <code>swipe-path.js</code>
+    precisa vir depois de <code>tab-order.js</code> porque referencia globalmente
+    <code>cancelTabOrderReview()</code>/<code>window._tabOrderCaptureMode</code>. Como tudo roda
+    num único <code>&lt;script&gt;</code> sem <code>import</code>/<code>export</code>, function
+    declarations continuam hoisted e chamáveis de qualquer lugar — só a ordem
+    de concatenação (não a de leitura via <code>read()</code>) determina o que está
+    disponível em que ponto para variáveis <code>let</code>/<code>const</code> de nível
+    superior.</p>
+
+    <p>Nenhum <code>window.*</code> foi removido ou renomeado — o contrato com
+    <code>messages.js</code> e com os <code>onclick=</code> das views permanece idêntico.
+    Também nesta sessão: helper <code>isA11yMobileProject()</code> adicionado ao lado
+    de <code>getA11yProjectOrigin()</code> (seção 3), substituindo 10 ocorrências
+    confirmadas de <code>getA11yProjectOrigin() === 'mobile'</code>/
+    <code>hacData.projectOrigin === 'mobile'</code> espalhadas em
+    <code>accessibility.js</code>, <code>handoff-ficha.js</code> e <code>onboarding.js</code> — nunca
+    tocou nas checagens de <code>modal.dataset.a11yOrigin</code> (origem de uma
+    spec/elemento individual, conceito diferente); e remoção de 4 handlers de
+    mensagem mortos do backend (<code>get-node-main-text</code>, <code>lock-spec</code>,
+    <code>hide-spec-lines</code>, <code>edit-spec-connector</code>), cada um removido em par
+    completo (handler + roteamento de resposta + stub de frontend associado,
+    quando havia).</p>
+
     <h2 id="s9">9. Contrato de mensagens (UI ↔ backend)</h2>
 
     <p>Toda comunicação passa por <code>postMessage</code>/<code>window.onmessage</code> — o frontend
@@ -1730,6 +2314,8 @@ hr {
       <tr><td><code>get-a11y-documentation-status</code></td><td>UI → backend</td><td><code>sectionName</code> (Section ativa a checar)</td></tr>
       <tr><td><code>a11y-documentation-status</code></td><td>backend → UI</td><td><code>activeSectionName</code>, <code>hasDocumentation</code>, <code>areaCount</code>, <code>nextSectionName</code> — ver seção 8</td></tr>
       <tr><td><code>start-tab-order-copy</code> / <code>generate-tab-order-from-layers</code> / <code>apply-tab-order-to-canvas</code></td><td>UI → backend</td><td>(entre outros campos já existentes) <code>sectionName</code></td></tr>
+      <tr><td><code>resolve-tab-order-narration</code></td><td>UI → backend</td><td><code>areaId</code>, <code>items: [{targetNodeId, targetNodeName, number}]</code> — novo em 2026-09-09 (seção 8g), Simulação de leitura por voz</td></tr>
+      <tr><td><code>tab-order-narration-resolved</code></td><td>backend → UI</td><td><code>areaId</code>, <code>items: [{number, targetNodeId, targetNodeName, shortName}]</code> — <code>shortName</code> é <code>null</code> quando o node sumiu ou não há match DSC não-<code>isUnmapped</code> (fallback só cobre <code>TEXT</code> → <code>'texto'</code>)</td></tr>
     </table>
 
     <h2 id="s10">10. Escala da UI (<code>--ui-scale</code>) e <code>position</code> dos modais</h2>

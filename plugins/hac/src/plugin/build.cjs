@@ -36,6 +36,14 @@ const modA11yConstantsGenerated = read('refs/_a11y-constants.generated.js');
 // arquivo ausente com um comentário placeholder, sem quebrar o build.
 const modInstructionFramesGenerated = read('refs/_instruction-frames.generated.js');
 const modA11y    = read('modules/accessibility.js');
+// Ordem de Tabulação e Trilha de Swipe (2026-09-09) — extraídos de
+// accessibility.js pra reduzir o maior arquivo do projeto. tab-order.js
+// precisa vir ANTES de handoff-ficha.js: a Ficha consome
+// _currentTabOrderItems. swipe-path.js referencia globalmente
+// cancelTabOrderReview()/window._tabOrderCaptureMode (tab-order.js), então
+// também precisa vir depois dele.
+const modTabOrder  = read('modules/tab-order.js');
+const modSwipePath = read('modules/swipe-path.js');
 const modFicha   = read('modules/handoff-ficha.js');
 const modOnboard = read('modules/onboarding.js');
 const modMsgs    = read('modules/messages.js');
@@ -220,10 +228,27 @@ ${modInstructionFramesGenerated}
 ${modA11y}
 
 // ============================================================
+// MODULE: tab-order.js
+// (Ordem de Tabulação — extraído de accessibility.js em 2026-09-09.
+// Precisa vir ANTES de handoff-ficha.js: a Ficha consome
+// _currentTabOrderItems.)
+// ============================================================
+${modTabOrder}
+
+// ============================================================
+// MODULE: swipe-path.js
+// (Trilha de Swipe — extraído de accessibility.js em 2026-09-09.
+// Precisa vir DEPOIS de tab-order.js: referencia globalmente
+// cancelTabOrderReview()/window._tabOrderCaptureMode.)
+// ============================================================
+${modSwipePath}
+
+// ============================================================
 // MODULE: handoff-ficha.js
 // (Ficha de Handoff — módulo apartado, ver comentário de topo do arquivo.
-// Precisa vir DEPOIS de accessibility.js: referencia A11Y_CATEGORIES,
-// switchA11yWorkspaceTab, a11yAreas/a11ySpecs, saveToStorage etc.)
+// Precisa vir DEPOIS de accessibility.js/tab-order.js: referencia
+// A11Y_CATEGORIES, switchA11yWorkspaceTab, a11yAreas/a11ySpecs,
+// _currentTabOrderItems, saveToStorage etc.)
 // ============================================================
 ${modFicha}
 
@@ -239,7 +264,7 @@ ${modOnboard}
     });
   </script>
 
-  <div id="toast-container"></div>
+  <div id="toast-container" role="status" aria-live="polite" aria-atomic="true"></div>
   <div id="resize-handle"></div>
 
 </body>

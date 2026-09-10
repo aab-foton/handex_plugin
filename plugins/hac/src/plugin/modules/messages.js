@@ -196,38 +196,6 @@
         showToast('Especificação criada e posicionada — travada por padrão, use o cadeado pra ajustar.');
       }
 
-      if (msg.type === "spec-locked") {
-        let found = false;
-        a11ySpecs.forEach(spec => {
-          if (spec && spec.id === msg.specId) {
-            spec.pendingConfirmation = false;
-            found = true;
-          }
-        });
-        if (found) {
-          if (typeof renderA11ySpecsList === 'function') renderA11ySpecsList();
-          saveToStorage();
-        }
-      }
-
-      if (msg.type === 'spec-connector-edited') {
-        const spec = a11ySpecs.find(s => s.id === msg.specId);
-        if (spec) {
-          spec.connectorStyle = msg.connectorStyle;
-          spec.connectorCurvature = msg.connectorCurvature;
-        }
-        saveToStorage();
-        if (typeof closeEditSpecConnectorModal === 'function') closeEditSpecConnectorModal();
-        showToast('Linha da especificação atualizada');
-        return;
-      }
-
-      if (msg.type === 'spec-connector-edit-failed') {
-        window._editingSpecConnectorIndex = null;
-        showToast('Não foi possível editar a linha — elemento vinculado não encontrado no canvas.', 'error');
-        return;
-      }
-
       if (msg.type === "selection-name") {
         // msg.mainText: code.js ecoa _findMainTextContent em get-selection-name.
         // msg.dscComponentName: nome cru do component set DSC (containingFrame)
@@ -236,10 +204,6 @@
         // msg.id (2026-09-04-ae): id do nó selecionado, usado pra checar spec
         // duplicada em prefillA11yComponentName.
         if (typeof prefillA11yComponentName === 'function') prefillA11yComponentName(msg.name, msg.mainText, msg.dscComponentName, msg.id);
-      }
-
-      if (msg.type === "node-main-text") {
-        if (typeof prefillA11yLabelFromMainText === 'function') prefillA11yLabelFromMainText(msg.mainText);
       }
 
       // Resposta de 'get-a11y-selection-info' — resolve o Promise pendente
@@ -349,6 +313,16 @@
           handleTabOrderCloneResolved(msg.areaId, msg.ok);
         }
       }
+      // Resposta de resolve-swipe-path-clone (2026-09-09, feature "editar
+      // trilha já criada") — mesmo espírito de tab-order-clone-resolved:
+      // "+ Adicionar ponto" numa trilha já em edição só arma a captura de
+      // clique depois de confirmar que a cópia clonada existente foi
+      // reconhecida/reaproveitada, nunca recriada do zero.
+      if (msg.type === "swipe-path-clone-resolved") {
+        if (typeof handleSwipePathCloneResolved === 'function') {
+          handleSwipePathCloneResolved(msg.areaId, msg.ok);
+        }
+      }
 
       // Geração automática por varredura de camadas (generate-tab-order-
       // from-layers em code.js) — responde com os CANDIDATOS
@@ -382,6 +356,16 @@
       // eventuais diagnósticos, sem ação adicional.
       if (msg.type === "tab-order-renumbered") {
         // no-op
+      }
+
+      // Resposta de resolve-tab-order-narration (2026-09-09) — o tipo de
+      // cada parada (matching DSC→a11y contra o node ORIGINAL) só existe
+      // recalculado ao vivo no backend; o front guarda a fila e conduz a
+      // narração por voz (Web Speech API) a partir daqui.
+      if (msg.type === "tab-order-narration-resolved") {
+        if (typeof _handleTabOrderNarrationResolved === 'function') {
+          _handleTabOrderNarrationResolved(msg.areaId, msg.items);
+        }
       }
 
       // ── Trilha de Swipe ──────────────────────────────────────────────

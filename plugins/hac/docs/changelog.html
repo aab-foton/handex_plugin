@@ -176,6 +176,7 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
     <a href="institucional.html">Regras de Negócio</a>
     <a href="design-system.html">Design System</a>
     <a href="changelog.html" class="active">Changelog</a>
+    <a href="auditoria-2026-09.html">Auditoria Geral</a>
   </nav>
   <button type="button" id="theme-toggle" aria-label="Alternar tema claro/escuro" title="Alternar tema claro/escuro"></button>
 </header>
@@ -1074,6 +1075,504 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
     continua igual (o ícone decorativo nunca ganha parada própria — só a
     Detecção de Specs o documenta, à parte). Ver Documentação Técnica,
     seção 6.</p>
+
+    <hr>
+
+    <h2>2026-09-09 — Handoff Review ganha hierarquia de títulos e itens decorativos</h2>
+
+    <p><strong>2 blocos novos no 4º bloco da Ficha</strong> (Handoff Review),
+    ambos com dado 100% real já rastreado pelo hac — sem checklist fixo de
+    contraste/toque/valores monetários, que não existe hoje como dado real:</p>
+    <ul>
+      <li><strong>Hierarquia de títulos</strong> — lista de todas as specs
+      "Nível de Título" da área, na ordem de leitura real (mesma ordenação
+      por camada já usada pela seção Leitor de Tela), com o selo do nível
+      (H1-H6) indentado visualmente por nível. Só aparece em áreas de
+      <strong>origem web</strong>: a lib "Design Acessível" só distingue
+      H1-H6 nesse fluxo — no mobile o selo é sempre "H" fixo sem
+      sub-nível, então não existe hierarquia real pra mostrar, e o bloco
+      inteiro é omitido (não uma versão degradada).</li>
+      <li><strong>Itens decorativos</strong> — lista de todas as specs
+      "Elemento Decorativo" da área, com o badge fixo dessa categoria (Ø).
+      Aparece igual em web e mobile.</li>
+    </ul>
+    <p>Cada item de ambas as listas mostra também, quando existir, o nome
+    do componente DSC real por trás da spec (mesmo campo já usado no card
+    "Componente" da seção Leitor de Tela). Só no bloco de títulos, cada
+    item mostra ainda o <strong>token tipográfico real</strong> vinculado
+    ao texto (nome do text style do Figma aplicado ali) — resolvido no
+    backend, direto do node real via <code>textStyleId</code> +
+    <code>figma.getStyleByIdAsync</code> (mesmo padrão já usado pela
+    Detecção Automática pra reconhecer tokens de tipografia), com tradução
+    original→clone reaproveitando o mesmo mecanismo já usado por Leitor de
+    Tela/Tabulação/Swipe. Nunca impeditivo: título sem token vinculado, ou
+    elemento apagado do canvas, simplesmente omite essa linha extra nesse
+    item, sem travar o resto do card. Ver Documentação Técnica, seção 8f.</p>
+
+    <h2>2026-09-09 — Simulação de leitura por voz da Ordem de Tabulação</h2>
+
+    <p>Ferramenta interativa nova dentro da aba de Tabulação (não vira bloco
+    na Ficha de Handoff): botão <strong>"Simular leitura"</strong> narra em
+    voz real cada parada da Ordem de Tabulação já criada, com destaque
+    sincronizado no canvas — como um leitor de tela faria de verdade.
+    Objetivo: dar ao designer um jeito rápido de "ouvir" a experiência que
+    está documentando, sem sair do Figma.</p>
+    <ul>
+      <li>Áudio real via <strong>Web Speech API</strong>
+      (<code>speechSynthesis</code>), nativa do navegador/Chromium do Figma
+      Desktop — sem serviço externo, sem token novo, sem dependência nova.</li>
+      <li>Cada parada anuncia <strong>tipo + nome</strong> do elemento (ex.
+      "Botão, Enviar"). O tipo é <strong>recalculado ao vivo</strong> a cada
+      simulação — nunca fica persistido em <code>tabOrderItems</code>, que
+      continua com o mesmo schema enxuto de sempre. Reaproveita o matching
+      DSC→a11y já existente (<code>_resolveDscComponentA11yMatch</code>)
+      contra o node original de cada item, com fallback gracioso (narra só
+      o nome) quando o node foi apagado/movido ou não há match DSC.</li>
+      <li>Percurso automático: aperta uma vez, narra tudo em sequência, com
+      pausa natural entre paradas; um botão "Parar simulação" interrompe a
+      qualquer momento.</li>
+      <li>Novo léxico <code>A11Y_NARRATION_TYPE_LABELS</code> traduz os tipos
+      pra fala em português natural (ex. <em>button</em> → "Botão",
+      <em>checkbox</em> → "Caixa de seleção", <em>inputs</em> → "Campo de
+      texto"), separado do vocabulário técnico já usado na UI (que tem
+      termos em inglês, inadequados pra voz).</li>
+    </ul>
+    <p>Ver Documentação Técnica, seção 8g.</p>
+
+    <h2>2026-09-09 — Bug real: grupo de selos aparecia aninhado dentro do clone ao inserir na Ficha</h2>
+
+    <p>Reportado com print: ao inserir/atualizar a Ordem de Tabulação na
+    Ficha de Handoff, o grupo <strong>[Selos de Tabulação] ...</strong>
+    aparecia no painel de camadas como FILHO do clone
+    <strong>[Ordem de Tabulação] ...</strong>, em vez de irmão dele (mesmo
+    nível, ao lado da Legenda) — estrutura errada. Causa raiz confirmada:
+    Áreas cuja Ordem de Tabulação/Swipe/Leitor de Tela foi criada numa
+    janela específica desta mesma sessão (entre a introdução do overlay-
+    irmão e a correção seguinte, ver Documentação Técnica seção 8a) tiveram
+    o grupo de selos/trilha reparentado PARA DENTRO do clone por uma versão
+    intermediária do código, já corrigida na criação — mas nunca migrada
+    nos arquivos que já tinham esse dado. Como a busca por overlay sempre
+    olhou só por IRMÃOS do clone, ela nunca enxergava esse overlay legado
+    agarrado por dentro: o move para a Ficha levava o clone inteiro,
+    overlay legado incluso, resultando no aninhamento visto no print.
+    Corrigido nos 3 fluxos que compartilham este subsistema (Tabulação,
+    Swipe, Leitor de Tela) com uma única função de resgate: antes de mover
+    o clone pra Ficha (ou de criar um overlay novo), busca recursivamente
+    por um overlay legado aninhado dentro do clone e, se achar, resgata pra
+    fora como irmão, preservando a posição visual. Idempotente — não afeta
+    Áreas cuja estrutura já está correta. Ver Documentação Técnica, seção
+    8a.</p>
+
+    <h2>2026-09-09 — Réplicas de trabalho nascem ao lado do original; Ficha reparentada de volta pra Section principal</h2>
+
+    <p>Dois ajustes no mesmo subsistema de clone/posicionamento:</p>
+    <ul>
+      <li><strong>Posição das réplicas invertida: ao lado, não mais
+      abaixo</strong> — a cópia de trabalho de Ordem de Tabulação/Swipe/
+      Leitor de Tela nascia sempre embaixo do frame original; agora nasce
+      ao lado (mesma altura, à direita), empurrando mais pra direita em vez
+      de mais pra baixo quando colide com algo já existente. Necessário
+      porque o designer pode documentar os 3 blocos em qualquer ordem — a
+      colisão continua verificada contra tudo que já está ocupado na
+      página (specs, cópias, a própria Ficha com seus cards), então uma
+      réplica nova nunca nasce sobre algo que já existe, não importa qual
+      bloco foi criado primeiro.</li>
+      <li><strong>Bug real: Ficha aparecendo fora da Section principal</strong>
+      — Fichas já existentes nunca eram reparentadas de novo em nenhum
+      "Atualizar" seguinte, mesmo se tivessem ficado fora da Section "hac —
+      Especificações de Acessibilidade — ...". Corrigido com uma checagem
+      antes de devolver a Ficha já existente: se ela não estiver dentro da
+      Section, reparenta agora.</li>
+    </ul>
+    <p>Ver Documentação Técnica, seção 8a.</p>
+
+    <h2>2026-09-09 — Seletor de idioma na simulação de leitura; ícone da aba Leitor de Tela trocado</h2>
+
+    <ul>
+      <li><strong>Seletor PT/EN ao lado de "Simular leitura"</strong> — a
+      narração passa a ter um idioma escolhível. Só a pronúncia da síntese de
+      voz e o rótulo do TIPO do elemento mudam de idioma (novo léxico
+      <code>A11Y_NARRATION_TYPE_LABELS_EN</code>, espelho em inglês do já
+      existente); o NOME do elemento nunca é traduzido, sempre vem como está
+      gravado no Figma. Escolha lida uma única vez ao iniciar a simulação —
+      trocar o idioma no meio de um percurso em andamento não afeta a fila já
+      em curso.</li>
+      <li><strong>Ícone da aba "Leitor de Tela" trocado</strong> — de
+      <code>ear</code> (orelha) para <code>accessibility</code>, mais neutro e
+      alinhado ao restante da vertical de a11y.</li>
+    </ul>
+    <p>Ver Documentação Técnica, seção 8f.</p>
+
+    <h2>2026-09-09 — Alerta de desatualizado + "Gerar handoff completo"; renomeação "Ficha" → "Handoff Completo"</h2>
+
+    <p>Pedido do usuário: cenário real mapeado — o designer insere a Ordem de
+    Tabulação na Ficha, depois volta e edita/adiciona itens na aba de
+    trabalho, mas esquece de clicar "Atualizar ficha" de novo; o canvas fica
+    com dado velho, sem nenhum aviso visível disso no dashboard da aba
+    Handoff.</p>
+    <ul>
+      <li><strong>Alerta de "desatualizado" nos 4 cards de status</strong> —
+      detecção por COMPARAÇÃO DE CONTAGEM (itemCount/specCount gravado na
+      última inserção vs. contagem atual, lida ao vivo das mesmas fontes já
+      usadas para montar o payload), nunca por timestamp de edição por item.
+      Ícone/cor trocam de <code>check-circle-2</code> verde para
+      <code>alert-circle</code> âmbar (cor de atenção, não de erro), com o
+      texto mostrando a contagem atual vs. a gravada. O card "Handoff
+      Review" herda o alerta por tabela quando qualquer seção-fonte
+      (Tabulação/Leitor de Tela, e Swipe só em projetos mobile) está
+      desatualizada, mesmo que o Review em si tenha sido inserido
+      corretamente da última vez.</li>
+      <li><strong>Botão "Gerar handoff completo"</strong> — novo, no topo da
+      aba Handoff do dashboard. Reinsere só as seções PENDENTES ou
+      DESATUALIZADAS, nunca as 4 incondicionalmente (mais rápido, sem
+      retrabalho no canvas para seções já em dia). Se qualquer seção-fonte
+      entrar na lista, o Handoff Review é forçado a entrar também, pra
+      refletir os dados novos que serão reinseridos na mesma rodada. Disparo
+      SEQUENCIAL (uma seção por vez, aguardando a resposta do backend antes
+      da próxima) — decisão deliberada: o Handoff Review lê o estado já
+      persistido das outras seções, então disparar tudo em paralelo correria
+      risco real de montar o resumo antes da resposta das seções-fonte ter
+      sido salva.</li>
+      <li><strong>Renomeação "Ficha"/"Ficha de Handoff" → "Handoff
+      Completo"</strong> — pedido à parte, no mesmo escopo: renomeação PURA de
+      todo texto visível ao designer (botões, toasts, labels de card, guia
+      "Entendendo as categorias") e do nome dos frames/seções criados no
+      canvas. Continua sendo 1 artefato por Área Marcada — nenhuma mudança de
+      arquitetura. Nomes internos de código (<code>_ficha*</code>,
+      <code>handoffFicha</code>, chaves de <code>pluginData</code>) não mudaram, por
+      convenção do projeto.</li>
+      <li><strong>Migração da Section organizadora</strong> — o nome da Section
+      que agrupa os frames de todas as áreas (<code>A11Y_FICHA_SECTION_NAME</code>,
+      localizada por nome literal exato, sem <code>pluginData</code>) agora é
+      <code>"hac — Handoff Completo"</code> pra Sections novas, mas a busca também
+      aceita o nome antigo <code>"hac — Ficha de Handoff"</code>
+      (<code>A11Y_FICHA_SECTION_NAME_LEGACY</code>) — arquivos já existentes
+      continuam reconhecidos e reaproveitados sem duplicar, sem nenhum rename
+      in-place da Section já gravada no canvas.</li>
+    </ul>
+    <p>Ver Documentação Técnica, seção 8h.</p>
+
+    <hr>
+
+    <h2>2026-09-09 — Editar a Trilha de Swipe já criada</h2>
+
+    <p>Pedido do usuário: uma Trilha de Swipe já criada só oferecia "Refazer
+    trilha de swipe" (recomeça a captura inteira do zero) ou "Remover trilha"
+    (apaga tudo) — sem nenhum jeito de adicionar 1 ponto, remover 1 ponto
+    específico, ou reordenar sem recomeçar, diferente da Ordem de Tabulação,
+    que já tinha edição item-a-item. A mecânica de edição (arrastar para
+    reordenar, remover por item, destacar ao clicar) já existia pronta no
+    modal de revisão — só nunca era aberta a partir de uma trilha JÁ SALVA.</p>
+    <ul>
+      <li><strong>Botão "Editar pontos"</strong> no card da trilha já-criada —
+      popula a lista pendente do modal de revisão a partir dos pontos
+      salvos e reabre o mesmo modal de sempre, já editável.</li>
+      <li><strong>Modal distingue criar de editar</strong> — título, instrução e
+      texto do botão de confirmar trocam ("Trilha de Swipe"/"Criar trilha de
+      swipe" vs. "Editar Trilha de Swipe"/"Salvar alterações") conforme o
+      modal foi aberto por "Iniciar"/"Refazer" ou por "Editar pontos".</li>
+      <li><strong>"+ Adicionar ponto" dentro do modal</strong> — novo, sempre
+      visível (também útil ao revisar uma trilha recém-capturada antes da 1ª
+      confirmação, não só no modo edição). Aceita shift+clique/marquise para
+      vários pontos novos de uma vez, mesmo padrão do "+ Adicionar item" da
+      Ordem de Tabulação.</li>
+      <li><strong>Achado que evitou um bug de canvas</strong>: o handler que
+      liga a captura de clique (<code>start-swipe-path-mode</code>) sempre
+      clona um frame novo do zero, apagando qualquer cópia anterior da área —
+      certo para "Iniciar"/"Refazer", mas errado para "+ Adicionar ponto"
+      numa edição (apagaria a cópia com a revisão em andamento). Corrigido
+      com um handler novo que só reconhece/reaproveita o clone já existente
+      antes de ligar a escuta, sem nunca recriá-lo à toa.</li>
+      <li>Confirmar a edição reaproveita 100% do caminho já existente
+      (apaga a trilha antiga inteira, redesenha do zero a partir da lista
+      atualizada) — nenhuma mudança na geometria/desenho da trilha no
+      canvas.</li>
+    </ul>
+    <p>Ver Documentação Técnica, seção 8i.</p>
+
+    <h2>2026-09-09 — Auditoria Geral: 7 agentes especializados revisam arquitetura, domínio funcional, dados e produto</h2>
+
+    <p>Pedido do usuário: revisão ampla de arquitetura, funcionalidades e produto,
+    com um "apanhado" consolidado de melhorias e observações — não uma correção
+    pontual. Sete agentes especializados (arquitetura, domínio de acessibilidade,
+    pipeline de dados DSC, UX/interface, Design System próprio, QA/riscos, e
+    oportunidades de inovação) revisaram o código real em paralelo, cada um na
+    sua frente, sem depender de memória de sessões anteriores.</p>
+    <ul>
+      <li>Novo documento <a href="auditoria-2026-09.html">Auditoria Geral</a>
+      consolidando os 7 relatórios — achados priorizados por severidade, com
+      referência de arquivo/linha, e uma lista única de ações recomendadas ao
+      final.</li>
+      <li><strong>Achados mais relevantes</strong>: CI de refresh das libs DSC
+      falhando há 5 execuções (toggle de permissão do GitHub nunca ativado);
+      artefato de build (<code>ui.html</code>/<code>code.bundle.js</code>) estava
+      desatualizado no working tree antes da auditoria (já corrigido); toasts
+      da própria interface sem <code>aria-live</code> (não anunciados a leitor
+      de tela); categoria "Estrutura da Página" nunca diferencia origem
+      web/mobile; 87 achados de revisão estrutural já curados sem canal de
+      volta ao matching automático; histórico de instabilidade em
+      reparenting/overlay de clone, com migração defensiva ativa sobre dados
+      legados.</li>
+      <li>Nenhuma correção foi aplicada automaticamente a partir dos achados —
+      o documento é insumo de diagnóstico para decisão de prioridades, não uma
+      lista de mudanças já feitas.</li>
+    </ul>
+
+    <h2>2026-09-09 — Correção do CI de refs DSC: cobertura das 4 libs no mapeamento, notificação com <code>dsc-android</code></h2>
+
+    <p>Primeira correção pontual a partir da Auditoria Geral (item "Ações de
+    processo/CI"). Escopo restrito aos dois workflows de GitHub Actions do
+    repositório <code>aab-foton/hac_plugin</code> — não inclui a ativação do toggle
+    "Allow GitHub Actions to create and approve pull requests", que é uma
+    configuração manual de Settings do GitHub, fora do código, e segue como
+    pendência do dono do repositório.</p>
+    <ul>
+      <li><strong><code>refresh-dsc-refs.yml</code></strong>: o step "Regenera mapeamento
+      DSC→a11y" rodava <code>build-dsc-a11y-mapping.cjs</code> só para
+      <code>web-angular-react</code> (default) e <code>super-app</code> (<code>--out
+      dsc-component-a11y-mapping-mobile.json</code>) — as outras 2 libs de produção
+      já cadastradas em <code>refs/_manifest.json</code> (<code>super-dsc-web</code>,
+      <code>dsc-android</code>) nunca eram regeneradas automaticamente, só
+      manualmente/localmente. Adicionadas as 2 chamadas faltantes, com os
+      nomes de arquivo de saída confirmados em <code>LIB_MAPPING_FILES</code>
+      (<code>build-dsc-structural-candidates.cjs</code>):
+      <code>dsc-component-a11y-mapping-superdscweb.json</code> e
+      <code>dsc-component-a11y-mapping-android.json</code>. Nenhum outro step do
+      workflow foi alterado (checkout, instalação de dependências, scan
+      estrutural de 09/09, checagem de diff, abertura de PR).</li>
+      <li><strong><code>notify-hac-refs-update.yml</code></strong>: o mapa
+      <code>LIB_NAMES</code> usado para identificar quais libs mudaram num PR
+      mergeado reconhecia só 3 das 4 libs (<code>web-angular-react</code>,
+      <code>super-app</code>, <code>super-dsc-web</code>) — <code>dsc-android</code> nunca aparecia
+      nomeada no release/issue de aviso aos designers, mesmo quando o arquivo
+      de refs dessa lib mudava. Adicionada a entrada faltante
+      (<code>src/plugin/refs/dsc-android.json</code> → "DSC | Android", nome de
+      exibição confirmado em <code>refs/_manifest.json</code>).</li>
+      <li><strong>Branches órfãs identificadas, não removidas</strong>: as 5 execuções
+      falhas do CI (causa raiz: toggle de PR desativado) deixaram branches
+      <code>bot/dsc-refs-*</code> com push já feito no GitHub antes da falha na
+      etapa de abrir PR. Investigação e lista exata ficam registradas para
+      decisão do dono do repositório — remoção de branch remota é ação
+      destrutiva e não foi executada automaticamente nesta correção.</li>
+    </ul>
+
+    <h2>2026-09-09 — Correções pontuais de UX/interface a partir da Auditoria Geral: aria-live nos toasts, nomenclatura Handoff Completo, onboarding e contraste dos cards de status</h2>
+
+    <p>Segunda correção pontual a partir da Auditoria Geral (achados da frente
+    "UX e interface do plugin", severidade Alto/Médio/Baixo). Escopo restrito a
+    4 itens — outros achados da mesma auditoria (CI, matching DSC, extração de
+    módulos, diferenciação web/mobile na categoria Estrutura da Página etc.)
+    seguem como pendência separada, tratados por outras frentes.</p>
+    <ul>
+      <li><strong>Toasts sem <code>aria-live</code> (achado Alto)</strong>:
+      <code>#toast-container</code> (<code>build.cjs</code>) ganhou <code>role="status"
+      aria-live="polite" aria-atomic="true"</code> — resolve para toda chamada de
+      <code>showToast</code> (<code>core.js</code>) de uma vez, sem precisar tocar em
+      cada chamada individual. Confirmado que <code>showToast</code> só faz
+      <code>appendChild</code> do toast dentro do container, nunca recria ou
+      sobrescreve os atributos do próprio container.</li>
+      <li><strong>Nomenclatura "Handoff" → "Handoff Completo" (reconciliação)</strong>:
+      tab da workspace em <code>specifications.html</code> ("Handoff" → "Handoff
+      Completo", com ajuste de tamanho de fonte só nessa tab para caber no
+      grid de 4 colunas); botão de inserção individual nas 3 abas de trabalho
+      (<code>_fichaButtonLabel</code>, <code>handoff-ficha.js</code>: "Inserir no
+      handoff"/"Atualizar handoff" → "Inserir no Handoff Completo"/"Atualizar
+      Handoff Completo"); card do 4º bloco do dashboard renomeado de "Handoff
+      Review" (inglês/nome de variável) para <strong>"Consolidado"</strong>
+      (<code>_fichaReviewCardHtml</code>), consistente em português com os outros
+      3 cards (Tabulação, Swipe, Leitor de Tela). Nomes internos de código
+      (<code>_ficha*</code>, <code>sectionKey: 'review'</code>) e os nomes de
+      frame/Section desenhados no canvas pelo backend não foram alterados —
+      fora do escopo desta correção, que foi só de textos de interface do
+      plugin.</li>
+      <li><strong>Onboarding — 2 lacunas pontuais (<code>onboarding.js</code>, ambas
+      as jornadas web/mobile)</strong>: o passo da Ordem de Tabulação ganhou 1
+      frase sobre <strong>"Simular leitura"</strong> (com seletor de idioma
+      PT/EN); o passo da Trilha de Swipe (jornada mobile) ganhou 1 frase sobre
+      o botão <strong>"Editar pontos"</strong> de uma trilha já criada; o passo
+      que apresenta as abas da workspace (ambas as jornadas) ganhou 1 frase
+      sobre o botão <strong>"Gerar handoff completo"</strong> do dashboard.
+      Ajustes de texto pontuais, estrutura do onboarding inalterada.</li>
+      <li><strong>Contraste insuficiente no tema escuro — cards de status
+      (achado Baixo)</strong>: <code>_fichaStatusCardHtml</code>/
+      <code>_fichaReviewCardHtml</code> (<code>handoff-ficha.js</code>) usavam cor hex
+      fixa via <code>style="color:${hex}"</code>, sem variante para tema escuro
+      — contraste medido abaixo do mínimo WCAG AA no dark mode (âmbar ~3,9:1,
+      verde ~3,2:1, mínimo exigido 4,5:1). Substituído por uma função única
+      <code>_fichaStatusColorClass(state)</code> que devolve classes Tailwind
+      com variante <code>dark:</code>, mesmo vocabulário já usado em
+      <code>accessibility.js</code>: <code>text-slate-400 dark:text-dark-muted</code>
+      (pendente), <code>text-amber-600 dark:text-amber-400</code> (desatualizado),
+      <code>text-green-600 dark:text-green-400</code> (inserido).</li>
+      <li><strong>Documentação atualizada na mesma entrega</strong>:
+      <code>docs/tecnico.html</code> ganhou a seção 8j descrevendo os 4 pontos
+      acima; este changelog registra a mudança.</li>
+    </ul>
+
+    <h2>2026-09-09 — Correções pontuais de Design System a partir da Auditoria Geral: hover azul consistente e badges de categoria gerados a partir de <code>A11Y_CATEGORIES</code></h2>
+
+    <p>Terceira correção pontual a partir da Auditoria Geral (achados da frente
+    "Design System próprio", severidade Baixa). Escopo restrito a
+    <code>modals.html</code> — o <code>rounded-xl</code> isolado em <code>handoff-ficha.js:69</code>,
+    citado no mesmo bloco da auditoria, é tratado separadamente (outro arquivo, fora
+    deste escopo).</p>
+    <ul>
+      <li><strong>Hover de cor incorreto em 4 botões</strong>: <code>hover:text-blue-700</code>/
+      <code>hover:bg-blue-700</code> (resolve para <code>#00335c</code> na escala customizada,
+      dois tons mais escuro que o padrão) trocado por <code>hover:text-blue-600</code>/
+      <code>hover:bg-blue-600</code> (<code>#004782</code>) em <code>modals.html</code>: botão de texto
+      "Atualizar nome" (Marcar Área), botão "Marcar", botão "Já habilitei, tentar de
+      novo" e botão "Iniciar Revisão". Confirmado antes da correção: em 3 dos 4 casos
+      (todos <code>&lt;button&gt;</code> com <code>bg-[#0070af]</code>) o override global de
+      <code>plugin.css</code> já forçava o hover certo via <code>!important</code>, mascarando o
+      efeito prático do bug — só o botão de texto "Atualizar nome" (sem <code>bg-</code>
+      correspondente na regra do CSS) tinha o hover visualmente incorreto de fato. Os 4
+      ficam consistentes agora entre classe Tailwind e override de CSS.</li>
+      <li><strong>Duplicação de dado no modal "Guia de categorias"</strong>: os 5 círculos
+      de categoria (<code>a11y-categories-help-modal</code>) reescreviam à mão os hex e
+      ícones/badges de <code>A11Y_CATEGORIES</code> (<code>accessibility.js</code>) via
+      <code>style="border-color:...;color:..."</code> — risco de dessincronizar
+      silenciosamente se uma cor de categoria mudasse na lib "Design Acessível". Cada
+      círculo virou um contêiner vazio (<code>.a11y-cat-badge</code>,
+      <code>data-a11y-cat="&lt;chave&gt;"</code>) preenchido em runtime a partir do próprio
+      <code>A11Y_CATEGORIES</code>, via <code>MutationObserver</code> observando a abertura do
+      modal — inline no próprio <code>modals.html</code>, sem arquivo novo (necessário
+      porque <code>accessibility.js</code> só é concatenado bem depois deste HTML no bundle
+      final <code>ui.html</code>, então não dava pra chamar a renderização direto na tag).
+      Textos didáticos e o filtro por origem web/mobile de cada bloco continuam
+      estáticos — não fazem parte do objeto <code>A11Y_CATEGORIES</code>.</li>
+      <li><strong>Documentação atualizada na mesma entrega</strong>: seções 1 e 7 de
+      <code>docs/design-system.html</code> registram os dois achados e a correção
+      aplicada.</li>
+    </ul>
+
+    <h2>2026-09-09 — Correções pontuais de domínio de acessibilidade a partir da Auditoria Geral: Nota de Código de Estrutura da Página por origem, trava do select de Nível de Título, <code>[dsc] Alert</code> → snackbar, curadoria estrutural aplicada</h2>
+
+    <p>Quarta correção pontual a partir da Auditoria Geral (achados da frente
+    "Domínio de acessibilidade", severidade Alto/Baixo, mais a curadoria já
+    aprovada de <code>dsc-structural-review.json</code>). Escopo restrito a
+    <code>accessibility.js</code>, aos campos de Estrutura da Página/Nível de Título em
+    <code>modals.html</code>, e aos 2 JSONs de mapeamento DSC→a11y afetados — outros
+    achados da mesma auditoria seguem como pendência separada, tratados por
+    outras frentes.</p>
+    <ul>
+      <li><strong>Estrutura da Página nunca diferenciava origem web/mobile
+      (achado Alto)</strong>: <code>updateA11yEstruturaFields()</code> sempre entregava
+      Nota de Código do subtipo "Marco de Navegação" em tags HTML
+      (<code>&lt;header&gt;</code>, <code>&lt;nav&gt;</code>, <code>&lt;main&gt;</code>,
+      <code>&lt;aside&gt;</code>, <code>&lt;footer&gt;</code>), mesmo em área mobile — tecnicamente
+      incorreto para React Native. Seguindo o mesmo princípio já usado em
+      Nível de Título mobile, adicionado <code>A11Y_CONTENT.estrutura.marcoMobile</code>
+      (uma nota de <code>accessibilityRole</code> por tipo de marco) e a função passa a
+      checar <code>modal.dataset.a11yOrigin === 'mobile'</code> antes de montar a Nota
+      de Código exibida — Descrição não muda (o papel semântico é o mesmo
+      independente de plataforma), só a Nota de Código técnica.</li>
+      <li><strong>Select de Nível de Título sem trava por origem (achado
+      Baixo)</strong>: o <code>&lt;select&gt;</code> (<code>#a11y-titulo-nivel-select</code>) sempre
+      mostrava as 7 opções (H1-H6 + "H mobile"), permitindo escolher, por
+      exemplo, H3 numa área mobile. Nova função
+      <code>_applyA11yTituloOriginLock()</code>, chamada de dentro de
+      <code>updateA11yTituloFields()</code> (já executada nos 3 pontos de entrada:
+      nova spec, edição de spec existente, e o próprio <code>onchange</code> do
+      select) — oculta e desabilita H1-H6 em área mobile, oculta e desabilita
+      "H (mobile)" em área web, e corrige automaticamente a opção selecionada
+      se ficar incompatível com a origem.</li>
+      <li><strong><code>[dsc] Alert</code> sem categoria de a11y mapeada</strong>:
+      confirmado nos dados reais de <code>web-angular-react.json</code> (8 variantes,
+      <code>containingFrame: "[dsc] Alert"</code>) que o componente existia em
+      <code>semMatch</code> (<code>match: null</code>) apesar do papel ARIA
+      (<code>role="alert"</code>) ser próximo de "snackbar" (categoria já catalogada
+      com nota de código pronta). Movido para <code>baixaConfianca</code> com
+      <code>match.shortName = "snackbar"</code> diretamente em
+      <code>dsc-component-a11y-mapping.json</code> — confiança baixa (não alta)
+      porque é aproximação semântica, não literal pelo nome; o script gerador
+      <code>build-dsc-a11y-mapping.cjs</code> não foi alterado (fora do escopo desta
+      correção pontual, fica para uma correção estrutural do matching).
+      Confirmado que não existe <code>[dsc] Alert</code> exato nas outras 3 libs —
+      correção não replicada nelas.</li>
+      <li><strong>3 achados de <code>dsc-structural-review.json</code> aplicados
+      (curadoria já aprovada)</strong>, todos na lib mobile (<code>super-app</code>),
+      em <code>dsc-component-a11y-mapping-mobile.json</code>:
+      <code>[dsc-tc] Avatar Hero</code> (mantido como categoria <code>imagem</code>, mas com
+      a <code>reason</code> do match reescrita para registrar que é um componente
+      composto — avatar + nome do usuário + mensagem de boas-vindas — que deve
+      ser entendido como imagem acompanhada de cabeçalho);
+      <code>[dsc-ts] Screen Input Money</code> e <code>[dsc-ts] Screen Item Select
+      List</code> (removidos de <code>baixaConfianca</code> e movidos para
+      <code>semMatch</code>, já que são templates de tela completos, não
+      componentes atômicos — deixam de aparecer como sugestão enganosa de
+      categoria única na Detecção Automática; decompor em subcomponentes reais
+      fica fora de escopo desta correção). <code>_meta.counts</code> de ambos os
+      arquivos de mapeamento recalculado para refletir as mudanças.</li>
+      <li><strong>Documentação atualizada na mesma entrega</strong>:
+      <code>docs/tecnico.html</code> (seções 2 e 6) e <code>docs/institucional.html</code>
+      (seção 3) registram as 4 mudanças acima.</li>
+    </ul>
+
+    <h2>2026-09-09 — Extração de tab-order.js e swipe-path.js; remoção de 4 handlers mortos; helper isA11yMobileProject()</h2>
+
+    <p>Reorganização estrutural de maior risco desta sessão: mexeu no maior
+    arquivo do projeto (<code>accessibility.js</code>, 7.718 linhas) e na área com
+    histórico real de bugs (Ordem de Tabulação, Trilha de Swipe). Validado
+    incrementalmente — <code>bundle:code</code>, <code>bundle:ui</code>, <code>lint</code> e
+    <code>export:plugin</code> rodados após cada etapa, nunca só no final. Nenhuma
+    lógica de negócio mudou: é reorganização de arquivo, remoção de código
+    confirmadamente morto, e substituição mecânica de expressão equivalente.</p>
+    <ul>
+      <li><strong>Extração de <code>src/plugin/modules/tab-order.js</code></strong>:
+      as 47 funções de Ordem de Tabulação que viviam dentro de
+      <code>accessibility.js</code> (a seção "Ordem de Tabulação" completa, incluindo
+      a subseção de Geração Automática por Varredura de Camadas e a Simulação
+      de Leitura por Voz, mais <code>toggleA11yTabOrderAccordion</code> e
+      <code>_tabOrderSectionHtml</code>, que viviam fisicamente na área de
+      renderização de accordion) foram movidas para um módulo próprio.
+      Continuam expostas em <code>window.*</code> exatamente como antes — o
+      contrato com <code>messages.js</code> e com os <code>onclick=</code> das views não
+      mudou. <code>window._a11yExpandedTabOrderIds</code> permaneceu em
+      <code>accessibility.js</code> por ser compartilhada com
+      <code>_a11ySetAllSubaccordions</code> (ação "Expandir/Recolher todos"), que não
+      foi movida.</li>
+      <li><strong>Extração de <code>src/plugin/modules/swipe-path.js</code></strong>:
+      as 26 funções da Trilha de Swipe (a seção "Trilha de Swipe" completa)
+      foram movidas para outro módulo próprio. <code>handleSwipePathCopyStarted</code>
+      estava fisicamente intercalada no meio do bloco de Tab Order (entre
+      <code>handleTabOrderCopyStarted</code> e <code>finishTabOrderCapture</code>) — extraída
+      com cuidado para não bagunçar o restante do fluxo de Tab Order ao redor
+      dela.</li>
+      <li><strong><code>build.cjs</code> atualizado</strong>: os 2 módulos novos são
+      lidos e concatenados na ordem <code>accessibility.js</code> →
+      <code>tab-order.js</code> → <code>swipe-path.js</code> → <code>handoff-ficha.js</code> →
+      <code>onboarding.js</code> — <code>tab-order.js</code> precisa vir antes de
+      <code>handoff-ficha.js</code> porque a Ficha consome
+      <code>_currentTabOrderItems</code>; <code>swipe-path.js</code> precisa vir depois de
+      <code>tab-order.js</code> porque referencia globalmente
+      <code>cancelTabOrderReview()</code>/<code>window._tabOrderCaptureMode</code>. Conferido
+      por script que nenhuma das 73 funções ficou duplicada (existindo nos
+      dois arquivos) nem órfã (removida de um lado e nunca colada no outro).</li>
+      <li><strong>4 handlers de mensagem mortos removidos do backend
+      (<code>code.js</code>)</strong>, em pares completos (handler + roteamento de
+      resposta + qualquer stub associado no frontend): <code>get-node-main-text</code>
+      (roteamento <code>node-main-text</code> em <code>messages.js</code>, stub
+      <code>prefillA11yLabelFromMainText</code> em <code>accessibility.js</code> — este último já
+      trazia comentário explícito de código morto herdado do Handex);
+      <code>lock-spec</code> (roteamento <code>spec-locked</code>); <code>hide-spec-lines</code> (sem
+      roteamento associado); e <code>edit-spec-connector</code>, o mais extenso dos
+      4 (roteamento <code>spec-connector-edited</code>/<code>spec-connector-edit-failed</code> e
+      a referência solta a <code>window._editingSpecConnectorIndex</code>, stub
+      <code>closeEditSpecConnectorModal</code> em <code>accessibility.js</code>).
+      <code>_findMainTextContent</code> (<code>code.js</code>) e <code>unlock-spec-group</code> (handler
+      irmão de <code>lock-spec</code>) foram mantidos intactos — ambos continuam em
+      uso por outros caminhos ativos.</li>
+      <li><strong>Helper <code>isA11yMobileProject()</code></strong> adicionado em
+      <code>accessibility.js</code>, ao lado de <code>getA11yProjectOrigin()</code> — atalho
+      para <code>getA11yProjectOrigin() === 'mobile'</code>. Substituiu 10 ocorrências
+      confirmadas dessa mesma checagem (a origem do PROJETO inteiro, nunca a
+      origem de uma spec/elemento individual — esse é outro conceito,
+      <code>modal.dataset.a11yOrigin</code>, que não foi tocado): 4 em
+      <code>accessibility.js</code>, 4 em <code>handoff-ficha.js</code>, 1 em
+      <code>onboarding.js</code> (dentro de uma guarda <code>typeof</code>, agora checando
+      <code>typeof isA11yMobileProject === 'function'</code>).</li>
+    </ul>
 
     <hr>
 

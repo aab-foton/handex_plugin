@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auditoria Geral (2026-09) — hac</title>
+<style>
+:root {
+  --hac-cyan: #0891B2;
+  --hac-blue: #005ca9;
+  --hac-blue-dark: #004782;
+  --hac-orange: #f39200;
+  --bg: #eef2f7;
+  --surface: #ffffff;
+  --line: #dde3ec;
+  --muted: #64748b;
+  --text: #1e293b;
+  --sev-critical-bg: #fde8e8; --sev-critical-fg: #b91c1c; --sev-critical-line: #f5b8b8;
+  --sev-high-bg: #fdf1de; --sev-high-fg: #92400e; --sev-high-line: #f7d9a8;
+  --sev-medium-bg: #fef9e7; --sev-medium-fg: #854d0e; --sev-medium-line: #f5e3a3;
+  --sev-low-bg: #eef2f7; --sev-low-fg: #475569; --sev-low-line: #cbd5e1;
+  --sev-ok-bg: #eafaf1; --sev-ok-fg: #15803d; --sev-ok-line: #b8e6cc;
+}
+:root[data-theme="dark"] {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --line: #334155;
+  --muted: #b4c6d8;
+  --text: #f1f5f9;
+  --sev-critical-bg: rgba(185,28,28,0.18); --sev-critical-fg: #fca5a5; --sev-critical-line: rgba(185,28,28,0.4);
+  --sev-high-bg: rgba(243,146,0,0.14); --sev-high-fg: #f5c98a; --sev-high-line: rgba(243,146,0,0.4);
+  --sev-medium-bg: rgba(202,138,4,0.14); --sev-medium-fg: #fde68a; --sev-medium-line: rgba(202,138,4,0.4);
+  --sev-low-bg: rgba(100,116,139,0.18); --sev-low-fg: #cbd5e1; --sev-low-line: rgba(100,116,139,0.4);
+  --sev-ok-bg: rgba(21,128,61,0.16); --sev-ok-fg: #86efac; --sev-ok-line: rgba(21,128,61,0.4);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+header.site-header {
+  background: var(--hac-blue);
+  color: #fff;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+:root[data-theme="dark"] header.site-header { background: #00335c; }
+header.site-header .brand-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-right: auto;
+}
+header.site-header .brand-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+header.site-header .brand-icon svg {
+  width: 20px;
+  height: 20px;
+  color: #fff;
+}
+header.site-header .brand {
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+}
+header.site-header nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+header.site-header nav a {
+  color: #e0effe;
+  text-decoration: none;
+  font-size: 13px;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+header.site-header nav a:hover {
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+}
+header.site-header nav a.active {
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+  font-weight: 700;
+}
+#theme-toggle {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+#theme-toggle:hover { background: rgba(255,255,255,0.22); }
+#theme-toggle svg { width: 18px; height: 18px; }
+main {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 28px 24px 64px;
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 28px 32px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+h1 {
+  font-size: 24px;
+  margin-top: 0;
+  color: var(--hac-blue);
+  letter-spacing: -0.01em;
+}
+h2 {
+  font-size: 18px;
+  margin-top: 40px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  color: var(--hac-blue);
+  letter-spacing: -0.01em;
+}
+h2:first-of-type { border-top: none; padding-top: 0; }
+h3 {
+  font-size: 15px;
+  margin-top: 22px;
+  color: var(--text);
+}
+p { margin: 12px 0; }
+a { color: var(--hac-cyan); }
+a:hover { text-decoration: none; }
+code {
+  font-family: "Consolas", "SFMono-Regular", monospace;
+  background: #f1f5f9;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  color: #0f172a;
+}
+:root[data-theme="dark"] code {
+  background: #334155;
+  color: #f1f5f9;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 13px;
+}
+th, td {
+  border: 1px solid var(--line);
+  padding: 8px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: #f8fafc;
+  font-weight: 700;
+}
+:root[data-theme="dark"] th { background: #263449; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+blockquote {
+  border-left: 3px solid var(--hac-cyan);
+  margin: 16px 0;
+  padding: 4px 16px;
+  background: #f0f9fb;
+  color: #334155;
+  font-size: 14px;
+}
+:root[data-theme="dark"] blockquote {
+  background: rgba(8,145,178,0.12);
+  color: #d7e6ee;
+}
+blockquote p { margin: 8px 0; }
+ul, ol { padding-left: 22px; }
+li { margin: 4px 0; }
+hr {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin: 32px 0;
+}
+.toc {
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px 20px;
+}
+:root[data-theme="dark"] .toc { background: #263449; }
+.toc p { margin: 0 0 8px; font-weight: 700; font-size: 13px; }
+.toc ol { margin: 0; }
+.private-note {
+  background: #fdf1de;
+  border: 1px solid #f7d9a8;
+  color: #7a4a00;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 12.5px;
+  margin-bottom: 24px;
+}
+:root[data-theme="dark"] .private-note {
+  background: rgba(243,146,0,0.12);
+  border-color: rgba(243,146,0,0.4);
+  color: #f5c98a;
+}
+.sev {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+.sev-critical { background: var(--sev-critical-bg); color: var(--sev-critical-fg); border-color: var(--sev-critical-line); }
+.sev-high { background: var(--sev-high-bg); color: var(--sev-high-fg); border-color: var(--sev-high-line); }
+.sev-medium { background: var(--sev-medium-bg); color: var(--sev-medium-fg); border-color: var(--sev-medium-line); }
+.sev-low { background: var(--sev-low-bg); color: var(--sev-low-fg); border-color: var(--sev-low-line); }
+.sev-ok { background: var(--sev-ok-bg); color: var(--sev-ok-fg); border-color: var(--sev-ok-line); }
+.finding {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 14px 0;
+}
+.finding-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+.finding-head strong { font-size: 13.5px; }
+.finding p { margin: 8px 0; font-size: 13.5px; }
+.finding code { font-size: 0.88em; }
+.agent-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 1px 7px;
+  margin-left: auto;
+}
+.footer-note {
+  margin-top: 48px;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="brand-group">
+    <span class="brand-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1" /><path d="m9 20 3-6 3 6" /><path d="m6 8 6 2 6-2" /><path d="M12 10v4" /></svg></span>
+    <span class="brand">hac — Handoff de Acessibilidade CAIXA</span>
+  </div>
+  <nav>
+    <a href="index.html">Início</a>
+    <a href="tecnico.html">Documentação Técnica</a>
+    <a href="dados.html">Semântica dos Dados</a>
+    <a href="institucional.html">Regras de Negócio</a>
+    <a href="design-system.html">Design System</a>
+    <a href="changelog.html">Changelog</a>
+    <a href="auditoria-2026-09.html" class="active">Auditoria Geral</a>
+  </nav>
+  <button type="button" id="theme-toggle" aria-label="Alternar tema claro/escuro" title="Alternar tema claro/escuro"></button>
+</header>
+<main>
+  <div class="card">
+
+    <div class="private-note">
+      Documentação interna do repositório privado <code>aab-foton/hac_plugin</code>.
+      Documento de diagnóstico, não é changelog nem documentação técnica descritiva —
+      registra o estado encontrado em 2026-09-09 e propostas de melhoria, para decisão
+      posterior do dono do produto. Nada aqui foi implementado automaticamente.
+    </div>
+
+    <h1>Auditoria Geral do hac (2026-09-09)</h1>
+
+    <p>Revisão ampla de arquitetura, funcionalidades e produto, conduzida por 7 agentes
+    especializados em paralelo (arquitetura, domínio de acessibilidade, pipeline de dados
+    DSC, UX/interface, Design System próprio, QA/riscos de regressão, e oportunidades de
+    inovação), cada um lendo o código-fonte real do estado atual do repositório — não
+    memória de sessões anteriores. Este documento consolida os achados de todos, sem
+    filtrar ou suavizar diagnósticos críticos.</p>
+
+    <div class="toc">
+      <p>Sumário</p>
+      <ol>
+        <li><a href="#s1">Sumário executivo — o que mais importa</a></li>
+        <li><a href="#s2">Arquitetura e dependências</a></li>
+        <li><a href="#s3">Domínio de acessibilidade (specs, categorias, matching)</a></li>
+        <li><a href="#s4">Pipeline de dados DSC e CI</a></li>
+        <li><a href="#s5">UX e interface do plugin</a></li>
+        <li><a href="#s6">Design System próprio (tokens e componentes)</a></li>
+        <li><a href="#s7">QA e riscos de regressão</a></li>
+        <li><a href="#s8">Oportunidades de melhoria e inovação</a></li>
+        <li><a href="#s9">Lista consolidada de ações recomendadas</a></li>
+      </ol>
+    </div>
+
+    <h2 id="s1">1. Sumário executivo — o que mais importa</h2>
+
+    <p>Sete frentes revisadas, achados reais e verificáveis em código — não há indicação
+    de bug ativo grave no comportamento hoje visível ao usuário, mas há dívida estrutural
+    e lacunas de processo que merecem atenção antes que o produto cresça mais.</p>
+
+    <div class="finding">
+      <div class="finding-head"><span class="sev sev-critical">Crítico</span><strong>CI de refresh das libs DSC está falhando há 5 execuções seguidas</strong><span class="agent-tag">data-design</span></div>
+      <p>Causa raiz confirmada: o toggle "Allow GitHub Actions to create and approve pull
+      requests" nunca foi ativado no repositório <code>aab-foton/hac_plugin</code> — pendência
+      registrada desde 2026-09-04, ainda aberta. Cada execução falhada deixa uma branch
+      órfã no GitHub (4 acumuladas até hoje) com dados nunca revisados. Mesmo corrigido o
+      toggle, o workflow hoje só regenera o mapeamento DSC→a11y de 2 das 4 libs
+      (falta <code>super-dsc-web</code> e <code>dsc-android</code>).</p>
+    </div>
+
+    <div class="finding">
+      <div class="finding-head"><span class="sev sev-critical">Crítico</span><strong>Artefato de build (<code>ui.html</code>/<code>code.bundle.js</code>) estava desatualizado no working tree</strong><span class="agent-tag">qa-plugin</span></div>
+      <p>Antes da auditoria, o código-fonte já tinha todas as features desta sessão
+      (narração por voz, edição de Trilha de Swipe, reposicionamento de réplicas), mas os
+      artefatos gerados que o Figma de fato carrega em runtime não tinham sido
+      regenerados. Se commitado naquele estado, o plugin instalado ficaria sem nenhuma
+      dessas features, apesar do repositório parecer correto. <strong>Já corrigido</strong> pelo
+      agente de QA rodando o pipeline de build completo antes de finalizar a auditoria.</p>
+    </div>
+
+    <div class="finding">
+      <div class="finding-head"><span class="sev sev-high">Alto</span><strong>Toasts/snackbars da própria interface não são anunciados a leitores de tela</strong><span class="agent-tag">design-ux</span></div>
+      <p><code>showToast</code> (<code>core.js:298-319</code>) não usa <code>role="status"</code>/<code>aria-live</code>. Nenhuma
+      confirmação, erro ou mensagem informativa do plugin chega a um usuário de leitor de
+      tela navegando a própria ferramenta — notável por ser exatamente o tipo de falha que
+      o hac existe para ensinar a evitar em produtos de terceiros.</p>
+    </div>
+
+    <div class="finding">
+      <div class="finding-head"><span class="sev sev-high">Alto</span><strong>Categoria "Estrutura da Página" nunca diferencia origem web/mobile</strong><span class="agent-tag">accessibility-specialist</span></div>
+      <p><code>updateA11yEstruturaFields()</code> (<code>accessibility.js:2013-2072</code>) sempre oferece Nota
+      de Código em tags HTML (<code>&lt;header&gt;</code>, <code>&lt;nav&gt;</code> etc.), mesmo para áreas
+      mobile — tecnicamente incorreto para React Native, que usa <code>accessibilityRole</code>. Um
+      dev pode receber uma nota de código real que não se aplica à plataforma.</p>
+    </div>
+
+    <div class="finding">
+      <div class="finding-head"><span class="sev sev-high">Alto</span><strong>87 achados de revisão estrutural represados, sem canal de volta ao pipeline</strong><span class="agent-tag">data-design + accessibility-specialist</span></div>
+      <p><code>dsc-structural-review.json</code> já foi 100% preenchido (curadoria manual/Gemini),
+      incluindo 3 achados concretos e corretivos na lib mobile (<code>Avatar Hero</code>,
+      <code>Screen Input Money</code>, <code>Screen Item Select List</code> — hoje tratados como match único
+      de baixa confiança quando deveriam ser decompostos). Nenhum desses achados é lido de
+      volta por <code>build-dsc-a11y-mapping.cjs</code> — é trabalho pronto e correto, sem uso.</p>
+    </div>
+
+    <div class="finding">
+      <div class="finding-head"><span class="sev sev-high">Alto</span><strong>Histórico de instabilidade estrutural em reparenting/overlay de clone</strong><span class="agent-tag">architecture-guardian</span></div>
+      <p>5+ rodadas de correção na mesma sessão (2026-09-08) para o mesmo problema
+      (artefatos desenhados dentro de clones de frame sendo recortados/perdidos). Existe
+      hoje uma migração defensiva ativa em produção (<code>_rescueLegacyOverlayNestedInsideClone</code>)
+      que resgata dados já gravados incorretamente no canvas por versões antigas do
+      código — ou seja, arquivos reais no mundo já têm esse dado estruturalmente errado.
+      É o núcleo de risco técnico mais reincidente do produto.</p>
+    </div>
+
+    <div class="finding">
+      <div class="finding-head"><span class="sev sev-medium">Médio</span><strong>Inconsistência terminológica "Handoff" vs. "Handoff Completo" incompleta</strong><span class="agent-tag">design-ux + qa-plugin</span></div>
+      <p>A renomeação desta sessão não chegou à tab da workspace (continua só "Handoff",
+      <code>specifications.html:231</code>) nem ao botão de inserção individual ("Inserir no
+      handoff", minúsculo, <code>handoff-ficha.js:58</code>), enquanto toasts e outros textos já
+      usam "Handoff Completo". <code>docs/tecnico.html</code> também ficou com nomenclatura mista
+      (13 ocorrências do nome antigo contra 6 do novo, apesar de ter recebido 406 linhas
+      de edição nesta sessão).</p>
+    </div>
+
+    <div class="finding">
+      <div class="finding-head"><span class="sev sev-medium">Médio</span><strong><code>accessibility.js</code> já é o maior arquivo do repositório (7.668 linhas)</strong><span class="agent-tag">architecture-guardian</span></div>
+      <p>Maior até que o backend inteiro (<code>code.js</code>, 7.243 linhas). Ordem de Tabulação
+      (727 linhas) e Trilha de Swipe (595 linhas) já têm fronteira de dados e mensagens
+      isolada o suficiente para virarem módulos próprios, seguindo o precedente
+      bem-sucedido de <code>handoff-ficha.js</code> (extraído em 2026-09-04).</p>
+    </div>
+
+    <p>O restante dos achados — por área, com mais detalhe e referências de código — está
+    nas seções abaixo. A seção 9 reúne todas as ações recomendadas numa lista única,
+    ordenável por esforço.</p>
+
+    <h2 id="s2">2. Arquitetura e dependências</h2>
+    <p><em>Agente: architecture-guardian.</em></p>
+
+    <h3>Schema <code>hacData</code></h3>
+    <ul>
+      <li><code>_schemaVersion</code> é decorativo — gravado como <code>1</code> desde a origem,
+      nunca lido nem comparado em nenhum ponto do código. Toda evolução de schema foi
+      tratada como aditiva (checagem de campo ausente + default), nunca por versão.</li>
+      <li><code>handoffFicha</code> (por área) não está declarado no schema raiz de
+      <code>core.js</code> — só existe descrito em <code>handoff-ficha.js</code>. O schema real do objeto
+      <code>a11yAreas[i]</code> está fragmentado em pelo menos 2 arquivos.</li>
+      <li><code>a11ySwipePaths</code> é a única estrutura sem variável de módulo espelhada
+      (decisão documentada), criando uma assimetria de acesso em relação às outras 3
+      estruturas de topo.</li>
+    </ul>
+
+    <h3>Contrato de mensagens</h3>
+    <ul>
+      <li>52 handlers no backend, ~44 tipos enviados pelo frontend, dispatcher único dos
+      dois lados — estruturalmente saudável.</li>
+      <li><strong>4 handlers confirmados como código morto</strong> herdados do Handex, nunca
+      removidos: <code>edit-spec-connector</code>, <code>hide-spec-lines</code>, <code>lock-spec</code>,
+      <code>get-node-main-text</code>.</li>
+      <li><strong>3 padrões de tratamento de erro coexistindo</strong> sem convenção documentada de
+      quando usar qual: <code>figma.notify()</code> silencioso, <code>postMessage</code> estruturado de
+      falha, e <code>try/catch</code> totalmente silencioso (best-effort). 25 dos 52 handlers não
+      têm <code>try/catch</code> próprio — a maioria são triviais, mas alguns manipulam árvore de
+      nós com risco real de exceção não capturada (<code>scan-frame</code>, <code>resolve-layer-order</code>,
+      <code>start-tab-order-copy</code>).</li>
+    </ul>
+
+    <h3>Divisão de módulos</h3>
+    <p><code>accessibility.js</code> concentra pelo menos 5 sub-domínios de tamanho médio-grande
+    (300-850 linhas cada). Os 2 candidatos mais fortes e de menor risco para extração:</p>
+    <table>
+      <tr><th>Sub-domínio</th><th class="num">Linhas</th><th>Por que é candidato forte</th></tr>
+      <tr><td>Ordem de Tabulação</td><td class="num">727</td><td>Fronteira de dados clara (<code>tabOrderItems</code>), 11 tipos de mensagem próprios, zero dependência de outros sub-domínios para funcionar.</td></tr>
+      <tr><td>Trilha de Swipe</td><td class="num">595</td><td>Arquitetura espelhada da Tabulação por design, mesma independência.</td></tr>
+    </table>
+    <p>Extrair as duas reduziria <code>accessibility.js</code> de 7.668 para ~5.750 linhas.</p>
+
+    <h3>Diferenciação web/mobile — mecanismo</h3>
+    <p>Bem aplicada nos fluxos auditados, mas implementada via checagem binária
+    (<code>=== 'mobile'</code>) espalhada em pelo menos 3 formas equivalentes de checagem, em vez
+    de um enum/helper central único (ex. <code>isA11yMobileProject()</code>). Funciona hoje; seria
+    ponto de dor real numa eventual 3ª origem de projeto.</p>
+
+    <h3>Dívida técnica mais relevante</h3>
+    <ul>
+      <li><strong>36 comentários "bug real corrigido/confirmado"</strong> no total, concentrados em
+      3 polos: reparenting/clone/overlay, fluxo de lote de Detecção Automática, e Ordem de
+      Tabulação/Swipe — sinal de que a arquitetura de clone-de-frame-para-anotação é o
+      núcleo de risco estrutural recorrente do produto.</li>
+      <li>Lista de 16 categorias de a11y <strong>duplicada manualmente</strong> entre
+      <code>accessibility.js:129-134</code> (runtime) e <code>build-dsc-a11y-mapping.cjs:92-96</code> (build
+      script), com aviso em comentário para manter sincronizado à mão — sem checagem
+      automática. Hoje idênticas (16/16), mas sem rede de segurança para a 17ª categoria.</li>
+      <li><code>docs/architecture-state.md</code> está obsoleto e se autodeclara assim desde
+      2026-09-02, mas continua no repositório com aparência de documento vivo —
+      <code>docs/tecnico.html</code> é a fonte real e atualizada.</li>
+    </ul>
+
+    <h2 id="s3">3. Domínio de acessibilidade (specs, categorias, matching)</h2>
+    <p><em>Agente: accessibility-specialist.</em></p>
+
+    <h3>As 5 categorias — cobertura</h3>
+    <p>Todos os textos didáticos são fiéis ao material extraído via REST API da lib
+    "Design Acessível" — não há conteúdo inventado. Assimetria real notada: dentro de
+    "Elementos e Imagens", alguns componentes têm Nota de Código técnica detalhada
+    (Accordion, Checkbox, Dialog...) e outros só Descrição (Breadcrumb, Button, Inputs,
+    Link) — vale confirmar com a vertical se é lacuna de conteúdo ou fidelidade real à
+    lib.</p>
+
+    <h3>Paridade entre os 3 fluxos + Handoff Completo</h3>
+    <ul>
+      <li><strong>Tabulação</strong> é a mais completa (manual + automático + edição incremental +
+      narração por voz).</li>
+      <li><strong>Swipe</strong> alcançou boa paridade após a reformulação de 2026-09-09 (edição
+      item-a-item, "+ Adicionar ponto", reordenar). Única lacuna: sem "Simular leitura"
+      (razoável, já que é gesto, não narração sequencial — mas uma prévia textual da
+      ordem dos pontos poderia ajudar a auditar sem reabrir "Editar pontos").</li>
+      <li><strong>Leitor de Tela</strong> (aba de criação das 5 categorias) sem lacuna funcional
+      identificada.</li>
+      <li><strong>Handoff Review</strong> é 100% dado local já persistido — não envolve nenhuma
+      chamada REST em runtime (a chamada REST do produto existe só no processo de
+      curadoria offline via CI/Gemini).</li>
+    </ul>
+
+    <h3>Matching DSC→a11y — números reais (2026-09-09)</h3>
+    <table>
+      <tr><th>Lib</th><th class="num">Variantes</th><th class="num">Alta confiança</th><th class="num">Baixa confiança</th><th class="num">Sem match</th><th class="num">% alta</th></tr>
+      <tr><td>web-angular-react</td><td class="num">1893</td><td class="num">646</td><td class="num">692</td><td class="num">555</td><td class="num">34,1%</td></tr>
+      <tr><td>super-app (mobile)</td><td class="num">4489</td><td class="num">494</td><td class="num">333</td><td class="num">3662</td><td class="num">11,0%</td></tr>
+      <tr><td>super-dsc-web</td><td class="num">4667</td><td class="num">715</td><td class="num">408</td><td class="num">3544</td><td class="num">15,3%</td></tr>
+      <tr><td>dsc-android</td><td class="num">1063</td><td class="num">382</td><td class="num">157</td><td class="num">524</td><td class="num">35,9%</td></tr>
+    </table>
+    <p>O volume de "sem match" é majoritariamente ruído filtrado corretamente (ícones sem
+    prefixo <code>[dsc]</code> real — ex. em <code>super-app</code>, só 134 dos 1551 <code>containingFrame</code>
+    distintos têm o prefixo). Dentro do universo já prefixado, o que de fato falta
+    categoria é majoritariamente esperado (Card, Tooltip, Spinner) — com <strong>uma exceção
+    real de atenção: <code>[dsc] Alert</code> sem match em nenhuma lib</strong>, apesar de ter papel
+    ARIA (<code>role="alert"</code>) muito próximo de "snackbar", categoria já catalogada.</p>
+
+    <h3>Diferenciação web/mobile por categoria — 2 vazamentos concretos</h3>
+    <div class="finding">
+      <div class="finding-head"><span class="sev sev-high">Alto</span><strong>Estrutura da Página nunca lê a origem do projeto</strong></div>
+      <p><code>updateA11yEstruturaFields()</code> (<code>accessibility.js:2013-2072</code>) sempre entrega
+      Nota de Código em tags HTML, mesmo em área mobile. Nível de Título já resolve isso
+      corretamente para o mesmo tipo de caso (<code>accessibilityRole</code> em vez de HTML) — a
+      inconsistência é notável porque o padrão certo já existe em outro lugar do mesmo
+      arquivo.</p>
+    </div>
+    <div class="finding">
+      <div class="finding-head"><span class="sev sev-low">Baixo</span><strong>Select de Nível de Título sem trava de opções por origem</strong></div>
+      <p>O <code>&lt;select&gt;</code> (<code>modals.html:360-371</code>) sempre mostra as 7 opções
+      independentemente da origem — só o default muda. Nada impede escolher "H3" numa
+      área mobile.</p>
+    </div>
+
+    <h2 id="s4">4. Pipeline de dados DSC e CI</h2>
+    <p><em>Agente: data-design.</em></p>
+
+    <h3>Estado do CI — <code>refresh-dsc-refs.yml</code></h3>
+    <p>Confirmado ao vivo via <code>gh run list</code>/<code>gh api</code>: as últimas 5 execuções falharam,
+    todas com o mesmo erro (<code>GitHub Actions is not permitted to create or approve pull
+    requests</code>). O toggle correspondente em Settings → Actions → General do repositório
+    <code>aab-foton/hac_plugin</code> segue desativado desde que a pendência foi registrada em
+    2026-09-04. Efeito colateral: <strong>4 branches <code>bot/dsc-refs-*</code> órfãs</strong> acumuladas,
+    cada uma com um push de dados feito antes da falha na etapa de PR.</p>
+    <p>Mesmo corrigido o toggle, o workflow hoje só regenera o mapeamento DSC→a11y de
+    <code>web-angular-react</code> e <code>super-app</code> — faltam as chamadas equivalentes para
+    <code>super-dsc-web</code> e <code>dsc-android</code>, que só foram geradas manualmente/localmente.
+    <code>notify-hac-refs-update.yml</code> tem a mesma lacuna (não reconhece <code>dsc-android</code>).</p>
+
+    <h3><code>fetch-instruction-frames.cjs</code> — inoperante desde a criação</h3>
+    <p>Os <code>nodeId</code> dos frames de instrução estão fixos como <code>null</code> (TODO nunca
+    preenchido) — o script roda toda semana no CI sem produzir nenhum artefato. Não quebra
+    nada (tratamento gracioso), mas a feature de "coluna de instrução na Ficha/Handoff
+    Completo" não tem nenhuma imagem disponível hoje, mesmo com o conteúdo textual já
+    preenchido pelo Gemini.</p>
+
+    <h3>Cobertura de scan raso vs. profundo</h3>
+    <p>Confirmado: só a lib mobile de "Design Acessível" recebeu deep-scan até hoje
+    (<code>deepScan: true</code>). As 4 libs de produção usadas pelo matching de a11y nunca tiveram
+    deep-scan — <code>fetch-design-refs.cjs</code> usa exclusivamente o endpoint raso
+    <code>/v1/files/:key/components</code>, nunca percorre a árvore completa via
+    <code>/v1/files/:key/nodes</code>. Componentes DSC reais não publicados como "componente"
+    formal do arquivo ficam invisíveis a todo o pipeline, incluindo o próprio inventário
+    de cobertura.</p>
+
+    <h3><code>dsc-structural-review.json</code> — trabalho pronto sem consumidor</h3>
+    <p>87 candidatos de baixa confiança já revisados estruturalmente (via REST API +
+    curadoria), <code>status: "preenchido"</code>. 80 confirmam o match atual; <strong>7 trazem achados
+    novos</strong>, incluindo 3 reais e concretos na lib mobile: <code>[dsc-tc] Avatar Hero</code> (deveria
+    virar "imagem com cabeçalho", não como está hoje), <code>[dsc-ts] Screen Input Money</code> e
+    <code>[dsc-ts] Screen Item Select List</code> (templates de tela inteiros que precisam ser
+    decompostos em subcomponentes, não tratados como unidade única). Nenhum grep encontra
+    referência a esse arquivo em <code>build-dsc-a11y-mapping.cjs</code> — o loop nunca fecha.</p>
+
+    <h3>Consistência entre as 4 libs</h3>
+    <ul>
+      <li>Nomenclatura de arquivo de mapeamento não é 1:1 previsível a partir do slug da
+      lib (sufixos históricos diferentes: sem sufixo, <code>-mobile</code>, <code>-superdscweb</code>,
+      <code>-android</code>).</li>
+      <li><code>{slug}-properties.json</code> está 8 dias mais antigo que <code>{slug}.json</code> em 3 das
+      4 libs — se algum component set foi renomeado nesse intervalo, o cruzamento por
+      nome exato usado em <code>build-a11y-constants.cjs</code> falha silenciosamente (fail-open,
+      sem aviso).</li>
+      <li><code>src/plugin/refs/README.md</code> já se autodeclara desatualizado (nota de
+      2026-09-08) e não documenta boa parte dos scripts/arquivos reais do diretório.</li>
+    </ul>
+
+    <h2 id="s5">5. UX e interface do plugin</h2>
+    <p><em>Agente: design-ux.</em></p>
+
+    <h3>Achado mais crítico desta frente</h3>
+    <div class="finding">
+      <div class="finding-head"><span class="sev sev-high">Alto</span><strong>Toasts sem <code>aria-live</code></strong></div>
+      <p><code>#toast-container</code> (<code>build.cjs:242</code>) e <code>showToast</code> (<code>core.js:298-319</code>) não
+      têm <code>role="status"</code>/<code>aria-live</code> — nenhuma confirmação, erro ou mensagem
+      informativa é anunciada a um usuário de leitor de tela navegando a interface do
+      hac. Correção sugerida de esforço mínimo: <code>aria-live="polite"</code> no container
+      resolve para todos os toasts de uma vez, sem tocar em cada chamada de
+      <code>showToast</code>.</p>
+    </div>
+
+    <h3>Consistência de nomenclatura "Handoff" vs. "Handoff Completo"</h3>
+    <p>A renomeação da sessão não chegou a 2 lugares muito visíveis: a própria tab da
+    workspace (<code>specifications.html:231</code>, ainda só "Handoff") e o botão de inserção
+    individual dentro de cada aba de trabalho ("Inserir no handoff"/"Atualizar handoff",
+    minúsculo, <code>handoff-ficha.js:58</code>). O card "Handoff Review" (<code>handoff-ficha.js:434</code>)
+    também ficou em inglês/nome de variável, quebrando o padrão 100% PT-BR do resto do
+    produto.</p>
+
+    <h3>Fluxo de navegação</h3>
+    <ul>
+      <li>Ordem das tabs (Tabulação → Swipe → Leitor de Tela → Handoff) contraria a lógica
+      operacional recomendada — o próprio onboarding instrui documentar specs (Leitor de
+      Tela) antes de montar a Ordem de Tabulação, mas a tab correspondente vem em 3º
+      lugar visualmente, sem nenhuma numeração ou indicação de "comece aqui".</li>
+      <li><strong>4 pontos de entrada diferentes</strong> para inserir a mesma seção no Handoff
+      Completo (botão dedicado em cada aba de trabalho + botão individual no card do
+      dashboard + botão consolidado "Gerar handoff completo") — funcionalmente correto,
+      mas sem explicação de quando usar qual.</li>
+      <li>Tab Swipe continua clicável e visualmente igual às outras mesmo em projeto web
+      (onde é sempre bloqueada) — só descobre-se a regra depois de clicar.</li>
+    </ul>
+
+    <h3>Onboarding</h3>
+    <p>Estado geral bom — já consolidado em 2 jornadas (web/mobile) e sincronizado com a
+    maior parte da estrutura atual. Duas lacunas pontuais: não menciona "Simular leitura"
+    (com seletor de idioma) nem "Editar pontos" da Trilha de Swipe, ambas features do
+    mesmo dia da última atualização do onboarding — e não menciona a existência do botão
+    "Gerar handoff completo".</p>
+
+    <h3>Tema claro/escuro em componentes recentes</h3>
+    <p>Seletor de idioma da narração e botão "Editar pontos" do Swipe estão corretamente
+    adaptados. <strong>Problema real e recorrente</strong>: os cards de status com alerta de
+    desatualização (<code>handoff-ficha.js:368-443</code>) usam cor hex fixa via <code>style=""</code>, sem
+    variante dark — contraste calculado abaixo do mínimo WCAG AA no tema escuro para pelo
+    menos 2 das 3 cores usadas (âmbar ~3,9:1, verde ~3,2:1, mínimo exigido 4,5:1). O
+    mesmo padrão hardcoded se repete em pelo menos 2 outros pontos do dashboard.</p>
+
+    <h2 id="s6">6. Design System próprio (tokens e componentes)</h2>
+    <p><em>Agente: design-system-specialist.</em></p>
+
+    <p>Já existe um documento de tokens formal e sério: <code>docs/design-system.html</code>
+    (989 linhas, evidência por arquivo/linha). O problema real não é ausência de
+    documentação — é desatualização: não cobre nada implementado a partir de
+    2026-09-04 (tab-switcher de 4 abas, dashboard do Handoff Completo, seletor de idioma,
+    trocas recentes de ícone).</p>
+
+    <h3>2 bugs de token concretos encontrados</h3>
+    <div class="finding">
+      <div class="finding-head"><span class="sev sev-low">Baixo</span><strong>Hover de cor incorreto em 4 botões</strong></div>
+      <p><code>modals.html:544-546,610,698,901</code> — <code>hover:text-blue-700</code>/<code>hover:bg-blue-700</code>
+      resolve para <code>#00335c</code> na escala customizada do projeto, dois tons mais escuro
+      que o padrão real usado em qualquer outro botão azul do produto (<code>blue-600</code>,
+      <code>#004782</code>).</p>
+    </div>
+    <div class="finding">
+      <div class="finding-head"><span class="sev sev-low">Baixo</span><strong><code>rounded-xl</code> isolado onde o padrão é <code>rounded-2xl</code></strong></div>
+      <p><code>handoff-ficha.js:69</code> — único botão de ação de largura total do produto com
+      radius menor que os demais botões equivalentes.</p>
+    </div>
+
+    <h3>Duplicação de dado (não de padrão visual)</h3>
+    <p>O modal estático "Guia de categorias" (<code>modals.html:934-980</code>) reescreve à mão os
+    5 hex de <code>A11Y_CATEGORIES</code> em vez de ler o objeto real — se uma cor de categoria
+    mudar em <code>accessibility.js</code>, esse modal fica dessincronizado silenciosamente, sem
+    nenhum erro. Solução de custo baixo: gerar esse bloco dinamicamente via JS a partir de
+    <code>A11Y_CATEGORIES</code> no carregamento da view.</p>
+
+    <h3>Recomendação explícita do agente</h3>
+    <p>Não criar um arquivo de tokens JS/CSS centralizado agora — o projeto é enxuto por
+    design, e o custo de uma camada de indireção nova supera o benefício de eliminar uma
+    duplicação pequena (~30 linhas). Repropagar o documento já existente é a ação de
+    maior retorno imediato.</p>
+
+    <h2 id="s7">7. QA e riscos de regressão</h2>
+    <p><em>Agente: qa-plugin.</em></p>
+
+    <p>Pipeline de build/lint roda limpo hoje (<code>bundle:code</code>, <code>bundle:ui</code>, <code>lint</code>,
+    <code>export:plugin</code>) — mas <code>npm run lint</code> sozinho <strong>não detecta</strong> artefato gerado
+    desatualizado (só olha o código-fonte, nunca compara contra <code>ui.html</code>/
+    <code>code.bundle.js</code>), que foi exatamente o achado crítico já citado na seção 1.</p>
+
+    <h3>Contrato de mensagens — validado</h3>
+    <p>Todos os 33 tipos de mensagem do backend têm handler correspondente no frontend,
+    incluindo os 3 handlers novos desta sessão (narração por voz, resolução de clone de
+    swipe). Nenhuma mensagem "no ar".</p>
+
+    <h3>Regressões potenciais das mudanças não commitadas — checklist validado</h3>
+    <table>
+      <tr><th>Mudança</th><th>Status</th></tr>
+      <tr><td>Renomeação "Ficha" → "Handoff Completo"</td><td>Validado nos textos principais; nome de camada interna <code>'Handoff Completo — Handoff Review'</code> ficou redundante (cosmético)</td></tr>
+      <tr><td>Migração <code>A11Y_FICHA_SECTION_NAME_LEGACY</code></td><td>Validado — aceita nome novo ou legado, nunca duplica Section</td></tr>
+      <tr><td>Reparenting de overlay de selos</td><td>Validado no código; requer teste manual no Figma para confirmar renderização</td></tr>
+      <tr><td>Reposicionamento de réplicas "ao lado"</td><td>Validado no código; mesmo requisito de teste manual</td></tr>
+      <tr><td>Narração por voz</td><td>Fallback por item robusto; não testável fora do Figma desktop (depende de Web Speech API real)</td></tr>
+      <tr><td>Edição de Trilha de Swipe existente</td><td>Validado — sequência correta de resolução de clone antes de ligar escuta</td></tr>
+    </table>
+
+    <h3>Cobertura de teste manual recomendada, por risco</h3>
+    <p><strong>Alto risco</strong> (quebraria silenciosamente): overlay de selos/trilha não esticando
+    a Section com Auto Layout; "+ Adicionar ponto" numa trilha já existente reaproveitando
+    o clone certo; abertura de arquivo com Section de nome legado sem duplicar; migração
+    de overlay legado aninhado em áreas documentadas antes de 2026-09-08/09.</p>
+    <p><strong>Médio risco</strong>: narração em área web vs. mobile com node apagado/renomeado;
+    renumeração de selos mobile vs. desktop; "Gerar Automaticamente" descendo em
+    Cards/Containers com botões aninhados.</p>
+
+    <h3>Doc viva com nomenclatura mista</h3>
+    <p><code>docs/tecnico.html</code> recebeu 406 linhas de edição nesta sessão mas manteve 13
+    ocorrências de "Ficha de Handoff" contra só 6 de "Handoff Completo" no corpo/títulos
+    pré-existentes — o texto novo foi escrito certo, o texto antigo não foi
+    reconciliado.</p>
+
+    <h2 id="s8">8. Oportunidades de melhoria e inovação</h2>
+    <p><em>Agente: innovation-specialist. Critério aplicado: acelera o fluxo real de
+    documentação? preserva fidelidade técnica? respeita a paridade desigual web/mobile?
+    Uma proposta (codegen/Dev Mode gerando atributos reais) foi avaliada e descartada
+    explicitamente por risco de um snippet tecnicamente incorreto ser copiado sem revisão
+    para produção — registrada aqui só para não ser reproposta sem essa memória.</em></p>
+
+    <table>
+      <tr><th>Proposta</th><th>Impacto</th><th>Esforço</th><th>Risco</th></tr>
+      <tr><td>Estender narração por voz para a Trilha de Swipe</td><td>Médio (mobile)</td><td>S</td><td>Baixo</td></tr>
+      <tr><td>Default PT na narração, seletor só como ajuste manual</td><td>Baixo</td><td>S</td><td>Nenhum</td></tr>
+      <tr><td>Figma Annotations API espelhando resumo da spec no node original</td><td>Médio-alto</td><td>M</td><td>Médio (sincronização com o card real)</td></tr>
+      <tr><td>Exportação estruturada (JSON/CSV) complementar ao Handoff Completo</td><td>Médio</td><td>S-M</td><td>Baixo (validar demanda real antes)</td></tr>
+      <tr><td>Variables API para cor de categoria em vez de hex fixo aproximado</td><td>Baixo-médio</td><td>S-M</td><td>Médio (depende de token real existir na lib)</td></tr>
+      <tr><td>Mapeamento categoria → critério WCAG como referência estática</td><td>Médio</td><td>M</td><td>Médio (exige curadoria da vertical de a11y)</td></tr>
+      <tr><td>Rascunho assistido por LLM em runtime para "Notas de Código"</td><td>Médio</td><td>M-L</td><td><strong>Alto</strong> — só com salvaguardas obrigatórias (nunca autopreenchimento, sempre revisão explícita)</td></tr>
+      <tr><td>Re-scan diferencial (só o que mudou desde o último scan)</td><td>Médio-alto</td><td>L</td><td>Alto (diff impreciso é pior que revisar tudo de novo)</td></tr>
+    </table>
+
+    <p>Recomendação de sequenciamento do próprio agente: começar pelas 2 primeiras
+    (esforço trivial, reaproveitam infraestrutura já validada nesta sessão); tratar
+    Annotations API e export estruturado como próximo horizonte, validando com o
+    integration-specialist; as duas últimas ficam como apostas de médio prazo, não
+    candidatas a próxima entrega.</p>
+
+    <h2 id="s9">9. Lista consolidada de ações recomendadas</h2>
+
+    <h3>Correções pontuais de baixo esforço</h3>
+    <ul>
+      <li><span class="sev sev-high">Alto</span> Adicionar <code>aria-live="polite"</code> ao
+      <code>#toast-container</code> (<code>build.cjs:242</code>) — 1 linha, resolve a lacuna de
+      acessibilidade dos toasts para todos os casos de uso.</li>
+      <li><span class="sev sev-medium">Médio</span> Renomear a tab "Handoff" para "Handoff
+      Completo" (ou documentar explicitamente a exceção por espaço) e ajustar o texto do
+      botão "Inserir/Atualizar no handoff" (<code>handoff-ficha.js:58</code>) para bater com o
+      resto do produto.</li>
+      <li><span class="sev sev-low">Baixo</span> Corrigir <code>hover:text-blue-700</code> →
+      <code>hover:blue-600</code> nos 4 botões afetados (<code>modals.html</code>) e o <code>rounded-xl</code>
+      isolado em <code>handoff-ficha.js:69</code>.</li>
+      <li><span class="sev sev-low">Baixo</span> Ajustar cor hex fixa dos cards de status de
+      desatualização (<code>handoff-ficha.js:368-443</code>) para usar classes com variante
+      <code>dark:</code>, corrigindo o contraste abaixo do mínimo WCAG AA no tema escuro.</li>
+      <li><span class="sev sev-low">Baixo</span> Renomear "Handoff Review" para português
+      (ex. "Consolidado"/"Resumo Geral").</li>
+    </ul>
+
+    <h3>Ações de processo/CI</h3>
+    <ul>
+      <li><span class="sev sev-critical">Crítico</span> Ativar "Allow GitHub Actions to
+      create and approve pull requests" no repositório <code>aab-foton/hac_plugin</code> — causa
+      raiz confirmada das 5 falhas consecutivas do CI.</li>
+      <li><span class="sev sev-high">Alto</span> Adicionar ao <code>refresh-dsc-refs.yml</code> as
+      chamadas de <code>build-dsc-a11y-mapping.cjs</code> faltantes para <code>super-dsc-web</code> e
+      <code>dsc-android</code>; atualizar <code>notify-hac-refs-update.yml</code> do mesmo jeito.</li>
+      <li><span class="sev sev-medium">Médio</span> Limpar as 4 branches órfãs
+      <code>bot/dsc-refs-*</code> no GitHub.</li>
+      <li><span class="sev sev-medium">Médio</span> Decidir o destino de
+      <code>dsc-structural-review.json</code>: promover confiança automaticamente quando
+      <code>hasComposedIcon</code>/<code>hasVisibleLabelText</code> confirmam, ou pelo menos tratar
+      manualmente os 3 achados corretivos já identificados na lib mobile.</li>
+      <li><span class="sev sev-low">Baixo</span> Preencher os <code>nodeId</code> reais em
+      <code>fetch-instruction-frames.cjs</code> ou formalizar que a feature de imagem de instrução
+      está pausada.</li>
+    </ul>
+
+    <h3>Correções de domínio (acessibilidade)</h3>
+    <ul>
+      <li><span class="sev sev-high">Alto</span> Diferenciar a categoria "Estrutura da
+      Página" por origem web/mobile, seguindo o mesmo padrão já correto de Nível de
+      Título (<code>accessibilityRole</code> em vez de tags HTML para mobile).</li>
+      <li><span class="sev sev-low">Baixo</span> Restringir as opções do select de Nível de
+      Título por origem do projeto.</li>
+      <li><span class="sev sev-low">Baixo</span> Avaliar dar a <code>[dsc] Alert</code> a mesma
+      categoria/nota de código já pronta de "snackbar".</li>
+    </ul>
+
+    <h3>Arquitetura (médio prazo, sem urgência)</h3>
+    <ul>
+      <li>Extrair Ordem de Tabulação e Trilha de Swipe de <code>accessibility.js</code> para
+      módulos próprios, seguindo o precedente de <code>handoff-ficha.js</code>.</li>
+      <li>Remover os 4 handlers de mensagem confirmados como código morto herdado do
+      Handex.</li>
+      <li>Substituir a checagem binária <code>=== 'mobile'</code> espalhada por um helper único
+      (<code>isA11yMobileProject()</code>), antecipando uma eventual 3ª origem de projeto.</li>
+      <li>Remover ou arquivar <code>docs/architecture-state.md</code>, já obsoleto e substituído
+      por <code>docs/tecnico.html</code>.</li>
+      <li>Repropagar <code>docs/design-system.html</code> com os componentes adicionados a partir
+      de 2026-09-04, e reconciliar a nomenclatura mista em <code>docs/tecnico.html</code>.</li>
+    </ul>
+
+    <p class="footer-note">hac — Auditoria Geral · gerada em 2026-09-09 · repositório privado, uso interno</p>
+  </div>
+</main>
+<script>
+(function () {
+  var ICON_SUN = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" /></svg>';
+  var ICON_MOON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" /></svg>';
+  var STORAGE_KEY = 'hac-docs-theme';
+  var root = document.documentElement;
+  var toggle = document.getElementById('theme-toggle');
+
+  function applyTheme(theme) {
+    if (theme === 'dark') {
+      root.setAttribute('data-theme', 'dark');
+      if (toggle) toggle.innerHTML = ICON_SUN;
+    } else {
+      root.removeAttribute('data-theme');
+      if (toggle) toggle.innerHTML = ICON_MOON;
+    }
+  }
+
+  var saved = null;
+  try { saved = localStorage.getItem(STORAGE_KEY); } catch (e) {}
+  applyTheme(saved === 'dark' ? 'dark' : 'light');
+
+  if (toggle) {
+    toggle.addEventListener('click', function () {
+      var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
+      try { localStorage.setItem(STORAGE_KEY, next); } catch (e) {}
+    });
+  }
+})();
+</script>
+</body>
+</html>

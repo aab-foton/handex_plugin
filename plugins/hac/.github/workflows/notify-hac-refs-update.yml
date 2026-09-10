@@ -60,6 +60,7 @@ jobs:
             ["src/plugin/refs/web-angular-react.json"]="Web Angular & React"
             ["src/plugin/refs/super-app.json"]="DSC | Super App"
             ["src/plugin/refs/super-dsc-web.json"]="Super DSC | Web"
+            ["src/plugin/refs/dsc-android.json"]="DSC | Android"
           )
 
           CHANGED_FILES=$(git diff --name-only \

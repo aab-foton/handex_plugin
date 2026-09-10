@@ -377,6 +377,7 @@ li { margin: 4px 0; }
     <a href="institucional.html">Regras de Negócio</a>
     <a href="design-system.html" class="active">Design System</a>
     <a href="changelog.html">Changelog</a>
+    <a href="auditoria-2026-09.html">Auditoria Geral</a>
   </nav>
   <button type="button" id="theme-toggle" aria-label="Alternar tema claro/escuro" title="Alternar tema claro/escuro"></button>
 </header>
@@ -451,6 +452,16 @@ li { margin: 4px 0; }
     explícito no CSS: <em>"Global overrides for buttons matching the Design System"</em>. Usado hoje no
     header/subheader (<code>bg-[#0070af]</code>) e nos botões de confirmação dos modais herdados
     (Marcar Área, categorias de spec).</p>
+    <p><strong>Correção 2026-09-09</strong> — 4 botões em <code>modals.html</code> usavam <code>hover:bg-blue-700</code>/
+    <code>hover:text-blue-700</code> (resolve para <code>#00335c</code>, dois tons mais escuro que o padrão real).
+    Em 3 deles (botões "Marcar", "Já habilitei, tentar de novo" e "Iniciar Revisão", todos <code>&lt;button&gt;</code>
+    com <code>bg-[#0070af]</code>) o override global de <code>plugin.css</code> acima já forçava o hover correto
+    (<code>#004782</code>) via <code>!important</code>, mascarando o efeito prático do bug — mas a classe Tailwind
+    ficava inconsistente/morta no código-fonte. No 4º (botão de texto "Atualizar nome", só
+    <code>text-[#0070af] hover:text-blue-700</code>, sem <code>bg-</code>/<code>border-</code> correspondente na regra
+    do CSS) o bug era visualmente ativo — esse hover realmente renderizava dois tons escuro demais.
+    Todos os 4 corrigidos para <code>hover:bg-blue-600</code>/<code>hover:text-blue-600</code> (<code>#004782</code>),
+    eliminando a ambiguidade entre classe e override.</p>
     <div class="swatch-grid">
       <div class="swatch-card"><div class="swatch-block" style="background:#f0f7ff"></div><div class="swatch-info"><div class="hex">#f0f7ff</div><div class="label">blue-50</div></div></div>
       <div class="swatch-card"><div class="swatch-block" style="background:#e0effe"></div><div class="swatch-info"><div class="hex">#e0effe</div><div class="label">blue-100</div></div></div>
@@ -676,6 +687,17 @@ li { margin: 4px 0; }
       próprio por categoria. Badge de letra fixo ("H" para Nível de Título, "Ø" para Elemento
       Decorativo) aparece só nessas duas categorias.</p>
     </div>
+    <p><strong>Correção 2026-09-09</strong> — os 5 círculos de categoria do modal "Guia de categorias"
+    (<code>a11y-categories-help-modal</code>, dentro de <code>modals.html</code>) reescreviam à mão
+    <code>border-color</code>/<code>color</code> (hex) e o ícone/badge de cada categoria, duplicando dado que já
+    existe em <code>A11Y_CATEGORIES</code> — risco de dessincronizar silenciosamente se uma cor de
+    categoria mudasse na lib "Design Acessível". Corrigido: cada círculo agora é um contêiner vazio
+    (<code>.a11y-cat-badge</code>, <code>data-a11y-cat="&lt;chave&gt;"</code>) preenchido em runtime a partir do
+    próprio <code>A11Y_CATEGORIES</code>, via <code>MutationObserver</code> na abertura do modal (inline em
+    <code>modals.html</code>, sem arquivo novo — necessário porque <code>accessibility.js</code>, onde
+    <code>A11Y_CATEGORIES</code> é definido, só é concatenado bem depois deste HTML no bundle final
+    <code>ui.html</code>). Textos didáticos e o filtro por origem web/mobile de cada bloco continuam 100%
+    estáticos no HTML — só a cor/ícone do círculo passou a ser dado único.</p>
 
     <h2 id="s8">8. Componentes — Modal</h2>
     <p class="evidence">Fonte: <code>src/plugin/views/modals.html</code> — 10 modais no total

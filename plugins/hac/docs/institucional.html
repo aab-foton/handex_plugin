@@ -236,6 +236,7 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
     <a href="institucional.html" class="active">Regras de Negócio</a>
     <a href="design-system.html">Design System</a>
     <a href="changelog.html">Changelog</a>
+    <a href="auditoria-2026-09.html">Auditoria Geral</a>
   </nav>
   <button type="button" id="theme-toggle" aria-label="Alternar tema claro/escuro" title="Alternar tema claro/escuro"></button>
 </header>
@@ -325,7 +326,7 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
     <table>
       <tr><th>Categoria</th><th>Para que serve</th><th>Existe versão mobile?</th></tr>
       <tr><td>Elementos e Imagens</td><td>Componentes interativos (botões, campos, links) e imagens que precisam de nome acessível, descrição ou texto alternativo.</td><td>Sim — 3 formatos (Componente / Link / Texto Alternativo)</td></tr>
-      <tr><td>Estrutura da Página</td><td>Marcações de organização da página (regiões/landmarks) para navegação por leitor de tela.</td><td>Não há equivalente publicado ainda</td></tr>
+      <tr><td>Estrutura da Página</td><td>Marcações de organização da página (regiões/landmarks) para navegação por leitor de tela.</td><td>Selo visual: não há equivalente publicado ainda. Texto de orientação ao desenvolvedor: sim, desde 2026-09-09 — o subtipo "Marco de Navegação" já orienta com o termo técnico correto de cada plataforma (ver nota técnica abaixo)</td></tr>
       <tr><td>Nível de Título</td><td>Hierarquia de títulos da página, para leitura estruturada por tecnologia assistiva.</td><td>Sim, de forma simplificada (sem níveis hierárquicos)</td></tr>
       <tr><td>Elemento Decorativo</td><td>Sinaliza elementos puramente visuais que devem ser ignorados por leitores de tela.</td><td>Sim</td></tr>
       <tr><td>Informações Adicionais</td><td>Campo de formato livre para observações que não se encaixam nas demais categorias.</td><td>Não há equivalente mobile definido</td></tr>
@@ -333,7 +334,16 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p><em>Nota técnica: as diferenças entre Web e Mobile citadas acima decorrem de
     limitações reais dos componentes já publicados nas bibliotecas oficiais do
-    Design System — não são escolhas arbitrárias do plugin.</em></p>
+    Design System — não são escolhas arbitrárias do plugin. Uma correção
+    pontual (2026-09-09): dentro de "Estrutura da Página", o subtipo "Marco de
+    Navegação" (cabeçalho, navegação, conteúdo principal, seção lateral,
+    rodapé) agora entrega o termo de orientação correto por plataforma — em
+    projeto Web, as tags HTML de referência (<code>&lt;header&gt;</code>,
+    <code>&lt;nav&gt;</code>, <code>&lt;main&gt;</code>, <code>&lt;aside&gt;</code>, <code>&lt;footer&gt;</code>);
+    em projeto Mobile, o atributo de papel semântico equivalente do React
+    Native (<code>accessibilityRole</code>), já que essa plataforma não possui
+    tags HTML. Antes dessa correção, o texto entregue a um projeto Mobile
+    mencionava indevidamente uma tag HTML que não existe nessa plataforma.</em></p>
 
     <h2 id="s4">4. Web ou Mobile: uma decisão única por projeto</h2>
 
