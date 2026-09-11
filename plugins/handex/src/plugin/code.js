@@ -173,27 +173,34 @@ function _compareSpecTags(tagA, tagB) {
   return 0;
 }
 
-// Reordena o specGroup recém-criado entre os demais grupos de spec da página
-// para que a profundidade (z-order) siga a ordem hierárquica das tags, não a
-// ordem de criação. Não afeta X/Y — só o índice na lista de filhos da página.
+// Reordena o specGroup recém-criado entre os demais grupos de spec para que
+// a profundidade (z-order) siga a ordem hierárquica das tags, não a ordem de
+// criação. Não afeta X/Y — só o índice na lista de filhos do container.
+// Container = specGroup.parent (a Section "Handex | Specs" desde 2026-09-11,
+// quando specs passaram a viver lá em vez de soltas em figma.currentPage
+// diretamente — ver _hdMoveToCategorySection). Sem essa correção, os
+// siblings/índices seriam buscados na página, mas os specGroups já não são
+// mais filhos diretos dela, quebrando a comparação por completo.
 function _reorderSpecGroupByTag(specGroup, tag) {
+  const container = specGroup.parent;
+  if (!container || !('children' in container)) return;
   // handexCategory cobre specs novas (FRAME/GROUP); prefixo de nome cobre
   // specs legadas criadas antes dessa marcação existir.
-  const siblings = figma.currentPage.children.filter(n =>
+  const siblings = container.children.filter(n =>
     n !== specGroup && (n.getPluginData('handexCategory') === 'spec' || n.name.startsWith('[Spec')));
   // Fallback = ficar no topo (equivalente ao appendChild padrão), não a contagem de
   // grupos — misturar essa contagem com índices reais de children (abaixo) empurraria
-  // a spec para trás de conteúdo não-spec da página quando não há tag posterior.
-  let insertIndex = figma.currentPage.children.length;
+  // a spec para trás de conteúdo não-spec do container quando não há tag posterior.
+  let insertIndex = container.children.length;
   for (let i = 0; i < siblings.length; i++) {
     const m = siblings[i].name.match(/^\[Spec \| ([A-Z]\d*(?:\.\d+)*) \| [a-z]+\] /);
     if (!m) continue;
     if (_compareSpecTags(tag, m[1]) < 0) {
-      const idx = figma.currentPage.children.indexOf(siblings[i]);
+      const idx = container.children.indexOf(siblings[i]);
       insertIndex = Math.min(insertIndex, idx);
     }
   }
-  figma.currentPage.insertChild(insertIndex, specGroup);
+  container.insertChild(insertIndex, specGroup);
 }
 
 
@@ -204,6 +211,53 @@ function hexToRgb(hex) {
     g: parseInt(result[2], 16) / 255,
     b: parseInt(result[3], 16) / 255
   } : { r: 0.5, g: 0.5, b: 0.5 };
+}
+
+// ─── Organização por categoria (Sections) ─────────────────────────────────
+// Medidas, specs e fluxos criados pelo Handex ficavam soltos direto em
+// figma.currentPage -- identificados só por pluginData (handexCategory),
+// invisível na árvore de camadas normal do Figma (achado real, 2026-09-11).
+// SECTION do Figma foi escolhida em vez de GROUP/FRAME porque, testado no
+// próprio arquivo do usuário, ela NÃO recalcula a posição dos filhos como
+// relativa ao container (diferente de group()/frame.appendChild(), que
+// sempre fazem isso) -- move um nó existente pra dentro sem alterar sua
+// posição visual/absoluta na página. Isso é essencial aqui: uma medida ou
+// conector de fluxo precisa continuar ancorado exatamente no lugar do
+// elemento real que anota, nunca reposicionado por entrar num container.
+// _hdEnsureCategorySection busca a Section já existente na página (por
+// nome fixo) e reaproveita; só cria uma nova na primeira vez que aquela
+// categoria aparece. Nunca redimensiona a Section pra "abraçar" os filhos
+// automaticamente -- ela só existe pra dar um agrupamento visível na árvore
+// de camadas, o layout dos itens dentro continua exatamente como já era.
+const HANDEX_SECTION_NAMES = { medida: 'Handex | Medidas', spec: 'Handex | Specs', fluxo: 'Handex | Fluxos', ficha: 'Handex | Ficha' };
+function _hdEnsureCategorySection(category) {
+  const sectionName = HANDEX_SECTION_NAMES[category];
+  if (!sectionName) return null;
+  // children (filhos diretos da página, não recursivo) em vez de findOne
+  // (que percorre a árvore inteira) -- a Section sempre fica como filho
+  // direto de currentPage, nunca aninhada, então não há necessidade de
+  // busca recursiva aqui. Relevante porque essa checagem roda a cada
+  // medida/spec/fluxo criado -- em páginas densas isso evita custo O(n) do
+  // total de nós da página a cada criação (ver nota de performance
+  // discutida nesta mesma sessão sobre documentações densas).
+  const existing = figma.currentPage.children.find(n => n.type === 'SECTION' && n.getPluginData('handexCategorySection') === category);
+  if (existing) return existing;
+  const section = figma.createSection();
+  section.name = sectionName;
+  section.setPluginData('handexCategorySection', category);
+  // Tamanho mínimo só pra Section existir de forma visível/selecionável antes
+  // do primeiro filho entrar -- ela nunca é redimensionada depois pra ajustar
+  // aos filhos (ver nota acima: não queremos nenhum recálculo de layout).
+  try { section.resizeWithoutConstraints(100, 100); } catch (e) {}
+  figma.currentPage.appendChild(section);
+  return section;
+}
+// Move um nó (já criado e posicionado normalmente) pra dentro da Section da
+// sua categoria, preservando x/y absolutos -- chamar DEPOIS que o nó já
+// está com handexCategory setado e na posição final desejada.
+function _hdMoveToCategorySection(node, category) {
+  const section = _hdEnsureCategorySection(category);
+  if (section) { try { section.appendChild(node); } catch (e) {} }
 }
 
 // ─── Helpers de montagem da ficha de handoff ──────────────────────────────
@@ -315,10 +369,16 @@ function _hdBuildFrameCard(f, fi) {
 
 // Subgrupo de medidas de 1 frame. handexFrameId identifica o subgrupo entre
 // gerações.
+// Subgrupo de medidas de 1 frame (ou de medidas avulsas, com
+// f.nome === 'Sem frame vinculado'). handexFrameId identifica o subgrupo
+// entre gerações; medidas avulsas usam a chave fixa '__loose__' (setada pelo
+// chamador, sobrescrevendo o valor vazio calculado aqui) já que não têm
+// frame.figmaId real -- mesmo padrão de _hdBuildSpecsSubgroup.
 function _hdBuildMeasuresSubgroup(f) {
   const fGroup = _hdCreateFrame("VERTICAL", 0, 6);
-  fGroup.name = `[Medidas | ${f.figmaId || f.id}] ${f.nome || 'Frame'}`;
-  fGroup.setPluginData('handexFrameId', f.figmaId || f.id || '');
+  const _frameKey = f.figmaId || f.id || '';
+  fGroup.name = _frameKey ? `[Medidas | ${_frameKey}] ${f.nome || 'Frame'}` : `[Medidas] ${f.nome || 'Frame'}`;
+  fGroup.setPluginData('handexFrameId', _frameKey);
   const fLabel = _hdCreateText(f.nome || 'Frame', 10, "Bold", { r: 0.27, g: 0.45, b: 0.78 });
   fGroup.appendChild(fLabel);
   _hdSetFillAndHug(fLabel);
@@ -536,12 +596,17 @@ function _hdBuildFlowCard(flow, fi) {
 // insert-flows-in-ficha): prefixo de nome + ordenação por timestamp
 // embutido no nome (ordenação alfabética de string já resolve, formato do
 // timestamp é sempre YYYY-MM-DD HH:MM). Retorna null se não encontrar.
+// Busca em figma.currentPage.children (fichas legadas, soltas na página,
+// criadas antes de 2026-09-11) E dentro da Section "Handex | Ficha" (padrão
+// atual) -- nunca recursiva além desse segundo nível, a ficha nunca fica
+// aninhada mais fundo que isso.
 function _hdFindExistingFicha(titulo) {
   const _titulo = (titulo || '').trim();
   const _prefix = _titulo ? `Handex | Ficha de Projeto | ${_titulo}` : 'Handex | Ficha de Projeto';
-  const fichas = figma.currentPage.children.filter(
-    n => n.type === 'FRAME' && n.name.startsWith(_prefix)
-  );
+  const _isFicha = n => n.type === 'FRAME' && n.name.startsWith(_prefix);
+  const _fichaSection = figma.currentPage.children.find(n => n.type === 'SECTION' && n.getPluginData('handexCategorySection') === 'ficha');
+  const fichas = figma.currentPage.children.filter(_isFicha)
+    .concat(_fichaSection ? _fichaSection.children.filter(_isFicha) : []);
   if (fichas.length === 0) return null;
   fichas.sort((a, b) => a.name.localeCompare(b.name));
   return fichas[fichas.length - 1];
@@ -1026,6 +1091,7 @@ async function _buildFlowConnection(nodeA, nodeB, msg) {
       finalGroup.locked = true;
       finalGroup.setPluginData('handexCategory', 'fluxo');
       finalGroup.setPluginData('handexFlowId', _flowId);
+      _hdMoveToCategorySection(finalGroup, 'fluxo');
       _flowResult = { id: finalGroup.id, flowUid: _flowId, name: friendlyName, type: msg.flowType, ..._flowExtra };
     } catch (e) { console.error(e); }
   } else if (isEvent) {
@@ -1055,6 +1121,7 @@ async function _buildFlowConnection(nodeA, nodeB, msg) {
       finalGroup.locked = true;
       finalGroup.setPluginData('handexCategory', 'fluxo');
       finalGroup.setPluginData('handexFlowId', _flowId);
+      _hdMoveToCategorySection(finalGroup, 'fluxo');
       _flowResult = { id: finalGroup.id, flowUid: _flowId, name: friendlyName, type: msg.flowType, ..._flowExtra };
     } catch (e) { console.error(e); }
   } else if (msg.decisionText && (msg.flowType === "line_solid" || msg.flowType === "line_dashed")) {
@@ -1086,6 +1153,7 @@ async function _buildFlowConnection(nodeA, nodeB, msg) {
       finalGroup.locked = true;
       finalGroup.setPluginData('handexCategory', 'fluxo');
       finalGroup.setPluginData('handexFlowId', _flowId);
+      _hdMoveToCategorySection(finalGroup, 'fluxo');
       _flowResult = { id: finalGroup.id, flowUid: _flowId, name: friendlyName, type: msg.flowType, ..._flowExtra };
     } catch (e) { console.error(e); }
   } else {
@@ -1095,6 +1163,7 @@ async function _buildFlowConnection(nodeA, nodeB, msg) {
     finalGroup.locked = true;
     finalGroup.setPluginData('handexCategory', 'fluxo');
     finalGroup.setPluginData('handexFlowId', _flowId);
+    _hdMoveToCategorySection(finalGroup, 'fluxo');
     _flowResult = { id: finalGroup.id, flowUid: _flowId, name: friendlyName, type: msg.flowType, ..._flowExtra };
   }
 
@@ -1372,9 +1441,14 @@ figma.ui.onmessage = async (msg) => {
   }
 
   if (msg.type === 'delete-canvas-content') {
-    // Todo conteúdo criado pelo Handex é agrupado num único nó de topo de página
-    // no momento da criação (mainContainer da ficha, specGroup, grupo de medida,
-    // finalGroup/legendFrame de fluxo) -- não sobram nós-irmãos soltos.
+    // Todo conteúdo criado pelo Handex é agrupado num único nó de topo
+    // (mainContainer da ficha, specGroup, grupo de medida, finalGroup/
+    // legendFrame de fluxo) -- não sobram nós-irmãos soltos DENTRO desse
+    // grupo. Desde 2026-09-11 esses nós de topo moram dentro das Sections
+    // "Handex | *" (ver _hdMoveToCategorySection), não mais soltos como
+    // filhos diretos da página -- por isso a varredura cobre também os
+    // filhos de cada Section, além de figma.currentPage.children (conteúdo
+    // legado, criado antes da migração pra Sections).
     // handexCategory (pluginData) é a fonte de verdade; prefixo de nome é fallback
     // para conteúdo criado antes desta marcação existir.
     const wanted = {
@@ -1397,13 +1471,27 @@ figma.ui.onmessage = async (msg) => {
 
     const counts = { ficha: 0, spec: 0, medida: 0, fluxo: 0 };
     const toRemove = [];
+    const _handexSections = [];
 
     figma.currentPage.children.forEach(node => {
+      if (node.type === 'SECTION' && node.getPluginData('handexCategorySection')) {
+        _handexSections.push(node);
+        return;
+      }
       const cat = matchCategory(node);
       if (cat) {
         toRemove.push(node);
         counts[cat]++;
       }
+    });
+    _handexSections.forEach(section => {
+      section.children.forEach(node => {
+        const cat = matchCategory(node);
+        if (cat) {
+          toRemove.push(node);
+          counts[cat]++;
+        }
+      });
     });
 
     // Marcador (contour procedural) fica fora do specGroup, vinculado só por
@@ -1945,15 +2033,28 @@ figma.ui.onmessage = async (msg) => {
         setFillAndHug(framesSection);
       }
 
-      // 1.8 MEDIDAS (seção independente, agrupada por frame)
+      // 1.8 MEDIDAS (seção independente, agrupada por frame + avulsas)
+      // Medidas criadas sem nenhum frame ativo/selecionado ficam em data.measurements
+      // (nível superior) -- mesmo padrão de "__loose__" já usado pra specs
+      // avulsas (ver 1.9 abaixo). Sem este bloco, medidas avulsas (ex: um
+      // grupo de medida solto na página, sem frame vinculado) ficavam de
+      // fora da Ficha por completo -- achado real, 2026-09-11.
       const _framesWithMeasures = (_frames || []).filter(f => (f.measurements || []).length > 0);
-      if (_framesWithMeasures.length > 0) {
+      const _looseMeasures = data.measurements || [];
+      if (_framesWithMeasures.length > 0 || _looseMeasures.length > 0) {
         const measSection = _hdCreateSection(content, "Medidas");
         _framesWithMeasures.forEach(f => {
           const fGroup = _hdBuildMeasuresSubgroup(f);
           measSection.appendChild(fGroup);
           _hdSetFillAndHug(fGroup);
         });
+        if (_looseMeasures.length > 0) {
+          const looseFrame = { nome: 'Sem frame vinculado', measurements: _looseMeasures };
+          const looseGroup = _hdBuildMeasuresSubgroup(looseFrame);
+          looseGroup.setPluginData('handexFrameId', '__loose__');
+          measSection.appendChild(looseGroup);
+          _hdSetFillAndHug(looseGroup);
+        }
         content.appendChild(measSection);
         setFillAndHug(measSection);
       }
@@ -2389,6 +2490,11 @@ figma.ui.onmessage = async (msg) => {
       mainContainer.locked = false;
       mainContainer.setPluginData('handexCategory', 'ficha');
       figma.currentPage.appendChild(mainContainer);
+      // Move pra Section "Handex | Ficha" ANTES de qualquer cálculo de
+      // posição abaixo -- Section preserva x/y absolutos (ver
+      // _hdMoveToCategorySection), então não interfere no posicionamento;
+      // cobre os dois caminhos (ficha nova e atualização) com um só ponto.
+      _hdMoveToCategorySection(mainContainer, 'ficha');
 
       if (_isUpdate && _inheritedX !== null) {
         // Ficha existente: herda a posição exata de onde estava -- pula todo
@@ -2448,7 +2554,11 @@ figma.ui.onmessage = async (msg) => {
         // 2ª prioridade: ao lado de ficha já existente no canvas, mas só se ela estiver
         // perto do frame mapeado (evita sobrepor outra ficha do mesmo projeto). Sem
         // âncora, mantém o comportamento antigo de olhar qualquer ficha no canvas.
-        _existingFichas = figma.currentPage.children.filter(n => {
+        // Busca em figma.currentPage.children (fichas legadas soltas) + dentro da
+        // Section "Handex | Ficha" (padrão atual, ver _hdFindExistingFicha acima).
+        const _fichaSectionForPos = figma.currentPage.children.find(n => n.type === 'SECTION' && n.getPluginData('handexCategorySection') === 'ficha');
+        const _fichaCandidates = figma.currentPage.children.concat(_fichaSectionForPos ? _fichaSectionForPos.children : []);
+        _existingFichas = _fichaCandidates.filter(n => {
           if (n.type !== 'FRAME' || !n.name.startsWith('Handex | Ficha') || n === mainContainer) return false;
           if (!_anchorBb) return true;
           const bb = n.absoluteBoundingBox;
@@ -2729,6 +2839,7 @@ figma.ui.onmessage = async (msg) => {
           group.name = `[Medida] ${node.name}`;
           group.locked = true;
           group.setPluginData('handexCategory', 'medida');
+          _hdMoveToCategorySection(group, 'medida');
           appliedMeasuresList.push({ name: node.name, nodeId: group.id, details: appliedDetails });
         }
 
@@ -3503,6 +3614,7 @@ figma.ui.onmessage = async (msg) => {
           group.name = `[Medida] ${m.name}`;
           group.locked = true;
           group.setPluginData('handexCategory', 'medida');
+          _hdMoveToCategorySection(group, 'medida');
           created++;
         }
       }
@@ -4053,7 +4165,10 @@ figma.ui.onmessage = async (msg) => {
           if (bb.x < _letterMap[l].x) _letterMap[l].x = bb.x;
           if (bb.y < _letterMap[l].topY) _letterMap[l].topY = bb.y;
         };
-        const _stackScanNodes = figma.currentPage.children;
+        // "Achata" a Section "Handex | Specs" nos filhos diretos antes de
+        // escanear -- specs vivem lá desde 2026-09-11 (ver
+        // _hdMoveToCategorySection), não mais soltas em figma.currentPage.
+        const _stackScanNodes = figma.currentPage.children.flatMap(n => n.type === 'SECTION' ? n.children : [n]);
         _stackScanNodes.forEach(n => {
           // handexCategory cobre specs novas (FRAME/GROUP); prefixo de nome
           // cobre specs legadas criadas antes dessa marcação existir.
@@ -4293,6 +4408,14 @@ figma.ui.onmessage = async (msg) => {
         contour.setPluginData('handexSpecMarkerFor', specGroup.id);
         specGroup.setPluginData('handexSpecMarkerId', contour.id);
       }
+      // Move os dois (specGroup + contour) pra dentro da mesma Section --
+      // preserva a posição absoluta de ambos (Section não recalcula, ver
+      // _hdMoveToCategorySection) e mantém os dois visíveis juntos na árvore
+      // de camadas, sem reverter a decisão de mantê-los como nós irmãos
+      // separados (essa decisão é sobre não compartilhar o MESMO grupo/frame
+      // -- não sobre não compartilhar a mesma Section).
+      _hdMoveToCategorySection(specGroup, 'spec');
+      if (contour) _hdMoveToCategorySection(contour, 'spec');
 
       _reorderSpecGroupByTag(specGroup, opts.letter);
 
@@ -5079,6 +5202,7 @@ figma.ui.onmessage = async (msg) => {
       legendFrame.locked = true;
       legendFrame.setPluginData('handexCategory', 'fluxo');
       figma.currentPage.appendChild(legendFrame);
+      _hdMoveToCategorySection(legendFrame, 'fluxo');
       figma.currentPage.selection = [legendFrame];
       figma.viewport.scrollAndZoomIntoView([legendFrame]);
       figma.notify("Legenda criada!");
@@ -5126,18 +5250,15 @@ figma.ui.onmessage = async (msg) => {
       // Escopa pelo título do projeto atual quando disponível -- sem isso,
       // fichas de OUTROS projetos na mesma página (mesmo prefixo de nome)
       // podiam ser lidas como "a mais recente" e sugerir a versão errada.
-      const _titulo = (msg.titulo || '').trim();
-      const _prefix = _titulo ? `Handex | Ficha de Projeto | ${_titulo}` : 'Handex | Ficha de Projeto';
-      const fichas = figma.currentPage.children.filter(
-        n => n.type === 'FRAME' && n.name.startsWith(_prefix)
-      );
-      if (fichas.length === 0) {
+      // Reaproveita _hdFindExistingFicha (mesmo critério, já busca dentro da
+      // Section "Handex | Ficha" além de fichas legadas soltas na página) em
+      // vez de duplicar a lógica de busca aqui -- eram duas cópias quase
+      // idênticas antes de 2026-09-11.
+      const latest = _hdFindExistingFicha(msg.titulo);
+      if (!latest) {
         figma.ui.postMessage({ type: 'ficha-version-pulled', versao: null, temFicha: false });
         return;
       }
-      // Nome inclui timestamp "YYYY-MM-DD HH:MM" no final -- ordenação de string já resolve "mais recente"
-      fichas.sort((a, b) => a.name.localeCompare(b.name));
-      const latest = fichas[fichas.length - 1];
       const campoVersao = latest.findOne(n => n.type === 'FRAME' && n.name === '[Campo] Versão');
       const versaoText = campoVersao ? campoVersao.findAll(n => n.type === 'TEXT')[1] : null;
       const versao = versaoText ? versaoText.characters.trim() : null;

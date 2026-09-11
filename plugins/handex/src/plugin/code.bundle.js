@@ -407,17 +407,19 @@
     return 0;
   }
   function _reorderSpecGroupByTag(specGroup, tag) {
-    const siblings = figma.currentPage.children.filter((n) => n !== specGroup && (n.getPluginData("handexCategory") === "spec" || n.name.startsWith("[Spec")));
-    let insertIndex = figma.currentPage.children.length;
+    const container = specGroup.parent;
+    if (!container || !("children" in container)) return;
+    const siblings = container.children.filter((n) => n !== specGroup && (n.getPluginData("handexCategory") === "spec" || n.name.startsWith("[Spec")));
+    let insertIndex = container.children.length;
     for (let i = 0; i < siblings.length; i++) {
       const m = siblings[i].name.match(/^\[Spec \| ([A-Z]\d*(?:\.\d+)*) \| [a-z]+\] /);
       if (!m) continue;
       if (_compareSpecTags(tag, m[1]) < 0) {
-        const idx = figma.currentPage.children.indexOf(siblings[i]);
+        const idx = container.children.indexOf(siblings[i]);
         insertIndex = Math.min(insertIndex, idx);
       }
     }
-    figma.currentPage.insertChild(insertIndex, specGroup);
+    container.insertChild(insertIndex, specGroup);
   }
   function hexToRgb2(hex) {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -426,6 +428,31 @@
       g: parseInt(result[2], 16) / 255,
       b: parseInt(result[3], 16) / 255
     } : { r: 0.5, g: 0.5, b: 0.5 };
+  }
+  var HANDEX_SECTION_NAMES = { medida: "Handex | Medidas", spec: "Handex | Specs", fluxo: "Handex | Fluxos", ficha: "Handex | Ficha" };
+  function _hdEnsureCategorySection(category) {
+    const sectionName = HANDEX_SECTION_NAMES[category];
+    if (!sectionName) return null;
+    const existing = figma.currentPage.children.find((n) => n.type === "SECTION" && n.getPluginData("handexCategorySection") === category);
+    if (existing) return existing;
+    const section = figma.createSection();
+    section.name = sectionName;
+    section.setPluginData("handexCategorySection", category);
+    try {
+      section.resizeWithoutConstraints(100, 100);
+    } catch (e) {
+    }
+    figma.currentPage.appendChild(section);
+    return section;
+  }
+  function _hdMoveToCategorySection(node, category) {
+    const section = _hdEnsureCategorySection(category);
+    if (section) {
+      try {
+        section.appendChild(node);
+      } catch (e) {
+      }
+    }
   }
   function _hdCreateText(text, size = 14, weight = "Regular", color = { r: 0.12, g: 0.16, b: 0.23 }) {
     const t = figma.createText();
@@ -527,8 +554,9 @@
   }
   function _hdBuildMeasuresSubgroup(f) {
     const fGroup = _hdCreateFrame("VERTICAL", 0, 6);
-    fGroup.name = `[Medidas | ${f.figmaId || f.id}] ${f.nome || "Frame"}`;
-    fGroup.setPluginData("handexFrameId", f.figmaId || f.id || "");
+    const _frameKey = f.figmaId || f.id || "";
+    fGroup.name = _frameKey ? `[Medidas | ${_frameKey}] ${f.nome || "Frame"}` : `[Medidas] ${f.nome || "Frame"}`;
+    fGroup.setPluginData("handexFrameId", _frameKey);
     const fLabel = _hdCreateText(f.nome || "Frame", 10, "Bold", { r: 0.27, g: 0.45, b: 0.78 });
     fGroup.appendChild(fLabel);
     _hdSetFillAndHug(fLabel);
@@ -733,9 +761,9 @@
   function _hdFindExistingFicha(titulo) {
     const _titulo = (titulo || "").trim();
     const _prefix = _titulo ? `Handex | Ficha de Projeto | ${_titulo}` : "Handex | Ficha de Projeto";
-    const fichas = figma.currentPage.children.filter(
-      (n) => n.type === "FRAME" && n.name.startsWith(_prefix)
-    );
+    const _isFicha = (n) => n.type === "FRAME" && n.name.startsWith(_prefix);
+    const _fichaSection = figma.currentPage.children.find((n) => n.type === "SECTION" && n.getPluginData("handexCategorySection") === "ficha");
+    const fichas = figma.currentPage.children.filter(_isFicha).concat(_fichaSection ? _fichaSection.children.filter(_isFicha) : []);
     if (fichas.length === 0) return null;
     fichas.sort((a, b) => a.name.localeCompare(b.name));
     return fichas[fichas.length - 1];
@@ -747,7 +775,7 @@
     };
     return "#" + toHex(r) + toHex(g) + toHex(b);
   }
-  var PLUGIN_VERSION = true ? "6.11.0" : "dev";
+  var PLUGIN_VERSION = true ? "6.12.0" : "dev";
   var DSC_HANDOFF_SUMMARY_ENABLED = false;
   async function _writeSharedPluginData(data) {
     var _a, _b, _c, _d, _e, _f, _g;
@@ -1089,6 +1117,7 @@
         finalGroup.locked = true;
         finalGroup.setPluginData("handexCategory", "fluxo");
         finalGroup.setPluginData("handexFlowId", _flowId);
+        _hdMoveToCategorySection(finalGroup, "fluxo");
         _flowResult = __spreadValues({ id: finalGroup.id, flowUid: _flowId, name: friendlyName, type: msg.flowType }, _flowExtra);
       } catch (e) {
         console.error(e);
@@ -1122,6 +1151,7 @@
         finalGroup.locked = true;
         finalGroup.setPluginData("handexCategory", "fluxo");
         finalGroup.setPluginData("handexFlowId", _flowId);
+        _hdMoveToCategorySection(finalGroup, "fluxo");
         _flowResult = __spreadValues({ id: finalGroup.id, flowUid: _flowId, name: friendlyName, type: msg.flowType }, _flowExtra);
       } catch (e) {
         console.error(e);
@@ -1159,6 +1189,7 @@
         finalGroup.locked = true;
         finalGroup.setPluginData("handexCategory", "fluxo");
         finalGroup.setPluginData("handexFlowId", _flowId);
+        _hdMoveToCategorySection(finalGroup, "fluxo");
         _flowResult = __spreadValues({ id: finalGroup.id, flowUid: _flowId, name: friendlyName, type: msg.flowType }, _flowExtra);
       } catch (e) {
         console.error(e);
@@ -1170,6 +1201,7 @@
       finalGroup.locked = true;
       finalGroup.setPluginData("handexCategory", "fluxo");
       finalGroup.setPluginData("handexFlowId", _flowId);
+      _hdMoveToCategorySection(finalGroup, "fluxo");
       _flowResult = __spreadValues({ id: finalGroup.id, flowUid: _flowId, name: friendlyName, type: msg.flowType }, _flowExtra);
     }
     if (!msg.suppressFlowCreatedBroadcast) {
@@ -1455,12 +1487,26 @@
       };
       const counts = { ficha: 0, spec: 0, medida: 0, fluxo: 0 };
       const toRemove = [];
+      const _handexSections = [];
       figma.currentPage.children.forEach((node) => {
+        if (node.type === "SECTION" && node.getPluginData("handexCategorySection")) {
+          _handexSections.push(node);
+          return;
+        }
         const cat = matchCategory(node);
         if (cat) {
           toRemove.push(node);
           counts[cat]++;
         }
+      });
+      _handexSections.forEach((section) => {
+        section.children.forEach((node) => {
+          const cat = matchCategory(node);
+          if (cat) {
+            toRemove.push(node);
+            counts[cat]++;
+          }
+        });
       });
       for (const node of toRemove) {
         const markerId = node.getPluginData && node.getPluginData("handexSpecMarkerId");
@@ -1902,13 +1948,21 @@
           setFillAndHug(framesSection);
         }
         const _framesWithMeasures = (_frames || []).filter((f) => (f.measurements || []).length > 0);
-        if (_framesWithMeasures.length > 0) {
+        const _looseMeasures = data.measurements || [];
+        if (_framesWithMeasures.length > 0 || _looseMeasures.length > 0) {
           const measSection = _hdCreateSection(content, "Medidas");
           _framesWithMeasures.forEach((f) => {
             const fGroup = _hdBuildMeasuresSubgroup(f);
             measSection.appendChild(fGroup);
             _hdSetFillAndHug(fGroup);
           });
+          if (_looseMeasures.length > 0) {
+            const looseFrame = { nome: "Sem frame vinculado", measurements: _looseMeasures };
+            const looseGroup = _hdBuildMeasuresSubgroup(looseFrame);
+            looseGroup.setPluginData("handexFrameId", "__loose__");
+            measSection.appendChild(looseGroup);
+            _hdSetFillAndHug(looseGroup);
+          }
           content.appendChild(measSection);
           setFillAndHug(measSection);
         }
@@ -2264,6 +2318,7 @@
         mainContainer.locked = false;
         mainContainer.setPluginData("handexCategory", "ficha");
         figma.currentPage.appendChild(mainContainer);
+        _hdMoveToCategorySection(mainContainer, "ficha");
         if (_isUpdate && _inheritedX !== null) {
           mainContainer.x = _inheritedX;
           mainContainer.y = _inheritedY;
@@ -2301,7 +2356,9 @@
             mainContainer.y = Math.round(_anchorBb.y);
             _positioned = true;
           }
-          _existingFichas = figma.currentPage.children.filter((n) => {
+          const _fichaSectionForPos = figma.currentPage.children.find((n) => n.type === "SECTION" && n.getPluginData("handexCategorySection") === "ficha");
+          const _fichaCandidates = figma.currentPage.children.concat(_fichaSectionForPos ? _fichaSectionForPos.children : []);
+          _existingFichas = _fichaCandidates.filter((n) => {
             if (n.type !== "FRAME" || !n.name.startsWith("Handex | Ficha") || n === mainContainer) return false;
             if (!_anchorBb) return true;
             const bb = n.absoluteBoundingBox;
@@ -2573,6 +2630,7 @@
             group.name = `[Medida] ${node.name}`;
             group.locked = true;
             group.setPluginData("handexCategory", "medida");
+            _hdMoveToCategorySection(group, "medida");
             appliedMeasuresList.push({ name: node.name, nodeId: group.id, details: appliedDetails });
           }
         }
@@ -3148,6 +3206,7 @@
             group.name = `[Medida] ${m.name}`;
             group.locked = true;
             group.setPluginData("handexCategory", "medida");
+            _hdMoveToCategorySection(group, "medida");
             created++;
           }
         }
@@ -3584,7 +3643,7 @@
             if (bb.x < _letterMap[l].x) _letterMap[l].x = bb.x;
             if (bb.y < _letterMap[l].topY) _letterMap[l].topY = bb.y;
           };
-          const _stackScanNodes = figma.currentPage.children;
+          const _stackScanNodes = figma.currentPage.children.flatMap((n) => n.type === "SECTION" ? n.children : [n]);
           _stackScanNodes.forEach((n) => {
             const _isSpecNode = n.getPluginData("handexCategory") === "spec" || n.name.startsWith("[Spec");
             if (!_isSpecNode) return;
@@ -3755,6 +3814,8 @@
           contour.setPluginData("handexSpecMarkerFor", specGroup.id);
           specGroup.setPluginData("handexSpecMarkerId", contour.id);
         }
+        _hdMoveToCategorySection(specGroup, "spec");
+        if (contour) _hdMoveToCategorySection(contour, "spec");
         _reorderSpecGroupByTag(specGroup, opts.letter);
         figma.ui.postMessage({
           type: "spec-created",
@@ -4362,6 +4423,7 @@
         legendFrame.locked = true;
         legendFrame.setPluginData("handexCategory", "fluxo");
         figma.currentPage.appendChild(legendFrame);
+        _hdMoveToCategorySection(legendFrame, "fluxo");
         figma.currentPage.selection = [legendFrame];
         figma.viewport.scrollAndZoomIntoView([legendFrame]);
         figma.notify("Legenda criada!");
@@ -4392,17 +4454,11 @@
     }
     if (msg.type === "pull-ficha-version-from-canvas") {
       try {
-        const _titulo = (msg.titulo || "").trim();
-        const _prefix = _titulo ? `Handex | Ficha de Projeto | ${_titulo}` : "Handex | Ficha de Projeto";
-        const fichas = figma.currentPage.children.filter(
-          (n) => n.type === "FRAME" && n.name.startsWith(_prefix)
-        );
-        if (fichas.length === 0) {
+        const latest = _hdFindExistingFicha(msg.titulo);
+        if (!latest) {
           figma.ui.postMessage({ type: "ficha-version-pulled", versao: null, temFicha: false });
           return;
         }
-        fichas.sort((a, b) => a.name.localeCompare(b.name));
-        const latest = fichas[fichas.length - 1];
         const campoVersao = latest.findOne((n) => n.type === "FRAME" && n.name === "[Campo] Vers\xE3o");
         const versaoText = campoVersao ? campoVersao.findAll((n) => n.type === "TEXT")[1] : null;
         const versao = versaoText ? versaoText.characters.trim() : null;
