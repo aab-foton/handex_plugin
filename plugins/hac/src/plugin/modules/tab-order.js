@@ -1164,19 +1164,34 @@ function _tabOrderNarrationAdvance() {
   if (item.targetNodeId) focusNode(item.targetNodeId);
 
   const lang = state.lang === 'en' ? 'en' : 'pt';
+  // Velocidade relida a CADA item (2026-09-11, pedido do usuário) — mudar
+  // o seletor no meio da simulação passa a valer já no próximo item, sem
+  // precisar parar e recomeçar. Fallback 1.5x quando o seletor não existe
+  // (build antiga em cache) ou tem valor inválido; a Web Speech API aceita
+  // rate entre 0.1 e 10, mas acima de ~2.5 a maioria das vozes fica
+  // ininteligível, então o seletor não oferece mais que isso.
+  const rateSelect = state.uid ? document.getElementById(`tab-order-narration-rate-${state.uid}`) : null;
+  const parsedRate = rateSelect ? parseFloat(rateSelect.value) : NaN;
+  const rate = (isFinite(parsedRate) && parsedRate > 0) ? parsedRate : 1.5;
+
   const utterance = new SpeechSynthesisUtterance(_tabOrderNarrationPhrase(item, lang));
   utterance.lang = lang === 'en' ? 'en-US' : 'pt-BR';
+  utterance.rate = rate;
+  // Pausa entre itens proporcional à velocidade — numa leitura acelerada,
+  // manter os 400ms fixos faria a pausa dominar o ritmo e anular boa parte
+  // do ganho de velocidade.
+  const gapMs = Math.round(400 / rate);
   utterance.onend = () => {
     if (!state.active) return;
-    // Pequeno intervalo fixo depois do fim real da fala (evento onend, não
-    // um timeout arbitrário simulando a duração da fala) — reproduz a
-    // pausa natural entre elementos de um leitor de tela real.
-    setTimeout(() => { if (state.active) _tabOrderNarrationAdvance(); }, 400);
+    // Intervalo depois do fim real da fala (evento onend, não um timeout
+    // arbitrário simulando a duração da fala) — reproduz a pausa natural
+    // entre elementos de um leitor de tela real.
+    setTimeout(() => { if (state.active) _tabOrderNarrationAdvance(); }, gapMs);
   };
   // Se a síntese falhar no meio (voz indisponível, engine travando), não
   // trava a simulação inteira nem deixa o botão preso — segue pro próximo
   // item do mesmo jeito que faria ao final de uma fala normal.
-  utterance.onerror = () => { if (state.active) setTimeout(() => { if (state.active) _tabOrderNarrationAdvance(); }, 400); };
+  utterance.onerror = () => { if (state.active) setTimeout(() => { if (state.active) _tabOrderNarrationAdvance(); }, gapMs); };
   try {
     window.speechSynthesis.speak(utterance);
   } catch (e) {

@@ -72,31 +72,9 @@
           </h4>
         </div>
 
-        <!-- Busca + filtro por categoria — filtro só de exibição sobre a
-             lista já renderizada (ver applyA11ySearchFilter em
-             modules/accessibility.js). -->
-        <div id="a11y-search-bar" class="hidden flex items-center gap-dsc-nano mb-3">
-          <div class="relative flex-1 min-w-0">
-            <i data-lucide="search" class="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-            <input type="text" id="a11y-search-input"
-              placeholder="Buscar por elemento, tela ou tag..."
-              oninput="applyA11ySearchFilter(this.value)"
-              class="w-full pl-8 pr-3 py-dsc-nano bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-dsc-medium text-dsc-label-tiny normal-case tracking-normal font-normal text-slate-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 outline-none focus:ring-2 focus:ring-[#0891B2]/20 focus:border-[#0891B2] transition-all" />
-          </div>
-          <select id="a11y-category-filter" onchange="applyA11yCategoryFilter(this.value)"
-            class="shrink-0 max-w-[40%] bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-dsc-medium px-2.5 py-dsc-nano text-dsc-label-tiny normal-case tracking-normal font-normal text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-[#0891B2]/20 focus:border-[#0891B2] transition-all">
-            <option value="">Todas as categorias</option>
-          </select>
-        </div>
-
         <ul id="a11y-groups-results" class="flex flex-col gap-dsc-nano min-h-[10px] mb-1">
           <!-- Preenchido por renderA11yGroupedList() em modules/accessibility.js -->
         </ul>
-        <div id="a11y-search-empty" class="hidden flex flex-col items-center justify-center py-10">
-          <i data-lucide="search-x" class="w-10 h-10 text-slate-200 dark:text-slate-700 mb-3" style="opacity:0.4"></i>
-          <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted text-center px-4">Nenhuma especificação encontrada</p>
-          <p class="text-dsc-label-tiny normal-case tracking-normal font-normal text-slate-400 dark:text-dark-muted text-center px-6 mt-0.5">Ajuste a busca ou o filtro de categoria.</p>
-        </div>
 
         <!-- Alerta "handoff próprio já iniciado" (2026-09-10) — populado por
              renderA11yPriorSessionAlert (modules/accessibility.js), chamada a

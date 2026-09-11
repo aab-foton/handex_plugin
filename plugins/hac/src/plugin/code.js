@@ -3330,6 +3330,34 @@ async function _collectA11yOccupiedBounds() {
   // diretos de cada Grupo, um retângulo por artefato, nunca o Grupo
   // inteiro. Um Grupo com 3 artefatos espalhados tem bounds muito maiores
   // que a união real ocupada por eles.
+  // Bug real corrigido (2026-09-11, print do usuário mostrando um vão
+  // enorme entre o Frame Principal e as réplicas): o mesmo raciocínio vale
+  // pro frame da Ficha ("[HAC] Handoff de Acessibilidade CAIXA | ..."),
+  // que é um FRAME (não GROUP) e por isso caía no `else` abaixo, sendo
+  // somado como UM retângulo único. Como ele cresce a cada bloco inserido
+  // (Auto Layout HORIZONTAL), virava um obstáculo gigante que empurrava
+  // cada réplica nova pra muito além da borda direita dele. Agora a Ficha
+  // também tem os FILHOS somados, nunca o container inteiro.
+  // Desce recursivamente enquanto o node for um CONTAINER organizador do
+  // hac (GROUP solto, frame da Ficha, GROUP de área dentro dela) — só
+  // soma como retângulo quando chega num artefato real (réplica, snapshot,
+  // selo, bloco de seção). Profundidade limitada: a árvore da Ficha tem
+  // no máximo 3 níveis de container (Ficha → Tela N → Documentação/Itens).
+  const _isHacOrganizerContainer = (node, depth) => {
+    if (depth > 3 || !node.children || node.children.length === 0) return false;
+    if (node.type === 'GROUP') return true;
+    try {
+      if (node.getPluginData && (node.getPluginData('hacFichaForArea') || node.getPluginData('hacFichaAreaGroup') === 'true')) return true;
+    } catch (e) { }
+    return false;
+  };
+  const addNodeOrDescend = (node, depth) => {
+    if (_isHacOrganizerContainer(node, depth)) {
+      node.children.forEach(c => addNodeOrDescend(c, depth + 1));
+    } else {
+      addNode(node);
+    }
+  };
   for (const sibling of figma.currentPage.children) {
     if (sibling.type !== 'SECTION') continue;
     let isSessionSection = false;
@@ -3338,11 +3366,7 @@ async function _collectA11yOccupiedBounds() {
     } catch (e) { }
     if (!isSessionSection) continue;
     for (const areaGroup of (sibling.children || [])) {
-      if (areaGroup.type === 'GROUP' && areaGroup.children) {
-        areaGroup.children.forEach(addNode);
-      } else {
-        addNode(areaGroup);
-      }
+      addNodeOrDescend(areaGroup, 0);
     }
   }
 
@@ -6790,6 +6814,7 @@ figma.ui.onmessage = async (msg) => {
     clone.x = x;
     clone.y = y;
     _reparentIntoSection(clone, () => _getOrCreateA11ySessionSection(designerName, currentUserId));
+    await _ensureLegendBesideClone(clone, 'tabulacao', areaId);
 
     return { clone, nodeMap };
   }
@@ -6823,6 +6848,7 @@ figma.ui.onmessage = async (msg) => {
     clone.x = x;
     clone.y = y;
     _reparentIntoSection(clone, () => _getOrCreateA11ySessionSection(designerName, currentUserId));
+    await _ensureLegendBesideClone(clone, 'swipe', areaId);
 
     return { clone, nodeMap };
   }
@@ -6894,6 +6920,7 @@ figma.ui.onmessage = async (msg) => {
     clone.x = x;
     clone.y = y;
     _reparentIntoSection(clone, () => _getOrCreateA11ySessionSection(designerName, currentUserId));
+    await _ensureLegendBesideClone(clone, 'leitor', areaId);
 
     return { clone, nodeMap };
   }
@@ -7810,7 +7837,7 @@ figma.ui.onmessage = async (msg) => {
   // marcada, via _ensureFichaBlocksForArea) e depois só tem seu CONTEÚDO
   // alternado entre clone real (em edição) e imagem+instruções
   // (finalizado) — nunca é recriado nem movido de lugar.
-  async function _getOrCreateFichaBlockSection(itensFrame, sectionKey) {
+  async function _getOrCreateFichaBlockSection(itensFrame, sectionKey, areaId) {
     const existing = _findFichaSectionInFrame(itensFrame, sectionKey);
     if (existing) return existing;
 
@@ -7835,13 +7862,124 @@ figma.ui.onmessage = async (msg) => {
     _insertFichaSectionInOrder(itensFrame, section, sectionKey);
     await _appendFichaBlockTitle(section, cfg.title);
 
-    const legend = await _buildFichaLegendColumn(
-      FICHA_INSTRUCTION_CONTENT[cfg.instructionKey],
-      cfg.legendTitle,
-      cfg.legendFallback
-    );
-    section.appendChild(legend);
+    // Reaproveita a legenda que já nasceu ao lado da réplica de trabalho
+    // (2026-09-11, _ensureLegendBesideClone) em vez de criar uma segunda —
+    // é a MESMA legenda do início ao fim: nasce junto da réplica, e no
+    // "Preencher Handoff" é movida pra dentro deste bloco. Só cria do zero
+    // quando não existe nenhuma (ex.: área antiga, ou réplica já
+    // descartada antes desta mudança).
+    const existingLegend = areaId ? _findLegendForArea(areaId, sectionKey) : null;
+    if (existingLegend) {
+      section.appendChild(existingLegend);
+    } else {
+      const legend = await _buildFichaLegendColumn(
+        FICHA_INSTRUCTION_CONTENT[cfg.instructionKey],
+        cfg.legendTitle,
+        cfg.legendFallback
+      );
+      legend.setPluginData('hacCategory', 'a11y');
+      if (areaId) legend.setPluginData('hacLegendForArea', `${areaId}::${sectionKey}`);
+      section.appendChild(legend);
+    }
     return section;
+  }
+
+  // Localiza a legenda de uma funcionalidade pelo pluginData estável
+  // (`hacLegendForArea` = "{areaId}::{sectionKey}"), onde quer que ela
+  // esteja: solta na Section (ao lado da réplica) ou já dentro do bloco da
+  // Ficha. Mesmo princípio de busca por marca, nunca por posição/nome, já
+  // usado pelo resto do hac.
+  function _findLegendForArea(areaId, sectionKey) {
+    const markerValue = `${areaId}::${sectionKey}`;
+    let found = null;
+    const check = (node) => {
+      if (found || !node) return;
+      try {
+        if (node.getPluginData && node.getPluginData('hacLegendForArea') === markerValue && !node.removed) {
+          found = node;
+        }
+      } catch (e) { }
+    };
+    _forEachA11ySessionDirectChild(check);
+    if (!found) _forEachA11ySessionAreaChild(check);
+    if (!found) _forEachA11yFichaFrameChild(check);
+    return found;
+  }
+
+  // Insere o texto de instruções daquela funcionalidade LOGO AO LADO da
+  // réplica de trabalho, no momento em que ela é criada (2026-09-11,
+  // pedido do usuário: "na hora que geramos a réplica, já podemos inserir
+  // o texto das instruções... aí o Preencher Handoff faz só a troca da
+  // réplica pela imagem estática"). Fica solta na Section, como irmã do
+  // clone (nunca dentro dele nem dentro de um Auto Layout), pelo mesmo
+  // motivo dos overlays de marcadores: Auto Layout comprimiria/reordenaria
+  // a réplica, que precisa continuar navegável pro designer clicar nos
+  // elementos. Idempotente por pluginData — "Refazer" não duplica.
+  async function _ensureLegendBesideClone(clone, sectionKey, areaId) {
+    try {
+      if (!clone || clone.removed || !clone.absoluteBoundingBox) return null;
+      const cfg = _FICHA_BLOCK_CONFIG[sectionKey];
+      if (!cfg) return null;
+
+      const parent = clone.parent;
+      if (!parent || typeof parent.appendChild !== 'function') return null;
+
+      const marker = 'hacLegendForArea';
+      const markerValue = `${areaId || ''}::${sectionKey}`;
+      for (const sibling of (parent.children || [])) {
+        try {
+          if (sibling.getPluginData && sibling.getPluginData(marker) === markerValue && !sibling.removed) {
+            return sibling;
+          }
+        } catch (e) { }
+      }
+
+      // Fontes pré-carregadas ANTES de montar a legenda (2026-09-11, bug
+      // real: a instrução não aparecia ao criar a réplica). A API do Figma
+      // exige a fonte carregada antes de escrever `characters`, e
+      // _buildFichaLegendColumn seta `characters` antes de chamar
+      // _applyFichaTypography (que é quem carrega) — nos builders da Ficha
+      // isso passava batido porque alguma fonte já tinha sido carregada
+      // antes na mesma execução, mas neste caminho (criação da réplica)
+      // nada carregou ainda, então lançava e caía no catch silencioso.
+      for (const f of [
+        { family: 'Roboto', style: 'Regular' }, { family: 'Roboto', style: 'Medium' }, { family: 'Roboto', style: 'Bold' },
+        { family: 'Inter', style: 'Regular' }, { family: 'Inter', style: 'Medium' }, { family: 'Inter', style: 'Bold' },
+      ]) {
+        try { await figma.loadFontAsync(f); } catch (e) { /* famílias ausentes são normais; basta uma delas resolver */ }
+      }
+
+      const legend = await _buildFichaLegendColumn(
+        FICHA_INSTRUCTION_CONTENT[cfg.instructionKey],
+        cfg.legendTitle,
+        cfg.legendFallback
+      );
+      legend.name = `[Instruções] ${cfg.name}`;
+      legend.setPluginData('hacCategory', 'a11y');
+      legend.setPluginData(marker, markerValue);
+      parent.appendChild(legend);
+      // Ao lado direito da réplica, alinhada pelo topo — posição medida em
+      // coordenadas absolutas e convertida pelo delta observado (mesmo
+      // padrão de _reparentIntoAreaGroup), robusto contra qualquer sistema
+      // de coordenadas do pai.
+      const cloneBB = clone.absoluteBoundingBox;
+      const targetX = Math.round(cloneBB.x + cloneBB.width + _TAB_ORDER_ROW_GAP);
+      const targetY = Math.round(cloneBB.y);
+      const legendBB = legend.absoluteBoundingBox;
+      if (legendBB) {
+        legend.x = Math.round(legend.x + (targetX - legendBB.x));
+        legend.y = Math.round(legend.y + (targetY - legendBB.y));
+      }
+      return legend;
+    } catch (e) {
+      // Visível ao designer, não só no console (2026-09-11): este catch já
+      // escondeu um bug real por uma rodada inteira (fonte não carregada
+      // antes de escrever `characters`) — a instrução simplesmente não
+      // aparecia, sem nenhum sinal de que algo tinha falhado.
+      console.error('[hac] _ensureLegendBesideClone: falha ao inserir as instruções ao lado da réplica (não impede o trabalho).', e && (e.stack || e.message));
+      try { figma.notify('Não foi possível inserir o texto de instruções ao lado da réplica — o restante do trabalho segue normalmente.'); } catch (e2) { }
+      return null;
+    }
   }
 
 
@@ -7863,7 +8001,7 @@ figma.ui.onmessage = async (msg) => {
     // diretamente — _findFichaSectionInFrame/_insertFichaSectionInOrder não
     // mudam, só o frame contra o qual operam.
     const itensFrame = await _getOrCreateFichaItensFrame(fichaFrame, area);
-    const section = await _getOrCreateFichaBlockSection(itensFrame, 'tabulacao');
+    const section = await _getOrCreateFichaBlockSection(itensFrame, 'tabulacao', area.id);
 
     let itemCount = 0;
     const resolved = area.targetNodeId
@@ -7964,7 +8102,7 @@ figma.ui.onmessage = async (msg) => {
     // Reestruturação de árvore (2026-09-10) — ver comentário equivalente em
     // _buildFichaTabulacaoSection.
     const itensFrame = await _getOrCreateFichaItensFrame(fichaFrame, area);
-    const section = await _getOrCreateFichaBlockSection(itensFrame, 'swipe');
+    const section = await _getOrCreateFichaBlockSection(itensFrame, 'swipe', area.id);
 
     const hasPoints = Array.isArray(points) && points.length >= 2;
     if (!hasPoints) {
@@ -8112,7 +8250,7 @@ figma.ui.onmessage = async (msg) => {
     // Reestruturação de árvore (2026-09-10) — ver comentário equivalente em
     // _buildFichaTabulacaoSection.
     const itensFrame = await _getOrCreateFichaItensFrame(fichaFrame, area);
-    const section = await _getOrCreateFichaBlockSection(itensFrame, 'leitor');
+    const section = await _getOrCreateFichaBlockSection(itensFrame, 'leitor', area.id);
 
     const resolved = area.targetNodeId
       ? await _resolveActiveSpecClone(area.id, area.targetNodeId, area.sectionName, designerName, currentUserId)

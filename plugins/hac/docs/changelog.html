@@ -2317,6 +2317,111 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
       pendente de teste manual no Figma real.</li>
     </ul>
 
+    <h2>2026-09-11 — ESTÁVEL: fluxo de Ordem de Tabulação, Swipe e Leitor de Tela ponta a ponta (marcar tela → capturar → Preencher Handoff)</h2>
+
+    <p>Sessão longa de correções encadeadas no fluxo completo de trabalho —
+    da marcação de uma tela até a geração do Handoff Completo. Confirmado
+    pelo usuário como estável nos 3 fluxos (Ordem de Tabulação, Swipe,
+    Leitor de Tela), com múltiplas telas na mesma Section funcionando
+    corretamente. Nenhuma mudança adicional deve ser feita sem
+    reconfirmação explícita, por acordo de processo.</p>
+    <ul>
+      <li><strong>Ordem real de clique corrigida em Ordem de Tabulação e
+      Swipe</strong>: <code>figma.currentPage.selection</code> não garante
+      ordem de clique (reflete a árvore de camadas/z-index) — itens
+      apareciam fora de ordem na lista (ex.: "primeiro item na terceira
+      posição"). As variáveis <code>_tabOrderClickSequence</code>/
+      <code>_swipePathClickSequence</code> existiam desde uma correção
+      anterior mas nunca eram populadas. O listener de
+      <code>selectionchange</code> agora rastreia a ordem cronológica real
+      (sem debounce, pra não perder cliques rápidos em sequência), e os
+      handlers usam essa sequência como fonte de ordem — a seleção nativa
+      do Figma passa a servir só de filtro.</li>
+      <li><strong>Modal educativo de Ordem de Tabulação destravado</strong>:
+      fechar pelo X ou clicando fora do modal "Selecionando elementos para a
+      Ordem de Tabulação" chamava <code>closeModal()</code> genérico, que
+      nunca disparava a captura — a UI voltava ao normal sem nenhuma ação
+      visível, parecendo travada. Os 3 caminhos de fechamento (X, backdrop,
+      botão "Entendi, começar seleção") agora chamam
+      <code>_confirmTabOrderShiftHint()</code>, a única função que de fato
+      inicia a captura. Texto do modal simplificado (2 instruções
+      essenciais, sem o aviso longo sobre marquise).</li>
+      <li><strong>Tentativa de consolidar Section+Ficha num único container
+      com Auto Layout — implementada, quebrou, revertida no mesmo dia</strong>:
+      chegou a ser desenhado e implementado um modelo de "Zona de Rascunho"/
+      "Zona de Documento Final" como containers físicos dentro da Section,
+      com clones de trabalho nascendo direto dentro de blocos Auto Layout da
+      Ficha. Print real mostrou réplicas comprimidas/invisíveis dentro do
+      Auto Layout e frames órfãos fora da Section — revertido cirurgicamente
+      no mesmo dia, preservando o resto do trabalho não commitado.
+      Consolidação de Section/Ficha num único container fica descartada por
+      ora; o modelo atual (réplica solta + Ficha gerada à parte no "Preencher
+      Handoff") é o que está confirmado como estável.</li>
+      <li><strong>Bug real corrigido em <code>_fitSectionToChildren</code></strong>:
+      misturava coordenadas relativas (<code>section.x</code>/<code>y</code>,
+      relativas ao pai direto) com absolutas (<code>absoluteBoundingBox</code>)
+      ao calcular o delta de reposicionamento — inofensivo enquanto a Section
+      só recebia chamadas na raiz da página, mas explodia a Section para
+      dezenas de milhares de pixels quando chamada com um container
+      aninhado. Corrigido lendo a posição absoluta real via
+      <code>absoluteBoundingBox</code> da própria Section, com deltas
+      corretos e distintos para a Section (relativo, direto) e para os
+      filhos (relativo, invertido).</li>
+      <li><strong>Bug real corrigido em <code>_collectA11yOccupiedBounds</code></strong>:
+      o frame da Ficha (<code>fichaFrame</code>) é um FRAME, não um GROUP —
+      caía no ramo que soma o node inteiro como um único retângulo de
+      colisão. Como esse frame cresce a cada bloco inserido, virava um
+      obstáculo gigante que empurrava cada nova réplica pra muito além da
+      borda direita dele (vão vazio real, visto em print). Corrigido com
+      varredura recursiva por containers organizadores do hac (Ficha → Tela
+      N → Documentação/Itens), somando só os artefatos reais como
+      retângulos de colisão.</li>
+      <li><strong>Texto de instruções nasce junto com a réplica de
+      trabalho</strong>: ao criar a réplica (Ordem de Tabulação/Swipe/Leitor),
+      o texto de instruções daquela funcionalidade já aparece ao lado dela
+      na Section, solta (nunca dentro de Auto Layout, mesmo motivo dos
+      overlays de marcadores). No "Preencher Handoff", essa MESMA legenda é
+      localizada por pluginData estável (<code>hacLegendForArea</code>) e
+      movida pra dentro do bloco da Ficha, em vez de criar uma segunda.
+      Corrigido no caminho: fontes (Roboto/Inter) precisam ser carregadas
+      ANTES de escrever <code>characters</code> num texto novo — um
+      <code>try/catch</code> silencioso escondeu esse erro por uma rodada
+      inteira (a instrução simplesmente não aparecia, sem nenhum sinal de
+      falha); agora pré-carrega as fontes e expõe qualquer falha via
+      <code>figma.notify</code>.</li>
+      <li><strong>Bug real corrigido — cards de tela sumiam da listagem</strong>:
+      a barra de busca + filtro de categoria (herança direta do Handex,
+      nunca fazia sentido no hac — filtrava specs soltas, não telas) tinha
+      um bug real em <code>_applyA11yFilters</code>: procurava
+      <code>[data-a11y-spec-item]</code> DENTRO de cada card de tela pra
+      decidir se mostrava ou escondia — mas esse atributo nunca existe lá
+      (só existe no bucket "Sem área", outra estrutura). Resultado:
+      qualquer card de tela era sempre escondido assim que a busca rodava
+      (o que acontecia sempre que houvesse 1+ spec no arquivo). Sintoma
+      relatado: contagem do header correta ("Telas Documentadas (2)"), mas
+      nenhum card visível. Corrigido removendo a busca/filtro por completo
+      — elimina o bug pela raiz e limpa a herança do Handex: HTML (barra de
+      busca, select de categoria, mensagem de vazio) e JS
+      (<code>_setupA11ySearchBar</code>, <code>applyA11ySearchFilter</code>,
+      <code>applyA11yCategoryFilter</code>, <code>_applyA11yFilters</code>)
+      removidos; <code>_normalizeSearchText</code> preservada (usada em
+      outros 2 pontos não relacionados).</li>
+      <li><strong>Ajustes menores confirmados na mesma sessão</strong>:
+      padding do chevron nativo do select de idioma da narração corrigido
+      (estava colado na borda); seletor de velocidade de leitura adicionado
+      (1x/1.5x/2x/2.5x, relido a cada item narrado, pausa entre itens
+      proporcional); badge β removido da aba Swipe; ícone do estado vazio
+      "Nenhuma tela selecionada ainda" com opacidade dupla corrigida
+      (estava quase invisível); gap entre réplicas de trabalho ajustado
+      para 40px; gap interno da Ficha (entre Frame Principal e os blocos de
+      funcionalidade) reduzido de 24px para 16px.</li>
+      <li><strong>Validação</strong>: <code>npm run bundle:code</code>,
+      <code>npm run bundle:ui</code>, <code>npm run lint</code> e
+      <code>npm run export:plugin</code> — todos limpos a cada rodada de
+      correção. Testado manualmente no Figma real com 2 telas na mesma
+      Section, confirmado estável pelo usuário nos 3 fluxos.</li>
+    </ul>
+
     <hr>
 
     <p><em>Entradas anteriores a 2026-08-24 pertencem ao histórico do plugin Handex

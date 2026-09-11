@@ -3269,11 +3269,26 @@ function _a11yWorkspaceTabTabulacao(area) {
              muda a pronúncia/idioma da síntese e o rótulo do tipo narrado
              (A11Y_NARRATION_TYPE_LABELS vs. _EN); o nome do elemento nunca
              muda, sempre vem como está gravado no Figma. Lido ao clicar em
-             "Simular leitura" (toggleTabOrderNarration), não reage sozinho. -->
+             "Simular leitura" (toggleTabOrderNarration), não reage sozinho.
+             pr-6 (2026-09-11): o chevron nativo do <select> é desenhado
+             sobre o padding-right — com pr-1 ele ficava colado no texto e
+             na borda. -->
         <select id="tab-order-narration-lang-${uid}" title="Idioma da narração" aria-label="Idioma da narração"
-          class="shrink-0 h-8 pl-2 pr-1 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm hover:shadow transition-all border-0 cursor-pointer">
+          class="shrink-0 h-8 pl-2.5 pr-6 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm hover:shadow transition-all border-0 cursor-pointer">
           <option value="pt" selected>PT</option>
           <option value="en">EN</option>
+        </select>
+        <!-- Velocidade da narração (2026-09-11, pedido do usuário) —
+             multiplicador aplicado em utterance.rate na Web Speech API.
+             Lido no mesmo momento do idioma (toggleTabOrderNarration), e
+             relido a cada item narrado pra que mudar a velocidade no meio
+             da simulação valha já no próximo item, sem reiniciar. -->
+        <select id="tab-order-narration-rate-${uid}" title="Velocidade da narração" aria-label="Velocidade da narração"
+          class="shrink-0 h-8 pl-2.5 pr-6 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm hover:shadow transition-all border-0 cursor-pointer">
+          <option value="1">1x</option>
+          <option value="1.5" selected>1.5x</option>
+          <option value="2">2x</option>
+          <option value="2.5">2.5x</option>
         </select>
       </div>` : ''}
       <button type="button" onclick="updateTabOrderNumbering('${escapeHtml(areaIdAttr)}')"
@@ -4004,12 +4019,15 @@ function renderA11yGroupedList() {
 
   if (areas.length === 0) {
     list.innerHTML = `
-      <li class="flex flex-col items-center justify-center py-12 animate-in fade-in duration-500 list-none">
+      <li class="w-full flex flex-col items-center justify-center py-12 animate-in fade-in duration-500 list-none">
         <div class="relative mb-4">
-          <i data-lucide="scan" class="w-16 h-16 text-slate-200 dark:text-slate-700" style="opacity:0.25"></i>
+          <!-- Sem opacity extra (2026-09-11): text-slate-300 + opacity 0.25
+               deixava o ícone quase invisível — a cor do token já dá o
+               contraste baixo pretendido pra um estado vazio. -->
+          <i data-lucide="scan" class="w-16 h-16 text-slate-300 dark:text-slate-600" aria-hidden="true"></i>
         </div>
-        <p class="text-[13px] font-bold text-slate-600 dark:text-white text-center px-4 mb-1">Nenhuma tela selecionada ainda</p>
-        <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted text-center px-6 mb-4 max-w-[260px] leading-relaxed">Selecione um frame para começar a documentar — as primeiras especificações de acessibilidade nascem dentro de uma tela selecionada.</p>
+        <p class="w-full text-[13px] font-bold text-slate-600 dark:text-white text-center px-4 mb-1">Nenhuma tela selecionada ainda</p>
+        <p class="w-full text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted text-center px-6 mb-4 max-w-[260px] mx-auto leading-relaxed">Selecione um frame para começar a documentar — as primeiras especificações de acessibilidade nascem dentro de uma tela selecionada.</p>
         <button type="button" onclick="openA11yAreaModal()" class="flex items-center gap-dsc-nano h-11 px-6 rounded-dsc-large text-[13px] font-bold text-white bg-[#0891B2] hover:bg-cyan-700 active:scale-[0.99] shadow-lg shadow-cyan-500/20 transition-all">
           <i data-lucide="scan" class="w-4 h-4 shrink-0" aria-hidden="true"></i>
           Selecionar Tela
@@ -4049,7 +4067,6 @@ function renderA11yGroupedList() {
   }
 
   _refreshIcons();
-  _setupA11ySearchBar();
 
   // A workspace de uma Área (view-area-workspace) vive num container à
   // parte de #a11y-groups-results — qualquer ação que dispare
@@ -4063,11 +4080,9 @@ function renderA11yGroupedList() {
 }
 window.renderA11yGroupedList = renderA11yGroupedList;
 
-// ── Busca + filtro por categoria ─────────────────────────────────────────
-// Filtro só de EXIBIÇÃO sobre a lista já renderizada, não persiste entre
-// sessões, não altera a11ySpecs/a11yAreas. Estrutura em 3 níveis (Área >
-// subaccordion de categoria > spec) — um nível só some se TODOS os filhos
-// não baterem o filtro, pra nunca deixar accordion pai vazio visível.
+// Normaliza texto pra comparação insensível a maiúsculas/acentos — usada
+// por _a11yAreaAccordionEl (atributo de busca do card) e pelo bucket "Sem
+// área" (agrupamento por spec).
 function _normalizeSearchText(s) {
   return String(s || '')
     .normalize('NFD').replace(/[̀-ͯ]/g, '')
@@ -4075,78 +4090,6 @@ function _normalizeSearchText(s) {
     .trim();
 }
 
-function _setupA11ySearchBar() {
-  const bar = document.getElementById('a11y-search-bar');
-  if (!bar) return;
-  const hasSpecs = a11ySpecs && a11ySpecs.length > 0;
-  bar.classList.toggle('hidden', !hasSpecs);
-  if (!hasSpecs) return;
-
-  const sel = document.getElementById('a11y-category-filter');
-  if (sel) {
-    const current = sel.value;
-    sel.innerHTML = '<option value="">Todas as categorias</option>';
-    Object.keys(A11Y_CATEGORIES).forEach(key => {
-      const opt = document.createElement('option');
-      opt.value = key;
-      opt.textContent = A11Y_CATEGORIES[key].label;
-      sel.appendChild(opt);
-    });
-    if ([...sel.options].some(o => o.value === current)) sel.value = current;
-  }
-
-  const searchInput = document.getElementById('a11y-search-input');
-  _applyA11yFilters(searchInput ? searchInput.value : '', sel ? sel.value : '');
-}
-
-function applyA11ySearchFilter(query) {
-  const sel = document.getElementById('a11y-category-filter');
-  _applyA11yFilters(query, sel ? sel.value : '');
-}
-window.applyA11ySearchFilter = applyA11ySearchFilter;
-
-function applyA11yCategoryFilter(category) {
-  const searchInput = document.getElementById('a11y-search-input');
-  _applyA11yFilters(searchInput ? searchInput.value : '', category);
-}
-window.applyA11yCategoryFilter = applyA11yCategoryFilter;
-
-function _applyA11yFilters(query, category) {
-  const list = document.getElementById('a11y-groups-results');
-  const emptyMsg = document.getElementById('a11y-search-empty');
-  if (!list) return;
-
-  const term = _normalizeSearchText(query);
-  let visibleTotal = 0;
-
-  list.querySelectorAll('[data-a11y-area]').forEach(areaEl => {
-    const areaText = areaEl.getAttribute('data-a11y-area-search') || '';
-    const areaMatchesTermAlone = term && areaText.includes(term) && !category;
-    let visibleInArea = 0;
-
-    areaEl.querySelectorAll('[data-a11y-spec-item]').forEach(itemEl => {
-      const text = itemEl.getAttribute('data-a11y-search') || '';
-      const cat = itemEl.getAttribute('data-a11y-category') || '';
-      const matchText = !term || text.includes(term) || areaMatchesTermAlone;
-      const matchCat = !category || cat === category;
-      const show = matchText && matchCat;
-      itemEl.style.display = show ? '' : 'none';
-      if (show) visibleInArea++;
-    });
-
-    areaEl.querySelectorAll('[data-a11y-subcat]').forEach(subcatEl => {
-      const anyVisible = [...subcatEl.querySelectorAll('[data-a11y-spec-item]')]
-        .some(itemEl => itemEl.style.display !== 'none');
-      subcatEl.style.display = anyVisible ? '' : 'none';
-    });
-
-    areaEl.style.display = visibleInArea > 0 ? '' : 'none';
-    visibleTotal += visibleInArea;
-  });
-
-  const hasAnyFilter = term || category;
-  if (emptyMsg) emptyMsg.classList.toggle('hidden', !hasAnyFilter || visibleTotal > 0);
-}
 
 // Wrappers pra não quebrar chamadores existentes (core.js, messages.js) que
 // ainda pedem a lista de specs ou a de áreas separadamente — ambos
