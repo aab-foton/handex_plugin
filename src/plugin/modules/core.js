@@ -1813,6 +1813,28 @@ function updateHomeFooterButtonsState() {
   if (clearBtn) clearBtn.disabled = !has;
 }
 
+// Badge de check nos cards da home (grid 2×3) indicando que aquele card já
+// tem documentação salva no projeto -- ver getHomeCardsDocumentedState em
+// design-data.js pro critério de cada card. "guide" nunca recebe badge (é
+// onboarding, não dado do projeto). Chamada junto de
+// updateHomeFooterButtonsState, mesmo gatilho (entrar na home + init-plugin).
+function updateHomeCardsCheckState() {
+  if (typeof getHomeCardsDocumentedState !== 'function') return;
+  const state = getHomeCardsDocumentedState();
+  Object.keys(state).forEach(cardId => {
+    const card = document.querySelector(`[data-home-card-id="${cardId}"]`);
+    if (!card) return;
+    const { done, count, label } = state[cardId];
+    const badge = card.querySelector('.home-card-check-badge');
+    if (badge) badge.classList.toggle('hidden', !done);
+    const textEl = card.querySelector('.home-card-check-text');
+    if (textEl) {
+      textEl.classList.toggle('hidden', !done);
+      if (done) textEl.textContent = label || String(count);
+    }
+  });
+}
+
 function navigate(viewId) {
   // focusNode() (usado pelo ícone de foco em specs/medidas/fluxos) cria um
   // [HighlightStroke] persistente no canvas que só some com um clique
@@ -1833,7 +1855,7 @@ function navigate(viewId) {
     btnTop.classList.remove('opacity-100', 'pointer-events-auto', 'translate-y-0');
   }
   document.getElementById("header-home")?.classList.remove("hidden");
-  if (viewId === 'view-home') updateHomeFooterButtonsState();
+  if (viewId === 'view-home') { updateHomeFooterButtonsState(); updateHomeCardsCheckState(); }
   if (viewId === 'view-specifications') {
     if (typeof _resetSpecsSearchInputs === 'function') _resetSpecsSearchInputs();
     syncAndRenderSpecs();

@@ -581,6 +581,12 @@
 <li>Merge com defaults para campos ausentes</li>
 </ul>
 <hr>
+<h3 id="211-home-badges-de-check-nos-cards">2.11 Home — Badges de check + contagem nos cards</h3>
+<p><strong>v6.9.0.</strong> Os 5 cards da home que representam dado do projeto exibem, no canto inferior direito, um badge verde circular com ícone de check quando já têm documentação salva — acompanhado de um texto curto à esquerda do badge. O card "Como usar o plugin" (<code>guide</code>) nunca recebe badge — é onboarding, não dado do projeto.</p>
+<p><strong>Critério e texto por card</strong> (<code>getHomeCardsDocumentedState()</code>, <code>design-data.js</code>, retorna <code>{ done, count, label }</code>):</p>
+<div class="table-wrap"><table><thead><tr><th>Card</th><th>Critério (<code>done</code>)</th><th>Texto exibido</th></tr></thead><tbody><tr><td>Informações do Projeto (<code>dados-projeto</code>)</td><td><code>step1.titulo</code> preenchido <strong>e</strong> pelo menos 1 item em <code>step1.equipe</code></td><td>Label fixo "Informações salvas" (booleano, sem contagem natural de itens)</td></tr><tr><td>Escanear Tokens (<code>tokens</code>)</td><td>algum frame com <code>specs</code> não vazio (components/icons/typography/vectors)</td><td>Número de frames escaneados</td></tr><tr><td>Anotar Specs (<code>specs</code>)</td><td>algum frame com <code>createdSpecs</code>, ou spec avulsa em <code>handoffData.specs</code></td><td>Total de specs (soma por frame + avulsas)</td></tr><tr><td>Anotar Medidas (<code>measurement</code>)</td><td>algum frame com <code>measurements</code>, ou medida avulsa em <code>handoffData.measurements</code></td><td>Total de medidas (soma por frame + avulsas)</td></tr><tr><td>Fluxos de Tela (<code>flows</code>)</td><td>algum item em <code>handoffData.createdFlows</code></td><td>Número de fluxos mapeados</td></tr></tbody></table></div>
+<p><strong>Atualização:</strong> <code>updateHomeCardsCheckState()</code> (<code>core.js</code>) aplica o estado nos badges e textos do DOM — chamada nos mesmos dois gatilhos de <code>updateHomeFooterButtonsState()</code> (entrar em <code>view-home</code> via <code>navigate()</code>, e na carga inicial via <code>init-plugin</code>), nunca recalculada isoladamente em cada ponto de criação de dado.</p>
+<hr>
 <h2 id="3-travas-e-condicoes-de-bloqueio">3. Travas e Condições de Bloqueio</h2>
 <h3 id="31-botao-gerar-ficha">3.1 Botão "Gerar Ficha"</h3>
 <p>Desabilitado (<code>opacity-50</code>, <code>cursor-not-allowed</code>) enquanto qualquer condição não for atendida:</p>
