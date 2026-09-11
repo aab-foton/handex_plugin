@@ -82,9 +82,11 @@
         // na primeira carga) -- dispara o banner aqui, só depois do estado
         // "visto" chegar do backend, senão apareceria sempre mesmo já visto.
         if (typeof maybeShowOnboardingBanner === 'function') maybeShowOnboardingBanner('home');
-        // Mesma razão: Baixar/Limpar do rodapé precisam do estado inicial
-        // correto sem esperar o usuário navegar pra outra view e voltar.
+        // Mesma razão: Baixar/Limpar do rodapé e os badges de check dos
+        // cards precisam do estado inicial correto sem esperar o usuário
+        // navegar pra outra view e voltar.
         if (typeof updateHomeFooterButtonsState === 'function') updateHomeFooterButtonsState();
+        if (typeof updateHomeCardsCheckState === 'function') updateHomeCardsCheckState();
 
         // Auto-fill do título com o nome do arquivo/projeto Figma se campo ainda estiver vazio
         if (msg.projectName) {

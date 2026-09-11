@@ -474,6 +474,45 @@
     }
     window.hasDocumentedContent = hasDocumentedContent;
 
+    // Checagem por card da home (ver updateHomeCardsCheckState em core.js) --
+    // cada card precisa saber se ELE MESMO tem conteúdo, diferente de
+    // hasDocumentedContent() (agregado, usado só pra habilitar Baixar/Limpar).
+    // "guide" nunca entra aqui: é onboarding, não representa dado do projeto.
+    // Cada entrada é { done, count, label }: "dados-projeto" é booleano (não
+    // tem uma contagem de "itens" natural) -- usa label fixo em vez de
+    // número. Os outros 4 têm contagem real (frames escaneados, specs,
+    // medidas, fluxos), exibida ao lado do badge.
+    function getHomeCardsDocumentedState() {
+      const frames = handoffData.frames || [];
+      const s1 = handoffData.step1 || {};
+
+      const scannedFramesCount = frames.filter(f => f.specs && (
+        (f.specs.components || []).length > 0
+        || (f.specs.icons || []).length > 0
+        || (f.specs.typography || []).length > 0
+        || (f.specs.vectors || []).length > 0
+      )).length;
+
+      const specsCount = frames.reduce((sum, f) => sum + (f.createdSpecs || []).length, 0)
+        + (handoffData.specs || []).length;
+
+      const measurementsCount = frames.reduce((sum, f) => sum + (f.measurements || []).length, 0)
+        + (handoffData.measurements || []).length;
+
+      const flowsCount = (handoffData.createdFlows || []).length;
+
+      const _isDadosProjetoDone = !!(s1.titulo && s1.titulo.trim()) && (s1.equipe || []).length > 0;
+
+      return {
+        'dados-projeto': { done: _isDadosProjetoDone, count: null, label: _isDadosProjetoDone ? 'Informações salvas' : null },
+        'tokens': { done: scannedFramesCount > 0, count: scannedFramesCount, label: null },
+        'specs': { done: specsCount > 0, count: specsCount, label: null },
+        'measurement': { done: measurementsCount > 0, count: measurementsCount, label: null },
+        'flows': { done: flowsCount > 0, count: flowsCount, label: null }
+      };
+    }
+    window.getHomeCardsDocumentedState = getHomeCardsDocumentedState;
+
     function requestClearAllData() {
       const hasContent = hasDocumentedContent();
 
