@@ -19,7 +19,7 @@ Plugin Figma que automatiza o handoff de design. Permite ao designer:
 - Mapear fluxos de tela
 - Gerar uma ficha técnica completa no canvas do Figma
 
-**Versão atual:** v6.10.0  
+**Versão atual:** v6.11.0  
 **Documentação:** `BUSINESS_RULES.md` (regras de negócio) · `CHANGELOG.md` (histórico)
 
 ---
@@ -172,6 +172,22 @@ git push origin main && git push gitlab main
 - Ícones: biblioteca **Lucide** (`data-lucide="nome"`)
 - Estilo: **Tailwind v3** (classes compiladas via `bundle:ui`)
 - Bordas dos botões: **`rounded-2xl`** em todo o plugin
+
+---
+
+## Normalização de botões contra o Design System (v6.11.0)
+
+Auditoria ampla em todo o plugin encontrou inconsistência real: botões que cumprem a mesma função (avançar/confirmar num modal, cancelar/fechar) usavam cores diferentes em telas diferentes, mesmo com o catálogo de 6 variantes já documentado em `docs/site/design-system.html`.
+
+**Achado principal — onboarding:** o botão de avançar/concluir (`onboarding.js`, funções `_renderOnboardingModal`) usava `style="background-color:${tool.color}"` — uma cor **por ferramenta** (`ONBOARDING_TOOLS`, ex: `#4f46e5` indigo em Specs, `#9333ea` purple em Fluxos), o mesmo sistema de identidade visual usado no ícone/barra de progresso/destaque de propósito do modal. Isso é intencional para os elementos decorativos, mas fazia o único botão de ação do modal mudar de cor sem nenhum significado semântico (indigo/purple não representam nada em nenhum outro lugar do plugin). **Corrigido:** o botão de ação agora é sempre azul de marca (`bg-blue-500 hover:bg-blue-600`) e "Pular"/"Voltar" sempre outline (`bg-white border border-gray-200 ...`) — em todas as ferramentas, independente de `tool.color`. A cor por ferramenta permanece intocada nos elementos decorativos.
+
+**Achado secundário — ~15 botões primários com hex solto:** vários modais (`modals.html`) e views (`guide.html`, `home.html`, `dados-projeto.html`, `handoff-summary.html`) usavam `bg-[#005ca9]`/`bg-[#004d8d]` direto em vez da classe nomeada `bg-blue-500`/`bg-blue-600` — mesma cor visual (confirmado: `blue-500` no `tailwind.config.cjs` já é `#005ca9`), mas sem o token. Inclui 4 ocorrências de hex **pré-reversão de marca** (`hover:bg-[#004d8f]`/`hover:bg-[#005a8e]`) já listadas como dívida técnica antiga — essas foram corrigidas junto.
+
+**Achado terciário — botões "Cancelar/Voltar/Fechar" sem padrão único:** a maioria usava `bg-gray-100 hover:bg-gray-200` (cinza sólido) ou texto puro sem fundo/borda — nenhum dos dois é a variante `outline` documentada (branco + borda cinza fina). Normalizados para `bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line hover:bg-gray-50`.
+
+**Nota importante sobre as classes `.hx-btn-*`:** essas classes **não existem como CSS real no plugin** — só existem dentro do `<style>` de `docs/site/design-system.html`, que é documentação, um arquivo HTML separado com seu próprio stylesheet. O código real do plugin usa Tailwind puro em cada botão (`bg-blue-500 hover:bg-blue-600 text-white rounded-2xl font-bold ...`). O catálogo documenta o padrão visual esperado, não uma API de classes reutilizável — ao aplicar/verificar o padrão em código, sempre usar Tailwind direto, nunca escrever `class="hx-btn hx-btn-primary"` esperando que funcione.
+
+**Não mexido (confirmado intencional):** botão "Usar esta posição" (âmbar, `modals.html`) — documentado por comentário explícito no próprio código como estado semântico de "ação em andamento no canvas", distinto do fluxo padrão. Botão "Conectar Agora" em estado disabled com cor de fundo própria (`bg-gray-300`) em vez de opacity sobre a cor normal — é uma correção de lógica condicional mais delicada, deixada de fora desta rodada.
 
 ---
 
