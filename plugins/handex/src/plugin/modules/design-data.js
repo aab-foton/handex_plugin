@@ -478,10 +478,11 @@
     // cada card precisa saber se ELE MESMO tem conteúdo, diferente de
     // hasDocumentedContent() (agregado, usado só pra habilitar Baixar/Limpar).
     // "guide" nunca entra aqui: é onboarding, não representa dado do projeto.
-    // Cada entrada é { done, count, label }: "dados-projeto" é booleano (não
-    // tem uma contagem de "itens" natural) -- usa label fixo em vez de
-    // número. Os outros 4 têm contagem real (frames escaneados, specs,
-    // medidas, fluxos), exibida ao lado do badge.
+    // Cada entrada é { done, label }: label é o texto final já exibido,
+    // sempre "Ação + particípio" (ex: "Specs criadas") -- com a contagem real
+    // entre parênteses quando o card tem uma (ex: "Specs criadas (3)").
+    // "dados-projeto" é o único sem contagem (critério booleano: título +
+    // equipe preenchidos, não uma lista de itens).
     function getHomeCardsDocumentedState() {
       const frames = handoffData.frames || [];
       const s1 = handoffData.step1 || {};
@@ -501,14 +502,16 @@
 
       const flowsCount = (handoffData.createdFlows || []).length;
 
-      const _isDadosProjetoDone = !!(s1.titulo && s1.titulo.trim()) && (s1.equipe || []).length > 0;
+      const hasDadosProjeto = !!(s1.titulo && s1.titulo.trim()) && (s1.equipe || []).length > 0;
+
+      const _withCount = (label, count) => `${label} (${count})`;
 
       return {
-        'dados-projeto': { done: _isDadosProjetoDone, count: null, label: _isDadosProjetoDone ? 'Informações salvas' : null },
-        'tokens': { done: scannedFramesCount > 0, count: scannedFramesCount, label: null },
-        'specs': { done: specsCount > 0, count: specsCount, label: null },
-        'measurement': { done: measurementsCount > 0, count: measurementsCount, label: null },
-        'flows': { done: flowsCount > 0, count: flowsCount, label: null }
+        'dados-projeto': { done: hasDadosProjeto, label: 'Informações salvas' },
+        'tokens': { done: scannedFramesCount > 0, label: _withCount('Tokens escaneados', scannedFramesCount) },
+        'specs': { done: specsCount > 0, label: _withCount('Specs criadas', specsCount) },
+        'measurement': { done: measurementsCount > 0, label: _withCount('Medidas inseridas', measurementsCount) },
+        'flows': { done: flowsCount > 0, label: _withCount('Fluxos mapeados', flowsCount) }
       };
     }
     window.getHomeCardsDocumentedState = getHomeCardsDocumentedState;

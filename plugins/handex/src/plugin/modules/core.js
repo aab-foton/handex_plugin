@@ -1824,13 +1824,13 @@ function updateHomeCardsCheckState() {
   Object.keys(state).forEach(cardId => {
     const card = document.querySelector(`[data-home-card-id="${cardId}"]`);
     if (!card) return;
-    const { done, count, label } = state[cardId];
+    const { done, label } = state[cardId];
     const badge = card.querySelector('.home-card-check-badge');
     if (badge) badge.classList.toggle('hidden', !done);
     const textEl = card.querySelector('.home-card-check-text');
     if (textEl) {
       textEl.classList.toggle('hidden', !done);
-      if (done) textEl.textContent = label || String(count);
+      if (done) textEl.textContent = label;
     }
   });
 }
