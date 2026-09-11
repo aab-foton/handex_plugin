@@ -185,6 +185,16 @@ body {
       flex-shrink: 0;
       transition: background 0.18s ease, transform 0.15s ease, padding 0.18s ease, gap 0.18s ease;
     }
+    /* .hidden é definido ANTES de .fab-inline no <style> compilado (ver
+       build.cjs: tailwind-compiled.css, depois plugin.css) -- com
+       especificidade igual (uma classe cada), a regra que vem depois vence,
+       então .fab-inline (display: inline-flex) sobrescrevia .hidden
+       (display: none) sempre que os dois estavam no mesmo elemento. Bug
+       real (2026-09): botão de ação do header ficava visível mesmo com
+       "hidden" aplicado (ver toggle header↔empty-state, core.js/
+       specifications.js/measurement.js). Corrigido fixando o caso aqui,
+       sem depender de reordenar os dois arquivos CSS. */
+    .fab-inline.hidden { display: none; }
     .fab-inline > i, .fab-inline > svg { flex-shrink: 0; }
     .fab-inline span {
       font-size: 11px;
