@@ -19,7 +19,7 @@ Plugin Figma que automatiza o handoff de design. Permite ao designer:
 - Mapear fluxos de tela
 - Gerar uma ficha técnica completa no canvas do Figma
 
-**Versão atual:** v6.9.0  
+**Versão atual:** v6.10.0  
 **Documentação:** `BUSINESS_RULES.md` (regras de negócio) · `CHANGELOG.md` (histórico)
 
 ---
@@ -205,6 +205,14 @@ Footer:
 ```
 
 "Gerar Ficha" não está mais no header global — hoje só é acionável de dentro de `view-dados-projeto` (`dados-projeto.html:314`) ou `view-handoff-summary` (`handoff-summary.html:146`), ambos chamando `openHandoffInjectModal()`.
+
+**Botão de ação header ↔ empty-state (v6.10.0):** as 4 telas com um botão de ação principal no header (Escanear Tokens "Registrar Frame", Anotar Specs "Nova spec", Anotar Medidas "Inserir medida", Fluxos de Tela "Conectar Frames") escondem esse botão do header enquanto a lista está vazia — nesse estado, o mesmo botão (mesmo `onclick`, visual `fab-inline` idêntico) aparece como CTA centralizado dentro do empty-state. Assim que o primeiro item é criado, o botão do header reaparece e o empty-state (com seu botão) desaparece. O link de texto sublinhado que antes duplicava a ação dentro da frase instrutiva do empty-state foi removido nas 4 telas — a frase agora só descreve a ação sem repetir o botão.
+
+Implementação: **dois botões reais** (um `id` no header + hidden por padrão, um centralizado no empty-state), nunca reparenting de nó via JS — decisão deliberada porque em 3 das 4 telas (Specs, Medidas, Fluxos) o empty-state é gerado via `innerHTML = template` a cada render (não é HTML fixo), então o botão central "nasce e morre" junto do template; reparenting exigiria capturar a referência do nó do header antes de sobrescrever o container, quebrando o padrão simples já usado no projeto. Toggle de visibilidade do botão do header amarrado à mesma condição `hasItems`/`hasFrames` já usada para os outros elementos da tela (seção título, botões de exportar/ocultar todos etc.):
+- Tokens: `updateEmptyFramesState()` (`core.js`) — botão `#btn-frame-register-header`.
+- Specs: `renderSpecsList()` (`specifications.js`) — botão `#specs-header-action-form` (id já existia, antes nunca era usado para toggle).
+- Medidas: `renderMeasurementsResults()` (`measurement.js`), só no branch `!frameId` (tela standalone — o mesmo render também é usado por frame dentro do hub de Tokens, onde não há header próprio) — botão `#btn-measure-header`.
+- Fluxos: `renderFlowsList()` (`specifications.js`) — botão `#btn-flow-connect-header`. Independente do segundo botão do header desta tela (`#btn-resync-flows`, ação secundária de redesenhar linhas — segue sua própria regra, só aparece com fluxos existentes, não faz parte desta troca).
 
 **Badge de check + label por card (v6.9.0):** os 5 cards da home que representam dado do projeto (`dados-projeto`, `tokens`, `specs`, `measurement`, `flows` — não `guide`, que é onboarding) exibem, no canto **superior esquerdo** (alinhado ao padding interno do botão, `top-3 left-3`), um badge verde circular com check quando já têm documentação salva — acompanhado de um texto curto fixo (`.home-card-check-text`) à direita do badge. O texto é sempre "Ação + particípio" e, quando o card tem uma contagem real, ela vai entre parênteses:
 - `dados-projeto`: "Informações salvas" — **sem contagem** (critério booleano: `step1.titulo` preenchido **e** pelo menos 1 item em `step1.equipe`, não uma lista de itens).

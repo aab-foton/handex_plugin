@@ -15,7 +15,11 @@
           </button>
         </div>
         <div class="flex items-center gap-1.5 shrink-0">
-          <button onclick="openMeasureModal()" class="fab-inline" title="Inserir medida" aria-label="Inserir medida">
+          <!-- Some do header enquanto não há nenhuma medida -- vira CTA
+               centralizado no empty-state (renderMeasurementsResults em
+               measurement.js), "sobe" pro header assim que a primeira
+               medida é inserida. -->
+          <button id="btn-measure-header" onclick="openMeasureModal()" class="fab-inline hidden" title="Inserir medida" aria-label="Inserir medida">
             <i data-lucide="plus" class="w-4 h-4 shrink-0"></i>
             <span>Inserir medida</span>
           </button>

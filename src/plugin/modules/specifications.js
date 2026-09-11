@@ -1928,6 +1928,10 @@
       const moreActionsBtn = document.getElementById('btn-specs-more-actions');
       const finalizeWrap = document.getElementById('btn-finalize-specs-wrap');
       const sectionTitle = document.getElementById('specs-section-title');
+      // "Nova spec" mora no header só quando já há alguma spec criada --
+      // lista vazia usa o CTA centralizado dentro do próprio empty-state
+      // (mesmo onclick="openSpecFormModal()").
+      const headerBtn = document.getElementById('specs-header-action-form');
 
       if (!createdSpecs || createdSpecs.length === 0) {
         list.innerHTML = `
@@ -1936,7 +1940,11 @@
               <i data-lucide="file-text" class="w-16 h-16 text-slate-200 dark:text-slate-700" style="opacity:0.25"></i>
             </div>
             <p class="text-[12px] font-bold text-slate-600 dark:text-dark-muted text-center px-4 mb-1">Nenhuma especificação criada ainda</p>
-            <p class="text-[10px] text-slate-600 dark:text-dark-muted text-center px-6">Selecione um elemento no canvas e toque em <button type="button" onclick="openSpecFormModal()" class="font-bold text-[#004d8d] dark:text-[#4da3e0] hover:underline">Nova spec</button></p>
+            <p class="text-[10px] text-slate-600 dark:text-dark-muted text-center px-6 mb-3">Selecione um elemento no canvas para começar.</p>
+            <button onclick="openSpecFormModal()" class="fab-inline" title="Criar especificação" aria-label="Criar especificação">
+              <i data-lucide="plus" class="w-4 h-4 shrink-0"></i>
+              <span>Nova spec</span>
+            </button>
           </li>
         `;
         if (exportBtn) exportBtn.classList.add('hidden');
@@ -1945,6 +1953,7 @@
         if (moreActionsBtn) moreActionsBtn.classList.add('hidden');
         if (finalizeWrap) finalizeWrap.classList.add('hidden');
         if (sectionTitle) sectionTitle.classList.add('hidden');
+        if (headerBtn) headerBtn.classList.add('hidden');
         closeSpecsMoreActions();
         const bar = document.getElementById('specs-search-bar');
         if (bar) bar.classList.add('hidden');
@@ -1956,6 +1965,7 @@
       if (collapseBtn) collapseBtn.classList.remove('hidden');
       if (moreActionsBtn) moreActionsBtn.classList.remove('hidden');
       if (finalizeWrap) finalizeWrap.classList.remove('hidden');
+      if (headerBtn) headerBtn.classList.remove('hidden');
       if (sectionTitle) {
         sectionTitle.classList.remove('hidden');
         sectionTitle.textContent = `Specs Criadas (${createdSpecs.length})`;
@@ -3389,6 +3399,11 @@
       const resyncBtn = document.getElementById('btn-resync-flows');
       const collapseBtn = document.querySelector('#view-flows [data-collapse-toggle]');
       const sectionTitle = document.getElementById('flows-section-title');
+      // "Conectar Frames" mora no header só quando já há algum fluxo -- lista
+      // vazia usa o CTA centralizado dentro do próprio empty-state (mesmo
+      // onclick="openFlowFormModal()"). Independente de #btn-resync-flows,
+      // que segue sua própria regra.
+      const headerBtn = document.getElementById('btn-flow-connect-header');
 
       if (!handoffData.createdFlows || handoffData.createdFlows.length === 0) {
         const emptyHtml = `
@@ -3397,7 +3412,11 @@
               <i data-lucide="git-branch" class="w-16 h-16 text-slate-200 dark:text-slate-700" style="opacity:0.25"></i>
             </div>
             <p class="text-[12px] font-bold text-slate-600 dark:text-dark-muted text-center px-4 mb-1">Nenhum fluxo criado ainda</p>
-            <p class="text-[10px] text-slate-600 dark:text-dark-muted text-center px-6">Selecione 2 elementos no canvas e toque em <button type="button" onclick="openFlowFormModal()" class="font-bold text-[#004d8d] dark:text-[#4da3e0] hover:underline">Conectar Frames</button></p>
+            <p class="text-[10px] text-slate-600 dark:text-dark-muted text-center px-6 mb-3">Selecione 2 elementos no canvas para começar.</p>
+            <button onclick="openFlowFormModal()" class="fab-inline" title="Conectar Frames" aria-label="Conectar Frames">
+              <i data-lucide="git-branch" class="w-4 h-4 shrink-0"></i>
+              <span>Conectar Frames</span>
+            </button>
           </li>
         `;
         containers.forEach(c => c.innerHTML = emptyHtml);
@@ -3405,12 +3424,14 @@
         if (resyncBtn) resyncBtn.classList.add('hidden');
         if (collapseBtn) collapseBtn.classList.add('hidden');
         if (sectionTitle) sectionTitle.classList.add('hidden');
+        if (headerBtn) headerBtn.classList.add('hidden');
         _updateContentHint('hint-flows', false);
         _refreshIcons();
         return;
       }
       if (finalizeWrap) finalizeWrap.classList.remove('hidden');
       if (resyncBtn) resyncBtn.classList.remove('hidden');
+      if (headerBtn) headerBtn.classList.remove('hidden');
       _updateContentHint('hint-flows', true);
 
       const FLOW_TYPE_LABELS = {

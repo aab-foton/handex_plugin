@@ -26,11 +26,16 @@
         const collapseBtn = document.querySelector('#view-measurement [data-collapse-toggle]');
         const finalizeWrap = document.getElementById('btn-finalize-measurements-wrap');
         const sectionTitle = document.getElementById('measures-section-title');
+        // "Inserir medida" mora no header só quando já há alguma medida --
+        // lista vazia usa o CTA centralizado dentro do próprio empty-state
+        // (mesmo onclick="openMeasureModal()").
+        const headerBtn = document.getElementById('btn-measure-header');
         if (data && data.length > 0) {
           if (exportBtn) exportBtn.classList.remove('hidden');
           if (hideAllBtn) hideAllBtn.classList.remove('hidden');
           if (collapseBtn) collapseBtn.classList.remove('hidden');
           if (finalizeWrap) finalizeWrap.classList.remove('hidden');
+          if (headerBtn) headerBtn.classList.remove('hidden');
           if (sectionTitle) {
             sectionTitle.classList.remove('hidden');
             sectionTitle.textContent = `Medidas Inseridas (${data.length})`;
@@ -40,6 +45,7 @@
           if (hideAllBtn) hideAllBtn.classList.add('hidden');
           if (collapseBtn) collapseBtn.classList.add('hidden');
           if (finalizeWrap) finalizeWrap.classList.add('hidden');
+          if (headerBtn) headerBtn.classList.add('hidden');
           if (sectionTitle) sectionTitle.classList.add('hidden');
         }
       }
@@ -52,7 +58,11 @@
                 <i data-lucide="ruler" class="w-16 h-16 text-slate-200 dark:text-slate-700" style="opacity:0.25"></i>
               </div>
               <p class="text-[12px] font-bold text-slate-600 dark:text-dark-muted text-center px-4 mb-1">Nenhuma medida criada ainda</p>
-              <p class="text-[10px] text-slate-600 dark:text-dark-muted text-center px-6">Selecione elementos no canvas e toque em <button type="button" onclick="openMeasureModal()" class="font-bold text-[#004d8d] dark:text-[#4da3e0] hover:underline">Inserir medida</button></p>
+              <p class="text-[10px] text-slate-600 dark:text-dark-muted text-center px-6 mb-3">Selecione elementos no canvas para começar.</p>
+              <button onclick="openMeasureModal()" class="fab-inline" title="Inserir medida" aria-label="Inserir medida">
+                <i data-lucide="plus" class="w-4 h-4 shrink-0"></i>
+                <span>Inserir medida</span>
+              </button>
             </li>
           `;
           _refreshIcons();

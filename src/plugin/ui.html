@@ -931,7 +931,11 @@ body {
           </button>
         </div>
         <div class="flex items-center gap-1.5 shrink-0">
-          <button onclick="openMeasureModal()" class="fab-inline" title="Inserir medida" aria-label="Inserir medida">
+          <!-- Some do header enquanto não há nenhuma medida -- vira CTA
+               centralizado no empty-state (renderMeasurementsResults em
+               measurement.js), "sobe" pro header assim que a primeira
+               medida é inserida. -->
+          <button id="btn-measure-header" onclick="openMeasureModal()" class="fab-inline hidden" title="Inserir medida" aria-label="Inserir medida">
             <i data-lucide="plus" class="w-4 h-4 shrink-0"></i>
             <span>Inserir medida</span>
           </button>
@@ -1346,7 +1350,10 @@ body {
           </button>
         </div>
         <div class="flex items-center gap-1.5 shrink-0">
-          <button id="specs-header-action-form" onclick="openSpecFormModal()" class="fab-inline" title="Criar especificação" aria-label="Criar especificação">
+          <!-- Some do header enquanto não há nenhuma spec -- vira CTA
+               centralizado no empty-state (renderSpecsList em specifications.js),
+               "sobe" pro header assim que a primeira spec é criada. -->
+          <button id="specs-header-action-form" onclick="openSpecFormModal()" class="fab-inline hidden" title="Criar especificação" aria-label="Criar especificação">
             <i data-lucide="plus" class="w-4 h-4 shrink-0"></i>
             <span>Nova spec</span>
           </button>
@@ -1502,7 +1509,11 @@ body {
       </div>
     </div>
     <div class="flex items-center gap-1.5 shrink-0">
-      <button onclick="requestFrameRegistration()" class="fab-inline" title="Registrar Frame" aria-label="Registrar Frame">
+      <!-- Some do header enquanto a lista está vazia -- a mesma ação vira um
+           CTA centralizado no empty-state (ver #frames-empty-state-action),
+           "sobe" pro header assim que o primeiro frame é registrado (ver
+           updateEmptyFramesState em core.js). -->
+      <button id="btn-frame-register-header" onclick="requestFrameRegistration()" class="fab-inline hidden" title="Registrar Frame" aria-label="Registrar Frame">
         <i data-lucide="plus" class="w-4 h-4 shrink-0"></i>
         <span>Registrar Frame</span>
       </button>
@@ -1549,7 +1560,11 @@ body {
         <i data-lucide="layout" class="w-16 h-16 text-slate-200 dark:text-slate-700" style="opacity:0.25"></i>
       </div>
       <p class="text-[12px] font-bold text-slate-600 dark:text-dark-muted text-center px-4 mb-1">Nenhum frame documentado</p>
-      <p class="text-[10px] text-slate-600 dark:text-dark-muted text-center px-6">Selecione um frame no canvas e toque em <button type="button" onclick="requestFrameRegistration()" class="font-bold text-[#004d8d] dark:text-[#4da3e0] hover:underline">Registrar Frame</button></p>
+      <p class="text-[10px] text-slate-600 dark:text-dark-muted text-center px-6 mb-3">Selecione um frame no canvas do Figma para começar.</p>
+      <button onclick="requestFrameRegistration()" class="fab-inline" title="Registrar Frame" aria-label="Registrar Frame">
+        <i data-lucide="plus" class="w-4 h-4 shrink-0"></i>
+        <span>Registrar Frame</span>
+      </button>
     </div>
 
     <ul id="list-frames" class="space-y-3">
@@ -1591,7 +1606,12 @@ body {
       <button id="btn-resync-flows" onclick="resyncAllFlows()" class="hidden min-w-[40px] min-h-[40px] flex items-center justify-center bg-white/10 dark:bg-white/10 rounded-xl hover:bg-white/20 dark:hover:bg-white/20 transition-colors" title="Redesenhar todas as linhas no canvas a partir dos dados salvos — use se moveu os frames e as conexões ficaram desalinhadas" aria-label="Redesenhar todas as linhas de fluxo no canvas">
         <i data-lucide="refresh-cw" class="w-5 h-5 text-white" aria-hidden="true"></i>
       </button>
-      <button onclick="openFlowFormModal()" class="fab-inline shrink-0" title="Conectar Frames" aria-label="Conectar Frames">
+      <!-- Some do header enquanto não há nenhum fluxo -- vira CTA
+           centralizado no empty-state (renderFlowsList em specifications.js),
+           "sobe" pro header assim que o primeiro fluxo é criado. Botão de
+           resync acima segue sua própria regra (só aparece com fluxos
+           existentes), não faz parte desta troca. -->
+      <button id="btn-flow-connect-header" onclick="openFlowFormModal()" class="fab-inline shrink-0 hidden" title="Conectar Frames" aria-label="Conectar Frames">
         <i data-lucide="git-branch" class="w-4 h-4 shrink-0"></i>
         <span>Conectar Frames</span>
       </button>
@@ -4801,6 +4821,10 @@ function updateEmptyFramesState() {
     if (hasFrames) sectionTitle.textContent = `Tokens Escaneados (${handoffData.frames.length})`;
   }
   _updateContentHint('frames-register-hint', hasFrames);
+  // "Registrar Frame" mora no header só quando já há frames -- lista vazia
+  // usa o CTA centralizado dentro de #frames-empty-state (mesmo onclick).
+  const headerBtn = document.getElementById('btn-frame-register-header');
+  if (headerBtn) headerBtn.classList.toggle('hidden', !hasFrames);
 }
 
 function importTitleFromSelection() {
@@ -8243,11 +8267,16 @@ document.addEventListener('DOMContentLoaded', _applyHomeCardOrder);
         const collapseBtn = document.querySelector('#view-measurement [data-collapse-toggle]');
         const finalizeWrap = document.getElementById('btn-finalize-measurements-wrap');
         const sectionTitle = document.getElementById('measures-section-title');
+        // "Inserir medida" mora no header só quando já há alguma medida --
+        // lista vazia usa o CTA centralizado dentro do próprio empty-state
+        // (mesmo onclick="openMeasureModal()").
+        const headerBtn = document.getElementById('btn-measure-header');
         if (data && data.length > 0) {
           if (exportBtn) exportBtn.classList.remove('hidden');
           if (hideAllBtn) hideAllBtn.classList.remove('hidden');
           if (collapseBtn) collapseBtn.classList.remove('hidden');
           if (finalizeWrap) finalizeWrap.classList.remove('hidden');
+          if (headerBtn) headerBtn.classList.remove('hidden');
           if (sectionTitle) {
             sectionTitle.classList.remove('hidden');
             sectionTitle.textContent = `Medidas Inseridas (${data.length})`;
@@ -8257,6 +8286,7 @@ document.addEventListener('DOMContentLoaded', _applyHomeCardOrder);
           if (hideAllBtn) hideAllBtn.classList.add('hidden');
           if (collapseBtn) collapseBtn.classList.add('hidden');
           if (finalizeWrap) finalizeWrap.classList.add('hidden');
+          if (headerBtn) headerBtn.classList.add('hidden');
           if (sectionTitle) sectionTitle.classList.add('hidden');
         }
       }
@@ -8269,7 +8299,11 @@ document.addEventListener('DOMContentLoaded', _applyHomeCardOrder);
                 <i data-lucide="ruler" class="w-16 h-16 text-slate-200 dark:text-slate-700" style="opacity:0.25"></i>
               </div>
               <p class="text-[12px] font-bold text-slate-600 dark:text-dark-muted text-center px-4 mb-1">Nenhuma medida criada ainda</p>
-              <p class="text-[10px] text-slate-600 dark:text-dark-muted text-center px-6">Selecione elementos no canvas e toque em <button type="button" onclick="openMeasureModal()" class="font-bold text-[#004d8d] dark:text-[#4da3e0] hover:underline">Inserir medida</button></p>
+              <p class="text-[10px] text-slate-600 dark:text-dark-muted text-center px-6 mb-3">Selecione elementos no canvas para começar.</p>
+              <button onclick="openMeasureModal()" class="fab-inline" title="Inserir medida" aria-label="Inserir medida">
+                <i data-lucide="plus" class="w-4 h-4 shrink-0"></i>
+                <span>Inserir medida</span>
+              </button>
             </li>
           `;
           _refreshIcons();
@@ -10563,6 +10597,10 @@ document.addEventListener('DOMContentLoaded', _applyHomeCardOrder);
       const moreActionsBtn = document.getElementById('btn-specs-more-actions');
       const finalizeWrap = document.getElementById('btn-finalize-specs-wrap');
       const sectionTitle = document.getElementById('specs-section-title');
+      // "Nova spec" mora no header só quando já há alguma spec criada --
+      // lista vazia usa o CTA centralizado dentro do próprio empty-state
+      // (mesmo onclick="openSpecFormModal()").
+      const headerBtn = document.getElementById('specs-header-action-form');
 
       if (!createdSpecs || createdSpecs.length === 0) {
         list.innerHTML = `
@@ -10571,7 +10609,11 @@ document.addEventListener('DOMContentLoaded', _applyHomeCardOrder);
               <i data-lucide="file-text" class="w-16 h-16 text-slate-200 dark:text-slate-700" style="opacity:0.25"></i>
             </div>
             <p class="text-[12px] font-bold text-slate-600 dark:text-dark-muted text-center px-4 mb-1">Nenhuma especificação criada ainda</p>
-            <p class="text-[10px] text-slate-600 dark:text-dark-muted text-center px-6">Selecione um elemento no canvas e toque em <button type="button" onclick="openSpecFormModal()" class="font-bold text-[#004d8d] dark:text-[#4da3e0] hover:underline">Nova spec</button></p>
+            <p class="text-[10px] text-slate-600 dark:text-dark-muted text-center px-6 mb-3">Selecione um elemento no canvas para começar.</p>
+            <button onclick="openSpecFormModal()" class="fab-inline" title="Criar especificação" aria-label="Criar especificação">
+              <i data-lucide="plus" class="w-4 h-4 shrink-0"></i>
+              <span>Nova spec</span>
+            </button>
           </li>
         `;
         if (exportBtn) exportBtn.classList.add('hidden');
@@ -10580,6 +10622,7 @@ document.addEventListener('DOMContentLoaded', _applyHomeCardOrder);
         if (moreActionsBtn) moreActionsBtn.classList.add('hidden');
         if (finalizeWrap) finalizeWrap.classList.add('hidden');
         if (sectionTitle) sectionTitle.classList.add('hidden');
+        if (headerBtn) headerBtn.classList.add('hidden');
         closeSpecsMoreActions();
         const bar = document.getElementById('specs-search-bar');
         if (bar) bar.classList.add('hidden');
@@ -10591,6 +10634,7 @@ document.addEventListener('DOMContentLoaded', _applyHomeCardOrder);
       if (collapseBtn) collapseBtn.classList.remove('hidden');
       if (moreActionsBtn) moreActionsBtn.classList.remove('hidden');
       if (finalizeWrap) finalizeWrap.classList.remove('hidden');
+      if (headerBtn) headerBtn.classList.remove('hidden');
       if (sectionTitle) {
         sectionTitle.classList.remove('hidden');
         sectionTitle.textContent = `Specs Criadas (${createdSpecs.length})`;
@@ -12024,6 +12068,11 @@ document.addEventListener('DOMContentLoaded', _applyHomeCardOrder);
       const resyncBtn = document.getElementById('btn-resync-flows');
       const collapseBtn = document.querySelector('#view-flows [data-collapse-toggle]');
       const sectionTitle = document.getElementById('flows-section-title');
+      // "Conectar Frames" mora no header só quando já há algum fluxo -- lista
+      // vazia usa o CTA centralizado dentro do próprio empty-state (mesmo
+      // onclick="openFlowFormModal()"). Independente de #btn-resync-flows,
+      // que segue sua própria regra.
+      const headerBtn = document.getElementById('btn-flow-connect-header');
 
       if (!handoffData.createdFlows || handoffData.createdFlows.length === 0) {
         const emptyHtml = `
@@ -12032,7 +12081,11 @@ document.addEventListener('DOMContentLoaded', _applyHomeCardOrder);
               <i data-lucide="git-branch" class="w-16 h-16 text-slate-200 dark:text-slate-700" style="opacity:0.25"></i>
             </div>
             <p class="text-[12px] font-bold text-slate-600 dark:text-dark-muted text-center px-4 mb-1">Nenhum fluxo criado ainda</p>
-            <p class="text-[10px] text-slate-600 dark:text-dark-muted text-center px-6">Selecione 2 elementos no canvas e toque em <button type="button" onclick="openFlowFormModal()" class="font-bold text-[#004d8d] dark:text-[#4da3e0] hover:underline">Conectar Frames</button></p>
+            <p class="text-[10px] text-slate-600 dark:text-dark-muted text-center px-6 mb-3">Selecione 2 elementos no canvas para começar.</p>
+            <button onclick="openFlowFormModal()" class="fab-inline" title="Conectar Frames" aria-label="Conectar Frames">
+              <i data-lucide="git-branch" class="w-4 h-4 shrink-0"></i>
+              <span>Conectar Frames</span>
+            </button>
           </li>
         `;
         containers.forEach(c => c.innerHTML = emptyHtml);
@@ -12040,12 +12093,14 @@ document.addEventListener('DOMContentLoaded', _applyHomeCardOrder);
         if (resyncBtn) resyncBtn.classList.add('hidden');
         if (collapseBtn) collapseBtn.classList.add('hidden');
         if (sectionTitle) sectionTitle.classList.add('hidden');
+        if (headerBtn) headerBtn.classList.add('hidden');
         _updateContentHint('hint-flows', false);
         _refreshIcons();
         return;
       }
       if (finalizeWrap) finalizeWrap.classList.remove('hidden');
       if (resyncBtn) resyncBtn.classList.remove('hidden');
+      if (headerBtn) headerBtn.classList.remove('hidden');
       _updateContentHint('hint-flows', true);
 
       const FLOW_TYPE_LABELS = {
