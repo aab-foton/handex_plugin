@@ -491,6 +491,7 @@
 
     <h3>Botões — catálogo de 6 variantes</h3>
     <p>Fonte: varredura de classes literais em <code>views/*.html</code>. Todo botão do Handex é uma destas 6 variantes.</p>
+    <p><strong>Nota:</strong> <code>.hx-btn-primary</code>/<code>.hx-btn-outline</code>/etc. são nomenclatura desta documentação, não classes CSS reais do plugin — não existem em <code>plugin.css</code> nem em nenhum arquivo do código. No código real, escreva o Tailwind puro citado em cada legenda abaixo (ex: <code>bg-blue-500 hover:bg-blue-600 text-white rounded-2xl font-bold</code>) diretamente no botão.</p>
 
     <div class="demo-block">
       <button class="hx-btn hx-btn-primary" type="button">
@@ -534,7 +535,7 @@
       <span class="demo-caption">Ícone utilitário com fundo: <code>bg-white border border-gray-200 rounded-2xl</code>, cor de hover semântica (vermelho para descarte). Disabled (segundo botão): mesma regra das variantes de texto — <code>disabled:opacity-40 disabled:cursor-not-allowed</code>. Usar sempre que a ação não tiver o que fazer (ex: "Baixar" e "Limpar" na home, sem nenhum dado documentado ainda).</span>
     </div>
 
-    <div class="debt-banner"><strong>Divergência confirmada:</strong> <code>home.html:167</code> e 3 ocorrências em <code>modals.html</code> (linhas 102, 1006, 1247) ainda usam <code>hover:bg-[#004d8f]</code>/<code>hover:bg-[#005a8e]</code> — hex do azul institucional <em>pré-reversão de marca</em>, não a classe nomeada <code>hover:bg-blue-600</code> atual. Essas 4 ocorrências não foram migradas.</div>
+    <p style="font-size:13px;color:var(--muted)"><strong>Resolvido em v6.11.0 (2026-09-10):</strong> auditoria ampla encontrou e corrigiu ~20 botões de ação primária com hex solto (incluindo as 4 ocorrências de hex pré-reversão de marca antes listadas aqui) e todos os botões "Cancelar/Voltar/Fechar" em cinza sólido ou texto puro sem padrão — normalizados para as classes Tailwind reais das variantes primária/outline. Achado principal: o botão de ação do onboarding (<code>onboarding.js</code>) usava uma cor por ferramenta (parte do sistema de identidade visual do modal), o que também colorá o botão de avançar com tons sem significado semântico (indigo, purple) — corrigido para sempre usar a variante primária (azul de marca); a cor por ferramenta permanece só nos elementos decorativos (ícone, barra de progresso, destaque de propósito).</p>
 
     <h3>Cards</h3>
     <div class="demo-block">
@@ -660,7 +661,7 @@
       <li><strong><code>rounded-xl</code> não é residual</strong> — 141 ocorrências reais em <code>views/*.html</code>, incluindo o botão "voltar" do header padrão de toda view. O padrão declarado (<code>rounded-2xl</code> universal) e o uso real convivem sem terem convergido.</li>
       <li><strong>Radius de card via seletor de atributo global</strong> — <code>[id$="-card"] { border-radius: 16px !important }</code> (<code>plugin.css:451-465</code>) em vez de classe Tailwind direta no elemento. Confirmado ativo.</li>
       <li><strong>z-index de modal sem constante nomeada</strong> — <code>z-[1000]</code>/<code>z-[1200]</code>/<code>z-[200]</code> continuam valores mágicos espalhados no HTML.</li>
-      <li><strong>Hex de brand direto no HTML</strong> — 4 ocorrências confirmadas de <code>hover:bg-[#004d8f]</code>/<code>hover:bg-[#005a8e]</code> (hex pré-reversão de marca) em <code>home.html:167</code> e <code>modals.html:102,1006,1247</code>, além de uso disseminado de <code>bg-[#005ca9]</code> em vez de <code>bg-blue-500</code> em muitas outras views.</li>
+      <li><strong>Hex de brand direto no HTML — RESOLVIDO em v6.11.0</strong> (era: 4 ocorrências de <code>hover:bg-[#004d8f]</code>/<code>hover:bg-[#005a8e]</code>, hex pré-reversão de marca, em <code>home.html</code> e <code>modals.html</code>, além de uso disseminado de <code>bg-[#005ca9]</code> em vez de <code>bg-blue-500</code> em botões de ação primária — todos migrados na auditoria/normalização de botões desta versão). Fora de botões de ação, decorações (dots, cards de seleção, headers de tela) ainda usam hex direto — não migradas, fora do escopo dessa correção.</li>
       <li><strong>Escala tipográfica sem token nomeado</strong> — <code>text-3xs</code>/<code>text-2xs</code>/<code>text-xs-plus</code>/<code>text-md</code> não existem em <code>fontSize</code> do <code>tailwind.config.cjs</code>; todo o código usa px arbitrário.</li>
       <li><strong>4 dialetos de accordion</strong> — <code>toggleAccordion(btn, nodeId)</code> (<code>core.js:2696</code>) é o padrão oficial, mas <code>guide.html</code> (onclick inline sem <code>aria-expanded</code>), o Briefing Estratégico (<code>div role="button"</code>) e chevrons próprios (<code>.journey-chevron</code>, <code>.group-chevron</code>) ainda coexistem.</li>
       <li><strong>Contadores de caractere abaixo do piso de contraste</strong> — <code>text-[9px] text-slate-400</code> sobre card branco mede ~2.6:1 (piso é 4.5:1), ~20 ocorrências, registrado como pendência e não corrigido em massa.</li>

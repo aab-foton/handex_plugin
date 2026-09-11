@@ -300,6 +300,16 @@ function _renderOnboardingModal() {
   const footer = document.getElementById('onboarding-modal-footer');
   if (!body || !footer) return;
 
+  // Botões de rodapé do onboarding sempre azul de marca (primária) / branco
+  // com borda (outline) -- nunca a cor de identidade por ferramenta
+  // (tool.color), que fica só nos elementos decorativos (ícone, barra de
+  // progresso, número do passo, destaque de propósito). Corrigido em
+  // 2026-09: o botão de ação mudava de cor por ferramenta (indigo em Specs,
+  // purple em Fluxos etc.), quebrando a expectativa de "botão primário =
+  // azul de marca" em qualquer outro lugar do plugin.
+  const _outlineBtnClasses = 'bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl py-3 px-4 text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors';
+  const _primaryBtnClasses = 'bg-blue-500 hover:bg-blue-600 text-white rounded-2xl py-3 px-6 text-[12px] font-bold transition-colors';
+
   if (_onboardingCurrentStep === -1) {
     // Tela de propósito: sozinha, sem numeração "Passo N de M" (não é um
     // passo do stepper) -- só "para que serve" e um Próximo que avança pro
@@ -310,8 +320,8 @@ function _renderOnboardingModal() {
       </div>
     `;
     footer.innerHTML = `
-      <button type="button" onclick="closeOnboarding()" class="px-4 py-2 text-slate-500 dark:text-dark-muted font-bold text-[12px] rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Pular</button>
-      <button type="button" onclick="_onboardingStep(1)" class="px-6 py-2 text-white font-bold text-[12px] rounded-xl transition-all" style="background-color:${tool.color}">Próximo</button>
+      <button type="button" onclick="closeOnboarding()" class="${_outlineBtnClasses}">Pular</button>
+      <button type="button" onclick="_onboardingStep(1)" class="${_primaryBtnClasses}">Próximo</button>
     `;
     _refreshIcons();
     return;
@@ -332,10 +342,10 @@ function _renderOnboardingModal() {
     `;
     const showBack = !isFirst || !!tool.purpose;
     footer.innerHTML = `
-      <button type="button" onclick="closeOnboarding()" class="px-4 py-2 text-slate-500 dark:text-dark-muted font-bold text-[12px] rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Pular</button>
+      <button type="button" onclick="closeOnboarding()" class="${_outlineBtnClasses}">Pular</button>
       <div class="flex items-center gap-2">
-        ${showBack ? '<button type="button" onclick="_onboardingStep(-1)" class="px-4 py-2 text-slate-600 dark:text-dark-muted font-bold text-[12px] rounded-xl border border-gray-200 dark:border-dark-line hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Voltar</button>' : ''}
-        <button type="button" onclick="${isLast ? 'closeOnboarding()' : '_onboardingStep(1)'}" class="px-6 py-2 text-white font-bold text-[12px] rounded-xl transition-all" style="background-color:${tool.color}">${isLast ? 'Concluir' : 'Próximo'}</button>
+        ${showBack ? `<button type="button" onclick="_onboardingStep(-1)" class="${_outlineBtnClasses}">Voltar</button>` : ''}
+        <button type="button" onclick="${isLast ? 'closeOnboarding()' : '_onboardingStep(1)'}" class="${_primaryBtnClasses}">${isLast ? 'Concluir' : 'Próximo'}</button>
       </div>
     `;
   } else {
@@ -354,8 +364,8 @@ function _renderOnboardingModal() {
       ${_onboardingReferenceHTML(tool.reference)}
     `;
     footer.innerHTML = `
-      ${tool.purpose ? '<button type="button" onclick="_onboardingStep(-1)" class="px-4 py-2 text-slate-600 dark:text-dark-muted font-bold text-[12px] rounded-xl border border-gray-200 dark:border-dark-line hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Voltar</button>' : '<div></div>'}
-      <button type="button" onclick="closeOnboarding()" class="px-6 py-2 text-white font-bold text-[12px] rounded-xl transition-all" style="background-color:${tool.color}">Entendi</button>
+      ${tool.purpose ? `<button type="button" onclick="_onboardingStep(-1)" class="${_outlineBtnClasses}">Voltar</button>` : '<div></div>'}
+      <button type="button" onclick="closeOnboarding()" class="${_primaryBtnClasses}">Entendi</button>
     `;
   }
   _refreshIcons();
