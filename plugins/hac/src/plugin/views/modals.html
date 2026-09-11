@@ -5,11 +5,11 @@
      rename, conforme instrução da tarefa. -->
 
 <!-- MODAL: ESCOLHA DE CATEGORIA -->
-<div id="a11y-category-picker-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-category-picker-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-4">
+<div id="a11y-category-picker-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-category-picker-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-dsc-tiny">
   <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeA11yCategoryPickerModal()" aria-hidden="true"></div>
-  <div class="relative z-10 w-full max-w-sm max-h-full min-h-0 flex flex-col rounded-2xl overflow-hidden shadow-2xl bg-white dark:bg-dark-surface">
-  <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line shrink-0">
-    <h3 id="a11y-category-picker-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-2">
+  <div class="relative z-10 w-full max-w-sm max-h-full min-h-0 flex flex-col rounded-dsc-large overflow-hidden shadow-dsc-elevation-2 bg-white dark:bg-dark-surface">
+  <div class="flex items-center justify-between p-dsc-tiny border-b border-gray-100 dark:border-dark-line shrink-0">
+    <h3 id="a11y-category-picker-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-dsc-nano">
       <i data-lucide="person-standing" class="w-4 h-4 text-[#0891B2]" aria-hidden="true"></i>
       <span id="a11y-category-picker-title-text">Nova especificação</span>
     </h3>
@@ -18,26 +18,26 @@
     </button>
   </div>
   <div class="flex-1 overflow-y-auto flex flex-col justify-center p-3" onscroll="handleScroll(this)">
-    <p id="a11y-category-picker-area-label" class="hidden text-[10px] font-bold text-cyan-700 dark:text-cyan-300 uppercase tracking-wider px-2 pb-2"></p>
-    <div class="flex flex-col gap-1 max-w-sm w-full mx-auto">
+    <p id="a11y-category-picker-area-label" class="hidden text-dsc-label-tiny font-bold text-cyan-700 dark:text-cyan-300 uppercase tracking-wider px-2 pb-2"></p>
+    <div class="flex flex-col gap-dsc-quark max-w-sm w-full mx-auto">
         <button type="button" id="a11y-category-btn-estrutura" onclick="chooseA11yType('estrutura')"
-          class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-cyan-50 dark:hover:bg-cyan-900/20 hover:text-[#0891B2] transition-colors text-left">
+          class="w-full flex items-center gap-2.5 px-dsc-micro py-2.5 rounded-dsc-medium text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-cyan-50 dark:hover:bg-cyan-900/20 hover:text-[#0891B2] transition-colors text-left">
           <i data-lucide="star" class="w-4 h-4 shrink-0" aria-hidden="true"></i> Estrutura da Página
         </button>
-        <button type="button" onclick="chooseA11yType('titulo')"
-          class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-cyan-50 dark:hover:bg-cyan-900/20 hover:text-[#0891B2] transition-colors text-left">
+        <button type="button" id="a11y-category-btn-titulo" onclick="chooseA11yType('titulo')"
+          class="w-full flex items-center gap-2.5 px-dsc-micro py-2.5 rounded-dsc-medium text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-cyan-50 dark:hover:bg-cyan-900/20 hover:text-[#0891B2] transition-colors text-left">
           <i data-lucide="heading" class="w-4 h-4 shrink-0" aria-hidden="true"></i> Nível de Título
         </button>
-        <button type="button" onclick="chooseA11yType('elemento')"
-          class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-cyan-50 dark:hover:bg-cyan-900/20 hover:text-[#0891B2] transition-colors text-left">
+        <button type="button" id="a11y-category-btn-elemento" onclick="chooseA11yType('elemento')"
+          class="w-full flex items-center gap-2.5 px-dsc-micro py-2.5 rounded-dsc-medium text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-cyan-50 dark:hover:bg-cyan-900/20 hover:text-[#0891B2] transition-colors text-left">
           <i data-lucide="image" class="w-4 h-4 shrink-0" aria-hidden="true"></i> Elementos e Imagens
         </button>
-        <button type="button" onclick="chooseA11yType('decorativo')"
-          class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-cyan-50 dark:hover:bg-cyan-900/20 hover:text-[#0891B2] transition-colors text-left">
+        <button type="button" id="a11y-category-btn-decorativo" onclick="chooseA11yType('decorativo')"
+          class="w-full flex items-center gap-2.5 px-dsc-micro py-2.5 rounded-dsc-medium text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-cyan-50 dark:hover:bg-cyan-900/20 hover:text-[#0891B2] transition-colors text-left">
           <i data-lucide="ban" class="w-4 h-4 shrink-0" aria-hidden="true"></i> Elemento Decorativo
         </button>
         <button type="button" id="a11y-category-btn-informacoes" onclick="chooseA11yType('informacoes')"
-          class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-cyan-50 dark:hover:bg-cyan-900/20 hover:text-[#0891B2] transition-colors text-left">
+          class="w-full flex items-center gap-2.5 px-dsc-micro py-2.5 rounded-dsc-medium text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-cyan-50 dark:hover:bg-cyan-900/20 hover:text-[#0891B2] transition-colors text-left">
           <i data-lucide="info" class="w-4 h-4 shrink-0" aria-hidden="true"></i> Informações Adicionais
         </button>
     </div>
@@ -47,13 +47,13 @@
 
 <!-- MODAL: ESPECIFICAÇÃO DE ACESSIBILIDADE (formulário das 5 categorias) -->
 <!-- Controlado por modules/accessibility.js: openA11yModal, closeA11yModal, confirmA11ySpec -->
-<div id="a11y-spec-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-modal-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-4">
+<div id="a11y-spec-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-modal-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-dsc-tiny">
   <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeA11yModal()" aria-hidden="true"></div>
-  <div class="relative z-10 w-full max-w-sm max-h-full min-h-0 flex flex-col rounded-2xl overflow-hidden shadow-2xl bg-white dark:bg-dark-surface">
+  <div class="relative z-10 w-full max-w-sm max-h-full min-h-0 flex flex-col rounded-dsc-large overflow-hidden shadow-dsc-elevation-2 bg-white dark:bg-dark-surface">
     <div class="border-b border-gray-100 dark:border-dark-line shrink-0">
-      <div class="flex items-center justify-between p-4 pb-3">
+      <div class="flex items-center justify-between p-dsc-tiny pb-3">
         <div class="min-w-0">
-          <h3 id="a11y-modal-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-2">
+          <h3 id="a11y-modal-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-dsc-nano">
             <span id="a11y-modal-title-icon" class="shrink-0 flex"><i data-lucide="person-standing" class="w-4 h-4 text-[#0891B2]" aria-hidden="true"></i></span>
             <span id="a11y-modal-title-text">Especificação de Acessibilidade</span>
             <!-- Corrigir categoria sugerida (só durante o wizard de revisão da
@@ -63,18 +63,18 @@
               <i data-lucide="arrow-left-right" class="w-3.5 h-3.5" aria-hidden="true"></i>
             </button>
           </h3>
-          <p id="a11y-modal-area-label" class="hidden text-[10px] font-bold text-cyan-600 dark:text-cyan-400 mt-0.5 ml-6 truncate"></p>
+          <p id="a11y-modal-area-label" class="hidden text-dsc-label-tiny normal-case tracking-normal font-bold text-cyan-600 dark:text-cyan-400 mt-0.5 ml-6 truncate"></p>
           <!-- Só visível durante o wizard de revisão da Detecção Automática —
                progresso "Item N de M" (ver _applyA11yWizardModalUi). -->
-          <p id="a11y-modal-wizard-progress" class="hidden text-[10px] font-bold text-slate-400 dark:text-dark-muted mt-0.5 ml-6 truncate"></p>
+          <p id="a11y-modal-wizard-progress" class="hidden text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-400 dark:text-dark-muted mt-0.5 ml-6 truncate"></p>
         </div>
-        <div class="flex items-center gap-1 shrink-0">
+        <div class="flex items-center gap-dsc-quark shrink-0">
           <!-- Só visível durante o wizard — centraliza/dá zoom no elemento do
                item atual no canvas (ver focusA11yWizardCurrentNode). Reaproveita
                o nodeId já guardado em modal.dataset.pendingTargetNodeId. -->
-          <button id="btn-a11y-wizard-focus" onclick="focusA11yWizardCurrentNode()" title="Localizar no canvas" aria-label="Localizar no canvas" class="hidden inline-flex items-center gap-1.5 h-8 px-3 rounded-2xl bg-[#0891B2]/10 border border-[#0891B2]/30 text-[#0891B2] dark:bg-cyan-900/20 dark:border-cyan-700/40 dark:text-cyan-400 hover:bg-[#0891B2]/20 dark:hover:bg-cyan-900/30 transition-colors">
+          <button id="btn-a11y-wizard-focus" onclick="focusA11yWizardCurrentNode()" title="Localizar no canvas" aria-label="Localizar no canvas" class="hidden inline-flex items-center gap-1.5 h-8 px-dsc-micro rounded-dsc-large bg-[#0891B2]/10 border border-[#0891B2]/30 text-[#0891B2] dark:bg-cyan-900/20 dark:border-cyan-700/40 dark:text-cyan-400 hover:bg-[#0891B2]/20 dark:hover:bg-cyan-900/30 transition-colors">
             <i data-lucide="locate" class="w-4 h-4 shrink-0"></i>
-            <span class="text-[11px] font-bold whitespace-nowrap">Focar</span>
+            <span class="text-dsc-label-tiny normal-case tracking-normal font-bold whitespace-nowrap">Focar</span>
           </button>
           <button onclick="closeA11yModal()" title="Fechar" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300 shrink-0">
             <i data-lucide="x" class="w-4 h-4"></i>
@@ -87,8 +87,8 @@
            _stepA11yWizardItem em accessibility.js. Campo numérico central
            aceita digitação direta (Enter ou blur) — ver
            _commitA11yWizardIndexInput. -->
-      <div id="a11y-modal-wizard-paginator" class="hidden flex items-center justify-center gap-2 px-4 pb-3">
-        <button type="button" id="btn-a11y-wizard-prev" onclick="_stepA11yWizardItem(-1)" title="Item anterior" aria-label="Item anterior" class="inline-flex items-center justify-center w-7 h-7 rounded-full text-slate-500 hover:bg-cyan-50 hover:text-[#0891B2] disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-500 dark:text-dark-muted dark:hover:bg-cyan-900/20 dark:hover:text-cyan-400 transition-colors">
+      <div id="a11y-modal-wizard-paginator" class="hidden flex items-center justify-center gap-dsc-nano px-4 pb-3">
+        <button type="button" id="btn-a11y-wizard-prev" onclick="_stepA11yWizardItem(-1)" title="Item anterior" aria-label="Item anterior" class="inline-flex items-center justify-center w-7 h-7 rounded-dsc-circ text-slate-500 hover:bg-cyan-50 hover:text-[#0891B2] disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-500 dark:text-dark-muted dark:hover:bg-cyan-900/20 dark:hover:text-cyan-400 transition-colors">
           <i data-lucide="chevron-left" class="w-4 h-4" aria-hidden="true"></i>
         </button>
         <div class="flex items-center gap-1.5">
@@ -96,10 +96,10 @@
             onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
             onblur="_commitA11yWizardIndexInput(this.value)"
             aria-label="Ir para o item número"
-            class="w-11 h-7 text-center text-[12px] font-extrabold rounded-lg border border-gray-200 dark:border-dark-line bg-gray-50 dark:bg-dark-bg text-[#0891B2] dark:text-cyan-400 outline-none focus:ring-2 focus:ring-cyan-100" />
-          <span id="a11y-wizard-index-total" class="text-[11px] font-bold text-slate-400 dark:text-dark-muted whitespace-nowrap">de —</span>
+            class="w-11 h-7 text-center text-[12px] font-extrabold rounded-dsc-small border border-gray-200 dark:border-dark-line bg-gray-50 dark:bg-dark-bg text-[#0891B2] dark:text-cyan-400 outline-none focus:ring-2 focus:ring-cyan-100" />
+          <span id="a11y-wizard-index-total" class="text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-400 dark:text-dark-muted whitespace-nowrap">de —</span>
         </div>
-        <button type="button" id="btn-a11y-wizard-next" onclick="_stepA11yWizardItem(1)" title="Próximo item" aria-label="Próximo item" class="inline-flex items-center justify-center w-7 h-7 rounded-full text-slate-500 hover:bg-cyan-50 hover:text-[#0891B2] disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-500 dark:text-dark-muted dark:hover:bg-cyan-900/20 dark:hover:text-cyan-400 transition-colors">
+        <button type="button" id="btn-a11y-wizard-next" onclick="_stepA11yWizardItem(1)" title="Próximo item" aria-label="Próximo item" class="inline-flex items-center justify-center w-7 h-7 rounded-dsc-circ text-slate-500 hover:bg-cyan-50 hover:text-[#0891B2] disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-500 dark:text-dark-muted dark:hover:bg-cyan-900/20 dark:hover:text-cyan-400 transition-colors">
           <i data-lucide="chevron-right" class="w-4 h-4" aria-hidden="true"></i>
         </button>
       </div>
@@ -111,11 +111,23 @@
            spec, só contexto pro designer durante o preenchimento). Populados
            em prefillA11yComponentName (modules/accessibility.js). -->
       <div class="mb-4 space-y-1">
-        <p class="text-[11px] text-slate-500 dark:text-dark-muted truncate">
+        <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted truncate">
           <span class="font-bold text-slate-600 dark:text-white">Camada no canvas:</span>
           <span id="a11y-modal-target-node-name">—</span>
         </p>
-        <p class="text-[11px] text-slate-500 dark:text-dark-muted truncate">
+        <!-- Contexto do pai imediato (2026-09-11, bug real reportado):
+             designer confirmou um sub-elemento (ex: um texto de título
+             dentro de um componente não reconhecido) pensando ser o
+             componente inteiro. Reforça no momento exato da confirmação,
+             além do card na lista "Não Documentados" — hidden por padrão,
+             só aparece quando openA11yModal/prefillA11yComponentName tem
+             o dado (nem todo item tem pai relevante, ex. Frame Principal
+             de uma Área). -->
+        <p id="a11y-modal-immediate-parent-wrap" class="hidden text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted truncate">
+          <span class="font-bold text-slate-600 dark:text-white">Está dentro de:</span>
+          <span id="a11y-modal-immediate-parent-name">—</span>
+        </p>
+        <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted truncate">
           <span class="font-bold text-slate-600 dark:text-white">Componente DSC:</span>
           <span id="a11y-modal-dsc-component-name">—</span>
         </p>
@@ -125,19 +137,19 @@
            que o nó selecionado JÁ tem uma spec da mesma categoria nesta
            área — não bloqueia a criação, só oferece um atalho pra editar a
            existente em vez de duplicar. -->
-      <div id="a11y-modal-duplicate-warning" class="hidden mb-4 flex items-start gap-2 rounded-xl border border-amber-200 dark:border-amber-800/40 bg-amber-50/60 dark:bg-amber-900/10 px-3 py-2.5">
+      <div id="a11y-modal-duplicate-warning" class="hidden mb-4 flex items-start gap-dsc-nano rounded-dsc-medium border border-amber-200 dark:border-amber-800/40 bg-amber-50/60 dark:bg-amber-900/10 px-dsc-micro py-2.5">
         <i data-lucide="triangle-alert" class="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" aria-hidden="true"></i>
         <div class="flex-1 min-w-0">
-          <p class="text-[11px] font-semibold text-amber-800 dark:text-amber-300">Já existe uma especificação para este elemento.</p>
+          <p class="text-dsc-label-tiny normal-case tracking-normal font-semibold text-amber-800 dark:text-amber-300">Já existe uma especificação para este elemento.</p>
           <button type="button" id="btn-a11y-modal-edit-duplicate" onclick="_editA11yDuplicateSpecFromModal()"
-            class="mt-1 text-[10.5px] font-bold text-amber-700 dark:text-amber-400 hover:underline">
+            class="mt-1 text-dsc-label-tiny normal-case tracking-normal font-bold text-amber-700 dark:text-amber-400 hover:underline">
             Editar especificação existente
           </button>
         </div>
       </div>
       <!-- Elementos e Imagens -->
       <div id="a11y-fields-elemento" class="hidden space-y-4">
-        <div class="grid grid-cols-4 gap-3">
+        <div class="grid grid-cols-4 gap-dsc-micro">
           <!-- Bloco desktop (16 categorias) — escondido por completo em specs
                mobile (modal.dataset.a11yOrigin === 'mobile'), ver
                updateA11yElementoFields/_toggleA11yElementoDesktopBlock em
@@ -145,10 +157,10 @@
                compartilha tela com o catálogo desktop. Tag foi movida pra
                ficar ao lado do Label (accessibilityLabel), mais abaixo. -->
           <div id="a11y-el-desktop-componente-col" class="col-span-4 relative">
-            <label for="a11y-el-componente-trigger" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Componente</label>
+            <label for="a11y-el-componente-trigger" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Componente</label>
             <button type="button" id="a11y-el-componente-trigger" onclick="toggleA11yComponenteMenu(event)"
               aria-haspopup="listbox" aria-expanded="false"
-              class="w-full flex items-center justify-between gap-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all">
+              class="w-full flex items-center justify-between gap-dsc-nano bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all">
               <span id="a11y-el-componente-trigger-label">Accordion</span>
               <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 shrink-0" aria-hidden="true"></i>
             </button>
@@ -172,24 +184,24 @@
               <option value="imagem">Imagem</option>
               <option value="outro">Outro (fora do catálogo)</option>
             </select>
-            <div id="a11y-el-componente-menu" role="listbox" class="hidden absolute left-0 right-0 top-full mt-1 z-50 max-h-56 overflow-y-auto bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl shadow-xl p-1">
-              <button type="button" role="option" onclick="selectA11yComponente('accordion','Accordion')" class="a11y-componente-option w-full text-left px-3 py-2 rounded-lg text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20">Accordion</button>
-              <button type="button" role="option" onclick="selectA11yComponente('breadcrumb','Breadcrumb')" class="a11y-componente-option w-full text-left px-3 py-2 rounded-lg text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20">Breadcrumb</button>
-              <button type="button" role="option" onclick="selectA11yComponente('button','Button')" class="a11y-componente-option w-full text-left px-3 py-2 rounded-lg text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20">Button</button>
-              <button type="button" role="option" onclick="selectA11yComponente('checkbox','Checkbox')" class="a11y-componente-option w-full text-left px-3 py-2 rounded-lg text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20">Checkbox</button>
-              <button type="button" role="option" onclick="selectA11yComponente('dialog','Dialog')" class="a11y-componente-option w-full text-left px-3 py-2 rounded-lg text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20">Dialog</button>
-              <button type="button" role="option" onclick="selectA11yComponente('inputs','Inputs')" class="a11y-componente-option w-full text-left px-3 py-2 rounded-lg text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20">Inputs</button>
-              <button type="button" role="option" onclick="selectA11yComponente('link','Link')" class="a11y-componente-option w-full text-left px-3 py-2 rounded-lg text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20">Link</button>
-              <button type="button" role="option" onclick="selectA11yComponente('listas','Listas')" class="a11y-componente-option w-full text-left px-3 py-2 rounded-lg text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20">Listas</button>
-              <button type="button" role="option" onclick="selectA11yComponente('paginator','Paginator')" class="a11y-componente-option w-full text-left px-3 py-2 rounded-lg text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20">Paginator</button>
-              <button type="button" role="option" onclick="selectA11yComponente('radio button','Radio Button')" class="a11y-componente-option w-full text-left px-3 py-2 rounded-lg text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20">Radio Button</button>
-              <button type="button" role="option" onclick="selectA11yComponente('snackbar','Snackbar')" class="a11y-componente-option w-full text-left px-3 py-2 rounded-lg text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20">Snackbar</button>
-              <button type="button" role="option" onclick="selectA11yComponente('stepper','Stepper')" class="a11y-componente-option w-full text-left px-3 py-2 rounded-lg text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20">Stepper</button>
-              <button type="button" role="option" onclick="selectA11yComponente('switch','Switch')" class="a11y-componente-option w-full text-left px-3 py-2 rounded-lg text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20">Switch</button>
-              <button type="button" role="option" onclick="selectA11yComponente('table','Table')" class="a11y-componente-option w-full text-left px-3 py-2 rounded-lg text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20">Table</button>
-              <button type="button" role="option" onclick="selectA11yComponente('tab group','Tab Group')" class="a11y-componente-option w-full text-left px-3 py-2 rounded-lg text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20">Tab Group</button>
-              <button type="button" role="option" onclick="selectA11yComponente('imagem','Imagem')" class="a11y-componente-option w-full text-left px-3 py-2 rounded-lg text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20">Imagem</button>
-              <button type="button" role="option" onclick="selectA11yComponente('outro','Outro (fora do catálogo)')" class="a11y-componente-option w-full text-left px-3 py-2 rounded-lg text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20 border-t border-gray-100 dark:border-dark-line mt-1 pt-2">Outro (fora do catálogo)</button>
+            <div id="a11y-el-componente-menu" role="listbox" class="hidden absolute left-0 right-0 top-full mt-1 z-50 max-h-56 overflow-y-auto bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-dsc-medium shadow-xl p-1">
+              <button type="button" role="option" onclick="selectA11yComponente('accordion','Accordion')" class="a11y-componente-option w-full text-left px-dsc-micro py-dsc-nano rounded-dsc-small text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20">Accordion</button>
+              <button type="button" role="option" onclick="selectA11yComponente('breadcrumb','Breadcrumb')" class="a11y-componente-option w-full text-left px-dsc-micro py-dsc-nano rounded-dsc-small text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20">Breadcrumb</button>
+              <button type="button" role="option" onclick="selectA11yComponente('button','Button')" class="a11y-componente-option w-full text-left px-dsc-micro py-dsc-nano rounded-dsc-small text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20">Button</button>
+              <button type="button" role="option" onclick="selectA11yComponente('checkbox','Checkbox')" class="a11y-componente-option w-full text-left px-dsc-micro py-dsc-nano rounded-dsc-small text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20">Checkbox</button>
+              <button type="button" role="option" onclick="selectA11yComponente('dialog','Dialog')" class="a11y-componente-option w-full text-left px-dsc-micro py-dsc-nano rounded-dsc-small text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20">Dialog</button>
+              <button type="button" role="option" onclick="selectA11yComponente('inputs','Inputs')" class="a11y-componente-option w-full text-left px-dsc-micro py-dsc-nano rounded-dsc-small text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20">Inputs</button>
+              <button type="button" role="option" onclick="selectA11yComponente('link','Link')" class="a11y-componente-option w-full text-left px-dsc-micro py-dsc-nano rounded-dsc-small text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20">Link</button>
+              <button type="button" role="option" onclick="selectA11yComponente('listas','Listas')" class="a11y-componente-option w-full text-left px-dsc-micro py-dsc-nano rounded-dsc-small text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20">Listas</button>
+              <button type="button" role="option" onclick="selectA11yComponente('paginator','Paginator')" class="a11y-componente-option w-full text-left px-dsc-micro py-dsc-nano rounded-dsc-small text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20">Paginator</button>
+              <button type="button" role="option" onclick="selectA11yComponente('radio button','Radio Button')" class="a11y-componente-option w-full text-left px-dsc-micro py-dsc-nano rounded-dsc-small text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20">Radio Button</button>
+              <button type="button" role="option" onclick="selectA11yComponente('snackbar','Snackbar')" class="a11y-componente-option w-full text-left px-dsc-micro py-dsc-nano rounded-dsc-small text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20">Snackbar</button>
+              <button type="button" role="option" onclick="selectA11yComponente('stepper','Stepper')" class="a11y-componente-option w-full text-left px-dsc-micro py-dsc-nano rounded-dsc-small text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20">Stepper</button>
+              <button type="button" role="option" onclick="selectA11yComponente('switch','Switch')" class="a11y-componente-option w-full text-left px-dsc-micro py-dsc-nano rounded-dsc-small text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20">Switch</button>
+              <button type="button" role="option" onclick="selectA11yComponente('table','Table')" class="a11y-componente-option w-full text-left px-dsc-micro py-dsc-nano rounded-dsc-small text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20">Table</button>
+              <button type="button" role="option" onclick="selectA11yComponente('tab group','Tab Group')" class="a11y-componente-option w-full text-left px-dsc-micro py-dsc-nano rounded-dsc-small text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20">Tab Group</button>
+              <button type="button" role="option" onclick="selectA11yComponente('imagem','Imagem')" class="a11y-componente-option w-full text-left px-dsc-micro py-dsc-nano rounded-dsc-small text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20">Imagem</button>
+              <button type="button" role="option" onclick="selectA11yComponente('outro','Outro (fora do catálogo)')" class="a11y-componente-option w-full text-left px-dsc-micro py-dsc-nano rounded-dsc-small text-[12px] text-slate-700 dark:text-white hover:bg-cyan-50 dark:hover:bg-cyan-900/20 border-t border-gray-100 dark:border-dark-line mt-1 pt-2">Outro (fora do catálogo)</button>
             </div>
           </div>
         </div>
@@ -200,43 +212,43 @@
         <div id="a11y-el-desktop-block" class="space-y-4">
           <div id="a11y-el-componente-outro-wrap" class="hidden">
             <div class="flex items-center justify-between mb-1.5 ml-1">
-              <label for="a11y-el-componente-outro" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Nome do componente</label>
-              <span id="a11y-el-componente-outro-counter" class="text-[9px] text-slate-400 dark:text-dark-muted shrink-0">0/80</span>
+              <label for="a11y-el-componente-outro" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Nome do componente</label>
+              <span id="a11y-el-componente-outro-counter" class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted shrink-0">0/80</span>
             </div>
             <input type="text" id="a11y-el-componente-outro" maxlength="80" placeholder="Ex: Botão primário"
               oninput="updateA11yCharCounter(this)"
-              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
+              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
           </div>
-          <div id="a11y-el-preview" class="p-3 bg-gray-50 dark:bg-dark-bg rounded-xl border border-gray-200 dark:border-dark-line space-y-2.5">
+          <div id="a11y-el-preview" class="p-3 bg-gray-50 dark:bg-dark-bg rounded-dsc-medium border border-gray-200 dark:border-dark-line space-y-2.5">
             <div>
-              <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Descrição</p>
+              <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Descrição</p>
               <p id="a11y-el-preview-descricao" class="text-[12px] text-slate-700 dark:text-white leading-snug"></p>
             </div>
             <div id="a11y-el-preview-nota-wrap">
-              <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Nota de Código</p>
+              <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Nota de Código</p>
               <p id="a11y-el-preview-nota" class="text-[12px] font-mono text-slate-700 dark:text-white leading-snug"></p>
             </div>
           </div>
         </div>
-        <div class="flex flex-wrap gap-3">
+        <div class="flex flex-wrap gap-dsc-micro">
           <div class="w-12 shrink-0">
-            <label for="a11y-el-tag-input" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Tag</label>
+            <label for="a11y-el-tag-input" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Tag</label>
             <input type="text" id="a11y-el-tag-input" maxlength="8" value="A" placeholder="A, A1..."
               oninput="validateA11yTagInput(); updateA11yCharCounter(this)"
-              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-1 py-2.5 text-[13px] text-center font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-cyan-100 outline-none transition-all uppercase" />
-            <span id="a11y-el-tag-input-counter" class="block text-center text-[9px] text-slate-400 dark:text-dark-muted mt-0.5">1/8</span>
+              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-1 py-2.5 text-[13px] text-center font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-cyan-100 outline-none transition-all uppercase" />
+            <span id="a11y-el-tag-input-counter" class="block text-center text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted mt-0.5">1/8</span>
           </div>
           <div class="flex-1 min-w-[10rem]">
             <div class="flex items-center justify-between mb-1.5 ml-1">
-              <label for="a11y-el-label" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Label (accessibilityLabel)</label>
-              <span id="a11y-el-label-counter" class="text-[9px] text-slate-400 dark:text-dark-muted shrink-0">0/100</span>
+              <label for="a11y-el-label" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Label (accessibilityLabel)</label>
+              <span id="a11y-el-label-counter" class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted shrink-0">0/100</span>
             </div>
             <input type="text" id="a11y-el-label" maxlength="100" placeholder="Ex: Botão de enviar formulário"
               oninput="updateA11yCharCounter(this)"
-              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
+              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
           </div>
         </div>
-        <p id="a11y-el-tag-error" class="hidden text-[10px] text-red-500 -mt-2.5 ml-1">Formato: A, B, A1, A2, A1.1, A1.2...</p>
+        <p id="a11y-el-tag-error" class="hidden text-dsc-label-tiny normal-case tracking-normal text-red-500 -mt-2.5 ml-1">Formato: A, B, A1, A2, A1.1, A1.2...</p>
         <!-- Variante secundária real do componente (ex: Button → "tipo":
              default/desabilitado/de icone...) — não confundir com o
              <select> de "Componente" (nível 1, controla qual dos 16
@@ -250,7 +262,7 @@
              componente ESCOLHIDO realmente tem na lib. Também faz parte do
              bloco desktop — escondida junto em specs mobile. -->
         <div id="a11y-el-toggles-wrap" class="hidden space-y-2.5">
-          <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider ml-1">Campos do componente</p>
+          <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider ml-1">Campos do componente</p>
           <div id="a11y-el-toggles-list" class="space-y-2"></div>
         </div>
         <!-- Sub-variante mobile ("Variante" real do component set
@@ -260,17 +272,17 @@
              batem 1:1 com A11Y_ELEMENTO_MOBILE_VARIANTS (strings exatas da
              property real do Figma). -->
         <div id="a11y-el-mobile-variant-wrap" class="hidden space-y-2">
-          <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider ml-1">Variante (mobile)</p>
-          <div class="grid grid-cols-3 gap-2">
-            <label class="flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl border border-gray-200 dark:border-dark-line text-[11px] font-bold text-slate-700 dark:text-white cursor-pointer has-[:checked]:border-cyan-400 has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/20">
+          <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider ml-1">Variante (mobile)</p>
+          <div class="grid grid-cols-3 gap-dsc-nano">
+            <label class="flex items-center justify-center gap-1.5 px-2 py-dsc-nano rounded-dsc-medium border border-gray-200 dark:border-dark-line text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-700 dark:text-white cursor-pointer has-[:checked]:border-cyan-400 has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/20">
               <input type="radio" name="a11y-el-mobile-variant" value="componente" checked onchange="updateA11yElementoMobileVariant()" class="w-3.5 h-3.5 text-cyan-600 focus:ring-cyan-500" />
               Componente
             </label>
-            <label class="flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl border border-gray-200 dark:border-dark-line text-[11px] font-bold text-slate-700 dark:text-white cursor-pointer has-[:checked]:border-cyan-400 has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/20">
+            <label class="flex items-center justify-center gap-1.5 px-2 py-dsc-nano rounded-dsc-medium border border-gray-200 dark:border-dark-line text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-700 dark:text-white cursor-pointer has-[:checked]:border-cyan-400 has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/20">
               <input type="radio" name="a11y-el-mobile-variant" value="link" onchange="updateA11yElementoMobileVariant()" class="w-3.5 h-3.5 text-cyan-600 focus:ring-cyan-500" />
               Link
             </label>
-            <label class="flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl border border-gray-200 dark:border-dark-line text-[11px] font-bold text-slate-700 dark:text-white cursor-pointer has-[:checked]:border-cyan-400 has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/20">
+            <label class="flex items-center justify-center gap-1.5 px-2 py-dsc-nano rounded-dsc-medium border border-gray-200 dark:border-dark-line text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-700 dark:text-white cursor-pointer has-[:checked]:border-cyan-400 has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/20">
               <input type="radio" name="a11y-el-mobile-variant" value="texto alternativo" onchange="updateA11yElementoMobileVariant()" class="w-3.5 h-3.5 text-cyan-600 focus:ring-cyan-500" />
               Texto Alternativo
             </label>
@@ -282,25 +294,25 @@
              "[a11y] Box specs LT" não tem nenhum desses campos. Visível só
              quando modal.dataset.a11yOrigin === 'mobile'. -->
         <div id="a11y-el-mobile-toggles-wrap" class="hidden space-y-2.5">
-          <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider ml-1">Campos exclusivos mobile</p>
+          <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider ml-1">Campos exclusivos mobile</p>
           <div id="a11y-el-mobile-toggles-list" class="space-y-2"></div>
         </div>
       </div>
 
       <!-- Estrutura da Página -->
       <div id="a11y-fields-estrutura" class="hidden space-y-4">
-        <div class="grid grid-cols-4 gap-3">
+        <div class="grid grid-cols-4 gap-dsc-micro">
           <div class="col-span-1">
-            <label for="a11y-estrutura-tag-input" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Tag</label>
+            <label for="a11y-estrutura-tag-input" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Tag</label>
             <input type="text" id="a11y-estrutura-tag-input" maxlength="8" value="A" placeholder="A, A1..."
               oninput="validateA11yTagInput(); updateA11yCharCounter(this)"
-              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-2 py-2.5 text-[13px] text-center font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-cyan-100 outline-none transition-all uppercase" />
-            <span id="a11y-estrutura-tag-input-counter" class="block text-center text-[9px] text-slate-400 dark:text-dark-muted mt-0.5">1/8</span>
+              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-2 py-2.5 text-[13px] text-center font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-cyan-100 outline-none transition-all uppercase" />
+            <span id="a11y-estrutura-tag-input-counter" class="block text-center text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted mt-0.5">1/8</span>
           </div>
           <div class="col-span-3">
-            <label for="a11y-estrutura-subtipo-select" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Subtipo</label>
+            <label for="a11y-estrutura-subtipo-select" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Subtipo</label>
             <select id="a11y-estrutura-subtipo-select" onchange="updateA11yEstruturaFields()"
-              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all">
+              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all">
               <option value="idiomas">Idiomas</option>
               <option value="marco de navegacao">Marco de Navegação</option>
               <option value="titulo da pagina">Título da Página</option>
@@ -308,21 +320,21 @@
             </select>
           </div>
         </div>
-        <p id="a11y-estrutura-tag-error" class="hidden text-[10px] text-red-500 -mt-2.5 ml-1">Formato: A, B, A1, A2, A1.1, A1.2...</p>
+        <p id="a11y-estrutura-tag-error" class="hidden text-dsc-label-tiny normal-case tracking-normal text-red-500 -mt-2.5 ml-1">Formato: A, B, A1, A2, A1.1, A1.2...</p>
 
         <div id="a11y-estrutura-idiomas-wrap" class="hidden">
-          <label for="a11y-estrutura-idiomas-select" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Idioma de</label>
+          <label for="a11y-estrutura-idiomas-select" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Idioma de</label>
           <select id="a11y-estrutura-idiomas-select" onchange="updateA11yEstruturaFields()"
-            class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all">
+            class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all">
             <option value="da pagina">Da página</option>
             <option value="das partes">Das partes</option>
           </select>
         </div>
 
         <div id="a11y-estrutura-marco-wrap" class="hidden">
-          <label for="a11y-estrutura-marco-select" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Marco</label>
+          <label for="a11y-estrutura-marco-select" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Marco</label>
           <select id="a11y-estrutura-marco-select" onchange="updateA11yEstruturaFields()"
-            class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all">
+            class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all">
             <option value="header">Header</option>
             <option value="nav">Nav</option>
             <option value="main">Main</option>
@@ -334,15 +346,15 @@
 
         <div>
           <div class="flex items-center justify-between mb-1.5 ml-1">
-            <label for="a11y-estrutura-descricao" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Descrição</label>
-            <span id="a11y-estrutura-descricao-counter" class="hidden text-[9px] text-slate-400 dark:text-dark-muted shrink-0">0/200</span>
+            <label for="a11y-estrutura-descricao" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Descrição</label>
+            <span id="a11y-estrutura-descricao-counter" class="hidden text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted shrink-0">0/200</span>
           </div>
           <input type="text" id="a11y-estrutura-descricao" readonly maxlength="200"
             oninput="updateA11yCharCounter(this)"
-            class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
+            class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
         </div>
-        <div id="a11y-estrutura-nota-wrap" class="p-3 bg-gray-50 dark:bg-dark-bg rounded-xl border border-gray-200 dark:border-dark-line">
-          <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Nota de Código</p>
+        <div id="a11y-estrutura-nota-wrap" class="p-3 bg-gray-50 dark:bg-dark-bg rounded-dsc-medium border border-gray-200 dark:border-dark-line">
+          <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Nota de Código</p>
           <p id="a11y-estrutura-nota" class="text-[12px] font-mono text-slate-700 dark:text-white leading-snug"></p>
         </div>
         <!-- Campos dinâmicos reais dos sub-níveis "EE idiomas"/"EE marco de
@@ -350,7 +362,7 @@
              componente real catalogado. Vazio em "Título da Página" e em
              "Customizável". -->
         <div id="a11y-estrutura-toggles-wrap" class="hidden space-y-2.5">
-          <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider ml-1">Campos do componente</p>
+          <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider ml-1">Campos do componente</p>
           <div id="a11y-estrutura-toggles-list" class="space-y-2"></div>
         </div>
       </div>
@@ -358,9 +370,9 @@
       <!-- Nível de Título -->
       <div id="a11y-fields-titulo" class="hidden space-y-4">
         <div>
-          <label for="a11y-titulo-nivel-select" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Nível</label>
+          <label for="a11y-titulo-nivel-select" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Nível</label>
           <select id="a11y-titulo-nivel-select" onchange="updateA11yTituloFields()"
-            class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all">
+            class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all">
             <option value="h1">H1</option>
             <option value="h2">H2</option>
             <option value="h3">H3</option>
@@ -370,20 +382,20 @@
             <option value="mobile">H (mobile — sem nível)</option>
           </select>
         </div>
-        <div class="p-3 bg-gray-50 dark:bg-dark-bg rounded-xl border border-gray-200 dark:border-dark-line space-y-2.5">
+        <div class="p-3 bg-gray-50 dark:bg-dark-bg rounded-dsc-medium border border-gray-200 dark:border-dark-line space-y-2.5">
           <div>
-            <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Descrição</p>
+            <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Descrição</p>
             <p id="a11y-fixed-descricao" class="text-[12px] text-slate-700 dark:text-white leading-snug"></p>
           </div>
           <div id="a11y-fixed-nota-wrap" class="hidden">
-            <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Nota de Código</p>
+            <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Nota de Código</p>
             <p id="a11y-fixed-nota" class="text-[12px] font-mono text-slate-700 dark:text-white leading-snug"></p>
           </div>
         </div>
         <!-- Campo dinâmico real do set "niveis de titulo" (só "Observações")
              — some no modo mobile ("H", sem nível real catalogado). -->
         <div id="a11y-titulo-toggles-wrap" class="hidden space-y-2.5">
-          <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider ml-1">Campos do componente</p>
+          <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider ml-1">Campos do componente</p>
           <div id="a11y-titulo-toggles-list" class="space-y-2"></div>
         </div>
       </div>
@@ -391,223 +403,223 @@
       <!-- Elemento Decorativo -->
       <div id="a11y-fields-decorativo" class="hidden space-y-4">
         <div>
-          <label for="a11y-decorativo-subtipo-select" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Subtipo</label>
+          <label for="a11y-decorativo-subtipo-select" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Subtipo</label>
           <select id="a11y-decorativo-subtipo-select" onchange="updateA11yDecorativoFields()"
-            class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all">
+            class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all">
             <option value="gerais">Gerais</option>
             <option value="imagem">Imagem</option>
           </select>
         </div>
-        <div class="p-3 bg-gray-50 dark:bg-dark-bg rounded-xl border border-gray-200 dark:border-dark-line space-y-2.5">
+        <div class="p-3 bg-gray-50 dark:bg-dark-bg rounded-dsc-medium border border-gray-200 dark:border-dark-line space-y-2.5">
           <div>
-            <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Descrição</p>
+            <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Descrição</p>
             <p id="a11y-fixed-descricao-dec" class="text-[12px] text-slate-700 dark:text-white leading-snug">Não deve ser anunciado pelo Leitor de Tela.</p>
           </div>
           <div>
-            <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Nota de Código</p>
+            <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Nota de Código</p>
             <p id="a11y-fixed-nota-dec" class="text-[12px] font-mono text-slate-700 dark:text-white leading-snug"></p>
           </div>
         </div>
         <!-- Campos dinâmicos reais do set correspondente ao subtipo (ED
              gerais/ED imagem) — Observações e Notas de Código. -->
         <div id="a11y-decorativo-toggles-wrap" class="hidden space-y-2.5">
-          <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider ml-1">Campos do componente</p>
+          <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider ml-1">Campos do componente</p>
           <div id="a11y-decorativo-toggles-list" class="space-y-2"></div>
         </div>
       </div>
 
       <!-- Informações Adicionais -->
       <div id="a11y-fields-informacoes" class="hidden space-y-4">
-        <div class="grid grid-cols-4 gap-3">
+        <div class="grid grid-cols-4 gap-dsc-micro">
           <div class="col-span-1">
-            <label for="a11y-informacoes-tag-input" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Tag</label>
+            <label for="a11y-informacoes-tag-input" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Tag</label>
             <input type="text" id="a11y-informacoes-tag-input" maxlength="8" value="A" placeholder="A, A1..."
               oninput="validateA11yTagInput(); updateA11yCharCounter(this)"
-              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-2 py-2.5 text-[13px] text-center font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-cyan-100 outline-none transition-all uppercase" />
-            <span id="a11y-informacoes-tag-input-counter" class="block text-center text-[9px] text-slate-400 dark:text-dark-muted mt-0.5">1/8</span>
+              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-2 py-2.5 text-[13px] text-center font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-cyan-100 outline-none transition-all uppercase" />
+            <span id="a11y-informacoes-tag-input-counter" class="block text-center text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted mt-0.5">1/8</span>
           </div>
           <div class="col-span-3">
-            <label for="a11y-informacoes-subtipo-select" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Subtipo</label>
+            <label for="a11y-informacoes-subtipo-select" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Subtipo</label>
             <select id="a11y-informacoes-subtipo-select" onchange="updateA11yInformacoesFields()"
-              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all">
+              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all">
               <option value="handoffs">Handoffs</option>
               <option value="conteudo extra">Conteúdo extra</option>
               <option value="customizavel">Customizável</option>
             </select>
           </div>
         </div>
-        <p id="a11y-informacoes-tag-error" class="hidden text-[10px] text-red-500 -mt-2.5 ml-1">Formato: A, B, A1, A2, A1.1, A1.2...</p>
+        <p id="a11y-informacoes-tag-error" class="hidden text-dsc-label-tiny normal-case tracking-normal text-red-500 -mt-2.5 ml-1">Formato: A, B, A1, A2, A1.1, A1.2...</p>
         <div>
           <div class="flex items-center justify-between mb-1.5 ml-1">
-            <label for="a11y-informacoes-descricao" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Descrição</label>
-            <span id="a11y-informacoes-descricao-counter" class="hidden text-[9px] text-slate-400 dark:text-dark-muted shrink-0">0/200</span>
+            <label for="a11y-informacoes-descricao" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Descrição</label>
+            <span id="a11y-informacoes-descricao-counter" class="hidden text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted shrink-0">0/200</span>
           </div>
           <input type="text" id="a11y-informacoes-descricao" readonly maxlength="200"
             oninput="updateA11yCharCounter(this)"
-            class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
+            class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
         </div>
         <!-- Campo dinâmico real do set "informações adicionais" (só
              "Observações") — some no subtipo "Customizável" (sem
              componente real catalogado). -->
         <div id="a11y-informacoes-toggles-wrap" class="hidden space-y-2.5">
-          <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider ml-1">Campos do componente</p>
+          <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider ml-1">Campos do componente</p>
           <div id="a11y-informacoes-toggles-list" class="space-y-2"></div>
         </div>
       </div>
 
       <!-- Modo de marcação: Contorno (Agrupamento, envolve a área) vs Linha (Conector, liga a um ponto) -->
       <div class="mt-4">
-        <label class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Modo de marcação</label>
-        <div class="grid grid-cols-2 gap-2">
-          <label class="relative flex items-center gap-2 p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all has-[:checked]:border-[#0891B2] has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/30 group">
+        <label class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Modo de marcação</label>
+        <div class="grid grid-cols-2 gap-dsc-nano">
+          <label class="relative flex items-center gap-dsc-nano p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium cursor-pointer hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all has-[:checked]:border-[#0891B2] has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/30 group">
             <input type="radio" name="a11y-draw-mode" value="contorno" checked class="sr-only" />
             <i data-lucide="square-dashed" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0891B2] shrink-0"></i>
-            <span class="text-[11px] font-bold text-gray-600 dark:text-dark-muted group-has-[:checked]:text-[#0891B2]">Contorno</span>
+            <span class="text-dsc-label-tiny normal-case tracking-normal font-bold text-gray-600 dark:text-dark-muted group-has-[:checked]:text-[#0891B2]">Contorno</span>
           </label>
-          <label class="relative flex items-center gap-2 p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all has-[:checked]:border-[#0891B2] has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/30 group">
+          <label class="relative flex items-center gap-dsc-nano p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium cursor-pointer hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all has-[:checked]:border-[#0891B2] has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/30 group">
             <input type="radio" name="a11y-draw-mode" value="linha" class="sr-only" />
             <i data-lucide="spline" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0891B2] shrink-0"></i>
-            <span class="text-[11px] font-bold text-gray-600 dark:text-dark-muted group-has-[:checked]:text-[#0891B2]">Linha</span>
+            <span class="text-dsc-label-tiny normal-case tracking-normal font-bold text-gray-600 dark:text-dark-muted group-has-[:checked]:text-[#0891B2]">Linha</span>
           </label>
         </div>
-        <p class="text-[10px] text-slate-400 dark:text-dark-muted mt-1 ml-1 leading-snug">Contorno envolve o elemento com uma moldura. Linha liga um ponto do elemento ao card com um traço.</p>
+        <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted mt-1 ml-1 leading-snug">Contorno envolve o elemento com uma moldura. Linha liga um ponto do elemento ao card com um traço.</p>
       </div>
 
       <!-- Guide Side Selection (todas as categorias) -->
       <div class="mt-3 mb-1">
-        <label class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Lado da Guia</label>
-        <div class="grid grid-cols-4 gap-2">
-          <label class="relative flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all has-[:checked]:border-[#0891B2] has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/30 group">
+        <label class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Lado da Guia</label>
+        <div class="grid grid-cols-4 gap-dsc-nano">
+          <label class="relative flex flex-col items-center gap-dsc-quark p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium cursor-pointer hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all has-[:checked]:border-[#0891B2] has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/30 group">
             <input type="radio" name="a11y-guide-side" value="right" checked class="sr-only" />
             <i data-lucide="arrow-right" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0891B2]"></i>
-            <span class="text-[9px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0891B2]">Dir.</span>
+            <span class="text-dsc-label-tiny normal-case tracking-normal font-bold whitespace-nowrap text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0891B2]">Dir.</span>
           </label>
-          <label class="relative flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all has-[:checked]:border-[#0891B2] has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/30 group">
+          <label class="relative flex flex-col items-center gap-dsc-quark p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium cursor-pointer hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all has-[:checked]:border-[#0891B2] has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/30 group">
             <input type="radio" name="a11y-guide-side" value="left" class="sr-only" />
             <i data-lucide="arrow-left" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0891B2]"></i>
-            <span class="text-[9px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0891B2]">Esq.</span>
+            <span class="text-dsc-label-tiny normal-case tracking-normal font-bold whitespace-nowrap text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0891B2]">Esq.</span>
           </label>
-          <label class="relative flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all has-[:checked]:border-[#0891B2] has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/30 group">
+          <label class="relative flex flex-col items-center gap-dsc-quark p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium cursor-pointer hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all has-[:checked]:border-[#0891B2] has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/30 group">
             <input type="radio" name="a11y-guide-side" value="top" class="sr-only" />
             <i data-lucide="arrow-up" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0891B2]"></i>
-            <span class="text-[9px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0891B2]">Topo</span>
+            <span class="text-dsc-label-tiny normal-case tracking-normal font-bold whitespace-nowrap text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0891B2]">Topo</span>
           </label>
-          <label class="relative flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all has-[:checked]:border-[#0891B2] has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/30 group">
+          <label class="relative flex flex-col items-center gap-dsc-quark p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium cursor-pointer hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all has-[:checked]:border-[#0891B2] has-[:checked]:bg-cyan-50 dark:has-[:checked]:bg-cyan-900/30 group">
             <input type="radio" name="a11y-guide-side" value="bottom" class="sr-only" />
             <i data-lucide="arrow-down" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0891B2]"></i>
-            <span class="text-[9px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0891B2]">Base</span>
+            <span class="text-dsc-label-tiny normal-case tracking-normal font-bold whitespace-nowrap text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0891B2]">Base</span>
           </label>
         </div>
       </div>
       </div>
     </div>
-    <div class="p-3 border-t border-gray-100 dark:border-dark-line flex gap-2 shrink-0">
-      <button onclick="cancelA11yModalExplicit()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors">Cancelar</button>
+    <div class="p-3 border-t border-gray-100 dark:border-dark-line flex gap-dsc-nano shrink-0">
+      <button onclick="cancelA11yModalExplicit()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-dsc-large transition-colors">Cancelar</button>
       <!-- Só visível durante o wizard de revisão da Detecção Automática
            (modal.dataset.wizardActive === '1', ver startA11yBatchWizard/
            _advanceA11yBatchWizard em accessibility.js) — descarta o item
            corrente da fila sem criar spec e avança pro próximo. -->
-      <button id="btn-a11y-wizard-discard" onclick="discardCurrentA11yBatchWizardItem()" class="hidden flex-1 py-2.5 text-[12px] font-bold text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/10 dark:hover:bg-red-900/20 rounded-2xl transition-colors">Descartar</button>
-      <button id="btn-a11y-confirm" onclick="confirmA11ySpec()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#0891B2] hover:bg-cyan-700 rounded-2xl transition-colors shadow-lg shadow-cyan-500/20 disabled:opacity-50 disabled:cursor-not-allowed">Aplicar</button>
+      <button id="btn-a11y-wizard-discard" onclick="discardCurrentA11yBatchWizardItem()" class="hidden flex-1 py-2.5 text-[12px] font-bold text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/10 dark:hover:bg-red-900/20 rounded-dsc-large transition-colors">Descartar</button>
+      <button id="btn-a11y-confirm" onclick="confirmA11ySpec()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#0891B2] hover:bg-cyan-700 rounded-dsc-large transition-colors shadow-lg shadow-cyan-500/20 disabled:opacity-50 disabled:cursor-not-allowed">Aplicar</button>
     </div>
 
   </div></div>
 
-<!-- MODAL: MARCAR ÁREA (selo numerado de seção/tela) -->
+<!-- MODAL: SELECIONAR TELA (selo numerado de seção/tela) -->
 <!-- Controlado por modules/accessibility.js: openA11yAreaModal, closeA11yAreaModal, confirmA11yArea -->
-<div id="a11y-area-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-area-modal-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-4">
+<div id="a11y-area-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-area-modal-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-dsc-tiny">
   <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeA11yAreaModal()" aria-hidden="true"></div>
-  <div class="relative z-10 w-full max-w-sm max-h-full min-h-0 flex flex-col rounded-2xl overflow-hidden shadow-2xl bg-white dark:bg-dark-surface">
-  <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line shrink-0">
-    <h3 id="a11y-area-modal-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-2">
-      <i data-lucide="map-pin" class="w-4 h-4 text-[#0070af]" aria-hidden="true"></i> Marcar Área
+  <div class="relative z-10 w-full max-w-sm max-h-full min-h-0 flex flex-col rounded-dsc-large overflow-hidden shadow-dsc-elevation-2 bg-white dark:bg-dark-surface">
+  <div class="flex items-center justify-between p-dsc-tiny border-b border-gray-100 dark:border-dark-line shrink-0">
+    <h3 id="a11y-area-modal-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-dsc-nano">
+      <i data-lucide="scan" class="w-4 h-4 text-[#0070af]" aria-hidden="true"></i> Selecionar Tela
     </h3>
     <button onclick="closeA11yAreaModal()" title="Fechar" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
       <i data-lucide="x" class="w-4 h-4"></i>
     </button>
   </div>
-  <div class="p-6 space-y-4 overflow-y-auto flex-1 min-h-0" onscroll="handleScroll(this)">
+  <div class="p-dsc-smaller space-y-4 overflow-y-auto flex-1 min-h-0" onscroll="handleScroll(this)">
     <div class="max-w-sm mx-auto space-y-4">
-      <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">
-        Selecione a seção no canvas e dê um rótulo — o selo criado organiza as specs dessa área na listagem.
+      <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-relaxed">
+        Seleciona o frame no canvas e clique em "Atualizar nome" para recuperar o nome do frame — o marcador criado organiza as specs dessa tela na listagem.
       </p>
       <!-- Aviso "Continuar na Section atual / Iniciar nova Section" removido
            (2026-09-04-k, achado real reportado pelo usuário): aparecia toda
            vez que este modal era aberto num arquivo já documentado, mesmo
            sendo só mais um frame do MESMO handoff — resultado prático era
            cada área acabando numa Section diferente em vez de todas como
-           grupos irmãos na mesma Section. Marcar Área agora sempre entra na
-           Section ativa, sem perguntar. -->
+           grupos irmãos na mesma Section. Selecionar Tela agora sempre entra
+           na Section ativa, sem perguntar. -->
       <div>
         <div class="flex items-center justify-between mb-1.5 ml-1">
-          <label for="a11y-area-label-input" class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Rótulo da área</label>
+          <label for="a11y-area-label-input" class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Rótulo da tela</label>
           <button type="button" onclick="refreshA11yAreaLabelFromSelection()" title="Puxar nome do elemento selecionado no canvas" aria-label="Puxar nome do elemento selecionado no canvas"
-            class="flex items-center gap-1 text-[10px] font-bold text-[#0070af] hover:text-blue-600 dark:text-blue-400 transition-colors">
+            class="flex items-center gap-dsc-quark text-dsc-label-tiny normal-case tracking-normal font-bold text-[#0070af] hover:text-blue-600 dark:text-blue-400 transition-colors">
             <i data-lucide="refresh-cw" class="w-3 h-3"></i> Atualizar nome
           </button>
         </div>
         <input type="text" id="a11y-area-label-input" placeholder="Ex: Home Portal DSC" maxlength="80"
           oninput="updateA11yCharCounter(this)"
-          class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all" />
-        <span id="a11y-area-label-input-counter" class="block text-right text-[9px] text-slate-400 dark:text-dark-muted mt-1">0/80</span>
+          class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all" />
+        <span id="a11y-area-label-input-counter" class="block text-right text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted mt-1">0/80</span>
       </div>
       <!-- Escolha Automático/Manual saiu daqui (2026-09-04-g, pedido do
-           usuário) — Marcar Área agora só cria a área, sem disparar
+           usuário) — Selecionar Tela agora só cria a tela, sem disparar
            varredura nenhuma. O Mapeamento Automático virou uma ação
            disponível a qualquer momento dentro da tab Leitor de Tela da
            workspace da área, ao lado das outras funcionalidades
            automáticas do plugin (ver _startA11yMappingFromLeitorTab,
            accessibility.js). -->
-      <div class="rounded-xl border border-gray-200 dark:border-dark-line overflow-hidden">
+      <div class="rounded-dsc-medium border border-gray-200 dark:border-dark-line overflow-hidden">
         <button type="button" onclick="toggleAccordion(this)" aria-expanded="true"
-          class="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-dark-line/20 transition-colors">
-          <span class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Configurações do selo</span>
+          class="w-full flex items-center justify-between gap-dsc-nano px-dsc-micro py-2.5 text-left hover:bg-gray-50 dark:hover:bg-dark-line/20 transition-colors">
+          <span class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Configurações do selo</span>
           <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-gray-400 transition-transform shrink-0" style="transform:rotate(180deg)"></i>
         </button>
-        <div class="accordion-content px-3 pb-3 space-y-4">
+        <div class="accordion-content px-dsc-micro pb-3 space-y-4">
       <div>
-        <label class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Posição do conector</label>
+        <label class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Posição do conector</label>
         <div class="grid grid-cols-5 gap-1.5">
-          <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#0070af] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+          <label class="flex flex-col items-center gap-dsc-quark px-0.5 py-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-dsc-medium cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#0070af] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
             <input type="radio" name="a11y-area-conector" value="superior" checked class="sr-only" />
             <i data-lucide="arrow-up" class="w-3.5 h-3.5 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]"></i>
-            <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]">Topo</span>
+            <span class="text-dsc-label-tiny normal-case tracking-normal font-bold whitespace-nowrap text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]">Topo</span>
           </label>
-          <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#0070af] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+          <label class="flex flex-col items-center gap-dsc-quark px-0.5 py-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-dsc-medium cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#0070af] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
             <input type="radio" name="a11y-area-conector" value="inferior" class="sr-only" />
             <i data-lucide="arrow-down" class="w-3.5 h-3.5 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]"></i>
-            <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]">Base</span>
+            <span class="text-dsc-label-tiny normal-case tracking-normal font-bold whitespace-nowrap text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]">Base</span>
           </label>
-          <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#0070af] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+          <label class="flex flex-col items-center gap-dsc-quark px-0.5 py-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-dsc-medium cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#0070af] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
             <input type="radio" name="a11y-area-conector" value="esquerda" class="sr-only" />
             <i data-lucide="arrow-left" class="w-3.5 h-3.5 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]"></i>
-            <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]">Esq.</span>
+            <span class="text-dsc-label-tiny normal-case tracking-normal font-bold whitespace-nowrap text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]">Esq.</span>
           </label>
-          <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#0070af] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+          <label class="flex flex-col items-center gap-dsc-quark px-0.5 py-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-dsc-medium cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#0070af] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
             <input type="radio" name="a11y-area-conector" value="direita" class="sr-only" />
             <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]"></i>
-            <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]">Dir.</span>
+            <span class="text-dsc-label-tiny normal-case tracking-normal font-bold whitespace-nowrap text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]">Dir.</span>
           </label>
-          <label class="flex flex-col items-center gap-1 p-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#0070af] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
+          <label class="flex flex-col items-center gap-dsc-quark px-0.5 py-2 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-dsc-medium cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#0070af] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
             <input type="radio" name="a11y-area-conector" value="desativado" class="sr-only" />
             <i data-lucide="ban" class="w-3.5 h-3.5 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]"></i>
-            <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]">Nenhum</span>
+            <span class="text-dsc-label-tiny normal-case tracking-normal font-bold whitespace-nowrap text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#0070af]">Nenhum</span>
           </label>
         </div>
-        <p class="text-[10px] text-slate-400 dark:text-dark-muted mt-1.5 ml-1 leading-relaxed">Lado do componente real da lib onde o conector/linha do selo aparece. "Nenhum" mostra só o número, sem linha.</p>
+        <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted mt-1.5 ml-1 leading-relaxed">Lado do componente real da lib onde o conector/linha do selo aparece. "Nenhum" mostra só o número, sem linha.</p>
       </div>
       <div>
-        <label for="a11y-area-number-input" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Número</label>
+        <label for="a11y-area-number-input" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Número</label>
         <input type="number" id="a11y-area-number-input" min="1" step="1"
-          class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all" />
+          class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all" />
       </div>
         </div>
       </div>
     </div>
     </div>
-    <div class="p-4 border-t border-gray-100 dark:border-dark-line flex gap-2 shrink-0">
-      <button onclick="closeA11yAreaModal()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors">Cancelar</button>
-      <button onclick="confirmA11yArea()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#0070af] hover:bg-blue-600 rounded-2xl transition-colors shadow-lg shadow-blue-500/20">Marcar</button>
+    <div class="p-dsc-tiny border-t border-gray-100 dark:border-dark-line flex gap-dsc-nano shrink-0">
+      <button onclick="closeA11yAreaModal()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-dsc-large transition-colors">Cancelar</button>
+      <button onclick="confirmA11yArea()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#0070af] hover:bg-blue-600 rounded-dsc-large transition-colors shadow-lg shadow-blue-500/20">Selecionar</button>
     </div>
 
   </div></div>
@@ -628,29 +640,29 @@
           dinamicamente, ver showA11yWizardSavingIndicator em
           accessibility.js (esse segundo uso pula direto pro estado 2, não
           passa pela pergunta de novo). -->
-<div id="a11y-post-area-detect-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-post-area-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-4">
+<div id="a11y-post-area-detect-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-post-area-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-dsc-tiny">
   <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" aria-hidden="true"></div>
-  <div class="relative z-10 w-full max-w-sm max-h-full min-h-0 flex flex-col rounded-2xl overflow-hidden shadow-2xl bg-white dark:bg-dark-surface">
+  <div class="relative z-10 w-full max-w-sm max-h-full min-h-0 flex flex-col rounded-dsc-large overflow-hidden shadow-dsc-elevation-2 bg-white dark:bg-dark-surface">
   <div class="w-full max-w-sm">
-    <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line shrink-0">
-      <h3 id="a11y-post-area-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-2">
+    <div class="flex items-center justify-between p-dsc-tiny border-b border-gray-100 dark:border-dark-line shrink-0">
+      <h3 id="a11y-post-area-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-dsc-nano">
         <i data-lucide="radar" class="w-4 h-4 text-[#0070af]" aria-hidden="true"></i> Detecção Automática
       </h3>
     </div>
 
     <!-- Estado 1: pergunta de origem (bloqueante, sem opção de fechar). -->
-    <div id="a11y-post-area-origin" class="p-5 flex flex-col gap-3">
-      <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">
+    <div id="a11y-post-area-origin" class="p-5 flex flex-col gap-dsc-micro">
+      <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-relaxed">
         Este handoff usa qual biblioteca de componentes?
       </p>
       <div class="grid grid-cols-2 gap-2.5">
         <button type="button" onclick="chooseA11yDetectionOrigin('web')"
-          class="flex flex-col items-center gap-2 py-4 rounded-2xl border-2 border-gray-200 dark:border-dark-line hover:border-[#0070af] hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-colors">
+          class="flex flex-col items-center gap-dsc-nano py-4 rounded-dsc-large border-2 border-gray-200 dark:border-dark-line hover:border-[#0070af] hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-colors">
           <i data-lucide="monitor" class="w-5 h-5 text-[#0070af]" aria-hidden="true"></i>
           <span class="text-[12px] font-bold text-slate-700 dark:text-white">Web</span>
         </button>
         <button type="button" onclick="chooseA11yDetectionOrigin('mobile')"
-          class="flex flex-col items-center gap-2 py-4 rounded-2xl border-2 border-gray-200 dark:border-dark-line hover:border-[#0070af] hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-colors">
+          class="flex flex-col items-center gap-dsc-nano py-4 rounded-dsc-large border-2 border-gray-200 dark:border-dark-line hover:border-[#0070af] hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-colors">
           <i data-lucide="smartphone" class="w-5 h-5 text-[#0070af]" aria-hidden="true"></i>
           <span class="text-[12px] font-bold text-slate-700 dark:text-white">Mobile</span>
         </button>
@@ -659,43 +671,43 @@
 
     <!-- Estado 2: carregando (varredura da área, ou "salvando" entre itens
          do wizard — texto trocado via JS, ver comentário acima). -->
-    <div id="a11y-post-area-loading" class="hidden p-6 flex-col items-center gap-3">
+    <div id="a11y-post-area-loading" class="hidden p-dsc-smaller flex-col items-center gap-dsc-micro">
       <i data-lucide="loader-2" class="w-6 h-6 text-[#0070af] animate-spin" aria-hidden="true"></i>
-      <p id="a11y-post-area-loading-text" class="text-[11px] text-slate-500 dark:text-dark-muted">Detectando componentes…</p>
+      <p id="a11y-post-area-loading-text" class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted">Detectando componentes…</p>
     </div>
   </div>
 
   </div></div>
 
 <!-- MODAL: LIB DE ACESSIBILIDADE NÃO VINCULADA -->
-<div id="a11y-library-required-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-lib-modal-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-4">
+<div id="a11y-library-required-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-lib-modal-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-dsc-tiny">
   <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeModal('a11y-library-required-modal')" aria-hidden="true"></div>
-  <div class="relative z-10 w-full max-w-sm max-h-full min-h-0 flex flex-col rounded-2xl overflow-hidden shadow-2xl bg-white dark:bg-dark-surface">
+  <div class="relative z-10 w-full max-w-sm max-h-full min-h-0 flex flex-col rounded-dsc-large overflow-hidden shadow-dsc-elevation-2 bg-white dark:bg-dark-surface">
   <div class="w-full max-w-sm">
-    <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line">
-      <h3 id="a11y-lib-modal-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-2">
+    <div class="flex items-center justify-between p-dsc-tiny border-b border-gray-100 dark:border-dark-line">
+      <h3 id="a11y-lib-modal-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-dsc-nano">
         <i data-lucide="library" class="w-4 h-4 text-[#0070af]" aria-hidden="true"></i> Biblioteca necessária
       </h3>
       <button onclick="closeModal('a11y-library-required-modal')" title="Fechar" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
         <i data-lucide="x" class="w-4 h-4"></i>
       </button>
     </div>
-    <div class="p-6 space-y-4">
-      <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed">
+    <div class="p-dsc-smaller space-y-4">
+      <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed">
         As specs de acessibilidade reaproveitam os componentes oficiais da biblioteca <strong>Design Acessível</strong> da CAIXA. Ela ainda não está acessível neste arquivo.
       </p>
-      <ol class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed list-decimal list-inside space-y-1.5">
+      <ol class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed list-decimal list-inside space-y-1.5">
         <li>Abra o painel <strong>Assets</strong> na barra lateral do Figma.</li>
         <li>Vá em <strong>Bibliotecas de equipe</strong> e busque por <strong>Design Acessível</strong>.</li>
         <li>Habilite a biblioteca para este arquivo.</li>
       </ol>
-      <p class="text-[10px] text-slate-400 dark:text-dark-muted leading-relaxed">
+      <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted leading-relaxed">
         Se não encontrar a biblioteca na busca, ela pode não estar publicada para o seu time — peça a um admin do DSC para compartilhá-la.
       </p>
     </div>
-    <div class="p-4 border-t border-gray-100 dark:border-dark-line flex gap-2">
-      <button onclick="closeModal('a11y-library-required-modal')" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors">Fechar</button>
-      <button onclick="retryA11yLibraryCheck()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#0070af] hover:bg-blue-600 rounded-2xl transition-colors">Já habilitei, tentar de novo</button>
+    <div class="p-dsc-tiny border-t border-gray-100 dark:border-dark-line flex gap-dsc-nano">
+      <button onclick="closeModal('a11y-library-required-modal')" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-dsc-large transition-colors">Fechar</button>
+      <button onclick="retryA11yLibraryCheck()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#0070af] hover:bg-blue-600 rounded-dsc-large transition-colors">Já habilitei, tentar de novo</button>
     </div>
   </div>
 
@@ -709,23 +721,61 @@
      ação, só avisa pra evitar trabalho duplicado/perdido. Corpo
      (#a11y-other-designer-body) preenchido dinamicamente por
      openA11yOtherDesignerModal (accessibility.js). -->
-<div id="a11y-other-designer-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-other-designer-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-4">
+<div id="a11y-other-designer-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-other-designer-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-dsc-tiny">
   <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeModal('a11y-other-designer-modal')" aria-hidden="true"></div>
-  <div class="relative z-10 w-full max-w-sm max-h-full min-h-0 flex flex-col rounded-2xl overflow-hidden shadow-2xl bg-white dark:bg-dark-surface">
+  <div class="relative z-10 w-full max-w-sm max-h-full min-h-0 flex flex-col rounded-dsc-large overflow-hidden shadow-dsc-elevation-2 bg-white dark:bg-dark-surface">
   <div class="w-full max-w-sm">
-    <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line">
-      <h3 id="a11y-other-designer-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-2">
+    <div class="flex items-center justify-between p-dsc-tiny border-b border-gray-100 dark:border-dark-line">
+      <h3 id="a11y-other-designer-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-dsc-nano">
         <i data-lucide="users" class="w-4 h-4 text-[#0070af]" aria-hidden="true"></i> Handoff já existe neste arquivo
       </h3>
       <button onclick="closeModal('a11y-other-designer-modal')" title="Fechar" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
         <i data-lucide="x" class="w-4 h-4"></i>
       </button>
     </div>
-    <div id="a11y-other-designer-body" class="p-6 space-y-3">
+    <div id="a11y-other-designer-body" class="p-dsc-smaller space-y-3">
       <!-- Preenchido dinamicamente por openA11yOtherDesignerModal. -->
     </div>
-    <div class="p-4 border-t border-gray-100 dark:border-dark-line flex gap-2">
-      <button onclick="closeModal('a11y-other-designer-modal')" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#0070af] hover:bg-blue-600 rounded-2xl transition-colors">Entendi</button>
+    <div class="p-dsc-tiny border-t border-gray-100 dark:border-dark-line flex gap-dsc-nano">
+      <button onclick="closeModal('a11y-other-designer-modal')" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#0070af] hover:bg-blue-600 rounded-dsc-large transition-colors">Entendi</button>
+    </div>
+  </div>
+
+  </div></div>
+
+<!-- MODAL: DICA DE SELEÇÃO (SHIFT+CLIQUE) DA ORDEM DE TABULAÇÃO (2026-09-10) -->
+<!-- Educativa, mostrada uma única vez por arquivo Figma (onboardingSeen,
+     chave 'tabOrderShiftHint' — mesmo mecanismo de onboarding.js) antes de
+     startTabOrderManualMode minimizar a janela e começar a escutar cliques
+     no canvas. Botão único "Entendi, começar seleção" fecha o modal e
+     prossegue o fluxo original (callback passado por
+     _showTabOrderShiftHintThenStart, tab-order.js) — nunca abre sozinha de
+     novo depois da 1ª vez, mas pode ser reaberta manualmente pelo link
+     "Como funciona a seleção?" dentro do modal de revisão da Ordem de
+     Tabulação logo abaixo (sem marcar/desmarcar estado de "visto"). -->
+<div id="a11y-tab-order-shift-hint-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-tab-order-shift-hint-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-dsc-tiny">
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="_confirmTabOrderShiftHint()" aria-hidden="true"></div>
+  <div class="relative z-10 w-full max-w-sm max-h-full min-h-0 flex flex-col rounded-dsc-large overflow-hidden shadow-dsc-elevation-2 bg-white dark:bg-dark-surface">
+  <div class="w-full max-w-sm">
+    <div class="flex items-center justify-between p-dsc-tiny border-b border-gray-100 dark:border-dark-line">
+      <h3 id="a11y-tab-order-shift-hint-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-dsc-nano">
+        <i data-lucide="mouse-pointer-click" class="w-4 h-4 text-[#0891B2]" aria-hidden="true"></i> Selecionando elementos para a Ordem de Tabulação
+      </h3>
+      <button onclick="_confirmTabOrderShiftHint()" title="Fechar" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+    <div class="p-dsc-smaller space-y-4">
+      <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed">
+        A janela do plugin vai minimizar para dar espaço ao canvas.
+      </p>
+      <ol class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed list-decimal list-inside space-y-2">
+        <li><strong>Segure Shift e clique</strong> em cada elemento, na ordem em que o teclado deve navegar por eles.</li>
+        <li>Errou a ordem? Sem problema — <strong>arraste para reposicionar</strong> os itens depois, na lista de revisão.</li>
+      </ol>
+    </div>
+    <div class="p-dsc-tiny border-t border-gray-100 dark:border-dark-line flex gap-dsc-nano">
+      <button id="btn-tab-order-shift-hint-continue" onclick="_confirmTabOrderShiftHint()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#0891B2] hover:bg-cyan-700 rounded-dsc-large transition-colors shadow-lg shadow-cyan-500/20">Entendi, começar seleção</button>
     </div>
   </div>
 
@@ -738,24 +788,29 @@
      nunca em lote); remover/reordenar na lista atualiza os selos reais
      correspondentes. "Concluir" só persiste os itens já desenhados e fecha
      o modal — não desenha nada nesse clique. -->
-<div id="a11y-tab-order-review-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-tab-order-review-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-4">
+<div id="a11y-tab-order-review-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-tab-order-review-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-dsc-tiny">
   <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="cancelTabOrderReview()" aria-hidden="true"></div>
-  <div class="relative z-10 w-full max-w-sm max-h-full min-h-0 flex flex-col rounded-2xl overflow-hidden shadow-2xl bg-white dark:bg-dark-surface">
-  <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line shrink-0">
-    <h3 id="a11y-tab-order-review-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-2">
+  <div class="relative z-10 w-full max-w-sm max-h-full min-h-0 flex flex-col rounded-dsc-large overflow-hidden shadow-dsc-elevation-2 bg-white dark:bg-dark-surface">
+  <div class="flex items-center justify-between p-dsc-tiny border-b border-gray-100 dark:border-dark-line shrink-0">
+    <h3 id="a11y-tab-order-review-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-dsc-nano">
       <i data-lucide="list-ordered" class="w-4 h-4 text-[#0891B2]" aria-hidden="true"></i> Ordem de Tabulação
     </h3>
-    <button onclick="cancelTabOrderReview()" title="Cancelar" aria-label="Cancelar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
-      <i data-lucide="x" class="w-4 h-4"></i>
-    </button>
+    <div class="flex items-center gap-dsc-quark">
+      <button onclick="openTabOrderShiftHintManually()" title="Como funciona a seleção?" aria-label="Como funciona a seleção?" class="text-gray-400 dark:text-dark-muted hover:text-cyan-600 dark:hover:text-cyan-400">
+        <i data-lucide="circle-help" class="w-4 h-4"></i>
+      </button>
+      <button onclick="cancelTabOrderReview()" title="Cancelar" aria-label="Cancelar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
   </div>
-  <div class="p-4 pb-2 shrink-0">
+  <div class="p-dsc-tiny pb-2 shrink-0">
     <div class="max-w-sm mx-auto">
-    <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed mb-3">
+    <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-relaxed mb-3">
       Esta é a sequência marcada no canvas — arraste para reordenar ou remova um item antes de confirmar. Use "Adicionar item" para incluir mais elementos (segure shift e clique, ou use marquise, pra marcar vários de uma vez) — eles sempre somam ao final da ordem já existente.
     </p>
     <button type="button" id="btn-tab-order-add-item" onclick="startTabOrderAddItemWait()"
-      class="w-full flex items-center justify-center gap-2 h-8 rounded-xl text-[10.5px] font-bold transition-all border border-cyan-200 dark:border-cyan-800/40 text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99]">
+      class="w-full flex items-center justify-center gap-dsc-nano h-8 rounded-dsc-medium text-dsc-label-tiny normal-case tracking-normal font-bold transition-all border border-cyan-200 dark:border-cyan-800/40 text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99]">
       <i data-lucide="plus" class="w-3.5 h-3.5" aria-hidden="true"></i>
       <span data-tab-order-add-item-label>Adicionar item</span>
     </button>
@@ -764,13 +819,13 @@
   <div class="px-4 overflow-y-auto flex-1 min-h-0" onscroll="handleScroll(this)">
     <div class="max-w-sm mx-auto">
     <ul id="a11y-tab-order-pending-list" class="flex flex-col gap-1.5 min-h-[10px] pb-2"></ul>
-    <p id="a11y-tab-order-pending-empty" class="text-[10px] text-slate-400 dark:text-dark-muted text-center py-6">Nenhum item ainda — clique num elemento do canvas para começar.</p>
+    <p id="a11y-tab-order-pending-empty" class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted text-center py-6">Nenhum item ainda — clique num elemento do canvas para começar.</p>
     </div>
   </div>
-  <div class="p-4 border-t border-gray-100 dark:border-dark-line shrink-0 flex gap-2 max-w-sm w-full mx-auto">
-    <button onclick="cancelTabOrderReview()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors">Cancelar</button>
+  <div class="p-dsc-tiny border-t border-gray-100 dark:border-dark-line shrink-0 flex gap-dsc-nano max-w-sm w-full mx-auto">
+    <button onclick="cancelTabOrderReview()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-dsc-large transition-colors">Cancelar</button>
     <button id="btn-tab-order-apply" onclick="applyTabOrderToCanvas()" disabled
-      class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#0891B2] hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl transition-colors shadow-lg shadow-cyan-500/20">
+      class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#0891B2] hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-dsc-large transition-colors shadow-lg shadow-cyan-500/20">
       Criar ordem de tabulação
     </button>
   </div>
@@ -793,24 +848,24 @@
      trocam dinamicamente via JS (openSwipePathReviewModal) conforme
      window._swipePathEditingExisting — criação/"Refazer" vs. "Editar
      pontos" de uma trilha já salva. -->
-<div id="a11y-swipe-path-review-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-swipe-path-review-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-4">
+<div id="a11y-swipe-path-review-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-swipe-path-review-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-dsc-tiny">
   <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="cancelSwipePathReview()" aria-hidden="true"></div>
-  <div class="relative z-10 w-full max-w-sm max-h-full min-h-0 flex flex-col rounded-2xl overflow-hidden shadow-2xl bg-white dark:bg-dark-surface">
-  <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line shrink-0">
-    <h3 id="a11y-swipe-path-review-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-2">
-      <i data-lucide="route" class="w-4 h-4 text-[#0891B2]" aria-hidden="true"></i> <span id="a11y-swipe-path-review-title-text">Trilha de Swipe</span>
+  <div class="relative z-10 w-full max-w-sm max-h-full min-h-0 flex flex-col rounded-dsc-large overflow-hidden shadow-dsc-elevation-2 bg-white dark:bg-dark-surface">
+  <div class="flex items-center justify-between p-dsc-tiny border-b border-gray-100 dark:border-dark-line shrink-0">
+    <h3 id="a11y-swipe-path-review-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-dsc-nano">
+      <i data-lucide="route" class="w-4 h-4 text-[#0891B2]" aria-hidden="true"></i> <span id="a11y-swipe-path-review-title-text">Trilha de Ordem de Leitura</span>
     </h3>
     <button onclick="cancelSwipePathReview()" title="Cancelar" aria-label="Cancelar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
       <i data-lucide="x" class="w-4 h-4"></i>
     </button>
   </div>
-  <div class="p-4 pb-2 shrink-0">
+  <div class="p-dsc-tiny pb-2 shrink-0">
     <div class="max-w-sm mx-auto">
-    <p id="a11y-swipe-path-review-instruction" class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed mb-3">
+    <p id="a11y-swipe-path-review-instruction" class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-relaxed mb-3">
       Esta é a trilha marcada no canvas, já na ordem espacial resolvida automaticamente — arraste para reordenar ou remova um ponto antes de confirmar.
     </p>
     <button type="button" id="btn-swipe-path-add-point" onclick="startSwipePathAddPoint()"
-      class="w-full flex items-center justify-center gap-2 h-8 rounded-xl text-[10.5px] font-bold transition-all border border-cyan-200 dark:border-cyan-800/40 text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99]">
+      class="w-full flex items-center justify-center gap-dsc-nano h-8 rounded-dsc-medium text-dsc-label-tiny normal-case tracking-normal font-bold transition-all border border-cyan-200 dark:border-cyan-800/40 text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99]">
       <i data-lucide="plus" class="w-3.5 h-3.5" aria-hidden="true"></i>
       <span data-swipe-path-add-point-label>Adicionar ponto</span>
     </button>
@@ -819,14 +874,14 @@
   <div class="px-4 overflow-y-auto flex-1 min-h-0" onscroll="handleScroll(this)">
     <div class="max-w-sm mx-auto">
     <ul id="a11y-swipe-path-pending-list" class="flex flex-col gap-1.5 min-h-[10px] pb-2"></ul>
-    <p id="a11y-swipe-path-pending-empty" class="text-[10px] text-slate-400 dark:text-dark-muted text-center py-6">Nenhum ponto ainda — clique num elemento do canvas para começar.</p>
+    <p id="a11y-swipe-path-pending-empty" class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted text-center py-6">Nenhum ponto ainda — clique num elemento do canvas para começar.</p>
     </div>
   </div>
-  <div class="p-4 border-t border-gray-100 dark:border-dark-line shrink-0 flex gap-2 max-w-sm w-full mx-auto">
-    <button onclick="cancelSwipePathReview()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors">Cancelar</button>
+  <div class="p-dsc-tiny border-t border-gray-100 dark:border-dark-line shrink-0 flex gap-dsc-nano max-w-sm w-full mx-auto">
+    <button onclick="cancelSwipePathReview()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-dsc-large transition-colors">Cancelar</button>
     <button id="btn-swipe-path-apply" onclick="applySwipePathToCanvas()" disabled
-      class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#0891B2] hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl transition-colors shadow-lg shadow-cyan-500/20">
-      <span id="a11y-swipe-path-review-confirm-text">Criar trilha de swipe</span>
+      class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#0891B2] hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-dsc-large transition-colors shadow-lg shadow-cyan-500/20">
+      <span id="a11y-swipe-path-review-confirm-text">Criar trilha de ordem de leitura</span>
     </button>
   </div>
 
@@ -839,20 +894,20 @@
      entrada do wizard de revisão individual: escolher a Área de destino e
      iniciar a revisão sequencial (abre o modal de especificação item a
      item, ver startA11yBatchWizard/_advanceA11yBatchWizard). -->
-<div id="a11y-batch-summary-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-batch-summary-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-4">
+<div id="a11y-batch-summary-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-batch-summary-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-dsc-tiny">
   <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeA11yBatchSummaryModal()" aria-hidden="true"></div>
-  <div class="relative z-10 w-full max-w-sm max-h-full min-h-0 flex flex-col rounded-2xl overflow-hidden shadow-2xl bg-white dark:bg-dark-surface">
-  <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line shrink-0">
-    <h3 id="a11y-batch-summary-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-2">
+  <div class="relative z-10 w-full max-w-sm max-h-full min-h-0 flex flex-col rounded-dsc-large overflow-hidden shadow-dsc-elevation-2 bg-white dark:bg-dark-surface">
+  <div class="flex items-center justify-between p-dsc-tiny border-b border-gray-100 dark:border-dark-line shrink-0">
+    <h3 id="a11y-batch-summary-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-dsc-nano">
       <i data-lucide="wand-2" class="w-4 h-4 text-[#0891B2]" aria-hidden="true"></i> Mapeamento Automatizado
     </h3>
-    <div class="flex items-center gap-1 shrink-0">
+    <div class="flex items-center gap-dsc-quark shrink-0">
       <!-- Reescaneia a mesma área sem fechar o modal, útil quando o
            designer vincula um Text Style do DSC num item do bloco
            "Possíveis títulos sem token DSC" e quer ver o resultado
            atualizado sem perder o contexto. -->
-      <button id="btn-a11y-batch-rescan" onclick="rescanA11yBatchArea()" title="Reescanear esta área" aria-label="Reescanear esta área"
-        class="w-7 h-7 flex items-center justify-center rounded-lg text-gray-500 dark:text-dark-muted hover:text-[#0891B2] hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-colors">
+      <button id="btn-a11y-batch-rescan" onclick="rescanA11yBatchArea()" title="Reescanear esta tela" aria-label="Reescanear esta tela"
+        class="w-7 h-7 flex items-center justify-center rounded-dsc-small text-gray-500 dark:text-dark-muted hover:text-[#0891B2] hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-colors">
         <i data-lucide="refresh-cw" class="w-4 h-4"></i>
       </button>
       <button onclick="closeA11yBatchSummaryModal()" title="Fechar" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
@@ -863,14 +918,14 @@
   <div class="p-5 overflow-y-auto flex-1 min-h-0" onscroll="handleScroll(this)">
     <div class="max-w-sm mx-auto">
       <div id="a11y-batch-area-wrap" class="mb-4">
-        <label for="a11y-batch-area-select" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Área mapeada para especificação</label>
+        <label for="a11y-batch-area-select" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Tela mapeada para especificação</label>
         <select id="a11y-batch-area-select"
-          class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all">
+          class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all">
         </select>
-        <p class="text-[10px] text-slate-400 dark:text-dark-muted mt-1.5 leading-tight">Todas as especificações do lote nascem dentro desta área.</p>
+        <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted mt-1.5 leading-tight">Todas as especificações do lote nascem dentro desta tela.</p>
       </div>
 
-      <p class="text-[11px] text-slate-600 dark:text-dark-muted mb-3 leading-snug">
+      <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted mb-3 leading-snug">
         Os itens abrem um a um para revisão — nenhum vira especificação sem sua confirmação.
       </p>
 
@@ -879,9 +934,9 @@
            — não substitui a revisão do designer. Fica visível sempre,
            antes do accordion de grupos detectados, pra não passar a
            impressão de cobertura completa/garantida. -->
-      <p class="flex items-start gap-1.5 text-[10px] text-amber-700 dark:text-amber-400 bg-amber-50/60 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/40 rounded-xl px-3 py-2 mb-4 leading-snug">
+      <p class="flex items-start gap-1.5 text-dsc-label-tiny normal-case tracking-normal text-amber-700 dark:text-amber-400 bg-amber-50/60 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/40 rounded-dsc-medium px-dsc-micro py-dsc-nano mb-4 leading-snug">
         <i data-lucide="triangle-alert" class="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true"></i>
-        <span>Esta é uma busca simples por componentes reconhecidos do DSC — ela pode não pegar tudo. Revise se todos os itens passíveis de especificação desta área foram de fato documentados.</span>
+        <span>Esta é uma busca simples por componentes reconhecidos do DSC — ela pode não pegar tudo. Revise se todos os itens passíveis de especificação desta tela foram de fato documentados.</span>
       </p>
 
       <!-- Grupos do resumo (Accordion, Button, Table...) — accordion
@@ -889,35 +944,35 @@
            por linha), não devem competir com "Iniciar Revisão" quando há
            muitos grupos. Cabeçalho mostra a contagem total (grupos + itens)
            mesmo fechado. -->
-      <div id="a11y-batch-summary-groups-block" class="mb-4 rounded-xl border border-gray-100 dark:border-dark-line overflow-hidden">
+      <div id="a11y-batch-summary-groups-block" class="mb-4 rounded-dsc-medium border border-gray-100 dark:border-dark-line overflow-hidden">
         <button type="button" onclick="toggleAccordion(this)" aria-expanded="false"
-          class="w-full flex items-center justify-between gap-2 px-3 py-2 text-left bg-gray-50 dark:bg-dark-bg hover:bg-gray-100 dark:hover:bg-dark-line/40 transition-colors">
-          <span id="a11y-batch-summary-groups-title" class="text-[10px] font-bold text-slate-600 dark:text-dark-muted uppercase tracking-wider truncate">Componentes detectados</span>
+          class="w-full flex items-center justify-between gap-dsc-nano px-dsc-micro py-dsc-nano text-left bg-gray-50 dark:bg-dark-bg hover:bg-gray-100 dark:hover:bg-dark-line/40 transition-colors">
+          <span id="a11y-batch-summary-groups-title" class="text-dsc-label-tiny font-bold text-slate-600 dark:text-dark-muted uppercase tracking-wider truncate">Componentes detectados</span>
           <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-500 transition-transform shrink-0" style="transform:rotate(0deg)"></i>
         </button>
-        <div class="accordion-content hidden px-3 pb-3 pt-2 space-y-1.5">
+        <div class="accordion-content hidden px-dsc-micro pb-3 pt-2 space-y-1.5">
           <div id="a11y-batch-summary-groups" class="space-y-1.5"></div>
         </div>
       </div>
 
-      <p id="a11y-batch-summary-skipped-notice" class="hidden text-[10px] text-amber-600 dark:text-amber-400 bg-amber-50/60 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/40 rounded-xl px-3 py-2 mb-4 leading-relaxed"></p>
+      <p id="a11y-batch-summary-skipped-notice" class="hidden text-dsc-label-tiny normal-case tracking-normal text-amber-600 dark:text-amber-400 bg-amber-50/60 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/40 rounded-dsc-medium px-dsc-micro py-dsc-nano mb-4 leading-relaxed"></p>
 
       <!-- Bloco de avisos ("Possíveis títulos sem token DSC") — accordion
            RECOLHIDO por padrão: informação secundária/não-bloqueante de
            volume variável não deve competir visualmente com a ação
            primária. Fica oculto por completo quando não há nenhum
            candidato (ver openA11yBatchSummaryModal em accessibility.js). -->
-      <div id="a11y-token-review-block" class="hidden mb-1 rounded-xl border border-amber-200 dark:border-amber-800/40 overflow-hidden">
+      <div id="a11y-token-review-block" class="hidden mb-1 rounded-dsc-medium border border-amber-200 dark:border-amber-800/40 overflow-hidden">
         <button type="button" onclick="toggleAccordion(this)" aria-expanded="false"
-          class="w-full flex items-center justify-between gap-2 px-3 py-2 text-left bg-amber-50/60 dark:bg-amber-900/10 hover:bg-amber-100/60 dark:hover:bg-amber-900/20 transition-colors">
+          class="w-full flex items-center justify-between gap-dsc-nano px-dsc-micro py-dsc-nano text-left bg-amber-50/60 dark:bg-amber-900/10 hover:bg-amber-100/60 dark:hover:bg-amber-900/20 transition-colors">
           <span class="flex items-center gap-1.5 min-w-0">
             <i data-lucide="link-2-off" class="w-3.5 h-3.5 text-amber-500 shrink-0" aria-hidden="true"></i>
-            <span id="a11y-token-review-title" class="text-[10px] font-bold text-slate-600 dark:text-dark-muted uppercase tracking-wider truncate">Possíveis títulos sem token DSC</span>
+            <span id="a11y-token-review-title" class="text-dsc-label-tiny font-bold text-slate-600 dark:text-dark-muted uppercase tracking-wider truncate">Possíveis títulos sem token DSC</span>
           </span>
           <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-amber-500 transition-transform shrink-0" style="transform:rotate(0deg)"></i>
         </button>
-        <div class="accordion-content hidden px-3 pb-3 pt-2 space-y-2">
-          <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-snug">
+        <div class="accordion-content hidden px-dsc-micro pb-3 pt-2 space-y-2">
+          <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-snug">
             Sem estilo do DSC vinculado, a detecção automática não pega.
             <span class="block text-slate-500 dark:text-dark-muted mt-1">Pra resolver, vincule um Text Style do DSC no Figma e escaneie de novo.</span>
           </p>
@@ -926,9 +981,9 @@
       </div>
     </div>
   </div>
-  <div class="p-4 border-t border-gray-100 dark:border-dark-line shrink-0 max-w-sm w-full mx-auto">
+  <div class="p-dsc-tiny border-t border-gray-100 dark:border-dark-line shrink-0 max-w-sm w-full mx-auto">
     <button id="btn-a11y-batch-confirm" onclick="startA11yBatchWizard()"
-      class="w-full py-2.5 text-[12px] font-bold text-white bg-[#0070af] hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl transition-colors">
+      class="w-full py-2.5 text-[12px] font-bold text-white bg-[#0070af] hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-dsc-large transition-colors">
       Iniciar Revisão
     </button>
   </div>
@@ -936,19 +991,19 @@
   </div></div>
 
 <!-- MODAL: GUIA DE CATEGORIAS DE ACESSIBILIDADE -->
-<div id="a11y-categories-help-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-help-modal-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-4">
+<div id="a11y-categories-help-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-help-modal-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-dsc-tiny">
   <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeModal('a11y-categories-help-modal')" aria-hidden="true"></div>
-  <div class="relative z-10 w-full max-w-[440px] max-h-full min-h-0 flex flex-col rounded-2xl overflow-hidden shadow-2xl bg-white dark:bg-dark-bg">
-  <div class="p-6 border-b border-gray-100 dark:border-dark-line flex items-center justify-between shrink-0">
+  <div class="relative z-10 w-full max-w-[440px] max-h-full min-h-0 flex flex-col rounded-dsc-large overflow-hidden shadow-dsc-elevation-2 bg-white dark:bg-dark-bg">
+  <div class="p-dsc-smaller border-b border-gray-100 dark:border-dark-line flex items-center justify-between shrink-0">
     <h3 id="a11y-help-modal-title" class="text-[#1E293B] dark:text-white font-bold text-[18px]">Entendendo as categorias</h3>
     <button onclick="closeModal('a11y-categories-help-modal')" title="Fechar" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-white">
       <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
     </button>
   </div>
-  <div class="flex-1 overflow-y-auto p-6" onscroll="handleScroll(this)">
+  <div class="flex-1 overflow-y-auto p-dsc-smaller" onscroll="handleScroll(this)">
     <div class="max-w-[440px] mx-auto space-y-5">
 
-      <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed -mt-1">
+      <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-relaxed -mt-1">
         Especificar para leitores de tela consiste em definir como as tecnologias assistivas (como NVDA, Jaws ou VoiceOver) interpretam e anunciam os elementos da interface — orientações fundamentais pro time de desenvolvimento implementar a experiência exatamente como projetada.
       </p>
 
@@ -961,45 +1016,45 @@
            categoria já reflete só a plataforma corrente — sem mais menção
            condicional às duas ao mesmo tempo (histórico dessa mudança em
            docs/changelog.html). -->
-      <div id="a11y-categories-help-estrutura" class="flex gap-3">
-        <div class="a11y-cat-badge w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0" data-a11y-cat="estrutura"></div>
+      <div id="a11y-categories-help-estrutura" class="flex gap-dsc-micro">
+        <div class="a11y-cat-badge w-7 h-7 rounded-dsc-circ border-2 flex items-center justify-center shrink-0" data-a11y-cat="estrutura"></div>
         <div class="space-y-1">
           <p class="text-[13px] font-bold text-slate-800 dark:text-white">Estrutura da página</p>
-          <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed">São elementos semânticos que estruturam o "esqueleto" de uma página, indicando as seções de conteúdo e para que servem. Exemplo: &lt;header&gt;, &lt;main&gt;, &lt;footer&gt;, etc. Listas também estão incluídas.</p>
+          <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed">São elementos semânticos que estruturam o "esqueleto" de uma página, indicando as seções de conteúdo e para que servem. Exemplo: &lt;header&gt;, &lt;main&gt;, &lt;footer&gt;, etc. Listas também estão incluídas.</p>
         </div>
       </div>
 
-      <div id="a11y-categories-help-titulo" class="flex gap-3">
-        <div class="a11y-cat-badge w-7 h-7 rounded-full border-2 flex items-center justify-center text-[12px] font-extrabold shrink-0" data-a11y-cat="titulo"></div>
+      <div id="a11y-categories-help-titulo" class="flex gap-dsc-micro">
+        <div class="a11y-cat-badge w-7 h-7 rounded-dsc-circ border-2 flex items-center justify-center text-dsc-label-tiny normal-case tracking-normal font-extrabold shrink-0" data-a11y-cat="titulo"></div>
         <div class="space-y-1">
           <p class="text-[13px] font-bold text-slate-800 dark:text-white">Nível de título (heading)</p>
-          <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed" data-a11y-help-origin="web">Cabeçalhos (H1-H6) estruturam a página logicamente. O H1 é o título principal (único por página), seguido por H2, H3 e assim por diante. Essa ordem permite que usuários de leitores de tela entendam o sumário do conteúdo.</p>
-          <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed hidden" data-a11y-help-origin="mobile">Cabeçalhos estruturam a página logicamente — o mais importante de cada tela deve ser marcado. No mobile (React Native) não existe hierarquia de níveis como no desktop: todo título usa o mesmo marcador "H", sem distinção H1-H6.</p>
+          <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed" data-a11y-help-origin="web">Cabeçalhos (H1-H6) estruturam a página logicamente. O H1 é o título principal (único por página), seguido por H2, H3 e assim por diante. Essa ordem permite que usuários de leitores de tela entendam o sumário do conteúdo.</p>
+          <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed hidden" data-a11y-help-origin="mobile">Cabeçalhos estruturam a página logicamente — o mais importante de cada tela deve ser marcado. No mobile (React Native) não existe hierarquia de níveis como no desktop: todo título usa o mesmo marcador "H", sem distinção H1-H6.</p>
         </div>
       </div>
 
-      <div id="a11y-categories-help-elemento" class="flex gap-3">
-        <div class="a11y-cat-badge w-7 h-7 rounded-full border-2 flex items-center justify-center text-[12px] font-extrabold shrink-0" data-a11y-cat="elemento"></div>
+      <div id="a11y-categories-help-elemento" class="flex gap-dsc-micro">
+        <div class="a11y-cat-badge w-7 h-7 rounded-dsc-circ border-2 flex items-center justify-center text-dsc-label-tiny normal-case tracking-normal font-extrabold shrink-0" data-a11y-cat="elemento"></div>
         <div class="space-y-1">
           <p class="text-[13px] font-bold text-slate-800 dark:text-white">Elementos interativos e imagens</p>
-          <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed" data-a11y-help-origin="web">Elementos interativos (como botões e links) executam ações. Se usam apenas ícones, necessitam de texto alternativo que descreva sua função (ex: "buscar") e não a aparência ("Lupa"). Para imagens estáticas, também use esse grupo.</p>
-          <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed hidden" data-a11y-help-origin="mobile">Elementos interativos (como botões e links) executam ações; imagens estáticas também entram neste grupo. Esta categoria tem 3 sub-variantes: <strong>Componente</strong> (com campo Link do Componente, apontando pro nome/URL do componente no DSC | Super App), <strong>Link</strong> e <strong>Texto Alternativo</strong> (alt-text de mídia).</p>
+          <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed" data-a11y-help-origin="web">Elementos interativos (como botões e links) executam ações. Se usam apenas ícones, necessitam de texto alternativo que descreva sua função (ex: "buscar") e não a aparência ("Lupa"). Para imagens estáticas, também use esse grupo.</p>
+          <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed hidden" data-a11y-help-origin="mobile">Elementos interativos (como botões e links) executam ações; imagens estáticas também entram neste grupo. Esta categoria tem 3 sub-variantes: <strong>Componente</strong> (com campo Link do Componente, apontando pro nome/URL do componente no DSC | Super App), <strong>Link</strong> e <strong>Texto Alternativo</strong> (alt-text de mídia).</p>
         </div>
       </div>
 
-      <div id="a11y-categories-help-decorativo" class="flex gap-3">
-        <div class="a11y-cat-badge w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0" data-a11y-cat="decorativo"></div>
+      <div id="a11y-categories-help-decorativo" class="flex gap-dsc-micro">
+        <div class="a11y-cat-badge w-7 h-7 rounded-dsc-circ border-2 flex items-center justify-center shrink-0" data-a11y-cat="decorativo"></div>
         <div class="space-y-1">
           <p class="text-[13px] font-bold text-slate-800 dark:text-white">Elemento decorativo</p>
-          <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed">Elementos decorativos são itens visuais que não transmitem conteúdo ou função, como divisores, formas abstratas ou ícones redundantes. Eles devem ser ignorados por leitores de tela para evitar ruídos desnecessários.</p>
+          <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed">Elementos decorativos são itens visuais que não transmitem conteúdo ou função, como divisores, formas abstratas ou ícones redundantes. Eles devem ser ignorados por leitores de tela para evitar ruídos desnecessários.</p>
         </div>
       </div>
 
-      <div id="a11y-categories-help-informacoes" class="flex gap-3">
-        <div class="a11y-cat-badge w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0" data-a11y-cat="informacoes"></div>
+      <div id="a11y-categories-help-informacoes" class="flex gap-dsc-micro">
+        <div class="a11y-cat-badge w-7 h-7 rounded-dsc-circ border-2 flex items-center justify-center shrink-0" data-a11y-cat="informacoes"></div>
         <div class="space-y-1">
           <p class="text-[13px] font-bold text-slate-800 dark:text-white">Informações adicionais</p>
-          <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed">Caso queira contemplar algum elemento/componente que não se encaixa nas outras categorias, use esta pra descrever o item e apontar suas observações — é a única categoria com formato livre.</p>
+          <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed">Caso queira contemplar algum elemento/componente que não se encaixa nas outras categorias, use esta pra descrever o item e apontar suas observações — é a única categoria com formato livre.</p>
         </div>
       </div>
 
@@ -1018,39 +1073,39 @@
            lugar nenhum antes) e a frase sobre a Ficha de Handoff. -->
       <div class="pt-3 mt-1 border-t border-gray-100 dark:border-dark-line space-y-2">
 
-        <div class="rounded-xl border border-gray-100 dark:border-dark-line overflow-hidden">
+        <div class="rounded-dsc-medium border border-gray-100 dark:border-dark-line overflow-hidden">
           <button type="button" onclick="toggleAccordion(this)" aria-expanded="false"
-            class="w-full flex items-center justify-between gap-2 px-3 py-2 text-left bg-gray-50 dark:bg-dark-bg hover:bg-gray-100 dark:hover:bg-dark-line/40 transition-colors">
-            <span class="text-[10px] font-bold text-slate-600 dark:text-dark-muted uppercase tracking-wider truncate">Estrutura padrão de cada spec</span>
+            class="w-full flex items-center justify-between gap-dsc-nano px-dsc-micro py-dsc-nano text-left bg-gray-50 dark:bg-dark-bg hover:bg-gray-100 dark:hover:bg-dark-line/40 transition-colors">
+            <span class="text-dsc-label-tiny font-bold text-slate-600 dark:text-dark-muted uppercase tracking-wider truncate">Estrutura padrão de cada spec</span>
             <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-500 transition-transform shrink-0" style="transform:rotate(0deg)"></i>
           </button>
-          <div class="accordion-content hidden px-3 pb-3 pt-2">
-            <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">Toda categoria segue os mesmos campos — <strong>Descrição</strong> (como o elemento deve ou não ser lido) e <strong>Notas de Código</strong> (apontamento técnico pro dev), quando aplicável à variante escolhida.</p>
+          <div class="accordion-content hidden px-dsc-micro pb-3 pt-2">
+            <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-relaxed">Toda categoria segue os mesmos campos — <strong>Descrição</strong> (como o elemento deve ou não ser lido) e <strong>Notas de Código</strong> (apontamento técnico pro dev), quando aplicável à variante escolhida.</p>
           </div>
         </div>
 
-        <div class="rounded-xl border border-gray-100 dark:border-dark-line overflow-hidden">
+        <div class="rounded-dsc-medium border border-gray-100 dark:border-dark-line overflow-hidden">
           <button type="button" onclick="toggleAccordion(this)" aria-expanded="false"
-            class="w-full flex items-center justify-between gap-2 px-3 py-2 text-left bg-gray-50 dark:bg-dark-bg hover:bg-gray-100 dark:hover:bg-dark-line/40 transition-colors">
-            <span class="text-[10px] font-bold text-slate-600 dark:text-dark-muted uppercase tracking-wider truncate">Área → Especificação</span>
+            class="w-full flex items-center justify-between gap-dsc-nano px-dsc-micro py-dsc-nano text-left bg-gray-50 dark:bg-dark-bg hover:bg-gray-100 dark:hover:bg-dark-line/40 transition-colors">
+            <span class="text-dsc-label-tiny font-bold text-slate-600 dark:text-dark-muted uppercase tracking-wider truncate">Tela → Especificação</span>
             <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-500 transition-transform shrink-0" style="transform:rotate(0deg)"></i>
           </button>
-          <div class="accordion-content hidden px-3 pb-3 pt-2 space-y-2">
-            <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Marcar Área</strong> (selo azul numerado) é o pré-requisito: identifica uma seção ou bloco da tela e agrupa, na listagem lateral, todas as especificações criadas dentro dela. Cada uma das 5 categorias acima é uma <strong>Especificação</strong>, sempre criada dentro de uma área já marcada.</p>
-            <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Contorno</strong> (padrão) envolve o elemento inteiro com uma moldura, com o selo embutido num dos cantos. <strong>Linha</strong> liga um ponto do elemento ao card de detalhamento com um traço, sem contornar a área — útil quando o elemento é pequeno ou está muito próximo de outros. Os dois são desenhados sobre uma cópia de trabalho do elemento, nunca sobre o frame original do seu design — o original nunca é alterado.</p>
+          <div class="accordion-content hidden px-dsc-micro pb-3 pt-2 space-y-2">
+            <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Selecionar Tela</strong> (selo azul numerado) é o pré-requisito: identifica uma seção ou bloco da tela e agrupa, na listagem lateral, todas as especificações criadas dentro dela. Cada uma das 5 categorias acima é uma <strong>Especificação</strong>, sempre criada dentro de uma tela já selecionada.</p>
+            <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Contorno</strong> (padrão) envolve o elemento inteiro com uma moldura, com o selo embutido num dos cantos. <strong>Linha</strong> liga um ponto do elemento ao card de detalhamento com um traço, sem contornar a tela — útil quando o elemento é pequeno ou está muito próximo de outros. Os dois são desenhados sobre uma cópia de trabalho do elemento, nunca sobre o frame original do seu design — o original nunca é alterado.</p>
           </div>
         </div>
 
-        <div class="rounded-xl border border-gray-100 dark:border-dark-line overflow-hidden">
+        <div class="rounded-dsc-medium border border-gray-100 dark:border-dark-line overflow-hidden">
           <button type="button" onclick="toggleAccordion(this)" aria-expanded="false"
-            class="w-full flex items-center justify-between gap-2 px-3 py-2 text-left bg-gray-50 dark:bg-dark-bg hover:bg-gray-100 dark:hover:bg-dark-line/40 transition-colors">
-            <span class="text-[10px] font-bold text-slate-600 dark:text-dark-muted uppercase tracking-wider truncate">Casos de borda comuns</span>
+            class="w-full flex items-center justify-between gap-dsc-nano px-dsc-micro py-dsc-nano text-left bg-gray-50 dark:bg-dark-bg hover:bg-gray-100 dark:hover:bg-dark-line/40 transition-colors">
+            <span class="text-dsc-label-tiny font-bold text-slate-600 dark:text-dark-muted uppercase tracking-wider truncate">Casos de borda comuns</span>
             <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-500 transition-transform shrink-0" style="transform:rotate(0deg)"></i>
           </button>
-          <div class="accordion-content hidden px-3 pb-3 pt-2 space-y-2">
-            <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">Um ícone ao lado de um texto que já explica a mesma coisa (ex.: ícone de lixeira ao lado do texto "Excluir") é <em>decorativo</em> — o texto já basta. Já um ícone sozinho, sem texto ao lado, que representa uma ação (ex.: só o ícone de lixeira, sem rótulo visível) é <em>Elemento e Imagem</em>, e precisa de descrição explicando a função.</p>
-            <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">Uma imagem que só ilustra/decora a tela (banner, ilustração de fundo) é <em>decorativa</em>. Uma imagem que carrega informação que não está em texto em nenhum outro lugar (gráfico, print de comprovante, foto de um documento) é <em>Elemento e Imagem</em> e precisa de texto alternativo descrevendo o conteúdo.</p>
-            <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">No final, o time de dev não recebe um documento à parte: consome direto o <strong>Handoff Completo</strong> gerado na aba Handoff de cada área, que reúne Descrição e Notas de Código de cada especificação já registrada no canvas.</p>
+          <div class="accordion-content hidden px-dsc-micro pb-3 pt-2 space-y-2">
+            <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-relaxed">Um ícone ao lado de um texto que já explica a mesma coisa (ex.: ícone de lixeira ao lado do texto "Excluir") é <em>decorativo</em> — o texto já basta. Já um ícone sozinho, sem texto ao lado, que representa uma ação (ex.: só o ícone de lixeira, sem rótulo visível) é <em>Elemento e Imagem</em>, e precisa de descrição explicando a função.</p>
+            <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-relaxed">Uma imagem que só ilustra/decora a tela (banner, ilustração de fundo) é <em>decorativa</em>. Uma imagem que carrega informação que não está em texto em nenhum outro lugar (gráfico, print de comprovante, foto de um documento) é <em>Elemento e Imagem</em> e precisa de texto alternativo descrevendo o conteúdo.</p>
+            <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-relaxed">No final, o time de dev não recebe um documento à parte: consome direto o <strong>Handoff Completo</strong> gerado na aba Handoff de cada tela, que reúne Descrição e Notas de Código de cada especificação já registrada no canvas.</p>
           </div>
         </div>
 
@@ -1110,11 +1165,11 @@
 <!-- MODAL: ONBOARDING (genérico — stepper com tela de "propósito" antes do
      Passo 1). Portado de views/modals.html (Handex main), adaptado só na
      paleta (cyan, igual ao resto do hac). Ver modules/onboarding.js. -->
-<div id="onboarding-modal" role="dialog" aria-modal="true" aria-labelledby="onboarding-modal-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-4">
+<div id="onboarding-modal" role="dialog" aria-modal="true" aria-labelledby="onboarding-modal-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-dsc-tiny">
   <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeOnboarding()" aria-hidden="true"></div>
-  <div class="relative z-10 w-full max-w-[420px] max-h-full min-h-0 flex flex-col rounded-2xl overflow-hidden shadow-2xl bg-white dark:bg-dark-bg">
-  <div class="p-6 border-b border-gray-100 dark:border-dark-line flex items-center gap-3 shrink-0 max-w-[420px] w-full mx-auto">
-    <div id="onboarding-modal-icon-wrap" class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0">
+  <div class="relative z-10 w-full max-w-[420px] max-h-full min-h-0 flex flex-col rounded-dsc-large overflow-hidden shadow-dsc-elevation-2 bg-white dark:bg-dark-bg">
+  <div class="p-dsc-smaller border-b border-gray-100 dark:border-dark-line flex items-center gap-dsc-micro shrink-0 max-w-[420px] w-full mx-auto">
+    <div id="onboarding-modal-icon-wrap" class="w-9 h-9 rounded-dsc-medium flex items-center justify-center shrink-0">
       <i id="onboarding-modal-icon" class="w-4.5 h-4.5"></i>
     </div>
     <h3 id="onboarding-modal-title" class="text-[#1E293B] dark:text-white font-bold text-[16px] flex-1 min-w-0"></h3>
@@ -1122,8 +1177,8 @@
       <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
     </button>
   </div>
-  <div id="onboarding-modal-body" class="flex-1 overflow-y-auto p-6 max-w-[420px] w-full mx-auto" onscroll="handleScroll(this)"></div>
-  <div id="onboarding-modal-footer" class="p-4 border-t border-gray-100 dark:border-dark-line flex items-center justify-between shrink-0 max-w-[420px] w-full mx-auto"></div>
+  <div id="onboarding-modal-body" class="flex-1 overflow-y-auto p-dsc-smaller max-w-[420px] w-full mx-auto" onscroll="handleScroll(this)"></div>
+  <div id="onboarding-modal-footer" class="p-dsc-tiny border-t border-gray-100 dark:border-dark-line flex items-center justify-between shrink-0 max-w-[420px] w-full mx-auto"></div>
 
   </div></div>
 
@@ -1133,43 +1188,43 @@
      preenchido em runtime por modules/messages.js a partir de
      msg.version (mensagem 'init-plugin' vinda de code.js / PLUGIN_VERSION,
      que por sua vez é injetada em build-time — ver scripts/bundle-code.cjs). -->
-<div id="about-hac-modal" role="dialog" aria-modal="true" aria-labelledby="about-hac-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-4">
+<div id="about-hac-modal" role="dialog" aria-modal="true" aria-labelledby="about-hac-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-dsc-tiny">
   <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeModal('about-hac-modal')" aria-hidden="true"></div>
-  <div class="relative z-10 w-full max-w-sm max-h-full min-h-0 flex flex-col rounded-2xl overflow-hidden shadow-2xl bg-white dark:bg-dark-surface">
+  <div class="relative z-10 w-full max-w-sm max-h-full min-h-0 flex flex-col rounded-dsc-large overflow-hidden shadow-dsc-elevation-2 bg-white dark:bg-dark-surface">
   <div class="w-full max-w-sm">
-    <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line">
-      <h3 id="about-hac-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-2">
+    <div class="flex items-center justify-between p-dsc-tiny border-b border-gray-100 dark:border-dark-line">
+      <h3 id="about-hac-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-dsc-nano">
         <i data-lucide="person-standing" class="w-4 h-4 text-[#0070af]" aria-hidden="true"></i> Sobre o hac
       </h3>
       <button onclick="closeModal('about-hac-modal')" title="Fechar" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
         <i data-lucide="x" class="w-4 h-4"></i>
       </button>
     </div>
-    <div class="p-6 space-y-4">
-      <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed">
+    <div class="p-dsc-smaller space-y-4">
+      <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed">
         <strong>HAC</strong> — Handoff de Acessibilidade CAIXA. Documenta, direto no canvas do Figma, como cada elemento da tela deve ser interpretado por um leitor de tela e em que ordem o teclado deve navegá-la.
       </p>
-      <dl class="text-[11px] leading-relaxed space-y-2.5">
+      <dl class="text-dsc-label-tiny normal-case tracking-normal leading-relaxed space-y-2.5">
         <div>
-          <dt class="text-[9px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wider">Versão</dt>
+          <dt class="text-dsc-label-tiny font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wider">Versão</dt>
           <dd id="about-hac-version" class="text-slate-700 dark:text-white font-semibold">—</dd>
         </div>
         <div>
-          <dt class="text-[9px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wider">Vertical responsável</dt>
+          <dt class="text-dsc-label-tiny font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wider">Vertical responsável</dt>
           <dd class="text-slate-700 dark:text-white font-semibold">Acessibilidade</dd>
         </div>
-        <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center justify-between gap-dsc-nano">
           <div>
-            <dt class="text-[9px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wider">Plataforma do projeto</dt>
+            <dt class="text-dsc-label-tiny font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wider">Plataforma do projeto</dt>
             <dd id="about-hac-project-origin" class="text-slate-700 dark:text-white font-semibold">—</dd>
           </div>
           <button type="button" onclick="openA11yProjectOriginPrompt()"
-            class="shrink-0 px-3 py-1.5 text-[10px] font-bold text-[#0070af] bg-[#0070af]/10 hover:bg-[#0070af]/20 rounded-xl transition-colors">Trocar</button>
+            class="shrink-0 px-dsc-micro py-1.5 text-dsc-label-tiny normal-case tracking-normal font-bold text-[#0070af] bg-[#0070af]/10 hover:bg-[#0070af]/20 rounded-dsc-medium transition-colors">Trocar</button>
         </div>
       </dl>
     </div>
-    <div class="p-4 border-t border-gray-100 dark:border-dark-line">
-      <button onclick="closeModal('about-hac-modal')" class="w-full py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors">Fechar</button>
+    <div class="p-dsc-tiny border-t border-gray-100 dark:border-dark-line">
+      <button onclick="closeModal('about-hac-modal')" class="w-full py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-dsc-large transition-colors">Fechar</button>
     </div>
   </div>
 

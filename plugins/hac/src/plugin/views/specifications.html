@@ -17,8 +17,8 @@
        dar mais respiro ao título mais longo. -->
   <div class="subheader-brand px-4 py-3 bg-[#0070af] dark:bg-[#00335c] flex flex-col shrink-0 shadow-md">
     <div class="flex items-center justify-between">
-      <div class="flex items-center gap-2 min-w-0">
-        <button onclick="navigate('view-home')" aria-label="Voltar para a página inicial" class="w-10 h-10 flex items-center justify-center bg-white/10 dark:bg-white/10 rounded-xl hover:bg-white/20 dark:hover:bg-white/20 transition-colors shrink-0">
+      <div class="flex items-center gap-dsc-nano min-w-0">
+        <button onclick="navigate('view-home')" aria-label="Voltar para a página inicial" class="w-10 h-10 flex items-center justify-center bg-white/10 dark:bg-white/10 rounded-dsc-medium hover:bg-white/20 dark:hover:bg-white/20 transition-colors shrink-0">
           <i data-lucide="arrow-left" class="w-5 h-5 text-white" aria-hidden="true"></i>
         </button>
         <h2 id="a11y-header-title" class="text-white font-bold text-[18px] truncate min-w-0">Acessibilidade</h2>
@@ -26,26 +26,26 @@
       <div class="flex items-center gap-1.5 shrink-0">
         <div class="relative">
           <button type="button" id="btn-a11y-more-actions" onclick="toggleA11yMoreActionsMenu()"
-            class="w-10 h-10 flex items-center justify-center hover:bg-white/20 rounded-xl transition-colors text-white/80 hover:text-white"
+            class="w-10 h-10 flex items-center justify-center hover:bg-white/20 rounded-dsc-medium transition-colors text-white/80 hover:text-white"
             title="Mais ações" aria-label="Mais ações" aria-haspopup="true" aria-expanded="false">
-            <i data-lucide="ellipsis-vertical" class="w-5 h-5" aria-hidden="true"></i>
+            <i data-lucide="circle-help" class="w-5 h-5" aria-hidden="true"></i>
           </button>
-          <div id="a11y-more-actions-menu" class="hidden absolute right-0 top-full mt-1 w-56 py-1.5 bg-white dark:bg-dark-surface rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line z-50">
+          <div id="a11y-more-actions-menu" class="hidden absolute right-0 top-full mt-1 w-56 py-1.5 bg-white dark:bg-dark-surface rounded-dsc-large shadow-2xl border border-gray-100 dark:border-dark-line z-50">
             <button type="button" onclick="closeA11yMoreActionsMenu(); openOnboardingForCurrentOrigin()"
               class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] font-semibold text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-dark-line transition-colors text-left">
               <i data-lucide="graduation-cap" class="w-4 h-4 text-slate-500 dark:text-dark-muted shrink-0" aria-hidden="true"></i>
-              Rever passo a passo
+              Como utilizar o Plugin
             </button>
             <button type="button" onclick="closeA11yMoreActionsMenu(); openA11yCategoriesHelp()"
               class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] font-semibold text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-dark-line transition-colors text-left">
               <i data-lucide="circle-help" class="w-4 h-4 text-slate-500 dark:text-dark-muted shrink-0" aria-hidden="true"></i>
-              Ver guia de categorias
+              Como funciona o handoff
             </button>
           </div>
         </div>
-        <button type="button" onclick="openA11yAreaModal()" class="fab-inline" title="Marcar área da tela" aria-label="Marcar área da tela">
-          <i data-lucide="map-pin" class="w-4 h-4 shrink-0"></i>
-          <span>Marcar Área</span>
+        <button type="button" id="btn-a11y-select-screen-header" onclick="openA11yAreaModal()" class="fab-inline" title="Selecionar tela" aria-label="Selecionar tela">
+          <i data-lucide="scan" class="w-4 h-4 shrink-0"></i>
+          <span>Selecionar Tela</span>
         </button>
       </div>
     </div>
@@ -55,71 +55,61 @@
   <div id="specs-scroll-container" class="flex-1 overflow-y-auto pt-0 px-4 pb-4" onscroll="handleScroll(this)">
     <div class="space-y-4 w-full mx-auto">
 
-      <!-- Onboarding banner (primeira visita) — 1 elemento por jornada
-           (web/mobile); maybeShowOnboardingBanner() (onboarding.js) só
-           deixa visível o da origem ATUAL do projeto, escondendo o outro
-           sempre. Os dois convergem pro mesmo conteúdo que o ícone de
-           chapéu abre (openOnboardingForCurrentOrigin), nunca um resumo
-           à parte (2026-09-09). -->
-      <div id="onboarding-banner-web" class="hidden flex items-start gap-2.5 bg-[#0891B2]/5 dark:bg-cyan-900/10 border border-[#0891B2]/20 dark:border-cyan-800/30 rounded-2xl p-3.5">
-        <i data-lucide="sparkles" class="w-4 h-4 text-[#0891B2] dark:text-cyan-300 shrink-0 mt-0.5"></i>
-        <div class="flex-1 min-w-0">
-          <p class="text-[11px] font-bold text-[#0891B2] dark:text-cyan-300">Primeira vez aqui?</p>
-          <p class="text-[10px] text-[#0891B2]/80 dark:text-cyan-300/80 leading-relaxed mt-0.5">Veja o passo a passo: marcar área, especificar e documentar a ordem de tabulação.</p>
-        </div>
-        <div class="flex items-center gap-1 shrink-0">
-          <button type="button" onclick="openOnboardingForCurrentOrigin({ markSeenOnOpen: true })" class="px-2.5 py-1 bg-[#0891B2] hover:bg-cyan-700 text-white text-[10px] font-bold rounded-lg transition-colors">Ver agora</button>
-          <button type="button" onclick="dismissOnboardingBanner()" title="Dispensar" aria-label="Dispensar" class="p-1 text-[#0891B2]/60 hover:text-[#0891B2] dark:text-cyan-300/60 dark:hover:text-cyan-300 transition-colors">
-            <i data-lucide="x" class="w-3.5 h-3.5"></i>
-          </button>
-        </div>
-      </div>
-      <div id="onboarding-banner-mobile" class="hidden flex items-start gap-2.5 bg-[#0891B2]/5 dark:bg-cyan-900/10 border border-[#0891B2]/20 dark:border-cyan-800/30 rounded-2xl p-3.5">
-        <i data-lucide="sparkles" class="w-4 h-4 text-[#0891B2] dark:text-cyan-300 shrink-0 mt-0.5"></i>
-        <div class="flex-1 min-w-0">
-          <p class="text-[11px] font-bold text-[#0891B2] dark:text-cyan-300">Primeira vez aqui?</p>
-          <p class="text-[10px] text-[#0891B2]/80 dark:text-cyan-300/80 leading-relaxed mt-0.5">Veja o passo a passo: marcar área, especificar e documentar a ordem de tabulação e a trilha de swipe.</p>
-        </div>
-        <div class="flex items-center gap-1 shrink-0">
-          <button type="button" onclick="openOnboardingForCurrentOrigin({ markSeenOnOpen: true })" class="px-2.5 py-1 bg-[#0891B2] hover:bg-cyan-700 text-white text-[10px] font-bold rounded-lg transition-colors">Ver agora</button>
-          <button type="button" onclick="dismissOnboardingBanner()" title="Dispensar" aria-label="Dispensar" class="p-1 text-[#0891B2]/60 hover:text-[#0891B2] dark:text-cyan-300/60 dark:hover:text-cyan-300 transition-colors">
-            <i data-lucide="x" class="w-3.5 h-3.5"></i>
-          </button>
-        </div>
-      </div>
+      <!-- Banner "Primeira vez aqui?" removido (2026-09-10, pedido do
+           usuário) — o onboarding completo (mesma jornada web/mobile que
+           este banner abria) agora dispara automaticamente ao escolher a
+           lib na Home (chooseA11yHomeOrigin, accessibility.js), ficando
+           redundante. Reabertura manual continua disponível pelo ícone de
+           chapéu ("Como utilizar o Plugin", openOnboardingForCurrentOrigin). -->
 
       <div>
-        <div class="flex items-center justify-between mb-3">
-          <h4 class="text-[11px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-[0.15em]">Frames Documentados</h4>
+        <!-- pt-dsc-tiny (2026-09-11, pedido do usuário) — dá respiro entre o
+             título e o header secundário azul acima, já que o banner de
+             onboarding que ocupava esse espaço foi removido (2026-09-10). -->
+        <div id="a11y-areas-count-header" class="hidden flex items-center justify-between mb-3 pt-dsc-tiny">
+          <h4 class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-[0.15em]">
+            Telas Documentadas&nbsp;(<span id="a11y-areas-count-value">0</span>)
+          </h4>
         </div>
-        <p class="text-[10px] text-slate-400 dark:text-dark-muted mb-2 leading-tight">
-          Marque uma área da tela (selo numerado) e clique no card para abrir o espaço de trabalho dela.
-        </p>
 
         <!-- Busca + filtro por categoria — filtro só de exibição sobre a
              lista já renderizada (ver applyA11ySearchFilter em
              modules/accessibility.js). -->
-        <div id="a11y-search-bar" class="hidden flex items-center gap-2 mb-3">
+        <div id="a11y-search-bar" class="hidden flex items-center gap-dsc-nano mb-3">
           <div class="relative flex-1 min-w-0">
             <i data-lucide="search" class="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
             <input type="text" id="a11y-search-input"
-              placeholder="Buscar por elemento, área ou tag..."
+              placeholder="Buscar por elemento, tela ou tag..."
               oninput="applyA11ySearchFilter(this.value)"
-              class="w-full pl-8 pr-3 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-xl text-[11px] text-slate-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 outline-none focus:ring-2 focus:ring-[#0891B2]/20 focus:border-[#0891B2] transition-all" />
+              class="w-full pl-8 pr-3 py-dsc-nano bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-dsc-medium text-dsc-label-tiny normal-case tracking-normal font-normal text-slate-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 outline-none focus:ring-2 focus:ring-[#0891B2]/20 focus:border-[#0891B2] transition-all" />
           </div>
           <select id="a11y-category-filter" onchange="applyA11yCategoryFilter(this.value)"
-            class="shrink-0 max-w-[40%] bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-xl px-2.5 py-2 text-[11px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-[#0891B2]/20 focus:border-[#0891B2] transition-all">
+            class="shrink-0 max-w-[40%] bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-dsc-medium px-2.5 py-dsc-nano text-dsc-label-tiny normal-case tracking-normal font-normal text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-[#0891B2]/20 focus:border-[#0891B2] transition-all">
             <option value="">Todas as categorias</option>
           </select>
         </div>
 
-        <ul id="a11y-groups-results" class="flex flex-col gap-2 min-h-[10px] mb-1">
+        <ul id="a11y-groups-results" class="flex flex-col gap-dsc-nano min-h-[10px] mb-1">
           <!-- Preenchido por renderA11yGroupedList() em modules/accessibility.js -->
         </ul>
         <div id="a11y-search-empty" class="hidden flex flex-col items-center justify-center py-10">
           <i data-lucide="search-x" class="w-10 h-10 text-slate-200 dark:text-slate-700 mb-3" style="opacity:0.4"></i>
-          <p class="text-[11px] font-bold text-slate-500 dark:text-dark-muted text-center px-4">Nenhuma especificação encontrada</p>
-          <p class="text-[10px] text-slate-400 dark:text-dark-muted text-center px-6 mt-0.5">Ajuste a busca ou o filtro de categoria.</p>
+          <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted text-center px-4">Nenhuma especificação encontrada</p>
+          <p class="text-dsc-label-tiny normal-case tracking-normal font-normal text-slate-400 dark:text-dark-muted text-center px-6 mt-0.5">Ajuste a busca ou o filtro de categoria.</p>
+        </div>
+
+        <!-- Alerta "handoff próprio já iniciado" (2026-09-10) — populado por
+             renderA11yPriorSessionAlert (modules/accessibility.js), chamada a
+             partir da resposta de check-my-prior-session (messages.js) logo
+             após a confirmação de origem web/mobile. Avisa o designer que ELE
+             MESMO já documentou telas neste arquivo antes (reabertura, troca
+             de máquina/sessão) — não é o mesmo caso de outro designer
+             (a11y-other-designer-modal, que é um modal bloqueante à parte).
+             Mesmo padrão visual dos banners de onboarding acima (acento
+             #0891B2), mas dispensa sem persistência: só esconde na sessão
+             atual, sem gravar em storage. Conteúdo textual populado só via
+             JS — fica vazio no HTML estático. -->
+        <div id="a11y-prior-session-alert" class="hidden flex items-start gap-2.5 bg-[#0891B2]/5 dark:bg-cyan-900/10 border border-[#0891B2]/20 dark:border-cyan-800/30 rounded-dsc-large p-3.5 mt-3">
         </div>
       </div>
 
@@ -159,20 +149,20 @@
      dashboard da tab Handoff). -->
 <main id="view-area-workspace" class="view flex p-0 flex-col h-full overflow-hidden">
   <div class="subheader-brand px-4 py-3 bg-[#0070af] dark:bg-[#00335c] flex items-center justify-between shrink-0 shadow-md">
-    <div class="flex items-center gap-2 min-w-0">
-      <button onclick="navigateBackToA11yList()" aria-label="Voltar para a lista de áreas" class="w-10 h-10 flex items-center justify-center bg-white/10 dark:bg-white/10 rounded-xl hover:bg-white/20 dark:hover:bg-white/20 transition-colors shrink-0">
+    <div class="flex items-center gap-dsc-nano min-w-0">
+      <button onclick="navigateBackToA11yList()" aria-label="Voltar para a lista de telas" class="w-10 h-10 flex items-center justify-center bg-white/10 dark:bg-white/10 rounded-dsc-medium hover:bg-white/20 dark:hover:bg-white/20 transition-colors shrink-0">
         <i data-lucide="arrow-left" class="w-5 h-5 text-white" aria-hidden="true"></i>
       </button>
-      <h2 id="a11y-workspace-title" class="text-white font-bold text-[16px] truncate min-w-0">Área</h2>
+      <h2 id="a11y-workspace-title" class="text-white font-bold text-[16px] truncate min-w-0">Tela</h2>
     </div>
     <div class="flex items-center gap-1.5 shrink-0">
       <div class="relative">
         <button type="button" id="btn-a11y-workspace-more-actions" onclick="toggleA11yWorkspaceMoreActionsMenu()"
-          class="w-10 h-10 flex items-center justify-center hover:bg-white/20 rounded-xl transition-colors text-white/80 hover:text-white"
+          class="w-10 h-10 flex items-center justify-center hover:bg-white/20 rounded-dsc-medium transition-colors text-white/80 hover:text-white"
           title="Mais ações" aria-label="Mais ações" aria-haspopup="true" aria-expanded="false">
           <i data-lucide="ellipsis-vertical" class="w-5 h-5" aria-hidden="true"></i>
         </button>
-        <div id="a11y-workspace-more-actions-menu" class="hidden absolute right-0 top-full mt-1 w-52 py-1.5 bg-white dark:bg-dark-surface rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line z-50">
+        <div id="a11y-workspace-more-actions-menu" class="hidden absolute right-0 top-full mt-1 w-52 py-1.5 bg-white dark:bg-dark-surface rounded-dsc-large shadow-2xl border border-gray-100 dark:border-dark-line z-50">
           <button type="button" onclick="closeA11yWorkspaceMoreActionsMenu(); focusNode(window._a11yWorkspaceAreaId)"
             class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] font-semibold text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-dark-line transition-colors text-left">
             <i data-lucide="locate" class="w-4 h-4 text-slate-500 dark:text-dark-muted shrink-0" aria-hidden="true"></i>
@@ -186,7 +176,7 @@
           <button type="button" onclick="closeA11yWorkspaceMoreActionsMenu(); _deleteA11yAreaFromWorkspace()"
             class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors text-left">
             <i data-lucide="trash-2" class="w-4 h-4 shrink-0" aria-hidden="true"></i>
-            Remover área
+            Remover tela
           </button>
         </div>
       </div>
@@ -204,36 +194,35 @@
        abaixo, nunca esta barra em si. Swipe leva um badge "Em fase de
        testes" (funcionalidade nova, exclusiva mobile, ainda não validada
        em campo). -->
-  <div id="a11y-workspace-tabs-bar" class="bg-white dark:bg-dark-surface border-b border-gray-100 dark:border-dark-line shrink-0 px-2" style="border-radius:0!important;box-shadow:none!important;">
+  <div id="a11y-workspace-tabs-bar" class="bg-white dark:bg-dark-surface border-b border-gray-100 dark:border-dark-line shrink-0 px-dsc-nano" style="border-radius:0!important;box-shadow:none!important;">
     <!-- Linha de tabs compacta, ícone+label na horizontal, sem cantos
          arredondados (2026-09-04-t, pedido do usuário — versão anterior
          era mais alta, com ícone empilhado sobre o texto). -->
     <div id="a11y-workspace-tabs" class="grid grid-cols-4">
       <button type="button" data-a11y-workspace-tab="tabulacao" onclick="switchA11yWorkspaceTab('tabulacao')"
-        class="a11y-workspace-tab-btn flex items-center justify-center gap-1.5 py-2 text-[11px] font-bold text-slate-400 dark:text-dark-muted border-b-2 border-transparent transition-colors rounded-none">
+        class="a11y-workspace-tab-btn flex items-center justify-center gap-1.5 py-dsc-nano text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-400 dark:text-dark-muted border-b-2 border-transparent transition-colors rounded-none">
         <i data-lucide="list-ordered" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i>
         <span class="truncate">Tabulação</span>
       </button>
       <button type="button" data-a11y-workspace-tab="swipe" onclick="switchA11yWorkspaceTab('swipe')"
-        class="a11y-workspace-tab-btn flex items-center justify-center gap-1.5 py-2 text-[11px] font-bold text-slate-400 dark:text-dark-muted border-b-2 border-transparent transition-colors rounded-none">
+        class="a11y-workspace-tab-btn flex items-center justify-center gap-1 py-dsc-nano text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-400 dark:text-dark-muted border-b-2 border-transparent transition-colors rounded-none">
         <i data-lucide="move-horizontal" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i>
         <span class="truncate">Swipe</span>
-        <span class="shrink-0 px-1 py-0.5 rounded-full bg-amber-400/90 text-[6.5px] font-extrabold uppercase tracking-wide text-amber-950 leading-none">Teste</span>
       </button>
       <button type="button" data-a11y-workspace-tab="leitor" onclick="switchA11yWorkspaceTab('leitor')"
-        class="a11y-workspace-tab-btn flex items-center justify-center gap-1.5 py-2 text-[11px] font-bold text-slate-400 dark:text-dark-muted border-b-2 border-transparent transition-colors rounded-none">
+        class="a11y-workspace-tab-btn flex items-center justify-center gap-1.5 py-dsc-nano text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-400 dark:text-dark-muted border-b-2 border-transparent transition-colors rounded-none">
         <i data-lucide="scan-text" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i>
         <span class="truncate">Leitor de Tela</span>
       </button>
       <button type="button" data-a11y-workspace-tab="handoff" onclick="switchA11yWorkspaceTab('handoff')"
-        class="a11y-workspace-tab-btn flex items-center justify-center gap-1.5 py-2 text-[11px] font-bold text-slate-400 dark:text-dark-muted border-b-2 border-transparent transition-colors rounded-none">
+        class="a11y-workspace-tab-btn flex items-center justify-center gap-1.5 py-dsc-nano text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-400 dark:text-dark-muted border-b-2 border-transparent transition-colors rounded-none">
         <i data-lucide="layout-dashboard" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i>
         <span class="truncate">Handoff</span>
       </button>
     </div>
   </div>
 
-  <div id="a11y-workspace-scroll-container" class="flex-1 overflow-y-auto p-4" onscroll="handleScroll(this)">
+  <div id="a11y-workspace-scroll-container" class="flex-1 overflow-y-auto p-dsc-tiny" onscroll="handleScroll(this)">
     <div id="a11y-workspace-tab-content" class="space-y-3 w-full mx-auto">
       <!-- Preenchido por _renderA11yWorkspaceTab() (accessibility.js) —
            uma função de render por tab, chamada sob demanda (só a tab

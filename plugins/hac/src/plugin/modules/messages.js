@@ -42,12 +42,12 @@
           if (userSlot) {
             const u = msg.currentUser;
             const avatarHtml = u.photoUrl
-              ? `<img src="${u.photoUrl}" alt="${u.name}" class="w-5 h-5 rounded-full object-cover border border-slate-200 dark:border-dark-line" />`
-              : `<span class="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white text-[9px] font-bold">${u.name.charAt(0).toUpperCase()}</span>`;
+              ? `<img src="${u.photoUrl}" alt="${u.name}" class="w-5 h-5 rounded-dsc-circ object-cover border border-slate-200 dark:border-dark-line" />`
+              : `<span class="w-5 h-5 rounded-dsc-circ bg-blue-500 flex items-center justify-center text-white text-dsc-label-tiny normal-case tracking-normal font-bold">${u.name.charAt(0).toUpperCase()}</span>`;
             userSlot.innerHTML = `
               <div class="flex items-center gap-1.5" title="${u.name}">
                 ${avatarHtml}
-                <span class="text-[10px] font-medium text-slate-500 dark:text-dark-muted max-w-[80px] truncate">${u.name.split(' ')[0]}</span>
+                <span class="text-dsc-label-tiny normal-case tracking-normal font-medium text-slate-500 dark:text-dark-muted max-w-[80px] truncate">${u.name.split(' ')[0]}</span>
               </div>`;
           }
         }
@@ -84,7 +84,9 @@
         // view-specifications (ver navigate() em core.js) — não no boot,
         // que sempre abre em view-home.
         if (typeof setOnboardingSeenState === 'function') setOnboardingSeenState(msg.onboardingSeen);
-        window._a11ySpecModalInstructionShown = !!msg.specModalInstructionSeen;
+        // window._a11ySpecModalInstructionShown removido em 2026-09-11 — a
+        // instrução única de vida inteira virou orientação repetida no gate
+        // de seleção (openA11yCategoryPickerModal, accessibility.js).
 
         // A escolha de plataforma (picker Web/Mobile) vive na própria
         // view-home, que já nasce ativa no boot sem passar por navigate() —
@@ -110,6 +112,16 @@
         const otherSections = msg.otherDesignersSections || [];
         if (otherSections.length > 0 && typeof openA11yOtherDesignerModal === 'function') {
           openA11yOtherDesignerModal(otherSections);
+        }
+      }
+
+      // Resposta de check-my-prior-session (2026-09-10), disparada no mesmo
+      // momento que check-other-designers-sections — avisa o designer que ELE
+      // MESMO já documentou telas neste arquivo antes (reabertura, troca de
+      // máquina/sessão). priorSession null não faz nada, fluxo segue normal.
+      if (msg.type === 'my-prior-session-checked') {
+        if (msg.priorSession && typeof renderA11yPriorSessionAlert === 'function') {
+          renderA11yPriorSessionAlert(msg.priorSession);
         }
       }
 
@@ -316,6 +328,15 @@
           handleSwipePathCopyStarted(msg.cloneId);
         }
       }
+      // Resposta de resolve-a11y-focus-node (2026-09-11) — o backend
+      // resolveu qual node focar (réplica de trabalho da etapa, ou o Frame
+      // Principal como fallback) e devolveu o id pra este lado chamar
+      // focusNode de fato (highlight-node já existente, testado).
+      if (msg.type === "a11y-focus-node-resolved") {
+        if (msg.nodeId && typeof focusNode === 'function') {
+          focusNode(msg.nodeId);
+        }
+      }
       // Resposta de resolve-tab-order-clone (2026-09-04-aj) — "Adicionar
       // itens" numa área já documentada só arma a captura de clique depois
       // de confirmar que a cópia clonada existente foi reconhecida/
@@ -432,6 +453,18 @@
           _fichaHandleSectionInsertFailed(msg);
         }
       }
+      // Resposta de prepare-ficha-section-edit (code.js) — mesmo padrão de
+      // dispatch acima (2026-09-11, consolidação Section/Ficha).
+      if (msg.type === "ficha-section-edit-ready") {
+        if (typeof _fichaHandleSectionEditReady === 'function') {
+          _fichaHandleSectionEditReady(msg);
+        }
+      }
+      if (msg.type === "ficha-section-edit-failed") {
+        if (typeof _fichaHandleSectionEditFailed === 'function') {
+          _fichaHandleSectionEditFailed(msg);
+        }
+      }
       // Resposta de highlight-ficha-node quando o frame não é mais
       // encontrado no canvas (ex.: apagado manualmente) — sem isto, "Ver
       // ficha no canvas" falha em silêncio (achado real de QA, 2026-09-04).
@@ -474,6 +507,29 @@
         } else {
           window._a11yLibCheckOnSuccess = null; // não deixa um callback de tentativa anterior "vazar" pra próxima checagem bem-sucedida
           openModal('a11y-library-required-modal');
+        }
+      }
+
+      // Resposta de resolve-manual-spec-match (2026-09-11, Parte 2 do gate de
+      // seleção) — disparada por openA11yCategoryPickerModal junto com
+      // check-a11y-library, em paralelo, sem ordem garantida entre as duas.
+      // Ignora respostas de um pedido que não é mais o mais recente (mesmo
+      // padrão de token de check-a11y-library acima) — o designer pode ter
+      // clicado "+" de novo, ou trocado a seleção, antes desta responder.
+      if (msg.type === 'manual-spec-match-resolved') {
+        if (msg.token && window._a11yManualMatchToken && msg.token !== window._a11yManualMatchToken) {
+          // resposta obsoleta, ignora
+        } else {
+          window._a11yManualMatchResult = { nodeId: msg.nodeId, nodeName: msg.nodeName, match: msg.match };
+          // Só tem efeito visual se o picker já estiver aberto — se a
+          // resposta chegar antes de check-a11y-library confirmar o vínculo,
+          // _openA11yCategoryPickerModalNow (accessibility.js) reaplica o
+          // realce assim que o picker de fato abrir.
+          const pickerModal = document.getElementById('a11y-category-picker-modal');
+          const pickerOpen = pickerModal && !pickerModal.classList.contains('hidden');
+          if (pickerOpen && typeof _applyA11yManualMatchToPicker === 'function') {
+            _applyA11yManualMatchToPicker();
+          }
         }
       }
 

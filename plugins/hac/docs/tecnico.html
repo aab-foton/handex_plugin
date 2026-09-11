@@ -273,6 +273,14 @@ hr {
         <li><a href="#s8j">Correções pós-auditoria (2026-09-09): aria-live nos toasts, nomenclatura Handoff Completo, contraste dos cards de status</a></li>
         <li><a href="#s8k">Extração de tab-order.js e swipe-path.js</a></li>
         <li><a href="#s8l">Legenda rica na Ficha + telas de ajuda (2026-09-10)</a></li>
+        <li><a href="#s8m">Isolamento de sessão por usuário, versionamento v1.0/v1.1 (2026-09-10)</a></li>
+        <li><a href="#s8n">Réplica de fundo do Handoff Completo vira snapshot de imagem (2026-09-10)</a></li>
+        <li><a href="#s8o">Reestruturação da árvore de layers do Handoff Completo (2026-09-10)</a></li>
+        <li><a href="#s8p">Alerta de handoff próprio já iniciado neste arquivo (2026-09-10)</a></li>
+        <li><a href="#s8q">Correções pós-reestruturação + descontinuação do Handoff Review (2026-09-10)</a></li>
+        <li><a href="#s8r">Dica educativa de Shift+clique antes da captura de Ordem de Tabulação (2026-09-10)</a></li>
+        <li><a href="#s8s">Gate de seleção + matching determinístico no fluxo manual + alerta de handoff honesto (2026-09-11)</a></li>
+        <li><a href="#s8t">Correção de tipografia da Ficha: escala real do DSC (2026-09-11)</a></li>
         <li><a href="#s9">Contrato de mensagens (UI ↔ backend)</a></li>
         <li><a href="#s10">Escala da UI e <code>position</code> dos modais</a></li>
         <li><a href="#s10a">Onboarding — 1 jornada por origem</a></li>
@@ -316,6 +324,14 @@ hr {
     número de versão.</p>
 
     <h3><code>a11yAreas[]</code></h3>
+    <p><em>Nota de terminologia (2026-09-10):</em> o termo de UI/produto mudou de
+    "Área"/"Área Marcada" para "Tela"/"Tela Selecionada" (botão "Marcar Área" →
+    "Selecionar Tela"), por decisão do usuário — mudança só de texto visível.
+    Nomes internos de código, variáveis (<code>a11yAreas</code>, <code>areaId</code>,
+    <code>a11yAreaId</code>), funções (<code>openA11yAreaModal</code>,
+    <code>_a11yAreaAccordionEl</code>, etc.) e esta documentação técnica permanecem com o
+    termo "área", sem migração — é implementação interna, não risco de quebra e
+    decisão explícita de não tocar nisso agora.</p>
     <p>Selo numerado de seção/tela marcado no canvas. Campos: <code>id</code>, <code>number</code>,
     <code>label</code>, <code>targetNodeId</code>. Não tem campo <code>origin</code> próprio — a origem
     web/mobile deixou de ser calculada por área (ver seção 3). Na UI, cada área é
@@ -1140,6 +1156,20 @@ hr {
     motivou cada regra abaixo está narrado na seção <a href="#s8e">8e</a>;
     aqui fica só o contrato em si, para consulta rápida antes de tocar
     qualquer uma das funções citadas ou de adicionar um 5º consumidor.</p>
+
+    <p><strong>Nota (2026-09-10, ver <a href="#s8n">8n</a>)</strong>: a partir
+    desta data, dentro do Handoff Completo (Ficha), o CLONE de trabalho de
+    Tabulação/Swipe/Leitor de Tela deixou de ser movido pra dentro da Ficha
+    — só um snapshot (imagem) dele é inserido lá, via
+    <code>_snapshotCloneIntoFichaSection</code>. O GRUPO-OVERLAY de
+    marcadores continua sendo movido/reaproveitado normalmente pra dentro
+    da Ficha, exatamente como descrito no resto desta seção — a única
+    mudança de contrato é que overlay e clone podem agora viver em
+    ramos DIFERENTES da árvore (overlay dentro da Ficha, clone preso pra
+    sempre na Section de sessão), por isso
+    <code>_findCloneOverlaySibling</code> não pode mais depender de
+    parentesco (<code>sibling.parent === clone.parent</code>) — busca a
+    página inteira.</p>
 
     <p><strong>Quem cria o clone, por feature</strong>:</p>
     <ul>
@@ -2509,6 +2539,957 @@ hr {
     botão "Entendi", nenhuma ação de trocar de usuário/ver histórico (fora de
     escopo).</p>
 
+    <h2 id="s8n">8n. Réplica de fundo do Handoff Completo vira snapshot de imagem (2026-09-10)</h2>
+
+    <p><strong>Motivação</strong>: até esta mudança, cada um dos 3 blocos de
+    trabalho (Tabulação/Swipe/Leitor de Tela) dentro do Handoff Completo
+    (a "Ficha") continha um <strong>clone real, camada por camada, da tela
+    original</strong>, movido pra dentro da Ficha via
+    <code>_moveActiveCloneIntoFichaSection</code> — ou seja, cada Área
+    documentada carregava <strong>3 clones completos e independentes da
+    mesma tela</strong>, cada um clonando a árvore inteira (incluindo
+    instâncias de componente DSC aninhadas), sem nenhuma otimização de
+    peso. Decisão de produto (2026-09-10): a <strong>réplica de FUNDO</strong>
+    (a cópia visual da tela em si) passa a ser uma <strong>imagem estática</strong>
+    dentro da Ficha, enquanto os <strong>marcadores/overlay</strong> (selos de
+    Tabulação, trilha de Swipe, specGroups do Leitor de Tela) continuam
+    100% reais e sobrepostos a essa imagem — exatamente como já se
+    sobrepunham ao clone real antes. A <strong>réplica de TRABALHO</strong>
+    (a que fica na Section de sessão do designer, usada pra clicar/marcar
+    Tabulação/Swipe/specs incrementalmente) <strong>não muda em nada</strong> —
+    continua real, clicável, editável; só a cópia que antes era MOVIDA pra
+    dentro da Ficha deixou de ser movida e passou a virar uma foto dela.</p>
+
+    <p><strong>Revisão de decisão anterior</strong>: a diretriz registrada em
+    2026-09-08 ("réplica sempre fiel, nunca imagem" — cogitado converter a
+    Ficha final inteira em imagem por peso de arquivo, descartado porque
+    precisava continuar auditável/consultável como camada real) foi
+    revista <strong>especificamente para a réplica de FUNDO dentro do
+    Handoff Completo</strong>, não para a réplica de trabalho nem para os
+    marcadores/overlay, que continuam camadas reais auditáveis. O
+    trade-off aceito: a imagem de fundo não é mais inspecionável
+    camada-a-camada dentro da Ficha, mas os dados que importam para
+    handoff (selos, trilha, specs com componente DSC real) continuam
+    reais; o peso do arquivo cai por eliminar 3× a duplicação de árvore
+    completa por Área.</p>
+
+    <p><strong>Primeira vez que o hac usa <code>exportAsync</code>/
+    <code>figma.createImage</code></strong> — nenhuma chamada anterior no
+    projeto gerava imagem rasterizada; toda a base sempre trabalhou só com
+    nodes vetoriais/reais. Não está na lista de APIs bloqueadas sob
+    <code>documentAccess: "dynamic-page"</code> (<code>scripts/check-figma-api-usage.cjs</code>).</p>
+
+    <p><strong>Nova função <code>_snapshotCloneIntoFichaSection(clone,
+    targetSection, pluginDataKey)</code></strong>: lê
+    <code>clone.absoluteBoundingBox</code>, exporta via
+    <code>clone.exportAsync({format: 'PNG', constraint: {type: 'SCALE', value: 2}})</code>
+    dentro de <code>try/catch</code>, cria a imagem
+    (<code>figma.createImage(bytes)</code>) e um <code>RECTANGLE</code> do
+    mesmo tamanho/posição do clone, com
+    <code>fills = [{type: 'IMAGE', imageHash, scaleMode: 'FILL'}]</code>,
+    <code>locked = true</code> (não editável, é só visual) e marcado com
+    <code>hacFichaSnapshotForClone === clone.id</code>. Conversão de
+    coordenadas (<code>absoluteBoundingBox</code>, relativo à página, →
+    relativo a <code>targetSection</code>) reaproveita o MESMO princípio já
+    usado por <code>_reparentIntoAreaGroup</code>: appendChild primeiro,
+    depois corrige x/y pela diferença observada no
+    <code>absoluteBoundingBox</code> antes/depois — robusto contra
+    qualquer sistema de coordenadas do novo pai (a seção é um FRAME com
+    Auto Layout). Idempotente: se já existir uma imagem antiga deste clone
+    dentro de <code>targetSection</code>, remove antes de criar a nova —
+    cada "Atualizar" substitui a imagem, refletindo o estado atual da
+    tela. <strong>Fallback se <code>exportAsync</code> falhar</strong>: cria
+    um FRAME placeholder (mesmo tamanho, fundo cinza claro, Auto Layout
+    centralizado) com o texto "Não foi possível gerar a prévia desta
+    tela" — loga o erro via <code>console.error</code>, nunca lança a
+    exceção adiante nem trava a montagem da Ficha.</p>
+
+    <p><strong><code>_findCloneOverlaySibling</code> deixou de buscar só por
+    parentesco</strong> — mudança de maior risco desta entrega. Antes, o
+    overlay era sempre encontrado como IRMÃO do clone
+    (<code>sibling.parent === clone.parent</code>), premissa válida
+    enquanto clone e overlay sempre se moviam juntos. Com o clone de
+    trabalho NUNCA MAIS entrando na Ficha (permanece pra sempre na Section
+    de sessão) enquanto o overlay CONTINUA sendo movido pra dentro da
+    Ficha, a premissa "mesmo pai" quebra. Corrigido: a busca agora varre a
+    <strong>página inteira</strong> por um GROUP marcado com o
+    <code>pluginDataKey</code> esperado, reaproveitando as mesmas fontes de
+    varredura já usadas por <code>_forEachTabOrderCopyCandidate</code>/
+    <code>_forEachFichaFrameCandidate</code> (soltos em
+    <code>figma.currentPage</code>, dentro de Sections de sessão, dentro de
+    frames de Ficha) — sem inventar uma 5ª fonte. Como
+    <code>_getOrCreateCloneOverlayGroup</code> usa
+    <code>_findCloneOverlaySibling</code> internamente, a correção se
+    propaga automaticamente sem precisar editá-la à parte; ela continua
+    criando o overlay como irmão de <code>clone.parent</code> quando
+    genuinamente não existe nenhum ainda (mesmo comportamento de sempre).</p>
+
+    <p><strong>Os 3 builders</strong>
+    (<code>_buildFichaTabulacaoSection</code>/<code>_buildFichaSwipeSection</code>/
+    <code>_buildFichaLeitorSection</code>) trocaram a chamada única a
+    <code>_moveActiveCloneIntoFichaSection</code> por duas etapas: (1)
+    <code>await _snapshotCloneIntoFichaSection(clone, section, pluginDataKey)</code>
+    e (2) <code>_getOrCreateCloneOverlayGroup(clone, pluginDataKey, namePrefix)</code>
+    seguido de um <code>appendChild</code> manual do overlay pra dentro da
+    seção quando ainda não estiver lá (<code>overlayGroup.parent !== section</code>).
+    Como <code>section</code> é sempre um FRAME com Auto Layout, mover o
+    overlay SOZINHO (sem o clone se movendo junto como proxy de
+    deslocamento, diferente do modelo antigo) faz o Figma recalcular x/y
+    automaticamente pra encaixá-lo no fluxo — compensado medindo o próprio
+    deslocamento sofrido pelo overlay (<code>absoluteBoundingBox</code>
+    antes/depois do <code>appendChild</code>) e desfazendo-o, mesmo
+    princípio de <code>_reparentIntoAreaGroup</code>, seguido de
+    <code>_setCloneOverlayGroupAbsolutePositioning</code> pra tirá-lo do
+    fluxo do Auto Layout dali em diante. Toda a lógica defensiva existente
+    (<code>_rescueLegacyOverlayNestedInsideClone</code>, seed permanente
+    do GROUP) foi preservada — nada removido, só reorganizado entre a
+    parte do CLONE (agora vira snapshot) e a parte do OVERLAY (continua
+    grupo real movido/reaproveitado).</p>
+
+    <p><strong><code>_moveActiveCloneIntoFichaSection</code> ficou sem
+    chamador ativo</strong> — mantida no código (com comentário explícito
+    de que não é mais usada por nenhum dos 3 builders), preservação de
+    histórico/lógica já testada de compensação de delta. Remoção
+    definitiva é decisão de limpeza futura, fora de escopo desta
+    mudança.</p>
+
+    <p><strong>Ainda pendente de teste manual no Figma</strong> — build/lint
+    limpos não garantem que <code>exportAsync</code> funciona de fato em
+    produção (não roda fora do ambiente Figma real, sem suíte automatizada
+    no projeto). Validar manualmente: gerar/atualizar um Handoff Completo
+    para uma Área com os 3 blocos preenchidos, confirmar que (1) a imagem
+    de fundo aparece corretamente posicionada e dimensionada em cada
+    bloco, (2) os selos/trilha/specGroups aparecem sobrepostos na posição
+    certa, (3) "Atualizar" substitui a imagem antiga sem duplicar, e (4) a
+    réplica de trabalho na Section de sessão continua intacta e clicável
+    depois da operação.</p>
+
+    <h2 id="s8o">8o. Reestruturação da árvore de layers do Handoff Completo (2026-09-10)</h2>
+
+    <p><strong>Motivação</strong>: antes desta mudança, o frame raiz do
+    Handoff Completo (<code>_createOrGetFichaFrame</code>) era um único
+    Auto Layout HORIZONTAL com as 4 seções (Tabulação/Swipe/Leitor de
+    Tela/Handoff Review) todas como filhas diretas dele, lado a lado, sem
+    nenhum nível intermediário de agrupamento. Pedido do usuário: introduzir
+    2 níveis de container — um <strong>Grupo "Área N - [Nome do Frame]"</strong>
+    e, dentro dele, dois Auto Layout irmãos: <strong>"[HAC] Documentação"</strong>
+    (cabeçalho + nome do frame documentado) e <strong>"[HAC] Itens"</strong>
+    (onde os 4 blocos de sempre continuam vivendo, agora aninhados um nível
+    mais fundo). Escopo explicitamente limitado a estrutura de camadas/
+    visual — nenhuma lógica de geração de conteúdo, idempotência,
+    resolução/reaproveitamento de overlay ou cálculo de delta de
+    reparenting foi alterada; tudo isso continua exatamente como descrito
+    na seção 8n acima.</p>
+
+    <p><strong>Nova árvore</strong>:</p>
+    <pre>[HAC] Handoff de Acessibilidade CAIXA | {data} | {designer} | v{versão}   (FRAME raiz, mesmo nó reconhecido por hacFichaForArea)
+  Área N - [Nome do Frame]                                                (GROUP)
+    [HAC] Documentação                                                    (FRAME Auto Layout VERTICAL)
+      Cabeçalho (componente real da lib quando publicado; fallback hoje)
+      [HAC] [Nome do Frame]                                               (texto "display large/600")
+    [HAC] Itens                                                           (FRAME Auto Layout HORIZONTAL)
+      Ordem de Tabulação   (FRAME Auto Layout VERTICAL — era "Handoff Completo — Tabulação")
+      Swipe                (FRAME Auto Layout VERTICAL — era "Handoff Completo — Swipe")
+      Leitor de Tela       (FRAME Auto Layout VERTICAL — era "Handoff Completo — Leitor de Tela")
+      Handoff Review       (FRAME Auto Layout VERTICAL — sem posição definida no pedido original; mantido ao lado dos outros 3, mesma ordem relativa de sempre via FICHA_SECTION_ORDER)</pre>
+
+    <p><strong>Decisão de design 1 — raiz continua FRAME, não vira
+    SECTION</strong>: o pedido original descrevia o nível mais externo como
+    uma Section do Figma. Mantido como FRAME (só renomeado) porque (a) o
+    frame raiz já é reconhecido por toda a malha de busca/idempotência via
+    <code>hacFichaForArea</code> em pluginData, (b) FRAME é quem hoje
+    carrega Auto Layout HORIZONTAL, fill, stroke e cornerRadius — o
+    "cartão" pedido pelo usuário —, o que uma SECTION do Figma não
+    suporta da mesma forma, e (c) o frame já é reparentado para dentro da
+    Section de sessão do designer via <code>_reparentIntoSection</code>;
+    aninhar Section-dentro-de-Section teria exigido tratamento especial sem
+    ganho funcional. Trade-off aceito: o nó raiz não é literalmente uma
+    "Section" do Figma, mas cumpre o mesmo papel visual (cartão externo
+    nomeado, com timestamp/designer/versão no nome).</p>
+
+    <p><strong>Decisão de design 2 — <code>_forEachA11yFichaFrameChild</code>
+    generalizada para recursão</strong>: esta função varre o conteúdo de
+    qualquer frame de Ficha já existente pra localizar clones/overlays
+    já movidos (usada por <code>_findCloneOverlaySibling</code>,
+    <code>_forEachTabOrderCopyCandidate</code>,
+    <code>_forEachSwipePathCopyCandidate</code>). Antes descia exatamente 2
+    níveis fixos (<code>fichaFrame.children</code> = seções,
+    <code>section.children</code> = clone/overlay/legend) — profundidade
+    que bastava para a árvore antiga. Com os 2 novos níveis de
+    agrupamento, uma descida fixa deixaria de encontrar overlays/clones já
+    movidos em fichas geradas com a nova estrutura, quebrando a
+    idempotência de "Atualizar" (seria uma REGRESSÃO funcional, não só
+    visual). Corrigido generalizando a função para descida RECURSIVA
+    (limite de profundidade 8, com <code>Set</code> de nós visitados contra
+    ciclos) — estritamente aditivo: encontra tudo que encontrava antes,
+    mais qualquer coisa mais profunda; todo chamador já filtra por
+    <code>pluginData</code> específico depois, então nunca passa a
+    "encontrar errado", só "encontrar em mais lugares".</p>
+
+    <p><strong>Novas funções em <code>code.js</code></strong>:</p>
+    <ul>
+      <li><code>_getOrCreateFichaAreaGroup(fichaFrame, area)</code> — cria
+      (ou localiza, por <code>hacFichaAreaGroup</code> em pluginData) o
+      GROUP "Área N - [Nome do Frame]", com "[HAC] Documentação" e "[HAC]
+      Itens" já dentro dele desde o nascimento (GROUP nunca pode ficar
+      vazio, mesmo princípio já usado por <code>_getOrCreateCloneOverlayGroup</code>).
+      Marcado <code>layoutPositioning = ABSOLUTE</code> dentro do fichaFrame
+      (Auto Layout), mesma função <code>_setCloneOverlayGroupAbsolutePositioning</code>
+      já existente reaproveitada diretamente.</li>
+      <li><code>_createFichaDocumentacaoFrame(area)</code> — monta "[HAC]
+      Documentação": tenta importar o componente real de Cabeçalho da lib
+      (ver bloqueio abaixo) e cai num fallback visual (frame branco, barra
+      verde no topo, título) quando a lib não estiver publicada; sempre
+      adiciona "[HAC] [Nome do Frame]" com o nome do frame documentado, na
+      escala tipográfica "display large/600" (60px/120%/semibold).</li>
+      <li><code>_createFichaItensFrame()</code> / <code>_findFichaItensFrame(fichaFrame)</code>
+      / <code>_getOrCreateFichaItensFrame(fichaFrame, area)</code> — criam/
+      localizam "[HAC] Itens", o novo destino que os 4 builders
+      (<code>_buildFichaTabulacaoSection</code>/<code>_buildFichaSwipeSection</code>/
+      <code>_buildFichaLeitorSection</code>/<code>_buildFichaReviewSection</code>)
+      passam a usar no lugar do <code>fichaFrame</code> raiz —
+      <code>_findFichaSectionInFrame</code>/<code>_insertFichaSectionInOrder</code>
+      não mudaram, só o frame contra o qual operam.</li>
+      <li><code>_appendFichaBlockTitle(section, text)</code> — título de
+      bloco na escala "heading huge/600" (40px/140%/semibold), inserido no
+      topo de cada um dos 3 blocos de trabalho (a legenda já tinha seu
+      próprio título de 13px, mas reescalar ELE pra 40px quebraria o
+      layout do card estreito de legenda — este é um texto novo, acima
+      dela).</li>
+    </ul>
+
+    <p><strong>Bloqueio real confirmado via REST API — componente de
+    Cabeçalho não está publicado</strong>: o pedido original apontava o
+    component set <code>.[hac mob base] Cabeçalho Template</code> (arquivo
+    <code>HhriLSpKnCB2dHhyiU16iB</code>, variante
+    <code>Status=Finalizado</code>) como o node <code>7100:1423</code>.
+    Verificado nesta sessão via <code>GET /v1/files/{key}/nodes?ids=7100:1424</code>:
+    o component set <strong>existe de fato</strong> (node
+    <code>7100:1424</code>, 4 variantes de <code>Status</code>), mas
+    <strong>não aparece</strong> em <code>GET /v1/files/{key}/components</code>
+    nem <code>/component_sets</code> — ou seja, apesar deste mesmo arquivo
+    já ter 6 OUTROS component sets publicados (ver
+    <code>hac-published-lib-verification.json</code>: "[hac] Conectores",
+    "[hac] Agrupamento", "[hac] Número da tela", "[hac] Ordenação", "[hac
+    mob] Box specs leitor de tela", "[hac web] Box specs leitor de tela"),
+    este component set específico não foi publicado e não tem key pública
+    utilizável por <code>figma.importComponentByKeyAsync</code>. Sem key
+    real pra hardcodar (diferente de <code>A11Y_AGRUPAMENTO_KEYS</code>
+    etc., que têm key confirmada) — implementado
+    <code>A11Y_HAC_CABECALHO_TEMPLATE_PUBLISHED = false</code> +
+    <code>A11Y_HAC_CABECALHO_TEMPLATE_KEY = null</code> (placeholder), e
+    <code>_createFichaDocumentacaoFrame</code> cai direto no fallback
+    (frame com barra verde + título, sem tentar
+    <code>importComponentByKeyAsync</code>) — nunca bloqueia a geração do
+    handoff (princípio "token/componente nunca impeditivo"). Assim que a
+    lib publicar este component set, resolver a key real (mesmo processo
+    REST API desta sessão) e preencher a constante — o código já está
+    pronto pra trocar de fallback pra componente real sem mudança
+    estrutural adicional.</p>
+
+    <p><strong>Espaçamento/radius — escala descendente confirmada via REST
+    API</strong>: valores reais observados no node de referência real
+    apontado pelo usuário (<code>HhriLSpKnCB2dHhyiU16iB</code>, node
+    <code>10459:24855</code>, frame "[A11Y Handoff] [dsc] Button" — exemplo
+    já existente de handoff no mesmo estilo visual): frame raiz do handoff
+    com <code>itemSpacing=64</code>, <code>padding=80</code> em todos os
+    lados, <code>cornerRadius=16</code>; blocos de segundo nível com
+    <code>itemSpacing=24</code>; blocos de conteúdo menores com
+    <code>itemSpacing=16</code>/<code>8</code>; frames de imagem com
+    <code>cornerRadius=8</code>. Aplicado no hac seguindo a mesma lógica de
+    escala (raio/espaçamento maiores no container mais externo, menores
+    nos blocos mais internos): fichaFrame raiz
+    (<code>itemSpacing=64</code>, <code>padding=80</code>,
+    <code>cornerRadius=16</code>) → "[HAC] Itens"
+    (<code>itemSpacing=24</code>, <code>padding=24</code>,
+    <code>cornerRadius=16</code>, "merece o padding/radius maior" por ser o
+    container mais externo dos 4 blocos, conforme pedido) → cada bloco de
+    trabalho — Ordem de Tabulação/Swipe/Leitor de Tela
+    (<code>itemSpacing=16</code>, <code>padding=16</code>,
+    <code>cornerRadius=8</code>) → retângulos de snapshot
+    (<code>cornerRadius=8</code>, mesmo valor "image" do node de
+    referência).</p>
+
+    <p><strong>Container raiz — fill/stroke reais confirmados via REST
+    API</strong>: o node de referência usa fill branco puro e stroke com a
+    variável real <code>color/border/neutral/6 (grayscale 110)</code>
+    (<code>remote: true</code> nesse arquivo — variável importada de outra
+    library, <code>hiddenFromPublishing: true</code>, resolvido via
+    <code>GET /v1/files/{key}/variables/local</code> nesta sessão: hex
+    <code>#404b52</code>). Por ser uma variável remota
+    (<code>hiddenFromPublishing</code>), aplicado como hex fixo em vez de
+    <code>importVariableByKeyAsync</code>/<code>setBoundVariable</code> —
+    mesmo padrão já usado no hac pra outras cores da lib (ex. o fundo azul
+    <code>#DCEEFB</code> do fichaFrame antes desta mudança, agora
+    substituído por branco puro <code>#FFFFFF</code> + o stroke
+    <code>#404b52</code>, <code>strokeWeight=1</code>,
+    <code>strokeAlign='INSIDE'</code>).</p>
+
+    <p><strong>Sombra "Elevation 1" aplicada nos 4 retângulos de
+    snapshot</strong>: mesmo objeto de <code>effects</code>
+    (<code>DROP_SHADOW</code>, <code>color: {r:0,g:0,b:0,a:0.04}</code>,
+    <code>offset: {x:0,y:1}</code>, <code>radius: 2</code>) aplicado direto
+    em <code>_snapshotCloneIntoFichaSection</code> — cobre automaticamente
+    os 3 usos já existentes (Tabulação/Swipe/Leitor de Tela) por
+    compartilharem a mesma função, sem precisar duplicar em cada builder.
+    Valor resolvido real do estilo "Shadows | Elevations/Elevation 1" do
+    DSC, confirmado via REST API nas libs Super DSC Web e DSC Super App
+    nesta sessão.</p>
+
+    <p><strong>Tipografia — escala real do DSC aplicada em 2 pontos
+    novos</strong>: confirmada via REST API no mesmo node de referência
+    (<code>10459:24855</code>) — "display large/600" (60px/120%/peso 600)
+    no nome do frame documentado (único texto novo desta entrega
+    proeminente o bastante pra ser o H1 da Ficha) e "heading huge/600"
+    (40px/140%/peso 600) no título de cada um dos 3 blocos de trabalho
+    (função <code>_appendFichaBlockTitle</code>, ver acima). Textos menores
+    já existentes (labels de selo, specs individuais, título de 13px da
+    legenda) não foram alterados, conforme escopo explícito do pedido.
+    Fonte "Inter Semi Bold" tentada primeiro (peso 600 real), com fallback
+    best-effort pra "Inter Bold" se não estiver disponível na máquina —
+    mesmo padrão de carregamento de fonte best-effort já usado em toda a
+    base.</p>
+
+    <p><strong>Bloco "Frame Principal" — implementado em complemento a
+    esta entrega (autorizado explicitamente pelo usuário como
+    funcionalidade NOVA)</strong>: inicialmente deixado de fora por
+    introduzir comportamento genuinamente novo (fora do escopo original de
+    "só mover estrutura existente") — o usuário revisou e autorizou
+    explicitamente a implementação. Agora é o 1º bloco de "[HAC] Itens"
+    (<code>FICHA_SECTION_ORDER = ['principal', 'tabulacao', 'swipe',
+    'leitor', 'review']</code>), com nome do frame + selo real de "Número
+    da tela" + snapshot da tela ORIGINAL da área (não um clone de
+    trabalho).</p>
+
+    <p><strong>Nova função <code>_buildFichaFramePrincipalSection(itensFrame,
+    area)</code></strong>, chamada de dentro de
+    <code>_getOrCreateFichaItensFrame</code> — roda em TODA chamada (não só
+    na criação de "[HAC] Itens"), porque o pedido é refletir o estado atual
+    da tela original a cada "Inserir/Atualizar" de qualquer um dos 3
+    builders. Idempotente por conteúdo, não por "já rodou uma vez": o texto
+    de nome do frame só é criado se a seção ainda não existir; o snapshot é
+    SEMPRE regerado (mesmo princípio de idempotência de
+    <code>_snapshotCloneIntoFichaSection</code> — remove a imagem antiga
+    marcada com o mesmo id antes de criar a nova); o selo de Número da tela
+    só é criado uma vez (marcado por pluginData
+    <code>hacFichaPrincipalBadgeForArea</code>), só reposicionado nas
+    chamadas seguintes.</p>
+
+    <p><strong>Snapshot do node ORIGINAL, não de um clone</strong>:
+    <code>_snapshotCloneIntoFichaSection</code> foi reaproveitada TAL COMO
+    ESTÁ (nenhuma alteração na função) — ela só usa
+    <code>exportAsync</code>/<code>absoluteBoundingBox</code>/<code>id</code>/<code>name</code>,
+    propriedades de qualquer <code>SceneNode</code>, não exclusivas de um
+    clone. Passar <code>area.targetNodeId</code> resolvido via
+    <code>figma.getNodeByIdAsync</code> (em vez de um clone de trabalho)
+    funciona sem nenhuma mudança nela, evitando um 4º clone incremental só
+    pra este bloco — o frame original é só LIDO (nunca precisa ficar
+    "vivo"/editável como os clones de Tabulação/Swipe/Leitor, que o
+    designer clica/marca incrementalmente).</p>
+
+    <p><strong>Selo de Número da tela — mesma key/lógica já usada em
+    <code>create-a11y-area</code>, não uma nova via de importação</strong>:
+    nova constante de escopo de módulo
+    <code>A11Y_ITEM_NUMBER_KEYS_DESKTOP</code>, com os MESMOS 5 valores já
+    hardcoded em 2 lugares do closure <code>figma.ui.onmessage</code>
+    (<code>A11Y_AREA_CONECTOR_KEYS</code> em <code>create-a11y-area</code>
+    e <code>A11Y_ITEM_NUMBER_KEYS</code> no handler de Ordem de Tabulação —
+    ambas já eram literalmente os mesmos valores, duplicados só por
+    estarem presas em closures diferentes). Promovida pro escopo de módulo
+    porque <code>_buildFichaFramePrincipalSection</code> vive fora de
+    qualquer um dos dois closures. Mesmo fallback mobile→desktop de
+    <code>create-a11y-area</code> (usa
+    <code>A11Y_ITEM_NUMBER_KEYS_MOBILE</code> quando
+    <code>area.a11yOrigin === 'mobile'</code>), mesma variante
+    "desativado" (sem conector/haste, adequado a um selo isolado sobre uma
+    imagem) e mesmo fallback gracioso pra elipse sólida se
+    <code>importComponentByKeyAsync</code> falhar. Posicionado no canto
+    superior esquerdo do snapshot (8px de margem pra dentro), coordenadas
+    calculadas diretamente contra o retângulo de snapshot devolvido por
+    <code>_snapshotCloneIntoFichaSection</code> — ambos vivem no mesmo
+    sistema de coordenadas (filhos diretos da mesma <code>section</code>),
+    sem precisar de nenhuma compensação de delta como a usada pelos
+    overlays de Tabulação/Swipe/Leitor (que migram de um pai antigo pra um
+    novo; aqui o selo nasce direto no destino final).</p>
+
+    <p><strong>Preservação do overlay ABSOLUTE nos outros 3 blocos —
+    confirmado, sem regressão</strong>: a reestruturação de árvore move o
+    grupo-overlay (selos de Tabulação, trilha de Swipe, specGroups do
+    Leitor de Tela) pra dentro dos novos níveis de aninhamento (Itens >
+    Ordem de Tabulação/Swipe/Leitor de Tela), mas a fórmula de
+    compensação de delta usada nos 3 builders NÃO foi alterada — continua
+    medindo <code>overlayGroup.absoluteBoundingBox</code> antes/depois do
+    <code>appendChild</code> e aplicando a diferença observada, princípio
+    já robusto a qualquer profundidade de aninhamento do novo pai (é
+    matemática de posição absoluta, não assume nível fixo). A única mudança
+    real foi generalizar <code>_forEachA11yFichaFrameChild</code> para
+    encontrar o overlay já movido na nova profundidade (ver acima) — a
+    lógica de CÁLCULO da posição em si é idêntica à de antes desta
+    entrega.</p>
+
+    <p><strong>Marcadores reais na legenda "Entendendo as categorias" do
+    Leitor de Tela</strong> (mesma entrega, achado durante a atualização de
+    copy abaixo): o círculo da seção Assets de cada bloco de instrução
+    (<code>_buildFichaLegendColumn</code>) era uma elipse sólida sem ícone,
+    só colorida por <code>_fichaLegendAssetColor</code>. Trocado para
+    reaproveitar o MESMO componente real "[a11y] Agrupamento" já usado nas
+    specs (<code>_tryImportA11yAgrupamento</code>, chamada de mais um
+    lugar — nenhuma lógica nova) via nova função
+    <code>_fichaLegendAssetCategory(label)</code>, que mapeia o label do
+    asset pra categoria (<code>elemento</code>/<code>titulo</code>/<code>decorativo</code>).
+    Redimensionado pra 24×24 (não 16×16 como a elipse antiga) porque o
+    componente real tem moldura tracejada + badge central, que ficaria
+    ilegível numa distorção maior. Fallback gracioso pra elipse sólida de
+    sempre se a categoria não mapear ou o import falhar.</p>
+
+    <p><strong>Conteúdo de instrução real (copy) — 3 blocos atualizados
+    em <code>refs/ficha-instruction-content.json</code></strong>: texto
+    fornecido diretamente pelo dono do repositório via print do Figma
+    (não mais extraído por agente MCP, ver <code>_meta.status</code>
+    atualizado no próprio JSON). <code>tabulacao</code> e
+    <code>leitorTela</code> tiveram <code>instructionsHeading</code>/
+    <code>instructionsBody</code> revisados; <code>swipe</code> — que
+    antes ficava vazio de propósito ("o frame de instrução do Swipe ainda
+    não existe na lib") — agora tem <code>title</code> ("Ordem de Leitura
+    Mobile (Swipe)"), <code>instructionsHeading</code> ("Instruções sobre
+    a documentação") e <code>instructionsBody</code> reais, então
+    <code>_buildFichaLegendColumn</code> deixa de cair no fallback de texto
+    curto pra esse bloco (a condição já existente,
+    <code>hasRichContent = !!(richContent.title)</code>, resolve isso
+    sozinha, sem mudança de código). <code>steps</code>/<code>assets</code>
+    do bloco <code>swipe</code> continuam vazios — a lib não tem essa
+    subseção pra Swipe — e os blocos condicionais que os renderizam
+    (<code>steps.length > 0</code>/<code>assets.length > 0</code>) já
+    lidavam com isso corretamente antes desta mudança.</p>
+
+    <p><strong>Ainda pendente de teste manual no Figma</strong> — mesma
+    ressalva da seção 8n: build/lint limpos não garantem o resultado visual
+    real. Validar manualmente: gerar/atualizar um Handoff Completo do
+    zero, confirmar (1) a árvore de layers bate com o diagrama acima
+    (incluindo "Frame Principal" como 1º bloco de "[HAC] Itens"), (2) o
+    fallback de Cabeçalho aparece corretamente (barra verde + título) já
+    que a lib real não está publicada, (3) padding/radius/sombra/tipografia
+    aparecem como descrito, (4) "Atualizar" continua idempotente (não
+    duplica Grupo de Área, "[HAC] Itens" nem o selo de Número da tela a
+    cada clique), (5) arquivos já documentados ANTES desta mudança (árvore
+    antiga, plana) continuam sendo encontrados/atualizados sem erro, (6) o
+    snapshot do Frame Principal reflete o frame original (não um clone) e
+    o selo aparece no canto superior esquerdo dele, e (7) os marcadores
+    reais (H/imagem/proibido) aparecem na legenda "Entendendo as
+    categorias" do bloco Leitor de Tela.</p>
+
+    <h2 id="s8p">8p. Alerta de handoff próprio já iniciado neste arquivo (2026-09-10)</h2>
+
+    <p><strong>Motivação</strong>: a seção 8m introduziu a detecção de handoff
+    de <em>outro</em> designer no mesmo arquivo. Faltava o caso simétrico e mais
+    comum na prática: o <strong>próprio</strong> designer reabrindo o arquivo
+    depois de um tempo, ou trocando de máquina/sessão — situação em que o
+    storage local do navegador (<code>figma.clientStorage</code>/cache do
+    frontend) pode não estar disponível, mas a Section de sessão dele já existe
+    no canvas com todo o trabalho feito.</p>
+
+    <p><strong>Backend</strong>: nova função
+    <code>_findOwnPriorSessionSection(currentUserId)</code>
+    (<code>code.js</code>), irmã de <code>_findOtherDesignersSessionSections</code>
+    com o filtro invertido — varre <code>figma.currentPage.children</code> por
+    Sections com <code>hacSessionSection === 'true'</code> e
+    <code>hacSessionOwnerId === currentUserId</code>. Retorna
+    <code>{ name, ownerId, version, areaCount }</code> na primeira Section
+    encontrada (não há dedupe de múltiplas Sections do mesmo dono — não deveria
+    haver mais de uma pela lógica de <code>_getOrCreateA11ySessionSection</code>),
+    ou <code>null</code> se <code>currentUserId</code> for vazio ou nenhuma
+    Section própria existir ainda. <code>version</code> vem direto de
+    <code>hacSessionVersion</code> (default <code>"1.0"</code>, mesmo padrão da
+    seção 8m).</p>
+
+    <p><strong>Critério de <code>areaCount</code></strong>: conta os filhos
+    DIRETOS da Section que são <code>type === 'GROUP'</code> e têm
+    <code>getPluginData('hacCategory') === 'a11y'</code> — o mesmo pluginData
+    que <code>create-a11y-area</code> grava no Grupo de cada tela documentada
+    (não um chute por "qualquer GROUP genérico"). <strong>Limitação
+    conhecida e documentada no comentário da função</strong>: como toda Área
+    nasce solta como filha direta da Section desde a reorganização de canvas de
+    2026-09-05 (seção 8e), a contagem cobre esse formato — não desce pela
+    hierarquia aninhada anterior a essa data
+    (<code>_forEachA11ySessionAreaChild</code>, usada em buscas de artefato,
+    não foi reaproveitada aqui porque o objetivo é uma contagem simples, não
+    localizar artefatos). Na prática, sessões antigas o bastante pra terem esse
+    formato legado subcontariam; dado que o caso de uso real é retomar um
+    handoff recente no mesmo arquivo, essa aproximação foi aceita sem
+    generalizar a busca nos dois níveis.</p>
+
+    <p><strong>Handler</strong> <code>check-my-prior-session</code>
+    (<code>msg.currentUserId</code>) → responde sempre
+    <code>my-prior-session-checked</code> com <code>priorSession</code> (nunca
+    bloqueante, mesmo padrão de todo handler de detecção do hac).</p>
+
+    <p><strong>Frontend</strong>: disparado no MESMO callback que
+    <code>check-other-designers-sections</code>, dentro de
+    <code>ensureA11yProjectOriginThen</code> (<code>accessibility.js</code>) —
+    logo após a primeira confirmação de origem Web/Mobile no arquivo. Resposta
+    tratada em <code>messages.js</code>
+    (<code>my-prior-session-checked</code>), que chama
+    <code>renderA11yPriorSessionAlert(priorSession)</code>
+    (<code>accessibility.js</code>). Essa função popula o elemento estático
+    <code>#a11y-prior-session-alert</code> (<code>specifications.html</code>,
+    inserido depois de <code>#a11y-groups-results</code>/<code>#a11y-search-empty</code>,
+    dentro da área rolável — não é footer fixo nem modal bloqueante). Mesmo
+    padrão visual dos banners de onboarding já existentes no mesmo arquivo
+    (acento <code>#0891B2</code>, ícone Lucide à esquerda, botão "x" à
+    direita). <strong>Texto revisado em 2026-09-11 (ver seção 13)</strong> —
+    ver detalhes lá; a versão atual não promete mais retomada automática.</p>
+
+    <p><strong>Fonte do número N</strong>: prioriza <code>a11yAreas.length</code>
+    (variável global do frontend, já populada nesse ponto do fluxo e é a MESMA
+    fonte que a lista "Telas Documentadas" exibe — mais confiável porque
+    reflete o estado já carregado/sincronizado no frontend) e só cai para
+    <code>priorSession.areaCount</code> (a contagem aproximada feita no canvas,
+    ver limitação acima) quando <code>a11yAreas</code> ainda está vazio ou
+    indefinido nesse ponto.</p>
+
+    <p><strong>Dispensa sem persistência</strong>: o botão "x" só executa
+    <code>classList.add('hidden')</code> no próprio elemento — ao contrário do
+    dismiss do banner de onboarding (<code>dismissOnboardingBanner</code>, que
+    grava em storage e nunca mais reaparece), este alerta reaparece na próxima
+    vez que <code>ensureA11yProjectOriginThen</code> rodar (nova sessão do
+    plugin). Decisão deliberada de simplicidade: o caso de uso é justamente
+    "avisar de novo se for relevante de novo", não suprimir permanentemente.</p>
+
+    <p><strong>Ver também</strong>: desenho futuro de reidratação de dados a
+    partir do canvas (não implementado nesta entrega) — seção 11.</p>
+
+    <h2 id="s8q">8q. Correção de divergências da reestruturação de árvore (2026-09-10) + descontinuação do Handoff Review</h2>
+
+    <p><strong>Motivação</strong>: a entrega da seção 8o divergiu em 4 pontos
+    do que o usuário havia pedido, confirmado com prints reais do Figma. Esta
+    seção documenta a correção de 3 desses pontos (o 4º — trocar "Frame
+    Principal" de FRAME para <code>SectionNode</code> — ficou
+    <strong>bloqueado</strong>, ver abaixo) e a descontinuação completa do
+    Handoff Review (seções 8f/8h, 4º bloco consolidado).</p>
+
+    <h3>Bloqueio real: "Frame Principal" NÃO virou Section</h3>
+
+    <p>O plano pedia trocar <code>figma.createFrame()</code> por
+    <code>figma.createSection()</code> em <code>_buildFichaFramePrincipalSection</code>
+    — <strong>não implementado</strong>. <code>SectionNode</code> na Plugin API
+    do Figma só pode ser filho direto de <code>PageNode</code> ou de outro
+    <code>SectionNode</code> (restrição de runtime, não representada nos
+    tipos TypeScript de <code>@figma/plugin-typings</code> — a assinatura de
+    <code>appendChild</code> é genérica o bastante pra aceitar qualquer
+    <code>SceneNode</code>, incluindo <code>SectionNode</code>, sem checagem
+    estática). O destino pedido (<code>itensFrame</code>, um
+    <code>FrameNode</code> comum dentro do Grupo "Tela N") rejeitaria essa
+    chamada em runtime. Sem acesso a um Figma desktop real neste ambiente
+    para confirmar empiricamente, e por ser um ponto de risco técnico
+    sinalizado explicitamente no plano como bloqueante, a implementação foi
+    interrompida nesse ponto específico e reportada para decisão do usuário
+    — nenhum workaround foi decidido unilateralmente. "Frame Principal"
+    continua sendo um <code>FrameNode</code> com Auto Layout, como já estava
+    desde a seção 8o.</p>
+
+    <p><strong>Decisão final do usuário (2026-09-10)</strong>: manter "Frame
+    Principal" como <code>FrameNode</code> definitivamente — não tentar a
+    alternativa de Section solta fora de <code>[HAC] Itens</code> com
+    posicionamento manual (que quebraria a hierarquia
+    <code>[HAC] Itens &gt; Frame Principal</code> já pedida e aprovada
+    anteriormente). Este ponto está encerrado, sem pendência de código.</p>
+
+    <h3>Correção 1: <code>_getOrCreateFichaAreaGroup</code> — sem positioning forçado + rename Área→Tela</h3>
+
+    <p>O GROUP nativo criado por <code>figma.group([docFrame, itensFrame],
+    fichaFrame)</code> já estava correto (tipo de node certo) — o problema
+    era uma chamada indevida logo em seguida a
+    <code>_setCloneOverlayGroupAbsolutePositioning(areaGroup)</code> +
+    <code>x=0, y=0</code>: reaproveitamento de uma função pensada
+    especificamente para overlays de clone (um contexto totalmente
+    diferente), sem necessidade real aqui e sem ter sido pedido.
+    <strong>Removido</strong> — o GROUP volta a se comportar nativamente
+    como item de layout dentro do Auto Layout HORIZONTAL do
+    <code>fichaFrame</code> pai, sem nenhum ajuste manual de posição.</p>
+
+    <p><strong>Rename</strong>: o nome do node passa de <code>"Área N -
+    {label}"</code> para <code>"Tela N - {label}"</code> — só o texto
+    literal do nome, sem tocar na função (<code>_getOrCreateFichaAreaGroup</code>
+    mantém o nome, assim como as variáveis internas <code>areaNumber</code>/
+    <code>frameLabel</code>). Não confundir com o segundo conceito de "grupo
+    de área" usado no fluxo de trabalho no canvas (<code>create-a11y-area</code>)
+    — estrutura completamente diferente, não tocada por esta correção.</p>
+
+    <h3>Correção 2: sizing "espremido"</h3>
+
+    <p><strong>Nome do frame documentado (fontSize 60)</strong>: o
+    <code>nomeText</code> em <code>_createFichaDocumentacaoFrame</code>
+    nascia sem <code>textAutoResize</code> explícito — herdava o default
+    <code>'NONE'</code> (dimensões travadas em 0), cortando o texto mais
+    proeminente da Ficha. Corrigido com
+    <code>nomeText.textAutoResize = 'WIDTH_AND_HEIGHT'</code>, setado ANTES
+    de <code>.characters</code>. <code>WIDTH_AND_HEIGHT</code> (não só
+    <code>'HEIGHT'</code>) porque o container pai (<code>nomeFrame</code>) é
+    HUG/HUG nos dois eixos — não há uma largura de referência do pai que
+    justificasse travar a largura do texto.</p>
+
+    <p><strong>API moderna de Fill nos blocos internos</strong>: vários
+    textos/blocos de conteúdo em <code>_buildFichaLegendColumn</code> e no
+    fallback de Cabeçalho (<code>_createFichaDocumentacaoFrame</code>) usavam
+    o padrão legado <code>layoutAlign = 'STRETCH'</code>. Trocados para
+    <code>layoutSizingHorizontal = 'FILL'</code> (API atual) — aplicado
+    <strong>só</strong> onde o pai direto já é <code>FIXED</code> no eixo
+    relevante (condição real pra Fill funcionar): <code>col</code> (Legenda,
+    largura fixa 220/260px), <code>stepsList</code>/<code>assetsList</code>
+    (largura fixa igual à coluna-mãe), <code>row</code> (filhos de
+    <code>stepsList</code>/<code>assetsList</code>), <code>label</code>/
+    <code>desc</code> dos itens de Assets, o <code>card</code> de fallback
+    do Swipe (260px fixo), e <code>barra</code>/<code>title</code> do
+    Cabeçalho fallback (480px fixo). <strong>Não aplicado</strong> em
+    marcadores/badges pequenos (<code>marker</code>, <code>number</code>),
+    que mantêm tamanho intrínseco por design.</p>
+
+    <p><strong>Decisão sobre o Cabeçalho fallback de 480px</strong>: avaliado
+    e descartado trocar para Fill — o pai direto (<code>docFrame</code>) é
+    HUG/HUG (calcula a própria largura a partir do maior filho); um Fill
+    aqui não teria nenhuma largura de referência pra "preencher" (geraria
+    dependência circular pai↔filho). O hardcode de 480px foi mantido de
+    propósito, com comentário no código explicando a decisão — não é um
+    esquecimento.</p>
+
+    <h3>Descontinuação do Handoff Review</h3>
+
+    <p><strong>Decisão do usuário (2026-09-10)</strong>: o Handoff Review (4º
+    bloco consolidado da Ficha, introduzido na seção 8f e ampliado na seção
+    8h) nunca foi finalizado — a versão de código chegou a divergir do que
+    havia sido de fato pedido (ver bloqueio acima e demais divergências desta
+    seção). Em vez de corrigir, o usuário optou por <strong>remover por
+    completo</strong> essa funcionalidade, mantendo só os 3 blocos reais
+    (Frame Principal, Ordem de Tabulação, Swipe, Leitor de Tela — este último
+    trio é o que efetivamente compõe "[HAC] Itens" hoje).</p>
+
+    <p><strong>Backend removido (<code>code.js</code>)</strong>: a função
+    <code>_buildFichaReviewSection</code> inteira (que desenhava o resumo por
+    seção, breakdown por categoria, hierarquia de títulos e itens
+    decorativos); a chave <code>'review'</code> de
+    <code>FICHA_SECTION_ORDER</code>; <code>'review'</code> da lista de
+    <code>sectionKey</code> válidos e o ramo de despacho correspondente no
+    handler <code>insert-ficha-section</code>; a função auxiliar
+    <code>_findFirstTextNode</code> (usada só pela hierarquia de títulos do
+    Review, ficou órfã) e a função <code>_removeFichaSectionInFrame</code>
+    (usada só pelo Review — sem estado próprio pra preservar, diferente das
+    outras 3 seções, que MOVEM a réplica de trabalho e nunca a
+    recriam/removem).</p>
+
+    <p><strong>Frontend removido (<code>handoff-ficha.js</code>)</strong>: a
+    chave <code>review</code> de <code>_fichaEmptySectionsState</code>; o
+    ramo <code>sectionKey === 'review'</code> de <code>_fichaInsertSection</code>;
+    as funções <code>_fichaReviewSourceKeys</code>/<code>_fichaReviewIsStale</code>
+    (e a exposição <code>window._fichaReviewIsStale</code>);
+    <code>_fichaReviewCardHtml</code> e sua chamada em
+    <code>_fichaDashboardHtml</code> (dashboard volta a mostrar 3 cards de
+    status, não 4); <code>'review'</code> de <code>candidateKeys</code> e do
+    <code>order</code> de <code>_fichaGenerateCompleteHandoff</code>, e a
+    lógica que forçava reprocessamento do Review quando qualquer
+    seção-fonte mudava.</p>
+
+    <p><strong>Ajuste em <code>accessibility.js</code></strong>: o array
+    <code>fichaSectionKeys</code> (usado pra calcular "X/N seções inseridas"
+    no card de listagem principal, <code>_a11yAreaAccordionEl</code>) também
+    tinha <code>'review'</code> — removido; o texto se ajusta sozinho porque
+    N vem do <code>.length</code> do próprio array.</p>
+
+    <p><strong>Não tocado</strong> (nomes parecidos, features diferentes):
+    <code>cancelTabOrderReview</code>, <code>cancelSwipePathReview</code>,
+    <code>needsA11yTokenReview</code>/<code>_a11yTokenReviewCandidates</code>
+    (revisão de token DSC sem match) — nenhuma relação com o Handoff Review
+    consolidado.</p>
+
+    <p><strong>Validação</strong>: <code>node --check</code> em
+    <code>code.js</code>/<code>handoff-ficha.js</code>/<code>accessibility.js</code>,
+    <code>npm run bundle:code</code>, <code>npm run bundle:ui</code>,
+    <code>npm run lint</code> e <code>npm run export:plugin</code> — todos
+    limpos. <strong>Pendente de teste manual no Figma real</strong> (mudança
+    não commitada): confirmar visualmente (1) rename "Área N" → "Tela N" nos
+    nomes de node, (2) Grupo de Tela posicionado nativamente lado a lado com
+    as demais telas, sem salto/deslocamento, (3) nome do frame documentado
+    (60px) não aparece mais cortado, (4) blocos de legenda/cabeçalho ocupam a
+    largura esperada do container, (5) dashboard da aba Handoff mostra 3
+    cards (não 4) e "Gerar handoff completo" reinsere só
+    Tabulação/Swipe/Leitor.</p>
+
+    <h2 id="s8r">8r. Dica educativa de Shift+clique antes da captura manual de Ordem de Tabulação (2026-09-10)</h2>
+
+    <p>Modal nova, puramente educativa, exibida <strong>uma única vez por
+    arquivo Figma</strong> — logo antes de <code>startTabOrderManualMode</code>
+    minimizar a janela e começar a escutar cliques no canvas (fluxo "Iniciar
+    Ordem de Tabulação"). Explica (1) Shift+clique sequencial — a ordem dos
+    cliques é o que vira a Ordem de Tabulação — e (2) como aprofundar a
+    seleção em camadas aninhadas dentro de um grupo/frame: clicar novamente
+    sobre o elemento já selecionado, ou dar duplo-clique, desce mais um nível
+    na árvore a cada repetição (comportamento nativo do Figma, descrito de
+    forma genérica de propósito — sem arriscar um atalho específico que possa
+    estar errado). Também avisa que <strong>marquise não preserva ordem de
+    clique confiável</strong> e recomenda Shift+clique quando a sequência
+    importa, lembrando que dá pra reordenar depois na lista de revisão.</p>
+
+    <p><strong>Mecanismo de "visto 1x", reaproveitado sem inventar sistema
+    novo</strong>: mesmo <code>onboardingSeen</code>/<code>_onboardingSeen(toolKey)</code>/
+    <code>markOnboardingSeen(toolKey)</code> de <code>onboarding.js</code> (já
+    genéricos o bastante para aceitar qualquer chave string, não só as de
+    <code>ONBOARDING_TOOLS</code>) — chave nova <code>'tabOrderShiftHint'</code>,
+    persistida em <code>figma.clientStorage</code> junto das demais chaves de
+    onboarding (por instalação do plugin, sobrevive a "Limpar Cache").</p>
+
+    <p><strong>Onde vive</strong> (<code>tab-order.js</code>):
+    <code>startTabOrderManualMode(areaId, targetNodeId)</code> continua sendo o
+    único ponto de entrada público (nenhum caller mudou) — agora checa
+    <code>_onboardingSeen('tabOrderShiftHint')</code> logo no início; se ainda
+    não foi vista, guarda os argumentos em
+    <code>window._pendingTabOrderShiftHintArgs</code>, abre o modal
+    (<code>#a11y-tab-order-shift-hint-modal</code>, <code>modals.html</code>) e
+    retorna cedo — o corpo real do fluxo (clonagem da tela, minimização da
+    janela, modo de captura contínua) foi extraído para
+    <code>_startTabOrderManualModeInner(areaId, targetNodeId)</code>. O botão
+    "Entendi, começar seleção" chama <code>_confirmTabOrderShiftHint()</code>,
+    que marca a chave como vista, fecha o modal e chama
+    <code>_startTabOrderManualModeInner</code> com os argumentos guardados.</p>
+
+    <p><strong>Reabertura manual</strong>: ícone de ajuda
+    (<code>circle-help</code>) no cabeçalho do modal de revisão da Ordem de
+    Tabulação (<code>#a11y-tab-order-review-modal</code>) chama
+    <code>openTabOrderShiftHintManually()</code> — reabre a mesma modal sem
+    marcar/desmarcar estado de "visto" e sem reiniciar nenhum fluxo de
+    captura (o designer já pode estar no meio de uma revisão em andamento).</p>
+
+    <h2 id="s8s">8s. Gate de seleção + matching determinístico no fluxo manual + alerta de handoff honesto (2026-09-11)</h2>
+
+    <p><strong>Motivação</strong>: 3 melhorias pontuais no fluxo de criação
+    manual de spec e no alerta de handoff próprio (seção 8p), pedidas juntas
+    por afetarem o mesmo momento de trabalho (clicar "Nova spec").</p>
+
+    <h3>1. Gate de seleção antes do picker de categoria</h3>
+
+    <p><strong>Problema anterior</strong>: clicar "Nova spec"
+    (<code>openA11yCategoryPickerModal</code>) abria o picker de categoria
+    direto, sem garantir que o designer tinha selecionado algo no canvas. O
+    erro "Selecione um elemento no canvas" (<code>create-unified-spec</code>,
+    <code>code.js</code>) só aparecia DEPOIS de preencher o formulário
+    inteiro e clicar Aplicar.</p>
+
+    <p><strong>Mudança</strong>: <code>openA11yCategoryPickerModal(areaId)</code>
+    agora, antes de disparar <code>check-a11y-library</code> (checagem que já
+    existia): (1) chama <code>focusNode(area.targetNodeId)</code>
+    (<code>core.js</code> — seleciona o frame da Área e dá scroll/zoom), (2)
+    mostra <code>showSnackbar('Clique no elemento que você quer especificar,
+    dentro do frame em destaque.')</code>. Nada disso bloqueia o fluxo — o
+    picker abre normalmente assim que <code>check-a11y-library</code>
+    responder, independente do estado da seleção.</p>
+
+    <p><strong>Decisão de UX (não repetir vs. sempre mostrar)</strong>: a
+    orientação aparece <strong>sempre</strong> que "Nova spec" é clicado, sem
+    lógica de "visto 1x". Isso substituiu a antiga instrução única de vida
+    inteira que existia dentro de <code>openA11yModal</code>
+    (<code>window._a11ySpecModalInstructionShown</code>/
+    <code>save-spec-modal-instruction-seen</code>, com estado em
+    <code>figma.clientStorage</code>) — as duas mensagens competiam pelo
+    mesmo momento do fluxo, então a antiga foi <strong>removida por
+    completo</strong> (handler <code>save-spec-modal-instruction-seen</code>
+    e o campo <code>specModalInstructionSeen</code> de <code>init-plugin</code>
+    também removidos do backend, sem uso restante). Por ser um snackbar curto
+    de leitura rápida (uma frase), repetir a cada clique foi considerado
+    aceitável — evita duas flags de "já vi" concorrentes para o mesmo
+    instante. Se se mostrar repetitivo demais na prática, dá pra persistir
+    via <code>figma.clientStorage</code> seguindo o mesmo padrão que já
+    existia (onboarding, dica de Shift+clique da seção 8r).</p>
+
+    <h3>2. Matching determinístico no fluxo manual</h3>
+
+    <p><strong>Objetivo</strong>: sugerir a categoria certa no picker quando o
+    elemento selecionado é um componente DSC reconhecido — sem tirar do
+    designer a decisão final.</p>
+
+    <p><strong>Backend</strong>: novo handler <code>resolve-manual-spec-match</code>
+    (<code>code.js</code>) e a função compartilhada
+    <code>_resolveManualSpecMatchAndNotify(token)</code> que ele chama — lê a
+    seleção ATUAL do canvas (<code>figma.currentPage.selection</code>, mesmo
+    padrão síncrono de <code>get-selection-name</code>), resolve
+    <code>getMainComponentAsync()</code> se for INSTANCE (mesmo tratamento de
+    erro try/catch já usado nos outros 3 pontos do arquivo) e reaproveita
+    <code>_resolveDscComponentA11yMatch(componentKey)</code> — <strong>não
+    duplica</strong> a lógica de matching. Responde sempre
+    <code>manual-spec-match-resolved</code> com <code>{ token, nodeId,
+    nodeName, match }</code>, onde <code>match</code> é <code>null</code>
+    (não é INSTANCE DSC reconhecida), <code>{ isUnmapped: true, ... }</code>
+    (é DSC, mas sem categoria de a11y) ou <code>{ a11yCategory, confidence,
+    origin, sourceLib, containingFrame }</code> (sugestão completa).</p>
+
+    <p><strong>Re-matching ao vivo enquanto o picker está aberto</strong>: o
+    picker normalmente abre ANTES do designer clicar no elemento-alvo real
+    dentro do frame (o clique acontece só depois de ler a instrução do item
+    1) — a resolução feita no instante do clique em "Nova spec" tenderia a
+    bater contra o próprio frame da Área (não uma INSTANCE útil). Por isso
+    <code>resolve-manual-spec-match</code> liga uma flag
+    <code>_a11yManualMatchModeActive</code>; o listener
+    <code>figma.on('selectionchange', ...)</code> já existente (mesmo
+    debounce de 500ms de Tabulação/Swipe) chama
+    <code>_resolveManualSpecMatchAndNotify(null)</code> de novo a cada
+    mudança de seleção enquanto o modo estiver ligado. O frontend desliga o
+    modo (<code>stop-manual-spec-match-mode</code>) dentro de
+    <code>closeA11yCategoryPickerModal</code> — cobre tanto confirmar uma
+    categoria quanto fechar pelo X/backdrop.</p>
+
+    <p><strong>Frontend</strong>: <code>_applyA11yManualMatchToPicker()</code>
+    (<code>accessibility.js</code>) reaproveita
+    <code>_resolveA11yFormPresetFromItem(fakeItem, 'detection')</code> — a
+    MESMA função que a Detecção Automática usa pra ir de
+    <code>dscComponentMatch</code> para <code>{ category, options }</code> —
+    empacotando o resultado do matching manual no mesmo formato de item
+    esperado. <strong>Nunca duplica</strong> a lógica de "shortName →
+    categoria/subtipo".</p>
+
+    <p><strong>Decisão de UX (realçar vs. pular direto pra categoria)</strong>:
+    diferente do wizard de Detecção Automática/Não Documentados (que PULA o
+    picker inteiramente quando já conhece a categoria, indo direto pro
+    formulário), aqui o picker <strong>continua aparecendo sempre</strong> —
+    pular a etapa destruiria a única tela onde o designer confirma a
+    categoria no fluxo manual, mesmo quando o matching está certo. A
+    categoria sugerida só ganha um realce visual (anel + fundo cyan + badge
+    "Sugerido", via atributo <code>data-a11y-suggested</code> no botão
+    correspondente em <code>#a11y-category-picker-modal</code>) — nunca fecha
+    o picker nem pré-clica em nada. Se o designer clicar na categoria
+    sugerida, <code>chooseA11yType</code> repassa o preset
+    (<code>presetComponente</code>/<code>presetEstruturaTipo</code>/
+    <code>presetTituloNivel</code>, conforme a categoria) pra
+    <code>openA11yModal</code>; se clicar em outra categoria, o preset (que
+    pertence só à categoria sugerida) é descartado — a sugestão nunca trava a
+    decisão final.</p>
+
+    <p><strong>Ajuste necessário em <code>modals.html</code></strong>: os
+    botões de categoria "Nível de Título", "Elementos e Imagens" e "Elemento
+    Decorativo" não tinham <code>id</code> (só "Estrutura da Página" e
+    "Informações Adicionais" tinham, usados pelo filtro de origem mobile) —
+    adicionados <code>id="a11y-category-btn-{categoria}"</code> nos 3 que
+    faltavam, necessário pra <code>_applyA11yManualMatchToPicker</code>
+    conseguir localizar/realçar qualquer uma das 5 categorias.</p>
+
+    <h3>3. Alerta de handoff honesto (revisão da seção 8p)</h3>
+
+    <p><strong>Backend</strong>: <code>_findOwnPriorSessionSection</code>
+    (<code>code.js</code>) agora extrai <code>timestamp</code> e
+    <code>designerName</code> do próprio <code>n.name</code> da Section
+    (formato <code>"[HAC] Handoff de Acessibilidade | {timestamp} |
+    {designerName} | v{versão}"</code>) com o <strong>mesmo split por
+    <code>'|'</code></strong> já usado por <code>extractDesignerName</code>
+    em <code>accessibility.js</code> (<code>openA11yOtherDesignerModal</code>)
+    — não é um parsing novo, só espelhado do lado backend (que não tem acesso
+    a funções do frontend). Adicionado também <code>sectionId</code>
+    (<code>n.id</code>) ao objeto retornado. Retorno completo agora:
+    <code>{ name, ownerId, version, areaCount, timestamp, designerName,
+    sectionId }</code>.</p>
+
+    <p><strong>Frontend</strong>: <code>renderA11yPriorSessionAlert</code>
+    troca o texto fixo "Handoff já iniciado neste arquivo" / "Você já
+    documentou N tela(s) aqui, versão {version}. <strong>Continue de onde
+    parou.</strong>" por "Handoff iniciado em {timestamp} por
+    {designerName}" (título) + "N tela(s), versão {version}." (corpo) — cai
+    no texto genérico anterior só se <code>timestamp</code>/
+    <code>designerName</code> não vierem preenchidos (Sections antigas, formato
+    pré-2026-09-10). <strong>A frase "Continue de onde parou" foi REMOVIDA por
+    completo</strong> — decisão explícita do usuário: é uma promessa falsa
+    hoje, não existe nenhum mecanismo de retomada/reidratação real a partir
+    do canvas (ver pendência detalhada na seção 11). Botão "x" de dispensar
+    mantido sem persistência (mesmo comportamento da seção 8p). Novo botão
+    "Ver no canvas" chama <code>focusNode(sectionId)</code> — a única ação de
+    retomada honesta que existe hoje: focar a Section no Figma, sem
+    reconstruir nenhum dado.</p>
+
+    <p><strong>Validação</strong>: <code>node --check</code> em
+    <code>code.js</code>/<code>accessibility.js</code>/<code>messages.js</code>,
+    <code>npm run bundle:code</code>, <code>npm run bundle:ui</code>,
+    <code>npm run lint</code> e <code>npm run export:plugin</code> — todos
+    limpos. <strong>Pendente de teste manual no Figma real</strong> (mudança
+    não commitada): confirmar (1) foco real no frame da Área ao clicar "Nova
+    spec", (2) snackbar de orientação aparece a cada clique, (3) categoria
+    sugerida realça no picker ao selecionar um componente DSC reconhecido
+    dentro do frame, incluindo o re-matching ao vivo ao trocar a seleção com
+    o picker já aberto, (4) preset é aplicado só quando a categoria escolhida
+    bate com a sugerida, (5) texto/botão novos do alerta de handoff próprio.</p>
+
+    <h2 id="s8t">8t. Correção de tipografia da Ficha: escala real do DSC, não mais aproximação (2026-09-11)</h2>
+
+    <p><strong>Motivação</strong>: auditoria desta sessão confirmou, via REST
+    API contra a lib real, a escala tipográfica completa do DSC — teto
+    36px, piso 12px, 11 tokens nomeados (<code>display/standard</code> a
+    <code>label/tiny</code>). Todo o desenho da Ficha (<code>code.js</code>)
+    usava <strong>fontName "Inter"</strong> (a lib real usa
+    <strong>"Roboto"</strong>) e tamanhos aproximados/inventados por exemplo
+    único de uma sessão anterior (60px, 40px, 13px, 11.5px, 11px, 10px) —
+    nenhum deles batia com um token real.</p>
+
+    <h3>Helper central: <code>_applyFichaTypography</code></h3>
+
+    <p>Novo par <code>A11Y_FICHA_TYPE_SCALE</code> (tabela dos 11 tokens
+    reais: fontSize, weight, lineHeightPercent, letterSpacing quando
+    aplicável) + <code>_applyFichaTypography(textNode, tokenName,
+    weightOverride?)</code> (<code>code.js</code>), que aplica
+    fontName+fontSize+lineHeight+letterSpacing de um token a um TEXT node.
+    Family resolvida para <strong>"Roboto"</strong> no peso mais próximo
+    (Regular/Medium/Bold — Roboto não publica um corte "SemiBold" nomeado
+    assim; 600 cai em "Medium", o mais próximo disponível), com
+    <code>loadFontAsync</code> dentro de try/catch e <strong>fallback
+    gracioso para "Inter"</strong> (mesma família já testada em todo o resto
+    do hac) caso "Roboto" não esteja disponível no runtime — nunca trava a
+    criação da Ficha por causa de fonte, mesmo princípio já usado no resto
+    do plugin. <code>weightOverride</code> (400/500/700) existe só para o
+    piso da escala (<code>label/tiny</code>, único token abaixo de 14px, que
+    é 700/bold "oficial"): textos corridos que hoje eram Regular/Medium
+    continuam com esse peso visual ao subir para 12px, em vez de virar bold
+    só por estarem no piso.</p>
+
+    <h3>Pontos corrigidos</h3>
+
+    <table>
+      <thead><tr><th>Local</th><th>Antes</th><th>Depois (token real)</th></tr></thead>
+      <tbody>
+        <tr><td>Nome da tela (<code>_createFichaDocumentacaoFrame</code>, <code>nomeText</code>)</td><td>60px / Inter Semi Bold-ou-Bold</td><td><code>display/standard</code> — 36px / Roboto Medium (peso 600) / lh44</td></tr>
+        <tr><td>Cabeçalho fallback (<code>title</code>, dentro da mesma função)</td><td>14px / Inter Bold</td><td><code>label/small</code> — 14px / Roboto Bold / lh20</td></tr>
+        <tr><td>Nome do frame no bloco "Frame Principal" (<code>_buildFichaFramePrincipalSection</code>)</td><td>13px / Inter Bold</td><td><code>label/small</code> — 14px / Roboto Bold / lh20</td></tr>
+        <tr><td>Título de bloco — Ordem de Tabulação/Swipe/Leitor de Tela (<code>_appendFichaBlockTitle</code>)</td><td>40px / Inter Semi Bold-ou-Bold / lh140%</td><td><code>title/large</code> — 28px / Roboto Medium (peso 600) / lh36</td></tr>
+        <tr><td>Título da legenda rica/fallback (<code>_buildFichaLegendColumn</code>, <code>titleText</code>)</td><td>13px / Inter Bold</td><td><code>label/small</code> — 14px / Roboto Bold / lh20</td></tr>
+        <tr><td>Descrição fallback, subtítulos, parágrafos, passos, assets (mesma função, ~10 textos)</td><td>11px/10px / Inter Regular-ou-Medium-ou-Bold</td><td><code>label/tiny</code> — 12px / Roboto no peso original (via <code>weightOverride</code>) / lh16</td></tr>
+        <tr><td>Card procedural de spec (fallback de <code>create-unified-spec</code>): letra do selo (<code>tagText</code>)</td><td>18px / Inter Bold</td><td><code>title/small</code> — 20px / Roboto Medium (peso 600) — token mais próximo de 18px disponível</td></tr>
+        <tr><td>Mesmo card: nome do elemento (<code>title</code>)</td><td>12px / Inter Bold</td><td><code>label/tiny</code> — 12px / Roboto Bold / lh16 (já estava no fontSize certo, faltava família/lineHeight)</td></tr>
+        <tr><td>Mesmo card: pill de categoria, nota, propriedades, link (~5 textos)</td><td>10px/11px / Inter Regular-ou-Medium-ou-Bold</td><td><code>label/tiny</code> — 12px / Roboto no peso original / lh16</td></tr>
+        <tr><td>Placeholder de snapshot indisponível (<code>_snapshotCloneIntoFichaSection</code>) e avisos de Swipe sem trilha/sem clone (<code>_buildFichaSwipeSection</code>)</td><td>11.5px / Inter Regular</td><td><code>label/tiny</code> — 12px / Roboto Regular (via <code>weightOverride=400</code>) / lh16</td></tr>
+      </tbody>
+    </table>
+
+    <p><strong>Decisão sobre o título de bloco (36px vs 28px)</strong>: o
+    nome da tela (<code>nomeText</code>) e o título de cada bloco
+    (Tabulação/Swipe/Leitor de Tela) tinham uma escada visual nítida antes
+    desta correção (60px vs 40px). Usar o mesmo token para os dois
+    (<code>display/standard</code>, 36px) removeria essa única pista de
+    hierarquia entre "nome da tela documentada" (H1 da Ficha) e "nome do
+    bloco" (H2 de cada seção). Optado por <code>title/large</code> (28px)
+    para o título de bloco — mantém a escada (36 &gt; 28) e ainda fica bem
+    acima dos títulos de card internos (14px), preservando a leitura de
+    "título de seção" sem inventar um tamanho fora da escala real.</p>
+
+    <p><strong>Fora de escopo, mantido como estava</strong> (já confirmado
+    correto na auditoria): todo <code>itemSpacing</code>/padding dos frames
+    estruturais principais, <code>cornerRadius</code> literal, o efeito de
+    sombra do snapshot, e cores/hex literais. Dois espaçamentos de
+    6px (entre item e o próximo do mesmo tipo, ex. "Passo N"/"Passo N+1") e
+    2px (label+descrição do mesmo asset) foram ajustados para os tokens de
+    spacing mais próximos — <code>nano</code> (8px) para itens distintos
+    (passos, assets), <code>quark</code> (4px) para partes do mesmo item
+    (número+texto de um passo, marcador+texto de um asset, label+descrição).</p>
+
+    <p><strong>Validação</strong>: <code>node --input-type=module --check</code>
+    em <code>code.js</code>, <code>node --check</code> em
+    <code>accessibility.js</code>, <code>npm run bundle:code</code>,
+    <code>npm run bundle:ui</code>, <code>npm run lint</code> e
+    <code>npm run export:plugin</code> — todos limpos. <strong>Pendente de
+    teste manual no Figma real</strong> (mudança não commitada): esta é uma
+    mudança visual real na Ficha, incluindo troca de família de fonte, que
+    precisa ser confirmada visualmente antes de qualquer commit.</p>
+
     <h2 id="s9">9. Contrato de mensagens (UI ↔ backend)</h2>
 
     <p>Toda comunicação passa por <code>postMessage</code>/<code>window.onmessage</code> — o frontend
@@ -2532,6 +3513,13 @@ hr {
       <tr><td><code>start-tab-order-copy</code> / <code>generate-tab-order-from-layers</code> / <code>apply-tab-order-to-canvas</code></td><td>UI → backend</td><td>(entre outros campos já existentes) <code>sectionName</code></td></tr>
       <tr><td><code>resolve-tab-order-narration</code></td><td>UI → backend</td><td><code>areaId</code>, <code>items: [{targetNodeId, targetNodeName, number}]</code> — novo em 2026-09-09 (seção 8g), Simulação de leitura por voz</td></tr>
       <tr><td><code>tab-order-narration-resolved</code></td><td>backend → UI</td><td><code>areaId</code>, <code>items: [{number, targetNodeId, targetNodeName, shortName}]</code> — <code>shortName</code> é <code>null</code> quando o node sumiu ou não há match DSC não-<code>isUnmapped</code> (fallback só cobre <code>TEXT</code> → <code>'texto'</code>)</td></tr>
+      <tr><td><code>check-other-designers-sections</code></td><td>UI → backend</td><td><code>currentUserId</code> — ver seção 8m</td></tr>
+      <tr><td><code>other-designers-sections-checked</code></td><td>backend → UI</td><td><code>otherDesignersSections: {name, ownerId}[]</code> — ver seção 8m</td></tr>
+      <tr><td><code>check-my-prior-session</code></td><td>UI → backend</td><td><code>currentUserId</code> — novo em 2026-09-10, ver seção 8p</td></tr>
+      <tr><td><code>my-prior-session-checked</code></td><td>backend → UI</td><td><code>priorSession: {name, ownerId, version, areaCount, timestamp, designerName, sectionId} | null</code> — <code>timestamp</code>/<code>designerName</code>/<code>sectionId</code> novos em 2026-09-11, ver seção 8s</td></tr>
+      <tr><td><code>resolve-manual-spec-match</code></td><td>UI → backend</td><td><code>token</code> — novo em 2026-09-11, ver seção 8s</td></tr>
+      <tr><td><code>stop-manual-spec-match-mode</code></td><td>UI → backend</td><td>sem payload — novo em 2026-09-11, desliga o re-matching ao vivo, ver seção 8s</td></tr>
+      <tr><td><code>manual-spec-match-resolved</code></td><td>backend → UI</td><td><code>token</code> (pode ser <code>null</code> nas respostas do listener de <code>selectionchange</code>), <code>nodeId</code>, <code>nodeName</code>, <code>match: null | {isUnmapped:true,...} | {a11yCategory, confidence, origin, sourceLib, containingFrame}</code> — novo em 2026-09-11, ver seção 8s</td></tr>
     </table>
 
     <h2 id="s10">10. Escala da UI (<code>--ui-scale</code>) e <code>position</code> dos modais</h2>
@@ -2653,6 +3641,38 @@ hr {
     (2) a lógica de replicar a Section inteira como nova versão major,
     preservando a anterior intacta (não só renomear/incrementar em cima da
     mesma Section, como o menor já faz).</p>
+
+    <p><strong>Planejado — reidratação de <code>hacData</code> a partir do
+    canvas (não implementado)</strong>: o alerta de handoff próprio (seção 8p)
+    hoje só INFORMA que já existe uma Section de sessão do designer atual —
+    ele não repopula <code>a11yAreas</code>/<code>a11ySpecs</code>/
+    <code>tabOrderItems</code>/<code>a11ySwipePaths</code> a partir dela. Se o
+    storage local (<code>figma.clientStorage</code>) também não tiver
+    sobrevivido (troca de máquina, cache limpo, navegador diferente), o
+    designer vê o alerta dizendo "você já documentou N telas aqui", mas a lista
+    "Telas Documentadas" continua vazia até ele recriar tudo manualmente —
+    contradição de UX que só não incomoda hoje porque o caso mais comum
+    (reabrir o mesmo arquivo na mesma máquina) já é coberto pelo storage local
+    de qualquer forma. <strong>Caso de uso real desta lacuna</strong>: retomar
+    um handoff PRÓPRIO não finalizado no MESMO arquivo — não é migração de
+    dados entre arquivos Figma diferentes, nem sincronização entre designers
+    (isso é outro problema, fora de escopo aqui). <strong>Caminho recomendado
+    para uma implementação futura</strong>: já que todo artefato de uma Área
+    (selo, specs, clones de Tabulação/Swipe, Ficha) grava metadados suficientes
+    via <code>pluginData</code> no próprio node do canvas (<code>hacCategory</code>,
+    <code>hacAreaTargetNodeId</code>, e os pluginData específicos de cada tipo
+    de spec/clone), o caminho é LER esses nodes já existentes dentro da Section
+    de sessão encontrada e reconstruir os arrays de <code>hacData</code> em
+    memória a partir deles — nunca recriar/desenhar nada novo no canvas, é
+    puramente leitura de estado já persistido ali. Escopo dessa reidratação
+    futura inclui decidir: (1) o gatilho de UI (automático ao detectar
+    handoff próprio, ou uma ação explícita tipo "Recuperar documentação"), (2)
+    o que fazer se <code>hacData</code> já tiver dados locais conflitantes
+    nesse momento (mesclar, perguntar, ou só reidratar quando local estiver
+    vazio), e (3) que pluginData de cada tipo de artefato hoje é suficiente
+    para reconstruir o objeto completo (specs, por exemplo, guardam a maior
+    parte do necessário nos nós de texto/spec já existentes, mas isso precisa
+    de um levantamento próprio, não assumido aqui).</p>
 
     <h2 id="s12">12. Sobre esta documentação</h2>
 

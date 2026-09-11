@@ -402,13 +402,15 @@ li { margin: 4px 0; }
     qualquer hospedagem externa).</p>
 
     <p>Base técnica confirmada em código: Tailwind CSS com tema customizado em
-    <code>src/plugin/styles/tailwind.config.cjs</code> (só a paleta <code>blue</code> e os tokens
-    <code>light</code>/<code>dark</code> são estendidos — <code>borderRadius</code>, tipografia e demais escalas usam
-    o padrão do Tailwind 3), mais CSS solto em <code>src/plugin/styles/plugin.css</code> (566 linhas)
-    para overrides globais e componentes que o Tailwind puro não cobre (tooltips, FABs, regras de
-    "uniformidade" de card/input). Ambos compilados para
-    <code>src/plugin/styles/tailwind-compiled.css</code> via <code>npm run bundle:css</code> (não editado à
-    mão).</p>
+    <code>src/plugin/styles/tailwind.config.cjs</code> — além da paleta <code>blue</code> e dos tokens
+    <code>light</code>/<code>dark</code>, desde 2026-09-11 o tema também estende <code>spacing</code>,
+    <code>borderRadius</code>, <code>boxShadow</code> e uma faixa de <code>fontSize</code> com tokens <code>dsc-*</code>
+    ancorados em valores reais do DSC (ver seção 3.1 abaixo) — o restante da escala de tipografia e
+    demais utilitários seguem o padrão do Tailwind 3), mais CSS solto em
+    <code>src/plugin/styles/plugin.css</code> (566 linhas) para overrides globais e componentes que o
+    Tailwind puro não cobre (tooltips, FABs, regras de "uniformidade" de card/input). Ambos
+    compilados para <code>src/plugin/styles/tailwind-compiled.css</code> via <code>npm run bundle:css</code>
+    (não editado à mão).</p>
 
     <div class="toc">
       <p>Sumário</p>
@@ -416,6 +418,7 @@ li { margin: 4px 0; }
         <li><a href="#s1">Cores</a></li>
         <li><a href="#s2">Tipografia</a></li>
         <li><a href="#s3">Espaçamento e border radius</a></li>
+        <li><a href="#s3b">Tokens reais do DSC (espaçamento, radius, efeitos, tipografia)</a></li>
         <li><a href="#s4">Ícones (Lucide)</a></li>
         <li><a href="#s5">Componentes — botões</a></li>
         <li><a href="#s6">Componentes — card de especificação</a></li>
@@ -583,6 +586,97 @@ li { margin: 4px 0; }
       <div class="spacing-item"><div class="spacing-box" style="width:16px;height:16px"></div>p-4 / 16px</div>
       <div class="spacing-item"><div class="spacing-box" style="width:24px;height:24px"></div>p-6 / 24px (corpo de modal simples)</div>
     </div>
+
+    <h2 id="s3b">3.1 Tokens reais do DSC (espaçamento, radius, efeitos, tipografia)</h2>
+    <p class="evidence">Fonte: REST API das libs "Super DSC | Web" e "DSC | Super App" (consulta em
+    2026-09-11), tokens adicionados em <code>src/plugin/styles/tailwind.config.cjs</code> (temas
+    <code>spacing</code>, <code>borderRadius</code>, <code>boxShadow</code>, <code>fontSize</code>, prefixo <code>dsc-</code>).</p>
+
+    <p>A partir de <strong>2026-09-11</strong>, os tokens de espaçamento, border-radius, efeitos (sombra)
+    e uma faixa da tipografia da UI do hac deixam de ser Tailwind puro arbitrário e passam a ser
+    ancorados em <strong>tokens reais do DSC</strong>, confirmados via API — não valores aproximados
+    visualmente. Só foi trazida a faixa útil para um painel de plugin de ~400px: os tokens de
+    espaçamento/radius de página inteira do DSC (ex. <code>giant</code>, <code>enormous</code>) ficaram de
+    fora por não terem aplicação nesse contexto.</p>
+
+    <h3>Espaçamento (<code>dsc/spacing/*</code>)</h3>
+    <table>
+      <thead><tr><th>Token DSC</th><th>Valor</th><th>Classe Tailwind (<code>dsc-*</code>)</th></tr></thead>
+      <tbody>
+        <tr><td>none</td><td>0px</td><td>—</td></tr>
+        <tr><td>quark</td><td>4px</td><td><code>dsc-quark</code></td></tr>
+        <tr><td>nano</td><td>8px</td><td><code>dsc-nano</code></td></tr>
+        <tr><td>micro</td><td>12px</td><td><code>dsc-micro</code></td></tr>
+        <tr><td>tiny</td><td>16px</td><td><code>dsc-tiny</code></td></tr>
+        <tr><td>smaller</td><td>24px</td><td><code>dsc-smaller</code></td></tr>
+        <tr><td>small</td><td>32px</td><td><code>dsc-small</code></td></tr>
+        <tr><td>medium</td><td>40px</td><td><code>dsc-medium</code></td></tr>
+        <tr><td>large</td><td>48px</td><td><code>dsc-large</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3>Border radius (<code>dsc/border/radius/*</code>)</h3>
+    <table>
+      <thead><tr><th>Token DSC</th><th>Valor</th><th>Classe Tailwind (<code>rounded-dsc-*</code>)</th></tr></thead>
+      <tbody>
+        <tr><td>none</td><td>0px</td><td>—</td></tr>
+        <tr><td>nano</td><td>4px</td><td><code>rounded-dsc-nano</code></td></tr>
+        <tr><td>small</td><td>8px</td><td><code>rounded-dsc-small</code></td></tr>
+        <tr><td>medium</td><td>12px</td><td><code>rounded-dsc-medium</code></td></tr>
+        <tr><td>large</td><td>16px</td><td><code>rounded-dsc-large</code></td></tr>
+        <tr><td>big</td><td>24px</td><td><code>rounded-dsc-big</code></td></tr>
+        <tr><td>pill</td><td>1000px</td><td><code>rounded-dsc-pill</code></td></tr>
+        <tr><td>circ</td><td>9999px</td><td><code>rounded-dsc-circ</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3>Efeitos (sombra)</h3>
+    <table>
+      <thead><tr><th>Token DSC</th><th>Definição</th><th>Classe Tailwind</th></tr></thead>
+      <tbody>
+        <tr><td>Elevation 1</td><td>offset y=1, radius=2, preto alpha=0.04, <code>showShadowBehindNode: true</code></td><td><code>shadow-dsc-elevation-1</code></td></tr>
+        <tr><td>Elevation 2</td><td>offset y=14, radius=28, preto alpha=0.04</td><td><code>shadow-dsc-elevation-2</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3>Tipografia (piso real da escala DSC = 12px)</h3>
+    <p>O DSC não define nenhum token de tipografia abaixo de 12px — <code>label/tiny</code> é o piso real
+    da escala. Os 4 tokens abaixo foram trazidos para o Tailwind como faixa <code>fontSize</code>
+    <code>dsc-*</code>:</p>
+    <table>
+      <thead><tr><th>Token DSC</th><th>Tamanho</th><th>Peso</th><th>Entrelinha</th><th>Letter-spacing</th><th>Classe Tailwind</th></tr></thead>
+      <tbody>
+        <tr><td>label/tiny</td><td>12px</td><td>500–700</td><td>16px</td><td>0.5px</td><td><code>text-dsc-label-tiny</code></td></tr>
+        <tr><td>label/small</td><td>14px</td><td>500–700</td><td>20px</td><td>0.1px</td><td><code>text-dsc-label-small</code></td></tr>
+        <tr><td>body/small</td><td>14px</td><td>400–600</td><td>20px</td><td>0.25px</td><td><code>text-dsc-body-small</code></td></tr>
+        <tr><td>label/standard</td><td>16px</td><td>500–700</td><td>24px</td><td>0.15px</td><td><code>text-dsc-label-standard</code></td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:12px;color:var(--muted)">Fonte Roboto conforme definição original do DSC — a UI
+    do hac continua usando <code>"Inter"</code> como <code>font-family</code> (ver seção 2); os tokens acima
+    ancoram apenas tamanho/peso/entrelinha/letter-spacing, não a família tipográfica.</p>
+
+    <h3>Correspondência de cor confirmada</h3>
+    <p><strong><code>#005CA9</code> = variável <code>color/primary/light ?/90</code> do DSC</strong> e
+    <strong><code>#F39200</code> = variável <code>color/secondary/light ?/70</code> do DSC</strong> — essa é uma
+    <strong>correspondência exata confirmada via API</strong>, não uma aproximação visual. A escala
+    <code>blue</code> do Tailwind do hac (seção 1 acima) já ancora corretamente em <code>#005ca9</code>; o
+    laranja <code>#f39200</code> segue restrito ao logo institucional (não usado como cor de ação da UI,
+    ver seção 1).</p>
+    <blockquote><p><strong>Nota sobre o cyan (<code>#0891B2</code>):</strong> é a cor de identidade
+    <strong>própria</strong> do hac, sem correspondência real no DSC — mantida deliberadamente como
+    diferenciação visual do produto. Isso não é uma lacuna nem uma pendência de mapeamento: não deve
+    ser "reancorada" a nenhuma variável DSC futuramente.</p></blockquote>
+
+    <h3>Nota sobre tipografia abaixo de 12px</h3>
+    <p>Como o piso real do DSC é 12px, qualquer texto do hac abaixo disso (existem hoje, ver
+    contagens de <code>text-[Npx]</code> na seção 2 — <code>10px</code>, <code>9px</code>, <code>8px</code> etc., necessários
+    pela densidade de informação de um painel de ~400px) é <strong>decisão de design própria do
+    hac</strong>, documentada como tal, e não uma lacuna a resolver em relação ao DSC. Em paralelo a
+    esta entrega, está em andamento/foi concluída na mesma leva uma migração de cerca de 223
+    ocorrências de texto para o piso de 12px onde isso é seguro sem quebrar layout de elementos de
+    dimensão fixa pequena (badges, contadores, selos) — detalhamento dessa migração fica a cargo da
+    tarefa específica que a executa.</p>
 
     <h2 id="s4">4. Ícones (Lucide)</h2>
     <p class="evidence">Fonte: grep de <code>data-lucide="..."</code> em <code>src/plugin/views/*.html</code>,

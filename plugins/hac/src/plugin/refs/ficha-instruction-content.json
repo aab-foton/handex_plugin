@@ -8,14 +8,14 @@
     "sourceFrameName": "Ordem de Tabulação e Leitor de Telas [Super App] V1",
     "extractedBy": "Gemini via MCP Figma",
     "extractedAt": "2026-09-09",
-    "status": "preenchido-parcial — tabulacao e leitorTela completos; swipe vazio de propósito, ver swipeNote",
-    "swipeNote": "O frame de instrução do Swipe ainda não existe na lib (confirmado com o usuário em 2026-09-08) — bloco 'swipe' abaixo fica vazio até a lib ganhar esse frame. _buildFichaLegendColumn deve cair no texto curto atual como fallback quando este bloco estiver vazio.",
+    "status": "preenchido — tabulacao, swipe e leitorTela com título+instrução reais (2026-09-10, texto fornecido diretamente pelo dono do repositório via print do Figma, não extraído por agente MCP). stepsHeading/steps/assetsHeading/assets do bloco swipe seguem vazios — o frame de instrução do Swipe na lib não tem essas subseções, só título+instrução.",
+    "swipeNote": "Atualizado em 2026-09-10: o bloco 'swipe' agora tem title/instructionsHeading/instructionsBody reais (fornecidos pelo dono do repositório, não pela lib via MCP) — os campos de passos/assets continuam vazios porque a lib não tem essa subseção para Swipe. _buildFichaLegendColumn só cai no fallback de texto curto quando 'title' estiver vazio, o que não é mais o caso aqui.",
     "howToFill": "Para cada um dos 3 blocos abaixo (tabulacao, swipe, leitorTela), abra o frame de instrução correspondente no Figma (sourceNodeUrl acima é o ponto de partida — Tabulação e Leitor de Tela estão nesse mesmo frame lado a lado; Swipe está num frame irmão próximo, mesma página) e transcreva o texto VISÍVEL exatamente como está escrito lá, sem resumir/parafrasear. Preencha campo a campo: title (o título do bloco, ex. 'Ordem de Tabulação'), instructionsHeading (o subtítulo que introduz o parágrafo, ex. 'Instruções sobre o tipo de documentação'), instructionsBody (o parágrafo explicativo completo), stepsHeading (o subtítulo da lista de passos, ex. 'Como fazer a ordem de tabulação'), steps (array de strings, um item por passo numerado, na ordem exata do template — sem o número, só o texto do passo), assetsHeading (sempre 'Assets' no template visto até agora, mas confirme), assets (array de {label, description} — cada selo/marcador mostrado na seção Assets, com seu rótulo e a descrição ao lado dele, ex. label: 'Conector de Identificação', description: descrição visível se houver, senão string vazia ''). Se algum campo genuinamente não existir no template de um bloco específico (ex.: Swipe pode ter uma seção 'Assets' diferente da de Tabulação, ou nenhuma), deixe como array/string vazia — nunca invente conteúdo. NÃO altere a estrutura de chaves deste JSON (novos campos quebram _buildFichaLegendColumn) — só preencha os valores."
   },
   "tabulacao": {
     "title": "Ordem de Tabulação",
     "instructionsHeading": "Instruções sobre o tipo de documentação",
-    "instructionsBody": "É a sequência lógica que o leitor de telas (VoiceOver/TalkBack) percorre nos elementos INTERATIVOS quando o usuário navega pela interface usando o gesto de varredura (deslizando o dedo na tela para avançar ou retornar).\n\n⚠️ Atenção: Use os marcadores numéricos apenas para indicar a sequência dos elementos na tela.\nDescrever os textos que o leitor de telas deve falar é a próxima etapa do handoff.",
+    "instructionsBody": "É a sequência lógica que o Leitor de tela (VoiceOver/TalkBack) percorre nos elementos INTERATIVOS quando o usuário navega com outros devices em interfaces de toque como teclados, mouses com botões programáveis ou acionadores .",
     "stepsHeading": "Como fazer a ordem de tabulação",
     "steps": [
       "Dê detach no template para poder usar.",
@@ -37,9 +37,9 @@
     ]
   },
   "swipe": {
-    "title": "",
-    "instructionsHeading": "",
-    "instructionsBody": "",
+    "title": "Ordem de Leitura Mobile (Swipe)",
+    "instructionsHeading": "Instruções sobre a documentação",
+    "instructionsBody": "Essa documentação trata-se de como o leitor de tela (VoiceOver/Talkback) deve seguir sequencialmente de forma nativa com o Basic Swipe, ou seja, sem os atalhos do rotor.",
     "stepsHeading": "",
     "steps": [],
     "assetsHeading": "",
@@ -47,8 +47,8 @@
   },
   "leitorTela": {
     "title": "Especificações para Leitores de Tela",
-    "instructionsHeading": "Instruções sobre o tipo de documentação",
-    "instructionsBody": "A Ordem de Tabulação define o caminho, já os cards de especificação (Box Specs) definem o que o leitor de telas vai falar em cada passo.",
+    "instructionsHeading": "Instruções sobre a documentação",
+    "instructionsBody": "Especificar para leitores de tela consiste em definir como as tecnologias assistivas (VoiceOver/Talkback) interpretam e anunciam os elementos da interface. Essa documentação assegura que o conteúdo seja plenamente compreendido e inclusivo, fornecendo as orientações fundamentais para que o time de desenvolvimento implemente a experiência exatamente como projetada.",
     "stepsHeading": "Como classificar os Elementos na Tela",
     "steps": [
       "Posicione as telas: Cole as telas do seu fluxo na área de trabalho para iniciar a documentação.",
@@ -59,16 +59,16 @@
     "assetsHeading": "Entendendo as categorias",
     "assets": [
       {
-        "label": "Elementos e imagens",
-        "description": "Utilizado para garantir a acessibilidade de elementos interativos e imagens. Atenção: descreva imagens apenas se forem essenciais para a navegação ou contexto, nos demais casos, marque as imagens como decorativas. Para ícones clicáveis, o label deve ditar a ação (ex: ‘Buscar’ para ícone de lupa)"
+        "label": "Elementos interativos e imagens",
+        "description": "Utilizado para referenciar componentes no Super DSC, garantir nome acessível aos elementos e descrever textos alternativos nas imagens."
       },
       {
-        "label": "Título",
-        "description": "Estrutura os cabeçalhos do app, permitindo que o leitor de telas navegue diretamente entre os tópicos. Atenção: Diferente da web, no mobile React não existe marcação de níveis como H1, H2, H3... O marcador é único e serve apenas para identificar o elemento como título."
+        "label": "Títulos",
+        "description": "Utilizado para estruturar os cabeçalhos da interface, permitindo que o leitor de tela navegue diretamente entre os tópicos que foram definidos como títulos de conteúdo."
       },
       {
-        "label": "Elemento decorativo",
-        "description": "Utilizado para marcar os elementos decorativos, que devem ser ignorados por leitores de tela, como imagens que não passam conteúdo ou função, formas abstratas, divisores ou ícones decorativos."
+        "label": "Elementos decorativos",
+        "description": "Utilizado para marcar os elementos que devem ser ignorados pelo leitor de tela, como por exemplo imagens que não passam conteúdo ou função, formas abstratas, divisores ou ícones decorativos."
       }
     ]
   }

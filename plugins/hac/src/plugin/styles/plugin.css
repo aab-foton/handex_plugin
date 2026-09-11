@@ -58,7 +58,7 @@ body {
       background: #F8FAFC;
       border: 1px solid #F1F5F9;
       border-radius: 99px;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 600;
       color: #64748b;
       cursor: pointer;
@@ -170,7 +170,7 @@ body {
     }
     .fab-inline > i, .fab-inline > svg { flex-shrink: 0; }
     .fab-inline span {
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 700;
       white-space: nowrap;
       max-width: 140px;
@@ -309,7 +309,7 @@ body {
       padding: 6px 10px;
       background-color: #1e293b;
       color: #fff;
-      font-size: 10px;
+      font-size: 12px;
       border-radius: 6px;
       white-space: normal;
       width: max-content;

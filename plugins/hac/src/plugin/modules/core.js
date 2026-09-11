@@ -113,7 +113,7 @@ Object.assign(window, {
 
 function clearPluginCache() {
   const confirmed = window.confirm(
-    'Limpar todo o cache do plugin?\n\nIsso removerá: áreas marcadas, especificações de acessibilidade e ordem de tabulação.\n\nEssa ação não pode ser desfeita.'
+    'Limpar todo o cache do plugin?\n\nIsso removerá: telas selecionadas, especificações de acessibilidade e ordem de tabulação.\n\nEssa ação não pode ser desfeita.'
   );
   if (!confirmed) return;
   parent.postMessage({ pluginMessage: { type: 'clear-cache' } }, '*');
@@ -306,8 +306,8 @@ function showToast(message, variant) {
   // com borda/ícone em vermelho (mesma paleta de erro usada em
   // modals.html, ex. text-red-500/border-red-500) em vez do check verde.
   toast.className = isError
-    ? 'bg-slate-800 text-white px-4 py-2 rounded-lg shadow-xl text-xs font-bold animate-in fade-in slide-in-from-bottom-4 duration-300 flex items-center gap-2 border border-red-500'
-    : 'bg-slate-800 text-white px-4 py-2 rounded-lg shadow-xl text-xs font-bold animate-in fade-in slide-in-from-bottom-4 duration-300 flex items-center gap-2';
+    ? 'bg-slate-800 text-white px-4 py-2 rounded-dsc-small shadow-xl text-xs font-bold animate-in fade-in slide-in-from-bottom-4 duration-300 flex items-center gap-2 border border-red-500'
+    : 'bg-slate-800 text-white px-4 py-2 rounded-dsc-small shadow-xl text-xs font-bold animate-in fade-in slide-in-from-bottom-4 duration-300 flex items-center gap-2';
   toast.innerHTML = isError
     ? `<i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-red-500"></i>`
     : `<i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-green-400"></i>`;
@@ -340,7 +340,7 @@ function showSnackbar(message, options) {
   const actionLabel = options && options.actionLabel;
   const onAction = options && options.onAction;
   const snackbar = document.createElement('div');
-  snackbar.className = 'bg-slate-800 text-white px-4 py-3 rounded-2xl shadow-xl text-xs font-medium animate-in fade-in slide-in-from-bottom-4 duration-300 flex items-start gap-2 border border-cyan-600 max-w-sm pointer-events-auto';
+  snackbar.className = 'bg-slate-800 text-white px-4 py-3 rounded-dsc-large shadow-xl text-xs font-medium animate-in fade-in slide-in-from-bottom-4 duration-300 flex items-start gap-2 border border-cyan-600 max-w-sm pointer-events-auto';
   snackbar.innerHTML = `<i data-lucide="info" class="w-3.5 h-3.5 text-cyan-400 mt-0.5 flex-shrink-0"></i>`;
   const dismiss = () => {
     snackbar.classList.add('fade-out');
@@ -491,7 +491,6 @@ function navigate(viewId) {
   }
   if (viewId === 'view-specifications') {
     if (typeof renderA11yGroupedList === 'function') renderA11yGroupedList();
-    if (typeof maybeShowOnboardingBanner === 'function') maybeShowOnboardingBanner();
     if (typeof _applyA11yHeaderOriginTitle === 'function') _applyA11yHeaderOriginTitle();
   }
   if (viewId === 'view-home' && typeof _renderA11yHomeOriginPicker === 'function') {
@@ -536,7 +535,7 @@ function navigate(viewId) {
 function toggleAccordion(btn, nodeId = null) {
   let content = btn.nextElementSibling;
   if (!content || content.tagName === 'BUTTON' || content.hasAttribute('data-accordion-toggle')) {
-    const parent = btn.closest('.border, .rounded-xl, .mb-3');
+    const parent = btn.closest('.border, .rounded-dsc-medium, .mb-3');
     content = parent ? parent.querySelector('.accordion-content, [data-accordion-content]') : null;
   }
   if (!content) return;
@@ -550,7 +549,7 @@ function toggleAccordion(btn, nodeId = null) {
     if (list) {
       list.querySelectorAll('[data-accordion-toggle]').forEach(otherBtn => {
         if (otherBtn === btn) return;
-        const otherParent = otherBtn.closest('.border, .rounded-xl, .mb-3');
+        const otherParent = otherBtn.closest('.border, .rounded-dsc-medium, .mb-3');
         const otherContent = otherParent ? otherParent.querySelector('.accordion-content, [data-accordion-content]') : null;
         if (otherContent && !otherContent.classList.contains('hidden')) {
           otherContent.classList.add('hidden');
@@ -584,7 +583,7 @@ function collapseAllAccordions(containerEl) {
     const isHidden = c.classList.contains('hidden');
     if (anyOpen ? !isHidden : isHidden) {
       c.classList.toggle('hidden');
-      const parent = c.closest('.border, .rounded-xl, .mb-3');
+      const parent = c.closest('.border, .rounded-dsc-medium, .mb-3');
       const btn = parent ? parent.querySelector('[onclick*="toggleAccordion"]') : null;
       if (btn) {
         btn.setAttribute('aria-expanded', anyOpen ? 'false' : 'true');
@@ -647,19 +646,23 @@ function focusNode(id) {
   parent.postMessage({ pluginMessage: { type: 'highlight-node', id, highlight: true, shouldScroll: true, color: '#0070af' } }, '*');
 }
 
-// Destaque transitório (retângulo HighlightStroke) pra qualquer lista que
-// queira dar um preview do elemento no canvas ao passar o mouse — não
-// seleciona nem rola a tela, e some assim que o mouse sai (clearHighlight).
-function sendHighlight(figmaId) {
-  if (figmaId) {
-    parent.postMessage({ pluginMessage: { type: 'highlight-node', id: figmaId, highlight: true, shouldScroll: false, selectNode: false, color: '#0070af' } }, '*');
-  }
+// Foca a RÉPLICA DE TRABALHO de uma etapa de a11y (Leitor de Tela/
+// Tabulação/Swipe), não o Frame Principal (2026-09-11, pedido do usuário:
+// "o foco nessa etapa... deve ser feito na frame da réplica e não no frame
+// principal. O frame principal é o backup, a base."). `kind` é 'leitor' |
+// 'tabulacao' | 'swipe' — cada etapa foca o clone da SUA PRÓPRIA
+// funcionalidade. O backend não tem acesso a hacData/a11yAreas[], então
+// `fallbackTargetNodeId` (area.targetNodeId, já disponível no frontend) é
+// enviado junto pra ele usar caso a réplica ainda não exista (primeira vez
+// que a etapa é aberta pra esta área) — resposta chega em
+// 'a11y-focus-node-resolved' (ver messages.js), que then chama focusNode
+// com o id resolvido.
+function focusA11yCloneNode(areaId, kind, fallbackTargetNodeId) {
+  if (!areaId) return;
+  parent.postMessage({ pluginMessage: { type: 'resolve-a11y-focus-node', areaId, kind, targetNodeId: fallbackTargetNodeId || null } }, '*');
 }
-function clearHighlight() {
-  parent.postMessage({ pluginMessage: { type: 'clear-highlight' } }, '*');
-}
-window.sendHighlight = sendHighlight;
-window.clearHighlight = clearHighlight;
+window.focusA11yCloneNode = focusA11yCloneNode;
+
 
 // ── Initialization ─────────────────────────────────────────────────────
 window.addEventListener('load', () => {

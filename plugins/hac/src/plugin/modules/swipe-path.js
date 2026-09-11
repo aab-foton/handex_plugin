@@ -121,7 +121,7 @@ function startSwipePathManualMode(areaId, targetNodeId) {
     // (chamado por "Concluir seleção" na barra mini).
     if (typeof _a11yCaptureMiniBarEnter === 'function') _a11yCaptureMiniBarEnter('swipePath');
     _swipePathSetCaptureMode('continuous', areaId, targetNodeId || null, getA11yActiveSectionName());
-    showToast('Cópia da área criada — segure shift e clique (ou use marquise) pra marcar os pontos dela. A janela foi minimizada para dar espaço ao canvas.');
+    showToast('Cópia da tela criada — segure shift e clique (ou use marquise) pra marcar os pontos dela. A janela foi minimizada para dar espaço ao canvas.');
   });
 }
 window.startSwipePathManualMode = startSwipePathManualMode;
@@ -146,7 +146,7 @@ function startSwipePathFromTabOrder(areaId, targetNodeId) {
     .sort((a, b) => (a.number || 0) - (b.number || 0));
 
   if (items.length < 2) {
-    showToast('Esta área ainda não tem Ordem de Tabulação com pelo menos 2 itens — marque a trilha manualmente.');
+    showToast('Esta tela ainda não tem Ordem de Tabulação com pelo menos 2 itens — marque a trilha manualmente.');
     startSwipePathManualMode(areaId, targetNodeId);
     return;
   }
@@ -223,7 +223,7 @@ function handleSwipePathCloneResolved(areaId, ok) {
   const btn = document.getElementById('btn-swipe-path-add-point');
   if (!ok) {
     if (btn) btn.disabled = false;
-    showToast('Não foi possível localizar a cópia da área no canvas — refaça a trilha.', 'error');
+    showToast('Não foi possível localizar a cópia da tela no canvas — refaça a trilha.', 'error');
     return;
   }
   _swipePathStartAddPointWait();
@@ -285,13 +285,13 @@ function openSwipePathReviewModal() {
   const instructionEl = document.getElementById('a11y-swipe-path-review-instruction');
   const confirmTextEl = document.getElementById('a11y-swipe-path-review-confirm-text');
   if (window._swipePathEditingExisting) {
-    if (titleEl) titleEl.textContent = 'Editar Trilha de Swipe';
+    if (titleEl) titleEl.textContent = 'Editar Trilha de Ordem de Leitura';
     if (instructionEl) instructionEl.textContent = 'Ajuste os pontos desta trilha — arraste para reordenar, remova ou adicione um novo ponto antes de salvar.';
     if (confirmTextEl) confirmTextEl.textContent = 'Salvar alterações';
   } else {
-    if (titleEl) titleEl.textContent = 'Trilha de Swipe';
+    if (titleEl) titleEl.textContent = 'Trilha de Ordem de Leitura';
     if (instructionEl) instructionEl.textContent = 'Esta é a trilha marcada no canvas, já na ordem espacial resolvida automaticamente — arraste para reordenar ou remova um ponto antes de confirmar.';
-    if (confirmTextEl) confirmTextEl.textContent = 'Criar trilha de swipe';
+    if (confirmTextEl) confirmTextEl.textContent = 'Criar trilha de ordem de leitura';
   }
   openModal('a11y-swipe-path-review-modal');
   _renderSwipePathPendingList();
@@ -372,9 +372,17 @@ window.handleSwipePathAccumulatedSelectionResult = handleSwipePathAccumulatedSel
 // highlight-node (code.js) direto com o nodeId real, sem tradução
 // clone→original (diferente de Tabulação): Trilha de Swipe sempre opera
 // sobre os nós reais do design.
+// Bug real corrigido (2026-09-11, print do usuário: clicar num ponto da
+// lista sempre levava pro Frame Principal, nunca pra réplica de trabalho
+// do Swipe) — usa o handler dedicado highlight-swipe-path-copy-node
+// (code.js), que resolve original→clone via _activeSwipePathCloneMaps,
+// mesmo padrão já usado por _highlightTabOrderListItem (tab-order.js) e
+// pelo wizard de Especificações (highlight-spec-copy-node). O genérico
+// highlight-node dispara contra o nodeId ORIGINAL, que nunca foi tocado
+// por este fluxo.
 function _highlightSwipePathListItem(nodeId) {
   if (!nodeId) return;
-  parent.postMessage({ pluginMessage: { type: 'highlight-node', id: nodeId, highlight: true, color: '#0891B2', selectNode: false, shouldScroll: true } }, '*');
+  parent.postMessage({ pluginMessage: { type: 'highlight-swipe-path-copy-node', id: nodeId, areaId: window._swipePathPendingAreaId, highlight: true, color: '#0891B2', selectNode: false, shouldScroll: true } }, '*');
 }
 window._highlightSwipePathListItem = _highlightSwipePathListItem;
 
@@ -391,7 +399,7 @@ function _renderSwipePathPendingList() {
   if (applyBtn) applyBtn.disabled = items.length < 2;
 
   containerEl.innerHTML = items.map((it, listIndex) => `
-    <li class="list-none flex items-center gap-2 px-2.5 py-1.5 bg-white dark:bg-dark-surface rounded-lg border border-gray-100 dark:border-dark-line cursor-pointer"
+    <li class="list-none flex items-center gap-2 px-2.5 py-1.5 bg-white dark:bg-dark-surface rounded-dsc-small border border-gray-100 dark:border-dark-line shadow-dsc-elevation-1 cursor-pointer"
       title="Destacar este elemento no canvas"
       draggable="true"
       data-list-index="${listIndex}"
@@ -403,8 +411,8 @@ function _renderSwipePathPendingList() {
       <span class="text-gray-300 dark:text-dark-muted cursor-grab active:cursor-grabbing shrink-0" title="Arrastar para reordenar" aria-hidden="true">
         <i data-lucide="grip-vertical" class="w-3.5 h-3.5"></i>
       </span>
-      <div class="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-extrabold text-white shrink-0" style="background-color:#0891B2">${listIndex + 1}</div>
-      <p class="flex-1 min-w-0 text-[11px] text-slate-700 dark:text-white truncate">${escapeHtml(it.nodeName || '')}</p>
+      <div class="w-6 h-6 rounded-dsc-circ flex items-center justify-center text-dsc-label-tiny normal-case tracking-normal font-extrabold text-white shrink-0" style="background-color:#0891B2">${listIndex + 1}</div>
+      <p class="flex-1 min-w-0 text-dsc-label-tiny normal-case tracking-normal text-slate-700 dark:text-white truncate">${escapeHtml(it.nodeName || '')}</p>
       <button type="button" title="Remover da lista" aria-label="Remover da lista"
         onclick="event.stopPropagation(); deleteSwipePathPendingItem('${escapeHtml(it.tempId)}')"
         class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors shrink-0">
@@ -416,6 +424,58 @@ function _renderSwipePathPendingList() {
   _refreshIcons();
 }
 window._renderSwipePathPendingList = _renderSwipePathPendingList;
+
+// Lista editável direto na aba Swipe da workspace (2026-09-11, paridade
+// pedida pelo usuário com a aba Tabulação) — renderiza no container
+// #a11y-swipe-path-tab-list (fora do modal), reaproveitando o MESMO
+// estado (window._swipePathPendingList) e a MESMA mecânica de
+// arrastar/remover do modal (_swipePathPendingDragStart/Drop,
+// deleteSwipePathPendingItem) — só o destino do HTML muda. Diferente do
+// modal, aqui NÃO existe botão "Salvar": cada mudança já dispara
+// applySwipePathToCanvas() automaticamente (ver os dois pontos marcados
+// "auto-save" abaixo), porque não há como editar "em memória, sem
+// persistir" quando cada ponto não tem selo próprio no canvas — qualquer
+// edição já implica redesenhar a trilha inteira mesmo.
+function _renderSwipePathTabList(areaId, targetNodeId) {
+  const existingPath = (hacData.a11ySwipePaths || []).find(p => p && p.areaId === areaId);
+  const containerEl = document.getElementById('a11y-swipe-path-tab-list');
+  if (!containerEl || !existingPath || !Array.isArray(existingPath.points)) return;
+
+  window._swipePathPendingList = existingPath.points.map(p => ({
+    nodeId: p.nodeId,
+    nodeName: p.nodeName || '',
+    tempId: _swipePathNextTempId(),
+  }));
+  window._swipePathPendingAreaId = areaId;
+  window._swipePathPendingTargetNodeId = targetNodeId || null;
+  window._swipePathEditingExisting = true;
+
+  containerEl.innerHTML = window._swipePathPendingList.map((it, listIndex) => `
+    <li class="list-none flex items-center gap-2 px-2.5 py-1.5 bg-white dark:bg-dark-surface rounded-dsc-small border border-gray-100 dark:border-dark-line shadow-dsc-elevation-1 cursor-pointer"
+      title="Destacar este elemento no canvas"
+      draggable="true"
+      data-list-index="${listIndex}"
+      onclick="_highlightSwipePathListItem('${escapeHtml(it.nodeId)}')"
+      ondragstart="_swipePathPendingDragStart(event, ${listIndex})"
+      ondragover="_tabOrderDragOver(event)"
+      ondrop="_swipePathPendingDrop(event, ${listIndex}, true)"
+      ondragend="_tabOrderDragEnd(event)">
+      <span class="text-gray-300 dark:text-dark-muted cursor-grab active:cursor-grabbing shrink-0" title="Arrastar para reordenar" aria-hidden="true">
+        <i data-lucide="grip-vertical" class="w-3.5 h-3.5"></i>
+      </span>
+      <div class="w-6 h-6 rounded-dsc-circ flex items-center justify-center text-dsc-label-tiny normal-case tracking-normal font-extrabold text-white shrink-0" style="background-color:#0891B2">${listIndex + 1}</div>
+      <p class="flex-1 min-w-0 text-dsc-label-tiny normal-case tracking-normal text-slate-700 dark:text-white truncate">${escapeHtml(it.nodeName || '')}</p>
+      <button type="button" title="Remover da lista" aria-label="Remover da lista"
+        onclick="event.stopPropagation(); deleteSwipePathPendingItem('${escapeHtml(it.tempId)}', true)"
+        class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors shrink-0">
+        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+      </button>
+    </li>
+  `).join('');
+
+  _refreshIcons();
+}
+window._renderSwipePathTabList = _renderSwipePathTabList;
 
 let _swipePathPendingDragIndex = null;
 
@@ -429,7 +489,13 @@ function _swipePathPendingDragStart(ev, listIndex) {
 }
 window._swipePathPendingDragStart = _swipePathPendingDragStart;
 
-function _swipePathPendingDrop(ev, targetListIndex) {
+// `autoSave` (2026-09-11): true quando chamado a partir da lista da ABA
+// (sem modal) — dispara applySwipePathToCanvas() imediatamente após
+// reordenar, redesenhando a trilha no canvas sem esperar um botão
+// "Salvar" (que só existe dentro do modal). false/omitido preserva o
+// comportamento original do modal (só reordena em memória, até o
+// designer clicar em "Salvar alterações").
+function _swipePathPendingDrop(ev, targetListIndex, autoSave) {
   ev.preventDefault();
   if (window._swipePathLocked) return; // trilha já enviada pro backend, aguardando resposta — ver applySwipePathToCanvas
   const sourceListIndex = _swipePathPendingDragIndex;
@@ -438,17 +504,27 @@ function _swipePathPendingDrop(ev, targetListIndex) {
   const [moved] = list.splice(sourceListIndex, 1);
   list.splice(targetListIndex, 0, moved);
   _swipePathPendingDragIndex = null;
-  _renderSwipePathPendingList();
+  if (autoSave) applySwipePathToCanvas();
+  else _renderSwipePathPendingList();
 }
 window._swipePathPendingDrop = _swipePathPendingDrop;
 
-function deleteSwipePathPendingItem(tempId) {
+function deleteSwipePathPendingItem(tempId, autoSave) {
   if (window._swipePathLocked) return; // trilha já enviada pro backend, aguardando resposta — ver applySwipePathToCanvas
   const list = window._swipePathPendingList || [];
   const idx = list.findIndex(it => it.tempId === tempId);
   if (idx === -1) return;
   list.splice(idx, 1);
-  _renderSwipePathPendingList();
+  // Remover o penúltimo ponto zera a trilha (mínimo de 2 pontos p/ existir
+  // uma trilha) — nesse caso, apaga a trilha por completo em vez de tentar
+  // redesenhar com 1 ponto só (o que insert-swipe-path/applySwipePathToCanvas
+  // já bloqueiam via list.length < 2).
+  if (autoSave && list.length < 2) {
+    deleteSwipePathForArea(window._swipePathPendingAreaId);
+    return;
+  }
+  if (autoSave) applySwipePathToCanvas();
+  else _renderSwipePathPendingList();
 }
 window.deleteSwipePathPendingItem = deleteSwipePathPendingItem;
 

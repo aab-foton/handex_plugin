@@ -57,14 +57,14 @@ const ONBOARDING_TOOLS = {
     // _renderA11yModalDscComponentName pra abrir um componente específico).
     purpose: 'O hac documenta, direto no canvas do Figma, como cada elemento da tela deve ser interpretado por um leitor de tela e em que ordem o teclado deve navegar por ela — para o time de desenvolvimento implementar acessibilidade sem depender de especificação à parte. O hac reconhece componentes das libs <strong>DSC Web Angular & React</strong> (legado) e <strong>Super DSC Web</strong> na mesma tela, já que as duas coexistem enquanto a migração de design system não termina. Os passos a seguir cobrem só o essencial para começar; para as regras completas de cada categoria, consulte a lib <a href="https://www.figma.com/design/3zdtN13YvPlCGPdXeL0Y2i" target="_blank" rel="noopener noreferrer" class="text-[#0891B2] dark:text-cyan-400 underline decoration-dotted hover:decoration-solid font-semibold">Design Acessível</a>.',
     steps: [
-      { text: 'Clique em <strong>Marcar Área</strong> no topo da tela e selecione a seção que você quer documentar — vira um selo azul numerado no canvas. Pense na área como uma "pasta": ela não carrega regra de acessibilidade nenhuma sozinha, só organiza — as especificações criadas dentro dela aparecem juntas na listagem lateral do plugin, mesmo ficando soltas ao lado no canvas.' },
-      { text: 'Dentro do espaço de trabalho da área, na aba Leitor de Tela, use <strong>Mapeamento Automático</strong> para o hac sugerir a categoria de cada componente do DSC ali dentro, comparando com o catálogo da lib "Design Acessível" — ou o botão <strong>Nova spec</strong> para começar do zero, manualmente, quando o elemento não bate com nenhum componente reconhecido (por exemplo, uma composição customizada que não existe no DSC).' },
+      { text: 'Clique em <strong>Selecionar Tela</strong> no topo da tela e selecione a seção que você quer documentar — vira um selo azul numerado no canvas. Pense na tela selecionada como uma "pasta": ela não carrega regra de acessibilidade nenhuma sozinha, só organiza — as especificações criadas dentro dela aparecem juntas na listagem lateral do plugin, mesmo ficando soltas ao lado no canvas.' },
+      { text: 'Dentro do espaço de trabalho da tela, na aba Leitor de Tela, use <strong>Mapeamento Automático</strong> para o hac sugerir a categoria de cada componente do DSC ali dentro, comparando com o catálogo da lib "Design Acessível" — ou o botão <strong>Nova spec</strong> para começar do zero, manualmente, quando o elemento não bate com nenhum componente reconhecido (por exemplo, uma composição customizada que não existe no DSC).' },
       { text: 'No resumo do Mapeamento Automático, revise os grupos sugeridos e clique em <strong>Iniciar Revisão</strong> — cada item detectado abre para você confirmar, ajustar a categoria ou descartar antes de virar especificação, um de cada vez. O hac sugere a categoria pelo tipo de componente, mas quem decide é você: revise principalmente ícones e imagens, onde decorativo vs. informativo depende do contexto de uso, não só do componente em si.' },
-      { text: 'Clique no card da área para abrir o espaço de trabalho dela, organizado em abas: <strong>Tabulação</strong> (ordem de navegação por teclado), <strong>Leitor de Tela</strong> (as especificações de conteúdo/semântica) e <strong>Handoff Completo</strong> (o painel de status que consolida tudo o que já foi documentado nessa área, com o botão <strong>Gerar handoff completo</strong> para reinserir de uma vez só as seções pendentes ou desatualizadas). Web não tem a aba Swipe — esse gesto é exclusivo de leitores de tela mobile.' },
+      { text: 'Clique no card da tela para abrir o espaço de trabalho dela, organizado em abas: <strong>Tabulação</strong> (ordem de navegação por teclado), <strong>Leitor de Tela</strong> (as especificações de conteúdo/semântica) e <strong>Handoff Completo</strong> (o painel de status que consolida tudo o que já foi documentado nessa tela, com o botão <strong>Gerar handoff completo</strong> para reinserir de uma vez só as seções pendentes ou desatualizadas). Web não tem a aba Ordem de Leitura — esse gesto é exclusivo de leitores de tela mobile.' },
       { text: 'Cada especificação cai numa das <strong>5 categorias</strong>, todas com componente real nesta origem, e é criada/editada na aba <strong>Leitor de Tela</strong>: Elementos e Imagens, Estrutura da Página, Nível de Título, Elemento Decorativo ou Informações Adicionais. Toda categoria usa os mesmos dois campos de fundo — <strong>Descrição</strong> (como o elemento deve ou não ser lido em voz alta) e <strong>Notas de Código</strong> (o apontamento técnico que o dev usa para implementar, quando a variante tiver um). Veja o guia <strong>"?"</strong> no cabeçalho a qualquer momento para saber quando usar cada categoria e ver exemplos de código reais.' + (typeof FICHA_INSTRUCTION_CONTENT_UI !== 'undefined' ? _onboardingFichaStepsHTML(FICHA_INSTRUCTION_CONTENT_UI.leitorTela) : '') },
       { text: '<strong>Nível de Título</strong> segue a hierarquia H1-H6 — o H1 é o título único da página, os demais estruturam o conteúdo em ordem lógica. <strong>Elementos interativos e imagens</strong> cobre botões, links e imagens estáticas — ícones sozinhos precisam de texto alternativo descrevendo a função, não a aparência.' },
-      { text: 'Componentes que o scan encontrou mas ainda não viraram especificação ficam no accordion <strong>"Não Documentados"</strong>, dentro da aba Leitor de Tela — clique em <strong>Criar spec</strong> para documentar qualquer um deles. É o jeito de garantir que nenhum componente da área fique de fora do handoff por esquecimento.' },
-      { text: 'Para a <strong>Ordem de Tabulação</strong>, abra essa aba dentro do espaço de trabalho da área: clique nos elementos em sequência no canvas ou use <strong>Gerar Automaticamente</strong>. O hac cria uma cópia da área pra marcar, sem tocar no design original. Essa ordem é o que garante que quem navega só de teclado (sem mouse) passe pelos elementos numa sequência que faz sentido — normalmente a mesma ordem visual, de cima para baixo e da esquerda para a direita. Depois de montada, use <strong>Simular leitura</strong> para ouvir a sequência em voz alta (com seletor de idioma PT/EN) e conferir se faz sentido antes de inserir no handoff.' + (typeof FICHA_INSTRUCTION_CONTENT_UI !== 'undefined' ? _onboardingFichaStepsHTML(FICHA_INSTRUCTION_CONTENT_UI.tabulacao) : '') }
+      { text: 'Componentes que o scan encontrou mas ainda não viraram especificação ficam no accordion <strong>"Não Documentados"</strong>, dentro da aba Leitor de Tela — clique em <strong>Criar spec</strong> para documentar qualquer um deles. É o jeito de garantir que nenhum componente da tela fique de fora do handoff por esquecimento.' },
+      { text: 'Para a <strong>Ordem de Tabulação</strong>, abra essa aba dentro do espaço de trabalho da tela: clique nos elementos em sequência no canvas ou use <strong>Gerar Automaticamente</strong>. O hac cria uma cópia da tela pra marcar, sem tocar no design original. Essa ordem é o que garante que quem navega só de teclado (sem mouse) passe pelos elementos numa sequência que faz sentido — normalmente a mesma ordem visual, de cima para baixo e da esquerda para a direita. Depois de montada, use <strong>Simular leitura</strong> para ouvir a sequência em voz alta (com seletor de idioma PT/EN) e conferir se faz sentido antes de inserir no handoff.' + (typeof FICHA_INSTRUCTION_CONTENT_UI !== 'undefined' ? _onboardingFichaStepsHTML(FICHA_INSTRUCTION_CONTENT_UI.tabulacao) : '') }
     ]
     // Bloco `reference` ("Quando usar cada categoria") REMOVIDO daqui
     // (2026-09-08) — vivia só neste onboarding, duplicando/competindo com
@@ -85,15 +85,15 @@ const ONBOARDING_TOOLS = {
     format: 'stepper',
     purpose: 'O hac documenta, direto no canvas do Figma, como cada elemento da tela deve ser interpretado por um leitor de tela e em que ordem o teclado/gesto deve navegar por ela — para o time de desenvolvimento implementar acessibilidade sem depender de especificação à parte. O hac reconhece componentes da lib <strong>Super DSC Mobile</strong> (DSC | Super App, React Native) — algumas categorias e regras são diferentes das libs web, cobertas nos passos abaixo. Os passos a seguir cobrem só o essencial para começar; para as regras completas de cada categoria, consulte a lib <a href="https://www.figma.com/design/3zdtN13YvPlCGPdXeL0Y2i" target="_blank" rel="noopener noreferrer" class="text-[#0891B2] dark:text-cyan-400 underline decoration-dotted hover:decoration-solid font-semibold">Design Acessível</a>.',
     steps: [
-      { text: 'Clique em <strong>Marcar Área</strong> no topo da tela e selecione a seção que você quer documentar — vira um selo azul numerado no canvas. Pense na área como uma "pasta": ela não carrega regra de acessibilidade nenhuma sozinha, só organiza — as especificações criadas dentro dela aparecem juntas na listagem lateral do plugin, mesmo ficando soltas ao lado no canvas.' },
-      { text: 'Dentro do espaço de trabalho da área, na aba Leitor de Tela, use <strong>Mapeamento Automático</strong> para o hac sugerir a categoria de cada componente do DSC ali dentro, comparando com o catálogo da lib "Design Acessível" — ou o botão <strong>Nova spec</strong> para começar do zero, manualmente, quando o elemento não bate com nenhum componente reconhecido (por exemplo, uma composição customizada que não existe no DSC).' },
+      { text: 'Clique em <strong>Selecionar Tela</strong> no topo da tela e selecione a seção que você quer documentar — vira um selo azul numerado no canvas. Pense na tela selecionada como uma "pasta": ela não carrega regra de acessibilidade nenhuma sozinha, só organiza — as especificações criadas dentro dela aparecem juntas na listagem lateral do plugin, mesmo ficando soltas ao lado no canvas.' },
+      { text: 'Dentro do espaço de trabalho da tela, na aba Leitor de Tela, use <strong>Mapeamento Automático</strong> para o hac sugerir a categoria de cada componente do DSC ali dentro, comparando com o catálogo da lib "Design Acessível" — ou o botão <strong>Nova spec</strong> para começar do zero, manualmente, quando o elemento não bate com nenhum componente reconhecido (por exemplo, uma composição customizada que não existe no DSC).' },
       { text: 'No resumo do Mapeamento Automático, revise os grupos sugeridos e clique em <strong>Iniciar Revisão</strong> — cada item detectado abre para você confirmar, ajustar a categoria ou descartar antes de virar especificação, um de cada vez. O hac sugere a categoria pelo tipo de componente, mas quem decide é você: revise principalmente ícones e imagens, onde decorativo vs. informativo depende do contexto de uso, não só do componente em si.' },
-      { text: 'Clique no card da área para abrir o espaço de trabalho dela, organizado em abas: <strong>Tabulação</strong> (ordem de navegação por teclado), <strong>Swipe</strong> (ordem de navegação por gesto, exclusiva do leitor de tela mobile), <strong>Leitor de Tela</strong> (as especificações de conteúdo/semântica) e <strong>Handoff Completo</strong> (o painel de status que consolida tudo o que já foi documentado nessa área, com o botão <strong>Gerar handoff completo</strong> para reinserir de uma vez só as seções pendentes ou desatualizadas).' },
+      { text: 'Clique no card da tela para abrir o espaço de trabalho dela, organizado em abas: <strong>Tabulação</strong> (ordem de navegação por teclado), <strong>Ordem de Leitura</strong> (ordem de navegação por gesto, exclusiva do leitor de tela mobile), <strong>Leitor de Tela</strong> (as especificações de conteúdo/semântica) e <strong>Handoff Completo</strong> (o painel de status que consolida tudo o que já foi documentado nessa tela, com o botão <strong>Gerar handoff completo</strong> para reinserir de uma vez só as seções pendentes ou desatualizadas).' },
       { text: 'Só <strong>3 categorias</strong> têm componente real nesta lib: Elementos e Imagens, Nível de Título e Elemento Decorativo. Estrutura da Página e Informações Adicionais não existem no vocabulário desta lib e ficam ocultas na escolha. Toda categoria usa os mesmos dois campos de fundo — <strong>Descrição</strong> (como o elemento deve ou não ser lido em voz alta) e <strong>Notas de Código</strong> (o apontamento técnico que o dev usa para implementar). Veja o guia <strong>"?"</strong> no cabeçalho a qualquer momento para saber quando usar cada categoria e ver exemplos de código reais.' + (typeof FICHA_INSTRUCTION_CONTENT_UI !== 'undefined' ? _onboardingFichaStepsHTML(FICHA_INSTRUCTION_CONTENT_UI.leitorTela) : '') },
       { text: '<strong>Nível de Título</strong> não tem hierarquia H1-H6 como no desktop — todo título usa o mesmo marcador único "H". <strong>Elementos e Imagens</strong> tem 3 sub-variantes aqui: <strong>Componente</strong> (com campo Link do Componente, apontando pro nome/URL do componente no DSC | Super App), <strong>Link</strong> e <strong>Texto Alternativo</strong> (alt-text de mídia).' },
-      { text: 'Componentes que o scan encontrou mas ainda não viraram especificação ficam no accordion <strong>"Não Documentados"</strong>, dentro da aba Leitor de Tela — clique em <strong>Criar spec</strong> para documentar qualquer um deles. É o jeito de garantir que nenhum componente da área fique de fora do handoff por esquecimento.' },
-      { text: 'Para a <strong>Ordem de Tabulação</strong>, abra essa aba dentro do espaço de trabalho da área: clique nos elementos em sequência no canvas ou use <strong>Gerar Automaticamente</strong>. O hac cria uma cópia da área pra marcar, sem tocar no design original. Essa ordem é o que garante que quem navega só de teclado passe pelos elementos numa sequência que faz sentido. Depois de montada, use <strong>Simular leitura</strong> para ouvir a sequência em voz alta (com seletor de idioma PT/EN) e conferir se faz sentido antes de inserir no handoff.' + (typeof FICHA_INSTRUCTION_CONTENT_UI !== 'undefined' ? _onboardingFichaStepsHTML(FICHA_INSTRUCTION_CONTENT_UI.tabulacao) : '') },
-      { text: 'Para a <strong>Trilha de Swipe</strong>, use o botão <strong>"ou usar a Ordem de Tabulação já mapeada"</strong> pra reaproveitar a sequência que você já revisou na Ordem de Tabulação, ou marque manualmente segurando shift e clicando nos elementos no canvas. É o gesto que quem usa o leitor de tela sem teclado físico percorre pra navegar pela tela. Se precisar corrigir uma trilha já criada, use o botão <strong>Editar pontos</strong> no card dela para reabrir a revisão item a item sem recomeçar do zero.' }
+      { text: 'Componentes que o scan encontrou mas ainda não viraram especificação ficam no accordion <strong>"Não Documentados"</strong>, dentro da aba Leitor de Tela — clique em <strong>Criar spec</strong> para documentar qualquer um deles. É o jeito de garantir que nenhum componente da tela fique de fora do handoff por esquecimento.' },
+      { text: 'Para a <strong>Ordem de Tabulação</strong>, abra essa aba dentro do espaço de trabalho da tela: clique nos elementos em sequência no canvas ou use <strong>Gerar Automaticamente</strong>. O hac cria uma cópia da tela pra marcar, sem tocar no design original. Essa ordem é o que garante que quem navega só de teclado passe pelos elementos numa sequência que faz sentido. Depois de montada, use <strong>Simular leitura</strong> para ouvir a sequência em voz alta (com seletor de idioma PT/EN) e conferir se faz sentido antes de inserir no handoff.' + (typeof FICHA_INSTRUCTION_CONTENT_UI !== 'undefined' ? _onboardingFichaStepsHTML(FICHA_INSTRUCTION_CONTENT_UI.tabulacao) : '') },
+      { text: 'Para a <strong>Trilha de Ordem de Leitura</strong>, use o botão <strong>"ou usar a Ordem de Tabulação já mapeada"</strong> pra reaproveitar a sequência que você já revisou na Ordem de Tabulação, ou marque manualmente segurando shift e clicando nos elementos no canvas. É o gesto que quem usa o leitor de tela sem teclado físico percorre pra navegar pela tela. Se precisar corrigir uma trilha já criada, use o botão <strong>Editar pontos</strong> no card dela para reabrir a revisão item a item sem recomeçar do zero.' }
     ]
   }
 };
@@ -123,59 +123,33 @@ function _onboardingKeyForCurrentOrigin() {
   return (typeof isA11yMobileProject === 'function' && isA11yMobileProject()) ? 'mobile' : 'web';
 }
 
-// Mostra o banner "Primeira vez aqui?" da jornada da origem ATUAL —
-// mantém 1 elemento no HTML por jornada (#onboarding-banner-web/-mobile,
-// mesmo padrão já usado por toolKey), escondendo explicitamente o da
-// OUTRA origem: sem isso, trocar de origem no meio da sessão podia
-// deixar os dois banners visíveis ao mesmo tempo (um já visto que nunca
-// tinha sido escondido, outro novo). Chamado ao navegar para
-// view-specifications (ver core.js, dentro de navigate()) e depois de
-// escolher a lib na Home.
-function maybeShowOnboardingBanner() {
-  const currentKey = _onboardingKeyForCurrentOrigin();
-  for (const key of Object.keys(ONBOARDING_TOOLS)) {
-    const banner = document.getElementById(`onboarding-banner-${key}`);
-    if (!banner) continue;
-    banner.classList.toggle('hidden', key !== currentKey || _onboardingSeen(currentKey));
-  }
-}
-window.maybeShowOnboardingBanner = maybeShowOnboardingBanner;
-
-function dismissOnboardingBanner() {
-  const toolKey = _onboardingKeyForCurrentOrigin();
-  const banner = document.getElementById(`onboarding-banner-${toolKey}`);
-  if (banner) banner.classList.add('hidden');
-  markOnboardingSeen(toolKey);
-}
-window.dismissOnboardingBanner = dismissOnboardingBanner;
-
-// Ponto de entrada único pro banner ("Ver agora") e pro ícone de chapéu
-// ("Rever passo a passo") — os dois SEMPRE abrem a mesma jornada
-// (web/mobile) da origem atual do projeto, nunca conteúdos divergentes
-// (bug real corrigido 2026-09-09: antes, escolher a lib na Home abria um
-// onboarding curto/específico automaticamente, e o chapéu abria outro
-// mais longo/genérico — dois conteúdos diferentes pro mesmo momento).
+// Ponto de entrada único pro onboarding — chamado tanto automaticamente
+// ao escolher a lib na Home (chooseA11yHomeOrigin, accessibility.js)
+// quanto pelo ícone de chapéu ("Como utilizar o Plugin") a qualquer
+// momento. SEMPRE abre a mesma jornada (web/mobile) da origem atual do
+// projeto, nunca conteúdos divergentes (bug real corrigido 2026-09-09).
+// Banner "Primeira vez aqui?" removido (2026-09-10, pedido do usuário) —
+// ficou redundante com a abertura automática ao escolher a lib.
 function openOnboardingForCurrentOrigin(opts) {
   openOnboarding(_onboardingKeyForCurrentOrigin(), opts);
 }
 window.openOnboardingForCurrentOrigin = openOnboardingForCurrentOrigin;
 
-// Abre o modal de onboarding — chamado tanto pelo banner ("Ver agora") quanto
-// pelo botão de revisão no cabeçalho de specifications.html (a qualquer
-// momento, sem alterar o estado "visto" nesse segundo caso — só o fluxo do
-// banner marca como visto).
+// Abre o modal de onboarding — chamado automaticamente ao escolher a lib
+// (onlyIfUnseen: true, só abre se ainda não visto por essa jornada) e
+// pelo botão de revisão no cabeçalho de specifications.html (sem
+// onlyIfUnseen, sempre abre, sem alterar o estado "visto" nesse caso).
 let _onboardingCurrentTool = null;
 let _onboardingCurrentStep = 0;
 
-function openOnboarding(toolKey, { markSeenOnOpen = false } = {}) {
+function openOnboarding(toolKey, { markSeenOnOpen = false, onlyIfUnseen = false } = {}) {
   const tool = ONBOARDING_TOOLS[toolKey];
   if (!tool) return;
+  if (onlyIfUnseen && _onboardingSeen(toolKey)) return;
   _onboardingCurrentTool = toolKey;
   // -1 é a tela de "propósito" (para que serve), exibida sozinha antes do
   // Passo 1 -- só existe quando a ferramenta tem tool.purpose cadastrado.
   _onboardingCurrentStep = tool.purpose ? -1 : 0;
-  const banner = document.getElementById(`onboarding-banner-${toolKey}`);
-  if (banner) banner.classList.add('hidden');
   if (markSeenOnOpen) markOnboardingSeen(toolKey);
   _renderOnboardingModal();
   openModal('onboarding-modal');
@@ -190,7 +164,7 @@ window.openOnboarding = openOnboarding;
 // pendência do Handex: hospedagem ainda não decidida).
 function _onboardingMediaHTML(step) {
   if (!step.media) return '';
-  return `<img src="${step.media}" alt="" class="w-full rounded-xl border border-gray-100 dark:border-dark-line mb-3" loading="lazy" />`;
+  return `<img src="${step.media}" alt="" class="w-full rounded-dsc-medium border border-gray-100 dark:border-dark-line mb-3" loading="lazy" />`;
 }
 
 // Bloco expansível (<details>) com os passos NUMERADOS reais do template
@@ -207,13 +181,13 @@ function _onboardingFichaStepsHTML(richContent) {
   if (!richContent || !Array.isArray(richContent.steps) || richContent.steps.length === 0) return '';
   return `
     <details class="mt-2 group">
-      <summary class="text-[10.5px] font-bold uppercase tracking-wider text-slate-400 dark:text-dark-muted cursor-pointer select-none list-none flex items-center gap-1">
+      <summary class="text-dsc-label-tiny font-bold uppercase tracking-wider text-slate-400 dark:text-dark-muted cursor-pointer select-none list-none flex items-center gap-1">
         <i data-lucide="chevron-right" class="w-3 h-3 transition-transform group-open:rotate-90"></i>
         Ver passo a passo do template oficial${richContent.stepsHeading ? ` — ${richContent.stepsHeading}` : ''}
       </summary>
       <ol class="mt-2 space-y-1.5 list-none pl-4">
         ${richContent.steps.map((s, i) => `
-          <li class="flex gap-1.5 text-[11px] text-slate-500 dark:text-dark-muted leading-snug">
+          <li class="flex gap-1.5 text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-snug">
             <span class="font-bold shrink-0">${i + 1}.</span>
             <span>${s}</span>
           </li>
@@ -228,7 +202,7 @@ function _onboardingFichaStepsHTML(richContent) {
 function _onboardingPurposeHTML(tool) {
   if (!tool.purpose) return '';
   return `
-    <div class="rounded-xl p-3.5 mb-4" style="background-color:${tool.color}0d">
+    <div class="rounded-dsc-medium p-3.5 mb-4" style="background-color:${tool.color}0d">
       <p class="text-[12px] text-slate-700 dark:text-white leading-relaxed">${tool.purpose}</p>
     </div>
   `;
@@ -261,14 +235,14 @@ function _onboardingReferenceHTML(reference) {
       ${visibleItems.map(item => `
         <div class="flex items-start gap-2">
           <i data-lucide="${item.icon}" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted shrink-0 mt-0.5"></i>
-          <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-tight">${item.text}</p>
+          <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-tight">${item.text}</p>
         </div>
       `).join('')}
     </div>
   `;
   return `
     <div class="border-t border-gray-100 dark:border-dark-line my-4"></div>
-    <p class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-dark-muted mb-2.5">${reference.title}</p>
+    <p class="text-dsc-label-tiny font-bold uppercase tracking-wider text-slate-500 dark:text-dark-muted mb-2.5">${reference.title}</p>
     ${body}
   `;
 }
@@ -294,13 +268,13 @@ function _renderOnboardingModal() {
     // passo do stepper) -- só "para que serve" e um Próximo que avança pro
     // Passo 1.
     body.innerHTML = `
-      <div class="rounded-xl p-3.5" style="background-color:${tool.color}0d">
+      <div class="rounded-dsc-medium p-3.5" style="background-color:${tool.color}0d">
         <p class="text-[13px] text-slate-700 dark:text-white leading-relaxed">${tool.purpose}</p>
       </div>
     `;
     footer.innerHTML = `
-      <button type="button" onclick="closeOnboarding()" class="px-4 py-2 text-slate-500 dark:text-dark-muted font-bold text-[12px] rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Pular</button>
-      <button type="button" onclick="_onboardingStep(1)" class="px-6 py-2 text-white font-bold text-[12px] rounded-xl transition-all" style="background-color:${tool.color}">Próximo</button>
+      <button type="button" onclick="closeOnboarding()" class="px-4 py-2 text-slate-500 dark:text-dark-muted font-bold text-[12px] rounded-dsc-medium hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Pular</button>
+      <button type="button" onclick="_onboardingStep(1)" class="px-6 py-2 text-white font-bold text-[12px] rounded-dsc-medium transition-all" style="background-color:${tool.color}">Próximo</button>
     `;
     _refreshIcons();
     return;
@@ -312,19 +286,19 @@ function _renderOnboardingModal() {
     const isFirst = _onboardingCurrentStep === 0;
     body.innerHTML = `
       <div class="flex items-center justify-center gap-1.5 mb-4">
-        ${tool.steps.map((_, i) => `<span class="h-1.5 rounded-full transition-all ${i === _onboardingCurrentStep ? 'w-6' : 'w-1.5'}" style="background-color:${i <= _onboardingCurrentStep ? tool.color : '#e2e8f0'}"></span>`).join('')}
+        ${tool.steps.map((_, i) => `<span class="h-1.5 rounded-dsc-circ transition-all ${i === _onboardingCurrentStep ? 'w-6' : 'w-1.5'}" style="background-color:${i <= _onboardingCurrentStep ? tool.color : '#e2e8f0'}"></span>`).join('')}
       </div>
       ${_onboardingMediaHTML(step)}
-      <p class="text-[10px] font-bold uppercase tracking-wider mb-2" style="color:${tool.color}">Passo ${_onboardingCurrentStep + 1} de ${tool.steps.length}</p>
+      <p class="text-dsc-label-tiny font-bold uppercase tracking-wider mb-2" style="color:${tool.color}">Passo ${_onboardingCurrentStep + 1} de ${tool.steps.length}</p>
       <p class="text-[13px] text-slate-700 dark:text-white leading-relaxed">${step.text}</p>
       ${_onboardingReferenceHTML(tool.reference)}
     `;
     const showBack = !isFirst || !!tool.purpose;
     footer.innerHTML = `
-      <button type="button" onclick="closeOnboarding()" class="px-4 py-2 text-slate-500 dark:text-dark-muted font-bold text-[12px] rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Pular</button>
+      <button type="button" onclick="closeOnboarding()" class="px-4 py-2 text-slate-500 dark:text-dark-muted font-bold text-[12px] rounded-dsc-medium hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Pular</button>
       <div class="flex items-center gap-2">
-        ${showBack ? '<button type="button" onclick="_onboardingStep(-1)" class="px-4 py-2 text-slate-600 dark:text-dark-muted font-bold text-[12px] rounded-xl border border-gray-200 dark:border-dark-line hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Voltar</button>' : ''}
-        <button type="button" onclick="${isLast ? 'closeOnboarding()' : '_onboardingStep(1)'}" class="px-6 py-2 text-white font-bold text-[12px] rounded-xl transition-all" style="background-color:${tool.color}">${isLast ? 'Concluir' : 'Próximo'}</button>
+        ${showBack ? '<button type="button" onclick="_onboardingStep(-1)" class="px-4 py-2 text-slate-600 dark:text-dark-muted font-bold text-[12px] rounded-dsc-medium border border-gray-200 dark:border-dark-line hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Voltar</button>' : ''}
+        <button type="button" onclick="${isLast ? 'closeOnboarding()' : '_onboardingStep(1)'}" class="px-6 py-2 text-white font-bold text-[12px] rounded-dsc-medium transition-all" style="background-color:${tool.color}">${isLast ? 'Concluir' : 'Próximo'}</button>
       </div>
     `;
   } else {
@@ -332,7 +306,7 @@ function _renderOnboardingModal() {
       <ol class="space-y-3 list-none">
         ${tool.steps.map((s, i) => `
           <li class="flex gap-2.5">
-            <span class="w-5 h-5 rounded-full font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5" style="background-color:${tool.color}1a;color:${tool.color}">${i + 1}</span>
+            <span class="w-5 h-5 rounded-dsc-circ font-black text-dsc-label-tiny normal-case tracking-normal flex items-center justify-center shrink-0 mt-0.5" style="background-color:${tool.color}1a;color:${tool.color}">${i + 1}</span>
             <div class="flex-1 min-w-0">
               <span class="text-[12px] text-slate-600 dark:text-slate-300 leading-relaxed">${s.text}</span>
               ${_onboardingMediaHTML(s)}
@@ -343,8 +317,8 @@ function _renderOnboardingModal() {
       ${_onboardingReferenceHTML(tool.reference)}
     `;
     footer.innerHTML = `
-      ${tool.purpose ? '<button type="button" onclick="_onboardingStep(-1)" class="px-4 py-2 text-slate-600 dark:text-dark-muted font-bold text-[12px] rounded-xl border border-gray-200 dark:border-dark-line hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Voltar</button>' : '<div></div>'}
-      <button type="button" onclick="closeOnboarding()" class="px-6 py-2 text-white font-bold text-[12px] rounded-xl transition-all" style="background-color:${tool.color}">Entendi</button>
+      ${tool.purpose ? '<button type="button" onclick="_onboardingStep(-1)" class="px-4 py-2 text-slate-600 dark:text-dark-muted font-bold text-[12px] rounded-dsc-medium border border-gray-200 dark:border-dark-line hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Voltar</button>' : '<div></div>'}
+      <button type="button" onclick="closeOnboarding()" class="px-6 py-2 text-white font-bold text-[12px] rounded-dsc-medium transition-all" style="background-color:${tool.color}">Entendi</button>
     `;
   }
   _refreshIcons();

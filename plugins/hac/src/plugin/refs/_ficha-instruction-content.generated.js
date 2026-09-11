@@ -4,7 +4,7 @@
 // Regenerar via: node src/plugin/refs/build-ficha-instruction-constants.cjs
 //            ou: npm run refs:ficha-instruction
 //
-// Gerado em: 2026-09-10T18:05:58.250Z
+// Gerado em: 2026-09-11T12:22:25.702Z
 //
 // Consumido por src/plugin/modules/onboarding.js como
 // FICHA_INSTRUCTION_CONTENT_UI.tabulacao/.swipe/.leitorTela — mesmo
@@ -17,7 +17,7 @@ const FICHA_INSTRUCTION_CONTENT_UI = {
   "tabulacao": {
     "title": "Ordem de Tabulação",
     "instructionsHeading": "Instruções sobre o tipo de documentação",
-    "instructionsBody": "É a sequência lógica que o leitor de telas (VoiceOver/TalkBack) percorre nos elementos INTERATIVOS quando o usuário navega pela interface usando o gesto de varredura (deslizando o dedo na tela para avançar ou retornar).\n\n⚠️ Atenção: Use os marcadores numéricos apenas para indicar a sequência dos elementos na tela.\nDescrever os textos que o leitor de telas deve falar é a próxima etapa do handoff.",
+    "instructionsBody": "É a sequência lógica que o Leitor de tela (VoiceOver/TalkBack) percorre nos elementos INTERATIVOS quando o usuário navega com outros devices em interfaces de toque como teclados, mouses com botões programáveis ou acionadores .",
     "stepsHeading": "Como fazer a ordem de tabulação",
     "steps": [
       "Dê detach no template para poder usar.",
@@ -39,9 +39,9 @@ const FICHA_INSTRUCTION_CONTENT_UI = {
     ]
   },
   "swipe": {
-    "title": "",
-    "instructionsHeading": "",
-    "instructionsBody": "",
+    "title": "Ordem de Leitura Mobile (Swipe)",
+    "instructionsHeading": "Instruções sobre a documentação",
+    "instructionsBody": "Essa documentação trata-se de como o leitor de tela (VoiceOver/Talkback) deve seguir sequencialmente de forma nativa com o Basic Swipe, ou seja, sem os atalhos do rotor.",
     "stepsHeading": "",
     "steps": [],
     "assetsHeading": "",
@@ -49,8 +49,8 @@ const FICHA_INSTRUCTION_CONTENT_UI = {
   },
   "leitorTela": {
     "title": "Especificações para Leitores de Tela",
-    "instructionsHeading": "Instruções sobre o tipo de documentação",
-    "instructionsBody": "A Ordem de Tabulação define o caminho, já os cards de especificação (Box Specs) definem o que o leitor de telas vai falar em cada passo.",
+    "instructionsHeading": "Instruções sobre a documentação",
+    "instructionsBody": "Especificar para leitores de tela consiste em definir como as tecnologias assistivas (VoiceOver/Talkback) interpretam e anunciam os elementos da interface. Essa documentação assegura que o conteúdo seja plenamente compreendido e inclusivo, fornecendo as orientações fundamentais para que o time de desenvolvimento implemente a experiência exatamente como projetada.",
     "stepsHeading": "Como classificar os Elementos na Tela",
     "steps": [
       "Posicione as telas: Cole as telas do seu fluxo na área de trabalho para iniciar a documentação.",
@@ -61,16 +61,16 @@ const FICHA_INSTRUCTION_CONTENT_UI = {
     "assetsHeading": "Entendendo as categorias",
     "assets": [
       {
-        "label": "Elementos e imagens",
-        "description": "Utilizado para garantir a acessibilidade de elementos interativos e imagens. Atenção: descreva imagens apenas se forem essenciais para a navegação ou contexto, nos demais casos, marque as imagens como decorativas. Para ícones clicáveis, o label deve ditar a ação (ex: ‘Buscar’ para ícone de lupa)"
+        "label": "Elementos interativos e imagens",
+        "description": "Utilizado para referenciar componentes no Super DSC, garantir nome acessível aos elementos e descrever textos alternativos nas imagens."
       },
       {
-        "label": "Título",
-        "description": "Estrutura os cabeçalhos do app, permitindo que o leitor de telas navegue diretamente entre os tópicos. Atenção: Diferente da web, no mobile React não existe marcação de níveis como H1, H2, H3... O marcador é único e serve apenas para identificar o elemento como título."
+        "label": "Títulos",
+        "description": "Utilizado para estruturar os cabeçalhos da interface, permitindo que o leitor de tela navegue diretamente entre os tópicos que foram definidos como títulos de conteúdo."
       },
       {
-        "label": "Elemento decorativo",
-        "description": "Utilizado para marcar os elementos decorativos, que devem ser ignorados por leitores de tela, como imagens que não passam conteúdo ou função, formas abstratas, divisores ou ícones decorativos."
+        "label": "Elementos decorativos",
+        "description": "Utilizado para marcar os elementos que devem ser ignorados pelo leitor de tela, como por exemplo imagens que não passam conteúdo ou função, formas abstratas, divisores ou ícones decorativos."
       }
     ]
   }

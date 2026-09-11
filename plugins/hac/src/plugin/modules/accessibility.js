@@ -42,15 +42,24 @@
 // closeModal, escapeHtml (todos em core.js/messages.js).
 // ============================================================
 
-// Flag temporária (2026-09-10, pedido do usuário): oculta da UI os 3 pontos
-// de entrada de mapeamento/geração automática — "ou usar Mapeamento
-// Automático" em Tabulação e Leitor de Tela, "ou usar a Ordem de Tabulação
-// já mapeada" em Swipe — enquanto o fluxo automático é refinado. Não remove
-// nenhuma lógica (_confirmGenerateTabOrderFromLayers, startSwipePathFromTabOrder,
-// _startA11yMappingFromLeitorTab continuam intactas e funcionais) — só some
-// o botão de entrada na UI. Reverter: trocar para `false` (ou remover a
-// constante e os 3 usos de A11Y_AUTO_MAPPING_HIDDEN nos templates).
-const A11Y_AUTO_MAPPING_HIDDEN = true;
+// Flag temporária (2026-09-10, pedido do usuário) — REVERTIDA (2026-09-11,
+// pedido do usuário): reativa os 3 pontos de entrada de mapeamento/geração
+// automática — "ou usar Mapeamento Automático" em Tabulação e Leitor de
+// Tela, "ou usar a Ordem de Tabulação já mapeada" em Swipe — que tinham
+// sido ocultados enquanto o fluxo automático era refinado. Nenhuma lógica
+// foi tocada nesse meio-tempo (_confirmGenerateTabOrderFromLayers,
+// startSwipePathFromTabOrder, _startA11yMappingFromLeitorTab continuaram
+// intactas e funcionais o tempo todo) — só o botão de entrada volta a
+// aparecer. Um scan mais aprofundado nas camadas (drill-in maior) é
+// melhoria separada, ainda a investigar/planejar.
+//
+// Correção de escopo (2026-09-11): o pedido de reativação era só para
+// Leitor de Tela — Tabulação e Swipe continuam ocultos por enquanto (a
+// flag única acima cobria os 3 pontos por engano). Duas flags
+// independentes agora: A11Y_AUTO_MAPPING_HIDDEN_LEITOR (reativado) e
+// A11Y_AUTO_MAPPING_HIDDEN_TAB_SWIPE (continua oculto).
+const A11Y_AUTO_MAPPING_HIDDEN_LEITOR = false;
+const A11Y_AUTO_MAPPING_HIDDEN_TAB_SWIPE = true;
 
 // Cores reais extraídas dos fills dos componentes publicados na lib "Design
 // Acessível". O selo (Tag/Chip) de cada categoria usa a cor "color" no
@@ -549,10 +558,53 @@ function _findA11yAreaById(areaId) {
 // fica guardada em window._a11yPendingAreaId até o formulário (openA11yModal)
 // ler e gravar em modal.dataset.areaId — é assim que confirmA11ySpec sabe em
 // qual área a nova spec deve nascer.
+//
+// Gate de seleção (2026-09-11): antes desta mudança, o picker de categoria
+// abria direto e o erro "Selecione um elemento no canvas" (create-unified-spec,
+// code.js) só aparecia DEPOIS do designer preencher o formulário inteiro e
+// clicar Aplicar — frustração tardia e evitável. Agora, ao clicar "Nova
+// spec": (1) foca o canvas no elemento principal da Área (focusNode,
+// core.js — seleciona + dá scroll/zoom), (2) mostra uma orientação curta e
+// NÃO bloqueante via snackbar orientando a clicar no elemento específico
+// dentro do frame em destaque, (3) dispara em paralelo o matching
+// determinístico (resolve-manual-spec-match, ver handler em code.js) pra já
+// chegar com uma categoria sugerida quando o designer abrir o picker. Nada
+// disso trava quem já sabe o que fazer — é só orientação/pré-preenchimento,
+// o picker abre normalmente assim que a checagem da lib responder,
+// independente do estado da seleção ou do matching.
+//
+// Decisão de UX (ambiguidade do plano): a instrução aparece SEMPRE que
+// "Nova spec" é clicado, sem lógica de "não repetir na sessão" — substituiu
+// a antiga dica única de vida inteira (window._a11ySpecModalInstructionShown,
+// removida de dentro de openA11yModal) porque as duas mensagens competiam
+// pelo mesmo momento. Como é um snackbar curto e de leitura rápida (uma
+// frase), repetir a cada clique não deveria incomodar — e evita a
+// complexidade de duas flags de "já vi" concorrentes para o mesmo instante
+// do fluxo. Se no futuro isso se mostrar repetitivo demais, dá pra persistir
+// via figma.clientStorage seguindo o mesmo padrão que já existia.
 function openA11yCategoryPickerModal(areaId) {
   window._a11yPendingAreaId = areaId || null;
   window._a11yLibCheckOnSuccess = null; // fluxo normal "+" nunca usa o desvio de openA11yFormFromUndocumented
   window._a11yCategoryPickerWizardSwitch = false;
+
+  // Foca a RÉPLICA DE TRABALHO do Leitor de Tela desta área, não o Frame
+  // Principal (2026-09-11) — é sobre ela que a spec vai ser desenhada.
+  const area = _findA11yAreaById(areaId);
+  if (area && typeof focusA11yCloneNode === 'function') {
+    focusA11yCloneNode(areaId, 'leitor', area.targetNodeId || null);
+  }
+  showSnackbar('Clique no elemento que você quer especificar, dentro do frame em destaque.');
+
+  // Matching determinístico (Parte 2) — token de correlação próprio, igual
+  // ao padrão já usado abaixo pra check-a11y-library: só a resposta do
+  // pedido MAIS recente pode aplicar sugestão de categoria (o designer pode
+  // clicar "+" em áreas diferentes, ou selecionar outro elemento, antes da
+  // primeira resposta chegar).
+  window._a11yManualMatchResult = null;
+  const matchToken = 'a11y-manual-match-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+  window._a11yManualMatchToken = matchToken;
+  parent.postMessage({ pluginMessage: { type: 'resolve-manual-spec-match', token: matchToken } }, '*');
+
   // Token de correlação — se o designer clicar "+" em duas áreas diferentes
   // antes da primeira checagem responder, só a resposta do pedido MAIS
   // recente pode abrir o modal.
@@ -610,11 +662,73 @@ function _openA11yCategoryPickerModalNow() {
   if (titleText) titleText.textContent = 'Nova especificação';
   _applyA11yCategoryPickerOriginFilter();
   openModal('a11y-category-picker-modal');
+  // Matching determinístico (Parte 2) — se resolve-manual-spec-match já
+  // respondeu antes da checagem da lib (ou responder logo em seguida,
+  // _applyA11yManualMatchToPicker é chamado de novo por messages.js quando
+  // chegar), realça a categoria sugerida sem escolher por conta própria.
+  _applyA11yManualMatchToPicker();
 }
 window._openA11yCategoryPickerModalNow = _openA11yCategoryPickerModalNow;
 
+// Decisão de UX (Parte 2, ambiguidade do plano): o picker já está sendo
+// aberto neste ponto do fluxo manual (diferente do wizard de Detecção
+// Automática/Não Documentados, que pula o picker inteiramente quando já
+// conhece a categoria) — pular a etapa aqui destruiria a única tela onde o
+// designer confirma a categoria no fluxo manual, mesmo quando o matching
+// está certo. Por isso a sugestão só REALÇA visualmente o botão da
+// categoria (borda/fundo cyan + rótulo "Sugerido"), nunca fecha o picker
+// nem pré-clica em nada — o designer sempre decide clicando, com ou sem
+// sugestão. `window._a11yManualMatchResult` chega de
+// manual-spec-match-resolved (messages.js); presetOptions correspondentes
+// (presetComponente/presetEstruturaTipo/presetTituloNivel) ficam guardados
+// em window._a11yManualMatchPreset pra chooseA11yType repassar pra
+// openA11yModal quando o designer confirmar QUALQUER categoria — se ele
+// escolher a categoria sugerida, o formulário já abre com o preset certo;
+// se escolher outra, o preset (de uma categoria diferente) é descartado.
+function _applyA11yManualMatchToPicker() {
+  // Sempre limpa o realce anterior primeiro — chamado toda vez que o picker
+  // reabre ou que uma resposta de matching chega, nunca deve acumular
+  // realce de uma seleção anterior.
+  document.querySelectorAll('#a11y-category-picker-modal [data-a11y-suggested]').forEach(el => {
+    el.removeAttribute('data-a11y-suggested');
+    el.classList.remove('ring-2', 'ring-cyan-500', 'bg-cyan-50', 'dark:bg-cyan-900/20');
+    const badge = el.querySelector('[data-a11y-suggested-badge]');
+    if (badge) badge.remove();
+  });
+
+  const result = window._a11yManualMatchResult;
+  window._a11yManualMatchPreset = null;
+  if (!result || !result.match || result.match.isUnmapped || !result.match.a11yCategory) return;
+
+  // Reaproveita o mesmo mapeamento categoria/preset usado pela Detecção
+  // Automática (_resolveA11yFormPresetFromItem) — não duplica a lógica de
+  // "shortName → categoria/subtipo" aqui. Empacota o match no mesmo formato
+  // de item esperado (kind 'detection').
+  const fakeItem = { name: result.nodeName || null, nodeId: result.nodeId || null, dscComponentMatch: result.match };
+  const { category, options } = _resolveA11yFormPresetFromItem(fakeItem, 'detection');
+  window._a11yManualMatchPreset = { category, options };
+
+  const btn = document.getElementById('a11y-category-btn-' + category);
+  if (btn) {
+    btn.setAttribute('data-a11y-suggested', 'true');
+    btn.classList.add('ring-2', 'ring-cyan-500', 'bg-cyan-50', 'dark:bg-cyan-900/20');
+    const badge = document.createElement('span');
+    badge.setAttribute('data-a11y-suggested-badge', 'true');
+    badge.className = 'ml-auto shrink-0 text-[9px] font-bold uppercase tracking-wider text-white bg-cyan-600 rounded-full px-1.5 py-0.5';
+    badge.textContent = 'Sugerido';
+    btn.appendChild(badge);
+  }
+}
+window._applyA11yManualMatchToPicker = _applyA11yManualMatchToPicker;
+
 function closeA11yCategoryPickerModal() {
   closeModal('a11y-category-picker-modal');
+  // Desliga o listener de re-matching ao vivo (Parte 2, ver
+  // _a11yManualMatchModeActive em code.js) — chamado tanto ao confirmar uma
+  // categoria (chooseA11yType) quanto ao fechar pelo X/backdrop. Inofensivo
+  // quando o modo nunca esteve ligado (ex.: fechar o picker do wizard de
+  // troca de categoria, que não passa pelo gate de seleção).
+  parent.postMessage({ pluginMessage: { type: 'stop-manual-spec-match-mode' } }, '*');
 }
 window.closeA11yCategoryPickerModal = closeA11yCategoryPickerModal;
 
@@ -633,6 +747,21 @@ function chooseA11yType(category) {
   if (window._a11yCategoryPickerWizardSwitch) {
     window._a11yCategoryPickerWizardSwitch = false;
     switchA11yWizardCategory(category);
+    return;
+  }
+  // Preset do matching determinístico (Parte 2) — só é aproveitado quando o
+  // designer escolhe A MESMA categoria que foi sugerida/realçada no picker
+  // (_applyA11yManualMatchToPicker). Escolher outra categoria descarta o
+  // preset (ele pertence à categoria sugerida, não faria sentido em outra) —
+  // a sugestão nunca trava a decisão final do designer.
+  const manualPreset = window._a11yManualMatchPreset;
+  window._a11yManualMatchPreset = null;
+  window._a11yManualMatchResult = null;
+  if (manualPreset && manualPreset.category === category) {
+    openA11yModal(category, Object.assign(
+      { a11yOrigin: getA11yProjectOrigin() || 'web' },
+      manualPreset.options
+    ));
     return;
   }
   // Origem da spec manual "+ Nova spec": lê a origem já configurada do
@@ -692,22 +821,15 @@ function openA11yModal(category, options) {
 
   const modal = document.getElementById('a11y-spec-modal');
   if (!modal) return;
-  // Instrução antes fixa no corpo do modal virou snackbar — mas o modal
-  // reabre repetidamente item a item no wizard de lote (potencialmente 50+
-  // vezes numa revisão grande), então só mostra na primeira vez de todas
-  // (persistido via figma.clientStorage, mesmo padrão do onboarding —
-  // window._a11ySpecModalInstructionShown já chega setada a partir de
-  // msg.specModalInstructionSeen em init-plugin, ver messages.js). O
-  // conteúdo continua coberto pelo hint fixo do rodapé do modal (ver
-  // modals.html) e pelo onboarding, então não se perde depois da 1ª vez.
-  // showSnackbar (não showToast) porque o texto tem 3 informações e precisa
-  // de mais tempo de leitura — permanece até fechamento manual (X) em vez
-  // de sumir sozinho em 3s.
-  if (!window._a11ySpecModalInstructionShown) {
-    window._a11ySpecModalInstructionShown = true;
-    parent.postMessage({ pluginMessage: { type: 'save-spec-modal-instruction-seen' } }, '*');
-    showSnackbar('Selecione o elemento no canvas antes de aplicar. A especificação nasce travada e posicionada ao lado dele — use o cadeado na listagem para destravar depois.');
-  }
+  // Instrução única de vida inteira REMOVIDA em 2026-09-11 (era mostrada
+  // aqui, na primeira vez que este modal abria — window._a11ySpecModalInstructionShown/
+  // save-spec-modal-instruction-seen). Virou orientação repetida a cada
+  // clique em "Nova spec", mostrada mais cedo no fluxo (ver
+  // openA11yCategoryPickerModal, gate de seleção antes do picker de
+  // categoria) — as duas mensagens competiam pelo mesmo momento de trabalho,
+  // então só a nova permanece. O conteúdo (travamento/cadeado) continua
+  // coberto pelo hint fixo do rodapé do modal (ver modals.html) e pelo
+  // onboarding.
   modal.dataset.category = category;
   modal.dataset.areaId = window._a11yPendingAreaId || '';
   modal.dataset.a11yOrigin = a11yOrigin;
@@ -724,11 +846,12 @@ function openA11yModal(category, options) {
   const pendingTargetNodeId = options && options.pendingTargetNodeId;
   if (pendingTargetNodeId) modal.dataset.pendingTargetNodeId = pendingTargetNodeId;
   else delete modal.dataset.pendingTargetNodeId;
-  // editA11ySpec sobrescreve editingSpecId/editingOriginalIndex e o texto do
-  // botão logo depois desta chamada — abrir pra criar uma spec nova sempre
-  // limpa qualquer resquício de edição anterior.
+  // editA11ySpec sobrescreve editingSpecId e o texto do botão logo depois
+  // desta chamada — abrir pra criar uma spec nova sempre limpa qualquer
+  // resquício de edição anterior. editingOriginalIndex não existe mais
+  // como dataset (2026-09-11) — confirmA11ySpec sempre resolve o índice
+  // na hora, a partir de editingSpecId, nunca de um valor congelado.
   delete modal.dataset.editingSpecId;
-  delete modal.dataset.editingOriginalIndex;
   const confirmBtnReset = document.getElementById('btn-a11y-confirm');
   if (confirmBtnReset) confirmBtnReset.textContent = 'Aplicar';
   // Reset defensivo do estado visual do wizard (botões "Localizar no
@@ -761,6 +884,20 @@ function openA11yModal(category, options) {
   if (targetNodeNameEl) {
     const presetTargetNodeName = (options && options.targetNodeName) || null;
     targetNodeNameEl.textContent = presetTargetNodeName || '—';
+  }
+  // "Está dentro de:" (2026-09-11) — mesmo raciocínio do card em
+  // _a11yUndocumentedItemHtml: reforça no formulário de confirmação (onde
+  // o designer de fato aplica) que este elemento é filho de outra coisa,
+  // evitando o mesmo engano de confirmar um sub-elemento pensando ser o
+  // componente inteiro. Só disponível no fluxo automático (o item já traz
+  // imediateParentName do scan); fluxo manual não tem esse dado ainda —
+  // fica oculto nesse caso, sem quebrar nada.
+  const immediateParentWrap = document.getElementById('a11y-modal-immediate-parent-wrap');
+  const immediateParentNameEl = document.getElementById('a11y-modal-immediate-parent-name');
+  const immediateParentName = (options && options.immediateParentName) || null;
+  if (immediateParentWrap && immediateParentNameEl) {
+    immediateParentWrap.classList.toggle('hidden', !immediateParentName);
+    immediateParentNameEl.textContent = immediateParentName || '—';
   }
   _renderA11yModalDscComponentName('a11y-modal-dsc-component-name', dscComponentName, a11yOrigin);
 
@@ -1036,9 +1173,9 @@ function _renderA11yElementoVariants(selectValue) {
       `<option value="${escapeHtml(o.value)}"${o.value === f.defaultValue ? ' selected' : ''}>${escapeHtml(o.label)}</option>`
     ).join('');
     row.innerHTML = `
-      <label class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">${escapeHtml(_capitalizeFirst(f.name))}</label>
+      <label class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">${escapeHtml(_capitalizeFirst(f.name))}</label>
       <select data-a11y-variant-name="${escapeHtml(f.rawName)}"
-        class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all">
+        class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all">
         ${optionsHtml}
       </select>
     `;
@@ -1100,19 +1237,19 @@ function _renderA11yElementoToggles(selectValue) {
   toggles.forEach(t => {
     const max = A11Y_TOGGLE_MAXLENGTH[t.key] || A11Y_TOGGLE_MAXLENGTH_DEFAULT;
     const row = document.createElement('div');
-    row.className = 'bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl overflow-hidden';
+    row.className = 'bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium overflow-hidden';
     row.innerHTML = `
-      <label class="flex items-center gap-2 px-3 py-2.5 cursor-pointer select-none">
+      <label class="flex items-center gap-dsc-nano px-dsc-micro py-2.5 cursor-pointer select-none">
         <input type="checkbox" data-a11y-toggle-key="${t.key}"
           onchange="_onA11yElementoToggleChange(this)"
           class="w-4 h-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500 cursor-pointer shrink-0" />
         <span class="text-[12px] font-bold text-slate-700 dark:text-white">${escapeHtml(t.label)}</span>
       </label>
-      <div class="hidden px-3 pb-3" data-a11y-toggle-textarea-wrap>
+      <div class="hidden px-dsc-micro pb-3" data-a11y-toggle-textarea-wrap>
         <textarea data-a11y-toggle-value maxlength="${max}" rows="2" placeholder="Insira seu texto de ${escapeHtml(t.label.toLowerCase())}."
           oninput="updateA11yCharCounterEl(this, this.nextElementSibling)"
-          class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg px-2.5 py-2 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all resize-none"></textarea>
-        <span class="block text-right text-[9px] text-slate-400 dark:text-dark-muted mt-0.5">0/${max}</span>
+          class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-dsc-small px-2.5 py-dsc-nano text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all resize-none"></textarea>
+        <span class="block text-right text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted mt-0.5">0/${max}</span>
       </div>
     `;
     list.appendChild(row);
@@ -1274,18 +1411,18 @@ function _renderA11yElementoMobileFields() {
   const toggleRowHtml = (key, label, placeholder) => {
     const max = A11Y_TOGGLE_MAXLENGTH[key] || A11Y_TOGGLE_MAXLENGTH_DEFAULT;
     return `
-    <div class="bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl overflow-hidden">
-      <label class="flex items-center gap-2 px-3 py-2.5 cursor-pointer select-none">
+    <div class="bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium overflow-hidden">
+      <label class="flex items-center gap-dsc-nano px-dsc-micro py-2.5 cursor-pointer select-none">
         <input type="checkbox" data-a11y-toggle-key="${key}"
           onchange="_onA11yElementoToggleChange(this)"
           class="w-4 h-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500 cursor-pointer shrink-0" />
         <span class="text-[12px] font-bold text-slate-700 dark:text-white">${escapeHtml(label)}</span>
       </label>
-      <div class="hidden px-3 pb-3" data-a11y-toggle-textarea-wrap>
+      <div class="hidden px-dsc-micro pb-3" data-a11y-toggle-textarea-wrap>
         <textarea data-a11y-toggle-value maxlength="${max}" rows="2" placeholder="${escapeHtml(placeholder)}"
           oninput="updateA11yCharCounterEl(this, this.nextElementSibling)"
-          class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg px-2.5 py-2 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all resize-none"></textarea>
-        <span class="block text-right text-[9px] text-slate-400 dark:text-dark-muted mt-0.5">0/${max}</span>
+          class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-dsc-small px-2.5 py-dsc-nano text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all resize-none"></textarea>
+        <span class="block text-right text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted mt-0.5">0/${max}</span>
       </div>
     </div>`;
   };
@@ -1294,8 +1431,8 @@ function _renderA11yElementoMobileFields() {
     const wrapDiv = document.createElement('div');
     wrapDiv.className = 'space-y-2.5';
     wrapDiv.innerHTML = `
-      <div class="p-3 bg-gray-50 dark:bg-dark-bg rounded-xl border border-gray-200 dark:border-dark-line">
-        <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Descrição (fixa)</p>
+      <div class="p-3 bg-gray-50 dark:bg-dark-bg rounded-dsc-medium border border-gray-200 dark:border-dark-line">
+        <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Descrição (fixa)</p>
         <p class="text-[12px] text-slate-700 dark:text-white leading-snug">${escapeHtml(A11Y_CONTENT.elemento.mobileLink.descricao)}</p>
       </div>
       ${toggleRowHtml('observacoes', A11Y_TOGGLE_LABELS.observacoes, 'Insira seu texto de observações.')}
@@ -1307,12 +1444,12 @@ function _renderA11yElementoMobileFields() {
     wrapDiv.innerHTML = `
       <div>
         <div class="flex items-center justify-between mb-1.5 ml-1">
-          <label for="a11y-el-mobile-alt-descricao" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Descrição (texto alternativo) *</label>
-          <span id="a11y-el-mobile-alt-descricao-counter" class="text-[9px] text-slate-400 dark:text-dark-muted shrink-0">0/180</span>
+          <label for="a11y-el-mobile-alt-descricao" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Descrição (texto alternativo) *</label>
+          <span id="a11y-el-mobile-alt-descricao-counter" class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted shrink-0">0/180</span>
         </div>
         <textarea id="a11y-el-mobile-alt-descricao" maxlength="180" rows="2" placeholder="Insira aqui o texto alternativo da imagem/mídia."
           oninput="updateA11yCharCounter(this)"
-          class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all resize-none"></textarea>
+          class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all resize-none"></textarea>
       </div>
       ${toggleRowHtml('observacoes', A11Y_TOGGLE_LABELS.observacoes, 'Insira seu texto de observações.')}
     `;
@@ -1370,25 +1507,25 @@ function _renderA11yElementoMobileFields() {
       })
       .join('');
     const linkRow = document.createElement('div');
-    linkRow.className = 'bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl p-3 space-y-2';
+    linkRow.className = 'bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium p-3 space-y-2';
     linkRow.innerHTML = `
       <p class="text-[12px] font-bold text-slate-700 dark:text-white">${escapeHtml(A11Y_TOGGLE_LABELS.linkComponente)}</p>
       <div>
-        <label for="a11y-el-mobile-link-select" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Componente do DSC (escolha "Personalizado" se não encontrar)</label>
+        <label for="a11y-el-mobile-link-select" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Componente do DSC (escolha "Personalizado" se não encontrar)</label>
         <select id="a11y-el-mobile-link-select"
-          class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg px-2.5 py-2 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all">
+          class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-dsc-small px-2.5 py-dsc-nano text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all">
           ${linkOptionsHtml}
         </select>
       </div>
       <div>
         <div class="flex items-center justify-between mb-1.5 ml-1">
-          <label for="a11y-el-mobile-link-url" class="block text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Link ou nome do componente *</label>
-          <span id="a11y-el-mobile-link-url-counter" class="text-[9px] text-slate-400 dark:text-dark-muted shrink-0">0/300</span>
+          <label for="a11y-el-mobile-link-url" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Link ou nome do componente *</label>
+          <span id="a11y-el-mobile-link-url-counter" class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted shrink-0">0/300</span>
         </div>
         <input type="text" id="a11y-el-mobile-link-url" maxlength="300" placeholder="${escapeHtml(A11Y_MOBILE_LINK_URL_PLACEHOLDER)}"
           oninput="updateA11yCharCounter(this)"
-          class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg px-2.5 py-2 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
-        <p id="a11y-el-mobile-link-url-lock-hint" class="hidden flex items-center gap-1 mt-1 ml-1 text-[9px] text-slate-400 dark:text-dark-muted">
+          class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-dsc-small px-2.5 py-dsc-nano text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
+        <p id="a11y-el-mobile-link-url-lock-hint" class="hidden flex items-center gap-dsc-quark mt-1 ml-1 text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted">
           <i data-lucide="lock" class="w-2.5 h-2.5"></i> Preenchido automaticamente a partir do componente do DSC — escolha "Personalizado" acima para editar.
         </p>
       </div>
@@ -1657,7 +1794,7 @@ function _renderA11yWorkspaceHeader() {
   const area = (a11yAreas || []).find(a => a && a.id === areaId);
   const titleEl = document.getElementById('a11y-workspace-title');
   if (titleEl) {
-    titleEl.textContent = area ? `${area.number ? area.number + ' · ' : ''}${area.label || 'Área'}` : 'Área';
+    titleEl.textContent = area ? `${area.number ? area.number + ' · ' : ''}${area.label || 'Tela'}` : 'Tela';
   }
 
   // Tab "Swipe" some inteira do tab-switcher em projetos web (2026-09-04-r,
@@ -1742,7 +1879,7 @@ function _deleteA11yAreaFromWorkspace() {
   const areaId = window._a11yWorkspaceAreaId;
   const area = (a11yAreas || []).find(a => a && a.id === areaId);
   if (!area) { navigateBackToA11yList(); return; }
-  deleteA11yArea(area.originalIndex);
+  deleteA11yArea(area.id);
   navigateBackToA11yList();
 }
 window._deleteA11yAreaFromWorkspace = _deleteA11yAreaFromWorkspace;
@@ -1813,14 +1950,18 @@ function _renderA11yWorkspaceTab() {
   else if (tab === 'handoff') html = _a11yWorkspaceTabHandoffDashboard(area, areaSpecs);
   container.innerHTML = html;
 
-  // O <ul> de Tabulação nasce vazio no template (mesmo padrão de
-  // renderA11yGroupedList) — preenche agora que já está no DOM. Trilha de
-  // Swipe não tem lista própria NESTA view (a lista pendente vive dentro do
-  // modal de revisão, #a11y-swipe-path-review-modal, aberto por
-  // startSwipePathManualMode) — o HTML retornado por _a11yWorkspaceTabSwipe
-  // é só o card de status + botões.
+  // Os <ul> de Tabulação/Swipe nascem vazios no template (mesmo padrão de
+  // renderA11yGroupedList) — preenche agora que já estão no DOM.
   if (tab === 'tabulacao') {
-    _renderTabOrderListForArea(area.id, document.getElementById(`tab-order-list-workspace-${area.originalIndex}`));
+    _renderTabOrderListForArea(area.id, document.getElementById(`tab-order-list-workspace-${area.id}`));
+  }
+  // Trilha de Swipe ganhou lista editável direto na aba (2026-09-11,
+  // paridade com Tabulação) — só popula se já existir trilha salva
+  // (_renderSwipePathTabList sai cedo sozinha se não achar, mas
+  // typeof-guard evita erro em telas web, onde esta função nem é
+  // carregada por não fazer sentido — Swipe é mobile-only).
+  if (tab === 'swipe' && typeof _renderSwipePathTabList === 'function') {
+    _renderSwipePathTabList(area.id, area.targetNodeId || null);
   }
 
   _refreshIcons();
@@ -1843,10 +1984,10 @@ window.selectA11yComponente = selectA11yComponente;
 // nova (mesmo comportamento de clicar "Editar" direto na listagem).
 function _editA11yDuplicateSpecFromModal() {
   const warningEl = document.getElementById('a11y-modal-duplicate-warning');
-  const idx = warningEl && warningEl.dataset.duplicateIndex ? parseInt(warningEl.dataset.duplicateIndex, 10) : -1;
-  if (idx < 0 || Number.isNaN(idx)) return;
+  const duplicateSpecId = warningEl ? warningEl.dataset.duplicateSpecId : '';
+  if (!duplicateSpecId) return;
   closeA11yModal();
-  editA11ySpec(idx);
+  editA11ySpec(duplicateSpecId);
 }
 window._editA11yDuplicateSpecFromModal = _editA11yDuplicateSpecFromModal;
 
@@ -1877,16 +2018,16 @@ function prefillA11yComponentName(name, mainText, dscComponentName, targetNodeId
   // uma segunda (ex.: categorias diferentes sobre o mesmo nó).
   const warningEl = document.getElementById('a11y-modal-duplicate-warning');
   if (warningEl) {
-    let duplicateIndex = -1;
+    let duplicateSpec = null;
     if (!modal.dataset.editingSpecId && targetNodeId) {
       const areaId = window._a11yPendingAreaId;
       const category = modal.dataset.category;
-      duplicateIndex = (a11ySpecs || []).findIndex(s =>
+      duplicateSpec = (a11ySpecs || []).find(s =>
         s && s.a11yAreaId === areaId && s.targetNodeId === targetNodeId && s.a11yType === category
-      );
+      ) || null;
     }
-    warningEl.classList.toggle('hidden', duplicateIndex === -1);
-    warningEl.dataset.duplicateIndex = duplicateIndex >= 0 ? String(duplicateIndex) : '';
+    warningEl.classList.toggle('hidden', !duplicateSpec);
+    warningEl.dataset.duplicateSpecId = duplicateSpec && duplicateSpec.id ? duplicateSpec.id : '';
   }
   if (modal.dataset.category !== 'elemento') return;
   // Label a partir do texto real do elemento (ver _findMainTextContent,
@@ -1955,19 +2096,19 @@ function _renderA11yFixedToggles(wrapId, listId, shortName) {
   toggles.forEach(t => {
     const max = A11Y_TOGGLE_MAXLENGTH[t.key] || A11Y_TOGGLE_MAXLENGTH_DEFAULT;
     const row = document.createElement('div');
-    row.className = 'bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-xl overflow-hidden';
+    row.className = 'bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium overflow-hidden';
     row.innerHTML = `
-      <label class="flex items-center gap-2 px-3 py-2.5 cursor-pointer select-none">
+      <label class="flex items-center gap-dsc-nano px-dsc-micro py-2.5 cursor-pointer select-none">
         <input type="checkbox" data-a11y-toggle-key="${t.key}"
           onchange="_onA11yElementoToggleChange(this)"
           class="w-4 h-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500 cursor-pointer shrink-0" />
         <span class="text-[12px] font-bold text-slate-700 dark:text-white">${escapeHtml(t.label)}</span>
       </label>
-      <div class="hidden px-3 pb-3" data-a11y-toggle-textarea-wrap>
+      <div class="hidden px-dsc-micro pb-3" data-a11y-toggle-textarea-wrap>
         <textarea data-a11y-toggle-value maxlength="${max}" rows="2" placeholder="Insira seu texto de ${escapeHtml(t.label.toLowerCase())}."
           oninput="updateA11yCharCounterEl(this, this.nextElementSibling)"
-          class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-lg px-2.5 py-2 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all resize-none"></textarea>
-        <span class="block text-right text-[9px] text-slate-400 dark:text-dark-muted mt-0.5">0/${max}</span>
+          class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-dsc-small px-2.5 py-dsc-nano text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all resize-none"></textarea>
+        <span class="block text-right text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted mt-0.5">0/${max}</span>
       </div>
     `;
     list.appendChild(row);
@@ -2335,8 +2476,15 @@ function confirmA11ySpec() {
   const category = modal ? modal.dataset.category : '';
   const areaId = modal ? modal.dataset.areaId : '';
   const editingSpecId = modal ? modal.dataset.editingSpecId : '';
-  const editingOriginalIndex = modal && modal.dataset.editingOriginalIndex !== undefined
-    ? parseInt(modal.dataset.editingOriginalIndex, 10) : -1;
+  // Bug real corrigido (2026-09-11): antes localizava a spec em edição por
+  // um índice de array "congelado" no dataset (editingOriginalIndex),
+  // capturado no momento em que o modal abriu — se qualquer re-render
+  // assíncrono (ex. layer-order-resolved) mudasse a ordem/posição de
+  // a11ySpecs enquanto o modal estava aberto, o índice apontava pra outra
+  // spec (ou pra nada) na hora de salvar. Agora sempre resolve pela
+  // identidade real (editingSpecId), nunca por posição.
+  const editingOriginalIndex = editingSpecId
+    ? a11ySpecs.findIndex(s => s && s.id === editingSpecId) : -1;
   const meta = A11Y_CATEGORIES[category];
   if (!meta) return;
 
@@ -2716,7 +2864,7 @@ function confirmA11ySpec() {
       && _getDocumentedNodeIdsForArea(areaId).has(dedupeNodeId);
     if (alreadyDocumented) {
       wizardState.discarded.add(confirmingIndex);
-      showToast('Item já documentado nesta área — pulado automaticamente.');
+      showToast('Item já documentado nesta tela — pulado automaticamente.');
       _advanceA11yBatchWizard();
       return;
     }
@@ -2767,65 +2915,71 @@ function _a11ySpecItemHtml(spec) {
   );
 
   return `
-    <div class="relative bg-gray-50/60 dark:bg-dark-bg/40 rounded-xl border ${isUnlocked ? 'border-amber-200 dark:border-amber-800/40' : isHidden ? 'border-gray-100 opacity-50' : 'border-gray-100 dark:border-dark-line'} overflow-hidden"
+    <div class="relative bg-gray-50/60 dark:bg-dark-bg/40 rounded-dsc-medium border ${isUnlocked ? 'border-amber-200 dark:border-amber-800/40' : isHidden ? 'border-gray-100 opacity-50' : 'border-gray-100 dark:border-dark-line'} overflow-hidden"
       data-a11y-spec-item data-a11y-category="${escapeHtml(spec.a11yType || '')}" data-a11y-search="${escapeHtml(searchText)}">
-      <div class="flex items-start px-2.5 py-2 gap-2">
-        <div class="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-extrabold text-white shrink-0 mt-0.5" style="background-color:${color}">${escapeHtml(spec.letter || 'A')}</div>
+      <div class="flex items-start px-2.5 py-dsc-nano gap-dsc-nano">
+        <div class="w-6 h-6 rounded-dsc-circ flex items-center justify-center text-dsc-label-tiny normal-case tracking-normal font-extrabold text-white shrink-0 mt-0.5" style="background-color:${color}">${escapeHtml(spec.letter || 'A')}</div>
         <div class="flex-1 min-w-0">
-          <p class="text-[11px] font-semibold text-slate-700 dark:text-white truncate">${escapeHtml(spec.targetNodeName || spec.name || 'Elemento')}</p>
-          <div class="flex items-center flex-wrap gap-1 mt-0.5">
-            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-[9px] font-bold" style="background-color:${fill};border-color:${color};color:${color};">
+          <p class="text-dsc-label-tiny normal-case tracking-normal font-semibold text-slate-700 dark:text-white truncate">${escapeHtml(spec.targetNodeName || spec.name || 'Elemento')}</p>
+          <div class="flex items-center flex-wrap gap-dsc-quark mt-0.5">
+            <span class="inline-flex items-center gap-dsc-quark px-1.5 py-0.5 rounded-dsc-circ border text-dsc-label-tiny normal-case tracking-normal font-bold" style="background-color:${fill};border-color:${color};color:${color};">
               <i data-lucide="${meta.icon}" class="w-2.5 h-2.5"></i> ${meta.label}
             </span>
             ${spec.a11ySourceLib ? `
-            <span class="inline-flex items-center px-1.5 py-0.5 rounded-full border text-[9px] font-medium bg-slate-50 dark:bg-dark-bg/60 border-slate-200 dark:border-dark-line text-slate-500 dark:text-dark-muted">
+            <span class="inline-flex items-center px-1.5 py-0.5 rounded-dsc-circ border text-dsc-label-tiny normal-case tracking-normal font-medium bg-slate-50 dark:bg-dark-bg/60 border-slate-200 dark:border-dark-line text-slate-500 dark:text-dark-muted">
               ${escapeHtml(spec.a11ySourceLib.label)}
             </span>` : ''}
             ${dscComponentLabel ? `
-            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-[9px] font-medium bg-slate-50 dark:bg-dark-bg/60 border-slate-200 dark:border-dark-line text-slate-500 dark:text-dark-muted">
+            <span class="inline-flex items-center gap-dsc-quark px-1.5 py-0.5 rounded-dsc-circ border text-dsc-label-tiny normal-case tracking-normal font-medium bg-slate-50 dark:bg-dark-bg/60 border-slate-200 dark:border-dark-line text-slate-500 dark:text-dark-muted">
               <i data-lucide="component" class="w-2.5 h-2.5"></i> ${escapeHtml(dscComponentLabel)}
             </span>` : ''}
             ${spec.needsReview ? `
             <button type="button" title="Especificação precisa de revisão — clique para verificar" aria-label="Verificar especificação — precisa de revisão"
-              onclick="editA11ySpec(${spec.originalIndex})"
-              class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-[9px] font-bold bg-amber-50/60 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/40 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/20 transition-colors">
+              onclick="editA11ySpec('${escapeHtml(spec.id)}')"
+              class="inline-flex items-center gap-dsc-quark px-1.5 py-0.5 rounded-dsc-circ border text-dsc-label-tiny normal-case tracking-normal font-bold bg-amber-50/60 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/40 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/20 transition-colors">
               <i data-lucide="alert-triangle" class="w-2.5 h-2.5"></i> Verificar
             </button>` : ''}
           </div>
         </div>
         <button type="button" title="Focar no elemento no canvas" aria-label="Focar no elemento no canvas"
-          onclick="focusNode('${spec.targetNodeId}')"
+          onclick="_highlightSpecListItem('${escapeHtml(spec.targetNodeId)}', '${escapeHtml(spec.a11yAreaId || '')}')"
           class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-[#0070af] transition-colors shrink-0">
           <i data-lucide="locate" class="w-3.5 h-3.5"></i>
         </button>
         <button type="button" title="${isHidden ? 'Mostrar' : 'Ocultar'} no canvas" aria-label="${isHidden ? 'Mostrar' : 'Ocultar'} no canvas"
-          onclick="toggleA11ySpecVisibility(${spec.originalIndex})"
+          onclick="toggleA11ySpecVisibility('${escapeHtml(spec.id)}')"
           class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-[#0070af] transition-colors shrink-0">
           <i data-lucide="${isHidden ? 'eye-off' : 'eye'}" class="w-3.5 h-3.5"></i>
         </button>
         <button type="button" title="${isUnlocked ? 'Travar' : 'Destravar'}" aria-label="${isUnlocked ? 'Travar' : 'Destravar'}"
-          onclick="toggleA11ySpecLock(${spec.originalIndex})"
+          onclick="toggleA11ySpecLock('${escapeHtml(spec.id)}')"
           class="w-6 h-6 flex items-center justify-center ${isUnlocked ? 'text-amber-500' : 'text-gray-400'} hover:text-[#0070af] transition-colors shrink-0">
           <i data-lucide="${isUnlocked ? 'lock-open' : 'lock'}" class="w-3.5 h-3.5"></i>
         </button>
         <button type="button" title="Editar" aria-label="Editar especificação de acessibilidade"
-          onclick="editA11ySpec(${spec.originalIndex})"
+          onclick="editA11ySpec('${escapeHtml(spec.id)}')"
           class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-[#0070af] transition-colors shrink-0">
           <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
         </button>
         <button type="button" title="Remover" aria-label="Remover especificação de acessibilidade"
-          onclick="deleteA11ySpec(${spec.originalIndex})"
+          onclick="deleteA11ySpec('${escapeHtml(spec.id)}')"
           class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors shrink-0">
           <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
         </button>
       </div>
       ${props.length > 0 ? `
       <div class="px-2.5 pb-2.5 space-y-1">
-        ${props.map(p => `
-          <div class="flex items-start justify-between gap-2 px-2 py-1 bg-white dark:bg-dark-surface rounded-lg">
-            <span class="text-[9px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider shrink-0 pt-px">${escapeHtml(p.label)}</span>
-            <span class="text-[10px] font-semibold text-slate-700 dark:text-white text-right break-all min-w-0">${escapeHtml(String(p.value))}</span>
-          </div>`).join('')}
+        ${props.map(p => {
+          const isLink = p.key === 'linkComponente' && /^https?:\/\//.test(String(p.value || ''));
+          const valueHtml = isLink
+            ? `<a href="${escapeHtml(p.value)}" target="_blank" rel="noopener noreferrer" title="Abrir componente no Figma" class="text-[10px] leading-snug font-semibold text-[#0070af] dark:text-cyan-300 text-right break-all min-w-0 underline hover:no-underline">${escapeHtml(String(p.value))}</a>`
+            : `<span class="text-dsc-label-tiny normal-case tracking-normal font-semibold text-slate-700 dark:text-white text-right break-all min-w-0">${escapeHtml(String(p.value))}</span>`;
+          return `
+          <div class="flex items-start justify-between gap-dsc-nano px-2 py-1 bg-white dark:bg-dark-surface rounded-dsc-small">
+            <span class="text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-500 dark:text-dark-muted shrink-0 pt-px">${escapeHtml(p.label)}</span>
+            ${valueHtml}
+          </div>`;
+        }).join('')}
       </div>` : ''}
     </div>
   `;
@@ -2913,13 +3067,13 @@ function _a11yCategoryAccordionEl(uid, catKey, catSpecs) {
   const meta = A11Y_CATEGORIES[catKey] || { label: _capitalizeFirst(catKey), icon: 'accessibility', color: '#0891B2', fill: '#E0F5FA' };
   const expand = window._a11yExpandedCategoryIds.has(uid);
   return `
-    <div class="rounded-lg border border-gray-100 dark:border-dark-line overflow-hidden ml-1 bg-white dark:bg-dark-surface" data-a11y-subcat="${escapeHtml(catKey)}">
-      <div class="flex items-center gap-2 px-2.5 py-2 cursor-pointer select-none hover:bg-gray-50 dark:hover:bg-dark-line/20 transition-colors"
+    <div class="rounded-dsc-small border border-gray-100 dark:border-dark-line overflow-hidden ml-1 bg-white dark:bg-dark-surface" data-a11y-subcat="${escapeHtml(catKey)}">
+      <div class="flex items-center gap-dsc-nano px-2.5 py-dsc-nano cursor-pointer select-none hover:bg-gray-50 dark:hover:bg-dark-line/20 transition-colors"
         onclick="toggleA11yCategoryAccordion('${uid}')">
-        <div class="w-4.5 h-4.5 rounded-full flex items-center justify-center shrink-0" style="background-color:${meta.fill}">
+        <div class="w-4.5 h-4.5 rounded-dsc-circ flex items-center justify-center shrink-0" style="background-color:${meta.fill}">
           <i data-lucide="${meta.icon}" class="w-2.5 h-2.5" style="color:${meta.color}"></i>
         </div>
-        <p class="flex-1 min-w-0 text-[10px] font-bold text-slate-600 dark:text-dark-muted uppercase tracking-wide truncate">${escapeHtml(meta.label)} (${catSpecs.length})</p>
+        <p class="flex-1 min-w-0 text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-600 dark:text-dark-muted truncate">${escapeHtml(meta.label)} (${catSpecs.length})</p>
         <i data-lucide="chevron-down" id="chevron-${uid}" class="w-3.5 h-3.5 text-gray-400 transition-transform shrink-0" style="transform:${expand ? 'rotate(180deg)' : 'rotate(0deg)'}"></i>
       </div>
       <div id="body-${uid}" class="accordion-content ${expand ? '' : 'hidden'} border-t border-gray-100 dark:border-dark-line p-1.5 space-y-1.5">
@@ -2978,20 +3132,30 @@ function _a11yUndocumentedItemHtml(areaId, entry) {
   // em openA11yFormFromUndocumented.
   const encodedItem = encodeURIComponent(JSON.stringify(item));
   return `
-    <div class="flex items-center gap-2 px-2.5 py-2 rounded-xl border ${isBaixa ? 'bg-amber-50/60 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/40' : 'bg-gray-50 dark:bg-dark-bg border-gray-100 dark:border-dark-line'}">
+    <div class="flex items-center gap-dsc-nano px-2.5 py-dsc-nano rounded-dsc-medium border ${isBaixa ? 'bg-amber-50/60 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/40' : 'bg-gray-50 dark:bg-dark-bg border-gray-100 dark:border-dark-line'}">
       <i data-lucide="${kind === 'tokenReview' ? 'alert-circle' : 'circle-help'}" class="w-3.5 h-3.5 ${isBaixa ? 'text-amber-500' : 'text-slate-400'} shrink-0" aria-hidden="true"></i>
       <div class="flex-1 min-w-0">
-        <p class="text-[11px] font-semibold text-slate-700 dark:text-white truncate" title="${escapeHtml(name)}">${escapeHtml(name)}</p>
-        <p class="text-[9px] text-slate-400 dark:text-dark-muted truncate">${escapeHtml(label)}</p>
+        <p class="text-dsc-label-tiny normal-case tracking-normal font-semibold text-slate-700 dark:text-white truncate" title="${escapeHtml(name)}">${escapeHtml(name)}</p>
+        <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted truncate">${escapeHtml(label)}</p>
+        ${item.immediateParentName ? `
+        <!-- Contexto do pai imediato (2026-09-11, bug real reportado):
+             designer confirmou um TEXT interno de um componente não
+             reconhecido pensando ser o componente inteiro. Diferente do
+             card de "componente pai reconhecido" (parentComponentMatch,
+             usado em outro lugar), este é o nome cru do node pai na
+             árvore — sempre disponível, mesmo sem match DSC. -->
+        <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted truncate italic" title="Este elemento está dentro de: ${escapeHtml(item.immediateParentName)}">
+          dentro de: ${escapeHtml(item.immediateParentName)}
+        </p>` : ''}
       </div>
       <button type="button" title="Focar no canvas" aria-label="Focar no canvas"
         onclick="focusNode('${item.nodeId}')"
-        class="shrink-0 w-6 h-6 flex items-center justify-center rounded-lg text-gray-400 hover:text-[#0070af] transition-colors">
+        class="shrink-0 w-6 h-6 flex items-center justify-center rounded-dsc-small text-gray-400 hover:text-[#0070af] transition-colors">
         <i data-lucide="crosshair" class="w-3.5 h-3.5" aria-hidden="true"></i>
       </button>
       <button type="button" title="Criar especificação" aria-label="Criar especificação de acessibilidade para ${escapeHtml(name)}"
         onclick="openA11yFormFromUndocumented('${areaId}', '${kind}', '${encodedItem}')"
-        class="shrink-0 inline-flex items-center gap-1 h-7 px-2 rounded-full bg-[#0891B2] text-white text-[9.5px] font-bold hover:bg-cyan-700 active:scale-95 transition-all">
+        class="shrink-0 inline-flex items-center gap-dsc-quark h-7 px-2 rounded-dsc-circ bg-[#0891B2] text-white text-dsc-label-tiny normal-case tracking-normal font-bold hover:bg-cyan-700 active:scale-95 transition-all">
         <i data-lucide="plus" class="w-3 h-3"></i> Criar spec
       </button>
     </div>
@@ -3006,13 +3170,13 @@ function _a11yUndocumentedAccordionEl(uid, areaId, entries) {
   const chevronStyle = expand ? 'rotate(180deg)' : 'rotate(0deg)';
   const bodyHiddenClass = expand ? '' : 'hidden';
   return `
-    <div class="rounded-lg border border-amber-200 dark:border-amber-800/40 overflow-hidden ml-1" data-a11y-subcat="nao-documentados">
-      <div class="flex items-center gap-2 px-2 py-1.5 cursor-pointer select-none bg-amber-50/60 dark:bg-amber-900/10 hover:bg-amber-100/60 dark:hover:bg-amber-900/20 transition-colors"
+    <div class="rounded-dsc-small border border-amber-200 dark:border-amber-800/40 overflow-hidden ml-1" data-a11y-subcat="nao-documentados">
+      <div class="flex items-center gap-dsc-nano px-2 py-1.5 cursor-pointer select-none bg-amber-50/60 dark:bg-amber-900/10 hover:bg-amber-100/60 dark:hover:bg-amber-900/20 transition-colors"
         onclick="toggleA11yUndocumentedAccordion('${uid}')">
-        <div class="w-4.5 h-4.5 rounded-full flex items-center justify-center shrink-0 bg-amber-100 dark:bg-amber-900/30">
+        <div class="w-4.5 h-4.5 rounded-dsc-circ flex items-center justify-center shrink-0 bg-amber-100 dark:bg-amber-900/30">
           <i data-lucide="circle-help" class="w-2.5 h-2.5 text-amber-600 dark:text-amber-400"></i>
         </div>
-        <p class="flex-1 min-w-0 text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wide truncate">Não Documentados (${entries.length})</p>
+        <p class="flex-1 min-w-0 text-dsc-label-tiny normal-case tracking-normal font-bold text-amber-700 dark:text-amber-400 truncate">Não documentados (${entries.length})</p>
         <i data-lucide="chevron-down" id="undoc-chevron-${uid}" class="w-3.5 h-3.5 text-amber-500 transition-transform shrink-0" style="transform:${chevronStyle}"></i>
       </div>
       <div id="undoc-body-${uid}" class="accordion-content ${bodyHiddenClass} border-t border-amber-100 dark:border-amber-900/30 p-1.5 space-y-1.5">
@@ -3035,7 +3199,10 @@ function _a11yUndocumentedAccordionEl(uid, areaId, entries) {
 // simples reescrever o corpo aqui (poucos elementos) do que fatorar um
 // terceiro parâmetro "sem wrapper" numa função já usada pelo card antigo.
 function _a11yWorkspaceTabTabulacao(area) {
-  const uid = `workspace-${area.originalIndex}`;
+  // uid usa area.id (não area.originalIndex, 2026-09-11) — precisa ser
+  // uma chave estável entre renders, ver comentário completo em
+  // _a11yWorkspaceTabLeitorDeTela.
+  const uid = `workspace-${area.id}`;
   const ulId = `tab-order-list-${uid}`;
   const areaIdAttr = area.id;
   // Mapeamento Automático some assim que já existe documentação MANUAL
@@ -3048,10 +3215,10 @@ function _a11yWorkspaceTabTabulacao(area) {
   const hasManualItems = typeof _currentTabOrderItems === 'function' && _currentTabOrderItems(area.id).length > 0;
   return `
     <div class="space-y-2">
-      <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">
-        Documente a sequência de foco do teclado (tecla Tab) desta área — segure shift e clique (ou use marquise) para marcar todos os elementos de uma vez, na ordem visual, e confirme ao final.
+      <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-relaxed">
+        Documente a sequência de foco do teclado (tecla Tab) desta tela — segure shift e clique (ou use marquise) para marcar todos os elementos de uma vez, na ordem visual, e confirme ao final.
       </p>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-dsc-nano">
         ${hasManualItems ? `
         <!-- Área já documentada (manual ou Mapeamento Automático,
              2026-09-04-aj, pedido do usuário): não faz sentido "Iniciar"
@@ -3060,23 +3227,23 @@ function _a11yWorkspaceTabTabulacao(area) {
              arma a captura de novo(s) elemento(s), reaproveitando a MESMA
              cópia clonada (nenhum selo já desenhado é tocado). -->
         <button type="button" onclick="startTabOrderAddItemsFromCard('${escapeHtml(areaIdAttr)}')"
-          class="flex-1 flex items-center justify-center gap-2 h-9 rounded-2xl text-[11px] font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
+          class="flex-1 flex items-center justify-center gap-dsc-nano h-9 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
           <i data-lucide="plus" class="w-3.5 h-3.5" aria-hidden="true"></i>
           Adicionar itens
         </button>` : `
         <button type="button" onclick="startTabOrderManualMode('${escapeHtml(areaIdAttr)}', '${escapeHtml(area.targetNodeId || '')}')"
-          class="flex-1 flex items-center justify-center gap-2 h-9 rounded-2xl text-[11px] font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
+          class="flex-1 flex items-center justify-center gap-dsc-nano h-9 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
           <i data-lucide="list-ordered" class="w-3.5 h-3.5" aria-hidden="true"></i>
           Iniciar Ordem de Tabulação
         </button>`}
         ${hasManualItems ? `
         <button type="button" onclick="deleteAllTabOrderForArea('${escapeHtml(areaIdAttr)}')"
-          title="Apagar toda a ordem de tabulação" aria-label="Apagar toda a ordem de tabulação desta área"
-          class="shrink-0 w-9 h-9 flex items-center justify-center rounded-2xl border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 active:scale-[0.99] transition-all">
+          title="Apagar toda a ordem de tabulação" aria-label="Apagar toda a ordem de tabulação desta tela"
+          class="shrink-0 w-9 h-9 flex items-center justify-center rounded-dsc-large border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 active:scale-[0.99] transition-all">
           <i data-lucide="trash-2" class="w-3.5 h-3.5" aria-hidden="true"></i>
         </button>` : ''}
       </div>
-      ${A11Y_AUTO_MAPPING_HIDDEN ? '' : (hasManualItems ? '' : `
+      ${A11Y_AUTO_MAPPING_HIDDEN_TAB_SWIPE ? '' : (hasManualItems ? '' : `
       <!-- Hierarquia visual (2026-09-04-e, pedido explícito com
            screenshot): Manual é o caminho PRIMÁRIO — o automático vira um
            link secundário abaixo, de propósito, pra que o designer
@@ -3086,7 +3253,7 @@ function _a11yWorkspaceTabTabulacao(area) {
            Automatizado" — não é geração final, o resultado ainda passa
            por revisão). -->
       <button type="button" onclick="_confirmGenerateTabOrderFromLayers('${escapeHtml(areaIdAttr)}', '${escapeHtml(area.targetNodeId || '')}')"
-        class="w-full flex items-center justify-center gap-1.5 h-7 mt-0.5 rounded-lg text-[10.5px] font-bold text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99] transition-all">
+        class="w-full flex items-center justify-center gap-1.5 h-7 mt-0.5 rounded-dsc-small text-dsc-label-tiny normal-case tracking-normal font-bold text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99] transition-all">
         <i data-lucide="sparkles" class="w-3.5 h-3.5" aria-hidden="true"></i>
         ou usar Mapeamento Automático
       </button>`)}
@@ -3094,7 +3261,7 @@ function _a11yWorkspaceTabTabulacao(area) {
       ${hasManualItems ? `
       <div class="flex items-center gap-1.5 mt-1">
         <button type="button" id="tab-order-narration-btn-${uid}" onclick="toggleTabOrderNarration('${escapeHtml(areaIdAttr)}', '${escapeHtml(uid)}')"
-          class="flex-1 flex items-center justify-center gap-2 h-8 rounded-2xl text-[11px] font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm hover:shadow transition-all">
+          class="flex-1 flex items-center justify-center gap-dsc-nano h-8 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm hover:shadow transition-all">
           <i data-lucide="play" class="w-3.5 h-3.5" aria-hidden="true"></i>
           Simular leitura
         </button>
@@ -3104,13 +3271,13 @@ function _a11yWorkspaceTabTabulacao(area) {
              muda, sempre vem como está gravado no Figma. Lido ao clicar em
              "Simular leitura" (toggleTabOrderNarration), não reage sozinho. -->
         <select id="tab-order-narration-lang-${uid}" title="Idioma da narração" aria-label="Idioma da narração"
-          class="shrink-0 h-8 pl-2 pr-1 rounded-2xl text-[10.5px] font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm hover:shadow transition-all border-0 cursor-pointer">
+          class="shrink-0 h-8 pl-2 pr-1 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm hover:shadow transition-all border-0 cursor-pointer">
           <option value="pt" selected>PT</option>
           <option value="en">EN</option>
         </select>
       </div>` : ''}
       <button type="button" onclick="updateTabOrderNumbering('${escapeHtml(areaIdAttr)}')"
-        class="w-full flex items-center justify-center gap-2 h-8 mt-1 rounded-2xl text-[11px] font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm hover:shadow transition-all">
+        class="w-full flex items-center justify-center gap-dsc-nano h-8 mt-1 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm hover:shadow transition-all">
         <i data-lucide="refresh-cw" class="w-3.5 h-3.5" aria-hidden="true"></i>
         Atualizar
       </button>
@@ -3134,16 +3301,16 @@ function _a11yWorkspaceTabTabulacao(area) {
 // web mostra só o aviso, sem registrar nenhum handler de clique. Sem
 // "Mapeamento Automático" nesta entrega (fora de escopo, ver plano).
 function _a11yWorkspaceTabSwipe(area) {
-  const badgeHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-[9px] font-extrabold uppercase tracking-wide">Em fase de testes</span>`;
+  const badgeHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded-dsc-circ bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-dsc-label-tiny font-extrabold uppercase tracking-wide">Em fase de testes</span>`;
 
   if (!isA11yMobileProject()) {
     return `
       <div class="space-y-2">
-        <div class="flex items-center gap-2">${badgeHtml}</div>
+        <div class="flex items-center gap-dsc-nano">${badgeHtml}</div>
         <div class="flex flex-col items-center justify-center py-8 text-center">
           <i data-lucide="smartphone" class="w-8 h-8 text-slate-200 dark:text-slate-700 mb-2" style="opacity:0.5" aria-hidden="true"></i>
-          <p class="text-[11px] font-semibold text-slate-500 dark:text-dark-muted">Disponível apenas para projetos mobile</p>
-          <p class="text-[10px] text-slate-400 dark:text-dark-muted mt-1 px-6">Trilha de Swipe documenta a navegação por gesto de deslizar, exclusiva do leitor de tela mobile.</p>
+          <p class="text-dsc-label-tiny normal-case tracking-normal font-semibold text-slate-500 dark:text-dark-muted">Disponível apenas para projetos mobile</p>
+          <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted mt-1 px-6">Trilha de Ordem de Leitura documenta a navegação por gesto de deslizar, exclusiva do leitor de tela mobile.</p>
         </div>
       </div>
     `;
@@ -3151,28 +3318,43 @@ function _a11yWorkspaceTabSwipe(area) {
 
   const existingPath = (hacData.a11ySwipePaths || []).find(p => p && p.areaId === area.id) || null;
   const pointCount = existingPath && Array.isArray(existingPath.points) ? existingPath.points.length : 0;
-  const startLabel = existingPath ? 'Refazer trilha de swipe' : 'Iniciar trilha de swipe';
+  const startLabel = existingPath ? 'Refazer trilha de ordem de leitura' : 'Iniciar trilha de ordem de leitura';
   const areaIdAttr = area.id;
   const targetNodeIdAttr = area.targetNodeId || '';
 
   return `
     <div class="space-y-2">
-      <div class="flex items-center gap-2">${badgeHtml}</div>
-      <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">
+      <div class="flex items-center gap-dsc-nano">${badgeHtml}</div>
+      <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-relaxed">
         Marque, em ordem, os pontos que o gesto de deslizar (swipe) percorre nesta tela — segure shift e clique (ou use marquise) para marcar todos de uma vez. O hac desenha uma trilha direcional com setas ligando todos os pontos.
       </p>
       ${existingPath ? `
-      <div class="flex items-center gap-2 px-3 py-2 rounded-xl bg-cyan-50 dark:bg-cyan-900/10 border border-cyan-100 dark:border-cyan-900/30">
+      <div class="flex items-center gap-dsc-nano px-dsc-micro py-dsc-nano rounded-dsc-medium bg-cyan-50 dark:bg-cyan-900/10 border border-cyan-100 dark:border-cyan-900/30">
         <i data-lucide="route" class="w-3.5 h-3.5 text-cyan-700 dark:text-cyan-400 shrink-0" aria-hidden="true"></i>
-        <span class="text-[11px] font-semibold text-cyan-700 dark:text-cyan-400">Trilha de Swipe (${pointCount} ${pointCount === 1 ? 'ponto' : 'pontos'})</span>
+        <span class="text-dsc-label-tiny normal-case tracking-normal font-semibold text-cyan-700 dark:text-cyan-400">Trilha de Ordem de Leitura (${pointCount} ${pointCount === 1 ? 'ponto' : 'pontos'})</span>
       </div>
+      <!-- Lista editável dos pontos já salvos, direto na aba (2026-09-11,
+           paridade pedida pelo usuário com a aba Tabulação — inicialmente
+           tinha ficado só leitura, depois o usuário confirmou que quer
+           arrastar/remover aqui também, igual Tabulação). Reaproveita 100%
+           o mesmo estado/mecânica do modal "Editar pontos"
+           (window._swipePathPendingList, _swipePathPendingDragStart/Drop,
+           deleteSwipePathPendingItem) — populado ao renderizar a aba via
+           _renderSwipePathTabList (swipe-path.js), que por baixo já é
+           openSwipePathEditMode sem abrir modal. Cada mudança (arrastar OU
+           remover) dispara applySwipePathToCanvas() automaticamente — não
+           há botão "Salvar" aqui: como cada ponto não tem selo próprio no
+           canvas (só a trilha inteira tem um grupo), toda edição já
+           implica redesenhar a trilha do zero mesmo, então não faz
+           sentido represar mudanças pendentes sem persistir. -->
+      <ul id="a11y-swipe-path-tab-list" class="flex flex-col gap-1.5 min-h-[10px]"></ul>
       <button type="button" onclick="openSwipePathEditMode('${escapeHtml(areaIdAttr)}', '${escapeHtml(targetNodeIdAttr)}')"
-        class="w-full flex items-center justify-center gap-2 h-8 rounded-2xl text-[11px] font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm hover:shadow transition-all">
-        <i data-lucide="list" class="w-3.5 h-3.5" aria-hidden="true"></i>
-        Editar pontos
+        class="w-full flex items-center justify-center gap-dsc-nano h-8 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm hover:shadow transition-all">
+        <i data-lucide="plus" class="w-3.5 h-3.5" aria-hidden="true"></i>
+        Adicionar ponto
       </button>` : ''}
       <button type="button" onclick="startSwipePathManualMode('${escapeHtml(areaIdAttr)}', '${escapeHtml(targetNodeIdAttr)}')"
-        class="w-full flex items-center justify-center gap-2 h-9 rounded-2xl text-[11px] font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
+        class="w-full flex items-center justify-center gap-dsc-nano h-9 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
         <i data-lucide="route" class="w-3.5 h-3.5" aria-hidden="true"></i>
         ${startLabel}
       </button>
@@ -3190,15 +3372,15 @@ function _a11yWorkspaceTabSwipe(area) {
            conta própria. Sem itens de Tabulação nesta área,
            startSwipePathFromTabOrder cai no fluxo manual normal (mesmo
            startSwipePathManualMode do botão acima) — nunca bloqueia. -->
-      ${A11Y_AUTO_MAPPING_HIDDEN ? '' : `
+      ${A11Y_AUTO_MAPPING_HIDDEN_TAB_SWIPE ? '' : `
       <button type="button" onclick="startSwipePathFromTabOrder('${escapeHtml(areaIdAttr)}', '${escapeHtml(targetNodeIdAttr)}')"
-        class="w-full flex items-center justify-center gap-1.5 h-7 mt-0.5 rounded-lg text-[10.5px] font-bold text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99] transition-all">
+        class="w-full flex items-center justify-center gap-1.5 h-7 mt-0.5 rounded-dsc-small text-dsc-label-tiny normal-case tracking-normal font-bold text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99] transition-all">
         <i data-lucide="sparkles" class="w-3.5 h-3.5" aria-hidden="true"></i>
         ou usar a Ordem de Tabulação já mapeada
       </button>`}
       ${existingPath ? `
       <button type="button" onclick="deleteSwipePathForArea('${escapeHtml(areaIdAttr)}')"
-        class="w-full flex items-center justify-center gap-2 h-8 mt-1 rounded-2xl text-[11px] font-bold border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-all">
+        class="w-full flex items-center justify-center gap-dsc-nano h-8 mt-1 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-all">
         <i data-lucide="trash-2" class="w-3.5 h-3.5" aria-hidden="true"></i>
         Remover trilha
       </button>` : ''}
@@ -3217,7 +3399,21 @@ function _a11yWorkspaceTabSwipe(area) {
 // "Editar" do dashboard da tab Handoff), expande automaticamente o
 // sub-accordion da categoria correspondente.
 function _a11yWorkspaceTabLeitorDeTela(area, areaSpecs) {
-  const uid = `workspace-${area.originalIndex}`;
+  // Bug real corrigido (2026-09-11, comportamento intermitente reportado
+  // pelo usuário — "às vezes as ações não aparecem"): uid usava
+  // area.originalIndex, uma posição de array recalculada a cada render
+  // (renderA11yGroupedList/_renderA11yWorkspaceTab), em vez de area.id
+  // (identidade estável da área). window._a11yExpandedCategoryIds/
+  // _a11ySeenCategoryIds são chaveados por `${uid}-cat-${catKey}` — se a
+  // resposta assíncrona de layer-order-resolved (que dispara um segundo
+  // render para reordenar por camada real) chegasse depois de qualquer
+  // mudança na ordenação relativa de a11yAreas, o originalIndex da MESMA
+  // área mudava entre o primeiro e o segundo render, gerando um uid
+  // diferente — o accordion recém-renderizado nascia com uid novo,
+  // encontrava _a11yExpandedCategoryIds vazio pra essa chave (o registro
+  // antigo ficava órfão) e fechava sozinho, escondendo as ações de cada
+  // item mesmo o usuário tendo acabado de abri-lo. area.id nunca muda.
+  const uid = `workspace-${area.id}`;
   const undocumentedEntries = _collectA11yUndocumentedForArea(area.id);
 
   const focusSpecId = window._a11yWorkspaceFocusSpecId;
@@ -3264,17 +3460,17 @@ function _a11yWorkspaceTabLeitorDeTela(area, areaSpecs) {
   const hasManualSpecs = areaSpecs.length > 0;
   return `
     <div class="space-y-2">
-      <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">Crie, edite ou remova especificações desta área, por categoria.</p>
+      <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-relaxed">Crie, edite ou remova especificações desta tela, por categoria.</p>
       <!-- Botão primário no mesmo padrão visual de "Iniciar Ordem de
            Tabulação"/"Iniciar trilha de swipe" (2026-09-04-x, pedido do
            usuário) — antes era um pill pequeno ao lado do texto
            descritivo, inconsistente com as outras 2 tabs. -->
       <button type="button" onclick="openA11yCategoryPickerModal('${area.id}')"
-        class="w-full flex items-center justify-center gap-2 h-9 rounded-2xl text-[11px] font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
+        class="w-full flex items-center justify-center gap-dsc-nano h-9 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
         <i data-lucide="plus" class="w-3.5 h-3.5" aria-hidden="true"></i>
         Nova spec
       </button>
-      ${A11Y_AUTO_MAPPING_HIDDEN ? '' : (hasManualSpecs ? '' : `
+      ${A11Y_AUTO_MAPPING_HIDDEN_LEITOR ? '' : (hasManualSpecs ? '' : `
       <!-- Mapeamento Automático migrou pra cá (2026-09-04-g, pedido do
            usuário) — deixou de ser uma escolha feita uma única vez no
            momento de Marcar Área (radio "Detecção Automática vs Manual"
@@ -3286,22 +3482,22 @@ function _a11yWorkspaceTabLeitorDeTela(area, areaSpecs) {
            já usado hoje por _resumeA11yBatchWizardForArea pra retomar
            detecção numa área já existente; nenhuma lógica nova de scan. -->
       <button type="button" onclick="_startA11yMappingFromLeitorTab('${escapeHtml(area.id)}')"
-        class="w-full flex items-center justify-center gap-1.5 h-7 mt-0.5 rounded-lg text-[10.5px] font-bold text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99] transition-all">
+        class="w-full flex items-center justify-center gap-1.5 h-7 mt-0.5 rounded-dsc-small text-dsc-label-tiny normal-case tracking-normal font-bold text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99] transition-all">
         <i data-lucide="radar" class="w-3.5 h-3.5" aria-hidden="true"></i>
         ou usar Mapeamento Automático
       </button>`)}
       ${(areaSpecs.length > 0 || undocumentedEntries.length > 0) ? `
-      <div class="flex items-center justify-end gap-1 px-0.5 -mb-0.5">
+      <div class="flex items-center justify-end gap-dsc-quark px-0.5 -mb-0.5">
         <button type="button" onclick="_a11ySetAllSubaccordions(this, true)"
-          class="text-[9.5px] font-bold text-cyan-700 dark:text-cyan-400 hover:underline px-1">Expandir todos</button>
-        <span class="text-[9.5px] text-gray-300 dark:text-dark-line">·</span>
+          class="text-dsc-label-tiny normal-case tracking-normal font-bold text-cyan-700 dark:text-cyan-400 hover:underline px-1">Expandir todos</button>
+        <span class="text-dsc-label-tiny normal-case tracking-normal text-gray-300 dark:text-dark-line">·</span>
         <button type="button" onclick="_a11ySetAllSubaccordions(this, false)"
-          class="text-[9.5px] font-bold text-slate-500 dark:text-dark-muted hover:underline px-1">Recolher todos</button>
+          class="text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-500 dark:text-dark-muted hover:underline px-1">Recolher todos</button>
       </div>` : ''}
       <div class="space-y-2">
         ${areaSpecs.length > 0
           ? categoryHtml
-          : (undocumentedEntries.length === 0 ? `<p class="text-[10px] text-slate-400 dark:text-dark-muted text-center py-3">Nenhuma especificação nesta área ainda. Use o botão "Nova spec" acima.</p>` : '')}
+          : (undocumentedEntries.length === 0 ? `<p class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted text-center py-3">Nenhuma especificação nesta tela ainda. Use o botão "Nova spec" acima.</p>` : '')}
         ${_a11yUndocumentedAccordionEl(`${uid}-undoc`, area.id, undocumentedEntries)}
       </div>
       ${typeof _fichaInsertButtonHtml === 'function' ? _fichaInsertButtonHtml(area, 'leitor') : ''}
@@ -3326,7 +3522,7 @@ function _a11yWorkspaceTabHandoffDashboard(area, areaSpecs) {
   return `
     <div class="space-y-4">
       <div>
-        <p class="text-[11px] text-slate-500 dark:text-dark-muted mb-2">Status do Handoff Completo desta área, reunindo o que já foi inserido de cada etapa.</p>
+        <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted mb-2">Status do Handoff Completo desta tela, reunindo o que já foi inserido de cada etapa.</p>
         <!-- "Gerar handoff completo" (2026-09-09, pedido do usuário) —
              reinsere só as seções pendentes/desatualizadas (nunca as 4
              incondicionalmente, ver _fichaGenerateCompleteHandoff em
@@ -3334,9 +3530,9 @@ function _a11yWorkspaceTabHandoffDashboard(area, areaSpecs) {
              com "sparkles" (já usado em "ou usar Mapeamento Automático"
              nesta mesma workspace, em outro contexto). -->
         <button type="button" onclick="_fichaGenerateCompleteHandoff('${escapeHtml(area.id)}')"
-          class="w-full flex items-center justify-center gap-2 h-9 mb-2 rounded-2xl text-[11px] font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
+          class="w-full flex items-center justify-center gap-dsc-nano h-9 mb-2 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
           <i data-lucide="layers" class="w-3.5 h-3.5" aria-hidden="true"></i>
-          Gerar handoff completo
+          Gerar Handoff
         </button>
         ${typeof _fichaDashboardHtml === 'function' ? _fichaDashboardHtml(area) : ''}
       </div>
@@ -3354,7 +3550,7 @@ function _a11yWorkspaceTabHandoffDashboard(area, areaSpecs) {
 //
 // Correção de corte (2026-09-04-j, achado real reportado pelo usuário):
 // o menu nasce dentro do <li> do card (overflow-hidden, necessário pro
-// rounded-2xl) e a lista inteira também tem overflow-y-auto — um
+// rounded-dsc-large) e a lista inteira também tem overflow-y-auto — um
 // `position: absolute` comum fica cortado por QUALQUER um dos dois
 // ancestrais. `position: fixed` NÃO resolve aqui (diferente do padrão já
 // usado no Handex, `toggleStatusDropdown`): o body do hac roda com
@@ -3436,15 +3632,11 @@ function toggleA11yCardMenu(e, areaId) {
 }
 window.toggleA11yCardMenu = toggleA11yCardMenu;
 
-// Wrapper de exclusão a partir do card — deleteA11yArea espera
-// originalIndex (não areaId), então resolve o índice atual antes de
-// delegar; mesma função usada pelo fluxo de exclusão de dentro da
-// workspace (_deleteA11yAreaFromWorkspace).
+// Wrapper de exclusão a partir do card — deleteA11yArea já aceita areaId
+// diretamente (2026-09-11), não precisa mais resolver índice aqui.
 function deleteA11yAreaFromCard(e, areaId) {
   if (e) e.stopPropagation();
-  const idx = (a11yAreas || []).findIndex(a => a && a.id === areaId);
-  if (idx === -1) return;
-  deleteA11yArea(idx);
+  deleteA11yArea(areaId);
 }
 window.deleteA11yAreaFromCard = deleteA11yAreaFromCard;
 
@@ -3478,22 +3670,22 @@ function openA11yConectorPicker(e, areaId) {
 
   const picker = document.createElement('div');
   picker.id = 'a11y-conector-picker';
-  picker.className = 'py-2 px-2 bg-white dark:bg-dark-surface rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line';
+  picker.className = 'py-dsc-nano px-2 bg-white dark:bg-dark-surface rounded-dsc-large shadow-2xl border border-gray-100 dark:border-dark-line';
   picker.innerHTML = `
-    <p class="text-[9.5px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wider px-1.5 pb-1.5">Direção do selo</p>
-    <div class="grid grid-cols-5 gap-1">
+    <p class="text-dsc-label-tiny font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wider px-1.5 pb-1.5">Direção do selo</p>
+    <div class="grid grid-cols-5 gap-dsc-quark">
       ${A11Y_CONECTOR_OPTIONS.map(opt => `
         <button type="button" onclick="_confirmA11yConectorChange('${escapeHtml(areaId)}', '${opt.value}')"
-          class="flex flex-col items-center gap-1 p-1.5 rounded-xl transition-all ${opt.value === current ? 'bg-blue-50 dark:bg-blue-900/30 border border-[#0070af]' : 'border border-transparent hover:bg-gray-50 dark:hover:bg-dark-line'}">
+          class="flex flex-col items-center gap-dsc-quark px-0.5 py-1.5 rounded-dsc-medium transition-all ${opt.value === current ? 'bg-blue-50 dark:bg-blue-900/30 border border-[#0070af]' : 'border border-transparent hover:bg-gray-50 dark:hover:bg-dark-line'}">
           <i data-lucide="${opt.icon}" class="w-3.5 h-3.5 ${opt.value === current ? 'text-[#0070af]' : 'text-slate-500 dark:text-dark-muted'}" aria-hidden="true"></i>
-          <span class="text-[8px] font-bold ${opt.value === current ? 'text-[#0070af]' : 'text-slate-500 dark:text-dark-muted'}">${opt.label}</span>
+          <span class="text-dsc-label-tiny normal-case tracking-normal font-bold whitespace-nowrap ${opt.value === current ? 'text-[#0070af]' : 'text-slate-500 dark:text-dark-muted'}">${opt.label}</span>
         </button>
       `).join('')}
     </div>
   `;
   document.body.appendChild(picker);
   if (triggerRect) {
-    const pickerWidth = 230;
+    const pickerWidth = 260;
     const left = Math.max(8, triggerRect.right - pickerWidth);
     // Sem animação (2026-09-04-o, pedido do usuário) — mesmo revert de
     // toggleA11yCardMenu, aparecimento simples e instantâneo no clique.
@@ -3590,7 +3782,9 @@ function _a11yComputeCategoryBreakdown(areaSpecs) {
 window._a11yComputeCategoryBreakdown = _a11yComputeCategoryBreakdown;
 
 function _a11yAreaAccordionEl(area, areaSpecs) {
-  const uid = `a11y-area-${area.originalIndex}`;
+  // uid usa area.id (não area.originalIndex, 2026-09-11) — mesma correção
+  // de estabilidade de chave aplicada em _a11yWorkspaceTabLeitorDeTela.
+  const uid = `a11y-area-${area.id}`;
   const tabOrderCount = _currentTabOrderItems(area.id).length;
   const isMobile = isA11yMobileProject();
   // Indicador "Swipe" reflete a CONTAGEM DE PONTOS da trilha desta área
@@ -3599,7 +3793,7 @@ function _a11yAreaAccordionEl(area, areaSpecs) {
   const swipePointCount = swipePath && Array.isArray(swipePath.points) ? swipePath.points.length : 0;
 
   const statusPill = (icon, label, ok) => `
-    <span class="inline-flex items-center gap-1 text-[9.5px] font-semibold" style="color:${ok ? '#16a34a' : '#94a3b8'}">
+    <span class="inline-flex items-center gap-dsc-quark text-dsc-label-tiny normal-case tracking-normal font-semibold" style="color:${ok ? '#16a34a' : '#94a3b8'}">
       <i data-lucide="${icon}" class="w-3 h-3 shrink-0"></i>${label}
     </span>
   `;
@@ -3607,37 +3801,41 @@ function _a11yAreaAccordionEl(area, areaSpecs) {
   const categoryBreakdownData = _a11yComputeCategoryBreakdown(areaSpecs);
   const categoryBreakdown = categoryBreakdownData
     .map(({ meta, count }) => `
-      <span class="inline-flex items-center gap-1 h-5 px-2 rounded-full text-[9px] font-bold" style="background-color:${meta.fill};color:${meta.color}">
+      <span class="inline-flex items-center gap-dsc-quark h-5 px-2 rounded-dsc-circ text-dsc-label-tiny normal-case tracking-normal font-bold" style="background-color:${meta.fill};color:${meta.color}">
         ${count} ${escapeHtml(meta.label)}
       </span>
     `).join('');
 
   const fichaState = area.handoffFicha && area.handoffFicha.sections ? area.handoffFicha.sections : null;
-  const fichaSectionKeys = isMobile ? ['tabulacao', 'swipe', 'leitor', 'review'] : ['tabulacao', 'leitor', 'review'];
+  // Havia uma 4ª chave ('review', Handoff Review/consolidado) — removida em
+  // 2026-09-10, funcionalidade descontinuada (ver _buildFichaReviewSection,
+  // code.js). "X/N seções inseridas" abaixo se ajusta sozinho (N vem do
+  // length deste array).
+  const fichaSectionKeys = isMobile ? ['tabulacao', 'swipe', 'leitor'] : ['tabulacao', 'leitor'];
   const fichaInsertedCount = fichaState ? fichaSectionKeys.filter(k => fichaState[k] && fichaState[k].insertedAt).length : 0;
 
   const li = document.createElement('li');
-  li.className = 'list-none bg-white dark:bg-dark-surface rounded-2xl border border-gray-100 dark:border-dark-line overflow-hidden';
+  li.className = 'list-none bg-white dark:bg-dark-surface rounded-dsc-large border border-gray-100 dark:border-dark-line shadow-dsc-elevation-1 overflow-hidden';
   li.setAttribute('data-a11y-area', area.id);
   li.setAttribute('data-a11y-area-search', escapeHtml(_normalizeSearchText(area.label)));
   li.innerHTML = `
     <div class="flex flex-col gap-2.5 px-3.5 py-3 cursor-pointer select-none hover:bg-gray-50 dark:hover:bg-dark-line/20 transition-colors"
       onclick="openA11yAreaWorkspace('${area.id}')" id="${uid}">
       <div class="flex items-center gap-2.5">
-        <div class="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-extrabold text-white shrink-0" style="background-color:#0070AF">${escapeHtml(String(area.number))}</div>
+        <div class="w-7 h-7 rounded-dsc-circ flex items-center justify-center text-dsc-label-tiny normal-case tracking-normal font-extrabold text-white shrink-0" style="background-color:#0070AF">${escapeHtml(String(area.number))}</div>
         <div class="flex-1 min-w-0">
           <p class="text-[12px] font-semibold text-slate-700 dark:text-white break-words leading-snug">${escapeHtml(area.label || '')}</p>
-          <p class="text-[9.5px] text-slate-400 dark:text-dark-muted">${areaSpecs.length} especificaç${areaSpecs.length === 1 ? 'ão' : 'ões'}</p>
+          <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted">${areaSpecs.length} especificaç${areaSpecs.length === 1 ? 'ão' : 'ões'}</p>
         </div>
         <div class="relative shrink-0" onclick="event.stopPropagation()">
-          <button type="button" title="Mais ações" aria-label="Mais ações desta área" aria-haspopup="true"
+          <button type="button" title="Mais ações" aria-label="Mais ações desta tela" aria-haspopup="true"
             onclick="toggleA11yCardMenu(event, '${escapeHtml(area.id)}')"
-            class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-dark-line text-slate-400 dark:text-dark-muted transition-colors">
+            class="w-7 h-7 flex items-center justify-center rounded-dsc-small hover:bg-gray-100 dark:hover:bg-dark-line text-slate-400 dark:text-dark-muted transition-colors">
             <i data-lucide="ellipsis-vertical" class="w-4 h-4" aria-hidden="true"></i>
           </button>
-          <div id="a11y-card-menu-${escapeHtml(area.id)}" class="hidden absolute right-0 top-full mt-1 w-48 py-1.5 bg-white dark:bg-dark-surface rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line z-50">
+          <div id="a11y-card-menu-${escapeHtml(area.id)}" class="hidden absolute right-0 top-full mt-1 w-48 py-1.5 bg-white dark:bg-dark-surface rounded-dsc-large shadow-2xl border border-gray-100 dark:border-dark-line z-50">
             <button type="button" onclick="focusNode('${escapeHtml(area.id)}')"
-              class="w-full flex items-center gap-2.5 px-3.5 py-2 text-[11.5px] font-semibold text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-dark-line transition-colors text-left">
+              class="w-full flex items-center gap-2.5 px-3.5 py-dsc-nano text-dsc-label-tiny normal-case tracking-normal font-semibold text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-dark-line transition-colors text-left">
               <i data-lucide="locate" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted shrink-0" aria-hidden="true"></i>
               Focar no canvas
             </button>
@@ -3646,35 +3844,35 @@ function _a11yAreaAccordionEl(area, areaSpecs) {
                  mudar direto, pra não trocar por engano a direção do selo
                  sem uma escolha explícita. -->
             <button type="button" onclick="openA11yConectorPicker(event, '${escapeHtml(area.id)}')"
-              class="w-full flex items-center gap-2.5 px-3.5 py-2 text-[11.5px] font-semibold text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-dark-line transition-colors text-left">
+              class="w-full flex items-center gap-2.5 px-3.5 py-dsc-nano text-dsc-label-tiny normal-case tracking-normal font-semibold text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-dark-line transition-colors text-left">
               <i data-lucide="move" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted shrink-0" aria-hidden="true"></i>
               Editar conector
             </button>
             <button type="button" onclick="toggleAreaGroupVisibility('${escapeHtml(area.id)}')"
-              class="w-full flex items-center gap-2.5 px-3.5 py-2 text-[11.5px] font-semibold text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-dark-line transition-colors text-left">
+              class="w-full flex items-center gap-2.5 px-3.5 py-dsc-nano text-dsc-label-tiny normal-case tracking-normal font-semibold text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-dark-line transition-colors text-left">
               <i data-lucide="eye-off" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted shrink-0" aria-hidden="true"></i>
               Ocultar/Mostrar no canvas
             </button>
             <button type="button" onclick="deleteA11yAreaFromCard(event, '${escapeHtml(area.id)}')"
-              class="w-full flex items-center gap-2.5 px-3.5 py-2 text-[11.5px] font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors text-left">
+              class="w-full flex items-center gap-2.5 px-3.5 py-dsc-nano text-dsc-label-tiny normal-case tracking-normal font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors text-left">
               <i data-lucide="trash-2" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i>
-              Remover área
+              Remover tela
             </button>
           </div>
         </div>
       </div>
 
-      <div class="flex items-center gap-3 flex-wrap pl-[38px]">
+      <div class="flex flex-col items-start gap-dsc-quark pl-[38px]">
         ${statusPill(tabOrderCount > 0 ? 'check-circle-2' : 'circle-dashed', tabOrderCount > 0 ? `Tabulação (${tabOrderCount})` : 'Tabulação pendente', tabOrderCount > 0)}
-        ${isMobile ? statusPill(swipePointCount > 0 ? 'check-circle-2' : 'circle-dashed', swipePointCount > 0 ? `Swipe (${swipePointCount} pontos)` : 'Swipe sem trilha', swipePointCount > 0) : ''}
+        ${isMobile ? statusPill(swipePointCount > 0 ? 'check-circle-2' : 'circle-dashed', swipePointCount > 0 ? `Ordem de Leitura (${swipePointCount} pontos)` : 'Ordem de Leitura pendente', swipePointCount > 0) : ''}
         ${statusPill(areaSpecs.length > 0 ? 'check-circle-2' : 'circle-dashed', areaSpecs.length > 0 ? `Leitor de Tela (${areaSpecs.length})` : 'Leitor de Tela pendente', areaSpecs.length > 0)}
       </div>
 
-      ${categoryBreakdown ? `<div class="flex items-center gap-1 flex-wrap pl-[38px]">${categoryBreakdown}</div>` : ''}
+      ${categoryBreakdown ? `<div class="flex items-center gap-dsc-quark flex-wrap pl-[38px]">${categoryBreakdown}</div>` : ''}
 
       <div class="flex items-center gap-1.5 pl-[38px]">
         <i data-lucide="file-output" class="w-3 h-3 shrink-0" style="color:${fichaInsertedCount > 0 ? '#0891B2' : '#94a3b8'}"></i>
-        <span class="text-[9.5px] font-semibold" style="color:${fichaInsertedCount > 0 ? '#0891B2' : '#94a3b8'}">
+        <span class="text-dsc-label-tiny normal-case tracking-normal font-semibold" style="color:${fichaInsertedCount > 0 ? '#0891B2' : '#94a3b8'}">
           Handoff Completo: ${fichaInsertedCount}/${fichaSectionKeys.length} seções inseridas
         </span>
       </div>
@@ -3692,20 +3890,20 @@ function _a11yAreaAccordionEl(area, areaSpecs) {
 function _a11ySemAreaAccordionEl(specs, tabItemsCount) {
   const uid = 'a11y-area-sem';
   const li = document.createElement('li');
-  li.className = 'list-none bg-white dark:bg-dark-surface rounded-xl border border-amber-200 dark:border-amber-800/40 overflow-hidden';
+  li.className = 'list-none bg-white dark:bg-dark-surface rounded-dsc-medium border border-amber-200 dark:border-amber-800/40 overflow-hidden';
   li.setAttribute('data-a11y-area', '__sem_area__');
   li.setAttribute('data-a11y-area-search', 'sem area');
   const parts = [`${specs.length} especificaç${specs.length === 1 ? 'ão' : 'ões'}`];
   if (tabItemsCount > 0) parts.push(`${tabItemsCount} ${tabItemsCount === 1 ? 'item' : 'itens'} de ordem de tabulação`);
   li.innerHTML = `
-    <div class="flex items-center gap-2 px-2.5 py-2 cursor-pointer select-none hover:bg-amber-50/50 dark:hover:bg-amber-900/10 transition-colors"
+    <div class="flex items-center gap-dsc-nano px-2.5 py-dsc-nano cursor-pointer select-none hover:bg-amber-50/50 dark:hover:bg-amber-900/10 transition-colors"
       onclick="toggleA11yAreaAccordion('${uid}')">
-      <div class="w-6 h-6 rounded-full flex items-center justify-center bg-amber-50 dark:bg-amber-900/30 text-amber-500 shrink-0">
+      <div class="w-6 h-6 rounded-dsc-circ flex items-center justify-center bg-amber-50 dark:bg-amber-900/30 text-amber-500 shrink-0">
         <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
       </div>
       <div class="flex-1 min-w-0">
-        <p class="text-[11px] font-semibold text-slate-700 dark:text-white truncate">Sem área</p>
-        <p class="text-[9px] text-slate-400 dark:text-dark-muted">${parts.join(' · ')} sem área associada</p>
+        <p class="text-dsc-label-tiny normal-case tracking-normal font-semibold text-slate-700 dark:text-white truncate">Sem tela</p>
+        <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted">${parts.join(' · ')} sem tela associada</p>
       </div>
       <i data-lucide="chevron-down" id="chevron-${uid}" class="w-4 h-4 text-gray-400 transition-transform shrink-0"></i>
     </div>
@@ -3784,19 +3982,38 @@ function renderA11yGroupedList() {
   // plugin, não persiste entre sessões.
   if (areas.length === 0 && !window._a11yEmptyAreasHintShown) {
     window._a11yEmptyAreasHintShown = true;
-    showToast('As especificações de acessibilidade nascem dentro de uma área marcada.');
+    showToast('As especificações de acessibilidade nascem dentro de uma tela selecionada.');
   }
 
-  // Marcar Área é pré-requisito: sem nenhuma área, nem mostramos a lista —
-  // orienta a marcar a primeira antes de anotar qualquer spec.
+  // Selecionar Tela é pré-requisito: sem nenhuma tela, nem mostramos a
+  // lista — orienta a selecionar a primeira antes de anotar qualquer spec.
+  // O botão grande some do header (fab-inline) e reaparece centralizado
+  // aqui, em destaque; quando já há tela(s) documentada(s), o header volta
+  // a ser o único lugar onde ele aparece (ver toggle logo abaixo).
+  const headerSelectScreenBtn = document.getElementById('btn-a11y-select-screen-header');
+  if (headerSelectScreenBtn) headerSelectScreenBtn.classList.toggle('hidden', areas.length === 0);
+
+  // Contagem ao lado de "Telas Documentadas" — só aparece quando há
+  // telas (2026-09-10, pedido do usuário: retirar o texto explicativo
+  // fixo abaixo do título, mostrar só o título + contagem quando houver
+  // conteúdo).
+  const areasCountHeader = document.getElementById('a11y-areas-count-header');
+  const areasCountValue = document.getElementById('a11y-areas-count-value');
+  if (areasCountHeader) areasCountHeader.classList.toggle('hidden', areas.length === 0);
+  if (areasCountValue) areasCountValue.textContent = String(areas.length);
+
   if (areas.length === 0) {
     list.innerHTML = `
       <li class="flex flex-col items-center justify-center py-12 animate-in fade-in duration-500 list-none">
         <div class="relative mb-4">
-          <i data-lucide="map-pin" class="w-16 h-16 text-slate-200 dark:text-slate-700" style="opacity:0.25"></i>
+          <i data-lucide="scan" class="w-16 h-16 text-slate-200 dark:text-slate-700" style="opacity:0.25"></i>
         </div>
-        <p class="text-[12px] font-bold text-slate-500 dark:text-dark-muted text-center px-4 mb-1">Nenhuma área marcada ainda</p>
-        <p class="text-[10px] text-slate-400 dark:text-dark-muted text-center px-6">Toque em <button type="button" onclick="openA11yAreaModal()" class="font-bold underline text-[#0070af] dark:text-cyan-400 hover:text-[#005a8c] dark:hover:text-cyan-300">"Marcar Área"</button> para identificar a primeira seção da tela — as especificações de acessibilidade nascem dentro de uma área.</p>
+        <p class="text-[13px] font-bold text-slate-600 dark:text-white text-center px-4 mb-1">Nenhuma tela selecionada ainda</p>
+        <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted text-center px-6 mb-4 max-w-[260px] leading-relaxed">Selecione um frame para começar a documentar — as primeiras especificações de acessibilidade nascem dentro de uma tela selecionada.</p>
+        <button type="button" onclick="openA11yAreaModal()" class="flex items-center gap-dsc-nano h-11 px-6 rounded-dsc-large text-[13px] font-bold text-white bg-[#0891B2] hover:bg-cyan-700 active:scale-[0.99] shadow-lg shadow-cyan-500/20 transition-all">
+          <i data-lucide="scan" class="w-4 h-4 shrink-0" aria-hidden="true"></i>
+          Selecionar Tela
+        </button>
       </li>
     `;
     _refreshIcons();
@@ -4048,17 +4265,33 @@ window._refreshUiForProjectOrigin = _refreshUiForProjectOrigin;
 // existente).
 // Bug real corrigido (2026-09-09): antes, escolher a lib aqui abria um
 // modal de onboarding automaticamente ("Camada 2", 3 passos específicos
-// da lib) — conteúdo DIFERENTE do que o banner "Primeira vez aqui?"/o
-// ícone de chapéu mostravam depois (7 passos genéricos), fazendo o
-// designer ver dois onboardings distintos pro mesmo momento. Não abre
-// mais modal nenhum aqui — só navega; maybeShowOnboardingBanner (chamada
-// dentro de navigate(), core.js) já mostra o banner da jornada certa
-// (web/mobile, resolvida pela origem que setA11yProjectLib acabou de
-// gravar) se ainda não tiver sido vista. Banner e chapéu agora sempre
-// abrem a MESMA fonte (ver openOnboardingForCurrentOrigin, onboarding.js).
+// da lib, com pouco conteúdo real) — DIFERENTE do onboarding completo que
+// o banner "Primeira vez aqui?"/o ícone de chapéu mostravam (7 passos
+// genéricos), fazendo o designer ver dois onboardings distintos pro mesmo
+// momento. Aquele onboarding curto foi removido.
+// Reintroduzido (2026-09-10, pedido do usuário) usando o onboarding
+// COMPLETO (o mesmo que banner/chapéu já abrem, sem duplicação de
+// conteúdo agora): ao escolher a lib, abre automaticamente o onboarding
+// certo pra essa origem — só na primeira vez por lib/arquivo (mesmo
+// critério "visto" de sempre, _onboardingSeen). O banner "Primeira vez
+// aqui?" foi removido do HTML (ficaria redundante com a abertura
+// automática) — ver onboarding.js/specifications.html/core.js.
 function chooseA11yHomeOrigin(lib) {
   setA11yProjectLib(lib, { silent: true });
   navigate('view-specifications');
+  if (typeof openOnboardingForCurrentOrigin === 'function') {
+    openOnboardingForCurrentOrigin({ markSeenOnOpen: true, onlyIfUnseen: true });
+  }
+  // Checagem de handoff de outro designer/próprio (2026-09-11, movida de
+  // ensureA11yProjectOriginThen — ver comentário lá: aquele bloco só
+  // rodava na primeira confirmação de origem do arquivo, o que quase nunca
+  // acontece na prática, já que a lib é escolhida aqui na Home antes de
+  // qualquer ação em view-specifications). Disparada logo após escolher a
+  // lib — mesmo instante em que o designer entra na tela de trabalho,
+  // então o alerta (se houver) já aparece pronto ao carregar a tela, sem
+  // esperar nenhuma ação subsequente do usuário.
+  parent.postMessage({ pluginMessage: { type: 'check-other-designers-sections', currentUserId: getA11yDesignerId() } }, '*');
+  parent.postMessage({ pluginMessage: { type: 'check-my-prior-session', currentUserId: getA11yDesignerId() } }, '*');
 }
 window.chooseA11yHomeOrigin = chooseA11yHomeOrigin;
 
@@ -4205,13 +4438,13 @@ function ensureA11yProjectOriginThen(onReady) {
   }
   window._a11yPendingOriginCallback = (origin) => {
     setA11yProjectOrigin(origin, { silent: true });
-    // Checagem de handoff de outro designer (2026-09-10) — disparada só
-    // aqui, na PRIMEIRA confirmação de origem do arquivo (nunca no
-    // ui-ready): é o primeiro momento em que o designer efetivamente
-    // começou a trabalhar nesta sessão. Resposta tratada em messages.js
-    // (other-designers-sections-checked) — abre um modal informativo só se
-    // encontrar algo; nunca bloqueia onReady, que já roda em seguida.
-    parent.postMessage({ pluginMessage: { type: 'check-other-designers-sections', currentUserId: getA11yDesignerId() } }, '*');
+    // Checagem de handoff de outro designer/próprio (2026-09-10) — MOVIDA
+    // para chooseA11yHomeOrigin (2026-09-11, bug real corrigido: este bloco
+    // só roda na PRIMEIRA confirmação de origem do arquivo, o que quase
+    // nunca acontece na prática, já que a origem é escolhida na Home antes
+    // de qualquer ação em view-specifications — o early-return logo no
+    // topo desta função, quando a origem já é conhecida, pulava direto pro
+    // onReady sem nunca disparar as checagens). Ver chooseA11yHomeOrigin.
     onReady(origin);
   };
   const originTitle = document.getElementById('a11y-post-area-title');
@@ -4280,13 +4513,65 @@ function openA11yOtherDesignerModal(sections) {
   }
 
   body.innerHTML = `
-    <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed">${message}</p>
-    <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed">Seu trabalho fica isolado numa Section própria — nada do que você fizer sobrescreve o handoff já existente. Combine com a equipe se o objetivo é complementar a mesma documentação.</p>
+    <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed">${message}</p>
+    <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed">Seu trabalho fica isolado numa Section própria — nada do que você fizer sobrescreve o handoff já existente. Combine com a equipe se o objetivo é complementar a mesma documentação.</p>
   `;
   openModal('a11y-other-designer-modal');
   if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
 }
 window.openA11yOtherDesignerModal = openA11yOtherDesignerModal;
+
+// Alerta "handoff próprio já iniciado" (2026-09-10, texto revisado em
+// 2026-09-11) — populado a partir da resposta de check-my-prior-session
+// (messages.js), disparada no mesmo momento que
+// check-other-designers-sections (ver ensureA11yProjectOriginThen acima).
+// Diferente do modal de outro designer: aqui é o PRÓPRIO designer reabrindo
+// o arquivo (ou trocando de máquina/sessão) e encontrando telas que ele
+// mesmo já documentou. `priorSession` é { name, ownerId, version, areaCount,
+// timestamp, designerName, sectionId } vindo do backend
+// (_findOwnPriorSessionSection, code.js — timestamp/designerName extraídos
+// do nome da Section com o mesmo split usado aqui por extractDesignerName).
+// Pra N, preferimos a11yAreas (já carregado nesse ponto do fluxo, é a mesma
+// fonte que a lista de telas documentadas exibe) e só caímos pra
+// priorSession.areaCount — uma contagem aproximada feita no canvas — se
+// a11yAreas ainda não estiver populado.
+// 2026-09-11: removida a frase "Continue de onde parou" — promessa falsa,
+// não existe hoje nenhum mecanismo de retomada/reidratação real a partir do
+// canvas (decisão explícita do usuário, ver docs/tecnico.html). No lugar,
+// ganhou um botão "Ver no canvas" — a única ação de retomada honesta que
+// existe: focar a Section no Figma (focusNode, já usado no resto do
+// projeto), não reconstruir nenhum dado.
+function renderA11yPriorSessionAlert(priorSession) {
+  const el = document.getElementById('a11y-prior-session-alert');
+  if (!el || !priorSession) return;
+
+  const areaCount = (Array.isArray(a11yAreas) && a11yAreas.length > 0)
+    ? a11yAreas.length
+    : (priorSession.areaCount || 0);
+  const version = priorSession.version || '1.0';
+  const timestamp = priorSession.timestamp || null;
+  const designerName = priorSession.designerName || null;
+  const sectionId = priorSession.sectionId || null;
+
+  const whenBy = timestamp && designerName
+    ? `Handoff iniciado em ${timestamp} por ${designerName}`
+    : 'Handoff já iniciado neste arquivo';
+
+  el.innerHTML = `
+    <i data-lucide="history" class="w-4 h-4 text-[#0891B2] dark:text-cyan-300 shrink-0 mt-0.5" aria-hidden="true"></i>
+    <div class="flex-1 min-w-0">
+      <p class="text-dsc-label-tiny normal-case tracking-normal font-bold text-[#0891B2] dark:text-cyan-300">${whenBy}</p>
+      <p class="text-dsc-label-tiny normal-case tracking-normal text-[#0891B2]/80 dark:text-cyan-300/80 leading-relaxed mt-0.5">${areaCount} tela${areaCount === 1 ? '' : 's'}, versão ${version}.</p>
+      ${sectionId ? `<button type="button" onclick="focusNode('${sectionId}')" class="mt-1 text-dsc-label-tiny normal-case tracking-normal font-bold text-[#0891B2] dark:text-cyan-300 underline hover:no-underline">Ver no canvas</button>` : ''}
+    </div>
+    <button type="button" onclick="this.closest('#a11y-prior-session-alert').classList.add('hidden')" title="Dispensar" aria-label="Dispensar" class="p-1 text-[#0891B2]/60 hover:text-[#0891B2] dark:text-cyan-300/60 dark:hover:text-cyan-300 transition-colors shrink-0">
+      <i data-lucide="x" class="w-3.5 h-3.5" aria-hidden="true"></i>
+    </button>
+  `;
+  el.classList.remove('hidden');
+  if (typeof _refreshIcons === 'function') _refreshIcons();
+}
+window.renderA11yPriorSessionAlert = renderA11yPriorSessionAlert;
 
 // ── Detecção Automática pós-Marcar-Área ─────────────────────────────────
 // A detecção nasce escopada ao elemento que ACABOU de virar Área
@@ -4307,7 +4592,7 @@ window.openA11yOtherDesignerModal = openA11yOtherDesignerModal;
 function _startA11yMappingFromLeitorTab(areaId) {
   const area = _findA11yAreaById(areaId);
   if (!area) {
-    showToast('Não foi possível localizar a área.');
+    showToast('Não foi possível localizar a tela.');
     return;
   }
   openA11yPostAreaDetectModal(area);
@@ -4509,6 +4794,10 @@ function _resolveA11yFormPresetFromItem(item, kind) {
   // round-trip a mais pro backend. Alimenta o campo read-only "Camada no
   // canvas" do formulário (ver openA11yModal/prefillA11yComponentName).
   const targetNodeName = item.name || null;
+  // Nome do pai imediato (2026-09-11) — sempre propagado pro formulário
+  // quando o scan já resolveu (ver code.js:_a11yScanArea), independente
+  // de categoria/match — mesmo raciocínio de targetNodeName acima.
+  const immediateParentName = item.immediateParentName || null;
 
   if (kind === 'tokenReview') {
     // needsA11yTokenReview nunca tem dscComponentMatch — é só um texto sem
@@ -4516,7 +4805,7 @@ function _resolveA11yFormPresetFromItem(item, kind) {
     // Adicionais" é a categoria mais plausível pra um texto solto sem
     // função de título/componente clara — o designer troca de categoria
     // manualmente se o texto for na verdade outra coisa.
-    return { category: 'informacoes', options: { pendingTargetNodeId: item.nodeId, targetNodeName } };
+    return { category: 'informacoes', options: { pendingTargetNodeId: item.nodeId, targetNodeName, immediateParentName } };
   }
 
   const match = item.dscComponentMatch;
@@ -4545,19 +4834,19 @@ function _resolveA11yFormPresetFromItem(item, kind) {
     // presetComponente é inválido/ausente, e o campo de texto livre
     // "Componente" fica vazio pro designer preencher) — o designer
     // confirma manualmente, igual seria digitando do zero.
-    return { category: 'elemento', options: { pendingTargetNodeId: item.nodeId, a11yOrigin, dscComponentName, targetNodeName } };
+    return { category: 'elemento', options: { pendingTargetNodeId: item.nodeId, a11yOrigin, dscComponentName, targetNodeName, immediateParentName } };
   }
   if (category === 'titulo') {
-    return { category: 'titulo', options: { pendingTargetNodeId: item.nodeId, presetTituloNivel: match.suggestedLevel, a11yOrigin, dscComponentName, targetNodeName } };
+    return { category: 'titulo', options: { pendingTargetNodeId: item.nodeId, presetTituloNivel: match.suggestedLevel, a11yOrigin, dscComponentName, targetNodeName, immediateParentName } };
   }
   if (category === 'decorativo') {
-    return { category: 'decorativo', options: { pendingTargetNodeId: item.nodeId, a11yOrigin, dscComponentName, targetNodeName } };
+    return { category: 'decorativo', options: { pendingTargetNodeId: item.nodeId, a11yOrigin, dscComponentName, targetNodeName, immediateParentName } };
   }
   if (category === 'estrutura') {
     const tipo = _inferA11yEstruturaTipoFromContainingFrame(match.containingFrame);
-    return { category: 'estrutura', options: { pendingTargetNodeId: item.nodeId, presetEstruturaTipo: tipo, a11yOrigin, dscComponentName, targetNodeName } };
+    return { category: 'estrutura', options: { pendingTargetNodeId: item.nodeId, presetEstruturaTipo: tipo, a11yOrigin, dscComponentName, targetNodeName, immediateParentName } };
   }
-  return { category: 'elemento', options: { pendingTargetNodeId: item.nodeId, presetComponente: shortName, a11yOrigin, dscComponentName, targetNodeName } };
+  return { category: 'elemento', options: { pendingTargetNodeId: item.nodeId, presetComponente: shortName, a11yOrigin, dscComponentName, targetNodeName, immediateParentName } };
 }
 window._resolveA11yFormPresetFromItem = _resolveA11yFormPresetFromItem;
 
@@ -4632,7 +4921,7 @@ function handleA11yPostAreaDetectionResult(detections, tokenReviewCandidates) {
       rescanBtn.disabled = false;
       rescanBtn.classList.remove('animate-spin');
     }
-    showToast('Área reescaneada.');
+    showToast('Tela reescaneada.');
   }
 
   window._a11yLooseDetections = detections;
@@ -4686,7 +4975,7 @@ function handleA11yPostAreaDetectionResult(detections, tokenReviewCandidates) {
     // dados do scan anterior), fecha também o resumo — sem isso ele ficaria
     // visível mostrando um resultado que não existe mais.
     closeModal('a11y-batch-summary-modal');
-    showToast('Nenhum componente do DSC reconhecido nessa área — anote manualmente.');
+    showToast('Nenhum componente do DSC reconhecido nessa tela — anote manualmente.');
     return;
   }
 
@@ -4765,7 +5054,7 @@ function _currentA11yDetectionsSource() {
 function rescanA11yBatchArea() {
   const pending = window._a11yPendingDetectionArea;
   if (!pending || !pending.targetNodeId) {
-    showToast('Não foi possível identificar a área para reescanear — marque novamente.');
+    showToast('Não foi possível identificar a tela para reescanear — selecione novamente.');
     return;
   }
   const btn = document.getElementById('btn-a11y-batch-rescan');
@@ -4821,7 +5110,7 @@ function openA11yBatchSummaryModal() {
 
   const areas = _allA11yAreas();
   if (detections.length > 0 && areas.length === 0) {
-    showToast('Marque uma área da tela antes de gerar o handoff automatizado.');
+    showToast('Selecione uma tela antes de gerar o handoff automatizado.');
     return;
   }
 
@@ -4880,9 +5169,9 @@ function openA11yBatchSummaryModal() {
         : g.shortName === 'estrutura' ? `Estrutura da Página (${_cleanDscContainingFrameName(g.containingFrame)})`
         : (A11Y_COMPONENTE_LABELS[g.shortName] || _capitalizeFirst(g.shortName));
       return `
-        <div class="flex items-center gap-2 px-3 py-2 rounded-xl border bg-gray-50 dark:bg-dark-bg border-gray-100 dark:border-dark-line">
-          <div class="w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[10px] font-extrabold bg-[#FFF6DC] text-[#FCBE05]">${g.count}</div>
-          <p class="flex-1 text-[11px] font-semibold text-slate-700 dark:text-white">${escapeHtml(label)}</p>
+        <div class="flex items-center gap-dsc-nano px-dsc-micro py-dsc-nano rounded-dsc-medium border bg-gray-50 dark:bg-dark-bg border-gray-100 dark:border-dark-line">
+          <div class="w-6 h-6 rounded-dsc-circ flex items-center justify-center shrink-0 text-dsc-label-tiny normal-case tracking-normal font-extrabold bg-[#FFF6DC] text-[#FCBE05]">${g.count}</div>
+          <p class="flex-1 text-dsc-label-tiny normal-case tracking-normal font-semibold text-slate-700 dark:text-white">${escapeHtml(label)}</p>
         </div>
       `;
     }).join('');
@@ -4956,11 +5245,11 @@ function openA11yBatchSummaryModal() {
       if (tokenReviewToggleBtn) tokenReviewToggleBtn.setAttribute('aria-expanded', 'false');
       if (tokenReviewChevron) tokenReviewChevron.style.transform = 'rotate(0deg)';
       tokenReviewList.innerHTML = tokenReviewCandidates.map(item => `
-        <div class="flex items-center gap-2 px-3 py-2 rounded-xl border bg-amber-50/60 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/40">
+        <div class="flex items-center gap-dsc-nano px-dsc-micro py-dsc-nano rounded-dsc-medium border bg-amber-50/60 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/40">
           <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-amber-500 shrink-0" aria-hidden="true"></i>
-          <p class="flex-1 text-[11px] font-semibold text-slate-700 dark:text-white truncate" title="${escapeHtml(item.layerName || item.name || 'Elemento')}">${escapeHtml(item.layerName || item.name || 'Elemento')}</p>
+          <p class="flex-1 text-dsc-label-tiny normal-case tracking-normal font-semibold text-slate-700 dark:text-white truncate" title="${escapeHtml(item.layerName || item.name || 'Elemento')}">${escapeHtml(item.layerName || item.name || 'Elemento')}</p>
           <button type="button" onclick="focusNode('${item.nodeId}')" title="Focar no canvas" aria-label="Focar no canvas"
-            class="shrink-0 w-6 h-6 flex items-center justify-center rounded-lg text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors">
+            class="shrink-0 w-6 h-6 flex items-center justify-center rounded-dsc-small text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors">
             <i data-lucide="crosshair" class="w-3.5 h-3.5" aria-hidden="true"></i>
           </button>
         </div>
@@ -5100,7 +5389,7 @@ function startA11yBatchWizard() {
   const areaSelect = document.getElementById('a11y-batch-area-select');
   const areaId = areaSelect ? areaSelect.value : null;
   if (!areaId) {
-    showToast('Selecione a área de destino.');
+    showToast('Selecione a tela de destino.');
     return;
   }
   if (detections.length === 0) return;
@@ -5346,6 +5635,17 @@ function focusA11yWizardCurrentNode() {
 }
 window.focusA11yWizardCurrentNode = focusA11yWizardCurrentNode;
 
+// Botão "Focar no elemento no canvas" da LISTAGEM de specs já confirmadas
+// (_a11ySpecItemHtml) — mesmo bug/correção de focusA11yWizardCurrentNode:
+// spec.targetNodeId é sempre o nodeId ORIGINAL (_originalTargetNodeId,
+// code.js), nunca o equivalente dentro do clone de trabalho do Leitor de
+// Tela. Usa o mesmo handler dedicado highlight-spec-copy-node.
+function _highlightSpecListItem(nodeId, areaId) {
+  if (!nodeId) return;
+  parent.postMessage({ pluginMessage: { type: 'highlight-spec-copy-node', id: nodeId, areaId: areaId || null, shouldScroll: true } }, '*');
+}
+window._highlightSpecListItem = _highlightSpecListItem;
+
 // Descarta o item corrente sem criar spec — nunca chama create-unified-spec.
 // Idempotente por índice (Set): reabrir pelo paginador um item já
 // confirmado nunca chega aqui (botão vira "Documentado", ver
@@ -5414,7 +5714,7 @@ window.stopA11yBatchWizard = stopA11yBatchWizard;
 function _resumeA11yBatchWizardForArea(areaId) {
   const area = _findA11yAreaById(areaId);
   if (!area || !area.targetNodeId) {
-    showToast('Não foi possível localizar a área para retomar — reescaneie manualmente.');
+    showToast('Não foi possível localizar a tela para retomar — reescaneie manualmente.');
     return;
   }
   window._a11yResumeWizardAfterScan = true;
@@ -5424,7 +5724,17 @@ window._resumeA11yBatchWizardForArea = _resumeA11yBatchWizardForArea;
 
 // Remover a entrada também remove o nó no canvas (mesmo padrão de
 // deleteA11yArea logo abaixo) — specs de A11y têm nó real desde a criação.
-function deleteA11ySpec(originalIndex) {
+// Bug real corrigido (2026-09-11): recebia `originalIndex` (posição
+// recalculada no array a cada render — ver comentário em
+// _a11ySpecItemHtml) em vez de `specId` (identidade estável) — se um
+// re-render assíncrono (ex. layer-order-resolved chegando) acontecesse
+// entre a montagem do HTML e o clique, o índice embutido no onclick podia
+// já não corresponder mais ao spec certo, apagando/alterando o item
+// errado silenciosamente. Agora recebe o id real e localiza a posição
+// atual no array na hora do clique — nunca confia num índice "congelado"
+// no HTML.
+function deleteA11ySpec(specId) {
+  const originalIndex = a11ySpecs.findIndex(s => s && s.id === specId);
   const spec = a11ySpecs[originalIndex];
   if (!spec) return;
   if (spec.id) {
@@ -5438,8 +5748,8 @@ window.deleteA11ySpec = deleteA11ySpec;
 
 // Mostrar/ocultar o nó da spec no canvas — mesmo par de mensagens
 // ('hide-node'/'show-node') que specs normais usam no Handex.
-function toggleA11ySpecVisibility(originalIndex) {
-  const spec = a11ySpecs[originalIndex];
+function toggleA11ySpecVisibility(specId) {
+  const spec = a11ySpecs.find(s => s && s.id === specId);
   if (!spec || !spec.id) return;
   spec.visible = spec.visible === false ? true : false;
   parent.postMessage({ pluginMessage: { type: spec.visible === false ? 'hide-node' : 'show-node', id: spec.id } }, '*');
@@ -5489,8 +5799,8 @@ window.toggleAreaGroupVisibility = toggleAreaGroupVisibility;
 // "Concluir posicionamento" — trava/destrava o specGroup no canvas via
 // unlock-spec-group (code.js). Specs de A11y nascem travadas — este toggle
 // é o único jeito de mexer nelas depois.
-function toggleA11ySpecLock(originalIndex) {
-  const spec = a11ySpecs[originalIndex];
+function toggleA11ySpecLock(specId) {
+  const spec = a11ySpecs.find(s => s && s.id === specId);
   if (!spec || !spec.id) return;
   const isNowUnlocked = spec.locked === false;
   spec.locked = isNowUnlocked ? true : false;
@@ -5508,8 +5818,8 @@ window.toggleA11ySpecLock = toggleA11ySpecLock;
 // os dados atuais. confirmA11ySpec detecta modal.dataset.editingSpecId e, em
 // vez de só criar, apaga o nó antigo no canvas e recria com os valores
 // atualizados.
-function editA11ySpec(originalIndex) {
-  const spec = a11ySpecs[originalIndex];
+function editA11ySpec(specId) {
+  const spec = a11ySpecs.find(s => s && s.id === specId);
   if (!spec || !spec.a11yType) return;
   window._a11yPendingAreaId = spec.a11yAreaId || null;
   // targetNodeName/dscComponentName (já salvos na spec) populam os 2 campos
@@ -5529,7 +5839,6 @@ function editA11ySpec(originalIndex) {
   const modal = document.getElementById('a11y-spec-modal');
   if (modal) {
     modal.dataset.editingSpecId = spec.id || '';
-    modal.dataset.editingOriginalIndex = String(originalIndex);
   }
   _prefillA11ySpecForEdit(spec);
   const confirmBtn = document.getElementById('btn-a11y-confirm');
@@ -5758,7 +6067,7 @@ function confirmA11yArea() {
   const input = document.getElementById('a11y-area-label-input');
   const label = input ? input.value.trim() : '';
   if (!label) {
-    showToast('Informe o rótulo da área.');
+    showToast('Informe o rótulo da tela.');
     return;
   }
   const conectorInput = document.querySelector('input[name="a11y-area-conector"]:checked');
@@ -5768,7 +6077,7 @@ function confirmA11yArea() {
   closeA11yAreaModal();
   _getA11ySelectionInfo().then(sel => {
     if (!sel || !sel.id) {
-      showToast('Selecione um elemento no canvas antes de marcar a área.');
+      showToast('Selecione um elemento no canvas antes de selecionar a tela.');
       return;
     }
     ensureA11yProjectOriginThen((origin) => {
@@ -5793,7 +6102,12 @@ window.confirmA11yArea = confirmA11yArea;
 //
 // A limpeza de DADO (specs/tabOrderItems/a11ySwipePaths em hacData) é
 // local, não depende de resposta do backend.
-function deleteA11yArea(originalIndex) {
+// Bug real corrigido (2026-09-11): recebia originalIndex (posição
+// "congelada" no array no momento do render) em vez de areaId — mesma
+// classe de bug já corrigida em deleteA11ySpec/toggleA11ySpecVisibility/
+// toggleA11ySpecLock/editA11ySpec, ver comentário em deleteA11ySpec.
+function deleteA11yArea(areaId) {
+  const originalIndex = a11yAreas.findIndex(a => a && a.id === areaId);
   const area = a11yAreas[originalIndex];
   if (!area) return;
 

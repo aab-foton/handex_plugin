@@ -196,6 +196,21 @@ ${viewSpecs}
 ${modalsShared}
   </div>
 
+  <!-- Botão "Voltar ao topo" (2026-09-11, bug real corrigido) — CSS
+       (styles/plugin.css) e as 4 funções JS que já o referenciam
+       (scrollToTop/handleScroll/navigate/toggleCollapse, core.js) sempre
+       existiram, mas o <button> em si nunca foi incluído aqui neste
+       build.cjs — perdido na extração do hac a partir do Handex
+       (commit e16a67c, 2026-08-25): CSS e JS foram copiados, o markup do
+       elemento não. Sem ele no DOM, scrollToTop() virava no-op silencioso
+       (guard 'if (btnTop)' em todo call-site). Fixed no body (fora de
+       qualquer .view), pra funcionar em qualquer tela sem precisar
+       duplicar por view — mesmo padrão do Handex original. -->
+  <button id="btn-top" onclick="scrollToTop()" title="Voltar ao topo" aria-label="Voltar ao topo"
+    class="fixed bottom-6 right-6 w-10 h-10 rounded-full flex items-center justify-center opacity-0 pointer-events-none translate-y-10 z-[100] transition-colors duration-200">
+    <i data-lucide="chevron-up" class="w-5 h-5"></i>
+  </button>
+
   <!--
     Plugin runtime — concatenado em um único <script> para que todos os
     módulos compartilhem o mesmo escopo. A separação em arquivos-fonte é

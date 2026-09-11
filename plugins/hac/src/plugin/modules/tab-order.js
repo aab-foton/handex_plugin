@@ -3,7 +3,7 @@
 // showToast, openModal, closeModal, escapeHtml, _refreshIcons, saveToStorage,
 // renderA11yGroupedList, getA11yActiveSectionName, getA11yDesignerName,
 // ensureA11yProjectOriginThen, _findA11yAreaById, _allA11yAreas, focusNode,
-// clearHighlight, _a11yCaptureMiniBarUpdateCount/_a11yCaptureMiniBarExit,
+// _a11yCaptureMiniBarUpdateCount/_a11yCaptureMiniBarExit,
 // A11Y_NARRATION_TYPE_LABELS/_EN, tabOrderItems (core.js) — todos definidos em
 // outros módulos do bundle. Também referencia cancelSwipePathReview() e
 // window._swipePathCaptureMode (swipe-path.js), concatenado logo em seguida.
@@ -37,13 +37,13 @@ function _tabOrderSectionHtml(uid, area) {
 
   if (readOnly) {
     return `
-      <div class="rounded-lg border border-gray-100 dark:border-dark-line overflow-hidden ml-1">
+      <div class="rounded-dsc-small border border-gray-100 dark:border-dark-line overflow-hidden ml-1">
         <div class="flex items-center gap-2 px-2 py-1.5 cursor-pointer select-none bg-gray-50/60 dark:bg-dark-bg/30 hover:bg-gray-100/60 dark:hover:bg-dark-line/20 transition-colors"
           onclick="toggleA11yTabOrderAccordion('${uid}')">
-          <div class="w-4.5 h-4.5 rounded-full flex items-center justify-center shrink-0 bg-gray-100 dark:bg-dark-line/40">
+          <div class="w-4.5 h-4.5 rounded-dsc-circ flex items-center justify-center shrink-0 bg-gray-100 dark:bg-dark-line/40">
             <i data-lucide="list-ordered" class="w-2.5 h-2.5 text-gray-400"></i>
           </div>
-          <p class="flex-1 min-w-0 text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wide truncate">Ordem de Tabulação</p>
+          <p class="flex-1 min-w-0 text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-500 dark:text-dark-muted truncate">Ordem de Tabulação</p>
           <i data-lucide="chevron-down" id="tab-order-chevron-${uid}" class="w-3.5 h-3.5 text-gray-400 transition-transform shrink-0" style="transform:${chevronStyle}"></i>
         </div>
         <div id="tab-order-body-${uid}" class="accordion-content ${bodyHiddenClass} border-t border-gray-50 dark:border-dark-line p-1.5">
@@ -54,13 +54,13 @@ function _tabOrderSectionHtml(uid, area) {
   }
 
   return `
-    <div class="rounded-lg border border-gray-100 dark:border-dark-line overflow-hidden ml-1">
+    <div class="rounded-dsc-small border border-gray-100 dark:border-dark-line overflow-hidden ml-1">
       <div class="flex items-center gap-2 px-2 py-1.5 cursor-pointer select-none bg-gray-50/60 dark:bg-dark-bg/30 hover:bg-gray-100/60 dark:hover:bg-dark-line/20 transition-colors"
         onclick="toggleA11yTabOrderAccordion('${uid}')">
-        <div class="w-4.5 h-4.5 rounded-full flex items-center justify-center shrink-0" style="background-color:#E0F5FA">
+        <div class="w-4.5 h-4.5 rounded-dsc-circ flex items-center justify-center shrink-0" style="background-color:#E0F5FA">
           <i data-lucide="list-ordered" class="w-2.5 h-2.5" style="color:#0891B2"></i>
         </div>
-        <p class="flex-1 min-w-0 text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wide truncate">Ordem de Tabulação</p>
+        <p class="flex-1 min-w-0 text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wide truncate">Ordem de Tabulação</p>
         <i data-lucide="chevron-down" id="tab-order-chevron-${uid}" class="w-3.5 h-3.5 text-gray-400 transition-transform shrink-0" style="transform:${chevronStyle}"></i>
       </div>
       <div id="tab-order-body-${uid}" class="accordion-content ${bodyHiddenClass} border-t border-gray-50 dark:border-dark-line p-1.5 space-y-1.5">
@@ -76,13 +76,13 @@ function _tabOrderSectionHtml(uid, area) {
              correção em "Mapeamento Automatizado" — não é geração final,
              o resultado ainda passa por revisão). -->
         <button type="button" onclick="event.stopPropagation(); startTabOrderManualMode('${escapeHtml(areaIdAttr)}', '${escapeHtml(area.targetNodeId || '')}')"
-          class="w-full flex items-center justify-center gap-2 h-8 rounded-2xl text-[10.5px] font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
+          class="w-full flex items-center justify-center gap-2 h-8 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
           <i data-lucide="list-ordered" class="w-3.5 h-3.5" aria-hidden="true"></i>
           Iniciar Ordem de Tabulação
         </button>
         ${(typeof _currentTabOrderItems === 'function' && _currentTabOrderItems(area.id).length > 0) ? '' : `
         <button type="button" onclick="event.stopPropagation(); _confirmGenerateTabOrderFromLayers('${escapeHtml(areaIdAttr)}', '${escapeHtml(area.targetNodeId || '')}')"
-          class="w-full flex items-center justify-center gap-1.5 h-6 mt-0.5 rounded-lg text-[10px] font-bold text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99] transition-all">
+          class="w-full flex items-center justify-center gap-1.5 h-6 mt-0.5 rounded-dsc-small text-dsc-label-tiny normal-case tracking-normal font-bold text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99] transition-all">
           <i data-lucide="sparkles" class="w-3 h-3" aria-hidden="true"></i>
           ou usar Mapeamento Automático
         </button>`}
@@ -92,7 +92,7 @@ function _tabOrderSectionHtml(uid, area) {
              aplicada). -->
         <ul id="${ulId}" class="flex flex-col gap-1.5 min-h-[10px]"></ul>
         <button type="button" onclick="event.stopPropagation(); updateTabOrderNumbering('${escapeHtml(areaIdAttr)}')"
-          class="w-full flex items-center justify-center gap-2 h-7 mt-1 rounded-2xl text-[10.5px] font-bold border border-gray-200 dark:border-dark-line text-slate-600 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 hover:border-slate-300 transition-all">
+          class="w-full flex items-center justify-center gap-2 h-7 mt-1 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold border border-gray-200 dark:border-dark-line text-slate-600 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 hover:border-slate-300 transition-all">
           <i data-lucide="refresh-cw" class="w-3.5 h-3.5" aria-hidden="true"></i>
           Atualizar
         </button>
@@ -164,9 +164,51 @@ function _tabOrderNextTempId() {
 // (messages.js → aqui).
 function startTabOrderManualMode(areaId, targetNodeId) {
   if (!areaId || !targetNodeId) {
-    showToast('Marque uma área da tela antes de iniciar a ordem de tabulação.');
+    showToast('Selecione uma tela antes de iniciar a ordem de tabulação.');
     return;
   }
+  // Dica educativa de Shift+clique/aprofundamento de seleção (2026-09-10) —
+  // mostrada uma única vez por arquivo Figma, ANTES de minimizar a janela
+  // e começar a escutar cliques (onboardingSeen, chave 'tabOrderShiftHint',
+  // mesmo mecanismo de onboarding.js). Se já foi vista, pula direto pro
+  // fluxo real (_startTabOrderManualModeInner) sem exibir nada.
+  if (!_onboardingSeen('tabOrderShiftHint')) {
+    window._pendingTabOrderShiftHintArgs = { areaId, targetNodeId };
+    if (typeof _refreshIcons === 'function') { openModal('a11y-tab-order-shift-hint-modal'); _refreshIcons(); }
+    else openModal('a11y-tab-order-shift-hint-modal');
+    return;
+  }
+  _startTabOrderManualModeInner(areaId, targetNodeId);
+}
+window.startTabOrderManualMode = startTabOrderManualMode;
+
+// Chamada pelo botão "Entendi, começar seleção" do modal educativo acima —
+// marca a chave como vista (nunca mais aparece sozinha neste arquivo) e
+// prossegue com o fluxo real que ficava dentro de startTabOrderManualMode.
+function _confirmTabOrderShiftHint() {
+  markOnboardingSeen('tabOrderShiftHint');
+  closeModal('a11y-tab-order-shift-hint-modal');
+  const args = window._pendingTabOrderShiftHintArgs;
+  window._pendingTabOrderShiftHintArgs = null;
+  if (args) _startTabOrderManualModeInner(args.areaId, args.targetNodeId);
+}
+window._confirmTabOrderShiftHint = _confirmTabOrderShiftHint;
+
+// Reabertura manual da dica (ícone "?" no modal de revisão da Ordem de
+// Tabulação) — puramente informativa, nunca marca/desmarca o estado de
+// "visto" e nunca reinicia o fluxo de captura (o designer já está no meio
+// da revisão/captura quando clica nisso).
+function openTabOrderShiftHintManually() {
+  window._pendingTabOrderShiftHintArgs = null;
+  openModal('a11y-tab-order-shift-hint-modal');
+  if (typeof _refreshIcons === 'function') _refreshIcons();
+}
+window.openTabOrderShiftHintManually = openTabOrderShiftHintManually;
+
+// Corpo real do fluxo manual — extraído de startTabOrderManualMode
+// (2026-09-10) pra poder ser chamado tanto direto (dica já vista) quanto
+// depois de fechar a dica educativa (1ª vez no arquivo).
+function _startTabOrderManualModeInner(areaId, targetNodeId) {
   // Exclusividade mútua com Trilha de Swipe (2026-09-04-ad, bug real
   // corrigido): os dois modos de captura podiam ficar ativos ao mesmo
   // tempo se o designer trocasse de tab sem cancelar/confirmar — como
@@ -195,10 +237,9 @@ function startTabOrderManualMode(areaId, targetNodeId) {
     // já com a lista pendente completa pronta pra revisão.
     if (typeof _a11yCaptureMiniBarEnter === 'function') _a11yCaptureMiniBarEnter('tabOrder');
     _tabOrderSetCaptureMode('continuous');
-    showToast('Cópia da área criada — segure shift e clique (ou use marquise) pra marcar os elementos dela. A janela foi minimizada para dar espaço ao canvas.');
+    showToast('Cópia da tela criada — segure shift e clique (ou use marquise) pra marcar os elementos dela. A janela foi minimizada para dar espaço ao canvas.');
   });
 }
-window.startTabOrderManualMode = startTabOrderManualMode;
 
 // Resposta de 'tab-order-copy-started' (messages.js) — guarda o id da cópia
 // rascunho e o mapa original→clone (objeto plano {nodeId-original:
@@ -323,7 +364,7 @@ function handleTabOrderCloneResolved(areaId, ok) {
   if (areaId !== window._tabOrderAddItemsFromCardAreaId) return;
   window._tabOrderAddItemsFromCardAreaId = null;
   if (!ok) {
-    showToast('Não foi possível localizar a área no canvas — marque novamente.');
+    showToast('Não foi possível localizar a tela no canvas — selecione novamente.');
     closeModal('a11y-tab-order-review-modal');
     return;
   }
@@ -519,7 +560,7 @@ function _renderTabOrderPendingList() {
   if (applyBtn) applyBtn.disabled = items.length === 0 || anyDrawing;
 
   containerEl.innerHTML = items.map((it, listIndex) => `
-    <li class="list-none flex items-center gap-2 px-2.5 py-1.5 bg-white dark:bg-dark-surface rounded-lg border border-gray-100 dark:border-dark-line cursor-pointer ${it.drawing ? 'opacity-60' : ''}"
+    <li class="list-none flex items-center gap-2 px-2.5 py-1.5 bg-white dark:bg-dark-surface rounded-dsc-small border border-gray-100 dark:border-dark-line shadow-dsc-elevation-1 cursor-pointer ${it.drawing ? 'opacity-60' : ''}"
       title="${it.drawFailed ? 'Falha ao desenhar o selo — remova e tente novamente' : 'Destacar este elemento no canvas'}"
       draggable="true"
       data-list-index="${listIndex}"
@@ -531,8 +572,8 @@ function _renderTabOrderPendingList() {
       <span class="text-gray-300 dark:text-dark-muted cursor-grab active:cursor-grabbing shrink-0" title="Arrastar para reordenar" aria-hidden="true">
         <i data-lucide="grip-vertical" class="w-3.5 h-3.5"></i>
       </span>
-      <div class="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-extrabold text-white shrink-0" style="background-color:${it.drawFailed ? '#DC2626' : '#0891B2'}">${listIndex + 1}</div>
-      <p class="flex-1 min-w-0 text-[11px] text-slate-700 dark:text-white truncate">${escapeHtml(it.nodeName || '')}</p>
+      <div class="w-6 h-6 rounded-dsc-circ flex items-center justify-center text-dsc-label-tiny normal-case tracking-normal font-extrabold text-white shrink-0" style="background-color:${it.drawFailed ? '#DC2626' : '#0891B2'}">${listIndex + 1}</div>
+      <p class="flex-1 min-w-0 text-dsc-label-tiny normal-case tracking-normal text-slate-700 dark:text-white truncate">${escapeHtml(it.nodeName || '')}</p>
       ${it.drawFailed ? '<i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-red-500 shrink-0" title="Selo não desenhado"></i>' : ''}
       <button type="button" title="Remover da lista" aria-label="Remover da lista"
         onclick="event.stopPropagation(); deleteTabOrderPendingItem('${escapeHtml(it.tempId)}')"
@@ -852,7 +893,7 @@ function _confirmGenerateTabOrderFromLayers(areaId, targetNodeId) {
     window._tabOrderActiveCloneNodeMap = null;
     window._tabOrderPendingGeneration = myGeneration;
     parent.postMessage({ pluginMessage: { type: 'generate-tab-order-from-layers', areaId, targetNodeId, sectionName: getA11yActiveSectionName(), designerName: getA11yDesignerName(), designerId: getA11yDesignerId(), generation: myGeneration } }, '*');
-    showToast('Varrendo elementos interativos da área…');
+    showToast('Varrendo elementos interativos da tela…');
   });
 }
 window._confirmGenerateTabOrderFromLayers = _confirmGenerateTabOrderFromLayers;
@@ -896,7 +937,7 @@ async function addTabOrderItemsFromLayers(items, cloneId, nodeMap, generation) {
     : [];
   openTabOrderReviewModal();
   if (window._tabOrderPendingList.length === 0) {
-    showToast('Nenhum elemento interativo encontrado automaticamente — a cópia da área já está pronta para marcação manual ("+ Adicionar item").');
+    showToast('Nenhum elemento interativo encontrado automaticamente — a cópia da tela já está pronta para marcação manual ("+ Adicionar item").');
     return;
   }
   showToast(`${window._tabOrderPendingList.length} elemento${window._tabOrderPendingList.length === 1 ? '' : 's'} encontrado${window._tabOrderPendingList.length === 1 ? '' : 's'} — desenhando no canvas…`);
@@ -949,7 +990,7 @@ function _renderTabOrderListForArea(areaId, containerEl) {
   const readOnly = areaId === '__sem_area__';
 
   containerEl.innerHTML = items.map((it, listIndex) => `
-    <li class="list-none flex items-center gap-2 px-2.5 py-1.5 bg-white dark:bg-dark-surface rounded-lg border border-gray-100 dark:border-dark-line"
+    <li class="list-none flex items-center gap-2 px-2.5 py-1.5 bg-white dark:bg-dark-surface rounded-dsc-small border border-gray-100 dark:border-dark-line shadow-dsc-elevation-1"
       draggable="${readOnly ? 'false' : 'true'}"
       data-list-index="${listIndex}"
       ${readOnly ? '' : `ondragstart="_tabOrderDragStart(event, ${listIndex}, '${escapeHtml(String(areaId))}')"
@@ -959,8 +1000,8 @@ function _renderTabOrderListForArea(areaId, containerEl) {
       ${readOnly ? '' : `<span class="text-gray-300 dark:text-dark-muted cursor-grab active:cursor-grabbing shrink-0" title="Arrastar para reordenar" aria-hidden="true">
         <i data-lucide="grip-vertical" class="w-3.5 h-3.5"></i>
       </span>`}
-      <div class="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-extrabold text-white shrink-0" style="background-color:#0891B2">${escapeHtml(String(it.number))}</div>
-      <p class="flex-1 min-w-0 text-[11px] text-slate-700 dark:text-white truncate">${escapeHtml(it.targetNodeName || '')}</p>
+      <div class="w-6 h-6 rounded-dsc-circ flex items-center justify-center text-dsc-label-tiny normal-case tracking-normal font-extrabold text-white shrink-0" style="background-color:#0891B2">${escapeHtml(String(it.number))}</div>
+      <p class="flex-1 min-w-0 text-dsc-label-tiny normal-case tracking-normal text-slate-700 dark:text-white truncate">${escapeHtml(it.targetNodeName || '')}</p>
       <button type="button" title="Focar no canvas" aria-label="Focar no canvas"
         onclick="focusNode('${it.id}')"
         class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-[#0070af] transition-colors shrink-0">
@@ -1101,7 +1142,6 @@ function _setTabOrderNarrationButtonState(uid, isActive) {
 // simulação" nem o highlight aceso no canvas depois que a fala parou.
 function _stopTabOrderNarration() {
   const state = window._tabOrderNarration;
-  const wasActive = state.active;
   try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch (e) { }
   const uid = state.uid;
   state.active = false;
@@ -1110,7 +1150,6 @@ function _stopTabOrderNarration() {
   state.queue = [];
   state.index = -1;
   if (uid) _setTabOrderNarrationButtonState(uid, false);
-  if (wasActive) clearHighlight();
 }
 
 function _tabOrderNarrationAdvance() {
