@@ -206,14 +206,14 @@ Footer:
 
 "Gerar Ficha" não está mais no header global — hoje só é acionável de dentro de `view-dados-projeto` (`dados-projeto.html:314`) ou `view-handoff-summary` (`handoff-summary.html:146`), ambos chamando `openHandoffInjectModal()`.
 
-**Badge de check + contagem por card (v6.9.0):** os 5 cards da home que representam dado do projeto (`dados-projeto`, `tokens`, `specs`, `measurement`, `flows` — não `guide`, que é onboarding) exibem, no canto inferior direito, um badge verde circular com check quando já têm documentação salva — acompanhado de um texto curto (`.home-card-check-text`) à esquerda do badge:
-- `dados-projeto`: **booleano**, sem contagem natural de "itens" — mostra o label fixo "Informações salvas". Critério: `step1.titulo` preenchido **e** pelo menos 1 item em `step1.equipe`.
-- `tokens`: número de frames com `specs` não vazio (qualquer categoria: components/icons/typography/vectors).
-- `specs`: número total de specs — soma de `createdSpecs` por frame + `handoffData.specs` avulsas.
-- `measurement`: número total de medidas — soma de `measurements` por frame + `handoffData.measurements` avulsas.
-- `flows`: número de itens em `handoffData.createdFlows`.
+**Badge de check + label por card (v6.9.0):** os 5 cards da home que representam dado do projeto (`dados-projeto`, `tokens`, `specs`, `measurement`, `flows` — não `guide`, que é onboarding) exibem, no canto **superior esquerdo** (alinhado ao padding interno do botão, `top-3 left-3`), um badge verde circular com check quando já têm documentação salva — acompanhado de um texto curto fixo (`.home-card-check-text`) à direita do badge. O texto é sempre "Ação + particípio" e, quando o card tem uma contagem real, ela vai entre parênteses:
+- `dados-projeto`: "Informações salvas" — **sem contagem** (critério booleano: `step1.titulo` preenchido **e** pelo menos 1 item em `step1.equipe`, não uma lista de itens).
+- `tokens`: "Tokens escaneados (N)" — N = nº de frames com `specs` não vazio (qualquer categoria: components/icons/typography/vectors).
+- `specs`: "Specs criadas (N)" — N = soma de `createdSpecs` por frame + `handoffData.specs` avulsas.
+- `measurement`: "Medidas inseridas (N)" — N = soma de `measurements` por frame + `handoffData.measurements` avulsas.
+- `flows`: "Fluxos mapeados (N)" — N = itens em `handoffData.createdFlows`.
 
-`getHomeCardsDocumentedState()` (`design-data.js`) retorna `{ done, count, label }` por card — `label` só é usado quando `count` é `null` (caso `dados-projeto`). Aplicado via `updateHomeCardsCheckState()` (`core.js`), chamada nos mesmos dois gatilhos de `updateHomeFooterButtonsState()` (entrar na home + `init-plugin`) — nunca recalculado em pontos isolados de criação de dado, para não arriscar ficar dessincronizado.
+`getHomeCardsDocumentedState()` (`design-data.js`) retorna `{ done, label }` por card — `label` já vem pronto para exibição, contagem incluída quando aplicável. Aplicado via `updateHomeCardsCheckState()` (`core.js`), chamada nos mesmos dois gatilhos de `updateHomeFooterButtonsState()` (entrar na home + `init-plugin`) — nunca recalculado em pontos isolados de criação de dado, para não arriscar ficar dessincronizado.
 
 ---
 
