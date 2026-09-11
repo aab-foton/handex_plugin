@@ -801,6 +801,33 @@ function _updateContentHint(hintId, hasContent) {
   if (hint) hint.classList.toggle('hidden', hasContent || _contentHintDismissed(hintId));
 }
 
+// Quando o botão de ação principal sai do header (lista vazia, vira CTA no
+// empty-state -- ver updateEmptyFramesState/renderSpecsList/
+// renderMeasurementsResults/renderFlowsList), o header ficaria com o lado
+// direito vazio. Move o wrapper de ícones de ajuda (graduation-cap + o
+// segundo ícone específico de cada tela, quando houver) do grupo esquerdo
+// (ao lado do título) pro grupo direito enquanto isso -- e de volta assim
+// que o botão de ação reaparece. São poucos elementos estáveis definidos
+// direto no HTML (não regenerados via innerHTML), então mover o nó real
+// (appendChild) é seguro e mais simples que duplicar.
+function _moveHeaderHelpIcons(helpIconsId, rightGroupSelector, hasContent) {
+  const helpIcons = document.getElementById(helpIconsId);
+  const rightGroup = document.querySelector(rightGroupSelector);
+  if (!helpIcons || !rightGroup) return;
+  // Grupo esquerdo = primeiro <div> filho direto do header (voltar + título)
+  // -- sempre resolvido a partir do header em si, nunca por posição relativa
+  // ao próprio wrapper de ícones (que muda de pai quando ele é movido).
+  const header = rightGroup.closest('.subheader-brand');
+  const leftGroup = header ? header.querySelector(':scope > div:first-child') : null;
+  if (hasContent) {
+    // Botão de ação está no header -- ícones voltam pro grupo esquerdo,
+    // logo depois do título (posição original no HTML).
+    if (leftGroup && helpIcons.parentElement !== leftGroup) leftGroup.appendChild(helpIcons);
+  } else if (helpIcons.parentElement !== rightGroup) {
+    rightGroup.insertBefore(helpIcons, rightGroup.firstChild);
+  }
+}
+
 function updateEmptyFramesState() {
   const empty = document.getElementById('frames-empty-state');
   if (!empty) return;
@@ -820,6 +847,7 @@ function updateEmptyFramesState() {
   // usa o CTA centralizado dentro de #frames-empty-state (mesmo onclick).
   const headerBtn = document.getElementById('btn-frame-register-header');
   if (headerBtn) headerBtn.classList.toggle('hidden', !hasFrames);
+  _moveHeaderHelpIcons('frames-header-help-icons', '#view-frames .subheader-brand > div:last-child', hasFrames);
 }
 
 function importTitleFromSelection() {

@@ -8,6 +8,12 @@
         <i data-lucide="arrow-left" class="w-5 h-5 text-white" aria-hidden="true"></i>
       </button>
       <h2 class="text-white font-bold text-[18px] truncate min-w-0">Escanear Tokens</h2>
+    </div>
+    <!-- Ícones de ajuda: vivem no grupo esquerdo (ao lado do título) quando
+         o botão de ação está no header; movidos pro grupo direito (ver
+         _moveHeaderHelpIcons em core.js) quando o botão vira CTA centralizado
+         no empty-state -- evita o header ficar com um lado vazio. -->
+    <div id="frames-header-help-icons" class="flex items-center gap-2 min-w-0">
       <button type="button" onclick="openOnboarding('handoff')" title="Como funciona esta ferramenta" aria-label="Como funciona esta ferramenta"
         class="min-w-[40px] min-h-[40px] flex items-center justify-center text-white/70 hover:text-white transition-colors shrink-0">
         <i data-lucide="graduation-cap" class="w-4.5 h-4.5"></i>

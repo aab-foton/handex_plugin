@@ -36,6 +36,7 @@
           if (collapseBtn) collapseBtn.classList.remove('hidden');
           if (finalizeWrap) finalizeWrap.classList.remove('hidden');
           if (headerBtn) headerBtn.classList.remove('hidden');
+          if (typeof _moveHeaderHelpIcons === 'function') _moveHeaderHelpIcons('measures-header-help-icons', '#view-measurement .subheader-brand > div:last-child', true);
           if (sectionTitle) {
             sectionTitle.classList.remove('hidden');
             sectionTitle.textContent = `Medidas Inseridas (${data.length})`;
@@ -46,6 +47,7 @@
           if (collapseBtn) collapseBtn.classList.add('hidden');
           if (finalizeWrap) finalizeWrap.classList.add('hidden');
           if (headerBtn) headerBtn.classList.add('hidden');
+          if (typeof _moveHeaderHelpIcons === 'function') _moveHeaderHelpIcons('measures-header-help-icons', '#view-measurement .subheader-brand > div:last-child', false);
           if (sectionTitle) sectionTitle.classList.add('hidden');
         }
       }

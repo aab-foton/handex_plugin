@@ -934,6 +934,13 @@ body {
             <i data-lucide="arrow-left" class="w-5 h-5 text-white" aria-hidden="true"></i>
           </button>
           <h2 class="text-white font-bold text-[18px] truncate min-w-0">Anotar Medidas</h2>
+        </div>
+        <!-- Ícones de ajuda: vivem no grupo esquerdo (ao lado do título)
+             quando o botão de ação está no header; movidos pro grupo direito
+             (ver _moveHeaderHelpIcons em core.js) quando o botão vira CTA
+             centralizado no empty-state -- evita o header ficar com um lado
+             vazio. -->
+        <div id="measures-header-help-icons" class="flex items-center gap-2 min-w-0">
           <button type="button" onclick="openOnboarding('medidas')"
             class="min-w-[40px] min-h-[40px] flex items-center justify-center text-white/70 hover:text-white transition-colors shrink-0"
             title="Como funciona esta ferramenta" aria-label="Como funciona esta ferramenta">
@@ -1348,6 +1355,13 @@ body {
             <i data-lucide="arrow-left" class="w-5 h-5 text-white" aria-hidden="true"></i>
           </button>
           <h2 class="text-white font-bold text-[18px] truncate min-w-0">Anotar Specs</h2>
+        </div>
+        <!-- Ícones de ajuda: vivem no grupo esquerdo (ao lado do título)
+             quando o botão de ação está no header; movidos pra cá (grupo
+             direito, ver header-toggle.js/toggleHeaderActionButton) quando
+             o botão de ação vira CTA centralizado no empty-state -- evita
+             o header ficar com um lado vazio quando a lista está vazia. -->
+        <div id="specs-header-help-icons" class="flex items-center gap-2 min-w-0">
           <button type="button" onclick="openOnboarding('specs')"
             class="min-w-[40px] min-h-[40px] flex items-center justify-center text-white/70 hover:text-white transition-colors shrink-0"
             title="Como funciona esta ferramenta" aria-label="Como funciona esta ferramenta">
@@ -1506,6 +1520,12 @@ body {
         <i data-lucide="arrow-left" class="w-5 h-5 text-white" aria-hidden="true"></i>
       </button>
       <h2 class="text-white font-bold text-[18px] truncate min-w-0">Escanear Tokens</h2>
+    </div>
+    <!-- Ícones de ajuda: vivem no grupo esquerdo (ao lado do título) quando
+         o botão de ação está no header; movidos pro grupo direito (ver
+         _moveHeaderHelpIcons em core.js) quando o botão vira CTA centralizado
+         no empty-state -- evita o header ficar com um lado vazio. -->
+    <div id="frames-header-help-icons" class="flex items-center gap-2 min-w-0">
       <button type="button" onclick="openOnboarding('handoff')" title="Como funciona esta ferramenta" aria-label="Como funciona esta ferramenta"
         class="min-w-[40px] min-h-[40px] flex items-center justify-center text-white/70 hover:text-white transition-colors shrink-0">
         <i data-lucide="graduation-cap" class="w-4.5 h-4.5"></i>
@@ -1606,6 +1626,14 @@ body {
         <i data-lucide="arrow-left" class="w-5 h-5 text-white" aria-hidden="true"></i>
       </button>
       <h2 class="text-white font-bold text-[18px] truncate min-w-0">Fluxos de Tela</h2>
+    </div>
+    <!-- Ícones de ajuda: vivem no grupo esquerdo (ao lado do título) quando
+         o botão de ação está no header; movidos pro grupo direito (ver
+         _moveHeaderHelpIcons em core.js) quando o botão vira CTA centralizado
+         no empty-state -- evita o header ficar com um lado vazio (aqui o
+         lado direito ficaria totalmente vazio, já que #btn-resync-flows
+         também está hidden até haver fluxos). -->
+    <div id="flows-header-help-icons" class="flex items-center gap-2 min-w-0">
       <button type="button" onclick="openOnboarding('fluxos')"
         class="min-w-[40px] min-h-[40px] flex items-center justify-center text-white/70 hover:text-white transition-colors shrink-0"
         title="Como funciona esta ferramenta" aria-label="Como funciona esta ferramenta">
@@ -4816,6 +4844,33 @@ function _updateContentHint(hintId, hasContent) {
   if (hint) hint.classList.toggle('hidden', hasContent || _contentHintDismissed(hintId));
 }
 
+// Quando o botão de ação principal sai do header (lista vazia, vira CTA no
+// empty-state -- ver updateEmptyFramesState/renderSpecsList/
+// renderMeasurementsResults/renderFlowsList), o header ficaria com o lado
+// direito vazio. Move o wrapper de ícones de ajuda (graduation-cap + o
+// segundo ícone específico de cada tela, quando houver) do grupo esquerdo
+// (ao lado do título) pro grupo direito enquanto isso -- e de volta assim
+// que o botão de ação reaparece. São poucos elementos estáveis definidos
+// direto no HTML (não regenerados via innerHTML), então mover o nó real
+// (appendChild) é seguro e mais simples que duplicar.
+function _moveHeaderHelpIcons(helpIconsId, rightGroupSelector, hasContent) {
+  const helpIcons = document.getElementById(helpIconsId);
+  const rightGroup = document.querySelector(rightGroupSelector);
+  if (!helpIcons || !rightGroup) return;
+  // Grupo esquerdo = primeiro <div> filho direto do header (voltar + título)
+  // -- sempre resolvido a partir do header em si, nunca por posição relativa
+  // ao próprio wrapper de ícones (que muda de pai quando ele é movido).
+  const header = rightGroup.closest('.subheader-brand');
+  const leftGroup = header ? header.querySelector(':scope > div:first-child') : null;
+  if (hasContent) {
+    // Botão de ação está no header -- ícones voltam pro grupo esquerdo,
+    // logo depois do título (posição original no HTML).
+    if (leftGroup && helpIcons.parentElement !== leftGroup) leftGroup.appendChild(helpIcons);
+  } else if (helpIcons.parentElement !== rightGroup) {
+    rightGroup.insertBefore(helpIcons, rightGroup.firstChild);
+  }
+}
+
 function updateEmptyFramesState() {
   const empty = document.getElementById('frames-empty-state');
   if (!empty) return;
@@ -4835,6 +4890,7 @@ function updateEmptyFramesState() {
   // usa o CTA centralizado dentro de #frames-empty-state (mesmo onclick).
   const headerBtn = document.getElementById('btn-frame-register-header');
   if (headerBtn) headerBtn.classList.toggle('hidden', !hasFrames);
+  _moveHeaderHelpIcons('frames-header-help-icons', '#view-frames .subheader-brand > div:last-child', hasFrames);
 }
 
 function importTitleFromSelection() {
@@ -8287,6 +8343,7 @@ document.addEventListener('DOMContentLoaded', _applyHomeCardOrder);
           if (collapseBtn) collapseBtn.classList.remove('hidden');
           if (finalizeWrap) finalizeWrap.classList.remove('hidden');
           if (headerBtn) headerBtn.classList.remove('hidden');
+          if (typeof _moveHeaderHelpIcons === 'function') _moveHeaderHelpIcons('measures-header-help-icons', '#view-measurement .subheader-brand > div:last-child', true);
           if (sectionTitle) {
             sectionTitle.classList.remove('hidden');
             sectionTitle.textContent = `Medidas Inseridas (${data.length})`;
@@ -8297,6 +8354,7 @@ document.addEventListener('DOMContentLoaded', _applyHomeCardOrder);
           if (collapseBtn) collapseBtn.classList.add('hidden');
           if (finalizeWrap) finalizeWrap.classList.add('hidden');
           if (headerBtn) headerBtn.classList.add('hidden');
+          if (typeof _moveHeaderHelpIcons === 'function') _moveHeaderHelpIcons('measures-header-help-icons', '#view-measurement .subheader-brand > div:last-child', false);
           if (sectionTitle) sectionTitle.classList.add('hidden');
         }
       }
@@ -10633,6 +10691,7 @@ document.addEventListener('DOMContentLoaded', _applyHomeCardOrder);
         if (finalizeWrap) finalizeWrap.classList.add('hidden');
         if (sectionTitle) sectionTitle.classList.add('hidden');
         if (headerBtn) headerBtn.classList.add('hidden');
+        if (typeof _moveHeaderHelpIcons === 'function') _moveHeaderHelpIcons('specs-header-help-icons', '#view-specifications .subheader-brand > div:last-child', false);
         closeSpecsMoreActions();
         const bar = document.getElementById('specs-search-bar');
         if (bar) bar.classList.add('hidden');
@@ -10645,6 +10704,7 @@ document.addEventListener('DOMContentLoaded', _applyHomeCardOrder);
       if (moreActionsBtn) moreActionsBtn.classList.remove('hidden');
       if (finalizeWrap) finalizeWrap.classList.remove('hidden');
       if (headerBtn) headerBtn.classList.remove('hidden');
+      if (typeof _moveHeaderHelpIcons === 'function') _moveHeaderHelpIcons('specs-header-help-icons', '#view-specifications .subheader-brand > div:last-child', true);
       if (sectionTitle) {
         sectionTitle.classList.remove('hidden');
         sectionTitle.textContent = `Specs Criadas (${createdSpecs.length})`;
@@ -12104,6 +12164,7 @@ document.addEventListener('DOMContentLoaded', _applyHomeCardOrder);
         if (collapseBtn) collapseBtn.classList.add('hidden');
         if (sectionTitle) sectionTitle.classList.add('hidden');
         if (headerBtn) headerBtn.classList.add('hidden');
+        if (typeof _moveHeaderHelpIcons === 'function') _moveHeaderHelpIcons('flows-header-help-icons', '#view-flows .subheader-brand > div:last-child', false);
         _updateContentHint('hint-flows', false);
         _refreshIcons();
         return;
@@ -12111,6 +12172,7 @@ document.addEventListener('DOMContentLoaded', _applyHomeCardOrder);
       if (finalizeWrap) finalizeWrap.classList.remove('hidden');
       if (resyncBtn) resyncBtn.classList.remove('hidden');
       if (headerBtn) headerBtn.classList.remove('hidden');
+      if (typeof _moveHeaderHelpIcons === 'function') _moveHeaderHelpIcons('flows-header-help-icons', '#view-flows .subheader-brand > div:last-child', true);
       _updateContentHint('hint-flows', true);
 
       const FLOW_TYPE_LABELS = {
