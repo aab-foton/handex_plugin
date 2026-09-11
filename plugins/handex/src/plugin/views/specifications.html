@@ -19,7 +19,10 @@
           </button>
         </div>
         <div class="flex items-center gap-1.5 shrink-0">
-          <button id="specs-header-action-form" onclick="openSpecFormModal()" class="fab-inline" title="Criar especificação" aria-label="Criar especificação">
+          <!-- Some do header enquanto não há nenhuma spec -- vira CTA
+               centralizado no empty-state (renderSpecsList em specifications.js),
+               "sobe" pro header assim que a primeira spec é criada. -->
+          <button id="specs-header-action-form" onclick="openSpecFormModal()" class="fab-inline hidden" title="Criar especificação" aria-label="Criar especificação">
             <i data-lucide="plus" class="w-4 h-4 shrink-0"></i>
             <span>Nova spec</span>
           </button>

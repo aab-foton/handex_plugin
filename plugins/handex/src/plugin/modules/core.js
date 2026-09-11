@@ -816,6 +816,10 @@ function updateEmptyFramesState() {
     if (hasFrames) sectionTitle.textContent = `Tokens Escaneados (${handoffData.frames.length})`;
   }
   _updateContentHint('frames-register-hint', hasFrames);
+  // "Registrar Frame" mora no header só quando já há frames -- lista vazia
+  // usa o CTA centralizado dentro de #frames-empty-state (mesmo onclick).
+  const headerBtn = document.getElementById('btn-frame-register-header');
+  if (headerBtn) headerBtn.classList.toggle('hidden', !hasFrames);
 }
 
 function importTitleFromSelection() {

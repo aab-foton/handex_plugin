@@ -18,7 +18,12 @@
       <button id="btn-resync-flows" onclick="resyncAllFlows()" class="hidden min-w-[40px] min-h-[40px] flex items-center justify-center bg-white/10 dark:bg-white/10 rounded-xl hover:bg-white/20 dark:hover:bg-white/20 transition-colors" title="Redesenhar todas as linhas no canvas a partir dos dados salvos — use se moveu os frames e as conexões ficaram desalinhadas" aria-label="Redesenhar todas as linhas de fluxo no canvas">
         <i data-lucide="refresh-cw" class="w-5 h-5 text-white" aria-hidden="true"></i>
       </button>
-      <button onclick="openFlowFormModal()" class="fab-inline shrink-0" title="Conectar Frames" aria-label="Conectar Frames">
+      <!-- Some do header enquanto não há nenhum fluxo -- vira CTA
+           centralizado no empty-state (renderFlowsList em specifications.js),
+           "sobe" pro header assim que o primeiro fluxo é criado. Botão de
+           resync acima segue sua própria regra (só aparece com fluxos
+           existentes), não faz parte desta troca. -->
+      <button id="btn-flow-connect-header" onclick="openFlowFormModal()" class="fab-inline shrink-0 hidden" title="Conectar Frames" aria-label="Conectar Frames">
         <i data-lucide="git-branch" class="w-4 h-4 shrink-0"></i>
         <span>Conectar Frames</span>
       </button>
