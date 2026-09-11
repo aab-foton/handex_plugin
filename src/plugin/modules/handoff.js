@@ -138,14 +138,25 @@ ${framesList.map(f => {
   return `### ${f.nome}${isNew}${auditMD}${ressalvasMD}${tokensMD}${excMD}`;
 }).join('\n\n')}
 
-## Medidas (${framesList.reduce((n, f) => n + (f.measurements || []).length, 0)})
+## Medidas (${framesList.reduce((n, f) => n + (f.measurements || []).length, 0) + (handoffData.measurements || []).length})
 ${(() => {
+  // Medidas avulsas (handoffData.measurements) não pertencem a nenhum frame
+  // específico -- ficavam de fora do Markdown exportado antes desta correção
+  // (2026-09-11), mesmo existindo de verdade e aparecendo na Ficha do canvas.
   const framesWithMeasures = framesList.filter(f => (f.measurements || []).length > 0);
-  if (framesWithMeasures.length === 0) return 'Nenhuma medida registrada.';
-  return framesWithMeasures.map(f =>
+  const looseMeasures = handoffData.measurements || [];
+  if (framesWithMeasures.length === 0 && looseMeasures.length === 0) return 'Nenhuma medida registrada.';
+  const parts = framesWithMeasures.map(f =>
     `### ${f.nome}\n` +
     f.measurements.map(m => `- **${m.name || 'Medida'}**: ${Array.isArray(m.details) ? m.details.join(' | ') : m.details || ''}`).join('\n')
-  ).join('\n\n');
+  );
+  if (looseMeasures.length > 0) {
+    parts.push(
+      `### Medidas Avulsas\n` +
+      looseMeasures.map(m => `- **${m.name || 'Medida'}**: ${Array.isArray(m.details) ? m.details.join(' | ') : m.details || ''}`).join('\n')
+    );
+  }
+  return parts.join('\n\n');
 })()}
 
 ## Especificações Anotadas (${framesList.reduce((n, f) => n + (f.createdSpecs || []).length, 0)})
@@ -290,7 +301,8 @@ ${(handoffData.createdFlows || []).length === 0
       );
       const totalSpecs = (handoffData.frames || []).reduce((n, f) => n + (f.createdSpecs || []).length, 0)
                        + ((typeof createdSpecs !== 'undefined' ? createdSpecs : []).length);
-      const totalMeasures = (handoffData.frames || []).reduce((n, f) => n + (f.measurements || []).length, 0);
+      const totalMeasures = (handoffData.frames || []).reduce((n, f) => n + (f.measurements || []).length, 0)
+                           + (handoffData.measurements || []).length;
       const totalFlows = (handoffData.createdFlows || []).length;
 
       const sections = [
@@ -1278,31 +1290,34 @@ ${(handoffData.createdFlows || []).length === 0
         accordionsHTML += buildAccordionHTML("acc-frames", "Frames Documentados", "layers", framesContent, false);
       }
 
-      // 7.1 Medidas (seção independente, agrupada por frame)
+      // 7.1 Medidas (seção independente, agrupada por frame + avulsas)
       const _framesWithMeas = (_allFrames).filter(f => (f.measurements || []).length > 0);
-      if (_framesWithMeas.length > 0) {
-        const totalMeas = _framesWithMeas.reduce((n, f) => n + f.measurements.length, 0);
+      const _looseMeas = handoffData.measurements || [];
+      if (_framesWithMeas.length > 0 || _looseMeas.length > 0) {
+        const totalMeas = _framesWithMeas.reduce((n, f) => n + f.measurements.length, 0) + _looseMeas.length;
+        const _measGroupHTML = (label, measurements, groupKey) => `
+          <div>
+            <p class="text-[9px] font-black uppercase tracking-widest text-[#005ca9] dark:text-blue-400 mb-1.5 flex items-center gap-1.5">
+              <i data-lucide="layers" class="w-3 h-3"></i> ${label}
+            </p>
+            <div class="space-y-1.5">
+              ${measurements.map((m, mi) => `
+                <div class="flex flex-col bg-cyan-50/40 dark:bg-cyan-950/10 border border-cyan-100/60 dark:border-cyan-900/30 rounded-lg overflow-hidden">
+                  <div class="flex items-center gap-2 p-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M21.3 8.7 8.7 21.3c-1 1-2.5 1-3.4 0l-2.6-2.6c-1-1-1-2.5 0-3.4L15.3 2.7c1-1 2.5-1 3.4 0l2.6 2.6c1 1 1 2.5 0 3.4Z"/><path d="m7.5 10.5 2 2"/><path d="m10.5 7.5 2 2"/><path d="m13.5 4.5 2 2"/><path d="m4.5 13.5 2 2"/></svg>
+                    <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex-1 truncate">${m.name || m.label || 'Medida'}</span>
+                    ${m.details ? `<span class="text-[10px] font-mono text-cyan-700 dark:text-cyan-400 shrink-0">${Array.isArray(m.details) ? m.details.join(' | ') : m.details}</span>` : ''}
+                  </div>
+                  ${_commentFieldHTML('meas-' + (m.nodeId || (groupKey + '-' + mi)), m.name || m.label || 'Medida')}
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
         const measContent = `
           <div class="space-y-4 text-left">
-            ${_framesWithMeas.map((f, fi) => `
-              <div>
-                <p class="text-[9px] font-black uppercase tracking-widest text-[#005ca9] dark:text-blue-400 mb-1.5 flex items-center gap-1.5">
-                  <i data-lucide="layers" class="w-3 h-3"></i> ${f.nome || 'Frame'}
-                </p>
-                <div class="space-y-1.5">
-                  ${f.measurements.map((m, mi) => `
-                    <div class="flex flex-col bg-cyan-50/40 dark:bg-cyan-950/10 border border-cyan-100/60 dark:border-cyan-900/30 rounded-lg overflow-hidden">
-                      <div class="flex items-center gap-2 p-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M21.3 8.7 8.7 21.3c-1 1-2.5 1-3.4 0l-2.6-2.6c-1-1-1-2.5 0-3.4L15.3 2.7c1-1 2.5-1 3.4 0l2.6 2.6c1 1 1 2.5 0 3.4Z"/><path d="m7.5 10.5 2 2"/><path d="m10.5 7.5 2 2"/><path d="m13.5 4.5 2 2"/><path d="m4.5 13.5 2 2"/></svg>
-                        <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex-1 truncate">${m.name || m.label || 'Medida'}</span>
-                        ${m.details ? `<span class="text-[10px] font-mono text-cyan-700 dark:text-cyan-400 shrink-0">${Array.isArray(m.details) ? m.details.join(' | ') : m.details}</span>` : ''}
-                      </div>
-                      ${_commentFieldHTML('meas-' + (m.nodeId || (fi + '-' + mi)), m.name || m.label || 'Medida')}
-                    </div>
-                  `).join('')}
-                </div>
-              </div>
-            `).join('')}
+            ${_framesWithMeas.map((f, fi) => _measGroupHTML(f.nome || 'Frame', f.measurements, fi)).join('')}
+            ${_looseMeas.length > 0 ? _measGroupHTML('Medidas Avulsas', _looseMeas, 'loose') : ''}
           </div>
         `;
         accordionsHTML += buildAccordionHTML("acc-medidas", `Medidas · ${totalMeas}`, "ruler", measContent, false);

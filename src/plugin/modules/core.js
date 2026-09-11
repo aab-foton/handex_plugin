@@ -2041,8 +2041,12 @@ function updateHandoffSummary() {
   if (featureRow) featureRow.classList.toggle('hidden', !feature);
 
   set('hs-count-frames', frames.length);
-  set('hs-count-specs', frames.reduce((s, f) => s + (f.createdSpecs?.length || 0), 0));
-  set('hs-count-measures', frames.reduce((s, f) => s + (f.measurements?.length || 0), 0));
+  // Soma specs/medidas POR FRAME + as avulsas (handoffData.specs/measurements,
+  // não vinculadas a nenhum frame específico) -- sem isso, medidas/specs
+  // criadas sem frame associado ficavam de fora da contagem, mesmo existindo
+  // de verdade e aparecendo na Ficha gerada (achado real, 2026-09-11).
+  set('hs-count-specs', frames.reduce((s, f) => s + (f.createdSpecs?.length || 0), 0) + (handoffData.specs?.length || 0));
+  set('hs-count-measures', frames.reduce((s, f) => s + (f.measurements?.length || 0), 0) + (handoffData.measurements?.length || 0));
   set('hs-count-flows', (handoffData.createdFlows || []).length);
   _refreshIcons();
 }
