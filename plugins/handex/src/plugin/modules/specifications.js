@@ -1954,6 +1954,7 @@
         if (finalizeWrap) finalizeWrap.classList.add('hidden');
         if (sectionTitle) sectionTitle.classList.add('hidden');
         if (headerBtn) headerBtn.classList.add('hidden');
+        if (typeof _moveHeaderHelpIcons === 'function') _moveHeaderHelpIcons('specs-header-help-icons', '#view-specifications .subheader-brand > div:last-child', false);
         closeSpecsMoreActions();
         const bar = document.getElementById('specs-search-bar');
         if (bar) bar.classList.add('hidden');
@@ -1966,6 +1967,7 @@
       if (moreActionsBtn) moreActionsBtn.classList.remove('hidden');
       if (finalizeWrap) finalizeWrap.classList.remove('hidden');
       if (headerBtn) headerBtn.classList.remove('hidden');
+      if (typeof _moveHeaderHelpIcons === 'function') _moveHeaderHelpIcons('specs-header-help-icons', '#view-specifications .subheader-brand > div:last-child', true);
       if (sectionTitle) {
         sectionTitle.classList.remove('hidden');
         sectionTitle.textContent = `Specs Criadas (${createdSpecs.length})`;
@@ -3425,6 +3427,7 @@
         if (collapseBtn) collapseBtn.classList.add('hidden');
         if (sectionTitle) sectionTitle.classList.add('hidden');
         if (headerBtn) headerBtn.classList.add('hidden');
+        if (typeof _moveHeaderHelpIcons === 'function') _moveHeaderHelpIcons('flows-header-help-icons', '#view-flows .subheader-brand > div:last-child', false);
         _updateContentHint('hint-flows', false);
         _refreshIcons();
         return;
@@ -3432,6 +3435,7 @@
       if (finalizeWrap) finalizeWrap.classList.remove('hidden');
       if (resyncBtn) resyncBtn.classList.remove('hidden');
       if (headerBtn) headerBtn.classList.remove('hidden');
+      if (typeof _moveHeaderHelpIcons === 'function') _moveHeaderHelpIcons('flows-header-help-icons', '#view-flows .subheader-brand > div:last-child', true);
       _updateContentHint('hint-flows', true);
 
       const FLOW_TYPE_LABELS = {
