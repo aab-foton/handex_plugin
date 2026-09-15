@@ -3272,7 +3272,7 @@ function _a11yWorkspaceTabTabulacao(area) {
   // _renderTabOrderListForArea pra saber se a área já tem itens.
   const hasManualItems = typeof _currentTabOrderItems === 'function' && _currentTabOrderItems(area.id).length > 0;
   return `
-    <div class="space-y-2 flex flex-col flex-1 min-h-0">
+    <div class="space-y-2 flex flex-col flex-1">
       <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-relaxed">
         Documente a sequência de ordem por tabulação (Tecla Tab) da interface, segure o Shift e vá clicando para selecionar os elementos acionáveis (Links, Buttons e Campos de Texto) um por um e confirme no final para selecionar tudo de uma vez.
       </p>
@@ -3395,7 +3395,7 @@ function _a11yWorkspaceTabSwipe(area) {
   const targetNodeIdAttr = area.targetNodeId || '';
 
   return `
-    <div class="space-y-2 flex flex-col flex-1 min-h-0">
+    <div class="space-y-2 flex flex-col flex-1">
       <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-relaxed">
         Documente a sequência de ordem por tabulação (Tecla Tab) da interface, segure o Shift e vá clicando para selecionar os elementos acionáveis (Links, Buttons e Campos de Texto) um por um e confirme no final para selecionar tudo de uma vez.
       </p>
@@ -3530,7 +3530,7 @@ function _a11yWorkspaceTabLeitorDeTela(area, areaSpecs) {
   // à tab Tabulação) — Manual ("Nova spec") sempre fica disponível.
   const hasManualSpecs = areaSpecs.length > 0;
   return `
-    <div class="space-y-2 flex flex-col flex-1 min-h-0">
+    <div class="space-y-2 flex flex-col flex-1">
       <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-relaxed">Crie, edite ou remova especificações desta tela, por categoria.</p>
       <!-- Botão primário no mesmo padrão visual de "Iniciar Ordem de
            Tabulação"/"Iniciar trilha de swipe" (2026-09-04-x, pedido do
