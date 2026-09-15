@@ -334,16 +334,10 @@ function _a11yCaptureBarSyncTooltips() {
   }
 
   const cancelBtn = document.getElementById('a11y-capture-mini-bar-cancel');
-  if (cancelBtn) {
-    cancelBtn.setAttribute('data-tooltip', `Sair sem documentar nada — os ${noun} marcados são descartados`);
-    cancelBtn.setAttribute('aria-label', `Cancelar seleção e descartar os ${noun} marcados`);
-  }
+  if (cancelBtn) cancelBtn.setAttribute('aria-label', `Cancelar seleção e descartar os ${noun} marcados`);
 
   const finishBtn = document.getElementById('a11y-capture-mini-bar-finish');
-  if (finishBtn) {
-    finishBtn.setAttribute('data-tooltip', `Terminar a marcação e revisar os ${noun} antes de aplicar`);
-    finishBtn.setAttribute('aria-label', `Concluir seleção e revisar os ${noun}`);
-  }
+  if (finishBtn) finishBtn.setAttribute('aria-label', `Concluir seleção e revisar os ${noun}`);
 }
 
 function _a11yCaptureBarApplyInstructionsVisibility() {

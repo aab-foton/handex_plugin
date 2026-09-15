@@ -3285,14 +3285,12 @@ function _a11yWorkspaceTabTabulacao(area) {
              arma a captura de novo(s) elemento(s), reaproveitando a MESMA
              cópia clonada (nenhum selo já desenhado é tocado). -->
         <button type="button" onclick="startTabOrderAddItemsFromCard('${escapeHtml(areaIdAttr)}')"
-          data-tooltip="Marcar mais elementos e somá-los ao final da ordem já existente"
-          class="tooltip-right flex-1 flex items-center justify-center gap-dsc-nano h-9 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
+          class="flex-1 flex items-center justify-center gap-dsc-nano h-9 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
           <i data-lucide="plus" class="w-3.5 h-3.5" aria-hidden="true"></i>
           Adicionar itens
         </button>` : `
         <button type="button" onclick="startTabOrderManualMode('${escapeHtml(areaIdAttr)}', '${escapeHtml(area.targetNodeId || '')}')"
-          data-tooltip="Cria uma cópia da tela e minimiza o plugin para você clicar nos elementos"
-          class="tooltip-right flex-1 flex items-center justify-center gap-dsc-nano h-9 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
+          class="flex-1 flex items-center justify-center gap-dsc-nano h-9 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
           <i data-lucide="list-ordered" class="w-3.5 h-3.5" aria-hidden="true"></i>
           Iniciar Ordem de Tabulação
         </button>`}
@@ -3313,7 +3311,6 @@ function _a11yWorkspaceTabTabulacao(area) {
            Automatizado" — não é geração final, o resultado ainda passa
            por revisão). -->
       <button type="button" onclick="_confirmGenerateTabOrderFromLayers('${escapeHtml(areaIdAttr)}', '${escapeHtml(area.targetNodeId || '')}')"
-        data-tooltip="O plugin varre as camadas e propõe uma ordem — você revisa antes de aplicar"
         class="w-full flex items-center justify-center gap-1.5 h-7 mt-0.5 rounded-dsc-small text-dsc-label-tiny normal-case tracking-normal font-bold text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99] transition-all">
         <i data-lucide="sparkles" class="w-3.5 h-3.5" aria-hidden="true"></i>
         ou usar Mapeamento Automático
@@ -3322,8 +3319,7 @@ function _a11yWorkspaceTabTabulacao(area) {
       ${hasManualItems ? `
       <div class="flex items-center gap-1.5 mt-1">
         <button type="button" id="tab-order-narration-btn-${uid}" onclick="toggleTabOrderNarration('${escapeHtml(areaIdAttr)}', '${escapeHtml(uid)}')"
-          data-tooltip="Ouvir a sequência em voz alta para conferir se a ordem faz sentido"
-          class="tooltip-right flex-1 flex items-center justify-center gap-dsc-nano h-8 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm hover:shadow transition-all">
+          class="flex-1 flex items-center justify-center gap-dsc-nano h-8 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm hover:shadow transition-all">
           <i data-lucide="play" class="w-3.5 h-3.5" aria-hidden="true"></i>
           Simular leitura
         </button>
@@ -3424,13 +3420,11 @@ function _a11yWorkspaceTabSwipe(area) {
            sentido represar mudanças pendentes sem persistir. -->
       <ul id="a11y-swipe-path-tab-list" class="flex flex-col gap-1.5 min-h-[10px]"></ul>
       <button type="button" onclick="openSwipePathEditMode('${escapeHtml(areaIdAttr)}', '${escapeHtml(targetNodeIdAttr)}')"
-        data-tooltip="Marcar mais pontos e somá-los ao final da trilha existente"
         class="w-full flex items-center justify-center gap-dsc-nano h-8 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm hover:shadow transition-all">
         <i data-lucide="plus" class="w-3.5 h-3.5" aria-hidden="true"></i>
         Adicionar ponto
       </button>` : ''}
       <button type="button" onclick="startSwipePathManualMode('${escapeHtml(areaIdAttr)}', '${escapeHtml(targetNodeIdAttr)}')"
-        data-tooltip="${existingPath ? 'Descarta a trilha atual e recomeça a marcação do zero' : 'Cria uma cópia da tela e minimiza o plugin para você clicar nos pontos'}"
         class="w-full flex items-center justify-center gap-dsc-nano h-9 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
         <i data-lucide="route" class="w-3.5 h-3.5" aria-hidden="true"></i>
         ${startLabel}
@@ -3451,14 +3445,12 @@ function _a11yWorkspaceTabSwipe(area) {
            startSwipePathManualMode do botão acima) — nunca bloqueia. -->
       ${A11Y_AUTO_MAPPING_HIDDEN_TAB_SWIPE ? '' : `
       <button type="button" onclick="startSwipePathFromTabOrder('${escapeHtml(areaIdAttr)}', '${escapeHtml(targetNodeIdAttr)}')"
-        data-tooltip="Reaproveita a sequência já confirmada na aba Tabulação, na mesma ordem"
         class="w-full flex items-center justify-center gap-1.5 h-7 mt-0.5 rounded-dsc-small text-dsc-label-tiny normal-case tracking-normal font-bold text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99] transition-all">
         <i data-lucide="sparkles" class="w-3.5 h-3.5" aria-hidden="true"></i>
         ou usar a Ordem de Tabulação já mapeada
       </button>`}
       ${existingPath ? `
       <button type="button" onclick="deleteSwipePathForArea('${escapeHtml(areaIdAttr)}')"
-        data-tooltip="Apagar a trilha desta tela do canvas, incluindo a linha e os pontos"
         class="w-full flex items-center justify-center gap-dsc-nano h-8 mt-1 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-all">
         <i data-lucide="trash-2" class="w-3.5 h-3.5" aria-hidden="true"></i>
         Remover trilha
@@ -3545,7 +3537,6 @@ function _a11yWorkspaceTabLeitorDeTela(area, areaSpecs) {
            usuário) — antes era um pill pequeno ao lado do texto
            descritivo, inconsistente com as outras 2 tabs. -->
       <button type="button" onclick="openA11yCategoryPickerModal('${area.id}')"
-        data-tooltip="Prepara a réplica da tela e foca o canvas para você clicar no elemento"
         class="w-full flex items-center justify-center gap-dsc-nano h-9 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
         <i data-lucide="plus" class="w-3.5 h-3.5" aria-hidden="true"></i>
         Nova spec
@@ -3562,7 +3553,6 @@ function _a11yWorkspaceTabLeitorDeTela(area, areaSpecs) {
            já usado hoje por _resumeA11yBatchWizardForArea pra retomar
            detecção numa área já existente; nenhuma lógica nova de scan. -->
       <button type="button" onclick="_startA11yMappingFromLeitorTab('${escapeHtml(area.id)}')"
-        data-tooltip="O plugin reconhece os componentes do DSC na tela e sugere uma categoria para cada um"
         class="w-full flex items-center justify-center gap-1.5 h-7 mt-0.5 rounded-dsc-small text-dsc-label-tiny normal-case tracking-normal font-bold text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99] transition-all">
         <i data-lucide="radar" class="w-3.5 h-3.5" aria-hidden="true"></i>
         ou usar Mapeamento Automático

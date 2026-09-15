@@ -61,7 +61,7 @@
        chutado — achado real com print do usuário). Com telas documentadas,
        nenhuma classe extra é aplicada — a lista volta a fluir/rolar
        normalmente como sempre funcionou. -->
-  <div id="specs-scroll-container" class="flex-1 overflow-y-auto pt-0 px-4 pb-4" onscroll="handleScroll(this)">
+  <div id="specs-scroll-container" class="flex-1 min-h-0 overflow-y-auto pt-0 px-4 pb-4" onscroll="handleScroll(this)">
     <div id="specs-scroll-container-inner" class="space-y-4 w-full mx-auto">
 
       <!-- Banner "Primeira vez aqui?" removido (2026-09-10, pedido do
@@ -214,7 +214,7 @@
        o `mt-auto` do botão "Preencher ..." (_fichaInsertButtonHtml,
        handoff-ficha.js) o empurre pra extremidade baixa do plugin. Com
        conteúdo longo nada muda: o container cresce e rola normalmente. -->
-  <div id="a11y-workspace-scroll-container" class="flex-1 overflow-y-auto p-dsc-tiny flex flex-col" onscroll="handleScroll(this)">
+  <div id="a11y-workspace-scroll-container" class="flex-1 min-h-0 overflow-y-auto p-dsc-tiny flex flex-col" onscroll="handleScroll(this)">
     <div id="a11y-workspace-tab-content" class="space-y-3 w-full mx-auto min-h-full flex flex-col">
       <!-- Preenchido por _renderA11yWorkspaceTab() (accessibility.js) —
            uma função de render por tab, chamada sob demanda (só a tab

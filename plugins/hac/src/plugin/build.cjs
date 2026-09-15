@@ -204,17 +204,17 @@ ${css}
              (itens de Tabulação vs. pontos de Swipe) — os valores abaixo
              são só o estado inicial. -->
         <button type="button" id="a11y-capture-mini-bar-help" onclick="_a11yCaptureBarToggleInstructions()"
-          data-tooltip="Recolher as instruções e liberar espaço no canvas" class="tooltip-left w-7 h-7 flex items-center justify-center text-slate-400 dark:text-dark-muted hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-light-line dark:hover:bg-dark-surface rounded-xl transition-colors shrink-0"
+          data-tooltip="Recolher as instruções e liberar espaço no canvas" class="tooltip-bottom w-7 h-7 flex items-center justify-center text-slate-400 dark:text-dark-muted hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-light-line dark:hover:bg-dark-surface rounded-xl transition-colors shrink-0"
           aria-label="Recolher instruções">
           <i data-lucide="chevron-up" id="a11y-capture-mini-bar-help-icon" class="w-4 h-4"></i>
         </button>
         <button type="button" id="a11y-capture-mini-bar-cancel" onclick="_a11yCaptureMiniBarCancel()"
-          data-tooltip="Sair sem documentar nada — o que você marcou é descartado" class="tooltip-bottom px-2.5 py-1.5 text-[10.5px] font-bold text-slate-500 dark:text-dark-muted hover:bg-light-line dark:hover:bg-dark-surface rounded-xl transition-colors"
+          class="px-2.5 py-1.5 text-[10.5px] font-bold text-slate-500 dark:text-dark-muted hover:bg-light-line dark:hover:bg-dark-surface rounded-xl transition-colors"
           aria-label="Cancelar seleção e descartar o que foi marcado">
           Cancelar
         </button>
         <button type="button" id="a11y-capture-mini-bar-finish" onclick="_a11yCaptureMiniBarFinish()"
-          data-tooltip="Terminar a marcação e revisar a lista antes de aplicar" class="tooltip-left px-3 py-1.5 text-[10.5px] font-bold text-white bg-[#0891B2] hover:bg-cyan-700 rounded-xl transition-colors shadow-lg shadow-cyan-500/20"
+          class="px-3 py-1.5 text-[10.5px] font-bold text-white bg-[#0891B2] hover:bg-cyan-700 rounded-xl transition-colors shadow-lg shadow-cyan-500/20"
           aria-label="Concluir seleção e revisar a lista">
           Concluir seleção
         </button>

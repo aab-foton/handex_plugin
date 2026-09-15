@@ -103,14 +103,9 @@ function _fichaInsertButtonHtml(area, sectionKey, hasItems) {
   const already = !!(state && state.insertedAt);
   const label = _fichaButtonLabel(area, sectionKey);
   const icon = already ? 'refresh-cw' : 'file-plus-2';
-  const name = _fichaSectionDisplayName(sectionKey);
-  const tooltip = already
-    ? `Regerar este bloco no Handoff com o que mudou em ${name} desde a última inserção`
-    : `Leva o que você documentou em ${name} para o Handoff de Acessibilidade no canvas`;
   return `
     <button type="button" onclick="_fichaInsertSection('${escapeHtml(sectionKey)}')"
-      data-tooltip="${escapeHtml(tooltip)}"
-      class="tooltip-right w-full flex items-center justify-center gap-dsc-nano h-9 mt-auto pt-1 rounded-dsc-medium text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-white dark:bg-dark-surface text-cyan-700 dark:text-cyan-400 shadow-sm hover:shadow active:scale-[0.99] shrink-0">
+      class="w-full flex items-center justify-center gap-dsc-nano h-9 mt-auto pt-1 rounded-dsc-medium text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-white dark:bg-dark-surface text-cyan-700 dark:text-cyan-400 shadow-sm hover:shadow active:scale-[0.99] shrink-0">
       <i data-lucide="${icon}" class="w-3.5 h-3.5" aria-hidden="true"></i>
       ${label}
     </button>
