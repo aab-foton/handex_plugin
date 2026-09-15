@@ -153,33 +153,21 @@ function _tabOrderNextTempId() {
 
 // Ativado pelo botão "Iniciar Ordem de Tabulação" — reinicia a lista
 // pendente (fluxo novo, nunca acumula com uma sessão anterior não aplicada)
-// e abre o modal já em modo de escuta contínua.
+// e dispara 'start-tab-order-copy': o backend clona o frame da área
+// IMEDIATAMENTE (cópia vazia, sem selos ainda), pra que o frame ORIGINAL
+// fique 100% intocado durante todo o fluxo manual (o highlight temporário
+// de cada clique passa a ser desenhado sobre o node equivalente dentro da
+// cópia, nunca mais no original). Resposta tratada em
+// handleTabOrderCopyStarted (messages.js → aqui).
 //
-// Dispara 'start-tab-order-copy' ANTES de abrir a escuta de cliques: o
-// backend clona o frame da área IMEDIATAMENTE (cópia vazia, sem selos
-// ainda), pra que o frame ORIGINAL fique 100% intocado durante todo o
-// fluxo manual (o highlight temporário de cada clique passa a ser
-// desenhado sobre o node equivalente dentro da cópia, nunca mais no
-// original). Resposta tratada em handleTabOrderCopyStarted
-// (messages.js → aqui).
-// Conteúdo por feature do modal educativo de Shift+clique — ver
-// _showA11yShiftHintThenStart abaixo. 'tabulacao' preserva o texto
-// original (2026-09-10); 'swipe' adicionado em 2026-09-14 (pedido do
-// usuário: "coloque o toast sobre o Shift também no swipe" — Swipe nunca
-// teve esta dica, só Tabulação).
-const A11Y_SHIFT_HINT_CONTENT = {
-  tabulacao: {
-    onboardingKey: 'tabOrderShiftHint',
-    title: 'Selecionando elementos para a Ordem de Tabulação',
-    steps: '<li><strong>Segure Shift e clique</strong> em cada elemento, na ordem em que o teclado deve navegar por eles.</li>'
-      + '<li>Errou a ordem? Sem problema: <strong>arraste para reposicionar</strong> os itens depois, na lista de revisão.</li>',
-  },
-  swipe: {
-    onboardingKey: 'swipePathShiftHint',
-    title: 'Selecionando pontos para a Trilha de Swipe',
-    steps: '<li><strong>Segure Shift e clique</strong> em cada ponto, na ordem em que o gesto de swipe deve passar por eles.</li>'
-      + '<li>Errou a ordem? Sem problema: <strong>arraste para reposicionar</strong> os pontos depois, na lista de revisão.</li>',
-  },
+// Dica de Shift+clique por feature — incorporada como ÚLTIMO passo do bloco
+// de instrução rico (ver _renderA11yInstructionContent abaixo). 'tabulacao'
+// preserva o texto original (2026-09-10); 'swipe' adicionado em 2026-09-14
+// (pedido do usuário: "coloque o toast sobre o Shift também no swipe" —
+// Swipe nunca teve esta dica, só Tabulação).
+const A11Y_SHIFT_HINT_STEP_BY_FEATURE = {
+  tabulacao: 'Sugestão de uso: <strong>segure Shift e clique</strong> em cada elemento, na ordem em que o teclado deve navegar por eles. Errou a ordem? Sem problema: <strong>arraste para reposicionar</strong> os itens depois, na lista de revisão.',
+  swipe: 'Sugestão de uso: <strong>segure Shift e clique</strong> em cada ponto, na ordem em que o gesto de swipe deve passar por eles. Errou a ordem? Sem problema: <strong>arraste para reposicionar</strong> os pontos depois, na lista de revisão.',
 };
 
 function startTabOrderManualMode(areaId, targetNodeId) {
@@ -187,65 +175,95 @@ function startTabOrderManualMode(areaId, targetNodeId) {
     showToast('Selecione uma tela antes de iniciar a ordem de tabulação.');
     return;
   }
-  _showA11yShiftHintThenStart('tabulacao', { areaId, targetNodeId }, () => _startTabOrderManualModeInner(areaId, targetNodeId));
+  _startTabOrderManualModeInner(areaId, targetNodeId);
 }
 window.startTabOrderManualMode = startTabOrderManualMode;
 
-// Dica educativa de Shift+clique, generalizada por feature (2026-09-14) —
-// mostrada uma única vez por arquivo Figma POR FEATURE, ANTES de minimizar
-// a janela e começar a escutar cliques (onboardingSeen, chave própria por
-// feature, mesmo mecanismo de onboarding.js). Se já foi vista pra esta
-// feature, pula direto pro fluxo real (onConfirm) sem exibir nada.
-function _showA11yShiftHintThenStart(feature, pendingArgs, onConfirm) {
-  const content = A11Y_SHIFT_HINT_CONTENT[feature];
-  if (!content) { onConfirm(); return; }
-  if (_onboardingSeen(content.onboardingKey)) { onConfirm(); return; }
-  window._pendingA11yShiftHintFeature = feature;
-  window._pendingA11yShiftHintConfirm = onConfirm;
-  const titleEl = document.getElementById('a11y-shift-hint-title-text');
-  if (titleEl) titleEl.textContent = content.title;
-  const stepsEl = document.getElementById('a11y-shift-hint-steps');
-  if (stepsEl) stepsEl.innerHTML = content.steps;
-  if (typeof _refreshIcons === 'function') { openModal('a11y-tab-order-shift-hint-modal'); _refreshIcons(); }
-  else openModal('a11y-tab-order-shift-hint-modal');
+// Monta o HTML dos passos numerados do template oficial de Handoff
+// (FICHA_INSTRUCTION_CONTENT_UI, refs/ficha-instruction-content.json —
+// mesmo texto já usado na coluna de legenda da Ficha final), acrescentando
+// a dica de Shift+clique como último passo pra tabulacao/swipe
+// (A11Y_SHIFT_HINT_STEP_BY_FEATURE — o template oficial descreve "como
+// preencher a Ficha depois de pronta", não o gesto de captura no plugin em
+// si, que continua precisando ser explicado à parte). Usado tanto pelo
+// bloco de instrução da barra de captura (core.js,
+// _a11yCaptureBarRenderInstructions) quanto pelo modal do Leitor de Tela
+// (accessibility.js, openA11yCategoryPickerModal) — cada um passa os
+// próprios ids de elemento (`ids`), o conteúdo/lógica é o mesmo.
+function _renderA11yInstructionContent(feature, ids) {
+  const content = (typeof FICHA_INSTRUCTION_CONTENT_UI !== 'undefined') ? FICHA_INSTRUCTION_CONTENT_UI[feature] : null;
+  if (!content) return false;
+  const titleEl = document.getElementById(ids.title);
+  if (titleEl) titleEl.textContent = content.title || '';
+  const instrHeadingEl = document.getElementById(ids.instructionsHeading);
+  if (instrHeadingEl) instrHeadingEl.textContent = content.instructionsHeading || 'Instruções sobre a documentação';
+  const instrBodyEl = document.getElementById(ids.instructionsBody);
+  if (instrBodyEl) instrBodyEl.textContent = content.instructionsBody || '';
+  const stepsHeadingEl = document.getElementById(ids.stepsHeading);
+  if (stepsHeadingEl) stepsHeadingEl.textContent = content.stepsHeading || 'Como fazer';
+  const stepsEl = document.getElementById(ids.steps);
+  const shiftStep = A11Y_SHIFT_HINT_STEP_BY_FEATURE[feature];
+  const steps = [...(content.steps || [])];
+  if (shiftStep) steps.push(shiftStep);
+  if (stepsEl) {
+    stepsEl.innerHTML = steps.map(s => {
+      const boldMatch = /^([^:]{1,80}):\s*(.*)$/s.exec(s);
+      return boldMatch
+        ? `<li><strong>${escapeHtml(boldMatch[1])}:</strong> ${boldMatch[2].includes('<') ? boldMatch[2] : escapeHtml(boldMatch[2])}</li>`
+        : `<li>${s.includes('<') ? s : escapeHtml(s)}</li>`;
+    }).join('');
+  }
+  return true;
 }
 
-// Chamada pelo botão "Entendi, começar seleção" do modal educativo acima —
-// marca a chave da feature pendente como vista (nunca mais aparece
-// sozinha pra ELA, a outra feature ainda mostra a dica na sua 1ª vez) e
-// prossegue com o fluxo real (callback guardado por _showA11yShiftHintThenStart).
-function _confirmA11yShiftHint() {
-  const feature = window._pendingA11yShiftHintFeature;
-  const content = feature ? A11Y_SHIFT_HINT_CONTENT[feature] : null;
-  if (content) markOnboardingSeen(content.onboardingKey);
-  closeModal('a11y-tab-order-shift-hint-modal');
-  const onConfirm = window._pendingA11yShiftHintConfirm;
-  window._pendingA11yShiftHintFeature = null;
-  window._pendingA11yShiftHintConfirm = null;
-  if (typeof onConfirm === 'function') onConfirm();
-}
-window._confirmA11yShiftHint = _confirmA11yShiftHint;
+// ids do modal usado hoje só pelo Leitor de Tela (ver
+// openA11yCategoryPickerModal, accessibility.js) — Tabulação/Swipe usam o
+// bloco de instrução embutido na própria barra de captura (core.js), não
+// mais este modal (2026-09-15, pedido do usuário: "quero que as instruções
+// fiquem sendo exibidas, o designer recolhe se quiser", em vez de um modal
+// bloqueante antes de minimizar).
+const A11Y_INSTRUCTION_MODAL_IDS = {
+  title: 'a11y-instruction-modal-title-text',
+  instructionsHeading: 'a11y-instruction-modal-instructions-heading',
+  instructionsBody: 'a11y-instruction-modal-instructions-body',
+  stepsHeading: 'a11y-instruction-modal-steps-heading',
+  steps: 'a11y-instruction-modal-steps',
+};
 
-// Reabertura manual da dica (ícone "?" nos modais de revisão) —
-// puramente informativa, nunca marca/desmarca o estado de "visto" e nunca
-// reinicia o fluxo de captura (o designer já está no meio da revisão/
-// captura quando clica nisso). feature ∈ 'tabulacao' | 'swipe'.
-function openA11yShiftHintManually(feature) {
-  const content = A11Y_SHIFT_HINT_CONTENT[feature || 'tabulacao'];
-  if (!content) return;
-  window._pendingA11yShiftHintFeature = null;
-  window._pendingA11yShiftHintConfirm = null;
-  const titleEl = document.getElementById('a11y-shift-hint-title-text');
-  if (titleEl) titleEl.textContent = content.title;
-  const stepsEl = document.getElementById('a11y-shift-hint-steps');
-  if (stepsEl) stepsEl.innerHTML = content.steps;
-  openModal('a11y-tab-order-shift-hint-modal');
+function _renderA11yInstructionModal(feature) {
+  return _renderA11yInstructionContent(feature, A11Y_INSTRUCTION_MODAL_IDS);
+}
+
+// Reabertura manual da instrução (ícone "?" nos modais de revisão de
+// Tabulação/Swipe) — abre o MODAL (não o bloco embutido da barra, que seria
+// redundante já que a barra já está visível nesse momento). Puramente
+// informativa, nunca reinicia o fluxo de captura. feature ∈ 'tabulacao' |
+// 'swipe'.
+function openA11yInstructionManually(feature) {
+  if (!_renderA11yInstructionModal(feature || 'tabulacao')) return;
+  window._pendingA11yInstructionConfirm = null;
+  openModal('a11y-instruction-modal');
   if (typeof _refreshIcons === 'function') _refreshIcons();
 }
-window.openA11yShiftHintManually = openA11yShiftHintManually;
+window.openA11yInstructionManually = openA11yInstructionManually;
+
+// Botão "Entendi, começar seleção" do modal — fecha e, se havia um
+// callback pendente (window._pendingA11yInstructionConfirm, setado só por
+// openA11yCategoryPickerModal/accessibility.js pro fluxo do Leitor de
+// Tela), executa-o. Reabertura manual de Tabulação/Swipe
+// (openA11yInstructionManually acima) nunca seta esse callback, então aqui
+// só fecha o modal nesse caso — é puramente informativa, não reinicia
+// nada.
+function _confirmA11yInstructionModal() {
+  closeModal('a11y-instruction-modal');
+  const onConfirm = window._pendingA11yInstructionConfirm;
+  window._pendingA11yInstructionConfirm = null;
+  if (typeof onConfirm === 'function') onConfirm();
+}
+window._confirmA11yInstructionModal = _confirmA11yInstructionModal;
 // Alias retrocompatível — o link "Como funciona a seleção?" do modal de
 // revisão da Ordem de Tabulação (modals.html) já chama este nome.
-window.openTabOrderShiftHintManually = function () { openA11yShiftHintManually('tabulacao'); };
+window.openTabOrderShiftHintManually = function () { openA11yInstructionManually('tabulacao'); };
 
 // Corpo real do fluxo manual — extraído de startTabOrderManualMode
 // (2026-09-10) pra poder ser chamado tanto direto (dica já vista) quanto
@@ -309,7 +327,7 @@ function handleTabOrderCopyStarted(cloneId, nodeMap) {
     }
     if (typeof _a11yCaptureMiniBarEnter === 'function') _a11yCaptureMiniBarEnter('tabOrder');
     _tabOrderSetCaptureMode('continuous');
-    showToast('Cópia da tela criada. Segure shift e clique (ou use marquise) pra marcar os elementos dela. A janela foi minimizada para dar espaço ao canvas.');
+    showToast('Cópia da tela criada. Siga as instruções acima e clique nos elementos dela (segure shift, ou use marquise, pra marcar vários de uma vez).');
   }
 }
 window.handleTabOrderCopyStarted = handleTabOrderCopyStarted;

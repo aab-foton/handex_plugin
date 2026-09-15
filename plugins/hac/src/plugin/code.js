@@ -531,8 +531,8 @@ function _bestEffortSyncA11yBadgeLetter(root, letter) {
 }
 
 // Importa a VARIANTE mobile REAL certa para a categoria (elemento/titulo/
-// decorativo) do component set "[a11y mob] Box specs leitor de tela"
-// (fileKey 3zdtN13YvPlCGPdXeL0Y2i) — key resolvida em
+// decorativo) do component set "[hac mob] Box specs leitor de tela"
+// (fileKey HhriLSpKnCB2dHhyiU16iB) — key resolvida em
 // wrapperData.componentKeyByA11yType[type] (ver
 // design-acessivel-mobile-wrapper.generated.json). Cada categoria já importa
 // a key da sua própria variante (COMPONENT) diretamente — não a key do

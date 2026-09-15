@@ -582,7 +582,31 @@ function _findA11yAreaById(areaId) {
 // complexidade de duas flags de "já vi" concorrentes para o mesmo instante
 // do fluxo. Se no futuro isso se mostrar repetitivo demais, dá pra persistir
 // via figma.clientStorage seguindo o mesmo padrão que já existia.
+// Modal de instrução rico do template oficial de "Especificações para
+// Leitor de Tela" (2026-09-15) — diferente de Tabulação/Swipe (que hoje
+// mostram as instruções embutidas na própria barra de captura, sempre
+// visíveis por padrão, ver core.js/tab-order.js), o Leitor de Tela não tem
+// um "modo contínuo" minimizado (é spec por spec) — o modal aparece TODA
+// VEZ que "+ Nova spec" é clicado, decisão do usuário. Cobre as 5
+// categorias de uma vez só (todas fazem parte do mesmo bloco "Leitor de
+// Tela" na Ficha final) — aparece ANTES do designer escolher qual
+// categoria vai documentar, então nunca marca/desmarca onboardingSeen.
 function openA11yCategoryPickerModal(areaId) {
+  if (typeof _renderA11yInstructionModal === 'function' && _renderA11yInstructionModal('leitorTela')) {
+    // Callback consumido por _confirmA11yInstructionModal (tab-order.js) ao
+    // fechar o modal — ver comentário lá pra por que este é o ÚNICO
+    // consumidor de callback pendente (Tabulação/Swipe não usam mais o
+    // modal pra iniciar captura, só pra reabertura manual informativa).
+    window._pendingA11yInstructionConfirm = () => _openA11yCategoryPickerModalAfterInstruction(areaId);
+    openModal('a11y-instruction-modal');
+    if (typeof _refreshIcons === 'function') _refreshIcons();
+    return;
+  }
+  _openA11yCategoryPickerModalAfterInstruction(areaId);
+}
+window.openA11yCategoryPickerModal = openA11yCategoryPickerModal;
+
+function _openA11yCategoryPickerModalAfterInstruction(areaId) {
   window._a11yPendingAreaId = areaId || null;
   window._a11yLibCheckOnSuccess = null; // fluxo normal "+" nunca usa o desvio de openA11yFormFromUndocumented
   window._a11yCategoryPickerWizardSwitch = false;
@@ -612,7 +636,6 @@ function openA11yCategoryPickerModal(areaId) {
   window._a11yLibCheckToken = token;
   parent.postMessage({ pluginMessage: { type: 'check-a11y-library', token } }, '*');
 }
-window.openA11yCategoryPickerModal = openA11yCategoryPickerModal;
 
 // Abre o mesmo modal de escolha de categoria, mas para TROCAR a categoria de
 // um item em revisão no wizard da Detecção Automática (botão de alterar

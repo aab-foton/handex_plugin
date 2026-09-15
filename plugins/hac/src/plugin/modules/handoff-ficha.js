@@ -46,16 +46,35 @@ function _fichaSectionState(area, sectionKey) {
   return (area && area.handoffFicha && area.handoffFicha.sections && area.handoffFicha.sections[sectionKey]) || null;
 }
 
-// Label do botão — "Atualizar Handoff" só depois que aquela seção já foi
-// inserida ao menos uma vez (insertedAt presente), "Preencher Handoff"
-// caso contrário. Nunca inferido do canvas.
-// Nome interno da função/campos permanece "ficha" (convenção de código,
-// nunca visível) — só o TEXTO exibido muda. Renomeado de "Inserir/
+// Nome de exibição de cada seção da Ficha — mesmo texto das abas de
+// trabalho (specifications.html, #a11y-workspace-tabs: "Tabulação"/
+// "Swipe"/"Leitor de Tela", pedido do usuário: "pode usar o mesmo nome das
+// abas"), não o nome mais longo usado alhures ("Ordem de Tabulação"/
+// "Trilha de Swipe"). Fonte única, reaproveitada pelo label do botão
+// (_fichaButtonLabel) e pelo texto do loading de canvas em
+// _fichaInsertSection (antes duplicado como ternário solto nos dois
+// lugares, com o nome longo).
+function _fichaSectionDisplayName(sectionKey) {
+  return sectionKey === 'tabulacao' ? 'Tabulação' : sectionKey === 'swipe' ? 'Swipe' : 'Leitor de Tela';
+}
+
+// Label do botão — "Atualizar [Nome da Funcionalidade]" só depois que
+// aquela seção já foi inserida ao menos uma vez (insertedAt presente),
+// "Preencher [Nome da Funcionalidade]" caso contrário. Nunca inferido do
+// canvas. Nome interno da função/campos permanece "ficha" (convenção de
+// código, nunca visível) — só o TEXTO exibido muda. Renomeado de "Inserir/
 // Atualizar Handoff Completo" pra "Preencher/Atualizar Handoff"
-// (2026-09-11, consolidação Section/Ficha, pedido do usuário).
+// (2026-09-11), e de "Preencher/Atualizar Handoff" (genérico, sem indicar
+// QUAL seção) pra "Preencher/Atualizar [Ordem de Tabulação|Trilha de
+// Swipe|Leitor de Tela]" (2026-09-15, pedido do usuário: "para que fique
+// reconhecível o que está sendo levado pro handoff" — o botão aparece em 3
+// lugares diferentes (abas Tabulação/Swipe/Leitor de Tela) e o texto
+// genérico não deixava claro qual seção específica seria inserida/
+// atualizada).
 function _fichaButtonLabel(area, sectionKey) {
   const state = _fichaSectionState(area, sectionKey);
-  return (state && state.insertedAt) ? 'Atualizar Handoff' : 'Preencher Handoff';
+  const verb = (state && state.insertedAt) ? 'Atualizar' : 'Preencher';
+  return `${verb} ${_fichaSectionDisplayName(sectionKey)}`;
 }
 
 // Botão usado dentro das 3 abas de trabalho (Tabulação/Swipe/Leitor de
@@ -192,8 +211,7 @@ function _fichaInsertSection(sectionKey) {
   // vez): reabrir com texto novo antes do fechamento da chamada anterior é
   // seguro (mesmo modal, só troca o texto), não pisca duas transições
   // visuais distintas.
-  const _sectionLabel = sectionKey === 'tabulacao' ? 'Ordem de Tabulação' : sectionKey === 'swipe' ? 'Trilha de Swipe' : 'Leitor de Tela';
-  if (typeof showA11yCanvasLoading === 'function') showA11yCanvasLoading(`Consolidando ${_sectionLabel} no Handoff de Acessibilidade…`);
+  if (typeof showA11yCanvasLoading === 'function') showA11yCanvasLoading(`Consolidando ${_fichaSectionDisplayName(sectionKey)} no Handoff de Acessibilidade…`);
   showToast('Consolidando Handoff de Acessibilidade…');
   parent.postMessage({ pluginMessage: Object.assign({ type: 'insert-ficha-section' }, payload) }, '*');
 }

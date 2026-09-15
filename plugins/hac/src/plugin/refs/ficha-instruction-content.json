@@ -8,8 +8,8 @@
     "sourceFrameName": "Ordem de Tabulação e Leitor de Telas [Super App] V1",
     "extractedBy": "Gemini via MCP Figma",
     "extractedAt": "2026-09-09",
-    "status": "preenchido — tabulacao, swipe e leitorTela com título+instrução reais (2026-09-10, texto fornecido diretamente pelo dono do repositório via print do Figma, não extraído por agente MCP). stepsHeading/steps/assetsHeading/assets do bloco swipe seguem vazios — o frame de instrução do Swipe na lib não tem essas subseções, só título+instrução.",
-    "swipeNote": "Atualizado em 2026-09-10: o bloco 'swipe' agora tem title/instructionsHeading/instructionsBody reais (fornecidos pelo dono do repositório, não pela lib via MCP) — os campos de passos/assets continuam vazios porque a lib não tem essa subseção para Swipe. _buildFichaLegendColumn só cai no fallback de texto curto quando 'title' estiver vazio, o que não é mais o caso aqui.",
+    "status": "preenchido — tabulacao, swipe e leitorTela com título+instrução+passos reais (2026-09-15, texto fornecido diretamente pelo dono do repositório via prints de tela do template, substituindo a versão de 2026-09-09/10). Nenhum dos 3 blocos tem seção de Assets nos prints fornecidos — assetsHeading/assets ficam vazios para os 3 (antes só tabulacao/leitorTela tinham assets preenchidos; removido por não bater mais com o texto confirmado como completo).",
+    "swipeNote": "Atualizado em 2026-09-15: o bloco 'swipe' ganhou stepsHeading/steps reais (antes vazios — a versão extraída em 2026-09-09/10 não tinha essa subseção). _buildFichaLegendColumn só cai no fallback de texto curto quando 'title' estiver vazio, o que não é o caso em nenhum dos 3 blocos.",
     "howToFill": "Para cada um dos 3 blocos abaixo (tabulacao, swipe, leitorTela), abra o frame de instrução correspondente no Figma (sourceNodeUrl acima é o ponto de partida — Tabulação e Leitor de Tela estão nesse mesmo frame lado a lado; Swipe está num frame irmão próximo, mesma página) e transcreva o texto VISÍVEL exatamente como está escrito lá, sem resumir/parafrasear. Preencha campo a campo: title (o título do bloco, ex. 'Ordem de Tabulação'), instructionsHeading (o subtítulo que introduz o parágrafo, ex. 'Instruções sobre o tipo de documentação'), instructionsBody (o parágrafo explicativo completo), stepsHeading (o subtítulo da lista de passos, ex. 'Como fazer a ordem de tabulação'), steps (array de strings, um item por passo numerado, na ordem exata do template — sem o número, só o texto do passo), assetsHeading (sempre 'Assets' no template visto até agora, mas confirme), assets (array de {label, description} — cada selo/marcador mostrado na seção Assets, com seu rótulo e a descrição ao lado dele, ex. label: 'Conector de Identificação', description: descrição visível se houver, senão string vazia ''). Se algum campo genuinamente não existir no template de um bloco específico (ex.: Swipe pode ter uma seção 'Assets' diferente da de Tabulação, ou nenhuma), deixe como array/string vazia — nunca invente conteúdo. NÃO altere a estrutura de chaves deste JSON (novos campos quebram _buildFichaLegendColumn) — só preencha os valores."
   },
   "tabulacao": {
@@ -18,58 +18,36 @@
     "instructionsBody": "É a sequência lógica que o Leitor de tela (VoiceOver/TalkBack) percorre nos elementos INTERATIVOS quando o usuário navega com outros devices em interfaces de toque como teclados, mouses com botões programáveis ou acionadores .",
     "stepsHeading": "Como fazer a ordem de tabulação",
     "steps": [
-      "Dê detach no template para poder usar.",
-      "Posicione as telas: Cole as telas do seu fluxo na área de trabalho e utilize o conector de identificação para nomear cada uma delas. (O frame permite redimensionamento livre para se adequar às dimensões da sua interface).",
-      "Numere apenas os interativos: Aplique os marcadores de ordem de tabulação exclusivamente nos elementos acionáveis (botões ativos, campos de digitação, links e cards).",
-      "Ignore os itens sem ação: Textos puramente estáticos e botões desativados (disabled) não recebem foco do leitor de telas. Deixe esses elementos sem numeração.",
-      "Siga a ordem de leitura: Posicione os números de forma sequencial, da esquerda para a direita e de cima para baixo."
+      "Selecione os componentes interativos e imagens essenciais: Selecione apenas os elementos acionáveis da tela (como botões ativos, links, campos de formulário e seletores) e imagens cujo conteúdo seja indispensável para a navegação.",
+      "Siga a ordem de leitura ocidental: Selecione esses elementos sequencialmente respeitando o fluxo do layout, da esquerda para a direita, de cima para baixo.",
+      "Ignore elementos não interativos: Não inclua na seleção textos puramente estáticos, rótulos de campos, imagens decorativas ou botões desativados (disabled)."
     ],
-    "assetsHeading": "Assets",
-    "assets": [
-      {
-        "label": "Conector de identificação",
-        "description": "para nomear telas ou itens:"
-      },
-      {
-        "label": "Marcadores de ordem",
-        "description": "para a ordem de tabulação:"
-      }
-    ]
+    "assetsHeading": "",
+    "assets": []
   },
   "swipe": {
     "title": "Ordem de Leitura Mobile (Swipe)",
     "instructionsHeading": "Instruções sobre a documentação",
-    "instructionsBody": "Essa documentação trata-se de como o leitor de tela (VoiceOver/Talkback) deve seguir sequencialmente de forma nativa com o Basic Swipe, ou seja, sem os atalhos do rotor.",
-    "stepsHeading": "",
-    "steps": [],
+    "instructionsBody": "Essa documentação trata-se de como o leitor de tela (VoiceOver/Talkback) deve seguir sequencialmente de forma nativa com a navegação via Swipe, ou seja, sem os atalhos do rotor.",
+    "stepsHeading": "Como fazer a ordem de Leitura Mobile (Swipe)",
+    "steps": [
+      "Selecione todos os elementos na tela: Classifique elemento a elemento na tela de forma que demonstre um caminho ao qual o leitor de telas deve percorrer quando navegável nativamente com Basic Swipe.",
+      "Siga a ordem de leitura ocidental: Selecione esses elementos sequencialmente respeitando o fluxo do layout, da esquerda para a direita, de cima para baixo."
+    ],
     "assetsHeading": "",
     "assets": []
   },
   "leitorTela": {
-    "title": "Especificações para Leitores de Tela",
+    "title": "Especificações para Leitor de Tela",
     "instructionsHeading": "Instruções sobre a documentação",
     "instructionsBody": "Especificar para leitores de tela consiste em definir como as tecnologias assistivas (VoiceOver/Talkback) interpretam e anunciam os elementos da interface. Essa documentação assegura que o conteúdo seja plenamente compreendido e inclusivo, fornecendo as orientações fundamentais para que o time de desenvolvimento implemente a experiência exatamente como projetada.",
-    "stepsHeading": "Como classificar os Elementos na Tela",
+    "stepsHeading": "Como fazer as especificações para Leitor de Tela",
     "steps": [
-      "Posicione as telas: Cole as telas do seu fluxo na área de trabalho para iniciar a documentação.",
-      "Classifique os componentes: Utilize o conector de Elementos e Imagens para classificar os componentes, links e imagens essenciais para o contexto da sua interface. Siga a ordem alfabética ou numérica dentro do circulo. ️Atenção: os specs possuem variáveis, customize de acordo com a necessidade.",
-      "Especifique os títulos: Se o elemento que você está documentando for um título, utilize exclusivamente o componente de Título para marcá-lo.",
-      "Ignore itens decorativos: Imagens e ícones puramente ilustrativos não são lidos pelo leitor de telas. Deixe esses elementos de fora da classificação utilizando o conector de Elemento decorativo."
+      "Classifique os componentes: Utilize o conector de Elementos Interativos e Imagens para classificar os componentes interativos e imagens essenciais para o contexto da sua interface. Siga a ordem numérica dentro do círculo.",
+      "Especifique os títulos: Se o elemento que você está documentando for um título, utilize o conector Títulos para marcá-lo. No mobile (React Native) não é necessário mapear a hierarquia de níveis como no desktop, todo título usa o mesmo marcador \"H\", sem distinção H1-H6.",
+      "Ignore itens decorativos: Imagens e ícones puramente ilustrativos não são lidos pelo leitor de tela, classifique-os com o conector Elementos Decorativos."
     ],
-    "assetsHeading": "Entendendo as categorias",
-    "assets": [
-      {
-        "label": "Elementos interativos e imagens",
-        "description": "Utilizado para referenciar componentes no Super DSC, garantir nome acessível aos elementos e descrever textos alternativos nas imagens."
-      },
-      {
-        "label": "Títulos",
-        "description": "Utilizado para estruturar os cabeçalhos da interface, permitindo que o leitor de tela navegue diretamente entre os tópicos que foram definidos como títulos de conteúdo."
-      },
-      {
-        "label": "Elementos decorativos",
-        "description": "Utilizado para marcar os elementos que devem ser ignorados pelo leitor de tela, como por exemplo imagens que não passam conteúdo ou função, formas abstratas, divisores ou ícones decorativos."
-      }
-    ]
+    "assetsHeading": "",
+    "assets": []
   }
 }

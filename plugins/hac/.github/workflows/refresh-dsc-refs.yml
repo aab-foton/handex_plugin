@@ -13,6 +13,15 @@
 # dsc-component-a11y-mapping-android.json para dsc-android — atualizado em
 # 2026-09-09, ver docs/auditoria-2026-09.html, seção 4/9; nomes de arquivo
 # confirmados em LIB_MAPPING_FILES de build-dsc-structural-candidates.cjs).
+#
+# Acrescentado 2026-09-15: também busca as DUAS libs "Design Acessível"
+# (desktop + mobile), que alimentam só os marcadores visuais do próprio
+# hac e o dropdown "Componente do DSC" mobile — nunca o scan/matching
+# DSC→a11y acima. Motivo: essas libs vinham sendo atualizadas manualmente,
+# fora de qualquer esteira, e isso já causou uma publicação não percebida
+# por 6 dias e uma regressão silenciosa de nomenclatura só descoberta
+# rodando o build manualmente (ver src/plugin/refs/fetch-component-properties.cjs,
+# src/plugin/refs/build-a11y-constants.cjs).
 name: refresh-dsc-refs
 
 on:
@@ -68,6 +77,28 @@ jobs:
           FIGMA_TOKEN: ${{ secrets.FIGMA_TOKEN }}
         run: node src/plugin/refs/build-dsc-structural-candidates.cjs
 
+      # Acrescentado 2026-09-15 — libs "Design Acessível" (desktop e
+      # mobile), usadas só pros marcadores visuais do próprio hac
+      # (Agrupamento/Conectores/Item Number/dropdown "Componente do DSC"
+      # mobile), não pelo scan/matching DSC→a11y acima. Ficavam de fora
+      # do CI e só eram atualizadas manualmente — motivo real: a lib
+      # mobile passou 6 dias sem publicação percebida (bloqueando uma
+      # migração pendente) e, quando finalmente publicada, mudou nomes de
+      # variante sem aviso (regressão silenciosa em A11Y_MOBILE_WRAPPER,
+      # só percebida rodando o build manualmente). --deep-scan é
+      # obrigatório aqui: as properties reais (VARIANT "Componente",
+      # "Conector") vivem em component sets OCULTOS, só alcançáveis via
+      # tree-walk, não pelo GET /component_sets padrão. --reset ignora
+      # qualquer checkpoint parcial (checkout de CI é sempre limpo; ver
+      # src/plugin/refs/.checkpoints/, ignorado no git).
+      - name: "Regenera refs das libs Design Acessível (desktop + mobile) e constantes derivadas"
+        env:
+          FIGMA_TOKEN: ${{ secrets.FIGMA_TOKEN }}
+        run: |
+          node src/plugin/refs/fetch-component-properties.cjs --lib design-acessivel --deep-scan --reset
+          node src/plugin/refs/fetch-component-properties.cjs --lib design-acessivel-mobile --deep-scan --reset
+          node src/plugin/refs/build-a11y-constants.cjs
+
       - name: Verifica se algo mudou
         id: diff
         run: |
@@ -87,10 +118,10 @@ jobs:
           BRANCH="bot/dsc-refs-$(date -u +%Y%m%d-%H%M)"
           git checkout -b "$BRANCH"
           git add src/plugin/refs/
-          git commit -m "chore(dsc): atualiza refs DSC (4 libs) e mapeamentos de a11y ($(date -u +%Y-%m-%d))"
+          git commit -m "chore(dsc): atualiza refs DSC (4 libs + Design Acessível) e mapeamentos/constantes de a11y ($(date -u +%Y-%m-%d))"
           git push origin "$BRANCH"
           gh pr create \
             --title "chore(dsc): atualização automática das refs DSC — $(date -u +%Y-%m-%d)" \
-            --body "Atualização automática das refs DSC (\`src/plugin/refs/\`) para as quatro libs (web-angular-react, super-app, super-dsc-web, dsc-android), buscadas via REST API do Figma, e regeneração dos quatro mapeamentos DSC→a11y correspondentes. Revisar o diff e aprovar se OK." \
+            --body "Atualização automática das refs (\`src/plugin/refs/\`): as quatro libs DSC de produto (web-angular-react, super-app, super-dsc-web, dsc-android) com regeneração dos quatro mapeamentos DSC→a11y, e as duas libs Design Acessível (desktop + mobile) com regeneração das constantes de a11y derivadas (\`_a11y-constants.generated.js\`, \`design-acessivel-mobile-wrapper.generated.json\`) — todas buscadas via REST API do Figma. Revisar o diff e aprovar se OK." \
             --base main \
             --head "$BRANCH"

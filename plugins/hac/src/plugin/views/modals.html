@@ -703,47 +703,55 @@
 
   </div></div>
 
-<!-- MODAL: DICA DE SELEÇÃO (SHIFT+CLIQUE) — Ordem de Tabulação E Trilha de
-     Swipe (2026-09-10, generalizado 2026-09-14) -->
-<!-- Educativa, mostrada uma única vez por arquivo Figma POR FEATURE
-     (onboardingSeen, chave 'tabOrderShiftHint'|'swipePathShiftHint' — mesmo
-     mecanismo de onboarding.js) antes de startTabOrderManualMode/
-     startSwipePathManualMode minimizar a janela e começar a escutar cliques
-     no canvas. Título/texto trocados dinamicamente por
-     _showA11yShiftHintThenStart (tab-order.js) conforme a feature — mesmo
-     padrão de troca de texto por contexto que _a11yCaptureMiniBarUpdateCount
-     já usa pra "item"/"ponto". Botão único "Entendi, começar seleção" fecha
-     o modal e prossegue o fluxo original (_confirmA11yShiftHint) — nunca
-     abre sozinha de novo depois da 1ª vez por feature, mas pode ser
-     reaberta manualmente pelo link "Como funciona a seleção?" dentro dos
-     modais de revisão (sem marcar/desmarcar estado de "visto"). -->
-<div id="a11y-tab-order-shift-hint-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-tab-order-shift-hint-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-dsc-tiny">
-  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="_confirmA11yShiftHint()" aria-hidden="true"></div>
-  <div class="relative z-10 w-full max-w-sm max-h-full min-h-0 flex flex-col rounded-dsc-large overflow-hidden shadow-dsc-elevation-2 bg-white dark:bg-dark-surface">
-  <div class="w-full max-w-sm">
-    <div class="flex items-center justify-between p-dsc-tiny border-b border-gray-100 dark:border-dark-line">
-      <h3 id="a11y-tab-order-shift-hint-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-dsc-nano">
-        <i data-lucide="mouse-pointer-click" class="w-4 h-4 text-[#0891B2]" aria-hidden="true"></i> <span id="a11y-shift-hint-title-text">Selecionando elementos para a Ordem de Tabulação</span>
+<!-- MODAL: INSTRUÇÃO DO TEMPLATE OFICIAL — Especificações para Leitor de
+     Tela, e reabertura manual de Ordem de Tabulação/Ordem de Leitura Mobile
+     (Swipe) (2026-09-15, substitui o antigo modal curto de dica
+     Shift+clique). -->
+<!-- Conteúdo rico (título + 2 cards: "Instruções sobre..."/"Como fazer...")
+     igual ao template oficial de Handoff, uma tradução direta de
+     FICHA_INSTRUCTION_CONTENT_UI.tabulacao/.swipe/.leitorTela
+     (refs/ficha-instruction-content.json — mesmo texto já usado na coluna
+     de legenda da Ficha final, ver _buildFichaLegendColumn em code.js).
+     Preenchido dinamicamente por _renderA11yInstructionModal (tab-order.js)
+     conforme a feature.
+     Para Leitor de Tela: este MODAL é o único lugar onde a instrução
+     aparece — reaberto a partir de openA11yCategoryPickerModal
+     (accessibility.js) TODA VEZ que "+ Nova spec" é clicado, sem estado de
+     "visto"; ao confirmar, prossegue o fluxo real via callback
+     (window._pendingA11yInstructionConfirm, consumido por
+     _confirmA11yInstructionModal).
+     Para Tabulação/Swipe: as instruções já ficam visíveis por padrão
+     dentro da própria barra de captura (ver #a11y-capture-bar-instructions,
+     build.cjs, e core.js) — este modal só serve pra REABERTURA MANUAL,
+     informativa, pelo link "Como funciona a seleção?" dos modais de
+     revisão (openA11yInstructionManually, tab-order.js: nunca seta
+     callback, só fecha ao confirmar). -->
+<div id="a11y-instruction-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-instruction-modal-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-dsc-tiny">
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="_confirmA11yInstructionModal()" aria-hidden="true"></div>
+  <div class="relative z-10 w-full max-w-sm max-h-[85%] min-h-0 flex flex-col rounded-dsc-large overflow-hidden shadow-dsc-elevation-2 bg-white dark:bg-dark-surface">
+    <div class="flex items-center justify-between p-dsc-tiny border-b border-gray-100 dark:border-dark-line shrink-0">
+      <h3 id="a11y-instruction-modal-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-dsc-nano">
+        <i data-lucide="book-open-check" class="w-4 h-4 text-[#0891B2]" aria-hidden="true"></i> <span id="a11y-instruction-modal-title-text">Ordem de Tabulação</span>
       </h3>
-      <button onclick="_confirmA11yShiftHint()" title="Fechar" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
+      <button onclick="_confirmA11yInstructionModal()" title="Fechar" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
         <i data-lucide="x" class="w-4 h-4"></i>
       </button>
     </div>
-    <div class="p-dsc-smaller space-y-4">
-      <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed">
-        A janela do plugin vai minimizar para dar espaço ao canvas.
-      </p>
-      <ol id="a11y-shift-hint-steps" class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed list-decimal list-inside space-y-2">
-        <li><strong>Segure Shift e clique</strong> em cada elemento, na ordem em que o teclado deve navegar por eles.</li>
-        <li>Errou a ordem? Sem problema: <strong>arraste para reposicionar</strong> os itens depois, na lista de revisão.</li>
-      </ol>
+    <div class="p-dsc-smaller space-y-3 overflow-y-auto min-h-0">
+      <div class="rounded-dsc-medium border border-gray-100 dark:border-dark-line p-3.5">
+        <h4 id="a11y-instruction-modal-instructions-heading" class="font-bold text-[12px] text-slate-800 dark:text-white mb-2">Instruções sobre o tipo de documentação</h4>
+        <p id="a11y-instruction-modal-instructions-body" class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed"></p>
+      </div>
+      <div class="rounded-dsc-medium border border-gray-100 dark:border-dark-line p-3.5">
+        <h4 id="a11y-instruction-modal-steps-heading" class="font-bold text-[12px] text-slate-800 dark:text-white mb-2">Como fazer</h4>
+        <ol id="a11y-instruction-modal-steps" class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed list-decimal list-inside space-y-2.5"></ol>
+      </div>
     </div>
-    <div class="p-dsc-tiny border-t border-gray-100 dark:border-dark-line flex gap-dsc-nano">
-      <button id="btn-tab-order-shift-hint-continue" onclick="_confirmA11yShiftHint()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#0891B2] hover:bg-cyan-700 rounded-dsc-large transition-colors shadow-lg shadow-cyan-500/20">Entendi, começar seleção</button>
+    <div class="p-dsc-tiny border-t border-gray-100 dark:border-dark-line flex gap-dsc-nano shrink-0">
+      <button id="btn-a11y-instruction-modal-continue" onclick="_confirmA11yInstructionModal()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#0891B2] hover:bg-cyan-700 rounded-dsc-large transition-colors shadow-lg shadow-cyan-500/20">Entendi, começar seleção</button>
     </div>
   </div>
-
-  </div></div>
+</div>
 
 <!-- MODAL: REVISÃO DA ORDEM DE TABULAÇÃO -->
 <!-- Modal único de revisão — serve tanto o fluxo manual (clique sequencial
@@ -820,7 +828,7 @@
       <i data-lucide="route" class="w-4 h-4 text-[#0891B2]" aria-hidden="true"></i> <span id="a11y-swipe-path-review-title-text">Trilha de Ordem de Leitura</span>
     </h3>
     <div class="flex items-center gap-dsc-quark">
-      <button onclick="openA11yShiftHintManually('swipe')" title="Como funciona a seleção?" aria-label="Como funciona a seleção?" class="text-gray-400 dark:text-dark-muted hover:text-cyan-600 dark:hover:text-cyan-400">
+      <button onclick="openA11yInstructionManually('swipe')" title="Como funciona a seleção?" aria-label="Como funciona a seleção?" class="text-gray-400 dark:text-dark-muted hover:text-cyan-600 dark:hover:text-cyan-400">
         <i data-lucide="circle-help" class="w-4 h-4"></i>
       </button>
       <button onclick="cancelSwipePathReview()" title="Cancelar" aria-label="Cancelar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">

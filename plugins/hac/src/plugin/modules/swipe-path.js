@@ -27,7 +27,7 @@ function handleSwipePathCopyStarted(cloneId) {
       return;
     }
     if (typeof _a11yCaptureMiniBarEnter === 'function') _a11yCaptureMiniBarEnter('swipePath');
-    showToast('Cópia da tela criada. Segure shift e clique (ou use marquise) pra marcar os pontos dela. A janela foi minimizada para dar espaço ao canvas.');
+    showToast('Cópia da tela criada. Siga as instruções acima e clique nos pontos dela (segure shift, ou use marquise, pra marcar vários de uma vez).');
     return;
   }
   // Caminho legado defensivo — não deveria ser alcançável mais (todo
@@ -131,23 +131,13 @@ function startSwipePathManualMode(areaId, targetNodeId) {
     cancelTabOrderReview();
     showToast('A captura de Ordem de Tabulação em andamento foi cancelada.');
   }
-  // Dica educativa de Shift+clique (2026-09-14, pedido do usuário: "coloque
-  // o toast sobre o Shift também no swipe") — mesma dica que Tabulação já
-  // tinha, generalizada por feature (ver A11Y_SHIFT_HINT_CONTENT/
-  // _showA11yShiftHintThenStart, tab-order.js). Mostrada uma única vez por
-  // arquivo Figma, ANTES de minimizar a janela.
-  if (typeof _showA11yShiftHintThenStart === 'function') {
-    _showA11yShiftHintThenStart('swipe', { areaId, targetNodeId }, () => _startSwipePathManualModeInner(areaId, targetNodeId));
-  } else {
-    _startSwipePathManualModeInner(areaId, targetNodeId);
-  }
+  _startSwipePathManualModeInner(areaId, targetNodeId);
 }
 window.startSwipePathManualMode = startSwipePathManualMode;
 
 // Corpo real do fluxo manual — extraído de startSwipePathManualMode
-// (2026-09-14) pra poder ser chamado tanto direto (dica já vista) quanto
-// depois de fechar a dica educativa (1ª vez nesta feature no arquivo).
-// Mesmo padrão de _startTabOrderManualModeInner (tab-order.js).
+// (2026-09-14). Mesmo padrão de _startTabOrderManualModeInner
+// (tab-order.js).
 function _startSwipePathManualModeInner(areaId, targetNodeId) {
   ensureA11yProjectOriginThen(() => {
     window._swipePathPendingList = [];

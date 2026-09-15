@@ -4,9 +4,9 @@
     "slug": "design-acessivel",
     "libraryName": "Design Acessível (desktop)",
     "fileKey": "Wy0IhXRVZMSOOr8E609UqI",
-    "generatedAt": "2026-09-01T18:11:41.479Z",
+    "generatedAt": "2026-09-15T13:32:23.288Z",
     "generator": "fetch-component-properties.cjs",
-    "deepScan": false,
+    "deepScan": true,
     "discoverySignature": "a37a068e829c9d746e1fc59649e89dbd8ad063f975dfaf84a2fd312b05899f3d",
     "counts": {
       "totalComponentSets": 25,

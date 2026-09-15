@@ -131,18 +131,25 @@ const A11Y_LIBRARIES = [
   {
     slug: 'design-acessivel-mobile',
     name: 'Design Acessível (mobile)',
-    fileKey: '3zdtN13YvPlCGPdXeL0Y2i',
-    // Dois padrões de nome coexistem nesta lib: os wrappers PUBLICADOS
-    // (com `key`, importáveis via figma.importComponentByKeyAsync — ex:
-    // "[a11y mob] Conectores", "[a11y mob] Box specs leitor de tela") usam
-    // "[a11y mob] " sem sufixo; os nós OCULTOS internos usados como
-    // instância aninhada (sem `key`, só alcançáveis via --deep-scan — ex:
-    // ".[a11y mob base] Elementos e imagens") usam "[a11y mob base] " com
-    // prefixo "." opcional. O regex original só cobria o segundo padrão,
-    // que ignorava justamente os 5 wrappers publicados que o hac de fato
-    // importa em produção — corrigido em 2026-09-01 após 0 resultados via
-    // /component_sets numa primeira rodada real.
-    prefixRe: /^\.?\[a11y mob(?:ile)?(?: base)?\]\s*/i
+    // Migrado (2026-09-15) de '3zdtN13YvPlCGPdXeL0Y2i' (arquivo antigo,
+    // ainda publicado/ativo mas sendo DESCONTINUADO — confirmado com o
+    // dono do repo) para 'HhriLSpKnCB2dHhyiU16iB' ("[HAC] Handoff Super
+    // DSC Mobile e Web"), publicado como team library em algum momento
+    // entre 2026-09-08 (0 components via REST API) e 2026-09-15 (250
+    // components/51 component_sets, confirmado). A lib nova SUBSTITUI a
+    // antiga — não é uma segunda fonte em paralelo.
+    fileKey: 'HhriLSpKnCB2dHhyiU16iB',
+    // Prefixo mudou de "[a11y mob ...]" pra "[hac ...]" na lib nova —
+    // confirmado nos nomes reais: wrappers publicados "[hac mob] Box
+    // specs leitor de tela"/"[hac] Agrupamento"/"[hac] Conectores"/"[hac]
+    // Número da tela"/"[hac] Ordenação"/"[hac web] Box specs leitor de
+    // tela"; nós OCULTOS internos (sem key, só via --deep-scan) como
+    // ".[hac mob base]  Elementos e imagens" (node 10206:2177 — NOTA:
+    // dois espaços reais entre "]" e "Elementos" no nome do Figma, \s+
+    // no regex cobre isso) e ".[hac base] Box conteúdo bloqueado/editável".
+    // Mesmo espírito do regex antigo: prefixo "." opcional (sets ocultos),
+    // "[hac" + sufixo opcional "mob"/"web" + sufixo opcional "base".
+    prefixRe: /^\.?\[hac(?:\s+(?:mob|web))?(?:\s+base)?\]\s*/i
   }
 ];
 

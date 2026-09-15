@@ -161,15 +161,23 @@ ${css}
       </div>
     </div>
 
-    <!-- Barra de captura minimizada (Ordem de Tabulação / Trilha de Swipe,
-         2026-09-04-w) — irmã de #header-home, nunca as duas visíveis ao
-         mesmo tempo. Ligada por _a11yCaptureMiniBarEnter (core.js) ao
-         clicar "Iniciar" em qualquer uma das 2 features: esconde
-         #header-home e todo o conteúdo abaixo do header (div.flex-1),
-         encolhe a janela do Figma, e mostra só a contagem ao vivo + os 2
-         botões abaixo — enquanto isso, o designer clica no canvas em
-         silêncio, sem nenhum modal/lista aparecendo. -->
-    <div id="a11y-capture-mini-bar" class="hidden items-center justify-between w-full gap-2">
+  </header>
+
+  <!-- Barra de captura (Ordem de Tabulação / Trilha de Swipe, 2026-09-04-w,
+       redesenhada 2026-09-15) — IRMÃ do <header> (não filha), abaixo dele.
+       #header-home (logo CAIXA, zoom, tema, minimizar) é ESCONDIDO durante
+       a captura (_a11yCaptureMiniBarEnter, core.js) — esta barra assume o
+       papel de "header" nesse modo. Ordem: linha de contador+ações PRIMEIRO
+       (sempre visível, faz as vezes de header — contém o chevron de
+       recolher/expandir), bloco de instruções DEPOIS, abaixo dela, visível
+       só quando expandido (pedido do usuário: "o header que eu queria era
+       com o contador, o botão para expandir para as instruções e cancelar
+       e concluir" — recolhido = só esta linha, mesma altura de
+       CAPTURE_MINI_H; expandido = esta linha + o bloco de instruções
+       abaixo). Nunca sai do modo de captura em nenhum dos dois estados —
+       a escuta de cliques no canvas continua ativa o tempo todo. -->
+  <div id="a11y-capture-mini-bar" class="hidden flex-col w-full">
+    <div class="flex items-center justify-between w-full gap-2 px-4 py-2.5 shrink-0">
       <div class="flex items-center gap-2 min-w-0">
         <span class="w-2 h-2 rounded-full bg-[#0891B2] animate-pulse shrink-0" aria-hidden="true"></span>
         <span id="a11y-capture-mini-bar-count" class="text-[11px] font-bold text-slate-700 dark:text-white truncate">
@@ -177,6 +185,16 @@ ${css}
         </span>
       </div>
       <div class="flex items-center gap-2 shrink-0">
+        <!-- Alterna o bloco de instruções abaixo entre visível (padrão) e
+             recolhido — feature lida de window._a11yCaptureMiniBarFeature
+             ('tabOrder'|'swipePath'), convertida pra chave do conteúdo
+             ('tabulacao'|'swipe') por _a11yCaptureBarToggleInstructions
+             (core.js). Ícone/título trocam conforme o estado atual. -->
+        <button type="button" id="a11y-capture-mini-bar-help" onclick="_a11yCaptureBarToggleInstructions()"
+          title="Recolher instruções" aria-label="Recolher instruções"
+          class="w-7 h-7 flex items-center justify-center text-slate-400 dark:text-dark-muted hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-light-line dark:hover:bg-dark-surface rounded-xl transition-colors shrink-0">
+          <i data-lucide="chevron-up" id="a11y-capture-mini-bar-help-icon" class="w-4 h-4"></i>
+        </button>
         <button type="button" id="a11y-capture-mini-bar-cancel" onclick="_a11yCaptureMiniBarCancel()"
           title="Cancelar seleção e descartar pontos marcados" aria-label="Cancelar seleção e descartar pontos marcados"
           class="px-2.5 py-1.5 text-[10.5px] font-bold text-slate-500 dark:text-dark-muted hover:bg-light-line dark:hover:bg-dark-surface rounded-xl transition-colors">
@@ -188,7 +206,25 @@ ${css}
         </button>
       </div>
     </div>
-  </header>
+    <!-- max-h fixo (não medido dinamicamente, ver CAPTURE_BAR_EXPANDED_H em
+         core.js) — 320px cobre com folga o maior conteúdo real hoje
+         (tabulação: título + 2 cards + 4 passos incl. dica de Shift); rola
+         por dentro (overflow-y-auto) se algum texto futuro crescer além
+         disso, sem nunca estourar a janela. -->
+    <div id="a11y-capture-bar-instructions" class="w-full max-h-[320px] overflow-y-auto px-4 pb-3 pt-1 space-y-2.5 border-t border-gray-100 dark:border-dark-line">
+      <h3 id="a11y-capture-bar-instructions-title" class="font-bold text-[13px] text-slate-800 dark:text-white flex items-center gap-1.5 mt-2">
+        <i data-lucide="book-open-check" class="w-3.5 h-3.5 text-[#0891B2]" aria-hidden="true"></i> <span id="a11y-capture-bar-instructions-title-text">Ordem de Tabulação</span>
+      </h3>
+      <div class="rounded-dsc-medium border border-gray-100 dark:border-dark-line p-3">
+        <h4 id="a11y-capture-bar-instructions-heading" class="font-bold text-[11px] text-slate-800 dark:text-white mb-1.5">Instruções sobre o tipo de documentação</h4>
+        <p id="a11y-capture-bar-instructions-body" class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed"></p>
+      </div>
+      <div class="rounded-dsc-medium border border-gray-100 dark:border-dark-line p-3">
+        <h4 id="a11y-capture-bar-steps-heading" class="font-bold text-[11px] text-slate-800 dark:text-white mb-1.5">Como fazer</h4>
+        <ol id="a11y-capture-bar-steps" class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed list-decimal list-inside space-y-2"></ol>
+      </div>
+    </div>
+  </div>
 
   <div class="flex-1 overflow-hidden relative min-h-0">
 ${viewHome}

@@ -102,8 +102,9 @@ function buildComponentProperties(desktopJSON) {
 }
 
 // ── A11Y_MOBILE_WRAPPER ──────────────────────────────────────────────────
-// Component set publicado "[a11y mob] Box specs leitor de tela" (fileKey
-// 3zdtN13YvPlCGPdXeL0Y2i, node 5413:1262) NÃO é importável via
+// Component set "[hac mob] Box specs leitor de tela" (fileKey
+// HhriLSpKnCB2dHhyiU16iB, node 5413:1262 — mesmo nodeId da lib antiga,
+// só a key de publicação mudou) NÃO é importável via
 // figma.importComponentByKeyAsync — essa API só aceita a key de uma VARIANTE
 // individual (COMPONENT), não a key do COMPONENT_SET em si (que é o que
 // wrapperSet.key contém, extraído por fetch-component-properties.cjs). Usar
@@ -115,31 +116,40 @@ function buildComponentProperties(desktopJSON) {
 // property VARIANT "Conector" via setProperties. Essas 3 keys NÃO estão em
 // nenhum JSON de refs existente — fetch-component-properties.cjs só resolve
 // key para o nível de component set (variantes filhas ficam com key: null
-// no JSON, ver design-acessivel-mobile-properties.json nodeId 5413:1262),
-// então foram extraídas numa chamada avulsa e pontual à REST API do Figma
-// (GET /v1/files/:key/nodes?ids=5413:1259,5413:1260,5413:1261) em
-// 2026-09-02 e confirmadas 2x. Documentadas aqui (não em JSON de origem)
-// pelo mesmo motivo do bloco conectorValueByA11yType abaixo: é uma
-// correspondência pontual PRODUTO -> variante da lib, mantida bem visível
-// pra não virar "key solta" disfarçada de gerado. Se precisar reextrair no
-// futuro (ex: lib republicada com novos node ids), rodar a mesma chamada
-// contra o fileKey acima.
+// no JSON, ver design-acessivel-mobile-properties.json nodeId 5413:1262).
+//
+// Migradas (2026-09-15) para a lib NOVA via GET
+// /v1/files/HhriLSpKnCB2dHhyiU16iB/components (endpoint oficial de
+// componentes publicados do arquivo, não deep-scan) — os 3 nós filhos
+// continuam com os MESMOS nodeId de antes, só as keys e os valores de
+// "Conector" mudaram (maiúsculas/nome mais longo na opção de elementos).
+// Documentadas aqui (não em JSON de origem) pelo mesmo motivo do bloco
+// abaixo: é uma correspondência pontual PRODUTO -> variante da lib,
+// mantida bem visível pra não virar "key solta" disfarçada de gerado. Se
+// precisar reextrair no futuro (ex: lib republicada com novos node ids),
+// rodar a mesma chamada contra o fileKey acima.
 const MOBILE_WRAPPER_VARIANT_KEYS_BY_A11Y_TYPE = {
   // categoria a11y -> { nodeId, key } da variante (COMPONENT) real,
-  // extraídos e confirmados em 2026-09-02.
-  elemento:   { nodeId: '5413:1261', key: 'dc9a3b3d903b4d89ca1173bca5eb0537c9afd136' }, // "Elementos e imagens"
-  titulo:     { nodeId: '5413:1259', key: '2e2ed48f6e4574a873bbb2d9a4391cc63572a6d2' }, // "Títulos"
-  decorativo: { nodeId: '5413:1260', key: '7d3ccfcea95ea4159d78244f6f6c84963dd54adf' }, // "Elementos decorativos"
+  // extraídas e confirmadas em 2026-09-15.
+  elemento:   { nodeId: '10211:6229', key: '07949749708328cd1d50212cf67d92ddbe408b0f' }, // "Elementos Interativos e Imagens"
+  titulo:     { nodeId: '5413:1259', key: 'eb45bff4404c4bcdd1681ca0dcacf79476043e08' }, // "Títulos"
+  decorativo: { nodeId: '5413:1260', key: 'c34a58585f9cd5a6e3d4f248e593bd74d94c9ad4' }, // "Elementos Decorativos"
 };
 
 function buildMobileWrapper(mobileJSON) {
   if (!mobileJSON || !Array.isArray(mobileJSON.components)) return null;
 
+  // A lib nova tem DOIS component sets com o mesmo shortName "Box specs
+  // leitor de tela" — um mobile ("[hac mob] ...", nodeId 5413:1262) e um
+  // web ("[hac web] ...", nodeId 10330:4204). Antes da migração só existia
+  // a variante mobile, então o .find() por shortName bastava; agora
+  // precisa desambiguar pelo fullName, senão pode pegar o set web por
+  // acaso (ordem de array não é garantida pela REST API).
   const wrapperSet = mobileJSON.components.find(
-    c => c.shortName === 'Box specs leitor de tela'
+    c => c.shortName === 'Box specs leitor de tela' && /^\.?\[hac mob\]/i.test(c.fullName)
   );
   if (!wrapperSet || !wrapperSet.key) {
-    console.warn('⚠  component set "Box specs leitor de tela" (ou sua key) não encontrado no JSON mobile — A11Y_MOBILE_WRAPPER ficará nulo');
+    console.warn('⚠  component set mobile "Box specs leitor de tela" (ou sua key) não encontrado no JSON mobile — A11Y_MOBILE_WRAPPER ficará nulo');
     return null;
   }
 
@@ -147,14 +157,14 @@ function buildMobileWrapper(mobileJSON) {
     p => p.type === 'VARIANT' && p.name === 'Conector'
   );
   if (!conectorProp || !Array.isArray(conectorProp.variantOptions)) {
-    console.warn('⚠  property VARIANT "Conector" não encontrada em "Box specs leitor de tela" — A11Y_MOBILE_WRAPPER ficará nulo');
+    console.warn('⚠  property VARIANT "Conector" não encontrada em "Box specs leitor de tela" (mobile) — A11Y_MOBILE_WRAPPER ficará nulo');
     return null;
   }
 
   // Confere que as 3 opções esperadas ainda existem na lib real antes de
   // hardcodar o mapeamento — se a lib mudar de nomenclatura, o build avisa
   // em vez de gerar uma constante que aponta pra uma variante inexistente.
-  const expected = ['Elementos e imagens', 'Títulos', 'Elementos decorativos'];
+  const expected = ['Elementos Interativos e Imagens', 'Títulos', 'Elementos Decorativos'];
   const missing = expected.filter(v => !conectorProp.variantOptions.includes(v));
   if (missing.length > 0) {
     console.warn(`⚠  variantes esperadas de "Conector" não encontradas na lib mobile: ${missing.join(', ')} — A11Y_MOBILE_WRAPPER ficará nulo`);
@@ -176,32 +186,41 @@ function buildMobileWrapper(mobileJSON) {
 }
 
 // ── A11Y_MOBILE_LINK_COMPONENT_OPTIONS ──────────────────────────────────
-// As 64 opções da property VARIANT "Link" do component set interno
-// ".[a11y mob base] Link do Componente" (nó "." oculto, sem key publicada,
-// só alcançável via --deep-scan em fetch-component-properties.cjs — ver
-// components[].source === 'tree-walk' no JSON mobile). Mesmo array de
-// strings, na mesma ordem retornada pela API, hoje colado manualmente em
-// accessibility.js.
+// Migrado (2026-09-15) da lib ANTIGA (property VARIANT "Link" do
+// component set interno ".[a11y mob base] Link do Componente", que tinha
+// 64 opções + "Personalizado" como default real) para a lib NOVA
+// (property VARIANT "Componente", 78 opções, direto no set principal
+// ".[hac mob base]  Elementos e imagens" — sem nível de indireção, e SEM
+// nenhuma opção "Personalizado"/"Outro").
+//
+// "Personalizado" deliberadamente NÃO é adicionado aqui (nem por conta
+// própria do hac) — decisão de produto: o dropdown mostra só os
+// componentes REAIS do catálogo; quando o auto-match por nome exato não
+// encontra nada (accessibility.js, _renderA11yElementoMobileFields), o
+// formulário cai automaticamente no modo de texto livre, sem exigir que
+// o designer escolha uma opção de exceção. Ver
+// hac_lib_design_acessivel_publicada_migracao_2026_09_15 (memória do
+// projeto) para o histórico completo da migração.
 function buildMobileLinkOptions(mobileJSON) {
   if (!mobileJSON || !Array.isArray(mobileJSON.components)) return [];
 
-  const linkComponentSet = mobileJSON.components.find(
-    c => c.shortName === 'Link do Componente'
+  const elementosComponentSet = mobileJSON.components.find(
+    c => c.shortName === 'Elementos e imagens'
   );
-  if (!linkComponentSet) {
-    console.warn('⚠  component set "Link do Componente" não encontrado no JSON mobile — A11Y_MOBILE_LINK_COMPONENT_OPTIONS ficará vazio');
+  if (!elementosComponentSet) {
+    console.warn('⚠  component set "Elementos e imagens" não encontrado no JSON mobile — A11Y_MOBILE_LINK_COMPONENT_OPTIONS ficará vazio');
     return [];
   }
 
-  const linkProp = (linkComponentSet.properties || []).find(
-    p => p.type === 'VARIANT' && p.name === 'Link'
+  const componenteProp = (elementosComponentSet.properties || []).find(
+    p => p.type === 'VARIANT' && p.name === 'Componente'
   );
-  if (!linkProp) {
-    console.warn('⚠  property VARIANT "Link" não encontrada em "Link do Componente" — A11Y_MOBILE_LINK_COMPONENT_OPTIONS ficará vazio');
+  if (!componenteProp) {
+    console.warn('⚠  property VARIANT "Componente" não encontrada em "Elementos e imagens" — A11Y_MOBILE_LINK_COMPONENT_OPTIONS ficará vazio');
     return [];
   }
 
-  return linkProp.variantOptions || [];
+  return componenteProp.variantOptions || [];
 }
 
 // ── A11Y_MOBILE_COMPONENT_LINK_NODE_IDS ─────────────────────────────────

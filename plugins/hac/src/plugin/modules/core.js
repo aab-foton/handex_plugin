@@ -170,11 +170,13 @@ const MINI_H = 44;
 const CAPTURE_MINI_H = 52;
 
 function toggleCollapse() {
-  // Captura em andamento (barra mini ativa) tem prioridade de UI — nunca
-  // deveria ser possível chamar isto nesse estado (btn-collapse fica
-  // fisicamente inacessível junto com #header-home, ver
-  // _a11yCaptureMiniBarEnter abaixo), mas o guard-clause blinda contra
-  // chamada indireta futura (atalho de teclado, etc.) sem custo nenhum.
+  // Captura em andamento (barra de captura ativa) tem prioridade de UI —
+  // btn-collapse fica fisicamente inacessível junto com #header-home nesse
+  // estado (ver _a11yCaptureMiniBarEnter), mas o guard-clause blinda contra
+  // chamada indireta (atalho de teclado, etc.) sem custo nenhum. O tamanho
+  // da janela durante a captura é controlado por
+  // _a11yCaptureBarApplyInstructionsVisibility (recolher/expandir
+  // instruções), não por este toggle.
   if (window._a11yCaptureMiniBarActive) return;
   isCollapsed = !isCollapsed;
   const mainContent = document.querySelector('body > div.flex-1');
@@ -215,9 +217,23 @@ function ensureExpanded() {
 window._a11yCaptureMiniBarActive = false;
 window._a11yCaptureMiniBarFeature = null; // 'tabOrder' | 'swipePath' | null
 
+// Instruções visíveis por padrão dentro da própria barra (2026-09-15,
+// pedido do usuário: "quero que as instruções fiquem sendo exibidas, o
+// designer recolhe se quiser. Inclua um botão de recolher" — substitui a
+// tentativa anterior de modal bloqueante antes de minimizar). Estado
+// true = bloco de instrução visível (padrão ao entrar), false = recolhido
+// (só contador + Cancelar/Concluir, mesma altura mini de antes).
+window._a11yCaptureBarInstructionsVisible = true;
+
 function _a11yCaptureMiniBarEnter(feature) {
   window._a11yCaptureMiniBarActive = true;
   window._a11yCaptureMiniBarFeature = feature;
+  window._a11yCaptureBarInstructionsVisible = true;
+  // #header-home (logo CAIXA, zoom, tema, minimizar) é escondido durante a
+  // captura — a barra de captura (#a11y-capture-mini-bar: contador +
+  // chevron + Cancelar/Concluir) assume o papel de "header" nesse modo,
+  // com o bloco de instruções aparecendo abaixo dela quando expandido
+  // (2026-09-15, pedido do usuário).
   const headerHome = document.getElementById('header-home');
   const miniBar = document.getElementById('a11y-capture-mini-bar');
   const mainContent = document.querySelector('body > div.flex-1');
@@ -225,31 +241,94 @@ function _a11yCaptureMiniBarEnter(feature) {
   if (miniBar) { miniBar.classList.remove('hidden'); miniBar.classList.add('flex'); }
   if (mainContent) mainContent.classList.add('hidden');
   // Toast (showToast) é ancorado perto do rodapé da janela por padrão
-  // (bottom: 20px, ver plugin.css) — na altura mini (~52px) isso deixava o
-  // toast quase todo fora da área visível. Esta classe reancora o toast
-  // logo abaixo da barra mini enquanto ela estiver ativa (2026-09-04-y).
+  // (bottom: 20px, ver plugin.css) — na altura mini (~52px, estado
+  // recolhido) isso deixava o toast quase todo fora da área visível. Esta
+  // classe reancora o toast logo abaixo da barra enquanto ela estiver
+  // ativa (2026-09-04-y) — mantida também no estado expandido, mais
+  // espaço não faz mal.
   document.body.classList.add('a11y-capture-mini-active');
   // Bug real corrigido (2026-09-14, print do usuário): "Voltar ao topo"
   // (#btn-top, fixed bottom-6) projeta pra perto do TOPO da janela
-  // encolhida (~52-60px de altura), aparecendo por trás do modal
-  // minimizado — força escondido aqui, não depende só de handleScroll
-  // nunca disparar enquanto a barra mini está ativa (ver guard espelhado
-  // lá, core.js).
+  // encolhida, aparecendo por trás da barra — força escondido aqui, não
+  // depende só de handleScroll nunca disparar enquanto a barra está ativa
+  // (ver guard espelhado lá, core.js).
   const btnTop = document.getElementById('btn-top');
   if (btnTop) {
     btnTop.classList.add('opacity-0', 'pointer-events-none', 'translate-y-10');
     btnTop.classList.remove('opacity-100', 'pointer-events-auto', 'translate-y-0');
   }
   _a11yCaptureMiniBarUpdateCount(0);
-  const _scale = window.currentUiScale || 1;
-  const _h = Math.round(CAPTURE_MINI_H * _scale);
-  parent.postMessage({ pluginMessage: { type: 'resize-ui', width: FULL_W, height: _h } }, '*');
+  _a11yCaptureBarRenderInstructions(feature);
+  _a11yCaptureBarApplyInstructionsVisibility();
 }
 window._a11yCaptureMiniBarEnter = _a11yCaptureMiniBarEnter;
+
+// Popula o bloco de instrução da barra (título + "Instruções sobre..." +
+// "Como fazer...") a partir do template oficial — mesmo helper genérico
+// usado pelo modal do Leitor de Tela (_renderA11yInstructionContent,
+// tab-order.js), só muda o mapa de ids de destino.
+const A11Y_CAPTURE_BAR_INSTRUCTION_IDS = {
+  title: 'a11y-capture-bar-instructions-title-text',
+  instructionsHeading: 'a11y-capture-bar-instructions-heading',
+  instructionsBody: 'a11y-capture-bar-instructions-body',
+  stepsHeading: 'a11y-capture-bar-steps-heading',
+  steps: 'a11y-capture-bar-steps',
+};
+function _a11yCaptureBarRenderInstructions(feature) {
+  const contentKey = feature === 'tabOrder' ? 'tabulacao' : 'swipe';
+  if (typeof _renderA11yInstructionContent === 'function') {
+    _renderA11yInstructionContent(contentKey, A11Y_CAPTURE_BAR_INSTRUCTION_IDS);
+  }
+  if (typeof _refreshIcons === 'function') _refreshIcons();
+}
+
+// Altura TOTAL da janela com a barra expandida (linha de contador/ações,
+// que faz as vezes de header nesse modo, + bloco de instrução abaixo dela)
+// — número FIXO, não medido via scrollHeight. Medição dinâmica foi tentada
+// e descartada (2026-09-15, bug real reportado pelo usuário com print:
+// reabrir depois de recolher media uma altura errada e cortava/sobrepunha
+// conteúdo) — scrollHeight não é confiável aqui por 2 motivos combinados:
+// (1) o CSS `zoom: var(--ui-scale)` (plugin.css) já escala scrollHeight
+// nativamente, então multiplicar por _scale de novo aplicava a escala em
+// dobro; (2) mesmo em requestAnimationFrame, o layout podia não ter
+// assentado ainda (troca de ícones lucide é debounced em 30ms, scrollHeight
+// lido antes disso). Como o conteúdo é sempre um dos textos fixos de
+// FICHA_INSTRUCTION_CONTENT_UI (nunca dado dinâmico do usuário), um valor
+// fixo é mais robusto que depender de timing/escala. Soma: contador/ações
+// (~52px, igual à CAPTURE_MINI_H recolhida) + bloco de instrução
+// (max-h-[320px] fixo em build.cjs, com scroll próprio se precisar).
+const CAPTURE_BAR_EXPANDED_H = CAPTURE_MINI_H + 320;
+
+function _a11yCaptureBarApplyInstructionsVisibility() {
+  const block = document.getElementById('a11y-capture-bar-instructions');
+  const icon = document.getElementById('a11y-capture-mini-bar-help-icon');
+  const btn = document.getElementById('a11y-capture-mini-bar-help');
+  const visible = window._a11yCaptureBarInstructionsVisible;
+  if (block) block.classList.toggle('hidden', !visible);
+  if (icon) icon.setAttribute('data-lucide', visible ? 'chevron-up' : 'chevron-down');
+  if (btn) {
+    btn.title = visible ? 'Recolher instruções' : 'Ver instruções';
+    btn.setAttribute('aria-label', visible ? 'Recolher instruções' : 'Ver instruções');
+  }
+  if (typeof _refreshIcons === 'function') _refreshIcons();
+  const _scale = window.currentUiScale || 1;
+  const _h = Math.round((visible ? CAPTURE_BAR_EXPANDED_H : CAPTURE_MINI_H) * _scale);
+  parent.postMessage({ pluginMessage: { type: 'resize-ui', width: FULL_W, height: _h } }, '*');
+}
+
+// Botão de recolher/expandir da barra (chevron, ao lado de
+// Cancelar/Concluir) — alterna o estado, nunca sai do modo de captura: a
+// escuta de cliques no canvas continua ativa nos dois estados.
+function _a11yCaptureBarToggleInstructions() {
+  window._a11yCaptureBarInstructionsVisible = !window._a11yCaptureBarInstructionsVisible;
+  _a11yCaptureBarApplyInstructionsVisibility();
+}
+window._a11yCaptureBarToggleInstructions = _a11yCaptureBarToggleInstructions;
 
 function _a11yCaptureMiniBarExit() {
   window._a11yCaptureMiniBarActive = false;
   window._a11yCaptureMiniBarFeature = null;
+  window._a11yCaptureBarInstructionsVisible = true; // reset pro padrão da próxima captura
   const headerHome = document.getElementById('header-home');
   const miniBar = document.getElementById('a11y-capture-mini-bar');
   const mainContent = document.querySelector('body > div.flex-1');

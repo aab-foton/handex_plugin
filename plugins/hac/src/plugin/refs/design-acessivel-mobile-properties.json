@@ -1,13 +1,13 @@
 {
   "_meta": {
-    "description": "Component property definitions (VARIANT/BOOLEAN/TEXT/INSTANCE_SWAP, com opções e defaults) de cada component set \"^\\.?\\[a11y mob(?:ile)?(?: base)?\\]\\s*\" da lib \"Design Acessível (mobile)\". Gerado por fetch-component-properties.cjs (generalização de fetch-a11y-component-properties.cjs para as 5 libs DSC do hac). Unidade de extração é o COMPONENT SET (família), não a variante individual — ver cabeçalho do script para justificativa.",
+    "description": "Component property definitions (VARIANT/BOOLEAN/TEXT/INSTANCE_SWAP, com opções e defaults) de cada component set \"^\\.?\\[hac(?:\\s+(?:mob|web))?(?:\\s+base)?\\]\\s*\" da lib \"Design Acessível (mobile)\". Gerado por fetch-component-properties.cjs (generalização de fetch-a11y-component-properties.cjs para as 5 libs DSC do hac). Unidade de extração é o COMPONENT SET (família), não a variante individual — ver cabeçalho do script para justificativa.",
     "slug": "design-acessivel-mobile",
     "libraryName": "Design Acessível (mobile)",
-    "fileKey": "3zdtN13YvPlCGPdXeL0Y2i",
-    "generatedAt": "2026-09-01T18:12:50.373Z",
+    "fileKey": "HhriLSpKnCB2dHhyiU16iB",
+    "generatedAt": "2026-09-15T13:32:35.828Z",
     "generator": "fetch-component-properties.cjs",
     "deepScan": true,
-    "discoverySignature": "82569e4fe5663c5ac06c050863cd9b5c32c54f5db5e14d6fdb4772f203a9ff09",
+    "discoverySignature": "732699a4637016dd41530d7420634ace730e8493b26bbef7730c7c4a1a76bde0",
     "counts": {
       "totalComponentSets": 9,
       "resolved": 9,
@@ -35,16 +35,16 @@
   },
   "components": [
     {
-      "nodeId": "1:50",
-      "key": "907037f5556473e34b93ca073606b2f9420481b8",
-      "fullName": "[a11y mob] Conectores",
-      "shortName": "Conectores",
+      "nodeId": "1:169",
+      "key": "9ad0de549705036324f8c72e7782c0535896ea8d",
+      "fullName": "[hac] Agrupamento",
+      "shortName": "Agrupamento",
       "source": "component_sets",
       "properties": [
         {
-          "rawKey": "letra / número#7187:0",
+          "rawKey": "letra / número#7165:65",
           "name": "letra / número",
-          "syncId": "7187:0",
+          "syncId": "7165:65",
           "type": "TEXT",
           "defaultValue": "A"
         },
@@ -53,25 +53,24 @@
           "name": "tipo",
           "syncId": null,
           "type": "VARIANT",
-          "defaultValue": "elementos e imagens",
+          "defaultValue": "elementos interativos e imagens",
           "variantOptions": [
+            "elementos interativos e imagens",
             "decorativo",
-            "elementos e imagens",
             "títulos"
           ]
         },
         {
-          "rawKey": "conector",
-          "name": "conector",
+          "rawKey": "orientação",
+          "name": "orientação",
           "syncId": null,
           "type": "VARIANT",
-          "defaultValue": "desativado",
+          "defaultValue": "esquerda",
           "variantOptions": [
-            "desativado",
-            "inferior",
-            "superior",
             "esquerda",
-            "direita"
+            "direita",
+            "inferior",
+            "superior"
           ]
         }
       ],
@@ -82,15 +81,15 @@
         ],
         "variants": [
           "tipo",
-          "conector"
+          "orientação"
         ],
         "instanceSwaps": []
       }
     },
     {
       "nodeId": "13:479",
-      "key": "dda5b5b1aa3fb88f5e8675569c9d46c981f74459",
-      "fullName": "[a11y mob] Número da tela",
+      "key": "060f39545feb63c90d841655960bc35c1230bbbf",
+      "fullName": "[hac] Número da tela",
       "shortName": "Número da tela",
       "source": "component_sets",
       "properties": [
@@ -145,61 +144,38 @@
       }
     },
     {
-      "nodeId": "1:169",
-      "key": "17407c22fadeb0c9234e73a70f3c3e1b8e02c9a6",
-      "fullName": "[a11y mob] Agrupamento",
-      "shortName": "Agrupamento",
+      "nodeId": "10330:4204",
+      "key": "e2c3162d5c9d3fb22096d9bb7c949a18a7f45add",
+      "fullName": "[hac web] Box specs leitor de tela",
+      "shortName": "Box specs leitor de tela",
       "source": "component_sets",
       "properties": [
         {
-          "rawKey": "letra / número#7165:65",
-          "name": "letra / número",
-          "syncId": "7165:65",
-          "type": "TEXT",
-          "defaultValue": "A"
-        },
-        {
-          "rawKey": "tipo",
-          "name": "tipo",
+          "rawKey": "Conector",
+          "name": "Conector",
           "syncId": null,
           "type": "VARIANT",
-          "defaultValue": "elementos interativos e imagens",
+          "defaultValue": "Elementos Interativos e Imagens",
           "variantOptions": [
-            "elementos interativos e imagens",
-            "decorativo",
-            "estrutura da página"
-          ]
-        },
-        {
-          "rawKey": "orientação",
-          "name": "orientação",
-          "syncId": null,
-          "type": "VARIANT",
-          "defaultValue": "esquerda",
-          "variantOptions": [
-            "esquerda",
-            "direita",
-            "inferior",
-            "superior"
+            "Títulos",
+            "Elementos Decorativos",
+            "Elementos Interativos e Imagens"
           ]
         }
       ],
       "propertiesByType": {
         "toggles": [],
-        "texts": [
-          "letra / número"
-        ],
+        "texts": [],
         "variants": [
-          "tipo",
-          "orientação"
+          "Conector"
         ],
         "instanceSwaps": []
       }
     },
     {
       "nodeId": "5222:4270",
-      "key": "32b11696d518425df4fe6a0335af325e1c9dd596",
-      "fullName": "[a11y mob] Ordenação",
+      "key": "a22bae6f3993c9c4b857113bdcc92e4c5f12b947",
+      "fullName": "[hac] Ordenação",
       "shortName": "Ordenação",
       "source": "component_sets",
       "properties": [
@@ -234,9 +210,62 @@
       }
     },
     {
+      "nodeId": "1:50",
+      "key": "ef1080dfa99432945fb7e45b88ac95bec02e85ec",
+      "fullName": "[hac] Conectores",
+      "shortName": "Conectores",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "letra / número#7187:0",
+          "name": "letra / número",
+          "syncId": "7187:0",
+          "type": "TEXT",
+          "defaultValue": "A"
+        },
+        {
+          "rawKey": "tipo",
+          "name": "tipo",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "elementos interativos e imagens",
+          "variantOptions": [
+            "decorativo",
+            "títulos",
+            "elementos interativos e imagens"
+          ]
+        },
+        {
+          "rawKey": "conector",
+          "name": "conector",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "desativado",
+          "variantOptions": [
+            "desativado",
+            "inferior",
+            "superior",
+            "esquerda",
+            "direita"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [
+          "letra / número"
+        ],
+        "variants": [
+          "tipo",
+          "conector"
+        ],
+        "instanceSwaps": []
+      }
+    },
+    {
       "nodeId": "5413:1262",
-      "key": "e0951b67672ab4961c0efab838564797881f6cf7",
-      "fullName": "[a11y mob] Box specs leitor de tela",
+      "key": "30a1983bc9b59b0f6dfb4b75287f9ee5affcc487",
+      "fullName": "[hac mob] Box specs leitor de tela",
       "shortName": "Box specs leitor de tela",
       "source": "component_sets",
       "properties": [
@@ -245,11 +274,11 @@
           "name": "Conector",
           "syncId": null,
           "type": "VARIANT",
-          "defaultValue": "Elementos e imagens",
+          "defaultValue": "Elementos Interativos e Imagens",
           "variantOptions": [
-            "Elementos e imagens",
             "Títulos",
-            "Elementos decorativos"
+            "Elementos Decorativos",
+            "Elementos Interativos e Imagens"
           ]
         }
       ],
@@ -263,87 +292,18 @@
       }
     },
     {
-      "nodeId": "5362:961",
+      "nodeId": "10206:2177",
       "key": null,
-      "fullName": ".[a11y mob base] Elementos e imagens",
+      "fullName": ".[hac mob base]  Elementos e imagens",
       "shortName": "Elementos e imagens",
       "source": "tree-walk",
       "properties": [
         {
-          "rawKey": "Observação#5365:0",
-          "name": "Observação",
-          "syncId": "5365:0",
-          "type": "BOOLEAN",
-          "defaultValue": true
-        },
-        {
-          "rawKey": "Nome acessível#5366:0",
-          "name": "Nome acessível",
-          "syncId": "5366:0",
-          "type": "BOOLEAN",
-          "defaultValue": true
-        },
-        {
-          "rawKey": "Dica Leitor de Tela#5405:0",
-          "name": "Dica Leitor de Tela",
-          "syncId": "5405:0",
-          "type": "BOOLEAN",
-          "defaultValue": true
-        },
-        {
-          "rawKey": "Descrição#7111:0",
-          "name": "Descrição",
-          "syncId": "7111:0",
-          "type": "BOOLEAN",
-          "defaultValue": true
-        },
-        {
-          "rawKey": "Variante",
-          "name": "Variante",
+          "rawKey": "Componente",
+          "name": "Componente",
           "syncId": null,
           "type": "VARIANT",
-          "defaultValue": "componente",
-          "variantOptions": [
-            "componente",
-            "link",
-            "texto alternativo"
-          ]
-        }
-      ],
-      "propertiesByType": {
-        "toggles": [
-          "Observação",
-          "Nome acessível",
-          "Dica Leitor de Tela",
-          "Descrição"
-        ],
-        "texts": [],
-        "variants": [
-          "Variante"
-        ],
-        "instanceSwaps": []
-      }
-    },
-    {
-      "nodeId": "5536:8553",
-      "key": null,
-      "fullName": ".[a11y mob base] Link do Componente",
-      "shortName": "Link do Componente",
-      "source": "tree-walk",
-      "properties": [
-        {
-          "rawKey": "Texto#7157:0",
-          "name": "Texto",
-          "syncId": "7157:0",
-          "type": "TEXT",
-          "defaultValue": "[insira aqui o link do componente]."
-        },
-        {
-          "rawKey": "Link",
-          "name": "Link",
-          "syncId": null,
-          "type": "VARIANT",
-          "defaultValue": "Personalizado",
+          "defaultValue": "Accordion",
           "variantOptions": [
             "Accordion",
             "Account Select",
@@ -353,72 +313,84 @@
             "Badge",
             "Badge Notification",
             "Badge Text",
+            "Badge Text Alt",
             "Button",
             "Card",
             "Card Account",
             "Card Alert",
             "Card Carousel Horizontal",
             "Card Carousel Vertical",
+            "Card Feed",
             "Card Notification",
+            "Card Notification Alt",
             "Card Product Offer",
+            "Card Stats",
             "Card Wallet",
+            "Card Wallet Alt",
             "Card Widget",
             "Checkbox",
             "Chips",
             "Comparison Table",
             "Credit Card Button",
             "Date Picker",
+            "Digital Wallet Button",
             "Icon Button",
+            "Icon Button Alt",
             "Icon Button Text",
-            "Image Media",
-            "Input/Text Field - Single",
-            "Input/Text Field - Form",
+            "Input Chat",
             "Input Money",
             "Input Pin",
+            "Input Slider",
             "Input Stepper",
+            "Input / Text Field Form",
+            "Input / Text Field Single",
             "List Accordion",
-            "List Heading",
+            "List Footer",
             "List Item",
+            "List Item Funds",
+            "List Item Shortcut",
             "List Item Transaction",
             "Loading Animation",
+            "Micro Chart",
+            "Media Button Text",
             "Menu",
             "Navigation Bar",
-            "Page Controller",
-            "Page Header",
+            "Page Controler",
             "Popover",
+            "Product Card",
             "Progress",
             "Radio",
             "Search Bar",
-            "Selectable Media",
             "Segmented Button",
-            "Separator/Divider",
+            "Segmented Button Alt",
+            "Selectable Media",
             "Sheet",
-            "Skeleton/Shimmer",
+            "Shimmer",
             "Slider",
+            "Snackbar",
             "Spinner",
             "Swap Preview",
             "Switch",
             "Tabs",
             "Tile Button",
-            "Text",
             "Timeline",
-            "Toast/Snackbar",
+            "Tipkit Inline",
+            "Tipkit Popover",
             "Toolbar",
             "Tooltip",
             "Top App Bar",
             "Value Section",
+            "Value Section Alt",
             "Wheel Picker",
-            "Personalizado"
+            "Imagem"
           ]
         }
       ],
       "propertiesByType": {
         "toggles": [],
-        "texts": [
-          "Texto"
-        ],
+        "texts": [],
         "variants": [
-          "Link"
+          "Componente"
         ],
         "instanceSwaps": []
       }
@@ -426,7 +398,7 @@
     {
       "nodeId": "1:465",
       "key": null,
-      "fullName": ".[a11y mob base] Legenda",
+      "fullName": ".[hac mob base] Legenda",
       "shortName": "Legenda",
       "source": "tree-walk",
       "properties": [
@@ -488,7 +460,7 @@
     {
       "nodeId": "7100:1424",
       "key": null,
-      "fullName": ".[a11y mob base] Cabeçalho Template",
+      "fullName": ".[hac mob base] Cabeçalho Template",
       "shortName": "Cabeçalho Template",
       "source": "tree-walk",
       "properties": [
