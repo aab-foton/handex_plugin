@@ -193,8 +193,8 @@ function _fichaInsertSection(sectionKey) {
   // seguro (mesmo modal, só troca o texto), não pisca duas transições
   // visuais distintas.
   const _sectionLabel = sectionKey === 'tabulacao' ? 'Ordem de Tabulação' : sectionKey === 'swipe' ? 'Trilha de Swipe' : 'Leitor de Tela';
-  if (typeof showA11yCanvasLoading === 'function') showA11yCanvasLoading(`Inserindo ${_sectionLabel} no Handoff Completo…`);
-  showToast('Inserindo no Handoff Completo…');
+  if (typeof showA11yCanvasLoading === 'function') showA11yCanvasLoading(`Consolidando ${_sectionLabel} no Handoff de Acessibilidade…`);
+  showToast('Consolidando Handoff de Acessibilidade…');
   parent.postMessage({ pluginMessage: Object.assign({ type: 'insert-ficha-section' }, payload) }, '*');
 }
 window._fichaInsertSection = _fichaInsertSection;
@@ -281,7 +281,7 @@ function _fichaHandleSectionInserted(msg) {
 
   saveToStorage();
   if (window._toastSaved) _toastSaved();
-  showToast('Handoff Completo atualizado.');
+  showToast('Handoff de Acessibilidade atualizado.');
 
   if (typeof _renderA11yWorkspaceTab === 'function') _renderA11yWorkspaceTab();
   _fichaResolvePending(msg.sectionKey, true);
@@ -290,7 +290,7 @@ window._fichaHandleSectionInserted = _fichaHandleSectionInserted;
 
 function _fichaHandleSectionInsertFailed(msg) {
   if (typeof hideA11yCanvasLoading === 'function') hideA11yCanvasLoading();
-  showToast(msg && msg.reason ? msg.reason : 'Não foi possível atualizar o Handoff Completo.', 'error');
+  showToast(msg && msg.reason ? msg.reason : 'Não foi possível atualizar o Handoff de Acessibilidade.', 'error');
   _fichaResolvePending(msg && msg.sectionKey, false);
 }
 window._fichaHandleSectionInsertFailed = _fichaHandleSectionInsertFailed;
@@ -321,7 +321,7 @@ window._fichaViewOnCanvas = _fichaViewOnCanvas;
 // canvas (ex.: apagado manualmente) — sem isto, "Ver ficha no canvas" falha
 // em silêncio (achado real de QA, 2026-09-04).
 function _fichaHandleNodeNotFound(msg) {
-  showToast('O Handoff Completo desta tela não foi encontrado no canvas, talvez tenha sido apagado. Insira uma seção novamente para recriá-lo.', 'error');
+  showToast('O Handoff de Acessibilidade desta tela não foi encontrado no canvas, talvez tenha sido apagado. Insira uma seção novamente para recriá-lo.', 'error');
 }
 window._fichaHandleNodeNotFound = _fichaHandleNodeNotFound;
 
@@ -494,7 +494,7 @@ async function _fichaGenerateCompleteHandoff(areaId) {
   pendingKeys = order.filter(key => pendingKeys.includes(key));
 
   if (pendingKeys.length === 0) {
-    showToast('O Handoff Completo já está atualizado.');
+    showToast('O Handoff de Acessibilidade já está atualizado.');
     return;
   }
 

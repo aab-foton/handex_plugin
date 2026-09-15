@@ -229,6 +229,17 @@ function _a11yCaptureMiniBarEnter(feature) {
   // toast quase todo fora da área visível. Esta classe reancora o toast
   // logo abaixo da barra mini enquanto ela estiver ativa (2026-09-04-y).
   document.body.classList.add('a11y-capture-mini-active');
+  // Bug real corrigido (2026-09-14, print do usuário): "Voltar ao topo"
+  // (#btn-top, fixed bottom-6) projeta pra perto do TOPO da janela
+  // encolhida (~52-60px de altura), aparecendo por trás do modal
+  // minimizado — força escondido aqui, não depende só de handleScroll
+  // nunca disparar enquanto a barra mini está ativa (ver guard espelhado
+  // lá, core.js).
+  const btnTop = document.getElementById('btn-top');
+  if (btnTop) {
+    btnTop.classList.add('opacity-0', 'pointer-events-none', 'translate-y-10');
+    btnTop.classList.remove('opacity-100', 'pointer-events-auto', 'translate-y-0');
+  }
   _a11yCaptureMiniBarUpdateCount(0);
   const _scale = window.currentUiScale || 1;
   const _h = Math.round(CAPTURE_MINI_H * _scale);
@@ -603,7 +614,17 @@ function collapseAllAccordions(containerEl) {
 function handleScroll(el) {
   const btnTop = document.getElementById('btn-top');
   if (!btnTop) return;
-  if (!isCollapsed && el.scrollTop > 100) {
+  // Bug real corrigido (2026-09-14, reportado com print pelo usuário): a
+  // janela encolhe pra ~52-60px de altura durante a barra mini de captura
+  // (Ordem de Tabulação/Trilha de Swipe, ver _a11yCaptureMiniBarEnter) —
+  // "bottom: 24px" (classe bottom-6 do botão) nessa altura de janela
+  // projeta o botão pra perto do TOPO em vez do fundo, aparecendo por trás
+  // do modal minimizado. handleScroll já verificava isCollapsed (o
+  // collapse manual do plugin inteiro) mas nunca window._a11yCaptureMiniBarActive
+  // (modo de captura, estado diferente) — o modal de revisão por trás da
+  // barra mini pode ter conteúdo scrollável o bastante pra disparar
+  // scrollTop > 100 mesmo com a janela minimizada, revelando o botão.
+  if (!isCollapsed && !window._a11yCaptureMiniBarActive && el.scrollTop > 100) {
     btnTop.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-10');
     btnTop.classList.add('opacity-100', 'pointer-events-auto', 'translate-y-0');
   } else {

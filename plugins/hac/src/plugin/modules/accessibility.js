@@ -3330,12 +3330,9 @@ function _a11yWorkspaceTabTabulacao(area) {
 // web mostra só o aviso, sem registrar nenhum handler de clique. Sem
 // "Mapeamento Automático" nesta entrega (fora de escopo, ver plano).
 function _a11yWorkspaceTabSwipe(area) {
-  const badgeHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded-dsc-circ bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-dsc-label-tiny font-extrabold uppercase tracking-wide">Em fase de testes</span>`;
-
   if (!isA11yMobileProject()) {
     return `
       <div class="space-y-2">
-        <div class="flex items-center gap-dsc-nano">${badgeHtml}</div>
         <div class="flex flex-col items-center justify-center py-8 text-center">
           <i data-lucide="smartphone" class="w-8 h-8 text-slate-200 dark:text-slate-700 mb-2" style="opacity:0.5" aria-hidden="true"></i>
           <p class="text-dsc-label-tiny normal-case tracking-normal font-semibold text-slate-500 dark:text-dark-muted">Disponível apenas para projetos mobile</p>
@@ -3353,7 +3350,6 @@ function _a11yWorkspaceTabSwipe(area) {
 
   return `
     <div class="space-y-2">
-      <div class="flex items-center gap-dsc-nano">${badgeHtml}</div>
       <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-relaxed">
         Documente a sequência de ordem por tabulação (Tecla Tab) da interface, segure o Shift e vá clicando para selecionar os elementos acionáveis (Links, Buttons e Campos de Texto) um por um e confirme no final para selecionar tudo de uma vez.
       </p>
@@ -3551,7 +3547,7 @@ function _a11yWorkspaceTabHandoffDashboard(area, areaSpecs) {
   return `
     <div class="space-y-4">
       <div>
-        <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted mb-2">Status do Handoff Completo desta tela, reunindo o que já foi inserido de cada etapa.</p>
+        <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted mb-2">Status do Handoff de Acessibilidade desta tela, reunindo o que já foi inserido de cada etapa.</p>
         <!-- "Gerar handoff completo" (2026-09-09, pedido do usuário) —
              reinsere só as seções pendentes/desatualizadas (nunca as 4
              incondicionalmente, ver _fichaGenerateCompleteHandoff em
@@ -3789,7 +3785,7 @@ function _a11yAreaAccordionEl(area, areaSpecs) {
       <div class="flex items-center gap-1.5 pl-[38px]">
         <i data-lucide="file-output" class="w-3 h-3 shrink-0" style="color:${fichaInsertedCount > 0 ? '#0891B2' : '#94a3b8'}"></i>
         <span class="text-dsc-label-tiny normal-case tracking-normal font-semibold" style="color:${fichaInsertedCount > 0 ? '#0891B2' : '#94a3b8'}">
-          Handoff Completo: ${fichaInsertedCount}/${fichaSectionKeys.length} seções inseridas
+          Handoff de Acessibilidade: ${fichaInsertedCount}/${fichaSectionKeys.length} seções inseridas
         </span>
       </div>
     </div>

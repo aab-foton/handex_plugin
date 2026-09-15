@@ -22,9 +22,10 @@
     "version:major": "npm version major --no-git-tag-version"
   },
   "devDependencies": {
-    "tw3": "npm:tailwindcss@^3.4.17",
+    "@figma/plugin-typings": "^1.138.0",
     "@types/node": "^22.14.0",
     "esbuild": "^0.28.0",
+    "tw3": "npm:tailwindcss@^3.4.17",
     "typescript": "~5.8.2"
   }
 }

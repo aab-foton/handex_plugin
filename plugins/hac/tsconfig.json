@@ -1,13 +1,15 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "commonjs",
+    "module": "ESNext",
     "lib": ["ES2022", "DOM"],
     "skipLibCheck": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
     "allowJs": true,
-    "checkJs": false,
-    "noEmit": true
+    "checkJs": true,
+    "noEmit": true,
+    "types": ["@figma/plugin-typings"]
   },
-  "include": ["src/plugin/code.js"]
+  "include": ["src/plugin/code.js", "src/plugin/backend/**/*.js", "src/plugin/globals.d.ts"]
 }
