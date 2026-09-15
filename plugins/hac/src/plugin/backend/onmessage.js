@@ -3268,6 +3268,32 @@ figma.ui.onmessage = async (msg) => {
         }
         await _walkLayerOrder(root);
       }
+      // Marca como RESOLVIDO-E-NÃO-ENCONTRADO (null) todo id pedido que a
+      // varredura não alcançou — bug real corrigido (2026-09-15, plugin
+      // travando ao criar spec): antes a resposta só trazia os ids
+      // encontrados, e o frontend (messages.js, 'layer-order-resolved') só
+      // cacheia o que volta, mas re-renderiza SEMPRE. Como o render
+      // redispara resolve-layer-order pros ids ainda "faltando"
+      // (_a11yQueueLayerOrderResolution filtra por `!(id in areaCache)`),
+      // qualquer id não alcançável fechava um ciclo infinito
+      // render → mensagem → render, sem debounce: o DOM era destruído e
+      // reconstruído em loop apertado (innerHTML='' + _refreshIcons), que é
+      // o "pisca, ícones somem e trava" relatado.
+      //
+      // Três caminhos reais levam a um id não alcançado, todos plausíveis
+      // no uso normal: (a) `root` nulo — frame da Área apagado/movido;
+      // (b) ancestral com visible === false, já que o `continue` acima pula
+      // a subárvore inteira; (c) a spec aponta um nó que não está NESTA
+      // árvore — o caso mais comum agora que a spec nasce sobre a réplica
+      // de trabalho, não sobre o frame original.
+      //
+      // O valor null é deliberado: entra no cache (`id in areaCache` passa
+      // a ser true, encerrando o ciclo) e _a11ySortSpecsByLayerOrder já
+      // trata ausência de ordem caindo no fallback alfabético — null não é
+      // confundido com posição 0 porque a comparação lá é por `undefined`.
+      for (const id of wantedIds) {
+        if (!(id in order)) order[id] = null;
+      }
       figma.ui.postMessage({ type: "layer-order-resolved", areaId, areaTargetNodeId, order });
     })();
     return;

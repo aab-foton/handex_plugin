@@ -611,13 +611,36 @@ function _openA11yCategoryPickerModalAfterInstruction(areaId) {
   window._a11yLibCheckOnSuccess = null; // fluxo normal "+" nunca usa o desvio de openA11yFormFromUndocumented
   window._a11yCategoryPickerWizardSwitch = false;
 
-  // Foca a RÉPLICA DE TRABALHO do Leitor de Tela desta área, não o Frame
-  // Principal (2026-09-11) — é sobre ela que a spec vai ser desenhada.
+  // Cria (ou reaproveita) a RÉPLICA DE TRABALHO do Leitor de Tela ANTES de
+  // focar — 2026-09-15, pedido do usuário: "assim que eu clico pra criar a
+  // spec, já deveríamos ter a réplica e o canvas focar na réplica".
+  //
+  // Até aqui a réplica só nascia dentro de create-unified-spec, ou seja, ao
+  // APLICAR a primeira spec: o focusA11yCloneNode abaixo não tinha o que
+  // focar e caía no Frame Principal, então o designer clicava sobre o
+  // design original enquanto a spec seria desenhada sobre uma réplica que
+  // ainda ia ser criada. O wizard de Detecção Automática já resolvia isso
+  // desde 2026-09-14 (startA11yBatchWizard) — este é o mesmo adiantamento
+  // para o fluxo MANUAL ("+ Nova spec"), reusando o mesmo handler
+  // idempotente (start-spec-copy → _resolveActiveSpecClone, que reusa
+  // clone existente e só cria do zero na primeira vez).
+  //
+  // O foco roda no retorno de 'spec-copy-started' (messages.js), não aqui:
+  // focar antes da réplica existir repetiria o bug que esta mudança corrige.
+  // Best-effort — área sem targetNodeId resolvível não trava o fluxo, só
+  // perde o adiantamento e foca o que houver.
   const area = _findA11yAreaById(areaId);
-  if (area && typeof focusA11yCloneNode === 'function') {
+  if (area && area.targetNodeId) {
+    window._a11ySpecCopyPendingFocusAreaId = areaId;
+    // Loading de canvas enquanto a réplica é clonada — mesmo padrão de
+    // Tabulação/Swipe (_startTabOrderManualModeInner), pelo mesmo motivo:
+    // em telas grandes a clonagem demora o bastante pra parecer que nada
+    // aconteceu ao clicar. Fechado em 'spec-copy-started' (messages.js).
+    if (typeof showA11yCanvasLoading === 'function') showA11yCanvasLoading('Preparando a réplica de trabalho…');
+    parent.postMessage({ pluginMessage: { type: 'start-spec-copy', areaId, targetNodeId: area.targetNodeId, sectionName: getA11yActiveSectionName(), designerName: getA11yDesignerName(), designerId: getA11yDesignerId() } }, '*');
+  } else if (area && typeof focusA11yCloneNode === 'function') {
     focusA11yCloneNode(areaId, 'leitor', area.targetNodeId || null);
   }
-  showSnackbar('Clique no elemento que você quer especificar, dentro do frame em destaque.');
 
   // Matching determinístico (Parte 2) — token de correlação próprio, igual
   // ao padrão já usado abaixo pra check-a11y-library: só a resposta do
@@ -3249,7 +3272,7 @@ function _a11yWorkspaceTabTabulacao(area) {
   // _renderTabOrderListForArea pra saber se a área já tem itens.
   const hasManualItems = typeof _currentTabOrderItems === 'function' && _currentTabOrderItems(area.id).length > 0;
   return `
-    <div class="space-y-2">
+    <div class="space-y-2 flex flex-col flex-1 min-h-0">
       <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-relaxed">
         Documente a sequência de ordem por tabulação (Tecla Tab) da interface, segure o Shift e vá clicando para selecionar os elementos acionáveis (Links, Buttons e Campos de Texto) um por um e confirme no final para selecionar tudo de uma vez.
       </p>
@@ -3262,19 +3285,21 @@ function _a11yWorkspaceTabTabulacao(area) {
              arma a captura de novo(s) elemento(s), reaproveitando a MESMA
              cópia clonada (nenhum selo já desenhado é tocado). -->
         <button type="button" onclick="startTabOrderAddItemsFromCard('${escapeHtml(areaIdAttr)}')"
-          class="flex-1 flex items-center justify-center gap-dsc-nano h-9 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
+          data-tooltip="Marcar mais elementos e somá-los ao final da ordem já existente"
+          class="tooltip-right flex-1 flex items-center justify-center gap-dsc-nano h-9 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
           <i data-lucide="plus" class="w-3.5 h-3.5" aria-hidden="true"></i>
           Adicionar itens
         </button>` : `
         <button type="button" onclick="startTabOrderManualMode('${escapeHtml(areaIdAttr)}', '${escapeHtml(area.targetNodeId || '')}')"
-          class="flex-1 flex items-center justify-center gap-dsc-nano h-9 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
+          data-tooltip="Cria uma cópia da tela e minimiza o plugin para você clicar nos elementos"
+          class="tooltip-right flex-1 flex items-center justify-center gap-dsc-nano h-9 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
           <i data-lucide="list-ordered" class="w-3.5 h-3.5" aria-hidden="true"></i>
           Iniciar Ordem de Tabulação
         </button>`}
         ${hasManualItems ? `
         <button type="button" onclick="deleteAllTabOrderForArea('${escapeHtml(areaIdAttr)}')"
-          title="Apagar toda a ordem de tabulação" aria-label="Apagar toda a ordem de tabulação desta tela"
-          class="shrink-0 w-9 h-9 flex items-center justify-center rounded-dsc-large border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 active:scale-[0.99] transition-all">
+          data-tooltip="Apagar todos os selos desta tela e recomeçar a ordem do zero" aria-label="Apagar toda a ordem de tabulação desta tela"
+          class="tooltip-left shrink-0 w-9 h-9 flex items-center justify-center rounded-dsc-large border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 active:scale-[0.99] transition-all">
           <i data-lucide="trash-2" class="w-3.5 h-3.5" aria-hidden="true"></i>
         </button>` : ''}
       </div>
@@ -3288,6 +3313,7 @@ function _a11yWorkspaceTabTabulacao(area) {
            Automatizado" — não é geração final, o resultado ainda passa
            por revisão). -->
       <button type="button" onclick="_confirmGenerateTabOrderFromLayers('${escapeHtml(areaIdAttr)}', '${escapeHtml(area.targetNodeId || '')}')"
+        data-tooltip="O plugin varre as camadas e propõe uma ordem — você revisa antes de aplicar"
         class="w-full flex items-center justify-center gap-1.5 h-7 mt-0.5 rounded-dsc-small text-dsc-label-tiny normal-case tracking-normal font-bold text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99] transition-all">
         <i data-lucide="sparkles" class="w-3.5 h-3.5" aria-hidden="true"></i>
         ou usar Mapeamento Automático
@@ -3296,7 +3322,8 @@ function _a11yWorkspaceTabTabulacao(area) {
       ${hasManualItems ? `
       <div class="flex items-center gap-1.5 mt-1">
         <button type="button" id="tab-order-narration-btn-${uid}" onclick="toggleTabOrderNarration('${escapeHtml(areaIdAttr)}', '${escapeHtml(uid)}')"
-          class="flex-1 flex items-center justify-center gap-dsc-nano h-8 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm hover:shadow transition-all">
+          data-tooltip="Ouvir a sequência em voz alta para conferir se a ordem faz sentido"
+          class="tooltip-right flex-1 flex items-center justify-center gap-dsc-nano h-8 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm hover:shadow transition-all">
           <i data-lucide="play" class="w-3.5 h-3.5" aria-hidden="true"></i>
           Simular leitura
         </button>
@@ -3333,7 +3360,7 @@ function _a11yWorkspaceTabTabulacao(area) {
         <i data-lucide="refresh-cw" class="w-3.5 h-3.5" aria-hidden="true"></i>
         Atualizar
       </button>
-      ${typeof _fichaInsertButtonHtml === 'function' ? _fichaInsertButtonHtml(area, 'tabulacao') : ''}
+      ${typeof _fichaInsertButtonHtml === 'function' ? _fichaInsertButtonHtml(area, 'tabulacao', hasManualItems) : ''}
     </div>
   `;
 }
@@ -3372,7 +3399,7 @@ function _a11yWorkspaceTabSwipe(area) {
   const targetNodeIdAttr = area.targetNodeId || '';
 
   return `
-    <div class="space-y-2">
+    <div class="space-y-2 flex flex-col flex-1 min-h-0">
       <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-relaxed">
         Documente a sequência de ordem por tabulação (Tecla Tab) da interface, segure o Shift e vá clicando para selecionar os elementos acionáveis (Links, Buttons e Campos de Texto) um por um e confirme no final para selecionar tudo de uma vez.
       </p>
@@ -3397,11 +3424,13 @@ function _a11yWorkspaceTabSwipe(area) {
            sentido represar mudanças pendentes sem persistir. -->
       <ul id="a11y-swipe-path-tab-list" class="flex flex-col gap-1.5 min-h-[10px]"></ul>
       <button type="button" onclick="openSwipePathEditMode('${escapeHtml(areaIdAttr)}', '${escapeHtml(targetNodeIdAttr)}')"
+        data-tooltip="Marcar mais pontos e somá-los ao final da trilha existente"
         class="w-full flex items-center justify-center gap-dsc-nano h-8 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm hover:shadow transition-all">
         <i data-lucide="plus" class="w-3.5 h-3.5" aria-hidden="true"></i>
         Adicionar ponto
       </button>` : ''}
       <button type="button" onclick="startSwipePathManualMode('${escapeHtml(areaIdAttr)}', '${escapeHtml(targetNodeIdAttr)}')"
+        data-tooltip="${existingPath ? 'Descarta a trilha atual e recomeça a marcação do zero' : 'Cria uma cópia da tela e minimiza o plugin para você clicar nos pontos'}"
         class="w-full flex items-center justify-center gap-dsc-nano h-9 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
         <i data-lucide="route" class="w-3.5 h-3.5" aria-hidden="true"></i>
         ${startLabel}
@@ -3422,17 +3451,19 @@ function _a11yWorkspaceTabSwipe(area) {
            startSwipePathManualMode do botão acima) — nunca bloqueia. -->
       ${A11Y_AUTO_MAPPING_HIDDEN_TAB_SWIPE ? '' : `
       <button type="button" onclick="startSwipePathFromTabOrder('${escapeHtml(areaIdAttr)}', '${escapeHtml(targetNodeIdAttr)}')"
+        data-tooltip="Reaproveita a sequência já confirmada na aba Tabulação, na mesma ordem"
         class="w-full flex items-center justify-center gap-1.5 h-7 mt-0.5 rounded-dsc-small text-dsc-label-tiny normal-case tracking-normal font-bold text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99] transition-all">
         <i data-lucide="sparkles" class="w-3.5 h-3.5" aria-hidden="true"></i>
         ou usar a Ordem de Tabulação já mapeada
       </button>`}
       ${existingPath ? `
       <button type="button" onclick="deleteSwipePathForArea('${escapeHtml(areaIdAttr)}')"
+        data-tooltip="Apagar a trilha desta tela do canvas, incluindo a linha e os pontos"
         class="w-full flex items-center justify-center gap-dsc-nano h-8 mt-1 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-all">
         <i data-lucide="trash-2" class="w-3.5 h-3.5" aria-hidden="true"></i>
         Remover trilha
       </button>` : ''}
-      ${typeof _fichaInsertButtonHtml === 'function' ? _fichaInsertButtonHtml(area, 'swipe') : ''}
+      ${typeof _fichaInsertButtonHtml === 'function' ? _fichaInsertButtonHtml(area, 'swipe', !!existingPath) : ''}
     </div>
   `;
 }
@@ -3507,13 +3538,14 @@ function _a11yWorkspaceTabLeitorDeTela(area, areaSpecs) {
   // à tab Tabulação) — Manual ("Nova spec") sempre fica disponível.
   const hasManualSpecs = areaSpecs.length > 0;
   return `
-    <div class="space-y-2">
+    <div class="space-y-2 flex flex-col flex-1 min-h-0">
       <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-relaxed">Crie, edite ou remova especificações desta tela, por categoria.</p>
       <!-- Botão primário no mesmo padrão visual de "Iniciar Ordem de
            Tabulação"/"Iniciar trilha de swipe" (2026-09-04-x, pedido do
            usuário) — antes era um pill pequeno ao lado do texto
            descritivo, inconsistente com as outras 2 tabs. -->
       <button type="button" onclick="openA11yCategoryPickerModal('${area.id}')"
+        data-tooltip="Prepara a réplica da tela e foca o canvas para você clicar no elemento"
         class="w-full flex items-center justify-center gap-dsc-nano h-9 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
         <i data-lucide="plus" class="w-3.5 h-3.5" aria-hidden="true"></i>
         Nova spec
@@ -3530,6 +3562,7 @@ function _a11yWorkspaceTabLeitorDeTela(area, areaSpecs) {
            já usado hoje por _resumeA11yBatchWizardForArea pra retomar
            detecção numa área já existente; nenhuma lógica nova de scan. -->
       <button type="button" onclick="_startA11yMappingFromLeitorTab('${escapeHtml(area.id)}')"
+        data-tooltip="O plugin reconhece os componentes do DSC na tela e sugere uma categoria para cada um"
         class="w-full flex items-center justify-center gap-1.5 h-7 mt-0.5 rounded-dsc-small text-dsc-label-tiny normal-case tracking-normal font-bold text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99] transition-all">
         <i data-lucide="radar" class="w-3.5 h-3.5" aria-hidden="true"></i>
         ou usar Mapeamento Automático
@@ -3548,7 +3581,7 @@ function _a11yWorkspaceTabLeitorDeTela(area, areaSpecs) {
           : (undocumentedEntries.length === 0 ? `<p class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted text-center py-3">Nenhuma especificação nesta tela ainda. Use o botão "Nova spec" acima.</p>` : '')}
         ${_a11yUndocumentedAccordionEl(`${uid}-undoc`, area.id, undocumentedEntries)}
       </div>
-      ${typeof _fichaInsertButtonHtml === 'function' ? _fichaInsertButtonHtml(area, 'leitor') : ''}
+      ${typeof _fichaInsertButtonHtml === 'function' ? _fichaInsertButtonHtml(area, 'leitor', hasManualSpecs) : ''}
     </div>
   `;
 }
@@ -3867,7 +3900,16 @@ function _a11ySortSpecsByLayerOrder(specsList, areaId) {
   return specsList.slice().sort((a, b) => {
     const orderA = (areaCache && a.targetNodeId) ? areaCache[a.targetNodeId] : undefined;
     const orderB = (areaCache && b.targetNodeId) ? areaCache[b.targetNodeId] : undefined;
-    if (orderA === undefined || orderB === undefined) {
+    // null == RESOLVIDO-E-NÃO-ENCONTRADO (2026-09-15, ver resolve-layer-order
+    // em onmessage.js): o id foi procurado e não existe nesta árvore — quase
+    // sempre porque um ancestral está oculto e a DFS pula a subárvore. Vale
+    // como "já perguntei, não pergunte de novo" pro cache (é o que encerra o
+    // ciclo de render infinito), mas NÃO é uma posição válida de ordenação.
+    // Precisa cair no mesmo fallback alfabético de quando a resposta ainda
+    // não chegou — sem o `== null` abaixo, `null - null` daria 0 e essas
+    // specs seriam tratadas como empatadas na posição zero, embaralhando a
+    // lista em vez de preservar a ordem por tag.
+    if (orderA == null || orderB == null) {
       return String(a.letter || '').localeCompare(String(b.letter || ''));
     }
     return orderA - orderB;
@@ -3879,8 +3921,18 @@ function _a11ySortSpecsByLayerOrder(specsList, areaId) {
 // e consulta o backend de uma vez só. Re-renderiza ao final — chamada
 // "fire and forget" a partir de renderA11yGroupedList, que já rendeu uma vez
 // com o fallback alfabético enquanto a consulta está em voo.
+// Guard de requisição em voo, por área (2026-09-15). Segunda linha de
+// defesa do ciclo de render infinito corrigido em resolve-layer-order
+// (onmessage.js): mesmo com o backend marcando os ids não encontrados,
+// esta função é chamada por TODO render, e vários renders podem acontecer
+// antes da primeira resposta voltar (spec criada → render → resposta de
+// outra mensagem → render...). Sem o guard, cada um desses renders
+// dispararia um pedido idêntico, multiplicando mensagens e renders.
+window._a11yLayerOrderInFlight = window._a11yLayerOrderInFlight || {};
+
 function _a11yQueueLayerOrderResolution(areaId, targetNodeId, specsList) {
   if (!areaId || !targetNodeId) return;
+  if (window._a11yLayerOrderInFlight[areaId]) return;
   const cache = window._a11yLayerOrderCache;
   const areaCache = cache[areaId] || {};
   const missingIds = Array.from(new Set(
@@ -3890,6 +3942,7 @@ function _a11yQueueLayerOrderResolution(areaId, targetNodeId, specsList) {
   ));
   if (missingIds.length === 0) return;
 
+  window._a11yLayerOrderInFlight[areaId] = true;
   parent.postMessage({ pluginMessage: { type: 'resolve-layer-order', areaId, areaTargetNodeId: targetNodeId, nodeIds: missingIds } }, '*');
 }
 
