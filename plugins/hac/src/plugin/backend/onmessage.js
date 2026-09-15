@@ -83,12 +83,10 @@ import {
   _getOrCreateCloneOverlayGroup,
   _getOrCreateFichaAreaGroup,
   _getOrCreateFichaItensFrame,
-  _getOrCreateHacPage,
   _getOrCreateNamedSection,
   _insertFichaSectionInOrder,
   _isHacOwnedNode,
   _moveActiveCloneIntoFichaSection,
-  _nodeIsAttached,
   _nodeOnCurrentPage,
   _orderNodesInZigzagReadingOrder,
   _rectsOverlap,
@@ -2386,7 +2384,7 @@ figma.ui.onmessage = async (msg) => {
     if (cachedNodeMap) {
       const existingCloneEntry = cachedNodeMap.get(root.id);
       const existingClone = existingCloneEntry ? await _getSceneNodeById(existingCloneEntry.id) : null;
-      if (existingClone && !existingClone.removed && _nodeIsAttached(existingClone)) {
+      if (existingClone && !existingClone.removed && _nodeOnCurrentPage(existingClone)) {
         let clone = existingClone;
         if (clone.type === 'INSTANCE') {
           try {
@@ -2408,7 +2406,7 @@ figma.ui.onmessage = async (msg) => {
     // já desenhadas no clone antigo (ficam "penduradas" numa cópia que
     // ninguém mais referencia).
     const canvasClone = _findSpecCloneForArea(areaId);
-    if (canvasClone && !canvasClone.removed && _nodeIsAttached(canvasClone)) {
+    if (canvasClone && !canvasClone.removed && _nodeOnCurrentPage(canvasClone)) {
       let clone = canvasClone;
       if (clone.type === 'INSTANCE') {
         try { clone = clone.detachInstance(); } catch (e) { /* segue como INSTANCE */ }
@@ -2615,15 +2613,10 @@ figma.ui.onmessage = async (msg) => {
       // devolvia esse clone morto; tabOrderClone.appendChild(group) em
       // _createTabOrderBadge lançava (node removido não aceita filhos),
       // caindo num catch mudo que deixava o selo solto na página (sem
-      // reparentar em lugar nenhum). _nodeIsAttached cobre o caso vizinho
-      // que .removed não pega: node desanexado da árvore sem estar
-      // formalmente removido (pai removido, detach intermediário) — ali a
-      // subida por .parent termina em null. Era _nodeOnCurrentPage até
-      // 2026-09-15; virou _nodeIsAttached porque um clone pode viver
-      // legitimamente na página dedicada de Handoff enquanto o designer
-      // olha outra página, e ali a pergunta é "serve de container?", não
-      // "está visível pro usuário?".
-      if (existingClone && !existingClone.removed && _nodeIsAttached(existingClone)) {
+      // reparentar em lugar nenhum). Também confirma que o node ainda
+      // pertence à página atual — getNodeByIdAsync pode, em teoria,
+      // resolver um id de outra página.
+      if (existingClone && !existingClone.removed && _nodeOnCurrentPage(existingClone)) {
         // Migração leve (2026-09-08): clone resolvido da memória pode ter
         // sido criado ANTES da correção de detachInstance (áreas já em
         // documentação no momento do fix) — ainda é uma INSTANCE, então
@@ -2653,7 +2646,7 @@ figma.ui.onmessage = async (msg) => {
     // todo o trabalho já feito) órfã dentro da Ficha, nunca mais
     // encontrada por nenhuma varredura.
     const canvasClone = _findTabOrderCopyForArea(areaId);
-    if (canvasClone && !canvasClone.removed && _nodeIsAttached(canvasClone)) {
+    if (canvasClone && !canvasClone.removed && _nodeOnCurrentPage(canvasClone)) {
       let clone = canvasClone;
       if (clone.type === 'INSTANCE') {
         try { clone = clone.detachInstance(); } catch (e) { /* segue como INSTANCE */ }
@@ -2695,11 +2688,11 @@ figma.ui.onmessage = async (msg) => {
     if (cachedNodeMap) {
       const existingCloneEntry = cachedNodeMap.get(root.id);
       const existingClone = existingCloneEntry ? await _getSceneNodeById(existingCloneEntry.id) : null;
-      // Mesma checagem de .removed/_nodeIsAttached de
+      // Mesma checagem de .removed/_nodeOnCurrentPage de
       // _resolveActiveTabOrderClone (2026-09-05) — mesmo risco de
       // referência morta depois que _forEachSwipePathCopyCandidate passou
       // a alcançar clones dentro do Grupo da Área.
-      if (existingClone && !existingClone.removed && _nodeIsAttached(existingClone)) {
+      if (existingClone && !existingClone.removed && _nodeOnCurrentPage(existingClone)) {
         // Mesma migração leve de _resolveActiveTabOrderClone (2026-09-08).
         let clone = existingClone;
         if (clone.type === 'INSTANCE') {
@@ -2719,7 +2712,7 @@ figma.ui.onmessage = async (msg) => {
     // crítico desde que "Inserir na ficha" passou a MOVER a cópia de
     // trabalho pra dentro do frame da Ficha).
     const canvasClone = _findSwipePathCopyForArea(areaId);
-    if (canvasClone && !canvasClone.removed && _nodeIsAttached(canvasClone)) {
+    if (canvasClone && !canvasClone.removed && _nodeOnCurrentPage(canvasClone)) {
       let clone = canvasClone;
       if (clone.type === 'INSTANCE') {
         try { clone = clone.detachInstance(); } catch (e) { /* segue como INSTANCE */ }
@@ -3269,55 +3262,7 @@ figma.ui.onmessage = async (msg) => {
         }
         await _walkLayerOrder(root);
       }
-      // Marca como RESOLVIDO-E-NÃO-ENCONTRADO (null) todo id pedido que a
-      // varredura não alcançou — bug real corrigido (2026-09-15, plugin
-      // travando ao criar spec): antes a resposta só trazia os ids
-      // encontrados, e o frontend (messages.js, 'layer-order-resolved') só
-      // cacheia o que volta, mas re-renderiza SEMPRE. Como o render
-      // redispara resolve-layer-order pros ids ainda "faltando"
-      // (_a11yQueueLayerOrderResolution filtra por `!(id in areaCache)`),
-      // qualquer id não alcançável fechava um ciclo infinito
-      // render → mensagem → render, sem debounce: o DOM era destruído e
-      // reconstruído em loop apertado (innerHTML='' + _refreshIcons), que é
-      // o "pisca, ícones somem e trava" relatado.
-      //
-      // Três caminhos reais levam a um id não alcançado, todos plausíveis
-      // no uso normal: (a) `root` nulo — frame da Área apagado/movido;
-      // (b) ancestral com visible === false, já que o `continue` acima pula
-      // a subárvore inteira; (c) a spec aponta um nó que não está NESTA
-      // árvore — o caso mais comum agora que a spec nasce sobre a réplica
-      // de trabalho, não sobre o frame original.
-      //
-      // O valor null é deliberado: entra no cache (`id in areaCache` passa
-      // a ser true, encerrando o ciclo) e _a11ySortSpecsByLayerOrder já
-      // trata ausência de ordem caindo no fallback alfabético — null não é
-      // confundido com posição 0 porque a comparação lá é por `undefined`.
-      for (const id of wantedIds) {
-        if (!(id in order)) order[id] = null;
-      }
       figma.ui.postMessage({ type: "layer-order-resolved", areaId, areaTargetNodeId, order });
-    })();
-    return;
-  }
-
-  // Handler de TESTE ISOLADO (Fase 1 do plano de seleção múltipla de
-  // telas, 2026-09-15) — valida as 3 APIs novas (figma.root.children,
-  // figma.createPage, figma.setCurrentPageAsync, page.loadAsync dentro de
-  // _getOrCreateHacPage) sem tocar em nenhum fluxo real ainda. Acionado
-  // por um botão escondido na UI (ver dev-tools em specifications.html).
-  // Remover quando a Fase 3 (criação em lote) estiver integrada e este
-  // caminho de teste não for mais necessário.
-  if (msg.type === "dev-test-hac-page") {
-    (async () => {
-      try {
-        const page = await _getOrCreateHacPage();
-        await figma.setCurrentPageAsync(page);
-        figma.notify(`Página "${page.name}" ok — ${page.children.length} filho(s) hoje.`);
-        figma.ui.postMessage({ type: "dev-test-hac-page-result", ok: true, pageId: page.id, childCount: page.children.length });
-      } catch (e) {
-        figma.notify('Falhou: ' + (e && e.message), { error: true });
-        figma.ui.postMessage({ type: "dev-test-hac-page-result", ok: false, error: e && e.message });
-      }
     })();
     return;
   }

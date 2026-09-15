@@ -164,12 +164,9 @@ document.addEventListener('DOMContentLoaded', () => {
 let isCollapsed = false;
 const FULL_W = 480, FULL_H = 750;
 const MINI_H = 44;
-// Piso defensivo da barra de captura (Ordem de Tabulação/Trilha de Swipe)
-// — maior que MINI_H porque precisa caber contagem + botões lado a lado.
-// Desde 2026-09-15 a altura real da barra é MEDIDA do DOM
-// (_a11yCaptureBarMeasuredHeight); esta constante só entra quando a
-// medição falha (elemento ausente ou layout ainda não assentado), pra
-// nunca pedir uma janela de 0px.
+// Altura da barra de captura minimizada (Ordem de Tabulação/Trilha de
+// Swipe) — maior que MINI_H porque precisa caber contagem + 2 botões lado
+// a lado, não só o header padrão encolhido.
 const CAPTURE_MINI_H = 52;
 
 function toggleCollapse() {
@@ -232,21 +229,15 @@ function _a11yCaptureMiniBarEnter(feature) {
   window._a11yCaptureMiniBarActive = true;
   window._a11yCaptureMiniBarFeature = feature;
   window._a11yCaptureBarInstructionsVisible = true;
-  // O <header> INTEIRO é escondido durante a captura — a barra
-  // (#a11y-capture-mini-bar: contador + chevron + Cancelar/Concluir) assume
-  // o papel de header nesse modo, com o bloco de instruções abaixo dela
-  // quando expandido (2026-09-15, pedido do usuário).
-  //
-  // Esconder só #header-home (o conteúdo) não basta: o <header> que o
-  // contém tem py-2 + border-b próprios e continuaria ocupando ~17px no
-  // fluxo, aparecendo como uma faixa branca sob a barra no estado
-  // recolhido (bug real reportado com print, 2026-09-15).
+  // #header-home (logo CAIXA, zoom, tema, minimizar) é escondido durante a
+  // captura — a barra de captura (#a11y-capture-mini-bar: contador +
+  // chevron + Cancelar/Concluir) assume o papel de "header" nesse modo,
+  // com o bloco de instruções aparecendo abaixo dela quando expandido
+  // (2026-09-15, pedido do usuário).
   const headerHome = document.getElementById('header-home');
-  const headerEl = headerHome ? headerHome.closest('header') : null;
   const miniBar = document.getElementById('a11y-capture-mini-bar');
   const mainContent = document.querySelector('body > div.flex-1');
-  if (headerEl) headerEl.classList.add('hidden');
-  else if (headerHome) headerHome.classList.add('hidden');
+  if (headerHome) headerHome.classList.add('hidden');
   if (miniBar) { miniBar.classList.remove('hidden'); miniBar.classList.add('flex'); }
   if (mainContent) mainContent.classList.add('hidden');
   // Toast (showToast) é ancorado perto do rodapé da janela por padrão
@@ -291,78 +282,38 @@ function _a11yCaptureBarRenderInstructions(feature) {
   if (typeof _refreshIcons === 'function') _refreshIcons();
 }
 
-// A altura da janela nos dois estados é MEDIDA do DOM, nunca uma constante
-// (2026-09-15, dois bugs reais reportados com print): (a) um teto fixo no
-// bloco de instrução cortava o texto e criava barra de rolagem — o usuário
-// não quer rolagem nesta etapa; (b) CAPTURE_MINI_H (52) foi dimensionado
-// quando a barra era o único conteúdo DENTRO do <header>; agora ela vive
-// fora dele e a linha de contador/ações tem padding próprio, ficando mais
-// alta que 52 — encolher pra 52 cortava a barra no meio e deixava um
-// "pedaço" do bloco aparecendo.
-//
-// Sobre o zoom: o body tem `zoom: var(--ui-scale)` com
-// `height: calc(100vh / var(--ui-scale))` (plugin.css) — o CSS já compensa
-// a escala internamente, então getBoundingClientRect() devolve o valor no
-// espaço pré-zoom do body. Multiplicar por _scale aqui converte pra pixels
-// reais da janela, que é o que figma.ui.resize espera.
-function _a11yCaptureBarMeasuredHeight() {
-  const bar = document.getElementById('a11y-capture-mini-bar');
-  if (!bar) return CAPTURE_MINI_H;
-  const h = Math.ceil(bar.getBoundingClientRect().height);
-  // Piso defensivo: se a medição vier zerada (layout ainda não assentou,
-  // elemento oculto), cai na altura mínima conhecida em vez de pedir uma
-  // janela de 0px.
-  return h > 0 ? h : CAPTURE_MINI_H;
-}
-
-// Tooltips da barra de captura, reescritos conforme o estado real
-// (2026-09-15) — um tooltip que descreve a ação errada é pior que nenhum.
-// Dois eixos mudam o texto: o chevron alterna entre recolher/mostrar, e o
-// substantivo muda por feature ("itens" na Tabulação, "pontos" no Swipe),
-// mesma distinção que _a11yCaptureMiniBarUpdateCount já faz no contador.
-function _a11yCaptureBarSyncTooltips() {
-  const visible = window._a11yCaptureBarInstructionsVisible;
-  const noun = window._a11yCaptureMiniBarFeature === 'tabOrder' ? 'itens' : 'pontos';
-
-  const helpBtn = document.getElementById('a11y-capture-mini-bar-help');
-  if (helpBtn) {
-    const t = visible
-      ? 'Recolher as instruções e liberar espaço no canvas'
-      : 'Mostrar as instruções desta etapa';
-    helpBtn.setAttribute('data-tooltip', t);
-    helpBtn.setAttribute('aria-label', visible ? 'Recolher instruções' : 'Mostrar instruções');
-  }
-
-  const cancelBtn = document.getElementById('a11y-capture-mini-bar-cancel');
-  if (cancelBtn) {
-    cancelBtn.setAttribute('data-tooltip', `Sair sem documentar nada — os ${noun} marcados são descartados`);
-    cancelBtn.setAttribute('aria-label', `Cancelar seleção e descartar os ${noun} marcados`);
-  }
-
-  const finishBtn = document.getElementById('a11y-capture-mini-bar-finish');
-  if (finishBtn) {
-    finishBtn.setAttribute('data-tooltip', `Terminar a marcação e revisar os ${noun} antes de aplicar`);
-    finishBtn.setAttribute('aria-label', `Concluir seleção e revisar os ${noun}`);
-  }
-}
+// Altura TOTAL da janela com a barra expandida (linha de contador/ações,
+// que faz as vezes de header nesse modo, + bloco de instrução abaixo dela)
+// — número FIXO, não medido via scrollHeight. Medição dinâmica foi tentada
+// e descartada (2026-09-15, bug real reportado pelo usuário com print:
+// reabrir depois de recolher media uma altura errada e cortava/sobrepunha
+// conteúdo) — scrollHeight não é confiável aqui por 2 motivos combinados:
+// (1) o CSS `zoom: var(--ui-scale)` (plugin.css) já escala scrollHeight
+// nativamente, então multiplicar por _scale de novo aplicava a escala em
+// dobro; (2) mesmo em requestAnimationFrame, o layout podia não ter
+// assentado ainda (troca de ícones lucide é debounced em 30ms, scrollHeight
+// lido antes disso). Como o conteúdo é sempre um dos textos fixos de
+// FICHA_INSTRUCTION_CONTENT_UI (nunca dado dinâmico do usuário), um valor
+// fixo é mais robusto que depender de timing/escala. Soma: contador/ações
+// (~52px, igual à CAPTURE_MINI_H recolhida) + bloco de instrução
+// (max-h-[320px] fixo em build.cjs, com scroll próprio se precisar).
+const CAPTURE_BAR_EXPANDED_H = CAPTURE_MINI_H + 320;
 
 function _a11yCaptureBarApplyInstructionsVisibility() {
   const block = document.getElementById('a11y-capture-bar-instructions');
   const icon = document.getElementById('a11y-capture-mini-bar-help-icon');
+  const btn = document.getElementById('a11y-capture-mini-bar-help');
   const visible = window._a11yCaptureBarInstructionsVisible;
   if (block) block.classList.toggle('hidden', !visible);
   if (icon) icon.setAttribute('data-lucide', visible ? 'chevron-up' : 'chevron-down');
-  _a11yCaptureBarSyncTooltips();
+  if (btn) {
+    btn.title = visible ? 'Recolher instruções' : 'Ver instruções';
+    btn.setAttribute('aria-label', visible ? 'Recolher instruções' : 'Ver instruções');
+  }
   if (typeof _refreshIcons === 'function') _refreshIcons();
-  // Mede no próximo frame: a troca de 'hidden' acima (e a troca de ícone
-  // lucide, que é debounced) só afeta o layout depois que o navegador
-  // repinta. Medir no mesmo tick devolveria a altura do estado ANTERIOR —
-  // era o que fazia a janela ficar com sobra/corte ao alternar.
-  requestAnimationFrame(() => {
-    const _scale = window.currentUiScale || 1;
-    const _h = Math.round(_a11yCaptureBarMeasuredHeight() * _scale);
-    parent.postMessage({ pluginMessage: { type: 'resize-ui', width: FULL_W, height: _h } }, '*');
-  });
+  const _scale = window.currentUiScale || 1;
+  const _h = Math.round((visible ? CAPTURE_BAR_EXPANDED_H : CAPTURE_MINI_H) * _scale);
+  parent.postMessage({ pluginMessage: { type: 'resize-ui', width: FULL_W, height: _h } }, '*');
 }
 
 // Botão de recolher/expandir da barra (chevron, ao lado de
@@ -378,14 +329,9 @@ function _a11yCaptureMiniBarExit() {
   window._a11yCaptureMiniBarActive = false;
   window._a11yCaptureMiniBarFeature = null;
   window._a11yCaptureBarInstructionsVisible = true; // reset pro padrão da próxima captura
-  // Espelha _a11yCaptureMiniBarEnter: restaura o <header> inteiro (e, por
-  // garantia, #header-home — capturas iniciadas por uma versão anterior
-  // desta sessão podem tê-lo escondido individualmente).
   const headerHome = document.getElementById('header-home');
-  const headerEl = headerHome ? headerHome.closest('header') : null;
   const miniBar = document.getElementById('a11y-capture-mini-bar');
   const mainContent = document.querySelector('body > div.flex-1');
-  if (headerEl) headerEl.classList.remove('hidden');
   if (headerHome) headerHome.classList.remove('hidden');
   if (miniBar) { miniBar.classList.add('hidden'); miniBar.classList.remove('flex'); }
   if (mainContent) mainContent.classList.remove('hidden');

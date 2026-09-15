@@ -378,32 +378,6 @@ body {
       transform: translateX(0);
     }
 
-    /* Tooltip ABAIXO do elemento (2026-09-15) — obrigatório para controles
-       que vivem no topo da janela do plugin (barra de captura, header): o
-       padrão desenha acima, e ali seria cortado pela borda da janela, que
-       não tem scroll. Espelha o padrão invertendo bottom↔top e a direção
-       da seta. */
-    [data-tooltip].tooltip-bottom:before {
-      bottom: auto;
-      top: 125%;
-    }
-    [data-tooltip].tooltip-bottom:after {
-      bottom: auto;
-      top: 110%;
-      border-color: transparent transparent #1e293b transparent;
-    }
-    [data-tooltip].tooltip-bottom:hover:before {
-      bottom: auto;
-      top: 135%;
-    }
-    [data-tooltip].tooltip-bottom:hover:after {
-      bottom: auto;
-      top: 100%;
-    }
-    .dark [data-tooltip].tooltip-bottom:after {
-      border-color: transparent transparent #0f172a transparent;
-    }
-
     /* ── Accessibility & UX: Resize & Scale ────────────────── */
     #resize-handle {
       position: absolute;

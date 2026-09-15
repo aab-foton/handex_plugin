@@ -350,43 +350,10 @@ export function _orderNodesInZigzagReadingOrder(nodes) {
 // mutável que ele compartilha com o dispatcher figma.ui.onmessage (ver
 // comentário completo acima, no lugar onde os `let` viviam).
 
-// Usar APENAS onde o destino é selecionar/focar o nó (figma.currentPage.
-// selection = [...] + scrollAndZoomIntoView): selecionar exige que o nó
-// esteja na página que o usuário está vendo. Para "esse nó ainda é um
-// container válido?", use _nodeIsAttached abaixo — ver a nota lá.
 export function _nodeOnCurrentPage(node) {
   let n = node;
   while (n && n.type !== 'PAGE') n = n.parent;
   return n != null && n.id === figma.currentPage.id;
-}
-
-// Cisão de _nodeOnCurrentPage (2026-09-15). Os dois testes andavam juntos
-// porque o hac só operava numa página; com a página dedicada de Handoff
-// eles divergem.
-//
-// Aqui a pergunta é só "o nó continua ANEXADO à árvore do documento?" —
-// usado ao decidir se um clone de trabalho cacheado ainda serve de
-// container pra appendChild. Um nó pode não estar removido (.removed ===
-// false) e mesmo assim ter sido desanexado (pai removido, detach
-// intermediário); nesse caso a subida por .parent termina em null, e é
-// isso que este predicado pega. Comparar com a página corrente seria
-// errado: o clone pode viver legitimamente na página dedicada enquanto o
-// designer está olhando outra.
-export function _nodeIsAttached(node) {
-  let n = node;
-  while (n && n.type !== 'PAGE') n = n.parent;
-  return n != null;
-}
-
-// Página a que um nó pertence, ou null se ele estiver desanexado
-// (2026-09-15). Útil onde a operação precisa acontecer na página do NÓ e
-// não na que o designer está vendo — ex.: achar o overlay irmão de um
-// clone que vive na página dedicada de Handoff.
-/** @returns {PageNode | null} */
-export function _pageOfNode(node) {
-  let n = node;
-  while (n && n.type !== 'PAGE') n = n.parent;
-  return /** @type {PageNode | null} */ (n || null);
 }
 
 // Wrapper tipado de figma.getNodeByIdAsync (2026-09-14, checkJs: true) —
@@ -1522,52 +1489,6 @@ export function _computeNextA11ySectionName() {
   return `${A11Y_SECTION_NAME} v${maxVersion + 1}`;
 }
 
-// ── Página dedicada de Handoff (2026-09-15) ─────────────────────────────
-// Fundação da jornada de seleção múltipla de telas: em vez de cada Área
-// nascer avulsa na página onde o designer está trabalhando, o fluxo novo
-// cria (ou reaproveita) uma página PRÓPRIA no arquivo, só pro handoff.
-// Nenhum outro lugar do hac hoje cria/navega páginas — este é o primeiro
-// precedente, testado isolado (Fase 1 do plano) antes de qualquer fluxo
-// real depender dele.
-const HAC_PAGE_NAME = '👐 | HAC - Handoff de Acessibilidade CAIXA';
-
-// Resolve a página dedicada, criando se necessário. NUNCA navega o
-// designer até ela — quem decide QUANDO trocar de página é o chamador
-// (figma.setCurrentPageAsync, só depois que as cópias já existirem, ver
-// Fase 3 do plano — trocar de página antes disso deixaria o designer sem
-// as telas de origem à vista pra selecionar).
-//
-// Identificação por NOME é o caminho primário (figma.root.children é
-// legível direto sob documentAccess "dynamic-page", sem
-// loadAllPagesAsync — só o CONTEÚDO de página é lazy, a lista de páginas
-// não) — mas o pluginData 'hacDedicatedPage' é gravado na criação como
-// fallback, mesma lição já aprendida em _getOrCreateA11ySessionSection
-// (linha ~1573: "identificada por pluginData, nunca por nome" — o nome
-// sobrevive a um rename manual do designer, o pluginData não sobrevive a
-// nada além de apagar a página, que aí realmente não existe mais).
-export async function _getOrCreateHacPage() {
-  let page = figma.root.children.find(p => p.name === HAC_PAGE_NAME);
-  if (!page) {
-    // pluginData não é indexável — precisa varrer, mas só cai aqui se a
-    // busca por nome falhou (designer renomeou a página manualmente).
-    page = figma.root.children.find(p => {
-      try { return p.getPluginData && p.getPluginData('hacDedicatedPage') === 'true'; }
-      catch (e) { return false; }
-    }) || null;
-  }
-  if (page) {
-    // Página que já existia antes desta chamada (não foi criada agora) —
-    // sob dynamic-page, ler .children de uma página que não é a corrente
-    // exige carregar o conteúdo dela primeiro.
-    await page.loadAsync();
-    return page;
-  }
-  page = figma.createPage();
-  page.name = HAC_PAGE_NAME;
-  page.setPluginData('hacDedicatedPage', 'true');
-  return page;
-}
-
 // legacyName (opcional, 2026-09-09): usado só pela Section-mãe da Ficha
 // (renomeada de "hac — Ficha de Handoff" pra "hac — Handoff Completo",
 // pedido de produto) — arquivos já existentes têm essa Section gravada no
@@ -1581,14 +1502,9 @@ export async function _getOrCreateHacPage() {
 // de um nome legado sobreposto no tempo (ex.: Handoff Completo → Handoff
 // de Acessibilidade, que por sua vez já tinha migrado de Ficha de
 // Handoff).
-// `page` (2026-09-15) é opcional e o default preserva exatamente o
-// comportamento anterior — todo chamador que não passa nada continua
-// operando sobre figma.currentPage. Só os fluxos da página dedicada de
-// Handoff (_getOrCreateHacPage) passam uma página explícita.
-export function _getOrCreateNamedSection(sectionName, legacyNames, page) {
-  const _page = page || figma.currentPage;
+export function _getOrCreateNamedSection(sectionName, legacyNames) {
   const _legacyList = Array.isArray(legacyNames) ? legacyNames : (legacyNames ? [legacyNames] : []);
-  let section = _page.children.find(
+  let section = figma.currentPage.children.find(
     n => n.type === 'SECTION' && (n.name === sectionName || _legacyList.includes(n.name))
   );
   if (!section) {
@@ -1598,26 +1514,19 @@ export function _getOrCreateNamedSection(sectionName, legacyNames, page) {
     section.y = 0;
     section.resizeWithoutConstraints(200, 200);
   }
-  // A Section nasce no topo da pilha da PÁGINA CORRENTE (padrão de
-  // figma.create*(), que ignora `_page`), mas isso só vale no instante da
-  // criação — depois disso o design original pode subir acima dela (novo
-  // frame colado, reordenação manual no painel de Layers, duplicar tela
-  // etc.), e todo marcador visual (contorno, conector, selo de Área/Ordem
-  // de Tabulação) que vive dentro da Section passaria a ficar ATRÁS do
-  // elemento escaneado. Reforça o topo aqui — no único ponto de acesso à
-  // Section — para que qualquer chamador (spec nova, Área nova, cópia de
-  // Ordem de Tabulação, cálculo de bounds ocupados) sempre a encontre por
-  // cima do restante do canvas.
-  //
-  // O appendChild abaixo acumula um segundo papel quando `_page` não é a
-  // página corrente: além de reforçar o topo, é ele que de fato MOVE a
-  // Section recém-criada para a página certa (figma.createSection() sempre
-  // nasce na corrente). Por isso a condição `indexOf !== _lastIndex` também
-  // cobre o caso "não está nesta página" — indexOf devolve -1 ali, que
-  // nunca é igual a _lastIndex.
-  const _lastIndex = _page.children.length - 1;
-  if (_page.children.indexOf(section) !== _lastIndex) {
-    _page.appendChild(section);
+  // A Section nasce no topo da pilha de figma.currentPage.children (padrão
+  // de figma.create*()), mas isso só vale no instante da criação — depois
+  // disso o design original pode subir acima dela (novo frame colado,
+  // reordenação manual no painel de Layers, duplicar tela etc.), e todo
+  // marcador visual (contorno, conector, selo de Área/Ordem de Tabulação)
+  // que vive dentro da Section passaria a ficar ATRÁS do elemento escaneado.
+  // Reforça o topo aqui — no único ponto de acesso à Section — para que
+  // qualquer chamador (spec nova, Área nova, cópia de Ordem de Tabulação,
+  // cálculo de bounds ocupados) sempre a encontre por cima do restante do
+  // canvas.
+  const _lastIndex = figma.currentPage.children.length - 1;
+  if (figma.currentPage.children.indexOf(section) !== _lastIndex) {
+    figma.currentPage.appendChild(section);
   }
   return section;
 }
@@ -1661,13 +1570,10 @@ export function _getOrCreateA11ySection(sectionName) {
 // logo depois dele na pilha (figma.currentPage.insertChild). Chamadas que
 // reaproveitam uma Section já existente ignoram completamente esse
 // parâmetro — a ordem de camada dela já foi decidida na criação.
-// `page` (2026-09-15) é opcional, default = figma.currentPage — todo
-// chamador existente continua idêntico. Ver nota em _getOrCreateNamedSection.
-export function _getOrCreateA11ySessionSection(designerName, currentUserId, referenceNode, page) {
-  const _page = page || figma.currentPage;
+export function _getOrCreateA11ySessionSection(designerName, currentUserId, referenceNode) {
   let section = null;
   let unownedSection = null; // Section antiga (pré-migração), sem hacSessionOwnerId gravado.
-  for (const n of _page.children) {
+  for (const n of figma.currentPage.children) {
     if (n.type !== 'SECTION') continue;
     try {
       if (n.getPluginData && n.getPluginData('hacSessionSection') === 'true') {
@@ -1715,25 +1621,13 @@ export function _getOrCreateA11ySessionSection(designerName, currentUserId, refe
     // array de children). Silenciosamente ignorado se o referenceNode não
     // for mais filho direto da página (cai no createSection padrão, que
     // já entra no topo do array).
-    let _placed = false;
     if (referenceNode) {
       try {
-        const refIndex = _page.children.indexOf(referenceNode);
+        const refIndex = figma.currentPage.children.indexOf(referenceNode);
         if (refIndex !== -1) {
-          _page.insertChild(refIndex + 1, section);
-          _placed = true;
+          figma.currentPage.insertChild(refIndex + 1, section);
         }
       } catch (e) { }
-    }
-    // figma.createSection() nasce SEMPRE na página corrente, ignorando
-    // `_page`. Quando o alvo é outra página e o insertChild acima não
-    // rodou (sem referenceNode, ou referenceNode não é filho de `_page`),
-    // a Section ficaria órfã na página errada — este append é o que a
-    // move. No caso default (_page === currentPage) é inofensivo: a
-    // Section já está lá e o append só reforça o topo, mesmo efeito que
-    // _getOrCreateNamedSection já faz.
-    if (!_placed && _page.children.indexOf(section) === -1) {
-      try { _page.appendChild(section); } catch (e) { }
     }
   }
   return section;
@@ -2376,22 +2270,16 @@ function _findCloneOverlaySibling(clone, pluginDataKey, areaId) {
       }
     } catch (e) { }
   };
-  // Varre a página ONDE O CLONE ESTÁ, não a que o designer está vendo
-  // (2026-09-15) — o overlay é sempre irmão do clone, então derivar a
-  // página dele é mais confiável que assumir a corrente, e cobre o caso da
-  // página dedicada de Handoff. Cai pra currentPage se o clone estiver
-  // desanexado (_pageOfNode devolve null).
-  const _page = _pageOfNode(clone) || figma.currentPage;
   const walkAll = check => {
-    for (const sibling of _page.children) {
+    for (const sibling of figma.currentPage.children) {
       if (found) break;
       if (sibling.type === 'SECTION') continue;
       check(sibling);
     }
-    if (!found) _forEachA11ySessionAreaChild(check, _page);
-    if (!found) _forEachA11ySessionDirectChild(check, _page);
-    if (!found) _forEachFichaFrameCandidate(check, _page);
-    if (!found) _forEachA11yFichaFrameChild(check, _page);
+    if (!found) _forEachA11ySessionAreaChild(check);
+    if (!found) _forEachA11ySessionDirectChild(check);
+    if (!found) _forEachFichaFrameCandidate(check);
+    if (!found) _forEachA11yFichaFrameChild(check);
   };
 
   if (areaId) walkAll(checkByArea);
@@ -2792,10 +2680,8 @@ function _reparentIntoSwipePathSection(node, sectionName) {
 // (hacTabOrderCopyForArea/hacSwipePathCopyForArea/hacFichaForArea) precisa
 // varrer também esse nível, senão cópias/fichas da estrutura nova ficam
 // invisíveis pra remoção/toggle/localização e vazam órfãs no canvas.
-// `page` (2026-09-15) opcional, default = figma.currentPage. Ver nota em
-// _getOrCreateNamedSection.
-export function _forEachA11ySessionAreaChild(fn, page) {
-  for (const sibling of (page || figma.currentPage).children) {
+export function _forEachA11ySessionAreaChild(fn) {
+  for (const sibling of figma.currentPage.children) {
     if (sibling.type !== 'SECTION') continue;
     let isSessionSection = false;
     try {
@@ -2820,9 +2706,8 @@ export function _forEachA11ySessionAreaChild(fn, page) {
 // o resto do código: nunca remover uma fonte de varredura quando surge
 // uma estrutura nova, pra nunca deixar artefatos de qualquer geração
 // órfãos/invisíveis).
-// `page` (2026-09-15) opcional, default = figma.currentPage.
-export function _forEachA11ySessionDirectChild(fn, page) {
-  for (const sibling of (page || figma.currentPage).children) {
+export function _forEachA11ySessionDirectChild(fn) {
+  for (const sibling of figma.currentPage.children) {
     if (sibling.type !== 'SECTION') continue;
     let isSessionSection = false;
     try {
@@ -2833,21 +2718,19 @@ export function _forEachA11ySessionDirectChild(fn, page) {
   }
 }
 
-// `page` (2026-09-15) opcional, default = figma.currentPage.
-export function _forEachTabOrderCopyCandidate(fn, page) {
-  const _page = page || figma.currentPage;
-  for (const sibling of _page.children) {
+export function _forEachTabOrderCopyCandidate(fn) {
+  for (const sibling of figma.currentPage.children) {
     if (sibling.type === 'SECTION') continue;
     fn(sibling);
   }
-  _forEachA11ySessionAreaChild(fn, _page);
-  _forEachA11ySessionDirectChild(fn, _page);
+  _forEachA11ySessionAreaChild(fn);
+  _forEachA11ySessionDirectChild(fn);
   // Varre TAMBÉM dentro de frames de Ficha já existentes (2026-09-09) — a
   // cópia de trabalho pode ter sido MOVIDA pra dentro da Ficha por um
   // "Inserir na ficha" anterior (ver comentário completo em
   // _forEachA11yFichaFrameChild). Sem isto, um cache-miss depois de mover
   // recriaria a cópia do zero, deixando a movida órfã dentro da Ficha.
-  _forEachA11yFichaFrameChild(fn, _page);
+  _forEachA11yFichaFrameChild(fn);
   // Varre TODAS as Sections de Ordem de Tabulação com o prefixo base,
   // qualquer sufixo de versão (v2, v3...) — não só o nome fixo sem versão.
   // A criação (_getOrCreateTabOrderSection) já aplica o sufixo da geração
@@ -2856,7 +2739,7 @@ export function _forEachTabOrderCopyCandidate(fn, page) {
   // _removeExistingTabOrderCopiesForArea/_findTabOrderCopyForArea), o que
   // fazia clones antigos vazarem pra scans futuros como conteúdo "novo" do
   // design (bug real, 2026-09-03).
-  for (const sibling of _page.children) {
+  for (const sibling of figma.currentPage.children) {
     if (sibling.type !== 'SECTION' || !sibling.name.startsWith(A11Y_TAB_ORDER_SECTION_NAME)) continue;
     for (const child of (sibling.children || [])) fn(child);
   }
@@ -2914,23 +2797,20 @@ export function _removeExistingTabOrderCopiesForArea(areaId) {
 // _removeExistingTabOrderCopiesForArea, trocando só o pluginData
 // ('hacSwipePathCopyForArea') e a Section de destino
 // (A11Y_SWIPE_FLOW_SECTION_NAME).
-// `page` (2026-09-15) opcional, default = figma.currentPage — espelha
-// _forEachTabOrderCopyCandidate.
-export function _forEachSwipePathCopyCandidate(fn, page) {
-  const _page = page || figma.currentPage;
-  for (const sibling of _page.children) {
+export function _forEachSwipePathCopyCandidate(fn) {
+  for (const sibling of figma.currentPage.children) {
     if (sibling.type === 'SECTION') continue;
     fn(sibling);
   }
-  for (const sibling of _page.children) {
+  for (const sibling of figma.currentPage.children) {
     if (sibling.type !== 'SECTION' || !sibling.name.startsWith(A11Y_SWIPE_FLOW_SECTION_NAME)) continue;
     for (const child of (sibling.children || [])) fn(child);
   }
-  _forEachA11ySessionAreaChild(fn, _page);
-  _forEachA11ySessionDirectChild(fn, _page);
+  _forEachA11ySessionAreaChild(fn);
+  _forEachA11ySessionDirectChild(fn);
   // Mesmo motivo de _forEachTabOrderCopyCandidate (2026-09-09) — a cópia de
   // Swipe pode ter sido MOVIDA pra dentro da Ficha.
-  _forEachA11yFichaFrameChild(fn, _page);
+  _forEachA11yFichaFrameChild(fn);
 }
 
 // Mesma correção de vazamento de _removeExistingTabOrderCopiesForArea
@@ -2999,20 +2879,18 @@ function _reparentIntoFichaSection(node, sectionName) {
 // _forEachSwipeCopyCandidate: o frame da Ficha pode estar solto na página
 // (nunca chegou a ser reparentado) ou já dentro de alguma Section de Ficha
 // (qualquer geração/versão) — varre os dois níveis sempre.
-// `page` (2026-09-15) opcional, default = figma.currentPage.
-function _forEachFichaFrameCandidate(fn, page) {
-  const _page = page || figma.currentPage;
-  for (const sibling of _page.children) {
+function _forEachFichaFrameCandidate(fn) {
+  for (const sibling of figma.currentPage.children) {
     if (sibling.type === 'SECTION') continue;
     fn(sibling);
   }
-  for (const sibling of _page.children) {
+  for (const sibling of figma.currentPage.children) {
     if (sibling.type !== 'SECTION') continue;
     if (!sibling.name.startsWith(A11Y_FICHA_SECTION_NAME) && !sibling.name.startsWith(A11Y_FICHA_SECTION_NAME_LEGACY) && !sibling.name.startsWith(A11Y_FICHA_SECTION_NAME_LEGACY_2)) continue;
     for (const child of (sibling.children || [])) fn(child);
   }
-  _forEachA11ySessionAreaChild(fn, _page);
-  _forEachA11ySessionDirectChild(fn, _page);
+  _forEachA11ySessionAreaChild(fn);
+  _forEachA11ySessionDirectChild(fn);
 }
 
 // Nova fonte de varredura (2026-09-09, decisão de produto): a partir
@@ -3043,8 +2921,7 @@ function _forEachFichaFrameCandidate(fn, page) {
 // descida fixa deixaria de alcançar clone/overlay já movidos — sempre
 // encontrar MAIS nunca quebra nenhum chamador (todos filtram por
 // pluginData específico depois), então a recursão é estritamente aditiva.
-// `page` (2026-09-15) opcional, default = figma.currentPage.
-export function _forEachA11yFichaFrameChild(fn, page) {
+export function _forEachA11yFichaFrameChild(fn) {
   const visited = new Set();
   const walk = (node, depth) => {
     // Limite elevado pra 12 (2026-09-11): a árvore ganhou 2 níveis com a
@@ -3063,7 +2940,7 @@ export function _forEachA11yFichaFrameChild(fn, page) {
   _forEachFichaFrameCandidate(fichaFrame => {
     if (!fichaFrame || fichaFrame.type === 'SECTION') return;
     walk(fichaFrame, 0);
-  }, page);
+  });
 }
 
 // Localiza o frame da Ficha de uma área — tenta primeiro o id salvo em
@@ -3126,13 +3003,7 @@ export async function _findFichaFrameForArea(areaId, savedFrameId) {
 // _createSwipePathCloneForArea/_createSpecCloneForArea) continuam
 // funcionando normalmente: uma função de escopo de módulo é visível de
 // dentro de qualquer closure interno, só o inverso que não vale.
-// `page` (2026-09-15) opcional, default = figma.currentPage. ATENÇÃO: os
-// retângulos somados aqui vêm de absoluteBoundingBox, que é relativo à
-// PÁGINA — misturar bounds de páginas diferentes produz faixa livre sem
-// sentido. Todo chamador precisa passar a MESMA página onde o nó a
-// posicionar vai nascer.
-export async function _collectA11yOccupiedBounds(page) {
-  const _page = page || figma.currentPage;
+export async function _collectA11yOccupiedBounds() {
   const bounds = [];
   const seen = new Set();
   const addNode = (n) => {
@@ -3148,7 +3019,7 @@ export async function _collectA11yOccupiedBounds(page) {
   // faixa livre encolher a cada Área/cópia criada, até nenhum dos 4 lados
   // candidatos passar. Mesmo raciocínio já documentado abaixo pras Sections
   // por tipo: nunca o container, sempre os conteúdos.
-  _page.children.forEach(n => {
+  figma.currentPage.children.forEach(n => {
     let isSessionSection = false;
     try {
       isSessionSection = !!(n.getPluginData && n.getPluginData('hacSessionSection') === 'true');
@@ -3208,7 +3079,7 @@ export async function _collectA11yOccupiedBounds(page) {
       addNode(node);
     }
   };
-  for (const sibling of _page.children) {
+  for (const sibling of figma.currentPage.children) {
     if (sibling.type !== 'SECTION') continue;
     let isSessionSection = false;
     try {
@@ -3221,7 +3092,7 @@ export async function _collectA11yOccupiedBounds(page) {
   }
 
   const areaTargetIds = [];
-  for (const sibling of _page.children) {
+  for (const sibling of figma.currentPage.children) {
     try {
       const areaTargetId = sibling.getPluginData && sibling.getPluginData('hacAreaTargetNodeId');
       if (areaTargetId) areaTargetIds.push(areaTargetId);
@@ -3250,7 +3121,7 @@ export async function _collectA11yOccupiedBounds(page) {
       }
     }
   };
-  for (const sibling of _page.children) {
+  for (const sibling of figma.currentPage.children) {
     if (sibling.type !== 'SECTION') continue;
     let isSessionSection = false;
     try {
@@ -3264,7 +3135,7 @@ export async function _collectA11yOccupiedBounds(page) {
   // evitar sobrepor documentação de handoffs antigos também, não só a
   // Section corrente.
   const specSectionPrefix = A11Y_SECTION_NAME;
-  for (const sibling of _page.children) {
+  for (const sibling of figma.currentPage.children) {
     if (sibling.type !== 'SECTION' || !sibling.name.startsWith(specSectionPrefix)) continue;
     for (const child of (sibling.children || [])) {
       try {
@@ -3283,7 +3154,7 @@ export async function _collectA11yOccupiedBounds(page) {
 
   // Mesmo raciocínio para as Sections de Trilha de Swipe.
   const swipeFlowSectionPrefix = A11Y_SWIPE_FLOW_SECTION_NAME;
-  for (const sibling of _page.children) {
+  for (const sibling of figma.currentPage.children) {
     if (sibling.type !== 'SECTION' || !sibling.name.startsWith(swipeFlowSectionPrefix)) continue;
     for (const child of (sibling.children || [])) addNode(child);
   }
@@ -3292,7 +3163,7 @@ export async function _collectA11yOccupiedBounds(page) {
   // Áreas diferentes gerando Ficha colidem visualmente entre si, e uma
   // Ficha já inserida pode ser sobreposta por uma cópia de Tabulação
   // criada depois dela (achado real de QA, 2026-09-04).
-  for (const sibling of _page.children) {
+  for (const sibling of figma.currentPage.children) {
     if (sibling.type !== 'SECTION') continue;
     if (!sibling.name.startsWith(A11Y_FICHA_SECTION_NAME) && !sibling.name.startsWith(A11Y_FICHA_SECTION_NAME_LEGACY) && !sibling.name.startsWith(A11Y_FICHA_SECTION_NAME_LEGACY_2)) continue;
     for (const child of (sibling.children || [])) addNode(child);
@@ -3317,13 +3188,10 @@ export function _rectsOverlap(a, b) {
   return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
 }
 
-// `page` (2026-09-15) opcional, default = figma.currentPage — precisa ser a
-// mesma página onde o clone vai nascer, senão o cálculo de faixa livre roda
-// contra os bounds de outra página (absoluteBoundingBox é por página).
-export async function _findFreeTabOrderCopyPosition(cloneWidth, cloneHeight, originBounds, page) {
+export async function _findFreeTabOrderCopyPosition(cloneWidth, cloneHeight, originBounds) {
   let occupied;
   try {
-    occupied = await _collectA11yOccupiedBounds(page);
+    occupied = await _collectA11yOccupiedBounds();
   } catch (e) {
     console.error('[hac] _findFreeTabOrderCopyPosition: falhou em _collectA11yOccupiedBounds', e && e.message);
     throw e;

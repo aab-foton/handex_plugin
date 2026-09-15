@@ -336,37 +336,6 @@
           handleSwipePathCopyStarted(msg.cloneId);
         }
       }
-      // Resposta de start-spec-copy (2026-09-15). O wizard de Detecção
-      // Automática dispara e ignora — só precisa que a réplica exista antes
-      // do primeiro highlight. Já o fluxo manual ("+ Nova spec",
-      // openA11yCategoryPickerModal) precisa FOCAR a réplica assim que ela
-      // fica pronta, e por isso marca _a11ySpecCopyPendingFocusAreaId antes
-      // de disparar. Sem essa flag, focar aqui roubaria o foco do canvas
-      // também durante o wizard, que tem seu próprio controle de foco item
-      // a item.
-      if (msg.type === "spec-copy-started") {
-        const _pendingAreaId = window._a11ySpecCopyPendingFocusAreaId;
-        if (_pendingAreaId && msg.areaId === _pendingAreaId) {
-          window._a11ySpecCopyPendingFocusAreaId = null;
-          // Fecha o loading aberto por openA11yCategoryPickerModal
-          // (accessibility.js) — a réplica está pronta (ou falhou, e aí o
-          // fallback abaixo cuida do foco). Nunca deixar o overlay preso.
-          if (typeof hideA11yCanvasLoading === 'function') hideA11yCanvasLoading();
-          // fallbackTargetNodeId vai null de propósito: ele só serve pro
-          // backend focar o Frame Principal quando a réplica NÃO existe, e
-          // neste ponto ela acabou de ser criada/reusada com sucesso
-          // (cloneId não-nulo). Passar o original aqui reintroduziria
-          // justamente o foco errado que esta mudança corrige.
-          if (typeof focusA11yCloneNode === 'function') {
-            // cloneId nulo = a réplica não pôde ser criada (área sem node
-            // resolvível, frame apagado). Aí vale focar o que houver: sem
-            // fallback o designer ficaria sem referência nenhuma no canvas.
-            const _area = (!msg.cloneId && typeof _findA11yAreaById === 'function')
-              ? _findA11yAreaById(_pendingAreaId) : null;
-            focusA11yCloneNode(_pendingAreaId, 'leitor', (_area && _area.targetNodeId) || null);
-          }
-        }
-      }
       // Resposta de resolve-a11y-focus-node (2026-09-11) — o backend
       // resolveu qual node focar (réplica de trabalho da etapa, ou o Frame
       // Principal como fallback) e devolveu o id pra este lado chamar
@@ -584,22 +553,7 @@
             window._a11yLayerOrderCache[areaId] || {},
             msg.order || {}
           );
-          // Libera o guard de requisição em voo desta área
-          // (_a11yQueueLayerOrderResolution, accessibility.js) — precisa
-          // rodar ANTES do render abaixo, senão um id que continue faltando
-          // nunca mais seria pedido. Com o backend marcando os não
-          // encontrados como null, o render seguinte não repede nada e o
-          // ciclo termina aqui.
-          if (window._a11yLayerOrderInFlight) window._a11yLayerOrderInFlight[areaId] = false;
         }
         if (typeof renderA11yGroupedList === 'function') renderA11yGroupedList();
-      }
-      // Resposta do botão de teste isolado da Fase 1 (dev-test-hac-page,
-      // onmessage.js/accessibility.js) — só confirma visualmente que
-      // _getOrCreateHacPage funcionou; figma.notify já cobriu o feedback
-      // principal no backend, isto é só um segundo sinal no console pra
-      // depuração durante o desenvolvimento.
-      if (msg.type === 'dev-test-hac-page-result') {
-        console.log('[hac][dev-test-hac-page]', msg.ok ? 'ok' : 'falhou', msg);
       }
     };

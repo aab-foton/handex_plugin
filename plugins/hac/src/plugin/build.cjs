@@ -176,14 +176,7 @@ ${css}
        CAPTURE_MINI_H; expandido = esta linha + o bloco de instruções
        abaixo). Nunca sai do modo de captura em nenhum dos dois estados —
        a escuta de cliques no canvas continua ativa o tempo todo. -->
-  <!-- shrink-0 é obrigatório: o body é 'h-screen flex flex-col', e num
-       container flex o filho encolhe por padrão quando falta espaço. Com a
-       janela ainda na altura ANTERIOR (menor) no instante da medição, a
-       barra seria comprimida e getBoundingClientRect() devolveria a altura
-       comprimida — a medição se auto-limitaria e a janela nunca cresceria
-       o bastante. Com shrink-0 ela sempre reporta a altura natural do
-       conteúdo, que é o que _a11yCaptureBarMeasuredHeight (core.js) usa. -->
-  <div id="a11y-capture-mini-bar" class="hidden flex-col w-full shrink-0">
+  <div id="a11y-capture-mini-bar" class="hidden flex-col w-full">
     <div class="flex items-center justify-between w-full gap-2 px-4 py-2.5 shrink-0">
       <div class="flex items-center gap-2 min-w-0">
         <span class="w-2 h-2 rounded-full bg-[#0891B2] animate-pulse shrink-0" aria-hidden="true"></span>
@@ -197,36 +190,28 @@ ${css}
              ('tabOrder'|'swipePath'), convertida pra chave do conteúdo
              ('tabulacao'|'swipe') por _a11yCaptureBarToggleInstructions
              (core.js). Ícone/título trocam conforme o estado atual. -->
-        <!-- tooltip-bottom em toda a barra: ela fica no topo da janela, e o
-             tooltip padrão (acima) seria cortado. O texto de cada um é
-             reescrito em runtime por _a11yCaptureBarSyncTooltips (core.js)
-             conforme o estado (recolhido/expandido) e a feature ativa
-             (itens de Tabulação vs. pontos de Swipe) — os valores abaixo
-             são só o estado inicial. -->
         <button type="button" id="a11y-capture-mini-bar-help" onclick="_a11yCaptureBarToggleInstructions()"
-          data-tooltip="Recolher as instruções e liberar espaço no canvas" class="tooltip-left w-7 h-7 flex items-center justify-center text-slate-400 dark:text-dark-muted hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-light-line dark:hover:bg-dark-surface rounded-xl transition-colors shrink-0"
-          aria-label="Recolher instruções">
+          title="Recolher instruções" aria-label="Recolher instruções"
+          class="w-7 h-7 flex items-center justify-center text-slate-400 dark:text-dark-muted hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-light-line dark:hover:bg-dark-surface rounded-xl transition-colors shrink-0">
           <i data-lucide="chevron-up" id="a11y-capture-mini-bar-help-icon" class="w-4 h-4"></i>
         </button>
         <button type="button" id="a11y-capture-mini-bar-cancel" onclick="_a11yCaptureMiniBarCancel()"
-          data-tooltip="Sair sem documentar nada — o que você marcou é descartado" class="tooltip-bottom px-2.5 py-1.5 text-[10.5px] font-bold text-slate-500 dark:text-dark-muted hover:bg-light-line dark:hover:bg-dark-surface rounded-xl transition-colors"
-          aria-label="Cancelar seleção e descartar o que foi marcado">
+          title="Cancelar seleção e descartar pontos marcados" aria-label="Cancelar seleção e descartar pontos marcados"
+          class="px-2.5 py-1.5 text-[10.5px] font-bold text-slate-500 dark:text-dark-muted hover:bg-light-line dark:hover:bg-dark-surface rounded-xl transition-colors">
           Cancelar
         </button>
         <button type="button" id="a11y-capture-mini-bar-finish" onclick="_a11yCaptureMiniBarFinish()"
-          data-tooltip="Terminar a marcação e revisar a lista antes de aplicar" class="tooltip-left px-3 py-1.5 text-[10.5px] font-bold text-white bg-[#0891B2] hover:bg-cyan-700 rounded-xl transition-colors shadow-lg shadow-cyan-500/20"
-          aria-label="Concluir seleção e revisar a lista">
+          class="px-3 py-1.5 text-[10.5px] font-bold text-white bg-[#0891B2] hover:bg-cyan-700 rounded-xl transition-colors shadow-lg shadow-cyan-500/20">
           Concluir seleção
         </button>
       </div>
     </div>
-    <!-- SEM teto de altura e SEM overflow (2026-09-15, pedido do usuário:
-         "não quero rolagem nessa etapa"): o bloco cresce até o tamanho
-         natural do conteúdo, e a janela do Figma é redimensionada pra
-         caber exatamente isso (_a11yCaptureBarApplyInstructionsVisibility,
-         core.js, mede o scrollHeight real). Um max-h aqui voltaria a
-         cortar o texto e criar a barra de rolagem. -->
-    <div id="a11y-capture-bar-instructions" class="w-full px-4 pb-3 pt-1 space-y-2.5 border-t border-gray-100 dark:border-dark-line">
+    <!-- max-h fixo (não medido dinamicamente, ver CAPTURE_BAR_EXPANDED_H em
+         core.js) — 320px cobre com folga o maior conteúdo real hoje
+         (tabulação: título + 2 cards + 4 passos incl. dica de Shift); rola
+         por dentro (overflow-y-auto) se algum texto futuro crescer além
+         disso, sem nunca estourar a janela. -->
+    <div id="a11y-capture-bar-instructions" class="w-full max-h-[320px] overflow-y-auto px-4 pb-3 pt-1 space-y-2.5 border-t border-gray-100 dark:border-dark-line">
       <h3 id="a11y-capture-bar-instructions-title" class="font-bold text-[13px] text-slate-800 dark:text-white flex items-center gap-1.5 mt-2">
         <i data-lucide="book-open-check" class="w-3.5 h-3.5 text-[#0891B2]" aria-hidden="true"></i> <span id="a11y-capture-bar-instructions-title-text">Ordem de Tabulação</span>
       </h3>

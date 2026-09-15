@@ -86,31 +86,14 @@ function _fichaButtonLabel(area, sectionKey) {
 // troca de ícone (sempre cairia no else). Corrigido pra comparar
 // `state.insertedAt` diretamente, a mesma fonte de verdade que já gera o
 // label.
-//
-// `hasItems` (2026-09-15, pedido do usuário: "aparece apenas quando tiver
-// itens para serem inseridos no handoff") — sem nada documentado na aba
-// não há o que levar pro handoff, e o botão só ocuparia espaço oferecendo
-// uma ação vazia. Quem sabe se há itens é cada aba (a fonte é diferente em
-// cada uma: itens de Tabulação, trilha de Swipe, specs de Leitor de Tela),
-// por isso a condição chega pronta em vez de ser recalculada aqui.
-//
-// `mt-auto` empurra o botão pra base do container flex-col da aba
-// (_a11yWorkspaceTab*), mantendo-o na extremidade baixa do plugin mesmo
-// quando o conteúdo acima é curto — sem precisar de um rodapé fixo real.
-function _fichaInsertButtonHtml(area, sectionKey, hasItems) {
-  if (!hasItems) return '';
+function _fichaInsertButtonHtml(area, sectionKey) {
   const state = _fichaSectionState(area, sectionKey);
   const already = !!(state && state.insertedAt);
   const label = _fichaButtonLabel(area, sectionKey);
   const icon = already ? 'refresh-cw' : 'file-plus-2';
-  const name = _fichaSectionDisplayName(sectionKey);
-  const tooltip = already
-    ? `Regerar este bloco no Handoff com o que mudou em ${name} desde a última inserção`
-    : `Leva o que você documentou em ${name} para o Handoff de Acessibilidade no canvas`;
   return `
     <button type="button" onclick="_fichaInsertSection('${escapeHtml(sectionKey)}')"
-      data-tooltip="${escapeHtml(tooltip)}"
-      class="tooltip-right w-full flex items-center justify-center gap-dsc-nano h-9 mt-auto pt-1 rounded-dsc-medium text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-white dark:bg-dark-surface text-cyan-700 dark:text-cyan-400 shadow-sm hover:shadow active:scale-[0.99] shrink-0">
+      class="w-full flex items-center justify-center gap-dsc-nano h-9 mt-1 rounded-dsc-medium text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-white dark:bg-dark-surface text-cyan-700 dark:text-cyan-400 shadow-sm hover:shadow active:scale-[0.99]">
       <i data-lucide="${icon}" class="w-3.5 h-3.5" aria-hidden="true"></i>
       ${label}
     </button>
