@@ -209,8 +209,13 @@
     </div>
   </div>
 
-  <div id="a11y-workspace-scroll-container" class="flex-1 overflow-y-auto p-dsc-tiny" onscroll="handleScroll(this)">
-    <div id="a11y-workspace-tab-content" class="space-y-3 w-full mx-auto">
+  <!-- flex flex-col + min-h-full no filho (2026-09-15): faz o conteúdo da
+       aba ocupar pelo menos a altura visível mesmo quando é curto, pra que
+       o `mt-auto` do botão "Preencher ..." (_fichaInsertButtonHtml,
+       handoff-ficha.js) o empurre pra extremidade baixa do plugin. Com
+       conteúdo longo nada muda: o container cresce e rola normalmente. -->
+  <div id="a11y-workspace-scroll-container" class="flex-1 overflow-y-auto p-dsc-tiny flex flex-col" onscroll="handleScroll(this)">
+    <div id="a11y-workspace-tab-content" class="space-y-3 w-full mx-auto min-h-full flex flex-col">
       <!-- Preenchido por _renderA11yWorkspaceTab() (accessibility.js) —
            uma função de render por tab, chamada sob demanda (só a tab
            ativa é montada no DOM). -->
