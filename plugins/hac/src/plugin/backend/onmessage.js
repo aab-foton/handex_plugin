@@ -87,6 +87,7 @@ import {
   _insertFichaSectionInOrder,
   _isHacOwnedNode,
   _moveActiveCloneIntoFichaSection,
+  _nodeIsAttached,
   _nodeOnCurrentPage,
   _orderNodesInZigzagReadingOrder,
   _rectsOverlap,
@@ -2384,7 +2385,7 @@ figma.ui.onmessage = async (msg) => {
     if (cachedNodeMap) {
       const existingCloneEntry = cachedNodeMap.get(root.id);
       const existingClone = existingCloneEntry ? await _getSceneNodeById(existingCloneEntry.id) : null;
-      if (existingClone && !existingClone.removed && _nodeOnCurrentPage(existingClone)) {
+      if (existingClone && !existingClone.removed && _nodeIsAttached(existingClone)) {
         let clone = existingClone;
         if (clone.type === 'INSTANCE') {
           try {
@@ -2406,7 +2407,7 @@ figma.ui.onmessage = async (msg) => {
     // já desenhadas no clone antigo (ficam "penduradas" numa cópia que
     // ninguém mais referencia).
     const canvasClone = _findSpecCloneForArea(areaId);
-    if (canvasClone && !canvasClone.removed && _nodeOnCurrentPage(canvasClone)) {
+    if (canvasClone && !canvasClone.removed && _nodeIsAttached(canvasClone)) {
       let clone = canvasClone;
       if (clone.type === 'INSTANCE') {
         try { clone = clone.detachInstance(); } catch (e) { /* segue como INSTANCE */ }
@@ -2613,10 +2614,15 @@ figma.ui.onmessage = async (msg) => {
       // devolvia esse clone morto; tabOrderClone.appendChild(group) em
       // _createTabOrderBadge lançava (node removido não aceita filhos),
       // caindo num catch mudo que deixava o selo solto na página (sem
-      // reparentar em lugar nenhum). Também confirma que o node ainda
-      // pertence à página atual — getNodeByIdAsync pode, em teoria,
-      // resolver um id de outra página.
-      if (existingClone && !existingClone.removed && _nodeOnCurrentPage(existingClone)) {
+      // reparentar em lugar nenhum). _nodeIsAttached cobre o caso vizinho
+      // que .removed não pega: node desanexado da árvore sem estar
+      // formalmente removido (pai removido, detach intermediário) — ali a
+      // subida por .parent termina em null. Era _nodeOnCurrentPage até
+      // 2026-09-15; virou _nodeIsAttached porque um clone pode viver
+      // legitimamente na página dedicada de Handoff enquanto o designer
+      // olha outra página, e ali a pergunta é "serve de container?", não
+      // "está visível pro usuário?".
+      if (existingClone && !existingClone.removed && _nodeIsAttached(existingClone)) {
         // Migração leve (2026-09-08): clone resolvido da memória pode ter
         // sido criado ANTES da correção de detachInstance (áreas já em
         // documentação no momento do fix) — ainda é uma INSTANCE, então
@@ -2646,7 +2652,7 @@ figma.ui.onmessage = async (msg) => {
     // todo o trabalho já feito) órfã dentro da Ficha, nunca mais
     // encontrada por nenhuma varredura.
     const canvasClone = _findTabOrderCopyForArea(areaId);
-    if (canvasClone && !canvasClone.removed && _nodeOnCurrentPage(canvasClone)) {
+    if (canvasClone && !canvasClone.removed && _nodeIsAttached(canvasClone)) {
       let clone = canvasClone;
       if (clone.type === 'INSTANCE') {
         try { clone = clone.detachInstance(); } catch (e) { /* segue como INSTANCE */ }
@@ -2688,11 +2694,11 @@ figma.ui.onmessage = async (msg) => {
     if (cachedNodeMap) {
       const existingCloneEntry = cachedNodeMap.get(root.id);
       const existingClone = existingCloneEntry ? await _getSceneNodeById(existingCloneEntry.id) : null;
-      // Mesma checagem de .removed/_nodeOnCurrentPage de
+      // Mesma checagem de .removed/_nodeIsAttached de
       // _resolveActiveTabOrderClone (2026-09-05) — mesmo risco de
       // referência morta depois que _forEachSwipePathCopyCandidate passou
       // a alcançar clones dentro do Grupo da Área.
-      if (existingClone && !existingClone.removed && _nodeOnCurrentPage(existingClone)) {
+      if (existingClone && !existingClone.removed && _nodeIsAttached(existingClone)) {
         // Mesma migração leve de _resolveActiveTabOrderClone (2026-09-08).
         let clone = existingClone;
         if (clone.type === 'INSTANCE') {
@@ -2712,7 +2718,7 @@ figma.ui.onmessage = async (msg) => {
     // crítico desde que "Inserir na ficha" passou a MOVER a cópia de
     // trabalho pra dentro do frame da Ficha).
     const canvasClone = _findSwipePathCopyForArea(areaId);
-    if (canvasClone && !canvasClone.removed && _nodeOnCurrentPage(canvasClone)) {
+    if (canvasClone && !canvasClone.removed && _nodeIsAttached(canvasClone)) {
       let clone = canvasClone;
       if (clone.type === 'INSTANCE') {
         try { clone = clone.detachInstance(); } catch (e) { /* segue como INSTANCE */ }
