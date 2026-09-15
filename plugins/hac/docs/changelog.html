@@ -2422,6 +2422,162 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
       Section, confirmado estável pelo usuário nos 3 fluxos.</li>
     </ul>
 
+    <h2>2026-09-11 a 2026-09-14 — ESTÁVEL: reorganização completa da árvore
+    de layers da Ficha, sem tocar no fluxo de captura</h2>
+
+    <p>Pedido explícito do usuário: reorganizar onde os nós da Ficha moram
+    no canvas (estrutura de camadas exata mostrada por print) sem alterar
+    <strong>como</strong> a captura funciona — ordem de clique, selos,
+    trilha de Swipe, specs do Leitor de Tela permaneceram intocados durante
+    toda a sessão. Levou cerca de 15 rodadas de bugs geométricos
+    encadeados, cada um investigado por agente especializado a partir de
+    print real antes de qualquer correção (nunca por suposição), até a
+    confirmação final do usuário: "Agora sim isso ficou perfeito!".</p>
+
+    <h3>Estrutura final da árvore</h3>
+    <pre><code>SECTION "[HAC] Handoff de Acessibilidade | {data} | {designer} | v{N}"
+└── "[HAC] Documentação"                FRAME, Auto Layout VERTICAL, 1 por Section
+    ├── "Tela 1 - {nome}"               FRAME, Auto Layout VERTICAL, largura FIXA sincronizada
+    │   ├── "Título Card"               FRAME — barra azul-escura "Documentação da Tela N - {nome}"
+    │   │   └── "Título do bloco"       TEXT
+    │   └── "[HAC] Assets do Handoff"   FRAME, Auto Layout HORIZONTAL, gap 64px
+    │       ├── Grupo da Área           GROUP (selo + frame original), locked=true
+    │       ├── "[HAC] Ordem de Tabulação"    FRAME, Auto Layout HORIZONTAL
+    │       │   ├── "[HAC] Instruções de Ordem de Tabulação"   FRAME, largura FIXA 360px
+    │       │   │   ├── "Título do bloco"     TEXT
+    │       │   │   └── "Legenda"             FRAME, largura FIXA 220/260px
+    │       │   └── "[HAC] Handoff - Ordem de Tabulação"       FRAME, layoutMode NONE
+    │       │       └── (réplica de trabalho + overlay de selos, dimensionado por bbox)
+    │       ├── "[HAC] Ordem de Leitura | Swipe"    (mesmo padrão)
+    │       └── "[HAC] Leitor de Tela"              (mesmo padrão, N specGroups lado a lado)
+    └── "Tela 2 - {nome}"               (empilhada abaixo)</code></pre>
+
+    <h3>Grupo da Área passou a viver dentro de "Assets do Handoff"</h3>
+    <p>Antes ficava solto, irmão direto de "[HAC] Documentação" — cada tela
+    marcada acumulava um frame original solto na Section. Agora é
+    reparentado pra dentro do "[HAC] Assets do Handoff" da própria Tela, na
+    primeira captura de qualquer funcionalidade daquela tela
+    (<code>_ensureLegendBesideClone</code>). Não acontece em
+    <code>create-a11y-area</code> porque "Tela N" depende de
+    <code>area.id</code>, que só existe depois do <code>figma.group()</code>
+    que cria o Grupo da Área — antecipar criaria dependência circular. Fica
+    bloqueado (<code>locked = true</code>) pra evitar edição manual
+    acidental enquanto o designer trabalha na réplica ao lado.</p>
+
+    <h3>Causa raiz real do "texto com largura zerada" — não era ordem de
+    operações, era FILL sobre pai Hug</h3>
+    <p>O sintoma ("texto quebrado letra por letra na vertical", "W 0" no
+    painel do Figma mesmo com Fill selecionado) apareceu e foi "corrigido"
+    várias vezes em pontos diferentes (Título Card, Instruções de cada
+    bloco, textos da Legenda) antes da causa real ser isolada:
+    <code>layoutSizingHorizontal='FILL'</code> só produz esticamento real
+    quando o pai <strong>imediato</strong> tem largura FIXED — empilhado
+    sobre uma cadeia de pais Hug (o caso comum na Ficha), o Figma calcula
+    uma largura degenerada (~0). Solução definitiva adotada em toda a
+    Ficha: <strong>largura numérica explícita</strong>
+    (<code>resizeWithoutConstraints</code> calculado a partir do pai/
+    conteúdo real, medindo a largura natural do texto em 2 fases quando
+    necessário), nunca mais FILL nos textos da Ficha.</p>
+    <p>Bug irmão descoberto na mesma investigação:
+    <code>resizeWithoutConstraints</code> chamado <strong>depois</strong>
+    de setar <code>primaryAxisSizingMode='AUTO'</code> faz a API do Figma
+    reverter o eixo pra FIXED com o valor passado — travava "Passos"/
+    "Assets"/linhas da Legenda em 1px de altura. Corrigido reafirmando o
+    sizing mode desejado sempre <strong>depois</strong> de qualquer resize,
+    e adicionada <code>_repairCollapsedAutoLayoutHeights</code> pra
+    reparar nodes já existentes em arquivos abertos antes da correção.</p>
+
+    <h3>"[HAC] Handoff - {Func}" — Auto Layout real não funciona com
+    conteúdo de posição livre</h3>
+    <p>Tentado 2 vezes: (1) clone em fluxo dentro de Auto Layout — "o Auto
+    Layout comprimia/escondia a réplica"; (2) Auto Layout só pelo Hug, com
+    todo filho em <code>layoutPositioning='ABSOLUTE'</code> — um filho
+    ABSOLUTE é <strong>ignorado</strong> pelo cálculo de Hug do pai, então
+    o frame colapsava pra perto de zero e a réplica aparecia espremida/
+    cortada. As duas tentativas foram revertidas no mesmo dia em que
+    apareceram. Solução final: <code>layoutMode='NONE'</code> +
+    dimensionamento 100% manual por bounding box
+    (<code>_fitFichaHandoffFrameToChildren</code>), chamado toda vez que o
+    conteúdo interno muda de tamanho.</p>
+
+    <h3>Um ReferenceError real escondido por um catch silencioso inflou a
+    Section pra ~2520px de altura</h3>
+    <p>Um bug de digitação (<code>beforeBB</code> referenciado fora do
+    escopo onde existia) lançava um erro real a cada reparenting de clone —
+    engolido por um <code>catch</code> que só fazia <code>console.error</code>.
+    Efeito em cascata: o overlay de selos nunca era movido junto com a
+    réplica, e a função que dimensiona o "[HAC] Handoff - {Func}" nunca
+    rodava, produzindo um vão vertical enorme sem nenhum erro visível ao
+    usuário. Lição adotada: todo <code>catch</code> de reparenting
+    geométrico na Ficha passou a ter também <code>figma.notify</code>, não
+    só <code>console.error</code> — o console sozinho já escondeu 2 bugs
+    reais nesta sessão.</p>
+
+    <h3>Migrar a Section pra FRAME com Auto Layout foi cogitado e
+    descartado</h3>
+    <p><code>SectionNode</code> não tem auto-fit via Plugin API (só por
+    duplo clique manual do designer, que dispara o auto-fit nativo do
+    Figma). Cogitado migrar o container raiz pra FRAME com Auto Layout;
+    descartado depois de mapear o impacto com um agente especializado: o
+    conteúdo da Section é todo de posição livre, então um FRAME acabaria
+    com <code>layoutMode='NONE'</code> de qualquer forma (mesmo padrão do
+    item acima) — nenhum ganho real de "auto-ajuste nativo" — e a migração
+    exigiria mover manualmente cada filho de Sections já existentes em
+    arquivos de produção (não existe API do Figma pra trocar o tipo de um
+    node). Mantida a Section; corrigido <code>_fitSectionToChildren</code>
+    em duas frentes: (1) media por <code>absoluteBoundingBox</code>, que em
+    nodes com <code>clipsContent=false</code> inclui todo o transbordamento
+    de selos/overlays — trocado por <code>absoluteTransform</code> (posição
+    real do node) + <code>width</code>/<code>height</code> declarados; (2)
+    a Section nunca era re-dimensionada depois que a réplica saía dela (pro
+    "[HAC] Handoff - {Func}") — ficava com o tamanho antigo, abraçando um
+    espaço vazio onde o clone tinha nascido antes de ser movido. Corrigido
+    chamando o fit de novo nos 3 fluxos de criação de réplica e nos 3
+    builders do "Preencher Handoff" (este último especialmente necessário
+    no Leitor de Tela, que pode gerar N cards de spec lado a lado — um por
+    elemento marcado — bem mais largo que Tabulação/Swipe).</p>
+
+    <h3>Removido/desativado nesta janela</h3>
+    <ul>
+      <li><strong><code>_ensureDocumentacaoHeader</code> removida por
+      completo</strong> (não só desativada) — o cabeçalho "Handoff de
+      acessibilidade" com barra verde nunca teve key pública publicada pro
+      componente real, e o fallback local tinha o mesmo bug de largura
+      zerada. Substituído pela barra "Título Card" de cada Tela, que já
+      carrega a mesma informação (nome + número da tela).</li>
+      <li><strong><code>_ensureCloneWorkFrame</code> desativada</strong>
+      (não removida — renomeada pra <code>_ensureCloneWorkFrame_DESATIVADA</code>,
+      corpo original preservado) — a moldura cinza + título da réplica de
+      trabalho, posicionados por x/y absoluto, brigavam com o Auto Layout
+      dos blocos novos. A função virou um no-op que só limpa molduras de
+      sessões anteriores.</li>
+      <li><strong>"Frame Principal" (snapshot redundante do frame original
+      dentro da Ficha) parou de ser criado automaticamente</strong> — o
+      frame original já está visível na própria Section, ao lado da
+      réplica; recriá-lo como imagem dentro da Ficha era cópia duplicada.
+      <code>_buildFichaFramePrincipalSection</code> não foi apagada, só
+      deixou de ser chamada.</li>
+    </ul>
+
+    <h3>Outros ajustes visuais confirmados nesta janela</h3>
+    <ul>
+      <li>Gap entre o Grupo da Área e os blocos de funcionalidade dentro de
+      "[HAC] Assets do Handoff": 64px.</li>
+      <li>Bloco de cada funcionalidade (<code>[HAC] Ordem de Tabulação</code>
+      etc.) passou de Auto Layout VERTICAL pra HORIZONTAL — Instruções à
+      esquerda, réplica à direita, nunca mais empilhados.</li>
+      <li>Grupo da Área (frame original + selo) fica bloqueado no canvas
+      (<code>locked = true</code>) depois de reparentado.</li>
+    </ul>
+
+    <p><strong>Validação</strong>: <code>npm run bundle:code</code>,
+    <code>npm run bundle:ui</code>, <code>npm run lint</code> e
+    <code>npm run export:plugin</code> — todos limpos a cada rodada.
+    Confirmado estável pelo usuário no Figma real, com múltiplas telas e
+    os 3 fluxos de captura + Preencher Handoff. Detalhes completos, com o
+    registro exato de cada causa raiz, em
+    <code>docs/funcionalidades-protegidas.md</code>.</p>
+
     <hr>
 
     <p><em>Entradas anteriores a 2026-08-24 pertencem ao histórico do plugin Handex

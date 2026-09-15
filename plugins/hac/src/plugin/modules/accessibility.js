@@ -127,8 +127,8 @@ const A11Y_CONTENT = {
       header: { notaCodigo: 'accessibilityRole="header"' },
       nav:    { notaCodigo: 'accessibilityRole="menu" (ou "navigation" nas plataformas/bibliotecas que suportarem o role customizado)' },
       main:   { notaCodigo: 'accessibilityRole="summary" (ou marcar o container principal da tela via accessible={true} agrupando o conteúdo, já que RN não tem role nativo equivalente a <main>)' },
-      aside:  { notaCodigo: 'accessibilityRole="summary" (papel semântico aproximado — RN não tem role nativo equivalente a <aside>; descrever o agrupamento via accessibilityLabel)' },
-      footer: { notaCodigo: 'accessibilityRole="summary" (papel semântico aproximado — RN não tem role nativo equivalente a <footer>; descrever o agrupamento via accessibilityLabel)' },
+      aside:  { notaCodigo: 'accessibilityRole="summary" (papel semântico aproximado: RN não tem role nativo equivalente a <aside>; descrever o agrupamento via accessibilityLabel)' },
+      footer: { notaCodigo: 'accessibilityRole="summary" (papel semântico aproximado: RN não tem role nativo equivalente a <footer>; descrever o agrupamento via accessibilityLabel)' },
     },
     tituloPagina: { descricao: 'Definir o título da página como: [insira aqui o título].', notasCodigo: 'Definir usando a tag <title> no HTML.' },
     customizavel: { descricao: 'Insira seu texto da descrição.', notasCodigo: 'Insira seu texto com as anotações necessárias para o pessoal de desenvolvimento.' },
@@ -327,7 +327,7 @@ const A11Y_ELEMENTO_MOBILE_VARIANTS = {
 // opção. Regenerar via: npm run refs:a11y-constants (NÃO editar
 // A11Y_MOBILE_LINK_COMPONENT_OPTIONS à mão).
 const A11Y_MOBILE_LINK_COMPONENT_OPTIONS = A11Y_MOBILE_LINK_COMPONENT_OPTIONS_GENERATED;
-const A11Y_MOBILE_LINK_URL_PLACEHOLDER = '[insira aqui o link do componente]. Se o componente não estiver na lista acima, escreva o nome real dele aqui — é assim que a vertical de a11y sabe que falta mapear esse componente na lib.';
+const A11Y_MOBILE_LINK_URL_PLACEHOLDER = '[insira aqui o link do componente]. Se o componente não estiver na lista acima, escreva o nome real dele aqui: é assim que a vertical de a11y sabe que falta mapear esse componente na lib.';
 
 // Tabela nome-do-dropdown -> node_id do component set REAL na lib "DSC |
 // Super App" (fileKey abaixo) — só os nomes com match EXATO e sem
@@ -1526,7 +1526,7 @@ function _renderA11yElementoMobileFields() {
           oninput="updateA11yCharCounter(this)"
           class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-dsc-small px-2.5 py-dsc-nano text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
         <p id="a11y-el-mobile-link-url-lock-hint" class="hidden flex items-center gap-dsc-quark mt-1 ml-1 text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted">
-          <i data-lucide="lock" class="w-2.5 h-2.5"></i> Preenchido automaticamente a partir do componente do DSC — escolha "Personalizado" acima para editar.
+          <i data-lucide="lock" class="w-2.5 h-2.5"></i> Preenchido automaticamente a partir do componente do DSC. Escolha "Personalizado" acima para editar.
         </p>
       </div>
     `;
@@ -2864,7 +2864,7 @@ function confirmA11ySpec() {
       && _getDocumentedNodeIdsForArea(areaId).has(dedupeNodeId);
     if (alreadyDocumented) {
       wizardState.discarded.add(confirmingIndex);
-      showToast('Item já documentado nesta tela — pulado automaticamente.');
+      showToast('Item já documentado nesta tela, pulado automaticamente.');
       _advanceA11yBatchWizard();
       return;
     }
@@ -2879,7 +2879,7 @@ function confirmA11ySpec() {
       hideA11yWizardSavingIndicator();
       if (!state) return;
       if (ok) state.confirmed.add(confirmingIndex);
-      else showToast('Não foi possível criar esta especificação — item pulado.');
+      else showToast('Não foi possível criar esta especificação. Item pulado.');
       // Só avança automaticamente pro próximo pendente se o designer ainda
       // está olhando pro item que acabou de confirmar — se ele já pulou pra
       // outro item enquanto isso, o avanço aconteceria por baixo do formulário
@@ -2888,6 +2888,18 @@ function confirmA11ySpec() {
       else _refreshA11yWizardPaginator(state);
     });
   } else {
+    // Loading de canvas (2026-09-14) — mesmo motivo do wizard
+    // (showA11yWizardSavingIndicator): criar/importar o componente real da
+    // lib pode levar segundos. Fechado em spec-created (messages.js); sem
+    // resposta explícita de FALHA neste caminho manual (create-unified-spec
+    // usa figma.notify direto em erro, sem postMessage de volta) — timeout
+    // de segurança evita o loading ficar preso indefinidamente se algo
+    // impedir a resposta de chegar.
+    if (typeof showA11yCanvasLoading === 'function') showA11yCanvasLoading('Salvando especificação…');
+    if (window._a11yManualSpecLoadingTimeout) clearTimeout(window._a11yManualSpecLoadingTimeout);
+    window._a11yManualSpecLoadingTimeout = setTimeout(() => {
+      if (typeof hideA11yCanvasLoading === 'function') hideA11yCanvasLoading();
+    }, 15000);
     parent.postMessage({ pluginMessage: { type: 'create-unified-spec', opts } }, '*');
   }
 }
@@ -2934,7 +2946,7 @@ function _a11ySpecItemHtml(spec) {
               <i data-lucide="component" class="w-2.5 h-2.5"></i> ${escapeHtml(dscComponentLabel)}
             </span>` : ''}
             ${spec.needsReview ? `
-            <button type="button" title="Especificação precisa de revisão — clique para verificar" aria-label="Verificar especificação — precisa de revisão"
+            <button type="button" title="Especificação precisa de revisão, clique para verificar" aria-label="Verificar especificação, precisa de revisão"
               onclick="editA11ySpec('${escapeHtml(spec.id)}')"
               class="inline-flex items-center gap-dsc-quark px-1.5 py-0.5 rounded-dsc-circ border text-dsc-label-tiny normal-case tracking-normal font-bold bg-amber-50/60 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/40 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/20 transition-colors">
               <i data-lucide="alert-triangle" class="w-2.5 h-2.5"></i> Verificar
@@ -3216,7 +3228,7 @@ function _a11yWorkspaceTabTabulacao(area) {
   return `
     <div class="space-y-2">
       <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-relaxed">
-        Documente a sequência de foco do teclado (tecla Tab) desta tela — segure shift e clique (ou use marquise) para marcar todos os elementos de uma vez, na ordem visual, e confirme ao final.
+        Documente a sequência de ordem por tabulação (Tecla Tab) da interface, segure o Shift e vá clicando para selecionar os elementos acionáveis (Links, Buttons e Campos de Texto) um por um e confirme no final para selecionar tudo de uma vez.
       </p>
       <div class="flex items-center gap-dsc-nano">
         ${hasManualItems ? `
@@ -3270,11 +3282,13 @@ function _a11yWorkspaceTabTabulacao(area) {
              (A11Y_NARRATION_TYPE_LABELS vs. _EN); o nome do elemento nunca
              muda, sempre vem como está gravado no Figma. Lido ao clicar em
              "Simular leitura" (toggleTabOrderNarration), não reage sozinho.
-             pr-6 (2026-09-11): o chevron nativo do <select> é desenhado
-             sobre o padding-right — com pr-1 ele ficava colado no texto e
-             na borda. -->
+             pr-8 (2026-09-14, corrigido de pr-6): o chevron nativo do
+             <select> é desenhado sobre o padding-right — pr-6 (24px) ainda
+             deixava o ícone colado quase em cima do texto (achado real com
+             print do usuário); pr-8 (32px) dá respiro real entre "PT"/"2.5x"
+             e a seta. -->
         <select id="tab-order-narration-lang-${uid}" title="Idioma da narração" aria-label="Idioma da narração"
-          class="shrink-0 h-8 pl-2.5 pr-6 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm hover:shadow transition-all border-0 cursor-pointer">
+          class="shrink-0 h-8 pl-2.5 pr-8 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm hover:shadow transition-all border-0 cursor-pointer">
           <option value="pt" selected>PT</option>
           <option value="en">EN</option>
         </select>
@@ -3284,7 +3298,7 @@ function _a11yWorkspaceTabTabulacao(area) {
              relido a cada item narrado pra que mudar a velocidade no meio
              da simulação valha já no próximo item, sem reiniciar. -->
         <select id="tab-order-narration-rate-${uid}" title="Velocidade da narração" aria-label="Velocidade da narração"
-          class="shrink-0 h-8 pl-2.5 pr-6 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm hover:shadow transition-all border-0 cursor-pointer">
+          class="shrink-0 h-8 pl-2.5 pr-8 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm hover:shadow transition-all border-0 cursor-pointer">
           <option value="1">1x</option>
           <option value="1.5" selected>1.5x</option>
           <option value="2">2x</option>
@@ -3341,7 +3355,7 @@ function _a11yWorkspaceTabSwipe(area) {
     <div class="space-y-2">
       <div class="flex items-center gap-dsc-nano">${badgeHtml}</div>
       <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-relaxed">
-        Marque, em ordem, os pontos que o gesto de deslizar (swipe) percorre nesta tela — segure shift e clique (ou use marquise) para marcar todos de uma vez. O hac desenha uma trilha direcional com setas ligando todos os pontos.
+        Documente a sequência de ordem por tabulação (Tecla Tab) da interface, segure o Shift e vá clicando para selecionar os elementos acionáveis (Links, Buttons e Campos de Texto) um por um e confirme no final para selecionar tudo de uma vez.
       </p>
       ${existingPath ? `
       <div class="flex items-center gap-dsc-nano px-dsc-micro py-dsc-nano rounded-dsc-medium bg-cyan-50 dark:bg-cyan-900/10 border border-cyan-100 dark:border-cyan-900/30">
@@ -3655,116 +3669,13 @@ function deleteA11yAreaFromCard(e, areaId) {
 }
 window.deleteA11yAreaFromCard = deleteA11yAreaFromCard;
 
-// "Editar conector" (2026-09-04-l) — popover com as 5 direções (mesmo
-// vocabulário/ícones do modal de Marcar Área: Topo/Base/Esq./Dir./Nenhum).
-// Reaproveita o MESMO padrão de reparentar-pra-body de toggleA11yCardMenu
-// (correção de corte, 2026-09-04-j) — o popover nasceria dentro do <li>
-// do card (overflow-hidden) e da lista (overflow-y-auto), cortado do
-// mesmo jeito que o menu "⋯" já era.
-const A11Y_CONECTOR_OPTIONS = [
-  { value: 'superior', icon: 'arrow-up', label: 'Topo' },
-  { value: 'inferior', icon: 'arrow-down', label: 'Base' },
-  { value: 'esquerda', icon: 'arrow-left', label: 'Esq.' },
-  { value: 'direita', icon: 'arrow-right', label: 'Dir.' },
-  { value: 'desativado', icon: 'ban', label: 'Nenhum' },
-];
-function openA11yConectorPicker(e, areaId) {
-  if (e) e.stopPropagation();
-  // Captura o trigger e mede a posição ANTES de fechar/restaurar o menu
-  // "⋯" — bug real corrigido (2026-09-04-p): closeA11yCardMenu_ifOpen()
-  // devolve o menu (e o próprio botão "Editar conector", que é filho
-  // dele) pro <li> original dentro da lista com overflow-y-auto; medir
-  // getBoundingClientRect() DEPOIS disso pegava a posição do botão já
-  // recolhido/fora da área visível, jogando o popover pro topo da tela.
-  const trigger = e && e.currentTarget;
-  const triggerRect = trigger ? trigger.getBoundingClientRect() : null;
-  closeA11yCardMenu_ifOpen();
-  const area = (a11yAreas || []).find(a => a && a.id === areaId);
-  if (!area) return;
-  const current = area.conector || 'superior';
-
-  const picker = document.createElement('div');
-  picker.id = 'a11y-conector-picker';
-  picker.className = 'py-dsc-nano px-2 bg-white dark:bg-dark-surface rounded-dsc-large shadow-2xl border border-gray-100 dark:border-dark-line';
-  picker.innerHTML = `
-    <p class="text-dsc-label-tiny font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wider px-1.5 pb-1.5">Direção do selo</p>
-    <div class="grid grid-cols-5 gap-dsc-quark">
-      ${A11Y_CONECTOR_OPTIONS.map(opt => `
-        <button type="button" onclick="_confirmA11yConectorChange('${escapeHtml(areaId)}', '${opt.value}')"
-          class="flex flex-col items-center gap-dsc-quark px-0.5 py-1.5 rounded-dsc-medium transition-all ${opt.value === current ? 'bg-blue-50 dark:bg-blue-900/30 border border-[#0070af]' : 'border border-transparent hover:bg-gray-50 dark:hover:bg-dark-line'}">
-          <i data-lucide="${opt.icon}" class="w-3.5 h-3.5 ${opt.value === current ? 'text-[#0070af]' : 'text-slate-500 dark:text-dark-muted'}" aria-hidden="true"></i>
-          <span class="text-dsc-label-tiny normal-case tracking-normal font-bold whitespace-nowrap ${opt.value === current ? 'text-[#0070af]' : 'text-slate-500 dark:text-dark-muted'}">${opt.label}</span>
-        </button>
-      `).join('')}
-    </div>
-  `;
-  document.body.appendChild(picker);
-  if (triggerRect) {
-    const pickerWidth = 260;
-    const left = Math.max(8, triggerRect.right - pickerWidth);
-    // Sem animação (2026-09-04-o, pedido do usuário) — mesmo revert de
-    // toggleA11yCardMenu, aparecimento simples e instantâneo no clique.
-    picker.style.cssText = `position:absolute;top:${triggerRect.bottom + window.scrollY + 4}px;left:${left + window.scrollX}px;width:${pickerWidth}px;z-index:9999;`;
-  }
-  if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
-
-  const close = (ev) => { if (!picker.contains(ev.target) && ev.target !== trigger) _closeA11yConectorPicker(); };
-  const onEsc = (ev) => { if (ev.key === 'Escape') _closeA11yConectorPicker(); };
-  function _closeA11yConectorPicker() {
-    document.removeEventListener('click', close, true);
-    document.removeEventListener('keydown', onEsc, true);
-    picker.remove();
-  }
-  setTimeout(() => {
-    document.addEventListener('click', close, true);
-    document.addEventListener('keydown', onEsc, true);
-  }, 0);
-}
-window.openA11yConectorPicker = openA11yConectorPicker;
-
-// Fecha o dropdown "⋯" do card antes de abrir o picker de conector — os
-// dois nascem a partir do mesmo botão de ação, não faz sentido os dois
-// abertos ao mesmo tempo.
-function closeA11yCardMenu_ifOpen() {
-  document.querySelectorAll('[id^="a11y-card-menu-"]').forEach(m => m.classList.add('hidden'));
-  if (typeof _restoreA11yCardMenuToOrigin === 'function') _restoreA11yCardMenuToOrigin();
-}
-
-// Precisa do targetNodeId/number/label/origin atuais da área — o backend
-// redesenha o CONTEÚDO do grupo (area.id nunca muda, ver
-// update-a11y-area-conector em code.js).
-function _confirmA11yConectorChange(areaId, conector) {
-  const picker = document.getElementById('a11y-conector-picker');
-  if (picker) picker.remove();
-  const area = (a11yAreas || []).find(a => a && a.id === areaId);
-  if (!area) return;
-  if (area.conector === conector) return; // mesma direção — nada a fazer
-  ensureA11yProjectOriginThen((origin) => {
-    parent.postMessage({
-      pluginMessage: {
-        type: 'update-a11y-area-conector',
-        areaId,
-        targetNodeId: area.targetNodeId,
-        number: area.number,
-        label: area.label,
-        conector,
-        origin,
-        sectionName: getA11yActiveSectionName(),
-      },
-    }, '*');
-  });
-}
-window._confirmA11yConectorChange = _confirmA11yConectorChange;
-
-// Resposta de 'a11y-area-conector-updated' — area.conector já foi
-// atualizado em hacData por messages.js antes desta função ser chamada;
-// aqui só re-renderiza a listagem pra refletir o novo estado (embora o
-// conector não apareça diretamente no resumo do card hoje, futuras
-// mudanças podem exibi-lo).
-function handleA11yAreaConectorUpdated(msg) {
-  if (typeof renderA11yGroupedList === 'function') renderA11yGroupedList();
-}
-window.handleA11yAreaConectorUpdated = handleA11yAreaConectorUpdated;
+// "Editar conector" (popover de 5 direções) e todo o fluxo
+// update-a11y-area-conector foram REMOVIDOS (2026-09-14, pedido do
+// usuário): número e direção do selo nascem sequenciais/automáticos, sem
+// UI de edição pós-criação — ver confirmA11yArea (não envia mais escolha
+// de conector, o backend sempre usa o default 'superior' quando ausente).
+// O handler update-a11y-area-conector segue existindo em code.js (não
+// removido, só órfão) — não há mais nenhum call site no frontend.
 
 // Área Marcada — CARD CLICÁVEL (deixou de ser accordion em 2026-09-04, ver
 // bloco "Workspace de uma Área Marcada" acima). Clicar no CORPO do card
@@ -3854,20 +3765,10 @@ function _a11yAreaAccordionEl(area, areaSpecs) {
               <i data-lucide="locate" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted shrink-0" aria-hidden="true"></i>
               Focar no canvas
             </button>
-            <!-- "Editar conector" (2026-09-04-l, pedido do usuário) — abre o
-                 popover de 5 direções (openA11yConectorPicker) em vez de
-                 mudar direto, pra não trocar por engano a direção do selo
-                 sem uma escolha explícita. -->
-            <button type="button" onclick="openA11yConectorPicker(event, '${escapeHtml(area.id)}')"
-              class="w-full flex items-center gap-2.5 px-3.5 py-dsc-nano text-dsc-label-tiny normal-case tracking-normal font-semibold text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-dark-line transition-colors text-left">
-              <i data-lucide="move" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted shrink-0" aria-hidden="true"></i>
-              Editar conector
-            </button>
-            <button type="button" onclick="toggleAreaGroupVisibility('${escapeHtml(area.id)}')"
-              class="w-full flex items-center gap-2.5 px-3.5 py-dsc-nano text-dsc-label-tiny normal-case tracking-normal font-semibold text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-dark-line transition-colors text-left">
-              <i data-lucide="eye-off" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted shrink-0" aria-hidden="true"></i>
-              Ocultar/Mostrar no canvas
-            </button>
+            <!-- "Editar conector" e "Ocultar/Mostrar no canvas" removidos
+                 (pedido do usuário, 2026-09-14): números e direção do selo
+                 nascem sequenciais/automáticos, sem necessidade de edição
+                 manual pós-criação. -->
             <button type="button" onclick="deleteA11yAreaFromCard(event, '${escapeHtml(area.id)}')"
               class="w-full flex items-center gap-2.5 px-3.5 py-dsc-nano text-dsc-label-tiny normal-case tracking-normal font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors text-left">
               <i data-lucide="trash-2" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i>
@@ -4017,17 +3918,40 @@ function renderA11yGroupedList() {
   if (areasCountHeader) areasCountHeader.classList.toggle('hidden', areas.length === 0);
   if (areasCountValue) areasCountValue.textContent = String(areas.length);
 
+  // Alterna o "modo estado vazio" na cadeia de containers pais (2026-09-14,
+  // pedido do usuário: centralizar sem depender de um min-h chutado em vh —
+  // isso causou scroll indevido quando a janela era menor que o valor
+  // chutado, achado real com print). SEM tela nenhuma, os 2 containers
+  // pais (a div interna do scroll container + a div deste bloco) viram
+  // 'flex flex-col h-full', propagando altura real do
+  // #specs-scroll-container (sempre flex-1, altura real da janela menos o
+  // header) até o <li> único, que passa a poder centralizar de verdade com
+  // justify-center. COM telas, nenhuma classe extra — a lista volta a
+  // fluir/rolar normalmente como sempre funcionou (o scroll continua
+  // existindo quando o conteúdo excede a janela, ou com zoom aplicado).
+  const scrollInner = document.getElementById('specs-scroll-container-inner');
+  const emptyStateBlock = document.getElementById('a11y-empty-state-block');
+  const isEmpty = areas.length === 0;
+  if (scrollInner) scrollInner.classList.toggle('h-full', isEmpty);
+  if (emptyStateBlock) emptyStateBlock.classList.toggle('h-full', isEmpty);
+  if (emptyStateBlock) emptyStateBlock.classList.toggle('flex', isEmpty);
+  if (emptyStateBlock) emptyStateBlock.classList.toggle('flex-col', isEmpty);
+
   if (areas.length === 0) {
+    // flex-1 (no <ul>, ver toggle acima) faz este <li> único ocupar a
+    // altura real restante dentro da cadeia h-full — justify-center
+    // centraliza de fato, sem nenhum valor de altura chutado.
+    list.classList.add('flex-1');
     list.innerHTML = `
-      <li class="w-full flex flex-col items-center justify-center py-12 animate-in fade-in duration-500 list-none">
+      <li class="w-full h-full flex flex-col items-center justify-center animate-in fade-in duration-500 list-none">
         <div class="relative mb-4">
           <!-- Sem opacity extra (2026-09-11): text-slate-300 + opacity 0.25
                deixava o ícone quase invisível — a cor do token já dá o
                contraste baixo pretendido pra um estado vazio. -->
           <i data-lucide="scan" class="w-16 h-16 text-slate-300 dark:text-slate-600" aria-hidden="true"></i>
         </div>
-        <p class="w-full text-[13px] font-bold text-slate-600 dark:text-white text-center px-4 mb-1">Nenhuma tela selecionada ainda</p>
-        <p class="w-full text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted text-center px-6 mb-4 max-w-[260px] mx-auto leading-relaxed">Selecione um frame para começar a documentar — as primeiras especificações de acessibilidade nascem dentro de uma tela selecionada.</p>
+        <p class="w-full text-[13px] font-bold text-slate-600 dark:text-white text-center px-4 mb-1">Nenhuma tela selecionada</p>
+        <p class="w-full text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted text-center px-6 mb-4 max-w-[260px] mx-auto leading-relaxed">Selecione um frame no figma e clique no botão a seguir para iniciar as etapas de preenchimento do handoff.</p>
         <button type="button" onclick="openA11yAreaModal()" class="flex items-center gap-dsc-nano h-11 px-6 rounded-dsc-large text-[13px] font-bold text-white bg-[#0891B2] hover:bg-cyan-700 active:scale-[0.99] shadow-lg shadow-cyan-500/20 transition-all">
           <i data-lucide="scan" class="w-4 h-4 shrink-0" aria-hidden="true"></i>
           Selecionar Tela
@@ -4037,6 +3961,7 @@ function renderA11yGroupedList() {
     _refreshIcons();
     return;
   }
+  list.classList.remove('flex-1');
 
   areas.forEach(area => {
     const areaSpecsRaw = specs.filter(s => s.a11yAreaId === area.id);
@@ -4457,7 +4382,7 @@ function openA11yOtherDesignerModal(sections) {
 
   body.innerHTML = `
     <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed">${message}</p>
-    <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed">Seu trabalho fica isolado numa Section própria — nada do que você fizer sobrescreve o handoff já existente. Combine com a equipe se o objetivo é complementar a mesma documentação.</p>
+    <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed">Seu trabalho fica isolado numa Section própria. Nada do que você fizer sobrescreve o handoff já existente. Combine com a equipe se o objetivo é complementar a mesma documentação.</p>
   `;
   openModal('a11y-other-designer-modal');
   if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
@@ -4603,26 +4528,41 @@ function closeA11yPostAreaDetectModal() {
 }
 window.closeA11yPostAreaDetectModal = closeA11yPostAreaDetectModal;
 
-// Achado de QA (wizard de revisão individual): entre o clique em "Aplicar"
-// (fecha #a11y-spec-modal de forma síncrona) e a resposta 'spec-created'
-// chegando (pode levar segundos — fontes + import de componente real da
-// lib), não havia NENHUM feedback visual: o plugin parecia travado.
+// Loading genérico de canvas (2026-09-14, pedido do usuário: "loading na
+// hora que estiver criando as layers, vale pra todas funcionalidades").
 // Reaproveita o mesmo modal/spinner já usado pela varredura pós-Marcar-Área
-// (#a11y-post-area-detect-modal) só trocando o texto — não é um estado novo
-// de produto, só um indicador de "isto está processando". Chamado em
-// confirmA11ySpec logo depois de fechar o modal individual; escondido em
-// _advanceA11yBatchWizard, no mesmo instante em que o próximo item abre (ou
-// em que o wizard termina/é interrompido). Pula direto pro estado de
-// loading — não é uma nova varredura, não faz sentido perguntar origem de
-// novo aqui.
-function showA11yWizardSavingIndicator() {
+// (#a11y-post-area-detect-modal, estado 2 "loading") — não é um componente
+// novo, só um ponto único pra abrir/fechar esse estado com texto
+// customizável. Usado por qualquer operação que desenha layers reais no
+// canvas e precisa de segundos pra responder (fontes + import de componente
+// real da lib, N selos em lote, etc.) — sem isso o plugin parece travado
+// entre o clique e o resultado aparecer.
+function showA11yCanvasLoading(text) {
   const loadingText = document.getElementById('a11y-post-area-loading-text');
-  if (loadingText) loadingText.textContent = 'Salvando especificação…';
+  if (loadingText) loadingText.textContent = text || 'Processando…';
   _setA11yPostAreaModalStage('loading');
   openModal('a11y-post-area-detect-modal');
 }
-function hideA11yWizardSavingIndicator() {
+window.showA11yCanvasLoading = showA11yCanvasLoading;
+function hideA11yCanvasLoading() {
   closeModal('a11y-post-area-detect-modal');
+}
+window.hideA11yCanvasLoading = hideA11yCanvasLoading;
+
+// Achado de QA (wizard de revisão individual): entre o clique em "Aplicar"
+// (fecha #a11y-spec-modal de forma síncrona) e a resposta 'spec-created'
+// chegando (pode levar segundos — fontes + import de componente real da
+// lib), não havia NENHUM feedback visual: o plugin parecia travado. Chamado
+// em confirmA11ySpec logo depois de fechar o modal individual; escondido em
+// _advanceA11yBatchWizard, no mesmo instante em que o próximo item abre (ou
+// em que o wizard termina/é interrompido). Mantidas como wrappers nomeados
+// (em vez de inlinar showA11yCanvasLoading direto nas chamadas) só pra não
+// reescrever os call sites já existentes — mesmo comportamento de antes.
+function showA11yWizardSavingIndicator() {
+  showA11yCanvasLoading('Salvando especificação…');
+}
+function hideA11yWizardSavingIndicator() {
+  hideA11yCanvasLoading();
 }
 
 // Agrega os 5 buckets do scan (components/icons/typography/vectors/images)
@@ -4918,7 +4858,7 @@ function handleA11yPostAreaDetectionResult(detections, tokenReviewCandidates) {
     // dados do scan anterior), fecha também o resumo — sem isso ele ficaria
     // visível mostrando um resultado que não existe mais.
     closeModal('a11y-batch-summary-modal');
-    showToast('Nenhum componente do DSC reconhecido nessa tela — anote manualmente.');
+    showToast('Nenhum componente do DSC reconhecido nessa tela. Anote manualmente.');
     return;
   }
 
@@ -4997,7 +4937,7 @@ function _currentA11yDetectionsSource() {
 function rescanA11yBatchArea() {
   const pending = window._a11yPendingDetectionArea;
   if (!pending || !pending.targetNodeId) {
-    showToast('Não foi possível identificar a tela para reescanear — selecione novamente.');
+    showToast('Não foi possível identificar a tela para reescanear. Selecione novamente.');
     return;
   }
   const btn = document.getElementById('btn-a11y-batch-rescan');
@@ -5355,6 +5295,21 @@ function startA11yBatchWizard() {
   window._a11yExpandedAreaIds = window._a11yExpandedAreaIds || new Set();
   window._a11yExpandedAreaIds.add(areaId);
 
+  // Cria (ou reaproveita) a réplica de trabalho do Leitor de Tela desta área
+  // ANTES de abrir o primeiro item do wizard — 2026-09-14, pedido do
+  // usuário: "cria-se primeiro a réplica e depois o foco é sempre na
+  // réplica", mesmo timing que Tabulação já usa (start-tab-order-copy antes
+  // de abrir a escuta de cliques). Sem isso, o botão "Focar" do wizard caía
+  // no Frame Principal até a primeira spec ser de fato aplicada (ver
+  // handler start-spec-copy, code.js). Silencioso e best-effort: a área sem
+  // targetNodeId resolvível não deve travar o wizard, só perde o
+  // adiantamento (highlight-spec-copy-node ainda cria a réplica sob demanda
+  // dentro de create-unified-spec, como já fazia antes desta mudança).
+  const area = _findA11yAreaById(areaId);
+  if (area && area.targetNodeId) {
+    parent.postMessage({ pluginMessage: { type: 'start-spec-copy', areaId, targetNodeId: area.targetNodeId, sectionName: getA11yActiveSectionName(), designerName: getA11yDesignerName(), designerId: getA11yDesignerId() } }, '*');
+  }
+
   closeA11yBatchSummaryModal();
   _advanceA11yBatchWizard();
 }
@@ -5400,7 +5355,7 @@ function _advanceA11yBatchWizard() {
     if (confirmedCount > 0 && discardedCount === 0) {
       showToast(`${confirmedCount} especifica${confirmedCount === 1 ? 'ção criada' : 'ções criadas'}.`);
     } else if (confirmedCount === 0 && discardedCount > 0) {
-      showToast(`Revisão concluída — ${discardedCount} ${discardedCount === 1 ? 'item' : 'itens'} descartado${discardedCount === 1 ? '' : 's'}, nenhuma especificação criada.`);
+      showToast(`Revisão concluída: ${discardedCount} ${discardedCount === 1 ? 'item' : 'itens'} descartado${discardedCount === 1 ? '' : 's'}, nenhuma especificação criada.`);
     } else {
       showToast(`${confirmedCount} especifica${confirmedCount === 1 ? 'ção criada' : 'ções criadas'}, ${discardedCount} descartado${discardedCount === 1 ? '' : 's'}.`);
     }
@@ -5631,8 +5586,8 @@ function stopA11yBatchWizard(viaExplicitCancelButton) {
   const areaId = state.areaId;
   if (!viaExplicitCancelButton && remaining > 0 && areaId) {
     const message = confirmedCount > 0
-      ? `Revisão interrompida — ${confirmedCount} especifica${confirmedCount === 1 ? 'ção criada' : 'ções criadas'}, ${remaining} ${remaining === 1 ? 'item' : 'itens'} de volta pra "Não Documentados".`
-      : `Revisão interrompida — ${remaining} ${remaining === 1 ? 'item' : 'itens'} continua${remaining === 1 ? '' : 'm'} em "Não Documentados".`;
+      ? `Revisão interrompida: ${confirmedCount} especifica${confirmedCount === 1 ? 'ção criada' : 'ções criadas'}, ${remaining} ${remaining === 1 ? 'item' : 'itens'} de volta pra "Não Documentados".`
+      : `Revisão interrompida: ${remaining} ${remaining === 1 ? 'item' : 'itens'} continua${remaining === 1 ? '' : 'm'} em "Não Documentados".`;
     showSnackbar(message, {
       actionLabel: 'Continuar revisão',
       onAction: () => _resumeA11yBatchWizardForArea(areaId),
@@ -5640,9 +5595,9 @@ function stopA11yBatchWizard(viaExplicitCancelButton) {
     return;
   }
   if (confirmedCount > 0) {
-    showToast(`Revisão interrompida — ${confirmedCount} especifica${confirmedCount === 1 ? 'ção criada' : 'ções criadas'}, ${remaining} ${remaining === 1 ? 'item' : 'itens'} de volta pra "Não Documentados".`);
+    showToast(`Revisão interrompida: ${confirmedCount} especifica${confirmedCount === 1 ? 'ção criada' : 'ções criadas'}, ${remaining} ${remaining === 1 ? 'item' : 'itens'} de volta pra "Não Documentados".`);
   } else {
-    showToast(`Revisão interrompida — ${remaining} ${remaining === 1 ? 'item' : 'itens'} continua${remaining === 1 ? '' : 'm'} em "Não Documentados".`);
+    showToast(`Revisão interrompida: ${remaining} ${remaining === 1 ? 'item' : 'itens'} continua${remaining === 1 ? '' : 'm'} em "Não Documentados".`);
   }
 }
 window.stopA11yBatchWizard = stopA11yBatchWizard;
@@ -5657,7 +5612,7 @@ window.stopA11yBatchWizard = stopA11yBatchWizard;
 function _resumeA11yBatchWizardForArea(areaId) {
   const area = _findA11yAreaById(areaId);
   if (!area || !area.targetNodeId) {
-    showToast('Não foi possível localizar a tela para retomar — reescaneie manualmente.');
+    showToast('Não foi possível localizar a tela para retomar. Reescaneie manualmente.');
     return;
   }
   window._a11yResumeWizardAfterScan = true;
@@ -5752,7 +5707,7 @@ function toggleA11ySpecLock(specId) {
   renderA11yGroupedList();
   showToast(isNowUnlocked
     ? 'Especificação travada novamente.'
-    : 'Especificação destravada — edite com cuidado e trave novamente ao concluir.');
+    : 'Especificação destravada. Edite com cuidado e trave novamente ao concluir.');
 }
 window.toggleA11ySpecLock = toggleA11ySpecLock;
 
@@ -5925,12 +5880,6 @@ function _prefillA11ySpecForEdit(spec) {
 function openA11yAreaModal() {
   const input = document.getElementById('a11y-area-label-input');
   if (input) { input.value = ''; updateA11yCharCounter(input); }
-  const conectorDefault = document.querySelector('input[name="a11y-area-conector"][value="superior"]');
-  if (conectorDefault) conectorDefault.checked = true;
-  // Sugere o próximo número livre, mas deixa editável — o designer pode
-  // querer reordenar áreas ou pular números de propósito.
-  const numberInput = document.getElementById('a11y-area-number-input');
-  if (numberInput) numberInput.value = _nextA11yAreaNumber();
   openModal('a11y-area-modal');
   setTimeout(() => { if (input) input.focus(); }, 50);
   // Pré-preenche com o nome do frame/elemento selecionado no canvas — só
@@ -6013,10 +5962,11 @@ function confirmA11yArea() {
     showToast('Informe o rótulo da tela.');
     return;
   }
-  const conectorInput = document.querySelector('input[name="a11y-area-conector"]:checked');
-  const conector = conectorInput ? conectorInput.value : 'superior';
-  const numberInput = document.getElementById('a11y-area-number-input');
-  const number = numberInput && numberInput.value ? parseInt(numberInput.value, 10) : _nextA11yAreaNumber();
+  // Direção do selo e número não têm mais UI de escolha (2026-09-14,
+  // pedido do usuário) — selos nascem sequenciais e organizados dentro
+  // da Section, sempre com a direção default e o próximo número livre.
+  const conector = 'superior';
+  const number = _nextA11yAreaNumber();
   closeA11yAreaModal();
   _getA11ySelectionInfo().then(sel => {
     if (!sel || !sel.id) {

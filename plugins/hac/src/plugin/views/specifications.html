@@ -52,8 +52,17 @@
   </div>
 
   <!-- Scrollable content -->
+  <!-- id="specs-scroll-container-inner"/"a11y-empty-state-block" (2026-09-14):
+       ganham a classe 'flex flex-col h-full' via JS SÓ quando não há
+       nenhuma tela (renderA11yGroupedList, accessibility.js) — propaga
+       altura real até o <li> do estado vazio, que aí sim centraliza de
+       verdade com justify-center, sem precisar chutar um min-h em vh (isso
+       causava scroll indevido quando a janela era menor que o valor
+       chutado — achado real com print do usuário). Com telas documentadas,
+       nenhuma classe extra é aplicada — a lista volta a fluir/rolar
+       normalmente como sempre funcionou. -->
   <div id="specs-scroll-container" class="flex-1 overflow-y-auto pt-0 px-4 pb-4" onscroll="handleScroll(this)">
-    <div class="space-y-4 w-full mx-auto">
+    <div id="specs-scroll-container-inner" class="space-y-4 w-full mx-auto">
 
       <!-- Banner "Primeira vez aqui?" removido (2026-09-10, pedido do
            usuário) — o onboarding completo (mesma jornada web/mobile que
@@ -62,7 +71,7 @@
            redundante. Reabertura manual continua disponível pelo ícone de
            chapéu ("Como utilizar o Plugin", openOnboardingForCurrentOrigin). -->
 
-      <div>
+      <div id="a11y-empty-state-block">
         <!-- pt-dsc-tiny (2026-09-11, pedido do usuário) — dá respiro entre o
              título e o header secundário azul acima, já que o banner de
              onboarding que ocupava esse espaço foi removido (2026-09-10). -->
@@ -195,7 +204,7 @@
       <button type="button" data-a11y-workspace-tab="handoff" onclick="switchA11yWorkspaceTab('handoff')"
         class="a11y-workspace-tab-btn flex items-center justify-center gap-1.5 py-dsc-nano text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-400 dark:text-dark-muted border-b-2 border-transparent transition-colors rounded-none">
         <i data-lucide="layout-dashboard" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i>
-        <span class="truncate">Handoff</span>
+        <span class="truncate">Resumo</span>
       </button>
     </div>
   </div>

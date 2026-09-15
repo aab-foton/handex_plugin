@@ -2,12 +2,12 @@
 // GERADO AUTOMATICAMENTE por build-a11y-constants.cjs — não editar à mão.
 // Fonte: refs/design-acessivel-properties.json (2026-09-01T18:11:41.479Z)
 //      + refs/design-acessivel-mobile-properties.json (2026-09-01T18:12:50.373Z)
-//      + refs/super-app.json (2026-09-09T18:47:00.759Z)
+//      + refs/super-app.json (2026-09-14T17:22:10.632Z)
 //      + refs/_manifest.json (fileKey da lib 'super-app')
 // Regenerar via: node src/plugin/refs/build-a11y-constants.cjs
 //            ou: npm run refs:a11y-constants
 //
-// Gerado em: 2026-09-11T17:00:34.492Z
+// Gerado em: 2026-09-15T00:24:42.412Z
 //
 // Consumido via alias em src/plugin/modules/accessibility.js:
 //   const A11Y_COMPONENT_PROPERTIES = A11Y_COMPONENT_PROPERTIES_GENERATED;

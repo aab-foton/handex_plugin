@@ -2178,11 +2178,22 @@ function _reparentIntoSection(node, getSection) {
   try {
     const _origX = node.x;
     const _origY = node.y;
+    // Container de ORIGEM guardado antes do appendChild (2026-09-14): tirar
+    // um node de uma Section a deixa superdimensionada (ela foi esticada
+    // pra abraçar esse node e nada a encolhe de volta — Sections não têm
+    // auto-fit via API, só por interação manual do designer). Reajustar a
+    // origem também evita que o "vão" volte por qualquer caminho de
+    // reparenting futuro, não só pelos 3 fluxos de réplica já corrigidos.
+    const oldParent = node.parent;
     const section = getSection();
     section.appendChild(node);
     node.x = Math.round(_origX - section.x);
     node.y = Math.round(_origY - section.y);
     _fitSectionToChildren(section);
+    if (oldParent && oldParent !== section && !oldParent.removed &&
+      oldParent.type === 'SECTION' && Array.isArray(oldParent.children)) {
+      try { _fitSectionToChildren(oldParent); } catch (e2) { }
+    }
   } catch (e) {
     // organização é só cosmética — a spec/área/cópia segue existindo
     // normalmente na página — mas loga sempre: um reparenting falhando em
@@ -2220,16 +2231,41 @@ function _reparentIntoSection(node, getSection) {
 function _fitSectionToChildren(section) {
   try {
     const children = section.children || [];
-    const withBounds = children.filter(c => !!c.absoluteBoundingBox);
+    const withBounds = children.filter(c => !!c.absoluteBoundingBox && c.visible !== false);
     if (withBounds.length === 0) return;
     const PADDING = 40;
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     for (const c of withBounds) {
       const bb = c.absoluteBoundingBox;
-      minX = Math.min(minX, bb.x);
-      minY = Math.min(minY, bb.y);
-      maxX = Math.max(maxX, bb.x + bb.width);
-      maxY = Math.max(maxY, bb.y + bb.height);
+      // `absoluteBoundingBox` de um node com `clipsContent=false` inclui
+      // TUDO que transborda dele — e toda a cadeia da Ficha usa
+      // clipsContent=false de propósito (pra selos e overlays não serem
+      // recortados). Medir por ele faz a Section se esticar pra abraçar
+      // transbordamento invisível.
+      //
+      // `absoluteTransform` dá a posição absoluta do PRÓPRIO node
+      // (tx=[0][2], ty=[1][2]), imune a transbordamento de filhos — e
+      // `width`/`height` dão a caixa declarada. Origem e extensão vêm
+      // então da MESMA fonte (a tentativa anterior misturava `bb.x` com
+      // `c.width`, produzindo uma caixa deslocada quando o transbordamento
+      // era pra esquerda/cima).
+      //
+      // Só vale pra node NÃO rotacionado: com rotação, a caixa alinhada
+      // aos eixos (o próprio bb) é a única medida correta — width/height
+      // descreveriam o retângulo girado, subdimensionando o espaço real.
+      let x = bb.x, y = bb.y, w = bb.width, h = bb.height;
+      try {
+        const t = c.absoluteTransform;
+        const semRotacao = t && Math.abs(t[0][1]) < 1e-6 && Math.abs(t[1][0]) < 1e-6;
+        if (semRotacao && typeof c.width === 'number' && c.width > 0 &&
+          typeof c.height === 'number' && c.height > 0) {
+          x = t[0][2]; y = t[1][2]; w = c.width; h = c.height;
+        }
+      } catch (e) { /* sem absoluteTransform: mantém o bbox */ }
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x + w);
+      maxY = Math.max(maxY, y + h);
     }
     const newX = Math.round(minX - PADDING);
     const newY = Math.round(minY - PADDING);
@@ -2306,7 +2342,32 @@ function _fitSectionToChildren(section) {
 // moldura antiga vira órfã e é removida antes de desenhar a nova);
 // "Adicionar item"/"Atualizar" reaproveitam o MESMO clone.id, então a
 // moldura existente é só redimensionada/reposicionada.
+// DESATIVADA (2026-09-12, pedido explícito do usuário: "Podemos eliminar a
+// moldura cinza e o texto, isso está dificultando tudo"). A moldura
+// ([Moldura] Réplica de Trabalho — ...) e o título ([Título] ...) eram
+// nodes posicionados por x/y ABSOLUTO, irmãos do clone. Depois que a
+// réplica passou a viver dentro de "[HAC] Handoff - {Func}" (FRAME com
+// Auto Layout), esses dois nodes passaram a brigar com o layout — entravam
+// no fluxo, esticavam/comprimiam o container e atrapalhavam o
+// posicionamento de tudo dentro da Section.
+//
+// A função vira um no-op que apenas REMOVE qualquer moldura/título de
+// sessões anteriores (via _removeCloneWorkFrame, que segue existindo e é
+// usada também na limpeza do "Preencher Handoff") — assim arquivos já
+// abertos convergem sozinhos, sem o designer precisar apagar na mão. Os 3
+// call sites continuam chamando normalmente; não foram removidos pra manter
+// o diff pequeno e reversível caso a moldura volte a ser pedida.
 async function _ensureCloneWorkFrame(clone, overlayGroup, title) {
+  try {
+    if (!clone || clone.removed) return;
+    _removeCloneWorkFrame(clone);
+  } catch (e) { }
+  return;
+}
+
+// Corpo original preservado (nunca chamado) — caso a moldura volte a ser
+// pedida, basta renomear esta função de volta para _ensureCloneWorkFrame.
+async function _ensureCloneWorkFrame_DESATIVADA(clone, overlayGroup, title) {
   try {
     try { await figma.loadFontAsync({ family: "Inter", style: "Bold" }); } catch (e) { }
     if (!clone || clone.removed || !clone.absoluteBoundingBox) return;
@@ -2364,6 +2425,13 @@ async function _ensureCloneWorkFrame(clone, overlayGroup, title) {
       // do overlay, nunca por cima.
       try { parent.insertChild(0, frameRect); } catch (e) { }
     }
+    // ORDEM CRÍTICA (2026-09-11, revisão 3): `parent` pode ser o FRAME
+    // "[HAC] Handoff - {Func}", que TEM Auto Layout — ABSOLUTE precisa ser
+    // reafirmado ANTES do resize/medição abaixo, senão o Auto Layout pode
+    // descartar a escrita manual de posição no próximo reflow. No-op
+    // quando `parent` não tem Auto Layout (ex. Section de sessão, caminho
+    // legado), mesma função já usada pro overlay.
+    _setCloneOverlayGroupAbsolutePositioning(frameRect);
     frameRect.resizeWithoutConstraints(Math.max(1, rectWidth), Math.max(1, rectHeight));
     const afterRectBB = frameRect.absoluteBoundingBox;
     if (afterRectBB) {
@@ -2383,6 +2451,9 @@ async function _ensureCloneWorkFrame(clone, overlayGroup, title) {
         parent.insertChild(rectIndex + 1, titleText);
       } catch (e) { }
     }
+    // ORDEM CRÍTICA (2026-09-11, revisão 3) — mesmo motivo de frameRect
+    // acima, reafirmado ANTES da medição de posição final logo abaixo.
+    _setCloneOverlayGroupAbsolutePositioning(titleText);
     try { titleText.fontName = { family: "Inter", style: "Bold" }; } catch (e) { }
     titleText.characters = title;
     titleText.fontSize = 12;
@@ -2758,17 +2829,27 @@ function _setCloneOverlayGroupAbsolutePositioning(overlayGroup) {
 // antes (só busca/marca por clone.id).
 async function _snapshotCloneIntoFichaSection(clone, targetSection, pluginDataKey, areaId) {
   const stableKey = areaId && pluginDataKey ? (pluginDataKey + 'SnapshotForArea') : null;
-  for (const child of (targetSection.children || []).slice()) {
-    try {
-      const matchesStable = stableKey && child.getPluginData &&
-        child.getPluginData(stableKey) === areaId;
-      const matchesLegacy = child.getPluginData &&
-        child.getPluginData('hacFichaSnapshotForClone') === clone.id;
-      if (matchesStable || matchesLegacy) {
-        child.remove();
-      }
-    } catch (e) { }
-  }
+  // Busca em 2 níveis (2026-09-11): desde a criação do GROUP "[HAC] Handoff
+  // - {Func}", o snapshot da rodada anterior não é mais filho DIRETO do
+  // bloco — está dentro desse grupo. Sem descer um nível, "Atualizar" não
+  // acharia a imagem antiga e passaria a EMPILHAR imagens obsoletas sobre a
+  // nova. Um nível basta: o grupo é sempre filho direto do bloco.
+  const _removeOldSnapshots = (parentNode) => {
+    for (const child of (parentNode.children || []).slice()) {
+      try {
+        const matchesStable = stableKey && child.getPluginData &&
+          child.getPluginData(stableKey) === areaId;
+        const matchesLegacy = child.getPluginData &&
+          child.getPluginData('hacFichaSnapshotForClone') === clone.id;
+        if (matchesStable || matchesLegacy) {
+          child.remove();
+        } else if (child.getPluginData && child.getPluginData('hacFichaHandoffGroup')) {
+          _removeOldSnapshots(child);
+        }
+      } catch (e) { }
+    }
+  };
+  _removeOldSnapshots(targetSection);
 
   const bb = clone.absoluteBoundingBox;
 
@@ -2797,11 +2878,16 @@ async function _snapshotCloneIntoFichaSection(clone, targetSection, pluginDataKe
       showShadowBehindNode: true
     }];
     // bb (absoluteBoundingBox) é relativo à página inteira — appendChild
-    // primeiro, depois corrige x/y pela diferença observada no
-    // absoluteBoundingBox antes/depois (mesmo princípio de
+    // primeiro, ABSOLUTE imediatamente (ORDEM CRÍTICA, 2026-09-11 revisão
+    // 3: `targetSection` pode ser o FRAME "[HAC] Handoff - {Func}", que TEM
+    // Auto Layout — sem isto o reflow do Auto Layout pode descartar a
+    // escrita manual de posição abaixo), depois corrige x/y pela diferença
+    // observada no absoluteBoundingBox antes/depois (mesmo princípio de
     // _reparentIntoAreaGroup: robusto contra qualquer sistema de
-    // coordenadas do novo pai, Auto Layout ou não).
+    // coordenadas do novo pai, Auto Layout ou não). No-op quando o pai não
+    // tem Auto Layout.
     targetSection.appendChild(rect);
+    _setCloneOverlayGroupAbsolutePositioning(rect);
     rect.resizeWithoutConstraints(bb.width, bb.height);
     const afterBB = rect.absoluteBoundingBox;
     if (afterBB) {
@@ -2818,6 +2904,8 @@ async function _snapshotCloneIntoFichaSection(clone, targetSection, pluginDataKe
     placeholder.counterAxisAlignItems = 'CENTER';
     placeholder.fills = [{ type: 'SOLID', color: { r: 0.9, g: 0.9, b: 0.9 } }];
     targetSection.appendChild(placeholder);
+    // ORDEM CRÍTICA — ver comentário equivalente no caminho de sucesso acima.
+    _setCloneOverlayGroupAbsolutePositioning(placeholder);
     placeholder.resizeWithoutConstraints(bb.width, bb.height);
     const afterBB = placeholder.absoluteBoundingBox;
     if (afterBB) {
@@ -3224,7 +3312,10 @@ function _forEachFichaFrameCandidate(fn) {
 function _forEachA11yFichaFrameChild(fn) {
   const visited = new Set();
   const walk = (node, depth) => {
-    if (!node || depth > 8 || visited.has(node.id)) return;
+    // Limite elevado pra 12 (2026-09-11): a árvore ganhou 2 níveis com a
+    // reorganização (Tela N, Assets do Handoff). Aumentar é estritamente
+    // aditivo — os chamadores filtram por pluginData depois.
+    if (!node || depth > 12 || visited.has(node.id)) return;
     visited.add(node.id);
     if (!Array.isArray(node.children)) return;
     for (const child of node.children) {
@@ -3341,13 +3432,31 @@ async function _collectA11yOccupiedBounds() {
   // Desce recursivamente enquanto o node for um CONTAINER organizador do
   // hac (GROUP solto, frame da Ficha, GROUP de área dentro dela) — só
   // soma como retângulo quando chega num artefato real (réplica, snapshot,
-  // selo, bloco de seção). Profundidade limitada: a árvore da Ficha tem
-  // no máximo 3 níveis de container (Ficha → Tela N → Documentação/Itens).
+  // selo, bloco de seção). Profundidade elevada pra 6 (2026-09-11): a
+  // árvore ganhou níveis com a reorganização (Documentação → Tela N →
+  // Assets do Handoff → bloco → Handoff-{Func}). Com o limite antigo (3),
+  // containers passavam a ser somados INTEIROS como obstáculo, distorcendo
+  // o cálculo de faixa livre e fazendo réplicas novas nascerem sobre
+  // conteúdo existente.
   const _isHacOrganizerContainer = (node, depth) => {
-    if (depth > 3 || !node.children || node.children.length === 0) return false;
+    if (depth > 6 || !node.children || node.children.length === 0) return false;
     if (node.type === 'GROUP') return true;
     try {
-      if (node.getPluginData && (node.getPluginData('hacFichaForArea') || node.getPluginData('hacFichaAreaGroup') === 'true')) return true;
+      if (node.getPluginData && (
+        node.getPluginData('hacFichaForArea') ||
+        node.getPluginData('hacFichaAreaGroup') === 'true' ||
+        node.getPluginData('hacFichaDocumentacaoFrame') === 'true' ||
+        node.getPluginData('hacFichaTelaForArea') ||
+        node.getPluginData('hacFichaItensFrame') === 'true' ||
+        // "[HAC] {Func}" (bloco) e "[HAC] Handoff - {Func}" (2026-09-11,
+        // revisão 2: agora FRAME, não GROUP — precisa de reconhecimento
+        // explícito por pluginData, senão o `node.type === 'GROUP'` acima
+        // não cobre mais e _collectA11yOccupiedBounds volta a somar o FRAME
+        // inteiro como 1 retângulo opaco, empurrando a próxima réplica pra
+        // longe — mesmo bug do "obstáculo gigante" já corrigido antes).
+        node.getPluginData('hacFichaSection') ||
+        node.getPluginData('hacFichaHandoffGroup')
+      )) return true;
     } catch (e) { }
     return false;
   };
@@ -3380,6 +3489,26 @@ async function _collectA11yOccupiedBounds() {
   // Grupos de Área dentro da Section de sessão também guardam o id do frame
   // ORIGINAL — sem isto o cálculo não enxergaria o frame documentado de
   // nenhuma Área criada na estrutura nova.
+  //
+  // Descida recursiva (2026-09-11, não só 1 nível): desde que o Grupo da
+  // Área passou a ser reparentado pra dentro de "Tela N > [HAC] Assets do
+  // Handoff" na primeira captura (_ensureLegendBesideClone, pedido do
+  // usuário: "a tela selecionada vai pra dentro da camada da Tela"), uma
+  // busca rasa (só filhos diretos da Section) deixa de encontrar
+  // `hacAreaTargetNodeId` de qualquer área já movida — mesmo limite de
+  // profundidade 6 de _isHacOrganizerContainer, mesmo raciocínio.
+  const _walkForAreaTargetIds = (node, depth) => {
+    if (!node || depth > 6 || !node.children) return;
+    for (const child of node.children) {
+      try {
+        const areaTargetId = child.getPluginData && child.getPluginData('hacAreaTargetNodeId');
+        if (areaTargetId) areaTargetIds.push(areaTargetId);
+      } catch (e) { }
+      if (_isHacOrganizerContainer(child, depth)) {
+        _walkForAreaTargetIds(child, depth + 1);
+      }
+    }
+  };
   for (const sibling of figma.currentPage.children) {
     if (sibling.type !== 'SECTION') continue;
     let isSessionSection = false;
@@ -3387,12 +3516,7 @@ async function _collectA11yOccupiedBounds() {
       isSessionSection = !!(sibling.getPluginData && sibling.getPluginData('hacSessionSection') === 'true');
     } catch (e) { }
     if (!isSessionSection) continue;
-    for (const child of (sibling.children || [])) {
-      try {
-        const areaTargetId = child.getPluginData && child.getPluginData('hacAreaTargetNodeId');
-        if (areaTargetId) areaTargetIds.push(areaTargetId);
-      } catch (e) { }
-    }
+    _walkForAreaTargetIds(sibling, 0);
   }
   // Varre TODAS as Sections de specs já existentes na página (qualquer
   // geração/versão, não só a ativa) — o cálculo de "faixa livre" precisa
@@ -3502,60 +3626,114 @@ async function _findFreeTabOrderCopyPosition(cloneWidth, cloneHeight, originBoun
 // bastante apesar do nome — aceita qualquer originBounds/dimensões)
 // usando o bounding box do frame ORIGINAL da área como origem, igual às
 // cópias de Tabulação/Swipe.
+// Configuração de cada bloco de funcionalidade dentro de "[HAC] Assets do
+// Handoff" — nome visível, título, e o texto de fallback da legenda.
+// `name` = nome da LAYER no painel do Figma (contrato estrutural, com
+// prefixo "[HAC]" — 2026-09-11, estrutura de árvore definida pelo
+// usuário). `title` = texto de LEITURA que aparece desenhado no canvas
+// (sem prefixo — é conteúdo pra quem lê o handoff, não identificador).
+//
+// ESCOPO GLOBAL por necessidade (bug real corrigido 2026-09-11): esta
+// constante vivia DENTRO do corpo de `figma.ui.onmessage`, declarada no
+// meio do handler. As funções de criação de réplica
+// (_createTabOrderCloneForArea e irmãs) rodam ANTES dessa linha do handler
+// ser executada, e um `const` fica na temporal dead zone até sua própria
+// declaração rodar — então `_FICHA_BLOCK_CONFIG` lançava
+// "is not initialized" e derrubava a cadeia inteira da Ficha (nenhum
+// "[HAC] Documentação", nenhuma legenda junto da réplica). No escopo
+// global a constante é inicializada no load do bundle, antes de qualquer
+// mensagem chegar.
+const _FICHA_BLOCK_CONFIG = {
+  tabulacao: {
+    name: '[HAC] Ordem de Tabulação',
+    title: 'Ordem de Tabulação',
+    instructionKey: 'tabulacao',
+    legendFallback: 'Sequência de foco do teclado (tecla Tab) desta tela — cada selo numerado indica a ordem em que o elemento recebe foco.',
+    legendTitle: 'Ordem de Tabulação',
+  },
+  swipe: {
+    name: '[HAC] Ordem de Leitura | Swipe',
+    title: 'Ordem de Leitura | Swipe',
+    instructionKey: 'swipe',
+    legendFallback: 'Navegação por gesto de deslizar (swipe), exclusiva do leitor de tela mobile — trilha direcional de pontos, na ordem em que o gesto percorre a tela.',
+    legendTitle: 'Trilha de Swipe',
+  },
+  leitor: {
+    name: '[HAC] Leitor de Tela',
+    title: 'Leitor de Tela',
+    instructionKey: 'leitorTela',
+    legendFallback: 'Elementos e imagens, estrutura da página, nível de título, elemento decorativo e informações adicionais — cada marcador indica a categoria de acessibilidade documentada naquele ponto da tela.',
+    legendTitle: 'Especificações para Leitor de Tela',
+    counterAxisAlignItems: 'MIN',
+  },
+};
+
 async function _createOrGetFichaFrame(area, designerName, currentUserId) {
-  const savedFrameId = area.handoffFicha && area.handoffFicha.frameId;
-  const existing = await _findFichaFrameForArea(area.id, savedFrameId);
-  if (existing) {
-    // Migração defensiva (2026-09-09): uma Ficha já existente pode estar
-    // fora de qualquer Section de sessão (bug antigo). Migração LAZY: só
-    // corrige quando esta função é chamada de novo pra aquela área (nunca
-    // em lote) — mesmo padrão já usado por _getOrCreateA11ySessionSection
-    // pra Sections "unowned".
-    let alreadyInSession = false;
-    let ancestor = existing.parent;
-    while (ancestor) {
-      try {
-        if (ancestor.getPluginData && ancestor.getPluginData('hacSessionSection') === 'true') {
-          alreadyInSession = true;
-          break;
-        }
-      } catch (e) { }
-      ancestor = ancestor.parent;
+  const sessionSection = _getOrCreateA11ySessionSection(designerName, currentUserId);
+
+  // Identidade POR SECTION (2026-09-11, estrutura de árvore definida pelo
+  // usuário): antes existia um frame raiz por ÁREA (marca
+  // `hacFichaForArea`), o que gerava N irmãos soltos na Section. Agora há
+  // UM "[HAC] Documentação" por Section, Auto Layout VERTICAL, empilhando
+  // todas as telas documentadas.
+  for (const child of (sessionSection.children || [])) {
+    try {
+      if (child.getPluginData && child.getPluginData('hacFichaDocumentacaoFrame') === 'true') {
+        try { child.name = '[HAC] Documentação'; } catch (e) { }
+        return child;
+      }
+    } catch (e) { }
+  }
+
+  // Migração LAZY de arquivos anteriores a esta mudança: adota o primeiro
+  // frame raiz antigo (marca `hacFichaForArea`) como o Documentação único,
+  // convertendo-o no lugar, e recolhe os demais pra dentro dele. Nunca
+  // remove nada — se algo falhar, o pior caso é um frame órfão visível,
+  // que o designer apaga manualmente.
+  const legacyFrames = [];
+  for (const child of (sessionSection.children || [])) {
+    try {
+      if (child.getPluginData && child.getPluginData('hacFichaForArea')) legacyFrames.push(child);
+    } catch (e) { }
+  }
+  if (legacyFrames.length > 0) {
+    try {
+      const adopted = legacyFrames[0];
+      adopted.name = '[HAC] Documentação';
+      adopted.layoutMode = 'VERTICAL';
+      adopted.itemSpacing = 48;
+      adopted.clipsContent = false;
+      adopted.setPluginData('hacFichaDocumentacaoFrame', 'true');
+      adopted.setPluginData('hacFichaDocForSession', sessionSection.id);
+      adopted.setPluginData('hacFichaDocMigratedAt', new Date().toISOString());
+      for (let i = 1; i < legacyFrames.length; i++) {
+        try { adopted.appendChild(legacyFrames[i]); } catch (e) { }
+      }
+      return adopted;
+    } catch (e) {
+      console.error('[hac] _createOrGetFichaFrame: falha ao migrar frames antigos (cria um Documentação novo).', e && e.message);
     }
-    if (!alreadyInSession) {
-      _reparentIntoSection(existing, () => _getOrCreateA11ySessionSection(designerName, currentUserId));
-    }
-    return existing;
   }
 
   // Posição livre calculada ANTES de criar/inserir o frame na página —
   // ponto de partida ao lado do frame ORIGINAL da área, sem colidir com o
   // que já existe no canvas. Dimensões "de partida" pequenas: o frame
-  // ainda está vazio (Auto Layout AUTO cresce conforme seções entram) e o
+  // ainda está vazio (Auto Layout AUTO cresce conforme telas entram) e o
   // cálculo só precisa de um ponto inicial; o frame real cresce depois sem
   // recalcular posição.
-  const root = area.targetNodeId ? await figma.getNodeByIdAsync(area.targetNodeId) : null;
+  const root = area && area.targetNodeId ? await figma.getNodeByIdAsync(area.targetNodeId) : null;
   const originBounds = (root && root.absoluteBoundingBox) || { x: 0, y: 0, width: 400, height: 400 };
   const { x, y } = await _findFreeTabOrderCopyPosition(480, 480, originBounds);
 
   const fichaFrame = figma.createFrame();
-  // Nome completo pedido pelo usuário (reestruturação 2026-09-10) —
-  // timestamp/designer/versão preenchidos com o que já está disponível
-  // neste ponto; hacSessionVersion (quem incrementa "vN.N") só existe na
-  // Section de sessão, lida best-effort abaixo sem travar a criação se
-  // faltar.
-  const _fichaTimestamp = new Date().toISOString().slice(0, 10);
-  let _fichaVersion = '1.0';
-  try {
-    const _sessionSectionForVersion = _getOrCreateA11ySessionSection(designerName, currentUserId);
-    const _savedVersion = _sessionSectionForVersion.getPluginData('hacSessionVersion');
-    if (_savedVersion) _fichaVersion = _savedVersion;
-  } catch (e) { }
-  fichaFrame.name = `[HAC] Handoff de Acessibilidade CAIXA | ${_fichaTimestamp} | ${designerName || 'Designer'} | v${_fichaVersion}`;
-  fichaFrame.layoutMode = 'HORIZONTAL';
+  // Nome fixo: o nome longo com timestamp/designer/versão já existe na
+  // SECTION de sessão (_getOrCreateA11ySessionSection) e é ela quem tem o
+  // incremento de versão — duplicá-lo aqui só gerava divergência.
+  fichaFrame.name = '[HAC] Documentação';
+  fichaFrame.layoutMode = 'VERTICAL';
   fichaFrame.primaryAxisSizingMode = 'AUTO';
   fichaFrame.counterAxisSizingMode = 'AUTO';
-  fichaFrame.itemSpacing = 64;
+  fichaFrame.itemSpacing = 48;
   fichaFrame.paddingLeft = 80;
   fichaFrame.paddingRight = 80;
   fichaFrame.paddingTop = 80;
@@ -3568,24 +3746,29 @@ async function _createOrGetFichaFrame(area, designerName, currentUserId) {
   // (grayscale 110)" — #404b52, remote:true nesse arquivo (importada de
   // outra library, hiddenFromPublishing), por isso hex fixo em vez de
   // setBoundVariable/importVariableByKeyAsync, mesmo padrão já usado no
-  // resto do hac (ver fundo azul '#DCEEFB' antes desta mudança).
+  // resto do hac.
   fichaFrame.fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }];
   fichaFrame.strokes = [{ type: 'SOLID', color: hexToRgb('#404b52') }];
   fichaFrame.strokeWeight = 1;
   fichaFrame.strokeAlign = 'INSIDE';
   fichaFrame.counterAxisAlignItems = 'MIN';
+  // clipsContent=false (2026-09-11): frames nascem com clip LIGADO na API
+  // do Figma, e qualquer filho posicionado em ABSOLUTE (overlays de
+  // marcadores, GROUPs de handoff) apareceria recortado.
+  fichaFrame.clipsContent = false;
   fichaFrame.locked = false;
   fichaFrame.setPluginData('hacCategory', 'a11y');
-  fichaFrame.setPluginData('hacFichaForArea', area.id || '');
+  fichaFrame.setPluginData('hacFichaDocumentacaoFrame', 'true');
+  fichaFrame.setPluginData('hacFichaDocForSession', sessionSection.id);
 
   // Nasce solto na página nas coordenadas ABSOLUTAS calculadas acima e só
   // depois é reparentado pra Section (que converte x/y pra relativo
   // preservando a posição visual) — mesmo padrão de
-  // _createTabOrderCloneForArea antes da consolidação.
+  // _createTabOrderCloneForArea.
   figma.currentPage.appendChild(fichaFrame);
   fichaFrame.x = x;
   fichaFrame.y = y;
-  _reparentIntoSection(fichaFrame, () => _getOrCreateA11ySessionSection(designerName, currentUserId));
+  _reparentIntoSection(fichaFrame, () => sessionSection);
 
   return fichaFrame;
 }
@@ -3672,187 +3855,331 @@ async function _applyFichaTypography(textNode, tokenName, weightOverride) {
 // (_findFichaSectionInFrame/_insertFichaSectionInOrder/snapshot/overlay)
 // continua idêntica, só passa a operar contra este frame em vez da raiz.
 
-// BLOQUEIO CONFIRMADO (2026-09-10, verificado via REST API nesta sessão):
-// o component set ".[hac mob base] Cabeçalho Template" existe de fato no
-// arquivo HhriLSpKnCB2dHhyiU16iB (node 7100:1424, variante padrão
-// "Status=Finalizado" = node 7100:1423, confirmado via GET /v1/files/
-// {key}/nodes?ids=7100:1424), mas NÃO aparece em GET /v1/files/{key}/
-// components nem /component_sets — ou seja, apesar do arquivo já ter 6
-// OUTROS component sets publicados (ver hac-published-lib-verification.
-// json), este especificamente não foi publicado e não tem key pública
-// utilizável por figma.importComponentByKeyAsync. Sem key real pra
-// documentar aqui (diferente de A11Y_AGRUPAMENTO_KEYS etc, que têm key
-// real confirmada) — _createFichaDocumentacaoFrame cai direto no fallback
-// (frame simples com barra verde + título), nunca tenta importComponent.
-// Token/componente nunca impeditivo: o handoff continua sendo gerado
-// normalmente. Assim que a lib publicar este component set, resolver a key
-// real (mesmo processo desta sessão) e trocar o fallback por
-// figma.importComponentByKeyAsync nesta função.
-const A11Y_HAC_CABECALHO_TEMPLATE_PUBLISHED = false;
-// Placeholder — preencher com a key real assim que
-// A11Y_HAC_CABECALHO_TEMPLATE_PUBLISHED virar true (ver bloqueio acima).
-const A11Y_HAC_CABECALHO_TEMPLATE_KEY = null;
-
-// "[HAC] Documentação" — Auto Layout VERTICAL com o Cabeçalho (componente
-// real da lib quando publicado, fallback gracioso enquanto não estiver) e
-// "[HAC] [Nome do Frame]" (texto com o nome do frame selecionado).
-async function _createFichaDocumentacaoFrame(area) {
-  const docFrame = figma.createFrame();
-  docFrame.name = '[HAC] Documentação';
-  docFrame.layoutMode = 'VERTICAL';
-  docFrame.primaryAxisSizingMode = 'AUTO';
-  docFrame.counterAxisSizingMode = 'AUTO';
-  docFrame.itemSpacing = 24;
-  // Padding=0 explícito (decisão consciente, não esquecimento): este frame
-  // é só um agrupamento invisível (fill vazio) — Cabeçalho e "[HAC] [Nome
-  // do Frame]" já têm seu próprio padding/fundo de cartão internamente, um
-  // padding extra aqui só duplicaria a margem visual sem propósito.
-  docFrame.paddingLeft = 0; docFrame.paddingRight = 0;
-  docFrame.paddingTop = 0; docFrame.paddingBottom = 0;
-  docFrame.fills = [];
-
-  const frameLabel = area.targetNodeName || area.sectionName || area.label || 'Área';
-
-  let cabecalho = null;
-  if (A11Y_HAC_CABECALHO_TEMPLATE_PUBLISHED) {
+// Cabeçalho de "[HAC] Documentação" REMOVIDO por completo (2026-09-11,
+// pedido explícito do usuário: "Fallback cabeçalho. Nem quero isso mais" —
+// reportado com print mostrando o texto "Handoff de acessibilidade"
+// quebrado letra por letra, 480×494 Hug, um bug de largura nunca corrigido
+// desde que existia). Existiam 2 caminhos: um componente real da lib (nunca
+// chegou a ser usado — a key nunca foi publicada, ver histórico abaixo) e
+// um fallback local (barra verde + texto) que era o único que efetivamente
+// rodava. Ambos removidos — nenhum substituto foi pedido.
+//
+// Histórico preservado só como referência, caso o pedido mude no futuro: o
+// component set ".[hac mob base] Cabeçalho Template" existe no arquivo
+// HhriLSpKnCB2dHhyiU16iB (node 7100:1424, variante "Status=Finalizado" =
+// node 7100:1423, confirmado via REST API 2026-09-10), mas nunca foi
+// publicado (não aparece em /components nem /component_sets), então nunca
+// teve key utilizável por figma.importComponentByKeyAsync.
+//
+// _getOrCreateFichaItensFrame (abaixo) não chama mais nenhuma função de
+// cabeçalho. Migração defensiva: cabeçalhos órfãos de sessões anteriores
+// (marcados `hacFichaDocHeader`) são removidos na primeira vez que
+// _getOrCreateFichaItensFrame roda sobre aquele "[HAC] Documentação" — ver
+// _removeOrphanDocumentacaoHeader.
+function _removeOrphanDocumentacaoHeader(docFrame) {
+  if (!docFrame || !docFrame.children) return;
+  for (const child of docFrame.children.slice()) {
     try {
-      const comp = await figma.importComponentByKeyAsync(A11Y_HAC_CABECALHO_TEMPLATE_KEY);
-      cabecalho = comp.createInstance();
-      const titleNode = cabecalho.findOne(n => n.type === 'TEXT');
-      if (titleNode) {
-        await figma.loadFontAsync(titleNode.fontName);
-        titleNode.characters = `Handoff de acessibilidade - ${frameLabel}`;
+      if (child.getPluginData && child.getPluginData('hacFichaDocHeader') === 'true') {
+        child.remove();
       }
-    } catch (e) {
-      cabecalho = null;
-    }
-  }
-  if (!cabecalho) {
-    // Fallback gracioso (component set real ainda não publicado — ver
-    // A11Y_HAC_CABECALHO_TEMPLATE_PUBLISHED acima): réplica visual simples
-    // da variante "Status=Finalizado" (barra verde + título), sem depender
-    // de nenhum componente importado.
-    cabecalho = figma.createFrame();
-    cabecalho.name = '[Fallback] Cabeçalho';
-    cabecalho.layoutMode = 'VERTICAL';
-    cabecalho.primaryAxisSizingMode = 'AUTO';
-    cabecalho.counterAxisSizingMode = 'FIXED';
-    // 480px hardcoded mantido de propósito (2026-09-10, avaliado e
-    // descartado usar layoutSizingHorizontal='FILL' aqui): `docFrame` (pai
-    // direto) é HUG/HUG (linhas 3225-3226) — sem largura própria, ele
-    // calcula a própria largura a partir do maior filho. Um FILL neste
-    // ponto não teria nenhuma referência de largura pra "preencher" (geraria
-    // dependência circular pai↔filho), diferente dos pontos de FILL abaixo
-    // aplicados só onde o pai já é FIXED. Largura fixa continua sendo a
-    // opção correta aqui, não um esquecimento.
-    cabecalho.resizeWithoutConstraints(480, 1);
-    cabecalho.paddingLeft = 16; cabecalho.paddingRight = 16;
-    cabecalho.paddingTop = 12; cabecalho.paddingBottom = 12;
-    cabecalho.itemSpacing = 4;
-    cabecalho.cornerRadius = 8;
-    cabecalho.fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }];
-    cabecalho.strokes = [{ type: 'SOLID', color: hexToRgb('#2e7532') }];
-    cabecalho.strokeWeight = 1;
-
-    const barra = figma.createRectangle();
-    barra.name = 'barra de status';
-    barra.resizeWithoutConstraints(1, 4);
-    cabecalho.appendChild(barra);
-    // layoutSizingHorizontal (API moderna, 2026-09-10) no lugar do
-    // layoutAlign='STRETCH' legado — `barra` é filha direta de `cabecalho`,
-    // que é FIXED no eixo contrário (counterAxisSizingMode, linha 3261),
-    // condição real pra Fill funcionar. Setado DEPOIS do appendChild (só
-    // passa a valer quando o node já está dentro de um pai com Auto
-    // Layout).
-    barra.layoutSizingHorizontal = 'FILL';
-    barra.fills = [{ type: 'SOLID', color: hexToRgb('#2e7532') }];
-
-    const title = figma.createText();
-    title.name = 'Título';
-    title.characters = `Handoff de acessibilidade - ${frameLabel}`;
-    title.textAutoResize = 'HEIGHT';
-    // Escala real (corrigido 2026-09-11, era 14px/Inter Bold — já batia com
-    // o fontSize real de "label/small", só faltava família Roboto e
-    // lineHeight/letterSpacing do token): "label/small" (14px, peso
-    // 700/bold, lineHeight 20).
-    await _applyFichaTypography(title, 'label/small');
-    title.fills = [{ type: 'SOLID', color: { r: 0.1, g: 0.1, b: 0.1 } }];
-    cabecalho.appendChild(title);
-    // Mesmo motivo do `barra` acima — título de descrição deve ocupar a
-    // largura inteira do cabeçalho, não manter tamanho intrínseco do texto.
-    title.layoutSizingHorizontal = 'FILL';
-  }
-  docFrame.appendChild(cabecalho);
-
-  const nomeFrame = figma.createFrame();
-  nomeFrame.name = `[HAC] ${frameLabel}`;
-  nomeFrame.layoutMode = 'HORIZONTAL';
-  nomeFrame.primaryAxisSizingMode = 'AUTO';
-  nomeFrame.counterAxisSizingMode = 'AUTO';
-  nomeFrame.paddingLeft = 12; nomeFrame.paddingRight = 12;
-  nomeFrame.paddingTop = 8; nomeFrame.paddingBottom = 8;
-  nomeFrame.cornerRadius = 8;
-  nomeFrame.fills = [{ type: 'SOLID', color: hexToRgb('#F5F5F5') }];
-
-  const nomeText = figma.createText();
-  nomeText.name = 'Nome do frame';
-  // Bug real corrigido (2026-09-10, reportado pelo usuário — texto
-  // "espremido"): figma.createText() nasce com textAutoResize = 'NONE'
-  // (dimensões travadas em 0) por padrão — sem setar isso explicitamente,
-  // o texto mais proeminente da Ficha ficava cortado dentro de `nomeFrame`.
-  // 'WIDTH_AND_HEIGHT' (não só 'HEIGHT') porque `nomeFrame` é HUG/HUG (AUTO
-  // nos dois eixos) — não há uma largura de referência do container pai que
-  // justifique travar a largura do texto; ele deve crescer livremente nos
-  // dois eixos, como o próprio nomeFrame já faz. Setado ANTES de
-  // `.characters` (ordem que garante o recálculo correto do bounding box na
-  // Plugin API).
-  nomeText.textAutoResize = 'WIDTH_AND_HEIGHT';
-  nomeText.characters = frameLabel;
-  // Escala tipográfica real do DSC (corrigido 2026-09-11 — confirmado via
-  // REST API nesta sessão contra a escala tipográfica publicada, não mais a
-  // aproximação por exemplo único de 2026-09-10, que usava 60px/Inter,
-  // valores fora do teto real de 36px e da família real "Roboto"): mapeado
-  // para "display/standard" (36px, peso 600/semibold, lineHeight 44 ≈122%).
-  // É o texto mais proeminente já presente nesta árvore (nome da área/frame
-  // documentado), por isso o maior token da escala real — 36px ainda cumpre
-  // esse papel de destaque mesmo sendo bem menor que os 60px anteriores
-  // (não existe token documentado acima de 36px).
-  await _applyFichaTypography(nomeText, 'display/standard');
-  nomeText.fills = [{ type: 'SOLID', color: { r: 0.1, g: 0.1, b: 0.1 } }];
-  nomeFrame.appendChild(nomeText);
-  docFrame.appendChild(nomeFrame);
-
-  return docFrame;
-}
-
-async function _getOrCreateFichaAreaGroup(fichaFrame, area) {
-  for (const child of (fichaFrame.children || [])) {
-    try {
-      if (child.getPluginData && child.getPluginData('hacFichaAreaGroup') === 'true') return child;
     } catch (e) { }
   }
+}
 
+// Insere um frame de Tela na posição correta dentro de "[HAC] Documentação",
+// ordenado por número da tela — mesmo princípio de
+// _insertFichaSectionInOrder (ordem visual fixa, independente da ordem de
+// clique do designer).
+function _insertTelaFrameInOrder(docFrame, telaFrame, number) {
+  const myNumber = Number(number) || 0;
+  let beforeChild = null;
+  for (const child of (docFrame.children || [])) {
+    if (child === telaFrame) continue;
+    let otherNumber = null;
+    try { otherNumber = child.getPluginData && child.getPluginData('hacFichaTelaNumber'); } catch (e) { }
+    if (!otherNumber) continue;
+    if (Number(otherNumber) > myNumber) {
+      beforeChild = child;
+      break;
+    }
+  }
+  if (beforeChild) {
+    docFrame.insertChild(docFrame.children.indexOf(beforeChild), telaFrame);
+  } else {
+    docFrame.appendChild(telaFrame);
+  }
+}
+
+// "Tela N - {nome}" — um por área documentada, empilhado verticalmente
+// dentro de "[HAC] Documentação". FRAME com Auto Layout VERTICAL
+// (2026-09-11, estrutura definida pelo usuário): era GROUP antes, mas
+// GROUP não tem Auto Layout e o empilhamento "Título Card" sobre "[HAC]
+// Assets do Handoff" depende dele.
+async function _getOrCreateFichaAreaGroup(fichaFrame, area) {
+  const areaId = area.id || '';
   const frameLabel = area.targetNodeName || area.sectionName || area.label || 'Área';
   const areaNumber = area.number || 1;
 
-  // GROUP (não FRAME) pelo mesmo motivo já documentado em
-  // _getOrCreateCloneOverlayGroup: precisa de pelo menos 1 filho pra
-  // existir — nasce com "[HAC] Documentação" e "[HAC] Itens" já dentro,
-  // nunca fica vazio.
-  const docFrame = await _createFichaDocumentacaoFrame(area);
-  const itensFrame = _createFichaItensFrame();
-  fichaFrame.appendChild(docFrame);
-  fichaFrame.appendChild(itensFrame);
-  const areaGroup = figma.group([docFrame, itensFrame], fichaFrame);
-  areaGroup.name = `Tela ${areaNumber} - ${frameLabel}`;
-  areaGroup.setPluginData('hacFichaAreaGroup', 'true');
-  areaGroup.setPluginData('hacCategory', 'a11y');
-  // Sem positioning forçado (2026-09-10, correção de bug real reportado
-  // pelo usuário): o GROUP se comporta nativamente como item de layout
-  // dentro do Auto Layout HORIZONTAL de `fichaFrame` — não precisa de
-  // nenhum ajuste manual de posição.
+  for (const child of (fichaFrame.children || [])) {
+    try {
+      if (child.getPluginData && child.getPluginData('hacFichaTelaForArea') === areaId) {
+        // Nome reflete o estado atual (o designer pode ter renomeado o
+        // frame original depois de marcar a tela).
+        try { child.name = `Tela ${areaNumber} - ${frameLabel}`; } catch (e) { }
+        return child;
+      }
+    } catch (e) { }
+  }
 
-  return areaGroup;
+  const telaFrame = figma.createFrame();
+  telaFrame.name = `Tela ${areaNumber} - ${frameLabel}`;
+  telaFrame.layoutMode = 'VERTICAL';
+  telaFrame.primaryAxisSizingMode = 'AUTO';
+  // Hug nos dois eixos (2026-09-12, revisão final após 7 tentativas no
+  // mesmo bug): a tentativa anterior de forçar `FIXED` 360px aqui piorou
+  // tudo — o conteúdo real ("[HAC] Assets do Handoff" com frame original +
+  // blocos lado a lado) é MUITO mais largo que 360, então o FIXED
+  // transbordava e bagunçava a posição de tudo dentro da Section, além de
+  // travar o FILL dos filhos contra uma largura errada. O natural aqui é
+  // Hug: "Tela N" abraça o conteúdo. Quem precisa de largura real é o
+  // "Título Card" (a barra azul), e ele resolve isso com largura FIXA
+  // EXPLÍCITA sincronizada ao conteúdo — sem FILL, sem depender de
+  // nenhuma cadeia de Auto Layout resolver corretamente
+  // (ver _ensureTelaTituloCard/_syncTelaTituloCardWidth).
+  telaFrame.counterAxisSizingMode = 'AUTO';
+  telaFrame.counterAxisAlignItems = 'MIN';
+  telaFrame.itemSpacing = 24;
+  telaFrame.paddingLeft = 0; telaFrame.paddingRight = 0;
+  telaFrame.paddingTop = 0; telaFrame.paddingBottom = 0;
+  telaFrame.fills = [];
+  telaFrame.clipsContent = false;
+  telaFrame.setPluginData('hacCategory', 'a11y');
+  telaFrame.setPluginData('hacFichaTelaForArea', areaId);
+  telaFrame.setPluginData('hacFichaTelaNumber', String(areaNumber));
+  // Marca legada mantida por compatibilidade — _isHacOrganizerContainer e
+  // outras varreduras ainda a reconhecem.
+  telaFrame.setPluginData('hacFichaAreaGroup', 'true');
+  _insertTelaFrameInOrder(fichaFrame, telaFrame, areaNumber);
+
+  await _ensureTelaTituloCard(telaFrame, area);
+  telaFrame.appendChild(_createFichaItensFrame());
+
+  return telaFrame;
+}
+
+// Sobe de "[HAC] Assets do Handoff" pro "Tela N" pai e ressincroniza a
+// largura da barra de título (2026-09-12) — chamada nos pontos que já sabem
+// que o conteúdo interno pode ter crescido (fim dos 3 builders de
+// funcionalidade, fim de _ensureLegendBesideClone). `itensFrame` é sempre
+// filho direto de `telaFrame` (ver _getOrCreateFichaAreaGroup), então
+// `.parent` resolve direto, sem busca.
+//
+// Substitui a dupla _fitTelaFrameWidthToContent/_fitTelaFrameWidthFromItensFrame
+// (removidas nesta revisão): elas forçavam `telaFrame` a ter largura FIXED
+// pra servir de âncora ao FILL dos filhos — abordagem abandonada, porque o
+// FIXED transbordava (conteúdo real é bem mais largo que o valor inicial) e
+// bagunçava a posição de tudo dentro da Section, além de nunca estabilizar
+// o FILL. Agora `telaFrame` é Hug (natural) e só a barra de título recebe
+// largura numérica explícita.
+function _fitTelaFrameWidthFromItensFrame(itensFrame) {
+  if (!itensFrame || itensFrame.removed) return;
+  try {
+    const telaFrame = itensFrame.parent;
+    if (telaFrame && telaFrame.getPluginData && telaFrame.getPluginData('hacFichaTelaForArea')) {
+      _syncTelaTituloCardWidth(telaFrame);
+    }
+  } catch (e) { }
+}
+
+// Sobe de "[HAC] Assets do Handoff" até a Section de sessão e a
+// redimensiona (2026-09-14, pedido do usuário: "temos três colunas pra
+// entrarem [...] a section e o frame interno precisam se adequar sobre
+// isso") — chamada no fim dos 3 builders da Ficha (Tabulação/Swipe/Leitor),
+// que rodam no "Preencher Handoff" e podem fazer qualquer bloco crescer
+// bem além do tamanho que a Section tinha antes (o Leitor de Tela em
+// especial: N specGroups lado a lado, um card por elemento marcado).
+// `itensFrame` → `telaFrame` (pai) → `fichaFrame` ("[HAC] Documentação",
+// avô) → Section de sessão (bisavô, sempre filho direto dela — ver
+// _reparentIntoSection em _createOrGetFichaFrame). Idempotente e barata,
+// mesmo princípio de _fitTelaFrameWidthFromItensFrame.
+function _fitSessionSectionFromItensFrame(itensFrame) {
+  if (!itensFrame || itensFrame.removed) return;
+  try {
+    const telaFrame = itensFrame.parent;
+    const fichaFrame = telaFrame && telaFrame.parent;
+    const sessionSection = fichaFrame && fichaFrame.parent;
+    if (sessionSection && !sessionSection.removed && sessionSection.type === 'SECTION') {
+      _fitSectionToChildren(sessionSection);
+    }
+  } catch (e) { }
+}
+
+// "Título Card" > "Título do bloco" — barra de cabeçalho por Tela
+// (2026-09-11, revisão visual: substitui o cartão cinza pequeno pelo
+// tratamento azul-escuro largo da referência do usuário — mesmo lugar na
+// árvore, mesma identidade de pluginData, só visual e texto novos). Texto
+// "Documentação da Tela {N} - {Nome do Frame}", com largura numérica
+// explícita (nunca FILL — ver comentário dentro da função).
+async function _ensureTelaTituloCard(telaFrame, area) {
+  const areaId = area.id || '';
+  const frameLabel = area.targetNodeName || area.sectionName || area.label || 'Área';
+  const areaNumber = area.number || 1;
+
+  let card = null;
+  for (const child of (telaFrame.children || [])) {
+    try {
+      if (child.getPluginData && child.getPluginData('hacFichaTelaTituloCard') === areaId) {
+        card = child;
+        break;
+      }
+    } catch (e) { }
+  }
+
+  if (!card) {
+    card = figma.createFrame();
+    card.name = 'Título Card';
+    card.layoutMode = 'HORIZONTAL';
+    card.primaryAxisSizingMode = 'FIXED';
+    card.counterAxisSizingMode = 'AUTO';
+    card.paddingLeft = 16; card.paddingRight = 16;
+    card.paddingTop = 12; card.paddingBottom = 12;
+    card.cornerRadius = 8;
+    card.clipsContent = false;
+    card.setPluginData('hacCategory', 'a11y');
+    card.setPluginData('hacFichaTelaTituloCard', areaId);
+    telaFrame.insertChild(0, card);
+  }
+  // ABANDONO DO FILL (2026-09-12, revisão final após 7 tentativas): todas
+  // as correções anteriores tentaram fazer `layoutSizingHorizontal='FILL'`
+  // funcionar — ajustando ordem de operações, dando largura FIXED ao pai,
+  // reafirmando a propriedade em nodes reaproveitados. Nada resolveu de
+  // forma estável, porque FILL é uma relação DECLARATIVA que depende da
+  // cadeia inteira de Auto Layout resolver na ordem certa, e essa cadeia
+  // muda de largura várias vezes durante a montagem da Ficha (o conteúdo
+  // cresce a cada bloco/réplica inserida).
+  //
+  // Solução definitiva: largura FIXA EXPLÍCITA, sincronizada ao conteúdo
+  // real por _syncTelaTituloCardWidth (chamada no fim de cada builder,
+  // quando o conteúdo já tem seu tamanho final). Sem FILL, sem depender de
+  // nenhum ancestral: o card tem uma largura numérica, e o texto dentro
+  // dele idem. É determinístico e imune a reflow/reaproveitamento.
+  card.primaryAxisSizingMode = 'FIXED';
+  // Barra azul-escura (referência visual do usuário) — reafirmado
+  // incondicionalmente, pra convergir cards de sessões anteriores.
+  card.fills = [{ type: 'SOLID', color: hexToRgb('#1F2933') }];
+
+  let titulo = (card.children || []).find(c => {
+    try { return c.getPluginData && c.getPluginData('hacFichaTelaTituloText') === areaId; } catch (e) { return false; }
+  });
+  if (!titulo) {
+    titulo = figma.createText();
+    titulo.name = 'Título do bloco';
+    // textAutoResize ANTES de .characters (bug real já documentado no
+    // fallback de cabeçalho): setar o texto primeiro trava a largura.
+    titulo.textAutoResize = 'HEIGHT';
+    titulo.setPluginData('hacFichaTelaTituloText', areaId);
+    card.appendChild(titulo);
+  }
+  await _applyFichaTypography(titulo, 'label/standard');
+  titulo.characters = `Documentação da Tela ${areaNumber} - ${frameLabel}`;
+  // Texto branco sobre fundo azul-escuro (referência visual).
+  titulo.fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }];
+  // Sem FILL aqui também — a largura do texto é fixada junto com a do card
+  // em _syncTelaTituloCardWidth. `textAutoResize='HEIGHT'` faz a altura
+  // acompanhar as quebras de linha naturais dentro dessa largura fixa.
+  _syncTelaTituloCardWidth(telaFrame);
+
+  return card;
+}
+
+// Sincroniza a largura do "Título Card" (barra azul) e do texto dentro dele
+// com a largura REAL do conteúdo da Tela (2026-09-12) — largura numérica
+// explícita, nunca FILL (ver comentário em _ensureTelaTituloCard).
+// Idempotente e barata: pode ser chamada quantas vezes for preciso, sempre
+// que o conteúdo interno crescer.
+// Repara containers Auto Layout VERTICAL cuja altura ficou travada em FIXED
+// (2026-09-14, reportado com print: painel mostrando "Fixed height (1)" nos
+// frames "Passos"/"Assets"/"Passo N" da Legenda, com o conteúdo invisível).
+//
+// Causa: `resizeWithoutConstraints(w, 1)` chamado DEPOIS de
+// `primaryAxisSizingMode='AUTO'` faz a API do Figma reverter o eixo pra
+// FIXED com a altura passada. A criação já foi corrigida (reafirmando AUTO
+// depois de cada resize), mas isso não conserta nodes que JÁ existem em
+// arquivos abertos — a Ficha é idempotente e reaproveita esses nodes.
+// Esta função varre a subárvore e devolve o Hug de altura a qualquer frame
+// Auto Layout que esteja com altura suspeita (<= 2px) apesar de ter filhos.
+function _repairCollapsedAutoLayoutHeights(root, depth) {
+  if (!root || root.removed || (depth || 0) > 8) return;
+  try {
+    for (const child of (root.children || [])) {
+      try {
+        const isAutoLayout = 'layoutMode' in child && child.layoutMode && child.layoutMode !== 'NONE';
+        const hasChildren = Array.isArray(child.children) && child.children.length > 0;
+        if (isAutoLayout && hasChildren &&
+          child.primaryAxisSizingMode === 'FIXED' && child.height <= 2) {
+          // VERTICAL: altura é o eixo primário. HORIZONTAL: é o contrário,
+          // mas o sintoma real observado é sempre no eixo que virou FIXED
+          // com valor 1 — reafirmar AUTO no eixo certo resolve os dois.
+          if (child.layoutMode === 'VERTICAL') child.primaryAxisSizingMode = 'AUTO';
+          else child.counterAxisSizingMode = 'AUTO';
+        } else if (isAutoLayout && hasChildren &&
+          child.layoutMode === 'HORIZONTAL' && child.counterAxisSizingMode === 'FIXED' && child.height <= 2) {
+          child.counterAxisSizingMode = 'AUTO';
+        }
+      } catch (e) { }
+      _repairCollapsedAutoLayoutHeights(child, (depth || 0) + 1);
+    }
+  } catch (e) { }
+}
+
+function _syncTelaTituloCardWidth(telaFrame) {
+  if (!telaFrame || telaFrame.removed) return;
+  try {
+    // Repara alturas colapsadas de sessões anteriores antes de medir
+    // (2026-09-14) — sem isto, um "Passos"/"Assets" travado em 1px
+    // continuaria invisível para sempre em arquivos já abertos.
+    _repairCollapsedAutoLayoutHeights(telaFrame, 0);
+    let card = null;
+    let contentWidth = 0;
+    for (const child of (telaFrame.children || [])) {
+      try {
+        if (child.getPluginData && child.getPluginData('hacFichaTelaTituloCard')) {
+          card = child;
+        } else if (child.width > contentWidth) {
+          // Maior filho que NÃO é o próprio card manda na largura — na
+          // prática é sempre "[HAC] Assets do Handoff".
+          contentWidth = child.width;
+        }
+      } catch (e) { }
+    }
+    if (!card || card.removed) return;
+    // Piso de 360px cobre o instante inicial, quando "Assets do Handoff"
+    // ainda está vazio e mediria ~0.
+    const targetWidth = Math.max(360, Math.round(contentWidth));
+    if (Math.round(card.width) !== targetWidth) {
+      card.resizeWithoutConstraints(targetWidth, Math.max(1, Math.round(card.height)));
+      // Reafirma o Hug de altura depois do resize (2026-09-14) — a API do
+      // Figma reverte o eixo pra FIXED quando resizeWithoutConstraints roda
+      // depois do sizing mode, travando a altura no valor passado. Ver
+      // comentário completo em _buildFichaLegendColumn/stepsList.
+      try { card.counterAxisSizingMode = 'AUTO'; } catch (e) { }
+    }
+    // O texto ganha a largura do card menos o padding horizontal — sem
+    // FILL, sem herança: um número, calculado aqui.
+    const innerWidth = Math.max(1, targetWidth - (card.paddingLeft || 0) - (card.paddingRight || 0));
+    for (const t of (card.children || [])) {
+      try {
+        if (t.type !== 'TEXT') continue;
+        if (t.textAutoResize !== 'HEIGHT') t.textAutoResize = 'HEIGHT';
+        if (Math.round(t.width) !== innerWidth) {
+          t.resizeWithoutConstraints(innerWidth, Math.max(1, Math.round(t.height)));
+        }
+      } catch (e) { }
+    }
+  } catch (e) {
+    console.error('[hac] _syncTelaTituloCardWidth: falha ao sincronizar largura do título (não impede o restante).', e && e.message);
+  }
 }
 
 // "[HAC] Itens" — novo destino das 3 seções (Tabulação/Swipe/Leitor de
@@ -3861,14 +4188,15 @@ async function _getOrCreateFichaAreaGroup(fichaFrame, area) {
 // dessas duas funções muda, só o frame que os builders passam a elas.
 function _createFichaItensFrame() {
   const itensFrame = figma.createFrame();
-  itensFrame.name = '[HAC] Itens';
+  itensFrame.name = '[HAC] Assets do Handoff';
   itensFrame.layoutMode = 'HORIZONTAL';
   itensFrame.primaryAxisSizingMode = 'AUTO';
   itensFrame.counterAxisSizingMode = 'AUTO';
-  // itemSpacing reduzido de 24 pra 16px (2026-09-11, pedido do usuário: o
-  // vão entre Frame Principal e os blocos de Tabulação/Swipe/Leitor dentro
-  // da Ficha estava "muito amplo").
-  itensFrame.itemSpacing = 16;
+  // 64px (2026-09-14, pedido do usuário: "Aumente o gap entre o frame
+  // principal e réplica para 64px"). Histórico: era 24, foi pra 16 em
+  // 2026-09-11 quando o vão parecia "muito amplo" — mas naquele momento a
+  // estrutura interna era outra (a réplica ainda não vivia dentro do bloco).
+  itensFrame.itemSpacing = 64;
   // Padding/radius (2026-09-10, pedido do usuário): "[HAC] Itens" é o
   // container mais externo dos 3/4 blocos — nível logo abaixo do
   // fichaFrame raiz (80/16) na escala descendente confirmada via REST API
@@ -3878,51 +4206,171 @@ function _createFichaItensFrame() {
   itensFrame.cornerRadius = 16;
   itensFrame.counterAxisAlignItems = 'MIN';
   itensFrame.fills = [];
+  // clipsContent=false (2026-09-11): frames nascem com clip LIGADO na API
+  // do Figma — sem isso, overlays de marcadores posicionados em ABSOLUTE
+  // (que por natureza extrapolam os limites do clone) apareceriam cortados.
+  itensFrame.clipsContent = false;
   itensFrame.setPluginData('hacFichaItensFrame', 'true');
   return itensFrame;
 }
 
-function _findFichaItensFrame(fichaFrame) {
-  let found = null;
-  const areaGroup = (fichaFrame.children || []).find(c => {
-    try { return c.getPluginData && c.getPluginData('hacFichaAreaGroup') === 'true'; } catch (e) { return false; }
+// Localiza o "[HAC] Assets do Handoff" DA ÁREA INFORMADA (2026-09-11): com
+// várias telas dentro do mesmo "[HAC] Documentação", buscar só pela marca
+// genérica devolveria o frame da tela errada. Sem `areaId`, cai no
+// comportamento antigo (primeira tela encontrada) — usado só por caminhos
+// legados.
+function _findFichaItensFrame(fichaFrame, areaId) {
+  const telaFrame = (fichaFrame.children || []).find(c => {
+    try {
+      if (!c.getPluginData) return false;
+      if (areaId) return c.getPluginData('hacFichaTelaForArea') === areaId;
+      return c.getPluginData('hacFichaAreaGroup') === 'true';
+    } catch (e) { return false; }
   });
-  if (!areaGroup) return null;
-  for (const child of (areaGroup.children || [])) {
+  if (!telaFrame) return null;
+  for (const child of (telaFrame.children || [])) {
     try {
       if (child.getPluginData && child.getPluginData('hacFichaItensFrame') === 'true') {
-        found = child;
-        break;
+        return child;
       }
     } catch (e) { }
   }
+  return null;
+}
+
+// Busca o frame de itens por pluginData, descendo a árvore inteira a
+// partir de qualquer node-raiz (2026-09-11). Substitui as buscas por NOME
+// (`findOne(n => n.name === '[HAC] Itens')`) que existiam nos handlers —
+// nome é dado de exibição, o designer pode renomear, e uma renomeação
+// interna do próprio plugin quebraria a busca em silêncio. Profundidade
+// limitada por segurança (mesmo espírito de _forEachA11yFichaFrameChild).
+function _findFichaItensFrameDeep(rootNode) {
+  if (!rootNode) return null;
+  let found = null;
+  const walk = (node, depth) => {
+    if (found || !node || depth > 8) return;
+    try {
+      if (node.getPluginData && node.getPluginData('hacFichaItensFrame') === 'true') {
+        found = node;
+        return;
+      }
+    } catch (e) { }
+    for (const child of (node.children || [])) walk(child, depth + 1);
+  };
+  walk(rootNode, 0);
   return found;
+}
+
+// Varre todos os nodes de todas as árvores de Ficha da página, em
+// profundidade (2026-09-11) — necessário desde que a hierarquia ganhou os
+// níveis "Tela N" > "[HAC] Assets do Handoff" > blocos: buscas que antes
+// olhavam só filhos diretos do frame raiz deixam de encontrar o alvo.
+// Coleta os nodes antes de chamar `fn`, pra que a callback possa remover
+// nodes sem invalidar a iteração.
+function _forEachFichaFrameNodeDeep(fn) {
+  const collected = [];
+  const walk = (node, depth) => {
+    if (!node || depth > 12) return;
+    collected.push(node);
+    for (const child of (node.children || [])) walk(child, depth + 1);
+  };
+  _forEachFichaFrameCandidate(root => {
+    if (!root || root.type === 'SECTION') return;
+    walk(root, 0);
+  });
+  for (const node of collected) {
+    try { if (!node.removed) fn(node); } catch (e) { }
+  }
 }
 
 // Destino único usado pelos 3 builders (Tabulação/Swipe/Leitor de Tela) no
 // lugar do fichaFrame raiz — cria a estrutura Área>Documentação+Itens na
 // primeira chamada (idempotente, mesmo princípio de _findFichaSectionInFrame
 // já usado por cada builder logo em seguida) e devolve sempre o mesmo
-// "[HAC] Itens". Também cria/atualiza "Frame Principal" (2026-09-10) a cada
-// chamada — não só na primeira criação de "[HAC] Itens" — porque o pedido é
-// que ele reflita o estado ATUAL da tela original toda vez que qualquer um
-// dos 3 builders rodar, igual ao princípio de "Atualizar" já usado nos
-// outros blocos (_snapshotCloneIntoFichaSection dentro dele já é
-// idempotente por si só, então repetir a chamada é seguro/barato).
+// "[HAC] Itens".
+//
+// "Frame Principal" REMOVIDO desta cadeia (2026-09-11, bug real reportado
+// pelo usuário com print: "Ele criou outro frame e outra réplica"). A
+// chamada a _buildFichaFramePrincipalSection recriava, dentro do "[HAC]
+// Documentação", um SNAPSHOT INTEIRO do frame original — que já está
+// visível na própria Section, ao lado da réplica de trabalho. Não é uma
+// réplica de trabalho nova, mas é uma cópia redundante do que o designer já
+// vê no canvas. Decisão do usuário: "o frame principal já está ali na
+// section, foi exatamente a tela que eu criei. A única coisa que é pra você
+// fazer é organizar dentro do frame [HAC] Documentação [...] a legenda que
+// será criada e a réplica que é criada" — o Documentação organiza só
+// legenda + réplica de trabalho, nunca gera imagem própria do original.
+// _buildFichaFramePrincipalSection não foi apagada (evita quebrar qualquer
+// referência residual), só deixou de ser chamada automaticamente aqui.
 async function _getOrCreateFichaItensFrame(fichaFrame, area) {
-  let itensFrame = _findFichaItensFrame(fichaFrame);
+  const areaId = (area && area.id) || '';
+  // Cabeçalho REMOVIDO por completo (2026-09-11, pedido explícito do
+  // usuário — ver comentário histórico acima de
+  // _removeOrphanDocumentacaoHeader). Limpeza defensiva de qualquer
+  // cabeçalho órfão de sessões anteriores, barata (só varre filhos
+  // diretos).
+  try { _removeOrphanDocumentacaoHeader(fichaFrame); } catch (e) { }
+  let itensFrame = _findFichaItensFrame(fichaFrame, areaId);
   if (!itensFrame) {
-    const areaGroup = await _getOrCreateFichaAreaGroup(fichaFrame, area);
-    itensFrame = _findFichaItensFrame(fichaFrame) || areaGroup.children.find(c => {
+    const telaFrame = await _getOrCreateFichaAreaGroup(fichaFrame, area);
+    itensFrame = _findFichaItensFrame(fichaFrame, areaId) || (telaFrame.children || []).find(c => {
       try { return c.getPluginData && c.getPluginData('hacFichaItensFrame') === 'true'; } catch (e) { return false; }
     });
   }
-  try {
-    await _buildFichaFramePrincipalSection(itensFrame, area);
-  } catch (e) {
-    console.error('[hac] _getOrCreateFichaItensFrame: falha ao construir/atualizar o Frame Principal (não impede o restante da Ficha).', e && e.message);
+  // Sem "[HAC] Assets do Handoff" nada abaixo dele pode ser criado (bloco da
+  // funcionalidade, instruções, legenda). Falhar alto aqui (2026-09-11) em
+  // vez de seguir com `undefined` — o chamador reporta o erro ao designer.
+  if (!itensFrame) {
+    throw new Error('não foi possível criar/localizar "[HAC] Assets do Handoff" da área ' + (areaId || '(sem id)'));
   }
+  // Backfill do gap (2026-09-14, pedido do usuário: 64px entre o frame
+  // principal e a réplica) — reafirmado a cada chamada pra convergir
+  // "[HAC] Assets do Handoff" criados por versões anteriores (16/24px).
+  try { itensFrame.itemSpacing = 64; } catch (e) { }
+  // Frame principal (Grupo da Área) BLOQUEADO no canvas (2026-09-14,
+  // pedido do usuário: "o frame principal pode ficar como bloqueado") — é
+  // material de referência, não deve ser arrastado/editado por acidente
+  // enquanto o designer trabalha na réplica ao lado. `locked` não impede
+  // nada que o plugin faça por código, só a manipulação manual.
+  try {
+    for (const child of (itensFrame.children || [])) {
+      try {
+        if (child.type === 'GROUP' && child.getPluginData && child.getPluginData('hacAreaTargetNodeId')) {
+          child.locked = true;
+        }
+      } catch (e) { }
+    }
+  } catch (e) { }
+  // Backfill de nome (2026-09-11) — ver comentário equivalente em
+  // _getOrCreateFichaBlockSection.
+  try { if (itensFrame) itensFrame.name = '[HAC] Assets do Handoff'; } catch (e) { }
+  // Limpeza defensiva de "frames fantasma" (2026-09-11, bug real reportado
+  // pelo usuário com print) — remove qualquer "[HAC] Handoff - {Func}"
+  // VAZIO encontrado aqui dentro. Cobre dois casos: (1) arquivos já abertos
+  // com um frame vazio deixado por uma execução anterior que falhou entre
+  // criar o FRAME e reparentar o clone nele (ver try/catch dedicado em
+  // _ensureLegendBesideClone, que previne isso daqui pra frente); (2)
+  // qualquer caminho futuro não coberto por essa proteção. Nunca remove um
+  // FRAME com conteúdo — só o caso genuinamente vazio.
+  try { _removeEmptyFichaHandoffFrames(itensFrame); } catch (e) { }
   return itensFrame;
+}
+
+function _removeEmptyFichaHandoffFrames(itensFrame) {
+  if (!itensFrame || !itensFrame.children) return;
+  for (const block of itensFrame.children.slice()) {
+    try {
+      if (!block.getPluginData || !block.getPluginData('hacFichaSection')) continue;
+      for (const child of (block.children || []).slice()) {
+        try {
+          if (child.getPluginData && child.getPluginData('hacFichaHandoffGroup') &&
+            !child.removed && (child.children || []).length === 0) {
+            child.remove();
+          }
+        } catch (e) { }
+      }
+    } catch (e) { }
+  }
 }
 
 // "Frame Principal" — 1º bloco de "[HAC] Itens" (2026-09-10, autorizado
@@ -3954,7 +4402,7 @@ async function _buildFichaFramePrincipalSection(itensFrame, area) {
   const isNew = !section;
   if (isNew) {
     section = figma.createFrame();
-    section.name = 'Frame Principal';
+    section.name = '[HAC] Frame Principal';
     section.layoutMode = 'VERTICAL';
     section.primaryAxisSizingMode = 'AUTO';
     section.counterAxisSizingMode = 'AUTO';
@@ -3963,6 +4411,7 @@ async function _buildFichaFramePrincipalSection(itensFrame, area) {
     section.paddingTop = 16; section.paddingBottom = 16;
     section.cornerRadius = 8;
     section.fills = [];
+    section.clipsContent = false;
     section.setPluginData('hacFichaSection', 'principal');
     _insertFichaSectionInOrder(itensFrame, section, 'principal');
 
@@ -3978,6 +4427,11 @@ async function _buildFichaFramePrincipalSection(itensFrame, area) {
     nomeText.fills = [{ type: 'SOLID', color: { r: 0.1, g: 0.1, b: 0.1 } }];
     section.appendChild(nomeText);
   }
+
+  // Backfill de nome (2026-09-11) — fora do `if (isNew)` porque esta
+  // função roda a cada chamada: blocos criados antes da renomeação
+  // convergem para o nome novo sem precisar recriar nada.
+  try { section.name = '[HAC] Frame Principal'; } catch (e) { }
 
   // Réplica de imagem SEMPRE regerada (mesmo princípio de idempotência já
   // usado nos outros 3 blocos — _snapshotCloneIntoFichaSection remove a
@@ -4072,13 +4526,14 @@ function _findFichaSectionInFrame(fichaFrame, sectionKey) {
   return null;
 }
 
-// Ordem visual fixa dos blocos da Ficha — 0) Frame Principal (2026-09-10,
-// nome do frame + selo de Número da tela + snapshot da tela principal,
-// sempre o primeiro/mais à esquerda), 1) Ordem de Tabulação, 2) Swipe,
-// 3) Leitor de Tela. Havia um 4º bloco ("Handoff Review", consolidado) —
-// removido por completo em 2026-09-10, funcionalidade descontinuada (nunca
-// finalizada, ver comentário de remoção acima de _buildFichaReviewSection
-// original, no bloco de handlers).
+// Ordem visual fixa dos blocos da Ficha — 1) Ordem de Tabulação, 2) Swipe,
+// 3) Leitor de Tela. 'principal' mantido na lista só por compatibilidade de
+// índice (nunca mais criado como bloco — ver comentário de remoção acima de
+// _getOrCreateFichaItensFrame, 2026-09-11: "Frame Principal" duplicava a
+// tela original, que já está visível na Section). Havia também um 4º bloco
+// ("Handoff Review", consolidado) — removido por completo em 2026-09-10,
+// funcionalidade descontinuada (nunca finalizada, ver comentário de remoção
+// acima de _buildFichaReviewSection original, no bloco de handlers).
 const FICHA_SECTION_ORDER = ['principal', 'tabulacao', 'swipe', 'leitor'];
 
 // Bug real corrigido (2026-09-08): antes, cada builder de seção fazia
@@ -4171,11 +4626,61 @@ function _fichaLegendAssetCategory(label) {
 async function _appendFichaBlockTitle(section, text) {
   const t = figma.createText();
   t.name = 'Título do bloco';
-  t.characters = text;
-  t.textAutoResize = 'HEIGHT';
+  // Bug real corrigido (2026-09-11, reportado com print pelo usuário: texto
+  // quebrado letra por letra, "W 0" mesmo com Fill selecionado) —
+  // textAutoResize precisa ser setado ANTES de `.characters`: um TEXT recém-
+  // criado nasce com textAutoResize='NONE' (largura/altura fixas em 0), e
+  // escrever texto nesse estado trava a largura nesse valor. FILL aplicado
+  // depois não corrige retroativamente — mesmo padrão de bug já documentado
+  // em _ensureTelaTituloCard (e no cabeçalho removido por completo).
+  //
+  // Medição em 2 fases (2026-09-14, corrige "Ordem de T..." cortado — print
+  // do usuário mostrava o título truncado numa única linha): começa em
+  // 'WIDTH_AND_HEIGHT' pra deixar o Figma medir a largura NATURAL do texto
+  // em 'title/large' (28px) numa linha só — sem isso, não há como saber se
+  // o título cabe no pai (260px, largo demais só pra "Leitor de Tela", curto
+  // demais pra "Ordem de Leitura | Swipe") sem adivinhar largura-por-
+  // caractere. Só depois de medir é que trocamos pra 'HEIGHT' com a largura
+  // final explícita — mesma ordem seting-antes-de-characters de sempre,
+  // só que em 2 passos.
+  t.textAutoResize = 'WIDTH_AND_HEIGHT';
   await _applyFichaTypography(t, 'title/large');
+  t.characters = text;
   t.fills = [{ type: 'SOLID', color: { r: 0.1, g: 0.1, b: 0.1 } }];
   section.appendChild(t);
+  // Largura numérica explícita, NÃO FILL (2026-09-12, mesma revisão que
+  // abandonou o FILL em _ensureTelaTituloCard — ver comentário completo
+  // lá). O pai ("[HAC] Instruções de {Func}") tem largura FIXED conhecida,
+  // então dá pra calcular a largura do texto diretamente, sem depender do
+  // Auto Layout resolver uma relação declarativa no momento certo.
+  //
+  // A largura final é o MAIOR entre a largura natural medida acima e a
+  // largura interna do pai — nunca o menor: forçar o texto pra caber num
+  // pai estreito demais é o que causava o corte ("Ordem de T..."). Quando o
+  // texto natural for maior que o pai, também FAZEMOS o pai crescer (ver
+  // bloco abaixo) — mesmo espírito de _syncTelaTituloCardWidth: o container
+  // se adapta ao conteúdo real, não o contrário.
+  try {
+    const naturalWidth = Math.max(1, Math.round(t.width));
+    const padH = (section && ((section.paddingLeft || 0) + (section.paddingRight || 0))) || 0;
+    const parentWidth = section && section.width > 0 ? section.width : 260;
+    const parentInnerWidth = Math.max(1, Math.round(parentWidth - padH));
+    const innerWidth = Math.max(naturalWidth, parentInnerWidth);
+    t.textAutoResize = 'HEIGHT';
+    t.resizeWithoutConstraints(innerWidth, Math.max(1, Math.round(t.height)));
+    // Se o texto precisou de mais espaço que o pai tinha, cresce o pai
+    // também (só a largura — counterAxisSizingMode já é 'FIXED', então sem
+    // isso o pai ficaria mais estreito que o próprio filho, cortando
+    // visualmente do mesmo jeito). Idempotente: só redimensiona se
+    // realmente precisar crescer, nunca encolhe um pai que já esteja maior
+    // (ex.: por causa da Legenda ao lado, mais larga que o título).
+    if (section && !section.removed && innerWidth > parentInnerWidth) {
+      const newParentWidth = Math.round(innerWidth + padH);
+      if (newParentWidth > Math.round(section.width)) {
+        section.resizeWithoutConstraints(newParentWidth, Math.max(1, Math.round(section.height)));
+      }
+    }
+  } catch (e) { }
   return t;
 }
 
@@ -4210,37 +4715,51 @@ async function _buildFichaLegendColumn(richContent, fallbackTitle, fallbackDescr
   // (não setBoundVariable) do fundo da Ficha acima.
   col.fills = [{ type: 'SOLID', color: hexToRgb('#F5F5F5') }];
 
+  // Largura interna (2026-09-14, abandono do FILL nesta função — mesma
+  // revisão de _ensureTelaTituloCard/_appendFichaBlockTitle, ver comentário
+  // completo lá): `col` tem largura FIXED conhecida no momento em que é
+  // criado (220/260, acima), então dá pra calcular a largura útil de TODO
+  // texto direto dela sem depender do Auto Layout resolver FILL na ordem
+  // certa. Usada por todo o restante da função.
+  const colInnerWidth = Math.max(1, Math.round(
+    col.width - (col.paddingLeft || 0) - (col.paddingRight || 0)
+  ));
+
   const titleText = figma.createText();
   titleText.name = 'Título';
-  titleText.characters = hasRichContent ? richContent.title : fallbackTitle;
+  // Bug real corrigido (2026-09-11, auditoria completa): textAutoResize
+  // precisa ser setado ANTES de `.characters` — ver comentário completo em
+  // _appendFichaBlockTitle.
   titleText.textAutoResize = 'HEIGHT';
   // Escala real (corrigido 2026-09-11, era 13px/Inter Bold): "label/small"
   // (14px, peso 700/bold, lineHeight 20) — piso mais próximo acima de 13px
   // para este texto de destaque (título da legenda, em negrito).
   await _applyFichaTypography(titleText, 'label/small');
+  titleText.characters = hasRichContent ? richContent.title : fallbackTitle;
   titleText.fills = [{ type: 'SOLID', color: { r: 0.1, g: 0.1, b: 0.1 } }];
   col.appendChild(titleText);
-  // layoutSizingHorizontal (API moderna, 2026-09-10) no lugar do
-  // layoutAlign='STRETCH' legado, aqui e nos demais textos/blocos desta
-  // função — `col` é FIXED (largura 220/260, linha 3752-3754), condição
-  // real pra Fill funcionar. Só aplicado em textos/blocos de conteúdo (que
+  // Largura numérica explícita, NÃO FILL (2026-09-14) — `colInnerWidth`
+  // acima, calculado uma vez e reaproveitado por todo texto direto de
+  // `col` nesta função. Só aplicado em textos/blocos de conteúdo (que
   // devem ocupar a largura do container); marcadores/badges pequenos
-  // (`marker`, `number`) mantêm tamanho intrínseco, sem Fill.
-  titleText.layoutSizingHorizontal = 'FILL';
+  // (`marker`, `number`) mantêm tamanho intrínseco.
+  titleText.resizeWithoutConstraints(colInnerWidth, Math.max(1, Math.round(titleText.height)));
 
   if (!hasRichContent) {
     const descText = figma.createText();
     descText.name = 'Descrição';
-    descText.characters = fallbackDescription;
+    // Bug real corrigido (2026-09-11) — ordem, ver comentário em
+    // _appendFichaBlockTitle.
     descText.textAutoResize = 'HEIGHT';
     // Escala real (corrigido 2026-09-11, era 11px/Inter Regular — abaixo do
     // piso real de 12px): elevado para "label/tiny" (12px, lineHeight 16),
     // com weightOverride=400 pra manter o peso visual Regular de texto
     // corrido (label/tiny é 700/bold por padrão — não se aplica aqui).
     await _applyFichaTypography(descText, 'label/tiny', 400);
+    descText.characters = fallbackDescription;
     descText.fills = [{ type: 'SOLID', color: { r: 0.4, g: 0.4, b: 0.4 } }];
     col.appendChild(descText);
-    descText.layoutSizingHorizontal = 'FILL';
+    descText.resizeWithoutConstraints(colInnerWidth, Math.max(1, Math.round(descText.height)));
     return col;
   }
 
@@ -4251,31 +4770,35 @@ async function _buildFichaLegendColumn(richContent, fallbackTitle, fallbackDescr
     if (!text) return;
     const t = figma.createText();
     t.name = 'Subtítulo';
-    t.characters = text;
+    // Bug real corrigido (2026-09-11) — ordem, ver comentário em
+    // _appendFichaBlockTitle.
     t.textAutoResize = 'HEIGHT';
     // Escala real (corrigido 2026-09-11, era 11px/Inter Medium — abaixo do
     // piso real de 12px): elevado para "label/tiny" (12px, lineHeight 16),
     // com weightOverride=500 pra manter o peso visual Medium.
     await _applyFichaTypography(t, 'label/tiny', 500);
+    t.characters = text;
     t.fills = [{ type: 'SOLID', color: { r: 0.1, g: 0.1, b: 0.1 } }];
     col.appendChild(t);
-    t.layoutSizingHorizontal = 'FILL';
+    t.resizeWithoutConstraints(colInnerWidth, Math.max(1, Math.round(t.height)));
   }
 
   async function appendParagraph(text) {
     if (!text) return;
     const t = figma.createText();
     t.name = 'Parágrafo';
-    t.characters = text;
+    // Bug real corrigido (2026-09-11) — ordem, ver comentário em
+    // _appendFichaBlockTitle.
     t.textAutoResize = 'HEIGHT';
     // Escala real (corrigido 2026-09-11, era 11px/Inter Regular — abaixo do
     // piso real de 12px): elevado para "label/tiny" (12px, lineHeight 16),
     // com weightOverride=400 pra manter o peso visual Regular de texto
     // corrido.
     await _applyFichaTypography(t, 'label/tiny', 400);
+    t.characters = text;
     t.fills = [{ type: 'SOLID', color: { r: 0.4, g: 0.4, b: 0.4 } }];
     col.appendChild(t);
-    t.layoutSizingHorizontal = 'FILL';
+    t.resizeWithoutConstraints(colInnerWidth, Math.max(1, Math.round(t.height)));
   }
 
   await appendHeading(richContent.instructionsHeading);
@@ -4296,13 +4819,21 @@ async function _buildFichaLegendColumn(richContent, fallbackTitle, fallbackDescr
     stepsList.primaryAxisSizingMode = 'AUTO';
     stepsList.counterAxisSizingMode = 'FIXED';
     col.appendChild(stepsList);
-    // layoutSizingHorizontal (API moderna) só passa a valer depois que o
-    // frame já está dentro de um pai com Auto Layout — setar
-    // counterAxisSizingMode antes do appendChild deixaria a largura em 1px
-    // (mesma armadilha do Hug documentada acima, mas no eixo contrário).
+    // Largura numérica explícita, NÃO FILL (2026-09-14) — `colInnerWidth`
+    // (calculado uma vez no topo da função) já desconta o padding de `col`;
+    // o valor antigo (`col.width`, largura EXTERNA, sem descontar padding)
+    // transbordava 24px pra fora da área útil — um dos containers com
+    // sizing incorreto encontrados na auditoria pedida (item 4).
     stepsList.counterAxisSizingMode = 'FIXED';
-    stepsList.layoutSizingHorizontal = 'FILL';
-    stepsList.resizeWithoutConstraints(col.width || 236, 1);
+    stepsList.resizeWithoutConstraints(colInnerWidth, 1);
+    // Bug real corrigido (2026-09-14, reportado com print: "ainda temos
+    // itens recolhidos no frame da ordem de tabulação" — painel mostrava
+    // este frame com H 1). `resizeWithoutConstraints` chamado DEPOIS de
+    // `primaryAxisSizingMode='AUTO'` faz a API do Figma reverter
+    // silenciosamente o eixo primário pra FIXED com a altura passada (1px),
+    // colapsando a lista de passos — a MESMA armadilha já documentada em
+    // `col` logo acima. Reafirmar AUTO depois do resize devolve o Hug.
+    stepsList.primaryAxisSizingMode = 'AUTO';
 
     // for...of (não mais .forEach) — necessário pra poder `await` a
     // aplicação de tipografia (loadFontAsync) de cada texto em sequência.
@@ -4319,14 +4850,23 @@ async function _buildFichaLegendColumn(richContent, fallbackTitle, fallbackDescr
       row.counterAxisAlignItems = 'MIN';
       row.resizeWithoutConstraints(1, 1);
       row.primaryAxisSizingMode = 'AUTO';
-      row.counterAxisSizingMode = 'AUTO';
+      row.counterAxisSizingMode = 'FIXED';
       stepsList.appendChild(row);
-      row.layoutSizingHorizontal = 'FILL';
+      // `row` ganha a largura cheia de `stepsList` (que já é `colInnerWidth`,
+      // sem padding próprio) — mesma lógica de "pai FIXED conhecido" do
+      // resto da função, em vez de FILL.
+      row.resizeWithoutConstraints(colInnerWidth, 1);
+      // Reafirma AUTO depois do resize (2026-09-14) — senão a altura fica
+      // travada em 1px e o passo inteiro some. Ver comentário em stepsList.
+      row.primaryAxisSizingMode = 'AUTO';
 
       const number = figma.createText();
       number.name = 'Número';
-      number.characters = `${i + 1}.`;
+      // Ordem preventiva (2026-09-11) — mesmo padrão do resto da função,
+      // embora este texto não use FILL hoje (WIDTH_AND_HEIGHT não trava
+      // largura como NONE/HEIGHT travariam).
       number.textAutoResize = 'WIDTH_AND_HEIGHT';
+      number.characters = `${i + 1}.`;
       // Escala real (corrigido 2026-09-11, era 11px/Inter Bold — abaixo do
       // piso real de 12px): elevado para "label/tiny" (12px, peso 700/bold
       // — já é o peso "oficial" do token, sem precisar de override).
@@ -4336,16 +4876,24 @@ async function _buildFichaLegendColumn(richContent, fallbackTitle, fallbackDescr
 
       const text = figma.createText();
       text.name = 'Texto';
-      text.characters = stepText;
+      // Bug real corrigido (2026-09-11) — ordem, ver comentário em
+      // _appendFichaBlockTitle.
       text.textAutoResize = 'HEIGHT';
       // Escala real (corrigido 2026-09-11, era 11px/Inter Regular — abaixo
       // do piso real de 12px): elevado para "label/tiny" (12px), com
       // weightOverride=400 pra manter o peso visual Regular de texto
       // corrido.
       await _applyFichaTypography(text, 'label/tiny', 400);
+      text.characters = stepText;
       text.fills = [{ type: 'SOLID', color: { r: 0.3, g: 0.3, b: 0.3 } }];
-      text.layoutGrow = 1;
       row.appendChild(text);
+      // Largura numérica explícita, NÃO layoutGrow (2026-09-14) — mesmo
+      // abandono do resto da função: a largura disponível pro texto é a de
+      // `row` (colInnerWidth) menos o "Número" (medido, WIDTH_AND_HEIGHT) e
+      // o itemSpacing entre os dois.
+      const numberSlot = Math.round(number.width) + (row.itemSpacing || 0);
+      const stepTextWidth = Math.max(1, colInnerWidth - numberSlot);
+      text.resizeWithoutConstraints(stepTextWidth, Math.max(1, Math.round(text.height)));
     }
   }
 
@@ -4364,9 +4912,16 @@ async function _buildFichaLegendColumn(richContent, fallbackTitle, fallbackDescr
     assetsList.primaryAxisSizingMode = 'AUTO';
     assetsList.counterAxisSizingMode = 'AUTO';
     col.appendChild(assetsList);
+    // Largura numérica explícita, NÃO FILL (2026-09-14) — mesma correção de
+    // `stepsList` acima: `colInnerWidth` já desconta o padding de `col`,
+    // diferente do `col.width` (largura EXTERNA) usado antes aqui, que
+    // transbordava a área útil em 24px.
     assetsList.counterAxisSizingMode = 'FIXED';
-    assetsList.layoutSizingHorizontal = 'FILL';
-    assetsList.resizeWithoutConstraints(col.width || 236, 1);
+    assetsList.resizeWithoutConstraints(colInnerWidth, 1);
+    // Mesma correção de `stepsList` (2026-09-14): reafirmar AUTO depois do
+    // resize, senão o eixo primário fica FIXED em 1px e a lista de Assets
+    // colapsa (aparecia como um traço fino no print do usuário).
+    assetsList.primaryAxisSizingMode = 'AUTO';
 
     for (let i = 0; i < richContent.assets.length; i++) {
       const asset = richContent.assets[i];
@@ -4381,9 +4936,14 @@ async function _buildFichaLegendColumn(richContent, fallbackTitle, fallbackDescr
       row.counterAxisAlignItems = 'MIN';
       row.resizeWithoutConstraints(1, 1);
       row.primaryAxisSizingMode = 'AUTO';
-      row.counterAxisSizingMode = 'AUTO';
+      row.counterAxisSizingMode = 'FIXED';
       assetsList.appendChild(row);
-      row.layoutSizingHorizontal = 'FILL';
+      // `row` ganha a largura cheia de `assetsList` (já é `colInnerWidth`)
+      // — mesmo padrão de "pai FIXED conhecido" do resto da função.
+      row.resizeWithoutConstraints(colInnerWidth, 1);
+      // Reafirma AUTO depois do resize (2026-09-14) — ver comentário
+      // equivalente na linha de Passo acima.
+      row.primaryAxisSizingMode = 'AUTO';
 
       // Marcador real da lib (2026-09-10, pedido do usuário) — mesmo
       // componente "[a11y] Agrupamento" já usado nas specs do Leitor de
@@ -4424,37 +4984,129 @@ async function _buildFichaLegendColumn(richContent, fallbackTitle, fallbackDescr
       textCol.fills = [];
       textCol.resizeWithoutConstraints(1, 1);
       textCol.primaryAxisSizingMode = 'AUTO';
-      textCol.counterAxisSizingMode = 'AUTO';
+      textCol.counterAxisSizingMode = 'FIXED';
       row.appendChild(textCol);
-      textCol.layoutGrow = 1;
+      // Largura numérica explícita, NÃO layoutGrow (2026-09-14) — o
+      // `marker` varia de tamanho (24px componente real da lib, 16px
+      // ellipse de fallback), então a largura disponível pro texto é
+      // calculada por linha: colInnerWidth menos o marker medido e o
+      // itemSpacing entre marker e textCol.
+      const markerSlot = Math.round(marker.width) + (row.itemSpacing || 0);
+      const textColWidth = Math.max(1, colInnerWidth - markerSlot);
+      textCol.resizeWithoutConstraints(textColWidth, 1);
+      // Reafirma AUTO depois do resize (2026-09-14) — ver comentário em
+      // stepsList; sem isto a coluna de texto do Asset colapsa em 1px.
+      textCol.primaryAxisSizingMode = 'AUTO';
 
       const label = figma.createText();
       label.name = 'Label';
-      label.characters = asset.label || '';
+      // Bug real corrigido (2026-09-11) — ordem, ver comentário em
+      // _appendFichaBlockTitle.
       label.textAutoResize = 'HEIGHT';
       // Escala real (corrigido 2026-09-11, era 11px/Inter Bold — abaixo do
       // piso real de 12px): elevado para "label/tiny" (12px, peso 700/bold
       // — já é o peso "oficial" do token).
       await _applyFichaTypography(label, 'label/tiny');
+      label.characters = asset.label || '';
       label.fills = [{ type: 'SOLID', color: { r: 0.1, g: 0.1, b: 0.1 } }];
       textCol.appendChild(label);
-      label.layoutSizingHorizontal = 'FILL';
+      label.resizeWithoutConstraints(textColWidth, Math.max(1, Math.round(label.height)));
 
       if (asset.description) {
         const desc = figma.createText();
         desc.name = 'Descrição';
-        desc.characters = asset.description;
+        // Bug real corrigido (2026-09-11) — ordem, ver comentário em
+        // _appendFichaBlockTitle.
         desc.textAutoResize = 'HEIGHT';
         // Escala real (corrigido 2026-09-11, era 10px/Inter Regular —
         // abaixo do piso real de 12px, o mais distante de todos os pontos
         // corrigidos): elevado para "label/tiny" (12px), com
         // weightOverride=400 pra manter o peso visual Regular.
         await _applyFichaTypography(desc, 'label/tiny', 400);
+        desc.characters = asset.description;
         desc.fills = [{ type: 'SOLID', color: { r: 0.4, g: 0.4, b: 0.4 } }];
         textCol.appendChild(desc);
-        desc.layoutSizingHorizontal = 'FILL';
+        desc.resizeWithoutConstraints(textColWidth, Math.max(1, Math.round(desc.height)));
       }
     }
+  }
+
+  return col;
+}
+
+// Legenda de Tabulação/Swipe (2026-09-14, pedido do usuário: "só instruções
+// sobre o tipo de documentação", os passos numerados e a seção Assets saem
+// da Ficha para estas duas funcionalidades — Leitor de Tela é diferente,
+// continua com os 3 blocos completos via _buildFichaLegendColumn). Função
+// PRÓPRIA em vez de um flag dentro de _buildFichaLegendColumn — Tabulação/
+// Swipe e Leitor de Tela são funcionalidades distintas com necessidades de
+// legenda diferentes, cada uma modularizada na sua função. O conteúdo de
+// steps/assets permanece intacto em ficha-instruction-content.json (nada
+// apagado da fonte), só não é mais desenhado por este caminho.
+async function _buildFichaInstructionOnlyLegendColumn(richContent, fallbackTitle, fallbackDescription) {
+  const hasRichContent = !!(richContent && richContent.title);
+
+  const col = figma.createFrame();
+  col.name = 'Legenda';
+  col.layoutMode = 'VERTICAL';
+  col.itemSpacing = 8;
+  col.paddingLeft = 12;
+  col.paddingRight = 12;
+  col.paddingTop = 12;
+  col.paddingBottom = 12;
+  col.cornerRadius = 8;
+  // Mesma ordem resize→sizing modes de _buildFichaLegendColumn (bug real
+  // corrigido em 2026-09-09, ver comentário completo lá).
+  col.resizeWithoutConstraints(hasRichContent ? 260 : 220, 1);
+  col.primaryAxisSizingMode = 'AUTO';
+  col.counterAxisSizingMode = 'FIXED';
+  col.fills = [{ type: 'SOLID', color: hexToRgb('#F5F5F5') }];
+
+  const colInnerWidth = Math.max(1, Math.round(
+    col.width - (col.paddingLeft || 0) - (col.paddingRight || 0)
+  ));
+
+  const titleText = figma.createText();
+  titleText.name = 'Título';
+  titleText.textAutoResize = 'HEIGHT';
+  await _applyFichaTypography(titleText, 'label/small');
+  titleText.characters = hasRichContent ? richContent.title : fallbackTitle;
+  titleText.fills = [{ type: 'SOLID', color: { r: 0.1, g: 0.1, b: 0.1 } }];
+  col.appendChild(titleText);
+  titleText.resizeWithoutConstraints(colInnerWidth, Math.max(1, Math.round(titleText.height)));
+
+  if (!hasRichContent) {
+    const descText = figma.createText();
+    descText.name = 'Descrição';
+    descText.textAutoResize = 'HEIGHT';
+    await _applyFichaTypography(descText, 'label/tiny', 400);
+    descText.characters = fallbackDescription;
+    descText.fills = [{ type: 'SOLID', color: { r: 0.4, g: 0.4, b: 0.4 } }];
+    col.appendChild(descText);
+    descText.resizeWithoutConstraints(colInnerWidth, Math.max(1, Math.round(descText.height)));
+    return col;
+  }
+
+  if (richContent.instructionsHeading) {
+    const heading = figma.createText();
+    heading.name = 'Subtítulo';
+    heading.textAutoResize = 'HEIGHT';
+    await _applyFichaTypography(heading, 'label/tiny', 500);
+    heading.characters = richContent.instructionsHeading;
+    heading.fills = [{ type: 'SOLID', color: { r: 0.1, g: 0.1, b: 0.1 } }];
+    col.appendChild(heading);
+    heading.resizeWithoutConstraints(colInnerWidth, Math.max(1, Math.round(heading.height)));
+  }
+
+  if (richContent.instructionsBody) {
+    const paragraph = figma.createText();
+    paragraph.name = 'Parágrafo';
+    paragraph.textAutoResize = 'HEIGHT';
+    await _applyFichaTypography(paragraph, 'label/tiny', 400);
+    paragraph.characters = richContent.instructionsBody;
+    paragraph.fills = [{ type: 'SOLID', color: { r: 0.4, g: 0.4, b: 0.4 } }];
+    col.appendChild(paragraph);
+    paragraph.resizeWithoutConstraints(colInnerWidth, Math.max(1, Math.round(paragraph.height)));
   }
 
   return col;
@@ -5747,11 +6399,20 @@ figma.ui.onmessage = async (msg) => {
 
         if (opts.link) {
           const linkTxt = figma.createText();
+          // Ordem corrigida (2026-09-14, mesmo bug de "W 0"/texto quebrado
+          // letra por letra já documentado em _appendFichaBlockTitle):
+          // textAutoResize precisa ser setado ANTES de `.characters` — um
+          // TEXT recém-criado nasce em 'NONE' (largura/altura travadas em
+          // 0), e escrever texto nesse estado trava a largura nesse valor.
+          // Abandonado também o layoutAlign='STRETCH' legado — `specCard`
+          // (pai) é Hug/Hug (AUTO/AUTO), então não existe largura FIXED
+          // real pra esticar contra; 'WIDTH_AND_HEIGHT' (mesmo modo já
+          // usado pelos textos irmãos `pLabel`/`pVal` deste fallback)
+          // deixa o texto medir seu próprio tamanho natural.
+          linkTxt.textAutoResize = "WIDTH_AND_HEIGHT";
           linkTxt.characters = opts.link;
           linkTxt.textDecoration = "UNDERLINE";
           linkTxt.hyperlink = { type: "URL", value: opts.link };
-          linkTxt.textAutoResize = "HEIGHT";
-          linkTxt.layoutAlign = "STRETCH";
           // Escala real (corrigido 2026-09-11, era 11px/Inter Regular —
           // abaixo do piso real de 12px): elevado para "label/tiny" (12px),
           // com weightOverride=400 pra manter o peso visual Regular.
@@ -6801,20 +7462,39 @@ figma.ui.onmessage = async (msg) => {
     const nodeMap = _buildOriginalToCloneMap(root, clone);
 
     // A réplica de trabalho nasce SOLTA na página, numa faixa livre ao
-    // lado do frame original, e só então é reparentada pra Section de
-    // sessão (que converte x/y pra relativo preservando a posição
-    // visual). Modelo revertido em 2026-09-11 depois de uma tentativa de
-    // fazer o clone nascer dentro do bloco Auto Layout da Ficha: o Auto
-    // Layout comprimia/escondia a réplica e ela deixava de ser utilizável
-    // pro designer clicar nos elementos — que é a razão de ela existir.
+    // lado do frame original, e só então é reparentada — primeiro pra
+    // Section de sessão (aqui embaixo), depois pro FRAME "[HAC] Handoff -
+    // {Func}" dentro de _ensureLegendBesideClone (2026-09-11, revisão 3).
+    //
+    // HISTÓRICO IMPORTANTE (2026-09-11): uma primeira tentativa desta
+    // sessão de fazer o clone nascer DIRETO dentro de um FRAME com Auto
+    // Layout foi revertida — o Auto Layout comprimia/escondia a réplica e
+    // ela deixava de ser utilizável pro designer clicar nos elementos, que
+    // é a razão de ela existir. A causa era o clone ficar em modo de FLUXO
+    // dentro do Auto Layout. A revisão 3 do FRAME de Handoff reproduz o
+    // container Auto Layout (necessário pro Hug automático que o usuário
+    // pediu), mas com CADA filho (clone incluído) forçado a
+    // `layoutPositioning='ABSOLUTE'` — isso tira o clone do fluxo
+    // completamente, então ele nunca é comprimido, só o Hug do PAI se
+    // ajusta ao redor dele. Não é o mesmo bug se repetindo.
     const cloneWidth = root.absoluteBoundingBox.width;
     const cloneHeight = root.absoluteBoundingBox.height;
     const { x, y } = await _findFreeTabOrderCopyPosition(cloneWidth, cloneHeight, root.absoluteBoundingBox);
     figma.currentPage.appendChild(clone);
     clone.x = x;
     clone.y = y;
-    _reparentIntoSection(clone, () => _getOrCreateA11ySessionSection(designerName, currentUserId));
-    await _ensureLegendBesideClone(clone, 'tabulacao', areaId);
+    const _sessionSection = _getOrCreateA11ySessionSection(designerName, currentUserId);
+    _reparentIntoSection(clone, () => _sessionSection);
+    await _ensureLegendBesideClone(clone, 'tabulacao', await _areaStubFromRoot(areaId, root, sectionName), designerName, currentUserId);
+    // Segundo fit da Section (2026-09-14, causa raiz do vão reportado):
+    // _reparentIntoSection acima já dimensionou a Section abraçando o clone
+    // na POSIÇÃO LIVRE DISTANTE em que ele nasceu. Logo depois,
+    // _ensureLegendBesideClone move clone e overlay pra dentro do
+    // handoffFrame (dentro da Ficha) — eles deixam de ser filhos diretos da
+    // Section, mas nada re-dimensionava a Section, que ficava com o tamanho
+    // antigo. O "vão" era literalmente o espaço que o clone ocupava antes
+    // de ser movido.
+    try { _fitSectionToChildren(_sessionSection); } catch (e) { }
 
     return { clone, nodeMap };
   }
@@ -6847,8 +7527,12 @@ figma.ui.onmessage = async (msg) => {
     figma.currentPage.appendChild(clone);
     clone.x = x;
     clone.y = y;
-    _reparentIntoSection(clone, () => _getOrCreateA11ySessionSection(designerName, currentUserId));
-    await _ensureLegendBesideClone(clone, 'swipe', areaId);
+    const _sessionSection = _getOrCreateA11ySessionSection(designerName, currentUserId);
+    _reparentIntoSection(clone, () => _sessionSection);
+    await _ensureLegendBesideClone(clone, 'swipe', await _areaStubFromRoot(areaId, root, sectionName), designerName, currentUserId);
+    // Segundo fit da Section — ver comentário completo em
+    // _createTabOrderCloneForArea (2026-09-14, causa raiz do vão).
+    try { _fitSectionToChildren(_sessionSection); } catch (e) { }
 
     return { clone, nodeMap };
   }
@@ -6919,8 +7603,12 @@ figma.ui.onmessage = async (msg) => {
     figma.currentPage.appendChild(clone);
     clone.x = x;
     clone.y = y;
-    _reparentIntoSection(clone, () => _getOrCreateA11ySessionSection(designerName, currentUserId));
-    await _ensureLegendBesideClone(clone, 'leitor', areaId);
+    const _sessionSection = _getOrCreateA11ySessionSection(designerName, currentUserId);
+    _reparentIntoSection(clone, () => _sessionSection);
+    await _ensureLegendBesideClone(clone, 'leitor', await _areaStubFromRoot(areaId, root, sectionName), designerName, currentUserId);
+    // Segundo fit da Section — ver comentário completo em
+    // _createTabOrderCloneForArea (2026-09-14, causa raiz do vão).
+    try { _fitSectionToChildren(_sessionSection); } catch (e) { }
 
     return { clone, nodeMap };
   }
@@ -7041,6 +7729,39 @@ figma.ui.onmessage = async (msg) => {
       // usuário, 2026-09-03: hoje só o clique direto no canvas focava).
       if (msg.shouldScroll) {
         figma.viewport.scrollAndZoomIntoView([node]);
+      }
+    })();
+    return;
+  }
+
+  // Espelha start-tab-order-copy pro wizard de Especificações (Leitor de
+  // Tela) — 2026-09-14, pedido do usuário: "cria-se primeiro a réplica e
+  // depois o foco é sempre na réplica e não no frame principal", igual
+  // Tabulação/Swipe já fazem. Antes desta mudança o Leitor de Tela NUNCA
+  // tinha uma réplica antecipada (comentário histórico em
+  // _buildFichaLeitorSection: "o Leitor de Tela NUNCA teve réplica visual") —
+  // a cópia só nascia dentro de create-unified-spec, ao aplicar a PRIMEIRA
+  // spec. Isso deixava o botão "Focar" do wizard (highlight-spec-copy-node
+  // abaixo) sem nada em _activeSpecCloneMaps pra resolver na abertura do
+  // wizard/primeiro item, caindo de volta no nodeId original (Frame
+  // Principal). Disparado pelo frontend ao abrir o wizard de Detecção
+  // Automática do Leitor de Tela (startA11yBatchWizard, accessibility.js),
+  // ANTES do primeiro highlight — mesmo timing de start-tab-order-copy.
+  // Reaproveita _resolveActiveSpecClone (idempotente: reusa clone existente
+  // em memória/canvas, só cria do zero na primeira vez) — nenhuma duplicação
+  // com o que create-unified-spec já faz.
+  if (msg.type === "start-spec-copy") {
+    (async () => {
+      const root = await figma.getNodeByIdAsync(msg.targetNodeId);
+      if (!root || !root.absoluteBoundingBox) {
+        figma.ui.postMessage({ type: "spec-copy-started", cloneId: null });
+        return;
+      }
+      try {
+        const resolved = await _resolveActiveSpecClone(msg.areaId, msg.targetNodeId, msg.sectionName, msg.designerName, msg.designerId);
+        figma.ui.postMessage({ type: "spec-copy-started", cloneId: resolved ? resolved.clone.id : null, areaId: msg.areaId });
+      } catch (e) {
+        figma.ui.postMessage({ type: "spec-copy-started", cloneId: null, areaId: msg.areaId });
       }
     })();
     return;
@@ -7800,35 +8521,8 @@ figma.ui.onmessage = async (msg) => {
   // _resolveActiveSpecClone — mesmas funções que o fluxo de trabalho usa)
   // pra dentro da seção da Ficha, reaproveitando _moveActiveCloneIntoFichaSection.
 
-  // Configuração de cada bloco de funcionalidade dentro de "[HAC] Itens" —
-  // nome visível, título, e o texto de fallback da legenda. Extraído dos 3
-  // builders (2026-09-11, modelo de estado único por bloco) pra que a
-  // criação do bloco VAZIO possa acontecer cedo (na marcação da Área),
-  // independente de haver conteúdo pra desenhar dentro dele ainda.
-  const _FICHA_BLOCK_CONFIG = {
-    tabulacao: {
-      name: 'Ordem de Tabulação',
-      title: 'Ordem de Tabulação',
-      instructionKey: 'tabulacao',
-      legendFallback: 'Sequência de foco do teclado (tecla Tab) desta tela — cada selo numerado indica a ordem em que o elemento recebe foco.',
-      legendTitle: 'Ordem de Tabulação',
-    },
-    swipe: {
-      name: 'Swipe',
-      title: 'Swipe',
-      instructionKey: 'swipe',
-      legendFallback: 'Navegação por gesto de deslizar (swipe), exclusiva do leitor de tela mobile — trilha direcional de pontos, na ordem em que o gesto percorre a tela.',
-      legendTitle: 'Trilha de Swipe',
-    },
-    leitor: {
-      name: 'Leitor de Tela',
-      title: 'Leitor de Tela',
-      instructionKey: 'leitorTela',
-      legendFallback: 'Elementos e imagens, estrutura da página, nível de título, elemento decorativo e informações adicionais — cada marcador indica a categoria de acessibilidade documentada naquele ponto da tela.',
-      legendTitle: 'Especificações para Leitor de Tela',
-      counterAxisAlignItems: 'MIN',
-    },
-  };
+  // _FICHA_BLOCK_CONFIG foi movida pro escopo GLOBAL (2026-09-11) — ver a
+  // declaração acima de _createOrGetFichaFrame e o comentário lá.
 
   // Cria (ou retorna, idempotente) o bloco VAZIO de uma funcionalidade
   // dentro de "[HAC] Itens" — só a caixa com título + legenda, sem
@@ -7838,50 +8532,267 @@ figma.ui.onmessage = async (msg) => {
   // alternado entre clone real (em edição) e imagem+instruções
   // (finalizado) — nunca é recriado nem movido de lugar.
   async function _getOrCreateFichaBlockSection(itensFrame, sectionKey, areaId) {
-    const existing = _findFichaSectionInFrame(itensFrame, sectionKey);
-    if (existing) return existing;
-
     const cfg = _FICHA_BLOCK_CONFIG[sectionKey];
     if (!cfg) return null;
 
-    const section = figma.createFrame();
-    section.name = cfg.name;
-    section.layoutMode = 'VERTICAL';
-    section.primaryAxisSizingMode = 'AUTO';
-    section.counterAxisSizingMode = 'AUTO';
-    section.itemSpacing = 16;
-    if (cfg.counterAxisAlignItems) section.counterAxisAlignItems = cfg.counterAxisAlignItems;
-    // Padding/radius intermediários (2026-09-10, mesma escala descendente
-    // 80→64→24→16→8 confirmada via REST API no node de referência real —
-    // ver comentário completo em _createOrGetFichaFrame).
-    section.paddingLeft = 16; section.paddingRight = 16;
-    section.paddingTop = 16; section.paddingBottom = 16;
-    section.cornerRadius = 8;
-    section.fills = [];
-    section.setPluginData('hacFichaSection', sectionKey);
-    _insertFichaSectionInOrder(itensFrame, section, sectionKey);
-    await _appendFichaBlockTitle(section, cfg.title);
+    let section = _findFichaSectionInFrame(itensFrame, sectionKey);
+    if (section) {
+      // Backfill de nome (2026-09-11): o bloco é idempotente por
+      // pluginData, então um bloco criado antes da renomeação manteria o
+      // nome antigo pra sempre. Nomes "[HAC] *" são contrato estrutural,
+      // não anotação livre do designer — convergir aqui é seguro.
+      try { section.name = cfg.name; } catch (e) { }
+      // Backfill de direção (2026-09-14): blocos criados antes desta
+      // revisão nasceram VERTICAL, empilhando réplica embaixo das
+      // instruções. Converge sem recriar o node (a árvore não muda, só a
+      // direção do Auto Layout).
+      try {
+        if (section.layoutMode === 'VERTICAL') section.layoutMode = 'HORIZONTAL';
+      } catch (e) { }
+    } else {
+      section = figma.createFrame();
+      section.name = cfg.name;
+      // HORIZONTAL (2026-09-14, reportado com print: "a réplica está abaixo
+      // dele, não do lado"): o bloco empilha "[HAC] Instruções de {Func}" e
+      // "[HAC] Handoff - {Func}" (que contém a réplica + selos). Com
+      // VERTICAL eles ficavam um sobre o outro; a referência visual do
+      // usuário sempre mostrou instruções À ESQUERDA e réplica À DIREITA.
+      section.layoutMode = 'HORIZONTAL';
+      section.primaryAxisSizingMode = 'AUTO';
+      section.counterAxisSizingMode = 'AUTO';
+      section.itemSpacing = 16;
+      if (cfg.counterAxisAlignItems) section.counterAxisAlignItems = cfg.counterAxisAlignItems;
+      // Padding/radius intermediários (2026-09-10, mesma escala descendente
+      // 80→64→24→16→8 confirmada via REST API no node de referência real —
+      // ver comentário completo em _createOrGetFichaFrame).
+      section.paddingLeft = 16; section.paddingRight = 16;
+      section.paddingTop = 16; section.paddingBottom = 16;
+      section.cornerRadius = 8;
+      section.fills = [];
+      section.clipsContent = false;
+      section.setPluginData('hacFichaSection', sectionKey);
+      _insertFichaSectionInOrder(itensFrame, section, sectionKey);
+    }
 
-    // Reaproveita a legenda que já nasceu ao lado da réplica de trabalho
-    // (2026-09-11, _ensureLegendBesideClone) em vez de criar uma segunda —
-    // é a MESMA legenda do início ao fim: nasce junto da réplica, e no
-    // "Preencher Handoff" é movida pra dentro deste bloco. Só cria do zero
-    // quando não existe nenhuma (ex.: área antiga, ou réplica já
-    // descartada antes desta mudança).
+    // Wrapper "[HAC] Instruções de {Func}" agrupando título + legenda
+    // (2026-09-11, estrutura definida pelo usuário) — idempotente, criado
+    // junto com o bloco.
+    await _getOrCreateFichaInstrucoesFrame(section, sectionKey, areaId);
+    return section;
+  }
+
+  // "[HAC] Instruções de {Func}" — agrupa o título do bloco e a legenda de
+  // instruções, que antes ficavam soltos como filhos diretos do bloco.
+  // Idempotente por pluginData `hacFichaInstrucoes` = sectionKey.
+  async function _getOrCreateFichaInstrucoesFrame(section, sectionKey, areaId) {
+    const cfg = _FICHA_BLOCK_CONFIG[sectionKey];
+    if (!cfg || !section) return null;
+
+    for (const child of (section.children || [])) {
+      try {
+        if (child.getPluginData && child.getPluginData('hacFichaInstrucoes') === sectionKey) {
+          return child;
+        }
+      } catch (e) { }
+    }
+
+    const instrucoes = figma.createFrame();
+    instrucoes.name = `[HAC] Instruções de ${cfg.title}`;
+    instrucoes.layoutMode = 'VERTICAL';
+    instrucoes.primaryAxisSizingMode = 'AUTO';
+    // Bug estrutural corrigido (2026-09-12, mesma classe do bug já
+    // corrigido em "Título Card"/"Tela N" — auditoria completa achou este
+    // ponto sem a mesma correção): `counterAxisSizingMode='AUTO'` (Hug)
+    // aqui deixa "Título do bloco" sem NENHUM ancestral imediato com
+    // largura real — a Legenda (FIXED, ~260px) só entra DEPOIS. FIXED
+    // resolve a raiz: o pai já nasce com largura real, antes mesmo do
+    // título ser escrito.
+    //
+    // Largura elevada de 260 para 360 (2026-09-14, corrige "Ordem de T..."
+    // cortado — print real do usuário): 260px cabia "Leitor de Tela" e
+    // "Ordem de Tabulação", mas não "Ordem de Leitura | Swipe" (a mais
+    // longa das 3, ~24 caracteres em 'title/large'=28px/Roboto SemiBold) —
+    // o texto FILL antigo comprimia pro pai, quebrando linha ou cortando.
+    // 360px é folga real medida pelas 3 strings de _FICHA_BLOCK_CONFIG,
+    // não um chute — mas não é mais a única linha de defesa:
+    // _appendFichaBlockTitle agora MEDE a largura natural do título (fase
+    // 'WIDTH_AND_HEIGHT') e cresce este frame de novo se algum título
+    // futuro, mesmo maior que os 3 atuais, ainda não couber.
+    instrucoes.resizeWithoutConstraints(360, 1);
+    instrucoes.counterAxisSizingMode = 'FIXED';
+    instrucoes.counterAxisAlignItems = 'MIN';
+    instrucoes.itemSpacing = 12;
+    instrucoes.paddingLeft = 0; instrucoes.paddingRight = 0;
+    instrucoes.paddingTop = 0; instrucoes.paddingBottom = 0;
+    instrucoes.fills = [];
+    instrucoes.clipsContent = false;
+    instrucoes.setPluginData('hacCategory', 'a11y');
+    instrucoes.setPluginData('hacFichaInstrucoes', sectionKey);
+    section.insertChild(0, instrucoes);
+
+    await _appendFichaBlockTitle(instrucoes, cfg.title);
+
+    // Reaproveita a legenda que já nasceu junto da réplica de trabalho
+    // (_ensureLegendBesideClone) em vez de criar uma segunda — é a MESMA
+    // legenda do início ao fim. Só cria do zero quando não existe nenhuma
+    // (ex.: área antiga, ou réplica já descartada).
     const existingLegend = areaId ? _findLegendForArea(areaId, sectionKey) : null;
     if (existingLegend) {
-      section.appendChild(existingLegend);
+      instrucoes.appendChild(existingLegend);
     } else {
-      const legend = await _buildFichaLegendColumn(
+      // Tabulação/Swipe (2026-09-14, pedido do usuário) usam a legenda
+      // enxuta (só título + instruções, sem passos/Assets) — Leitor de
+      // Tela é a única com a legenda completa via _buildFichaLegendColumn.
+      const legendBuilder = cfg.instructionKey === 'leitorTela'
+        ? _buildFichaLegendColumn
+        : _buildFichaInstructionOnlyLegendColumn;
+      const legend = await legendBuilder(
         FICHA_INSTRUCTION_CONTENT[cfg.instructionKey],
         cfg.legendTitle,
         cfg.legendFallback
       );
       legend.setPluginData('hacCategory', 'a11y');
       if (areaId) legend.setPluginData('hacLegendForArea', `${areaId}::${sectionKey}`);
-      section.appendChild(legend);
+      instrucoes.appendChild(legend);
     }
-    return section;
+    return instrucoes;
+  }
+
+  // "[HAC] Handoff - {Func}" — FRAME (2026-09-11, revisão 2: NÃO é mais
+  // GROUP) que passa a conter, desde a CRIAÇÃO da réplica de trabalho: o
+  // clone vivo (editável, clicável), sua Moldura+Título
+  // (_ensureCloneWorkFrame) e o GROUP de overlay de marcadores
+  // (_getOrCreateCloneOverlayGroup). No "Preencher Handoff", o clone é
+  // substituído por um snapshot NO MESMO FRAME — o FRAME em si nunca é
+  // recriado nem trocado de tipo.
+  //
+  // Revisão 3 (2026-09-11, confirmado pelo usuário via painel de
+  // propriedades real do Figma — "742 Hug × 1704 Hug"): este FRAME TEM
+  // Auto Layout ligado (`layoutMode='HORIZONTAL'`, sizing AUTO/AUTO) — é
+  // isso que produz o "Hug × Hug" no painel. A aparente contradição com o
+  // bug já revertido nesta sessão ("Auto Layout comprimia/escondia a
+  // réplica") se resolve porque aqui TODO filho direto (clone, Moldura,
+  // Título, GROUP de overlay) recebe `layoutPositioning = 'ABSOLUTE'`
+  // (mesma função já usada pro overlay,
+  // _setCloneOverlayGroupAbsolutePositioning) — um node ABSOLUTE fica FORA
+  // do fluxo do Auto Layout (não é redimensionado/comprimido por ele), mas
+  // o Figma ainda calcula o Hug do PAI pela união dos bounding boxes de
+  // TODOS os filhos, ABSOLUTE incluído. Resultado: o FRAME cresce/encolhe
+  // sozinho ao redor do conteúdo (sem resize manual, sem
+  // _fitFichaHandoffFrameToChildren) e nenhum filho é comprimido — o bug
+  // revertido antes só acontecia quando o CLONE em si ficava em FLUXO
+  // (não-ABSOLUTE) dentro de um Auto Layout.
+  //
+  // Por que FRAME (não GROUP): GROUP tem o ícone/tipo errado no painel —
+  // o usuário apontou a diferença visual entre os 2 ícones explicitamente.
+  //
+  // Idempotente por `hacFichaHandoffGroup` = "{areaId}::{sectionKey}" —
+  // mesma chave já usada na versão GROUP, sem necessidade de migração.
+  function _getOrCreateFichaHandoffFrame(section, sectionKey, areaId) {
+    const cfg = _FICHA_BLOCK_CONFIG[sectionKey];
+    if (!cfg || !section) return null;
+    const markerValue = `${areaId}::${sectionKey}`;
+
+    for (const child of (section.children || [])) {
+      try {
+        if (child.getPluginData && child.getPluginData('hacFichaHandoffGroup') === markerValue && !child.removed) {
+          try { child.name = `[HAC] Handoff - ${cfg.title}`; } catch (e) { }
+          return child;
+        }
+      } catch (e) { }
+    }
+
+    const frame = figma.createFrame();
+    frame.name = `[HAC] Handoff - ${cfg.title}`;
+    // SEM Auto Layout (2026-09-14, corrige "o frame da ordem de tabulação
+    // está toda encolhida"): a revisão anterior ligava Auto Layout aqui
+    // "só pelo Hug automático", partindo da premissa errada de que o Hug
+    // se ajustaria ao bbox dos filhos ABSOLUTE. Não se ajusta — um filho
+    // em `layoutPositioning='ABSOLUTE'` é IGNORADO pelo cálculo de Hug do
+    // pai, então o frame colapsava para perto de zero e a réplica (que é o
+    // conteúdo principal: clone + selos sobrepostos) aparecia espremida/
+    // cortada dentro dele.
+    //
+    // Com `layoutMode='NONE'`, os filhos ficam em posicionamento livre
+    // (que é exatamente o que réplica e overlay de selos precisam — eles se
+    // sobrepõem por coordenada, não empilham em fluxo) e o tamanho do frame
+    // é definido numericamente por _fitFichaHandoffFrameToChildren, mesma
+    // abordagem de largura explícita já adotada nos textos da Ficha.
+    frame.layoutMode = 'NONE';
+    // clipsContent=false (2026-09-11): a réplica + moldura + overlay
+    // extrapolam o bbox inicial (moldura tem padding próprio ao redor do
+    // clone) — sem isso, qualquer parte fora dos limites do momento da
+    // criação apareceria cortada.
+    frame.clipsContent = false;
+    frame.fills = [];
+    frame.setPluginData('hacCategory', 'a11y');
+    frame.setPluginData('hacFichaHandoffGroup', markerValue);
+    section.appendChild(frame);
+    return frame;
+  }
+
+  // Reafirma `layoutPositioning='ABSOLUTE'` em cada filho direto de
+  // "[HAC] Handoff - {Func}" (2026-09-11, revisão 3) — chamar depois de
+  // QUALQUER appendChild novo dentro dele (clone, moldura, título, overlay,
+  // snapshot), pelo mesmo motivo documentado em
+  // _setCloneOverlayGroupAbsolutePositioning: um node recém-parentado num
+  // FRAME com Auto Layout nasce em modo de FLUXO por padrão, e só sai dele
+  // quando esta propriedade é setada explicitamente — sem isso o Auto
+  // Layout tentaria empilhar/comprimir o conteúdo (o bug já revertido
+  // nesta sessão). Usa a MESMA função já usada pro overlay — ela já é
+  // genérica (recebe qualquer node, só checa layoutMode do pai).
+  function _absolutizeFichaHandoffFrameChildren(frame) {
+    if (!frame || frame.removed) return;
+    try {
+      for (const child of (frame.children || [])) {
+        _setCloneOverlayGroupAbsolutePositioning(child);
+      }
+    } catch (e) { }
+  }
+
+  // Redimensiona "[HAC] Handoff - {Func}" ao bounding box real dos filhos
+  // (réplica de trabalho + overlay de selos, ou snapshot + overlay depois
+  // do "Preencher Handoff").
+  //
+  // MECANISMO PRINCIPAL de dimensionamento desse frame (2026-09-14): como
+  // ele não tem Auto Layout (ver _getOrCreateFichaHandoffFrame), nada o
+  // dimensiona sozinho — sem esta função ele ficaria colapsado e o
+  // conteúdo apareceria espremido/cortado. Precisa ser chamada sempre que
+  // o conteúdo mudar de tamanho: ao reparentar o clone, ao desenhar
+  // selos/trilha/specs, e depois de remover a réplica no Preencher Handoff.
+  function _fitFichaHandoffFrameToChildren(frame) {
+    if (!frame || frame.removed) return;
+    try {
+      const children = (frame.children || []).filter(c => {
+        try { return c && !c.removed && c.visible !== false && c.absoluteBoundingBox; } catch (e) { return false; }
+      });
+      if (children.length === 0) return;
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      for (const c of children) {
+        const bb = c.absoluteBoundingBox;
+        minX = Math.min(minX, bb.x);
+        minY = Math.min(minY, bb.y);
+        maxX = Math.max(maxX, bb.x + bb.width);
+        maxY = Math.max(maxY, bb.y + bb.height);
+      }
+      const frameBB = frame.absoluteBoundingBox;
+      if (!frameBB) return;
+      const newWidth = Math.max(1, Math.round(maxX - minX));
+      const newHeight = Math.max(1, Math.round(maxY - minY));
+      frame.resizeWithoutConstraints(newWidth, newHeight);
+      // O resize acima pode ter deslocado o FRAME visualmente (o Figma
+      // ancora no canto sup.-esq. do próprio frame, não no bbox dos
+      // filhos) — corrige x/y pra que o FRAME sempre envolva exatamente
+      // [minX,minY]-[maxX,maxY], preservando as posições absolutas dos
+      // filhos (que não são tocadas por este resize).
+      const afterBB = frame.absoluteBoundingBox;
+      if (afterBB) {
+        frame.x = Math.round(frame.x + (minX - afterBB.x));
+        frame.y = Math.round(frame.y + (minY - afterBB.y));
+      }
+    } catch (e) {
+      console.error('[hac] _fitFichaHandoffFrameToChildren: falha ao ajustar tamanho (não impede o restante).', e && e.message);
+    }
   }
 
   // Localiza a legenda de uma funcionalidade pelo pluginData estável
@@ -7906,33 +8817,69 @@ figma.ui.onmessage = async (msg) => {
     return found;
   }
 
-  // Insere o texto de instruções daquela funcionalidade LOGO AO LADO da
-  // réplica de trabalho, no momento em que ela é criada (2026-09-11,
-  // pedido do usuário: "na hora que geramos a réplica, já podemos inserir
-  // o texto das instruções... aí o Preencher Handoff faz só a troca da
-  // réplica pela imagem estática"). Fica solta na Section, como irmã do
-  // clone (nunca dentro dele nem dentro de um Auto Layout), pelo mesmo
-  // motivo dos overlays de marcadores: Auto Layout comprimiria/reordenaria
-  // a réplica, que precisa continuar navegável pro designer clicar nos
-  // elementos. Idempotente por pluginData — "Refazer" não duplica.
-  async function _ensureLegendBesideClone(clone, sectionKey, areaId) {
+  // Monta o objeto mínimo de área que a cadeia da Ficha precisa, a partir
+  // do que as funções de clone têm em mãos (2026-09-11). Elas recebem só
+  // `areaId`/`sectionName`/`root`, não o objeto de área completo que vem do
+  // frontend — e a cadeia só usa id, targetNodeId, targetNodeName,
+  // sectionName e number. O número é lido do Grupo da Área no canvas (o
+  // nome dele começa com "N · Label", ver create-a11y-area); sem isso, cai
+  // em 1, que só afeta a ordem/rótulo, nunca a identidade (que é o id).
+  async function _areaStubFromRoot(areaId, root, sectionName) {
+    let number = 1;
     try {
-      if (!clone || clone.removed || !clone.absoluteBoundingBox) return null;
+      // getNodeByIdAsync (não a versão síncrona, proibida sob
+      // documentAccess: dynamic-page — ver scripts/check-figma-api-usage.cjs).
+      const areaGroup = areaId ? await figma.getNodeByIdAsync(areaId) : null;
+      const m = areaGroup && areaGroup.name && areaGroup.name.match(/^(\d+)\s*·/);
+      if (m) number = parseInt(m[1], 10) || 1;
+    } catch (e) { }
+    return {
+      id: areaId || '',
+      targetNodeId: root ? root.id : null,
+      targetNodeName: root ? root.name : null,
+      sectionName: sectionName || null,
+      number,
+    };
+  }
+
+  // Garante a estrutura da Ficha daquela funcionalidade NO MOMENTO em que
+  // a réplica de trabalho é criada (2026-09-11, pedido do usuário: "as
+  // instruções são criadas assim que as réplicas são criadas. Isso faria
+  // com que o frame [HAC] {Funcionalidade} seja criado de maneira
+  // correta"). Monta a cadeia inteira — "[HAC] Documentação" → "Tela N" →
+  // "[HAC] Assets do Handoff" → "[HAC] {Funcionalidade}" → "[HAC]
+  // Instruções de {Func}" — e é lá dentro que a legenda nasce.
+  //
+  // Revisão 2 (2026-09-11): também cria/obtém o FRAME "[HAC] Handoff -
+  // {Func}" (irmão de "[HAC] Instruções de {Func}" dentro do bloco) e
+  // REPARENTA o clone (+ Moldura/Título via _ensureCloneWorkFrame, já
+  // chamado pelo chamador logo depois desta função) pra dentro dele — no
+  // lugar de ficar solto na Section de sessão. Isso satisfaz a estrutura
+  // exata pedida pelo usuário nos prints reais do painel de Layers.
+  //
+  // Por que reparentar AQUI (dentro desta função) em vez de mudar a ordem
+  // das 3 `_create*CloneForArea`: o clone já chega aqui com x/y absolutos
+  // corretos (calculados por _findFreeTabOrderCopyPosition, sem nenhuma
+  // mudança) e já foi reparentado uma vez pra Section por
+  // `_reparentIntoSection` no chamador — esta função só o move de novo,
+  // da Section pro FRAME de Handoff, preservando posição visual (mesmo
+  // princípio de medição before/after). Isso evita reordenar a sequência
+  // testada e protegida das 3 funções de criação (R11 do plano).
+  //
+  // Toda a cadeia é idempotente por pluginData, então chamar aqui só
+  // ANTECIPA a criação; o "Preencher Handoff" depois reaproveita
+  // exatamente os mesmos nós, sem duplicar nada.
+  // NÃO altera como a réplica nasce, como é clicada/marcada, nem o ciclo de
+  // vida dela — só ONDE ela mora na árvore.
+  async function _ensureLegendBesideClone(clone, sectionKey, area, designerName, currentUserId) {
+    try {
+      if (!clone || clone.removed) return null;
       const cfg = _FICHA_BLOCK_CONFIG[sectionKey];
       if (!cfg) return null;
 
-      const parent = clone.parent;
-      if (!parent || typeof parent.appendChild !== 'function') return null;
-
+      const areaId = (area && area.id) || '';
       const marker = 'hacLegendForArea';
-      const markerValue = `${areaId || ''}::${sectionKey}`;
-      for (const sibling of (parent.children || [])) {
-        try {
-          if (sibling.getPluginData && sibling.getPluginData(marker) === markerValue && !sibling.removed) {
-            return sibling;
-          }
-        } catch (e) { }
-      }
+      const markerValue = `${areaId}::${sectionKey}`;
 
       // Fontes pré-carregadas ANTES de montar a legenda (2026-09-11, bug
       // real: a instrução não aparecia ao criar a réplica). A API do Figma
@@ -7949,27 +8896,200 @@ figma.ui.onmessage = async (msg) => {
         try { await figma.loadFontAsync(f); } catch (e) { /* famílias ausentes são normais; basta uma delas resolver */ }
       }
 
-      const legend = await _buildFichaLegendColumn(
-        FICHA_INSTRUCTION_CONTENT[cfg.instructionKey],
-        cfg.legendTitle,
-        cfg.legendFallback
-      );
-      legend.name = `[Instruções] ${cfg.name}`;
-      legend.setPluginData('hacCategory', 'a11y');
-      legend.setPluginData(marker, markerValue);
-      parent.appendChild(legend);
-      // Ao lado direito da réplica, alinhada pelo topo — posição medida em
-      // coordenadas absolutas e convertida pelo delta observado (mesmo
-      // padrão de _reparentIntoAreaGroup), robusto contra qualquer sistema
-      // de coordenadas do pai.
-      const cloneBB = clone.absoluteBoundingBox;
-      const targetX = Math.round(cloneBB.x + cloneBB.width + _TAB_ORDER_ROW_GAP);
-      const targetY = Math.round(cloneBB.y);
-      const legendBB = legend.absoluteBoundingBox;
-      if (legendBB) {
-        legend.x = Math.round(legend.x + (targetX - legendBB.x));
-        legend.y = Math.round(legend.y + (targetY - legendBB.y));
+      // A cadeia inteira é idempotente — _getOrCreateFichaBlockSection já
+      // chama _getOrCreateFichaInstrucoesFrame, que por sua vez cria a
+      // legenda (ou reaproveita uma já existente via _findLegendForArea).
+      //
+      // Logs de diagnóstico (2026-09-11, mantidos deliberadamente): foram
+      // eles que expuseram o bug real de _FICHA_BLOCK_CONFIG declarada no
+      // meio do handler (temporal dead zone) — sem passo a passo, o catch
+      // abaixo reportava só a mensagem final, não qual elo da cadeia parou.
+      console.log('[hac][legenda] início', { sectionKey, areaId, cloneName: clone.name });
+      const docFrame = await _createOrGetFichaFrame(area, designerName, currentUserId);
+      console.log('[hac][legenda] docFrame', docFrame && docFrame.id, docFrame && docFrame.name);
+      const itensFrame = await _getOrCreateFichaItensFrame(docFrame, area);
+      console.log('[hac][legenda] itensFrame', itensFrame && itensFrame.id, itensFrame && itensFrame.name);
+
+      // Reparenta o Grupo da Área ("N · Label" — selo + frame ORIGINAL
+      // marcado) pra dentro de "[HAC] Assets do Handoff", como PRIMEIRO
+      // filho (2026-09-11, pedido explícito do usuário: "a tela
+      // selecionada vai pra dentro da camada da Tela pela qual irá
+      // receber a documentação [...] fica dentro da pasta de assets dessa
+      // tela em específico"). Motivo: hoje esse GROUP nasce solto,
+      // irmão direto de "[HAC] Documentação" — ao marcar uma 2ª tela, o
+      // frame original dela se acumula solto ao lado, sem organização.
+      //
+      // Momento (2026-09-11, avaliado com architecture-guardian antes de
+      // implementar): só AQUI, na primeira captura de qualquer
+      // funcionalidade — nunca dentro de create-a11y-area em si, porque
+      // "Tela N"/"[HAC] Assets do Handoff" só existem a partir desta
+      // cadeia (_getOrCreateFichaItensFrame), que por sua vez PRECISA de
+      // area.id já existente pra se marcar (hacFichaTelaForArea) — e
+      // area.id só nasce depois do figma.group() em create-a11y-area.
+      // Antecipar essa criação pra dentro de create-a11y-area inverteria
+      // essa dependência e criaria a estrutura da Ficha mesmo quando o
+      // designer nunca captura nada — mudança de comportamento maior, não
+      // pedida. Idempotente: se o Grupo já estiver dentro de itensFrame
+      // (chamada seguinte, "Atualizar"), não faz nada.
+      try {
+        const areaGroup = areaId ? await figma.getNodeByIdAsync(areaId) : null;
+        // Log de diagnóstico (2026-09-11): sem isto, um `areaId` vazio/
+        // divergente ou um `areaGroup` não encontrado passa batido — o `if`
+        // abaixo simplesmente não entra, sem lançar nenhum erro, e o
+        // catch (que só pega EXCEÇÕES) nunca dispara. Foi exatamente esse
+        // silêncio que escondeu o bug real reportado com print ("o Grupo
+        // ficou solto, fora da Section inteira").
+        console.log('[hac][área] reparenting', {
+          areaId, found: !!areaGroup, removed: areaGroup && areaGroup.removed,
+          currentParent: areaGroup && areaGroup.parent && areaGroup.parent.id,
+          currentParentName: areaGroup && areaGroup.parent && areaGroup.parent.name,
+          targetParent: itensFrame && itensFrame.id,
+        });
+        if (areaGroup && !areaGroup.removed && areaGroup.parent !== itensFrame) {
+          // Bug real corrigido (2026-09-12, regressão reportada pelo
+          // usuário: "a réplica está sendo levada pra uma área totalmente
+          // aleatória"): `itensFrame` TEM Auto Layout ativo
+          // (layoutMode='HORIZONTAL'), e GroupNode NÃO suporta
+          // `layoutPositioning` (propriedade nem existe nele) — então,
+          // diferente do padrão usado em todo o resto do código pra
+          // preservar posição absoluta (medir before/after, ajustar x/y
+          // manual, válido só quando o destino NÃO tem Auto Layout ou
+          // quando o node aceita ABSOLUTE), o GROUP aqui entra
+          // necessariamente EM FLUXO dentro do Auto Layout. Um ajuste
+          // manual de x/y sobre um node em fluxo é sobrescrito pelo motor
+          // de Auto Layout do Figma no próximo reflow — o `beforeBB`/
+          // `afterBB` daqui não tinha efeito real, só inflava o bounding
+          // box reportado pra _collectA11yOccupiedBounds, empurrando a
+          // PRÓXIMA réplica pra uma posição distorcida/distante. Correção:
+          // não tentar preservar posição manual aqui — o GROUP participa
+          // do fluxo normalmente (primeiro filho, lado a lado com os
+          // blocos de funcionalidade), como qualquer outro item de um
+          // Auto Layout HORIZONTAL.
+          itensFrame.insertChild(0, areaGroup);
+          console.log('[hac][área] reparentado com sucesso', areaGroup.id);
+        }
+      } catch (areaReparentError) {
+        // Best-effort — organização é cosmética, nunca deve impedir o
+        // resto da cadeia (legenda, bloco, réplica) de seguir. figma.notify
+        // adicionado (2026-09-11): o console.error sozinho já escondeu
+        // outro bug real nesta sessão (a instrução não aparecia) por não
+        // ser visível ao designer sem o console aberto.
+        console.error('[hac] _ensureLegendBesideClone: falha ao mover o Grupo da Área pra dentro de "[HAC] Assets do Handoff".', areaReparentError && (areaReparentError.stack || areaReparentError.message));
+        try { figma.notify('Grupo da área não organizado: ' + (areaReparentError && (areaReparentError.message || String(areaReparentError))), { error: true, timeout: 6000 }); } catch (e4) { }
       }
+
+      const section = await _getOrCreateFichaBlockSection(itensFrame, sectionKey, areaId);
+      console.log('[hac][legenda] bloco', section && section.id, section && section.name);
+      if (!section) return null;
+
+      // FRAME "[HAC] Handoff - {Func}" (2026-09-11, revisão 3) — cria/obtém
+      // e reparenta o clone nele, preservando a posição visual. ORDEM
+      // CRÍTICA (mesmo princípio já usado pro overlay em todos os 3
+      // builders): ABSOLUTE tem que ser setado IMEDIATAMENTE após o
+      // appendChild, ANTES de medir/escrever qualquer x/y — o FRAME de
+      // Handoff TEM Auto Layout (é isso que dá o Hug automático), e
+      // enquanto o clone ainda está em modo de FLUXO (não-ABSOLUTE), o Auto
+      // Layout pode recalcular/descartar a escrita manual de posição no
+      // reflow seguinte.
+      const handoffFrame = _getOrCreateFichaHandoffFrame(section, sectionKey, areaId);
+      console.log('[hac][legenda] handoffFrame', handoffFrame && handoffFrame.id, handoffFrame && handoffFrame.name);
+      // Bug real corrigido (2026-09-11, reportado com print pelo usuário:
+      // "frame fantasma" vazio ao lado do bloco real): _getOrCreateFichaHandoffFrame
+      // já PERSISTE o FRAME no canvas (section.appendChild dentro dela)
+      // antes de devolver o controle aqui — se QUALQUER coisa falhar entre
+      // esse ponto e o clone efetivamente entrar nele, o FRAME sobrevive
+      // vazio, sem rollback. Try/catch dedicado: se o reparenting falhar,
+      // remove o FRAME recém-criado (só se ainda estiver vazio — nunca
+      // remove um FRAME que já tinha conteúdo de uma sessão anterior) em
+      // vez de deixá-lo visível sem nada dentro.
+      if (handoffFrame) {
+        try {
+          if (clone.parent !== handoffFrame) {
+            // Overlay de selos/trilha/specs precisa ser movido JUNTO com o
+            // clone (2026-09-14): ele é irmão do clone (nunca filho), e
+            // sem isto ficaria pra trás, solto na Section, enquanto a
+            // réplica entra no bloco — os selos "descolariam" da tela.
+            const overlayKey = sectionKey === 'tabulacao' ? 'hacTabOrderBadgesGroupForClone'
+              : sectionKey === 'swipe' ? 'hacSwipePathGroupForClone'
+                : 'hacSpecGroupForClone';
+            let overlay = null;
+            try {
+              for (const sibling of ((clone.parent && clone.parent.children) || [])) {
+                if (sibling !== clone && sibling.getPluginData && sibling.getPluginData(overlayKey) === clone.id) {
+                  overlay = sibling;
+                  break;
+                }
+              }
+            } catch (e) { }
+            const overlayBeforeBB = overlay && !overlay.removed ? overlay.absoluteBoundingBox : null;
+            // Bug real corrigido (2026-09-14): o código abaixo referenciava
+            // `beforeBB`, variável que existe em funções IRMÃS mas nunca
+            // neste escopo — lançava ReferenceError, engolido pelo catch
+            // logo abaixo. Efeito em cascata: o overlay nunca era movido
+            // junto (os selos "descolavam" da réplica) e, principalmente,
+            // `_fitFichaHandoffFrameToChildren` (última linha do bloco)
+            // nunca rodava — o frame ficava no tamanho default 100×100, e
+            // o bbox calculado depois, já com overlay e clone desalinhados,
+            // inflava "Tela N" para ~2520px de altura (o vão vertical
+            // vazio reportado com print).
+            const cloneBeforeBB = clone.absoluteBoundingBox;
+
+            handoffFrame.appendChild(clone);
+            _setCloneOverlayGroupAbsolutePositioning(clone);
+            // Réplica ancorada na ORIGEM do frame (2026-09-14, corrige o
+            // "frame fantasma"): antes o x/y era corrigido pelo delta
+            // before/after, o que PRESERVAVA a posição livre distante em
+            // que o clone tinha nascido no canvas — o bloco da Ficha
+            // ficava visualmente vazio no lugar certo, com o conteúdo real
+            // lá longe. Agora o clone vai pro canto do frame (0,0) e é o
+            // FRAME que se ajusta ao redor dele, aqui dentro da Ficha.
+            clone.x = 0;
+            clone.y = 0;
+
+            if (overlay && !overlay.removed && overlayBeforeBB) {
+              // O overlay acompanha o MESMO deslocamento que o clone
+              // sofreu, preservando o alinhamento selo↔elemento.
+              const cloneAfterBB = clone.absoluteBoundingBox;
+              handoffFrame.appendChild(overlay);
+              _setCloneOverlayGroupAbsolutePositioning(overlay);
+              const overlayAfterBB = overlay.absoluteBoundingBox;
+              if (cloneAfterBB && cloneBeforeBB && overlayAfterBB) {
+                const deltaX = Math.round((cloneAfterBB.x - cloneBeforeBB.x) - (overlayAfterBB.x - overlayBeforeBB.x));
+                const deltaY = Math.round((cloneAfterBB.y - cloneBeforeBB.y) - (overlayAfterBB.y - overlayBeforeBB.y));
+                overlay.x += deltaX;
+                overlay.y += deltaY;
+              }
+            }
+
+            // Ajusta o tamanho do FRAME ao conteúdo real assim que a
+            // réplica entra (2026-09-14) — sem Auto Layout, ele não cresce
+            // sozinho, e sem isto ficaria colapsado, com a réplica
+            // aparecendo espremida/cortada dentro dele.
+            _fitFichaHandoffFrameToChildren(handoffFrame);
+          }
+        } catch (reparentError) {
+          // figma.notify além do console (2026-09-14): este catch escondeu
+          // um ReferenceError por várias rodadas de teste — o sintoma
+          // chegava como "layout bagunçado", nunca como erro. Qualquer
+          // falha aqui quebra o dimensionamento do bloco, então precisa
+          // ser visível pra quem está usando o plugin, não só no console.
+          console.error('[hac] _ensureLegendBesideClone: reparenting do clone pro FRAME de Handoff falhou.', reparentError && (reparentError.stack || reparentError.message));
+          try { figma.notify('Falha ao organizar a réplica no bloco: ' + (reparentError && (reparentError.message || String(reparentError))), { error: true, timeout: 8000 }); } catch (e4) { }
+          try {
+            if (!handoffFrame.removed && (handoffFrame.children || []).length === 0) {
+              handoffFrame.remove();
+            }
+          } catch (e3) { }
+        }
+      }
+
+      // "Tela N" precisa refletir a largura real do conteúdo assim que a
+      // réplica entra pela primeira vez (2026-09-11) — ver comentário em
+      // _getOrCreateFichaAreaGroup/_fitTelaFrameWidthToContent.
+      _fitTelaFrameWidthFromItensFrame(itensFrame);
+
+      const legend = _findLegendForArea(areaId, sectionKey) || null;
+      console.log('[hac][legenda] legenda encontrada?', !!legend, legend && legend.id);
       return legend;
     } catch (e) {
       // Visível ao designer, não só no console (2026-09-11): este catch já
@@ -7977,7 +9097,10 @@ figma.ui.onmessage = async (msg) => {
       // antes de escrever `characters`) — a instrução simplesmente não
       // aparecia, sem nenhum sinal de que algo tinha falhado.
       console.error('[hac] _ensureLegendBesideClone: falha ao inserir as instruções ao lado da réplica (não impede o trabalho).', e && (e.stack || e.message));
-      try { figma.notify('Não foi possível inserir o texto de instruções ao lado da réplica — o restante do trabalho segue normalmente.'); } catch (e2) { }
+      // Mensagem com o erro REAL (2026-09-11): o texto genérico anterior não
+      // dizia o que falhou, e o bug voltou a aparecer sem deixar rastro
+      // utilizável pro designer relatar.
+      try { figma.notify('Instruções não inseridas: ' + (e && (e.message || String(e))), { error: true, timeout: 8000 }); } catch (e2) { }
       return null;
     }
   }
@@ -8009,11 +9132,22 @@ figma.ui.onmessage = async (msg) => {
       : null;
     if (resolved) {
       const { clone, nodeMap } = resolved;
+      // FRAME "[HAC] Handoff - {Func}" (2026-09-11, revisão 2) — já deve
+      // existir a esta altura, criado junto com a réplica de trabalho (ver
+      // _ensureLegendBesideClone/reordenação nos 3 _create*CloneForArea).
+      // Fallback defensivo: cria aqui se por algum motivo ainda não existir
+      // (ex. área antiga, migração), mas o caminho normal é reaproveitar.
+      const handoffFrame = _getOrCreateFichaHandoffFrame(section, 'tabulacao', area.id);
+
       // Réplica de fundo vira snapshot estático (2026-09-10) — a réplica de
       // TRABALHO (`clone`) nunca mais é movida pra dentro da Ficha, só uma
       // imagem dela. O overlay de marcadores (selos) continua real e é
-      // movido/reaproveitado como grupo, sobreposto ao snapshot.
-      await _snapshotCloneIntoFichaSection(clone, section, 'hacTabOrderBadgesGroupForClone', area.id);
+      // movido/reaproveitado como grupo, sobreposto ao snapshot. Snapshot e
+      // overlay vivem dentro do FRAME "[HAC] Handoff - {Func}" (2026-09-11,
+      // revisão 2 — antes era GROUP, agora é o mesmo FRAME que já hospedava
+      // a réplica de trabalho viva).
+      const snapshotTarget = handoffFrame || section;
+      const snapshot = await _snapshotCloneIntoFichaSection(clone, snapshotTarget, 'hacTabOrderBadgesGroupForClone', area.id);
 
       // Selos já existentes no overlay não são redesenhados — só os itens
       // ainda sem selo equivalente dentro dele entram aqui. Dedupe por
@@ -8021,30 +9155,26 @@ figma.ui.onmessage = async (msg) => {
       // 2026-09-09); fallback por `number` no NOME do grupo cobre selos
       // criados ANTES desta correção, que ainda não têm a marca.
       const overlayGroup = _getOrCreateCloneOverlayGroup(clone, 'hacTabOrderBadgesGroupForClone', '[Selos de Tabulação]', area.id);
-      if (overlayGroup.parent !== section) {
-        // `section` é um FRAME com Auto Layout — diferente de
-        // _moveActiveCloneIntoFichaSection (onde o CLONE se movia junto e
-        // seu deslocamento real, medido antes/depois do appendChild, era
-        // aplicado como proxy ao overlay), aqui o overlay é movido SOZINHO.
+      const overlayTarget = handoffFrame || section;
+      if (overlayGroup.parent !== overlayTarget) {
         // Bug real corrigido (2026-09-11, confirmado com print do usuário:
         // selos aparecendo completamente FORA da imagem de snapshot): a
         // ordem antiga escrevia x/y ANTES de setar layoutPositioning =
-        // 'ABSOLUTE' — enquanto o node ainda está em modo de fluxo (não
-        // ABSOLUTE), o Auto Layout de `section` pode recalcular/descartar
-        // essa escrita manual no reflow seguinte, e um reflow real
-        // acontece aqui: a imagem de snapshot (inserida logo ACIMA, ver
-        // _snapshotCloneIntoFichaSection) já mudou o tamanho de `section`,
-        // então o overlay entrava no fluxo vertical DEPOIS dela — daí o
-        // deslocamento "para fora". Correção: ABSOLUTE é setado
-        // IMEDIATAMENTE após o appendChild, ANTES de medir/escrever o
-        // delta final — assim a escrita de posição não é mais sujeita a
-        // recomputação de fluxo. Mesmo princípio de medição de sempre
-        // (before/after do MESMO node, mesmo espírito de
-        // _reparentIntoAreaGroup: soma a diferença before−after pra ANULAR
-        // o reposicionamento automático, não replicá-lo) — só mudou QUANDO
-        // essa medição final acontece.
+        // 'ABSOLUTE'. Correção: ABSOLUTE é setado IMEDIATAMENTE após o
+        // appendChild, ANTES de medir/escrever o delta final.
+        //
+        // ORDEM CRÍTICA — preservada textualmente (2026-09-11, revisão 2):
+        // _setCloneOverlayGroupAbsolutePositioning é no-op quando o pai não
+        // tem Auto Layout — e agora o pai (`handoffFrame`) NUNCA tem Auto
+        // Layout (`layoutMode='NONE'` por design, ver
+        // _getOrCreateFichaHandoffFrame), então o overlay permanece com
+        // posicionamento livre normal (x/y absoluto manual), igual a
+        // quando ficava solto na Section. A sequência
+        // before → appendChild → (no-op ABSOLUTE) → after → delta segue
+        // correta e serve só como proteção caso o overlay algum dia
+        // precise ficar dentro de um pai com Auto Layout de novo.
         const beforeBB = overlayGroup.absoluteBoundingBox;
-        section.appendChild(overlayGroup);
+        overlayTarget.appendChild(overlayGroup);
         _setCloneOverlayGroupAbsolutePositioning(overlayGroup);
         const afterBB = overlayGroup.absoluteBoundingBox;
         if (beforeBB && afterBB) {
@@ -8078,7 +9208,22 @@ figma.ui.onmessage = async (msg) => {
           console.error('[hac] _buildFichaTabulacaoSection: falha ao desenhar selo.', e && e.message);
         }
       }
+
+      // Depois de TODOS os selos desenhados — reafirma ABSOLUTE em todo
+      // filho do FRAME de Handoff (defensivo: cada selo pode ter mexido em
+      // filhos do overlay, não do FRAME em si, mas o custo de reconferir é
+      // baixo). Com Auto Layout + ABSOLUTE, o Hug do FRAME já se ajusta
+      // sozinho ao bbox final — não precisa de resize manual.
+      if (handoffFrame) _fitFichaHandoffFrameToChildren(handoffFrame);
     }
+    // "Tela N" precisa refletir a largura real do conteúdo que acabou de
+    // crescer (2026-09-11) — sem isto, "Título Card" (FILL) fica sem
+    // referência real pra esticar (ver comentário em
+    // _getOrCreateFichaAreaGroup/_fitTelaFrameWidthToContent).
+    _fitTelaFrameWidthFromItensFrame(itensFrame);
+    // Section de sessão re-ajustada (2026-09-14) — ver comentário completo
+    // em _fitSessionSectionFromItensFrame.
+    _fitSessionSectionFromItensFrame(itensFrame);
 
     return itemCount;
   }
@@ -8124,19 +9269,27 @@ figma.ui.onmessage = async (msg) => {
 
       const text = figma.createText();
       text.name = 'Texto';
-      text.characters = 'Nenhuma trilha de swipe definida para esta área.';
+      // Bug real corrigido (2026-09-11) — ordem, ver comentário em
+      // _appendFichaBlockTitle.
       text.textAutoResize = 'HEIGHT';
       // Escala real (corrigido 2026-09-11, era 11.5px/Inter Regular —
       // abaixo do piso real de 12px): elevado para "label/tiny" (12px), com
       // weightOverride=400 pra manter o peso visual Regular de texto
       // corrido.
       await _applyFichaTypography(text, 'label/tiny', 400);
+      text.characters = 'Nenhuma trilha de swipe definida para esta área.';
       text.fills = [{ type: 'SOLID', color: { r: 0.15, g: 0.15, b: 0.15 } }];
       card.appendChild(text);
-      // layoutSizingHorizontal (API moderna) no lugar de layoutAlign
-      // legado — `card` é FIXED (260px, linha 7434), condição real pra
-      // Fill funcionar: este texto de aviso deve ocupar a largura do card.
-      text.layoutSizingHorizontal = 'FILL';
+      // Largura numérica explícita, NÃO FILL (2026-09-14, mesma revisão que
+      // abandonou o FILL no resto da Ficha) — `card` é FIXED (260px, acima),
+      // então a largura útil do texto é 260 menos o padding horizontal do
+      // próprio card (12+12).
+      try {
+        const cardInnerWidth = Math.max(1, Math.round(
+          card.width - (card.paddingLeft || 0) - (card.paddingRight || 0)
+        ));
+        text.resizeWithoutConstraints(cardInnerWidth, Math.max(1, Math.round(text.height)));
+      } catch (e) { }
 
       section.appendChild(card);
       return 0;
@@ -8150,12 +9303,14 @@ figma.ui.onmessage = async (msg) => {
       // fallback textual, agora como erro em vez de estado normal.
       const errorText = figma.createText();
       errorText.name = 'Erro';
-      errorText.characters = 'Não foi possível localizar/criar a cópia de trabalho para desenhar a trilha — marque a área novamente.';
+      // Ordem preventiva (2026-09-11) — mesmo padrão do resto da função.
+      errorText.textAutoResize = 'WIDTH_AND_HEIGHT';
       // Escala real (corrigido 2026-09-11, era 11.5px/Inter Regular —
       // abaixo do piso real de 12px): elevado para "label/tiny" (12px), com
       // weightOverride=400 pra manter o peso visual Regular de texto
       // corrido.
       await _applyFichaTypography(errorText, 'label/tiny', 400);
+      errorText.characters = 'Não foi possível localizar/criar a cópia de trabalho para desenhar a trilha — marque a área novamente.';
       errorText.fills = [{ type: 'SOLID', color: { r: 0.7, g: 0.2, b: 0.2 } }];
       figma.currentPage.appendChild(errorText);
       section.appendChild(errorText);
@@ -8163,9 +9318,18 @@ figma.ui.onmessage = async (msg) => {
     }
 
     const { clone, nodeMap } = resolved;
+    // FRAME "[HAC] Handoff - {Func}" (2026-09-11, revisão 2) — mesmo
+    // princípio de _buildFichaTabulacaoSection: já deve existir (criado
+    // junto com a réplica de trabalho), fallback defensivo aqui.
+    const handoffFrame = _getOrCreateFichaHandoffFrame(section, 'swipe', area.id);
+
     // Réplica de fundo vira snapshot estático (2026-09-10) — ver comentário
-    // equivalente em _buildFichaTabulacaoSection.
-    await _snapshotCloneIntoFichaSection(clone, section, 'hacSwipePathGroupForClone', area.id);
+    // equivalente em _buildFichaTabulacaoSection. Criado JÁ AQUI, antes do
+    // early-return de "menos de 2 pontos resolvidos" logo abaixo — senão o
+    // snapshot ficaria solto no bloco nesse caminho.
+    const snapshotTarget = handoffFrame || section;
+    const snapshot = await _snapshotCloneIntoFichaSection(clone, snapshotTarget, 'hacSwipePathGroupForClone', area.id);
+    if (handoffFrame) _fitFichaHandoffFrameToChildren(handoffFrame);
 
     const resolvedNodes = [];
     for (const p of points) {
@@ -8177,6 +9341,8 @@ figma.ui.onmessage = async (msg) => {
       // Pontos existem no dado, mas não foram encontrados no clone atual
       // (elementos renomeados/removidos do design desde a última trilha)
       // — a réplica em si já foi inserida (fica visível), só sem a linha.
+      _fitTelaFrameWidthFromItensFrame(itensFrame);
+      _fitSessionSectionFromItensFrame(itensFrame);
       return 0;
     }
 
@@ -8188,16 +9354,16 @@ figma.ui.onmessage = async (msg) => {
     // redesenhar do zero aqui continua correto e mais simples do que
     // tentar diffar segmentos.
     const overlayGroup = _getOrCreateCloneOverlayGroup(clone, 'hacSwipePathGroupForClone', '[Trilha de Swipe]', area.id);
-    if (overlayGroup.parent !== section) {
-      // `section` é um FRAME com Auto Layout — o overlay é movido SOZINHO
-      // (o clone não se move mais, só o snapshot dele). Bug real corrigido
-      // (2026-09-11) — ver comentário completo em
+    const overlayTarget = handoffFrame || section;
+    if (overlayGroup.parent !== overlayTarget) {
+      // Bug real corrigido (2026-09-11) — ver comentário completo em
       // _buildFichaTabulacaoSection: ABSOLUTE precisa ser setado
       // IMEDIATAMENTE após o appendChild, ANTES de medir/escrever o delta
-      // final, senão o Auto Layout pode descartar a escrita manual no
-      // reflow causado pela imagem de snapshot inserida logo acima.
+      // final. ORDEM CRÍTICA preservada (2026-09-11, revisão 2) mesmo com o
+      // destino passando a ser o FRAME sem Auto Layout de Handoff —
+      // _setCloneOverlayGroupAbsolutePositioning é no-op aqui por design.
       const beforeBB = overlayGroup.absoluteBoundingBox;
-      section.appendChild(overlayGroup);
+      overlayTarget.appendChild(overlayGroup);
       _setCloneOverlayGroupAbsolutePositioning(overlayGroup);
       const afterBB = overlayGroup.absoluteBoundingBox;
       if (beforeBB && afterBB) {
@@ -8225,6 +9391,16 @@ figma.ui.onmessage = async (msg) => {
     } catch (e) {
       console.error('[hac] _buildFichaSwipeSection: reparenting da trilha pro overlay falhou, mantendo solta na página.', e && e.message);
     }
+
+    // Reafirma ABSOLUTE agora que a trilha (que pode extrapolar o snapshot)
+    // já está desenhada dentro do overlay — o Hug do FRAME de Handoff se
+    // ajusta sozinho, não precisa de resize manual.
+    if (handoffFrame) _fitFichaHandoffFrameToChildren(handoffFrame);
+    // Ver comentário equivalente em _buildFichaTabulacaoSection.
+    _fitTelaFrameWidthFromItensFrame(itensFrame);
+    // Section de sessão re-ajustada (2026-09-14) — ver comentário completo
+    // em _fitSessionSectionFromItensFrame.
+    _fitSessionSectionFromItensFrame(itensFrame);
 
     return points.length;
   }
@@ -8256,21 +9432,25 @@ figma.ui.onmessage = async (msg) => {
       ? await _resolveActiveSpecClone(area.id, area.targetNodeId, area.sectionName, designerName, currentUserId)
       : null;
     if (resolved) {
+      // FRAME "[HAC] Handoff - {Func}" (2026-09-11, revisão 2) — ver
+      // _buildFichaTabulacaoSection.
+      const handoffFrame = _getOrCreateFichaHandoffFrame(section, 'leitor', area.id);
+
       // Réplica de fundo vira snapshot estático (2026-09-10) — ver
       // comentário equivalente em _buildFichaTabulacaoSection.
-      await _snapshotCloneIntoFichaSection(resolved.clone, section, 'hacSpecGroupForClone', area.id);
+      const snapshotTarget = handoffFrame || section;
+      const snapshot = await _snapshotCloneIntoFichaSection(resolved.clone, snapshotTarget, 'hacSpecGroupForClone', area.id);
       const specOverlayGroup = _getOrCreateCloneOverlayGroup(resolved.clone, 'hacSpecGroupForClone', '[Specs de Leitor de Tela]', area.id);
-      if (specOverlayGroup.parent !== section) {
-        // `section` é um FRAME com Auto Layout — o overlay (com os
-        // specGroups reais já desenhados) é movido SOZINHO. Bug real
-        // corrigido (2026-09-11) — ver comentário completo em
-        // _buildFichaTabulacaoSection: ABSOLUTE precisa ser setado
-        // IMEDIATAMENTE após o appendChild, ANTES de medir/escrever o
-        // delta final, senão o Auto Layout pode descartar a escrita
-        // manual no reflow causado pela imagem de snapshot inserida logo
-        // acima.
+      const overlayTarget = handoffFrame || section;
+      if (specOverlayGroup.parent !== overlayTarget) {
+        // O overlay (com os specGroups reais já desenhados) é movido
+        // SOZINHO. Bug real corrigido (2026-09-11) — ver comentário
+        // completo em _buildFichaTabulacaoSection: ABSOLUTE precisa ser
+        // setado IMEDIATAMENTE após o appendChild, ANTES de medir/escrever
+        // o delta final. ORDEM CRÍTICA preservada (2026-09-11, revisão 3)
+        // com o destino passando a ser o FRAME com Auto Layout de Handoff.
         const beforeBB = specOverlayGroup.absoluteBoundingBox;
-        section.appendChild(specOverlayGroup);
+        overlayTarget.appendChild(specOverlayGroup);
         _setCloneOverlayGroupAbsolutePositioning(specOverlayGroup);
         const afterBB = specOverlayGroup.absoluteBoundingBox;
         if (beforeBB && afterBB) {
@@ -8278,6 +9458,10 @@ figma.ui.onmessage = async (msg) => {
           specOverlayGroup.y += Math.round(beforeBB.y - afterBB.y);
         }
       }
+      // Reafirma ABSOLUTE em todos os filhos do FRAME de Handoff. As specs
+      // já estão desenhadas no overlay desde o fluxo de trabalho, então o
+      // Hug do FRAME já reflete o tamanho final sozinho.
+      if (handoffFrame) _fitFichaHandoffFrameToChildren(handoffFrame);
     }
 
     // Bug real corrigido (2026-09-10, reportado com print pelo usuário):
@@ -8298,6 +9482,13 @@ figma.ui.onmessage = async (msg) => {
     // itemCount/detecção de "desatualizado" (ver _fichaSectionIsStale,
     // handoff-ficha.js) já reflete o número de specs reais recebidas aqui,
     // sem precisar desenhar nada a mais.
+    // Ver comentário equivalente em _buildFichaTabulacaoSection.
+    _fitTelaFrameWidthFromItensFrame(itensFrame);
+    // Section de sessão re-ajustada (2026-09-14) — ver comentário completo
+    // em _fitSessionSectionFromItensFrame. Especialmente relevante aqui: o
+    // Leitor de Tela pode gerar N specGroups lado a lado (um card por
+    // elemento marcado), bem mais largo que Tabulação/Swipe.
+    _fitSessionSectionFromItensFrame(itensFrame);
     return (specs || []).length;
   }
 
@@ -8388,26 +9579,38 @@ figma.ui.onmessage = async (msg) => {
       // corretamente. Localiza e remove SÓ o clone em si, isoladamente,
       // por pluginData (nunca por parentesco), preservando o overlay
       // onde quer que ele esteja agora.
+      // Revisão 3 (2026-09-11): o clone agora vive dentro do FRAME "[HAC]
+      // Handoff - {Func}" (Auto Layout + filhos ABSOLUTE, não mais solto na
+      // Section) — capturar o `parent` ANTES de remover clone+moldura.
+      // _fitFichaHandoffFrameToChildren chamada como fallback defensivo
+      // (o Hug do Auto Layout já deveria encolher sozinho ao remover
+      // filhos ABSOLUTE, mas o ajuste manual é barato e idempotente).
       try {
         if (sectionKey === 'tabulacao') {
           const workingClone = _findTabOrderCopyForArea(area.id);
           if (workingClone && !workingClone.removed) {
+            const handoffFrame = workingClone.parent;
             _removeCloneWorkFrame(workingClone);
             workingClone.remove();
+            if (handoffFrame && !handoffFrame.removed) _fitFichaHandoffFrameToChildren(handoffFrame);
           }
           _activeTabOrderCloneMaps.delete(area.id);
         } else if (sectionKey === 'swipe') {
           const workingClone = _findSwipePathCopyForArea(area.id);
           if (workingClone && !workingClone.removed) {
+            const handoffFrame = workingClone.parent;
             _removeCloneWorkFrame(workingClone);
             workingClone.remove();
+            if (handoffFrame && !handoffFrame.removed) _fitFichaHandoffFrameToChildren(handoffFrame);
           }
           _activeSwipePathCloneMaps.delete(area.id);
         } else if (sectionKey === 'leitor') {
           const workingClone = _findSpecCloneForArea(area.id);
           if (workingClone && !workingClone.removed) {
+            const handoffFrame = workingClone.parent;
             _removeCloneWorkFrame(workingClone);
             workingClone.remove();
+            if (handoffFrame && !handoffFrame.removed) _fitFichaHandoffFrameToChildren(handoffFrame);
           }
           _activeSpecCloneMaps.delete(area.id);
         }
@@ -8461,7 +9664,7 @@ figma.ui.onmessage = async (msg) => {
       // seção, se havia sido marcada por um "Editar" anterior — o bloco
       // final acabou de ser reinserido/atualizado com sucesso.
       try {
-        const itensFrameForStale = fichaFrame.findOne(n => n.name === '[HAC] Itens');
+        const itensFrameForStale = _findFichaItensFrameDeep(fichaFrame);
         const staleSection = itensFrameForStale ? _findFichaSectionInFrame(itensFrameForStale, sectionKey) : null;
         if (staleSection && staleSection.getPluginData('hacFichaSectionStale') === 'true') {
           staleSection.setPluginData('hacFichaSectionStale', '');
@@ -8536,12 +9739,13 @@ figma.ui.onmessage = async (msg) => {
 
       // Marca o bloco final correspondente como desatualizado — só a
       // seção específica dentro de "[HAC] Itens", não a área inteira. O
-      // clone recriado acima fica na Section de sessão (onde o designer
-      // consegue clicar nos elementos), não dentro do bloco.
+      // clone recriado acima fica dentro de "[HAC] Handoff - {Func}"
+      // (2026-09-11, revisão 2 — antes ficava solto na Section de sessão),
+      // onde o designer consegue clicar nos elementos normalmente.
       try {
         const savedFrameId = area.handoffFicha && area.handoffFicha.frameId;
         const fichaFrame = await _findFichaFrameForArea(area.id, savedFrameId);
-        const itensFrame = fichaFrame ? fichaFrame.findOne(n => n.name === '[HAC] Itens') : null;
+        const itensFrame = _findFichaItensFrameDeep(fichaFrame);
         const targetSection = itensFrame ? _findFichaSectionInFrame(itensFrame, sectionKey) : null;
         if (targetSection) {
           targetSection.setPluginData('hacFichaSectionStale', 'true');
@@ -8561,11 +9765,17 @@ figma.ui.onmessage = async (msg) => {
 
   // Exclusão em cascata — mesmo padrão de delete-tab-order-copy-for-area,
   // localizando só por pluginData.
+  // Bug real evitado (2026-09-11): com a inversão da hierarquia, o frame
+  // raiz "[HAC] Documentação" passou a ser ÚNICO por Section, compartilhado
+  // por todas as telas. Buscar por `hacFichaForArea` (marca antiga, do
+  // tempo em que havia um raiz por área) apagaria o Documentação inteiro —
+  // e com ele o trabalho de TODAS as telas. Agora remove só o frame
+  // "Tela N" daquela área (`hacFichaTelaForArea`).
   if (msg.type === "delete-ficha-for-area") {
-    _forEachFichaFrameCandidate(sibling => {
+    _forEachFichaFrameNodeDeep(node => {
       try {
-        if (sibling.getPluginData && sibling.getPluginData('hacFichaForArea') === msg.areaId) {
-          sibling.remove();
+        if (node.getPluginData && node.getPluginData('hacFichaTelaForArea') === msg.areaId) {
+          node.remove();
         }
       } catch (e) { }
     });
@@ -8573,12 +9783,13 @@ figma.ui.onmessage = async (msg) => {
   }
 
   // Ocultar/mostrar em cascata — mesmo padrão de
-  // toggle-tab-order-copy-visibility. Fire-and-forget.
+  // toggle-tab-order-copy-visibility. Fire-and-forget. Mesmo cuidado de
+  // escopo do handler acima: opera no frame da Tela, nunca no Documentação.
   if (msg.type === "toggle-ficha-visibility") {
-    _forEachFichaFrameCandidate(sibling => {
+    _forEachFichaFrameNodeDeep(node => {
       try {
-        if (sibling.getPluginData && sibling.getPluginData('hacFichaForArea') === msg.areaId) {
-          sibling.visible = !!msg.visible;
+        if (node.getPluginData && node.getPluginData('hacFichaTelaForArea') === msg.areaId) {
+          node.visible = !!msg.visible;
         }
       } catch (e) { }
     });

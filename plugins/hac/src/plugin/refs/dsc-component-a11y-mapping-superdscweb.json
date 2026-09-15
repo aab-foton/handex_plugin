@@ -1,7 +1,7 @@
 {
   "_meta": {
     "description": "Mapa containingFrame -> categoria de a11y, ESSENCIAL EM RUNTIME no hac (consumido por _getDscFrameToA11yMap em code.js para a Detecção Automática de a11y). Gerado por build-dsc-a11y-mapping.cjs a partir de refs/web-angular-react.json (dados reais da REST API do Figma, sem valores inventados). Adaptação do Handex Beta (onde este mesmo formato de arquivo é descrito como \"fundação de dados, não usado em runtime\" — desatualizado lá, mas aqui no hac o consumo em runtime é o desenho intencional desde o início).",
-    "generatedAt": "2026-09-09T18:50:19.341Z",
+    "generatedAt": "2026-09-14T19:11:29.391Z",
     "generator": "build-dsc-a11y-mapping.cjs (hac)",
     "sourceFile": "super-dsc-web.json",
     "sourceFileKey": "erkqbRKIbaFWbkHe51BeiZ",
@@ -81,8 +81,8 @@
         "variantCount": 0
       },
       "listas": {
-        "families": 5,
-        "variantCount": 103
+        "families": 3,
+        "variantCount": 78
       },
       "paginator": {
         "families": 1,
@@ -97,8 +97,8 @@
         "variantCount": 5
       },
       "stepper": {
-        "families": 2,
-        "variantCount": 63
+        "families": 4,
+        "variantCount": 88
       },
       "switch": {
         "families": 1,
@@ -434,9 +434,9 @@
       "containingFrame": "[dsc] Input with Chips ",
       "variantCount": 21,
       "sampleKeys": [
-        "249e30c0ad5ef9203c62abea8a4663a60601443b",
-        "aa506896c23ded18588d0820d7ed3e1b3ed6c5be",
-        "d048f0b5e331479065721ec1c5abc46b7bb2917b"
+        "35f0e4ce657a7530bf565b4d42e0c66150201916",
+        "63cd9ee12b1f2b4dbc5f694e25ab07c4f461becd",
+        "0ebedc660ee2e2de2c1b1d90f8bdb6a59de702c5"
       ],
       "match": {
         "shortName": "inputs",
@@ -523,7 +523,7 @@
         "7d59e01cf01745e805298c7742afde3026fd37a9"
       ],
       "match": {
-        "shortName": "listas",
+        "shortName": "stepper",
         "confidence": "baixa",
         "reason": "tabela curada (super-dsc-web) \"Progress List\""
       }
@@ -705,9 +705,9 @@
         "703c0f666f6918715f3fb0781850b5643bd7c96d"
       ],
       "match": {
-        "shortName": "listas",
+        "shortName": "stepper",
         "confidence": "baixa",
-        "reason": "tabela curada (super-dsc-web) \"List Item\""
+        "reason": "tabela curada (super-dsc-web) \"Progress List Item\""
       }
     },
     {
@@ -853,8 +853,8 @@
       "variantCount": 48,
       "sampleKeys": [
         "01b800ce517368ca13484915112529a55eee84f6",
-        "13a2851594c3fa8c9b8db0bebfa6931c247607dd",
-        "1686a555c4420c7a90d95293ca67ed3393f1a19c"
+        "0755edb14c836de66145f843560d1b7fe547cc73",
+        "13a2851594c3fa8c9b8db0bebfa6931c247607dd"
       ],
       "match": null
     },
@@ -922,9 +922,9 @@
       "containingFrame": "[dsc-ts] Screen Feedback",
       "variantCount": 20,
       "sampleKeys": [
-        "0b080eca64166896ce2158fa863d9e094099209c",
-        "102d9de32e521c5a7d2ac4f5f650b89cccae33c7",
-        "125f8a2558eeb30421659a73183fa38fc5bcf5b6"
+        "af4d246097a86cf9b4a1fe6c5b56c746df5f516c",
+        "f167bd863c1c2978efacfa72abc57a0c2b39a2ac",
+        "0b080eca64166896ce2158fa863d9e094099209c"
       ],
       "match": null
     },

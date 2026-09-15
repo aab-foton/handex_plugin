@@ -281,6 +281,7 @@ hr {
         <li><a href="#s8r">Dica educativa de Shift+clique antes da captura de Ordem de Tabulação (2026-09-10)</a></li>
         <li><a href="#s8s">Gate de seleção + matching determinístico no fluxo manual + alerta de handoff honesto (2026-09-11)</a></li>
         <li><a href="#s8t">Correção de tipografia da Ficha: escala real do DSC (2026-09-11)</a></li>
+        <li><a href="#s8u"><strong>Árvore de layers atual da Ficha e dimensionamento — ESTÁVEL (2026-09-11 a 2026-09-14)</strong></a></li>
         <li><a href="#s9">Contrato de mensagens (UI ↔ backend)</a></li>
         <li><a href="#s10">Escala da UI e <code>position</code> dos modais</a></li>
         <li><a href="#s10a">Onboarding — 1 jornada por origem</a></li>
@@ -2666,6 +2667,17 @@ hr {
 
     <h2 id="s8o">8o. Reestruturação da árvore de layers do Handoff Completo (2026-09-10)</h2>
 
+    <p style="background:#fff3cd;border:1px solid #ffe08a;padding:10px 14px;border-radius:6px;">
+    <strong>⚠ Superada pela seção <a href="#s8u">8u</a> (2026-09-14)</strong> —
+    a árvore descrita abaixo (Grupo da Área &gt; "[HAC] Documentação" +
+    "[HAC] Itens") era um estado intermediário. A "Decisão de design 1"
+    logo abaixo ("raiz continua FRAME, não vira SECTION") também foi
+    revertida: o raiz real hoje é a <strong>Section</strong> de sessão do
+    designer, com "[HAC] Documentação" como filho direto dela. Mantida
+    aqui por valor histórico (o raciocínio de idempotência por
+    <code>hacFichaForArea</code>/recursão de <code>_forEachA11yFichaFrameChild</code>
+    ainda é válido em espírito, só a árvore concreta mudou).</p>
+
     <p><strong>Motivação</strong>: antes desta mudança, o frame raiz do
     Handoff Completo (<code>_createOrGetFichaFrame</code>) era um único
     Auto Layout HORIZONTAL com as 4 seções (Tabulação/Swipe/Leitor de
@@ -3489,6 +3501,98 @@ hr {
     teste manual no Figma real</strong> (mudança não commitada): esta é uma
     mudança visual real na Ficha, incluindo troca de família de fonte, que
     precisa ser confirmada visualmente antes de qualquer commit.</p>
+
+    <h2 id="s8u">8u. Árvore de layers atual da Ficha e dimensionamento (2026-09-11 a 2026-09-14)</h2>
+
+    <p><strong>Estado real, ESTÁVEL</strong>, confirmado pelo usuário no
+    Figma real — substitui integralmente a árvore descrita na seção
+    <a href="#s8o">8o</a>. Restrição que valeu durante toda a
+    reorganização: <strong>não tocar em como a captura funciona</strong>
+    (ordem de clique, selos, trilha de Swipe, specs) — só em onde os nós
+    moram e como são dimensionados.</p>
+
+    <pre>SECTION "[HAC] Handoff de Acessibilidade | {data} | {designer} | v{N}"
+└── "[HAC] Documentação"                FRAME, Auto Layout VERTICAL, 1 por Section
+    ├── "Tela 1 - {nome}"               FRAME, Auto Layout VERTICAL, largura FIXA sincronizada
+    │   ├── "Título Card"               FRAME — barra "Documentação da Tela N - {nome}"
+    │   │   └── "Título do bloco"       TEXT
+    │   └── "[HAC] Assets do Handoff"   FRAME, Auto Layout HORIZONTAL, gap 64px
+    │       ├── Grupo da Área           GROUP (selo + frame original), locked=true
+    │       ├── "[HAC] Ordem de Tabulação"    FRAME, Auto Layout HORIZONTAL
+    │       │   ├── "[HAC] Instruções de Ordem de Tabulação"   FRAME, largura FIXA 360px
+    │       │   │   ├── "Título do bloco"     TEXT
+    │       │   │   └── "Legenda"             FRAME, largura FIXA 220/260px
+    │       │   └── "[HAC] Handoff - Ordem de Tabulação"       FRAME, layoutMode NONE
+    │       │       └── (réplica de trabalho + overlay de selos)
+    │       ├── "[HAC] Ordem de Leitura | Swipe"    (mesmo padrão)
+    │       └── "[HAC] Leitor de Tela"              (mesmo padrão)
+    └── "Tela 2 - {nome}"               (empilhada abaixo)</pre>
+
+    <p><strong>Diferenças concretas em relação à seção 8o</strong>: o raiz
+    é a Section de sessão do designer (não mais um FRAME próprio) —
+    <code>hacFichaForArea</code> foi substituído por
+    <code>hacFichaDocumentacaoFrame</code> (identidade por Section, não por
+    Área) + <code>hacFichaTelaForArea</code>/<code>hacFichaTelaNumber</code>
+    (o nível "Tela N" novo, um por Área documentada, empilhado
+    verticalmente dentro de "[HAC] Documentação"). "[HAC] Itens" foi
+    renomeado <code>[HAC] Assets do Handoff</code> e o Grupo da Área
+    (antes irmão de "[HAC] Documentação") passou a ser reparentado pra
+    dentro dele.</p>
+
+    <p><strong>Por que "[HAC] Handoff - {Func}" é <code>layoutMode='NONE'</code>,
+    não Auto Layout</strong>: tentado 2 vezes com Auto Layout real (clone
+    em fluxo — comprimia a réplica; depois com filhos ABSOLUTE — um filho
+    ABSOLUTE é ignorado pelo cálculo de Hug do pai, o frame colapsava). As
+    duas tentativas foram revertidas no mesmo dia. Solução final:
+    <code>layoutMode='NONE'</code> + dimensionamento manual por bounding
+    box via <code>_fitFichaHandoffFrameToChildren</code>, chamada toda vez
+    que o conteúdo interno muda (reparenting do clone, desenho de selos/
+    trilha/specs, remoção da réplica no Preencher Handoff).</p>
+
+    <p><strong>Por que os textos da Ficha não usam <code>layoutSizingHorizontal='FILL'</code></strong>:
+    provado repetidamente que FILL empilhado sobre uma cadeia de pais Hug
+    produz largura degenerada (~0) — o Figma não tem, nesse caso, nenhum
+    ancestral FIXED real contra o qual esticar. Todos os textos da Ficha
+    (Título Card, título de cada bloco, título/subtítulos/parágrafos da
+    Legenda) usam <code>resizeWithoutConstraints</code> com largura
+    numérica calculada a partir do pai/conteúdo real — nunca FILL.</p>
+
+    <p><strong>Section de sessão sem auto-fit via API</strong>:
+    <code>SectionNode</code> só recalcula tamanho/posição por interação
+    manual do designer (duplo clique), nunca em resposta a chamadas da
+    Plugin API. <code>_fitSectionToChildren</code> mede os filhos por
+    <code>absoluteTransform</code> (posição real do node) +
+    <code>width</code>/<code>height</code> declarados — não por
+    <code>absoluteBoundingBox</code>, que em nodes com
+    <code>clipsContent=false</code> inclui todo o transbordamento de
+    selos/overlays. Chamada de novo sempre que algo SAI de ser filho
+    direto da Section (ex.: o clone indo pro "[HAC] Handoff - {Func}"),
+    não só quando entra — sem isso a Section ficava com o tamanho antigo,
+    abraçando um espaço vazio. Migrar a Section pra FRAME com Auto Layout
+    foi cogitado e descartado: o conteúdo é todo de posição livre, então
+    o FRAME acabaria em <code>layoutMode='NONE'</code> de qualquer forma,
+    sem ganho real, e a migração exigiria mover manualmente cada filho de
+    Sections já existentes em arquivos de produção.</p>
+
+    <p><strong>Removido/desativado nesta janela</strong>:
+    <code>_ensureDocumentacaoHeader</code> (cabeçalho "Handoff de
+    acessibilidade" com barra verde) foi removida por completo — não só
+    desativada. <code>_ensureCloneWorkFrame</code> (moldura cinza + título
+    da réplica de trabalho) foi desativada e renomeada pra
+    <code>_ensureCloneWorkFrame_DESATIVADA</code> (corpo preservado, vira
+    no-op que só limpa molduras de sessões anteriores). "Frame Principal"
+    (snapshot redundante do frame original dentro da Ficha) parou de ser
+    criado automaticamente — o original já está visível na própria
+    Section; <code>_buildFichaFramePrincipalSection</code> não foi
+    apagada, só deixou de ser chamada.</p>
+
+    <p><strong>Validação</strong>: <code>npm run bundle:code</code>,
+    <code>npm run bundle:ui</code>, <code>npm run lint</code> e
+    <code>npm run export:plugin</code> — todos limpos a cada rodada de
+    correção. Confirmado estável pelo usuário no Figma real. Detalhes
+    completos de cada causa raiz (com trechos de código e o print que a
+    motivou) em <code>docs/changelog.html</code>, entrada de mesma data, e
+    em <code>docs/funcionalidades-protegidas.md</code>.</p>
 
     <h2 id="s9">9. Contrato de mensagens (UI ↔ backend)</h2>
 

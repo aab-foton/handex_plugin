@@ -1,0 +1,1066 @@
+{
+  "_meta": {
+    "status": "completo",
+    "scanDate": "2026-09-14",
+    "libsCobertas": [
+      "super-app",
+      "super-dsc-web",
+      "web-angular-react",
+      "dsc-android"
+    ],
+    "libsPendentes": [],
+    "totalRevisado": 87,
+    "resumoDecisoes": {
+      "confirma": 79,
+      "corrige": 8,
+      "sem_certeza": 0
+    },
+    "contexto": "Revisão funcional e estrutural via inspeção de variantes, propriedades e semântica real das 87 famílias de baixa confiança geradas por build-dsc-a11y-mapping.cjs em 2026-09-14. As decisões foram estritamente validadas contra as 16 categorias oficiais do HAC."
+  },
+  "revisao": [
+    {
+      "libSlug": "super-app",
+      "containingFrame": "[dsc] List Item",
+      "candidatoSugerido": "listas",
+      "decisao": "confirma",
+      "categoriaCorreta": "listas",
+      "justificativa": "Variantes reais contêm estados de seleção (selectable, selected, swipe left) para itens repetíveis de lista de navegação/conteúdo.",
+      "sampleKeys": [
+        "cd5e1591d5643d33cc36e83ab414747162b6958f",
+        "063964300cca1fd8ecd554e8205ec8a6dfb1f697"
+      ]
+    },
+    {
+      "libSlug": "super-app",
+      "containingFrame": "[dsc] Image Media",
+      "candidatoSugerido": "imagem",
+      "decisao": "confirma",
+      "categoriaCorreta": "imagem",
+      "justificativa": "Componente para exibição de mídia visual com propriedades de orientação landscape e aspect ratio (4:3), requerendo texto alternativo.",
+      "sampleKeys": [
+        "e620efda54c5ab698431d39e04427488c02d037b",
+        "4451ad24d88c5e57de5a0e52e3e3ed361aa99c4f"
+      ]
+    },
+    {
+      "libSlug": "super-app",
+      "containingFrame": "[dsc] Text Field Form",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Campo de texto de formulário com estados de validação (error, default) e suporte a múltiplas linhas (textarea/text field).",
+      "sampleKeys": [
+        "01773f0309c440a7c800f95abd30600b6fad21d7",
+        "10b2f9752d2d81346d9635d66ad9a28830fcfef6"
+      ]
+    },
+    {
+      "libSlug": "super-app",
+      "containingFrame": "[dsc] Radio",
+      "candidatoSugerido": "radio button",
+      "decisao": "confirma",
+      "categoriaCorreta": "radio button",
+      "justificativa": "Controle de seleção única com estados checked/unchecked e focus/pressed, alinhado diretamente à categoria radio button.",
+      "sampleKeys": [
+        "07be1fd4c8ab8fa1fd7ce34a1ae76dc788ee9899",
+        "29826392f101fccd9a09ff8ff3744f6426186dcb"
+      ]
+    },
+    {
+      "libSlug": "super-app",
+      "containingFrame": "[dsc] Text Field Single",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Campo de entrada de texto em linha única com tratamento de estado preenchido e indicação de erro.",
+      "sampleKeys": [
+        "91a0732042c1593817a225ca9963341079d1ebb6",
+        "93e916580349cf490cf383e6dea5cb7dcaf404a7"
+      ]
+    },
+    {
+      "libSlug": "super-app",
+      "containingFrame": "[dsc] Transaction List Item",
+      "candidatoSugerido": "listas",
+      "decisao": "confirma",
+      "categoriaCorreta": "listas",
+      "justificativa": "Item estruturado de lista de extrato/transações financeiras com variantes semânticas de status (neutral, danger, hover, pressed).",
+      "sampleKeys": [
+        "04c1d6f14e79114b6595b13a946e6b1e4d7d1adb",
+        "0f371bf65cd43aaa7fc328eecd22f7cace4366bb"
+      ]
+    },
+    {
+      "libSlug": "super-app",
+      "containingFrame": "[dsc] Search Bar",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Barra de busca com campo interativo de digitação e estados focus/typing e disabled, correspondendo à categoria inputs.",
+      "sampleKeys": [
+        "25c2e9da2dc5a0df04990f77d120c26daed49514",
+        "32e4fe9078a5a32bc5fcebdfa551ab704fe6e0d3"
+      ]
+    },
+    {
+      "libSlug": "super-app",
+      "containingFrame": "[dsc] Input Money",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Campo de entrada numérica formatada para moeda/valores monetários com estados read-only, hover e ajuste tipográfico.",
+      "sampleKeys": [
+        "45d55b1bfca24a0b57174e334751af6a11fe61ce",
+        "7a76d3168189092c468fb8b54f11d76f325618a0"
+      ]
+    },
+    {
+      "libSlug": "super-app",
+      "containingFrame": "[dsc-tc] Avatar Hero",
+      "candidatoSugerido": "imagem",
+      "decisao": "confirma",
+      "categoriaCorreta": "imagem",
+      "justificativa": "Componente de identificação do usuário com foto/avatar e orientação horizontal/vertical, enquadrando-se como imagem.",
+      "sampleKeys": [
+        "3ae3ca86e83972ae169a35ca9069726046d1ed0d",
+        "878bc2ef24790cad402de30fe310649182b8d993"
+      ]
+    },
+    {
+      "libSlug": "super-app",
+      "containingFrame": "[dsc] Account Select",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Controle seletor de conta bancária interativo funcionando como dropdown/select de formulário com estados focus, read-only e pressed.",
+      "sampleKeys": [
+        "2ee27a397298a4180b5183044ba242d21e620b92",
+        "2ff6a94357e788c0d537d488c2a98d21146e2d68"
+      ]
+    },
+    {
+      "libSlug": "super-app",
+      "containingFrame": "[dsc] Banking Logos",
+      "candidatoSugerido": "imagem",
+      "decisao": "confirma",
+      "categoriaCorreta": "imagem",
+      "justificativa": "Conjunto de logotipos de instituições financeiras (Inter, C6, etc.) que atuam como elementos gráficos informativos com necessidade de alt text.",
+      "sampleKeys": [
+        "0e9f6d76d7cc2cc6b4c99b551dfafa8e572e192d",
+        "f60937d611d3df364f59361c59e0bc789e782a17"
+      ]
+    },
+    {
+      "libSlug": "super-app",
+      "containingFrame": "[dsc] Avatar Hero",
+      "candidatoSugerido": "imagem",
+      "decisao": "confirma",
+      "categoriaCorreta": "imagem",
+      "justificativa": "Elemento visual de foto/avatar de perfil em tamanhos standard e small com estados interativos.",
+      "sampleKeys": [
+        "cd4180270fba82f46252a69cb679d9822e42bcca",
+        "10a4ed13654f3fb07de22549e980415f76bb0f04"
+      ]
+    },
+    {
+      "libSlug": "super-app",
+      "containingFrame": "[dsc] Input Chat",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Caixa de entrada de texto para mensagens de chat com suporte a linha única e múltiplas linhas.",
+      "sampleKeys": [
+        "1281a73719abd877b5e5fb2766def43c7a8c861d",
+        "24785a5cb00408e5dbb1049240fa746a0cfd4146"
+      ]
+    },
+    {
+      "libSlug": "super-app",
+      "containingFrame": "[dsc] National Flags",
+      "candidatoSugerido": "imagem",
+      "decisao": "confirma",
+      "categoriaCorreta": "imagem",
+      "justificativa": "Bandeiras nacionais ilustrativas em formato vetorial/imagem para seleção ou exibição de países, exigindo texto alternativo.",
+      "sampleKeys": [
+        "e118eb674f65a4cd4ead7ac9f7df491d9e65025b",
+        "0a6759e7a6925c46c99a42a8cd81e6bce46a9549"
+      ]
+    },
+    {
+      "libSlug": "super-app",
+      "containingFrame": "[dsc] List Heading",
+      "candidatoSugerido": "listas",
+      "decisao": "confirma",
+      "categoriaCorreta": "listas",
+      "justificativa": "Cabeçalho estrutural de lista de itens com opções de botão de ação integrado (icon button, button), integrando o padrão de listas.",
+      "sampleKeys": [
+        "a2a0497e29619cb6c0b8c572b87f11ae2a546310",
+        "0a2797bcc9ab0747c7a0a9a4cde3e44f2e82e760"
+      ]
+    },
+    {
+      "libSlug": "super-app",
+      "containingFrame": "[dsc] Sheet",
+      "candidatoSugerido": "dialog",
+      "decisao": "confirma",
+      "categoriaCorreta": "dialog",
+      "justificativa": "Painel modal deslizante (bottom sheet) de sobreposição com altura fixa/automática e overlay, correspondendo à categoria dialog.",
+      "sampleKeys": [
+        "6ca2b8873a2c2e8fe0e2dfe608225f51685f9e23",
+        "2c9484257de8443d1494a56b94f6dc6fa24e1ecd"
+      ]
+    },
+    {
+      "libSlug": "super-app",
+      "containingFrame": "[dsc-ts] Sheet - Single Filter",
+      "candidatoSugerido": "dialog",
+      "decisao": "confirma",
+      "categoriaCorreta": "dialog",
+      "justificativa": "Variação de bottom sheet modal especializada em apresentação de opções de filtro, funcionando como janela de diálogo modal.",
+      "sampleKeys": [
+        "18577626f3ef8b98e4cdb293f86e1dc48ddbad4a",
+        "577bccc24c4d38d1f9dc6bd0f7eb8e40dfb2cafe"
+      ]
+    },
+    {
+      "libSlug": "super-app",
+      "containingFrame": "[dsc] Social Programs Logos",
+      "candidatoSugerido": "imagem",
+      "decisao": "confirma",
+      "categoriaCorreta": "imagem",
+      "justificativa": "Logotipos gráficos de programas sociais (FIES, FGTS, etc.) necessitando de descrição de imagem acessível.",
+      "sampleKeys": [
+        "0621de1823e9661a6c6d783dad582a526b3848b9",
+        "171f6c2b64296209e73ecc9df38061d6a99e5c2e"
+      ]
+    },
+    {
+      "libSlug": "super-app",
+      "containingFrame": "[dsc] Logo CAIXA",
+      "candidatoSugerido": "imagem",
+      "decisao": "confirma",
+      "categoriaCorreta": "imagem",
+      "justificativa": "Marca institucional da CAIXA em variações full e synthesis element para fundos claros e escuros, enquadrando-se em imagem.",
+      "sampleKeys": [
+        "1fb7b09192e55cb8593f03522f76a959c47998b9",
+        "4db0a55e1fad204218fe243b677992dd9da140d8"
+      ]
+    },
+    {
+      "libSlug": "super-app",
+      "containingFrame": "[dsc] Input Slider",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Controle deslizante de entrada numérica contínua ou intervalar (range slider), operando como controle de formulário (inputs).",
+      "sampleKeys": [
+        "115eb68320f4538758992d095c971d7b6f8a6dde",
+        "44e13d68ffa484ed7bcf105a5ce9f5dc64dd6b71"
+      ]
+    },
+    {
+      "libSlug": "super-app",
+      "containingFrame": "[dsc] Date Picker Container",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Contêiner interativo para seleção de data por ano/mês, integrando o conjunto de seletores de formulário (inputs).",
+      "sampleKeys": [
+        "a972f212e699b6188d5b0698ce92bb35bbd30298",
+        "bda46f483cf6d57da2724266c87ef8edd76ca319"
+      ]
+    },
+    {
+      "libSlug": "super-app",
+      "containingFrame": "[dsc] Date Picker",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Seletor de calendário para escolha de datas em formulários, correspondendo à categoria inputs.",
+      "sampleKeys": [
+        "22c9cbdade13d01345d006941eab04d017446338",
+        "4bb2bbae39eea62d01a1a091463b64d1df3f719a"
+      ]
+    },
+    {
+      "libSlug": "super-app",
+      "containingFrame": "[dsc] List Footer",
+      "candidatoSugerido": "listas",
+      "decisao": "confirma",
+      "categoriaCorreta": "listas",
+      "justificativa": "Rodapé de lista com indicador de carregamento de novos itens e ações de paginação infinita, pertencente ao padrão de listas.",
+      "sampleKeys": [
+        "04d42c23bae904d48ce26da4f0fffba5e60b51ad",
+        "2fd71c904632ebcad3e5fc300bc815c3b8f1e52b"
+      ]
+    },
+    {
+      "libSlug": "super-app",
+      "containingFrame": "[dsc-ts] Screen Input Money",
+      "candidatoSugerido": "inputs",
+      "decisao": "corrige",
+      "categoriaCorreta": null,
+      "justificativa": "Trata-se de um template de tela inteira ('[dsc-ts]' Template Screen) de fluxo financeiro, não de um componente a11y atômico isolado.",
+      "sampleKeys": [
+        "d908b7393800afa8f9fdd02d7447960e9290f018",
+        "fd3f6729da97076f28a70af6d5cdd59509cc9abe"
+      ]
+    },
+    {
+      "libSlug": "super-app",
+      "containingFrame": "[dsc-ts] Screen Item Select List",
+      "candidatoSugerido": "listas",
+      "decisao": "corrige",
+      "categoriaCorreta": null,
+      "justificativa": "Template composto de tela completa ('[dsc-ts]') para fluxo de seleção e feedback, não configurando componente unitário de acessibilidade.",
+      "sampleKeys": [
+        "a69cb94fd9396c00c6d4934e7acf4a5ca3ba314b",
+        "fa4ace8b8449628b4bcf5f493b0e33d2565bbfbf"
+      ]
+    },
+    {
+      "libSlug": "super-app",
+      "containingFrame": "[dsc] Input Pin",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Campo de entrada de senha numérica/alfanumérica com células isoladas de dígitos (PIN/OTP), pertencente a inputs.",
+      "sampleKeys": [
+        "a9b5d0504fa79b5069785b39f01aae7e1e744c78",
+        "d3e68977a53146b48dc2c1811f0001eefac6a77f"
+      ]
+    },
+    {
+      "libSlug": "super-app",
+      "containingFrame": "[dsc] Avatar",
+      "candidatoSugerido": "imagem",
+      "decisao": "confirma",
+      "categoriaCorreta": "imagem",
+      "justificativa": "Componente gráfico de avatar/perfil com suporte a exibição individual e agrupada (stack), enquadrando-se como imagem.",
+      "sampleKeys": [
+        "04232af1991edd4dc7536b3040cf68b175bfaee8",
+        "1f9cbef19819b9573d3f762b6b9780261d2f7d49"
+      ]
+    },
+    {
+      "libSlug": "super-app",
+      "containingFrame": "[dsc] Toast",
+      "candidatoSugerido": "snackbar",
+      "decisao": "confirma",
+      "categoriaCorreta": "snackbar",
+      "justificativa": "Notificação flutuante temporária de feedback de sistema com variantes de cor/severidade (success, neutral), enquadrando-se em snackbar.",
+      "sampleKeys": [
+        "2440beaa0f2111005bd7d1227aced2633041ccd6",
+        "87b75d6db45b74358d06ed049d92834541f38a1b"
+      ]
+    },
+    {
+      "libSlug": "super-app",
+      "containingFrame": "[dsc] Tabs",
+      "candidatoSugerido": "tab group",
+      "decisao": "confirma",
+      "categoriaCorreta": "tab group",
+      "justificativa": "Conjunto de abas horizontais de alternância de visualização com alinhamento à esquerda ou centralizado, correspondendo a tab group.",
+      "sampleKeys": [
+        "7cf1f52951f11b3ff39c6d8af43a7a45208b981e",
+        "f16b4b2a45cab80487798df23c15f1d2bced5e14"
+      ]
+    },
+    {
+      "libSlug": "super-dsc-web",
+      "containingFrame": "[dsc] List Item",
+      "candidatoSugerido": "listas",
+      "decisao": "confirma",
+      "categoriaCorreta": "listas",
+      "justificativa": "Item de lista para web com suporte a seleção por rádio e estados de foco e desabilitado, integrando a categoria listas.",
+      "sampleKeys": [
+        "0b28422de1efde1e021dff707f2e171ec7a08bdf",
+        "0c6115524deadc6aaa0467006fc1559233dbf8bc"
+      ]
+    },
+    {
+      "libSlug": "super-dsc-web",
+      "containingFrame": "[dsc] Account Select",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Seletor de conta bancária com variantes para usuário único/múltiplo e estados colapsado/expandido, funcionando como select.",
+      "sampleKeys": [
+        "36816eaaaafb657a4552a883cf2c5cbb5f89dbe4",
+        "4d006f6f6950296be9afa55ae61fe184a1319838"
+      ]
+    },
+    {
+      "libSlug": "super-dsc-web",
+      "containingFrame": "[dsc] Date Field Form",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Campo de data formatada em formulário com suporte a estados preenchido, erro e desabilitado.",
+      "sampleKeys": [
+        "80c05dd3b1e2537f53409a60b115e4671f8b3869",
+        "8601b5251d4ac593bbc31f483a4b9b546d77a6e3"
+      ]
+    },
+    {
+      "libSlug": "super-dsc-web",
+      "containingFrame": "[dsc] Input with Chips ",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Campo de entrada de dados com seleção embutida de chips/tags em formulário, correspondendo à categoria inputs.",
+      "sampleKeys": [
+        "35f0e4ce657a7530bf565b4d42e0c66150201916",
+        "63cd9ee12b1f2b4dbc5f694e25ab07c4f461becd"
+      ]
+    },
+    {
+      "libSlug": "super-dsc-web",
+      "containingFrame": "[dsc] Text Field Form",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Campo de texto padrão para formulários web com validação de status e estados disabled/default.",
+      "sampleKeys": [
+        "0ac23109a42422264bf2ad0041bb424b09cb81a6",
+        "56fd5ab587fc99dc4a9d3aaa6f7f9e1e7974110e"
+      ]
+    },
+    {
+      "libSlug": "super-dsc-web",
+      "containingFrame": "[dsc] Text Area",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Campo de texto multilinha (textarea) para formulários com suporte a read-only e mensagens de erro.",
+      "sampleKeys": [
+        "1a13bf4f397b915e95021a813b133f37172e911d",
+        "0c6ffb1c398d80c3e3369627925ad2b9b5c94fb7"
+      ]
+    },
+    {
+      "libSlug": "super-dsc-web",
+      "containingFrame": "[dsc] Select Field Form",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Controle de caixa de seleção (dropdown select) em formulários com suporte a estados de erro e preenchido.",
+      "sampleKeys": [
+        "414ef1c39e005ce5365194eb6fa6180048ca05f8",
+        "41fb97e2aabb7aed6ca00b8f6d536d3d8b4cba76"
+      ]
+    },
+    {
+      "libSlug": "super-dsc-web",
+      "containingFrame": "[dsc] Password Field Form",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Campo de formulário seguro para entrada de senha com controle de visibilidade e estados focus/read-only.",
+      "sampleKeys": [
+        "0d315eee6ebae8d794590ea8ded037507f4aeb16",
+        "143b0a9a79e8d0a2170373c5681dbe6b2753e652"
+      ]
+    },
+    {
+      "libSlug": "super-dsc-web",
+      "containingFrame": "[dsc] Radio",
+      "candidatoSugerido": "radio button",
+      "decisao": "confirma",
+      "categoriaCorreta": "radio button",
+      "justificativa": "Botão de rádio para formulários com estados marcado/desmarcado e variantes semânticas (danger, default).",
+      "sampleKeys": [
+        "0aab5b9dce346c2d40b3d521312a0fddfd0ca136",
+        "0b353b6156617af56de0e58b960b7da8ab80dde6"
+      ]
+    },
+    {
+      "libSlug": "super-dsc-web",
+      "containingFrame": "[dsc] Progress List",
+      "candidatoSugerido": "listas",
+      "decisao": "corrige",
+      "categoriaCorreta": "stepper",
+      "justificativa": "Componente baseado em passos/etapas de fluxo (propriedades 'steps' e 'current step'), correspondendo à categoria stepper e não lista genérica.",
+      "sampleKeys": [
+        "84b13e5e1499c7c2b7ece216118b647c69239c02",
+        "045ac7820543a8cdc0c9232fc7d70e3ba818bdb6"
+      ]
+    },
+    {
+      "libSlug": "super-dsc-web",
+      "containingFrame": "[dsc] Header",
+      "candidatoSugerido": "estrutura",
+      "decisao": "corrige",
+      "categoriaCorreta": null,
+      "justificativa": "Marco estrutural de layout de página (landmark <header>), não constituindo nenhuma das 16 categorias pontuais de componentes a11y do HAC.",
+      "sampleKeys": [
+        "21497e3a12a9083e6b8bd20dfd16ef24b9600c5f",
+        "464719650cad0c920807d66cf753ca29d55b6bce"
+      ]
+    },
+    {
+      "libSlug": "super-dsc-web",
+      "containingFrame": "[dsc-tc] List Item",
+      "candidatoSugerido": "listas",
+      "decisao": "confirma",
+      "categoriaCorreta": "listas",
+      "justificativa": "Item de lista especializado com suporte a padrões expansíveis e de navegação em lista repetível.",
+      "sampleKeys": [
+        "a41f3392d5217fcfc9151a124486bbcd113400f4",
+        "41bece16b8d6c73a6f0c8c2ea88ea48c0441efc1"
+      ]
+    },
+    {
+      "libSlug": "super-dsc-web",
+      "containingFrame": "[dsc] Search Bar",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Barra de busca web com estados de hover, disabled e preenchimento de texto, pertencente a inputs.",
+      "sampleKeys": [
+        "b7645ab03fd02ba97ce65c15f51724fc93ee8ed1",
+        "17b97063139de00dd6ed0471b994998c0fcf98b6"
+      ]
+    },
+    {
+      "libSlug": "super-dsc-web",
+      "containingFrame": "[dsc] Input Money",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Campo de entrada formatada para valores monetários em aplicações web com opções tipográficas e estados de controle.",
+      "sampleKeys": [
+        "00983f5a5685689d1aeddf910126fec432b11f08",
+        "08af731a25a9bf7de0179bdc874563ec23c0240c"
+      ]
+    },
+    {
+      "libSlug": "super-dsc-web",
+      "containingFrame": "[dsc] Banking Logos",
+      "candidatoSugerido": "imagem",
+      "decisao": "confirma",
+      "categoriaCorreta": "imagem",
+      "justificativa": "Logotipos gráficos de bancos (Inter, Caixa, etc.) para identificação visual, exigindo texto alternativo acessível.",
+      "sampleKeys": [
+        "98d7a2b2f4c3d63df9ed5c63bf465990cd4c5ec2",
+        "9ab27000a44de1b3467134661d862fb7f5a5a402"
+      ]
+    },
+    {
+      "libSlug": "super-dsc-web",
+      "containingFrame": "[dsc] Input Chat",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Área de digitação de texto para conversação em chat com estados default e hover.",
+      "sampleKeys": [
+        "0408ed4c5cae01e5e5b4ade837af0683e32ae873",
+        "35ed5a476b03f252d734f16348d0dc48b9da7e0c"
+      ]
+    },
+    {
+      "libSlug": "super-dsc-web",
+      "containingFrame": "[dsc] List Heading",
+      "candidatoSugerido": "listas",
+      "decisao": "confirma",
+      "categoriaCorreta": "listas",
+      "justificativa": "Cabeçalho de seção de lista de itens em variações standard e small, compondo a estrutura do padrão de listas.",
+      "sampleKeys": [
+        "06bd47d501e10623508fe87257bb4b8964c5b0f6",
+        "4de41079d176a42e19c1fd210b2de55e627d6701"
+      ]
+    },
+    {
+      "libSlug": "super-dsc-web",
+      "containingFrame": "[dsc] National Flags",
+      "candidatoSugerido": "imagem",
+      "decisao": "confirma",
+      "categoriaCorreta": "imagem",
+      "justificativa": "Ícones/imagens de bandeiras internacionais para exibição visual de nacionalidade com necessidade de alt text.",
+      "sampleKeys": [
+        "85b3e06749e6195de557a446dfc4326ebba202e0",
+        "b86a19a31acfcc82edf94bff69783139301bbeba"
+      ]
+    },
+    {
+      "libSlug": "super-dsc-web",
+      "containingFrame": "[dsc-tc] Modal",
+      "candidatoSugerido": "dialog",
+      "decisao": "confirma",
+      "categoriaCorreta": "dialog",
+      "justificativa": "Janela modal desktop para confirmação de ações sensíveis (senha, exclusão de débito), atuando como caixa de diálogo (dialog).",
+      "sampleKeys": [
+        "4eb00288bafe3ca65e64c10d538b4bb4fd057304",
+        "1a2780396e3cd36992a2c1cf9acb1e74fbfce629"
+      ]
+    },
+    {
+      "libSlug": "super-dsc-web",
+      "containingFrame": "[dsc] Social Programs Logos",
+      "candidatoSugerido": "imagem",
+      "decisao": "confirma",
+      "categoriaCorreta": "imagem",
+      "justificativa": "Símbolos e marcas de programas sociais (FGTS, FIES) que atuam como elementos de imagem.",
+      "sampleKeys": [
+        "111687c0342f06cc63878fa48f730ca7cd4e0347",
+        "5816ad2af51446760d3740f0469ed6a63d1efce4"
+      ]
+    },
+    {
+      "libSlug": "super-dsc-web",
+      "containingFrame": "[dsc] Logotipo",
+      "candidatoSugerido": "imagem",
+      "decisao": "confirma",
+      "categoriaCorreta": "imagem",
+      "justificativa": "Elemento de marca e logotipo institucional com aplicações completas ou sintetizadas, requerendo texto alternativo.",
+      "sampleKeys": [
+        "594f6f367102c542a1c1eb72cec2a1f40a30db05",
+        "865362089dc193bbdd12b99d7f2b1fd724372fa6"
+      ]
+    },
+    {
+      "libSlug": "super-dsc-web",
+      "containingFrame": "[dsc] Toast",
+      "candidatoSugerido": "snackbar",
+      "decisao": "confirma",
+      "categoriaCorreta": "snackbar",
+      "justificativa": "Notificação flutuante de status efêmera (alert banner) com severidade danger e neutral, enquadrando-se em snackbar.",
+      "sampleKeys": [
+        "4d17b0e956fb6c0e1739ef852bba17bda5d5259c",
+        "7020758a5db2da7b53606116b5a1532e7c50c2de"
+      ]
+    },
+    {
+      "libSlug": "super-dsc-web",
+      "containingFrame": "[dsc] Progress List Item",
+      "candidatoSugerido": "listas",
+      "decisao": "corrige",
+      "categoriaCorreta": "stepper",
+      "justificativa": "Item de etapa de progresso com estados de fluxo (not started, in progress, complete, partial failure), pertencente ao stepper.",
+      "sampleKeys": [
+        "5973b4b435b6b36143500121c5fc32a131e3837e",
+        "5ede1e2ba92c945ce16239271d825935f26e2ba3"
+      ]
+    },
+    {
+      "libSlug": "super-dsc-web",
+      "containingFrame": "[dsc] Modal",
+      "candidatoSugerido": "dialog",
+      "decisao": "confirma",
+      "categoriaCorreta": "dialog",
+      "justificativa": "Diálogo modal com controle de overlay para visualização desktop e mobile, correspondendo à categoria dialog.",
+      "sampleKeys": [
+        "0b2d53d22030859fd7245d65470b4408b866b1fb",
+        "7d5c30826258ff90ed730f790800a67a75623c67"
+      ]
+    },
+    {
+      "libSlug": "super-dsc-web",
+      "containingFrame": "[dsc] Image Media",
+      "candidatoSugerido": "imagem",
+      "decisao": "confirma",
+      "categoriaCorreta": "imagem",
+      "justificativa": "Contêiner de exibição de imagens fotográficas em proporções 4:3 e 1:1, necessitando de texto alternativo.",
+      "sampleKeys": [
+        "f46ff1c3fd06563cfa6426dbae318e3331df34e9",
+        "b95f5e41497b860483a5a3203292a48c9e51b0f0"
+      ]
+    },
+    {
+      "libSlug": "super-dsc-web",
+      "containingFrame": "[dsc] Dropdown",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Menu dropdown de opções de seleção com tratamento de estados de erro e vazio, operando na categoria inputs.",
+      "sampleKeys": [
+        "76bde81c11a8cdc92e065cd44562ad606900dcbf",
+        "1a2558369331013d79b7876074a4e1998ea54e49"
+      ]
+    },
+    {
+      "libSlug": "super-dsc-web",
+      "containingFrame": "[dsc] Input Pin",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Entrada segmentada de tokens e códigos alfanuméricos/PIN de autenticação, enquadrando-se em inputs.",
+      "sampleKeys": [
+        "1973ac2e28f5f0458ea2060805f71465fc43d15e",
+        "6535de4f55850d710921934b7e3de3fa7f9bf306"
+      ]
+    },
+    {
+      "libSlug": "super-dsc-web",
+      "containingFrame": "[dsc] Avatar",
+      "candidatoSugerido": "imagem",
+      "decisao": "confirma",
+      "categoriaCorreta": "imagem",
+      "justificativa": "Identificador visual de perfil em variantes individual e empilhada (stack), classificado como imagem.",
+      "sampleKeys": [
+        "32973399cb39784a5bfef69b209a05e3adad1a54",
+        "7922fd0802b838ad36257f04ffc8fbc752a77ffb"
+      ]
+    },
+    {
+      "libSlug": "super-dsc-web",
+      "containingFrame": "[dsc] Input Slider",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Controle deslizante de seleção contínua ou faixa de valores (range slider), operando como controle de formulário.",
+      "sampleKeys": [
+        "8c90b79c2410ae9d3f7b2de1e9d111fc00d6113a",
+        "092df26f1ef87acefa7837e5a63ee53ae98720dc"
+      ]
+    },
+    {
+      "libSlug": "super-dsc-web",
+      "containingFrame": "[dsc] Footer",
+      "candidatoSugerido": "estrutura",
+      "decisao": "corrige",
+      "categoriaCorreta": null,
+      "justificativa": "Rodapé de página estrutural (landmark <footer>), não constituindo componente interativo ou semântico das 16 categorias a11y do HAC.",
+      "sampleKeys": [
+        "7475f19c9738aa9e566afce3853da6ef63700aed",
+        "3194dc4eda36bfdf6bad8a632b7141922a63f562"
+      ]
+    },
+    {
+      "libSlug": "web-angular-react",
+      "containingFrame": "[dsc] Tab",
+      "candidatoSugerido": "tab group",
+      "decisao": "confirma",
+      "categoriaCorreta": "tab group",
+      "justificativa": "Variantes de abas de navegação individual com texto, ícones e estados de seleção, integrando funcionalmente a categoria tab group.",
+      "sampleKeys": [
+        "65a904b82218cb3b8d00d9c29e60d112beaf856c",
+        "10698d9f5c99043eaa64be4e293f958769b8cc12"
+      ]
+    },
+    {
+      "libSlug": "web-angular-react",
+      "containingFrame": "[dsc] Select with Chips",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Campo seletor múltiplo com exibição de tags/chips selecionadas e suporte a estados readonly, hover e feedback.",
+      "sampleKeys": [
+        "6b7735f490cc5995c7aaae65b1267bf25d6ed671",
+        "71821f3fb13e5fd38a661b7ff2d76396d5a1ac01"
+      ]
+    },
+    {
+      "libSlug": "web-angular-react",
+      "containingFrame": "[dsc] Input with Chips",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Controle de formulário para inserção e gestão de chips de dados com suporte a validação e mensagens de feedback.",
+      "sampleKeys": [
+        "049f4f6da02f8f7e7502af57a316744ff9d24c02",
+        "0803ce17aa511ed4d460efb8c484f73e2ae1beb3"
+      ]
+    },
+    {
+      "libSlug": "web-angular-react",
+      "containingFrame": "[dsc] Range Slider",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Controle deslizante de intervalo com ajuste de marcadores inicial e final (posições de 0 a 8), pertencente a inputs.",
+      "sampleKeys": [
+        "b8a1e72145254ff42f6ccd5c98ed7353226bae2b",
+        "01f7f02e658e570fd519980cc1f53696e31cafac"
+      ]
+    },
+    {
+      "libSlug": "web-angular-react",
+      "containingFrame": "[dsc] Input File",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Campo de upload de arquivos de formulário com estados hover, readonly e focus, operando na categoria inputs.",
+      "sampleKeys": [
+        "23ec5824ae184ec87ad1714ab690f0cf35a96a5e",
+        "41876e94fa5c6b3e4e3aedff9277770c6bf02653"
+      ]
+    },
+    {
+      "libSlug": "web-angular-react",
+      "containingFrame": "[dsc] Input Textarea",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Campo multilinha para inserção de texto longo com suporte a estados default e readonly.",
+      "sampleKeys": [
+        "d468afd4708727b1a218f651fecdb38d10ba0d44",
+        "e3c401b6e828148788b3e58a95ff4f16d5797bfb"
+      ]
+    },
+    {
+      "libSlug": "web-angular-react",
+      "containingFrame": "[dsc] Datepicker",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Campo com seletor de calendário para datas com estados preenchido e focus em diferentes tamanhos.",
+      "sampleKeys": [
+        "e745c673bc56384e9d2e2fe22107477f550e083f",
+        "fb45c258df47456cb2d456cd8838b9607a1338e7"
+      ]
+    },
+    {
+      "libSlug": "web-angular-react",
+      "containingFrame": "[dsc] Select",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Menu dropdown select padrão de formulário com opções selecionáveis e mensagens de validação.",
+      "sampleKeys": [
+        "13332c96738aac3ba2704bda13f8df196864aea0",
+        "2d4777726ce98b8c66af55d1e542e775dad82583"
+      ]
+    },
+    {
+      "libSlug": "web-angular-react",
+      "containingFrame": "[dsc] Input",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Campo de entrada de texto padrão em múltiplos tamanhos com suporte a estados de foco, leitura e erro.",
+      "sampleKeys": [
+        "0d49275aff6d695014b75ba9e36ff0a607f963c1",
+        "3924cda3d8076a2eeb175008158bf86020488df7"
+      ]
+    },
+    {
+      "libSlug": "web-angular-react",
+      "containingFrame": "[dsc] Input Currency",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Campo formatado para valores monetários com máscara de moeda e suporte a feedback de erro.",
+      "sampleKeys": [
+        "0250864c710b184a35ebe234f2d48592c73c65ff",
+        "0ff4bc47a0a51ad7c4054b8f1e04ff591ea4c56b"
+      ]
+    },
+    {
+      "libSlug": "web-angular-react",
+      "containingFrame": "[dsc] Datepicker Range",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Campo de seleção de intervalo de datas (data inicial e final), correspondendo à categoria inputs.",
+      "sampleKeys": [
+        "be3cb4e1cc1254f68d67df02a19c34a53a19eb8d",
+        "5b34ef30afaa1477e3210c6a61a9a5ef8733666e"
+      ]
+    },
+    {
+      "libSlug": "web-angular-react",
+      "containingFrame": "[dsc] Timepicker",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Campo de formulário para seleção de horas e minutos com estados disabled, readonly e preenchido.",
+      "sampleKeys": [
+        "090f3f4827934a54783e9f0b01645b0ce7227e50",
+        "02d91c58e79e03ddab181c381912493111444d03"
+      ]
+    },
+    {
+      "libSlug": "web-angular-react",
+      "containingFrame": "[dsc] Logotipo",
+      "candidatoSugerido": "imagem",
+      "decisao": "confirma",
+      "categoriaCorreta": "imagem",
+      "justificativa": "Aplicação institucional do logotipo CAIXA em variações completas para diferentes fundos, enquadrando-se como imagem.",
+      "sampleKeys": [
+        "ea56159696e33a98cdc0834ce5965af1932d5609",
+        "0f7a79660b01659b216701aa5b956920a35f94a3"
+      ]
+    },
+    {
+      "libSlug": "web-angular-react",
+      "containingFrame": "[dsc] Slider",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Controle deslizante de valor único contínuo ou posicional com suporte a estados default e disabled.",
+      "sampleKeys": [
+        "a907af29dc5d67284c587f41a82ecf290cfb7853",
+        "a18b9080e6731a40a1c3a1132dd5b2ea46110061"
+      ]
+    },
+    {
+      "libSlug": "web-angular-react",
+      "containingFrame": "[dsc] Footer",
+      "candidatoSugerido": "estrutura",
+      "decisao": "corrige",
+      "categoriaCorreta": null,
+      "justificativa": "Rodapé de página de layout web (container estrutural), sem correspondência entre as 16 categorias pontuais de acessibilidade do HAC.",
+      "sampleKeys": [
+        "1c68f825551b0a52a7f4aa671074c57add906697",
+        "30d9b9328bbab424f60ac9667b8e0a6796c9bf96"
+      ]
+    },
+    {
+      "libSlug": "web-angular-react",
+      "containingFrame": "[dsc] Dropdown Select with Chips",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Painel suspenso de opções selecionáveis com chips para compor o seletor de formulário.",
+      "sampleKeys": [
+        "6ef37832405c4fef2fc692b5ff286b8f8bb67a09",
+        "bd8effef8fd94f9b24641deb0b6c59e3e7f66886"
+      ]
+    },
+    {
+      "libSlug": "web-angular-react",
+      "containingFrame": "[dsc] Datepicker Calendar",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Grade de calendário interativo para seleção de mês e ano, compondo o conjunto de componentes datepicker (inputs).",
+      "sampleKeys": [
+        "3b43e68ccd82f02791b4cfe18e4643ad60bd4c7b",
+        "5d3d7f5ad1124470709b57495cb6143d491c94fc"
+      ]
+    },
+    {
+      "libSlug": "web-angular-react",
+      "containingFrame": "[dsc] Dropdown Input with Chips",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Menu suspenso auxiliar para seleção de chips associado a campos de entrada de formulário.",
+      "sampleKeys": [
+        "62b1bddb3877931d5aa8965ec21de3365a37144a",
+        "86a3bf5c0464e48954703795cb21ea62d13b0be2"
+      ]
+    },
+    {
+      "libSlug": "web-angular-react",
+      "containingFrame": "[dsc] Header",
+      "candidatoSugerido": "estrutura",
+      "decisao": "corrige",
+      "categoriaCorreta": null,
+      "justificativa": "Cabeçalho de layout de página web (marco estrutural <header>), não sendo nenhuma das 16 categorias pontuais do HAC.",
+      "sampleKeys": [
+        "1f2f30971a809f97fd8f7ff103575cfc266aba6d",
+        "f394208b007750ee0fa6ff3b64e63d70dec411d6"
+      ]
+    },
+    {
+      "libSlug": "dsc-android",
+      "containingFrame": "[dsc] Text Field",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Campo de texto nativo Android com estados readonly, disabled e suporte a mensagens de feedback.",
+      "sampleKeys": [
+        "1149eca77643bf99ecb47caa09717fef8c075ba2",
+        "13ed795f8e99308be188bcd2e2b2b8de44d067e3"
+      ]
+    },
+    {
+      "libSlug": "dsc-android",
+      "containingFrame": "[dsc] Tabs",
+      "candidatoSugerido": "tab group",
+      "decisao": "confirma",
+      "categoriaCorreta": "tab group",
+      "justificativa": "Barra de abas Android fixas e roláveis (scrollable/fixed) com rótulos e ícones, pertencente a tab group.",
+      "sampleKeys": [
+        "107521ed5f1b19b5818ceb85fed3e390d6ba7ee8",
+        "2dcfe1a304938b71bc692b9ad88c76b40d1ea215"
+      ]
+    },
+    {
+      "libSlug": "dsc-android",
+      "containingFrame": "[dsc] Discrete Slider",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Controle deslizante de passos discretos para seleção numérica com marcadores visuais, enquadrando-se em inputs.",
+      "sampleKeys": [
+        "aff3a712202025ae44d8926283be389bc4e87501",
+        "d49f88c9c55bee37a89f27bd48c67d6da05327fb"
+      ]
+    },
+    {
+      "libSlug": "dsc-android",
+      "containingFrame": "[dsc] Range Selection Slider",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Controle deslizante duplo para seleção de intervalos numéricos (range slider), operando como controle de entrada.",
+      "sampleKeys": [
+        "033d5655712abb01490832d11ed9ee3564e7dd66",
+        "14c0e2ad0d6be1a7e7ca3ad6a642ad3923669d7c"
+      ]
+    },
+    {
+      "libSlug": "dsc-android",
+      "containingFrame": "[dsc] Centered Slider",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Slider bipolar centralizado com valores positivos e negativos (-50 a +50), pertencente à categoria inputs.",
+      "sampleKeys": [
+        "06ac96431a1f074c3f2b8a19863b036e42189a03",
+        "37bed6e44ae9413b0ae88e90febf6ff506edc750"
+      ]
+    },
+    {
+      "libSlug": "dsc-android",
+      "containingFrame": "[dsc] Continuous Slider",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Controle deslizante de variação contínua de valores numéricos para Android, correspondendo a inputs.",
+      "sampleKeys": [
+        "08b74844c1b4b72b400abc4c90b5530fc446285c",
+        "1a40b119c4a5a2e1953e10f3dc1865a32333ed69"
+      ]
+    },
+    {
+      "libSlug": "dsc-android",
+      "containingFrame": "[dsc] Logotipo",
+      "candidatoSugerido": "imagem",
+      "decisao": "confirma",
+      "categoriaCorreta": "imagem",
+      "justificativa": "Elemento de marca do logotipo CAIXA em variações para telas Android, exigindo contentDescription (imagem).",
+      "sampleKeys": [
+        "178ed76d4481a576b4f116b175b70f4d540e1f03",
+        "39a4e4168dd1b907d44d4dc33a874488de153ce8"
+      ]
+    },
+    {
+      "libSlug": "dsc-android",
+      "containingFrame": "[dsc] Modal Date Picker",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Seletor de calendário de data em diálogo para Android (seleção de ano e dia), classificado como inputs.",
+      "sampleKeys": [
+        "14e01d37795eb1010f3bf9373bc588e4ad82becf",
+        "5c7a0a5d34a76b3b3e861e2682b6b71cac315a5d"
+      ]
+    },
+    {
+      "libSlug": "dsc-android",
+      "containingFrame": "[dsc] Modal Date Input",
+      "candidatoSugerido": "inputs",
+      "decisao": "confirma",
+      "categoriaCorreta": "inputs",
+      "justificativa": "Entrada direta de datas em modal com suporte a entrada individual ou intervalo de datas (inputs).",
+      "sampleKeys": [
+        "0d59c2f7a06ed114584f6bd34aed382c669c5837",
+        "97ed87374721bcc75204237dc11671d7d9e548f1"
+      ]
+    }
+  ]
+}

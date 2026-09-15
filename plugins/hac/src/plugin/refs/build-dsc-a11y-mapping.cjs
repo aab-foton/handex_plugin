@@ -241,7 +241,13 @@ const A11Y_LIB_COMPONENT_MAP = [
     // [dsc] (vêm sem prefixo nos dados reais) — não incluídos aqui por não
     // atender ao filtro de prefixo de qualquer forma.
     'super-app': ['List Item', 'List Heading', 'List Footer', 'List Accordion', 'Transaction List Item'],
-    'super-dsc-web': ['List Item', 'List Heading', 'Progress List', 'Progress List Item'],
+    // 'Progress List'/'Progress List Item' REMOVIDOS daqui (2026-09-14,
+    // correção real encontrada por revisão do Gemini via MCP, inspeção
+    // visual dos componentes): não são listas genéricas — têm properties
+    // 'steps'/'current step' e estados de progresso (not started/in
+    // progress/complete/partial failure), são navegação sequencial entre
+    // etapas. Movidos pra 'stepper' abaixo.
+    'super-dsc-web': ['List Item', 'List Heading'],
     // dsc-android: SEM correspondência clara — não existe family "[dsc] List
     // *" nos dados reais desta lib (confirmado 2026-09-02); "[base] Item"/
     // "[base] Menu item" são componentes internos sem prefixo [dsc], fora do
@@ -278,7 +284,12 @@ const A11Y_LIB_COMPONENT_MAP = [
     // (que documenta navegação sequencial entre etapas), por isso NÃO
     // incluído aqui apesar de conter a palavra "Stepper". SEM correspondência
     // clara pro conceito de a11y nesta lib.
-    'super-dsc-web': ['Stepper'],
+    // 'Progress List'/'Progress List Item' adicionados aqui (2026-09-14,
+    // correção real — ver comentário removido em 'listas' acima): são
+    // stepper de fato (properties 'steps'/'current step', estados de
+    // progresso), não listas genéricas — o nome "List" enganava o match
+    // por palavra completa.
+    'super-dsc-web': ['Stepper', 'Progress List', 'Progress List Item'],
     // dsc-android: SEM correspondência — não existe family "Stepper" nos
     // dados reais desta lib.
   } },
@@ -339,6 +350,20 @@ const A11Y_STRUCTURAL_EXACT_OVERRIDES = {
   '[dsc] Logotipo': { shortName: 'imagem', reason: 'conteúdo de imagem/marca — precisa de texto alternativo' },
 };
 
+// Padrão de exclusão (2026-09-14, achado real da revisão do Gemini via MCP,
+// inspeção visual de "[dsc-ts] Screen Input Money" e "[dsc-ts] Screen Item
+// Select List" em super-app): "[dsc-ts] Screen *" são templates de TELA
+// INTEIRA (telas de referência compostas por vários componentes), não
+// componentes a11y atômicos isolados — o prefixo [dsc-ts] (DSC Templates de
+// Screen) já cobre tanto componentes reutilizáveis quanto essas telas
+// completas, e o wordMatch genérico acaba casando o nome da tela com algum
+// shortName por coincidência de palavra (ex: "Screen Input Money" bate
+// "inputs"). Confirmado nos dados reais: existem 28 famílias "[dsc-ts]
+// Screen *" em super-app e 1 em super-dsc-web — não são 2 exceções pontuais,
+// é o padrão inteiro de nomenclatura de templates. Excluído ANTES de
+// qualquer match, mesma posição lógica dos overrides estruturais acima.
+const A11Y_SCREEN_TEMPLATE_EXCLUDE_REGEX = /^\[dsc-ts\]\s*screen\b/i;
+
 function normalize(str) {
   return String(str || '')
     .normalize('NFD').replace(/[̀-ͯ]/g, '') // remove acentos
@@ -391,6 +416,13 @@ function matchShortName(containingFrameName, libSlug) {
   // ícones soltos de icon-set genérico (ex: "3d-select-face", "playlist-plus",
   // "window-tabs") chegavam até aqui e batiam por acidente.
   if (!hasDscPrefix(containingFrameName)) {
+    return null;
+  }
+
+  // Templates de tela inteira — ver A11Y_SCREEN_TEMPLATE_EXCLUDE_REGEX acima.
+  // Nunca são componente a11y atômico, então nem entram como candidato de
+  // baixa confiança — vão direto para semMatch.
+  if (A11Y_SCREEN_TEMPLATE_EXCLUDE_REGEX.test(String(containingFrameName || '').trim())) {
     return null;
   }
 
@@ -448,13 +480,28 @@ function matchShortName(containingFrameName, libSlug) {
   // literal do shortName). Só consulta a entrada da lib atual (libSlug) —
   // elimina o risco de um nome curado pra uma lib bater por acidente em nomes
   // de outra lib que nunca foram inspecionados para aquele shortName.
+  //
+  // Achatada e ordenada por especificidade (mais tokens primeiro) ANTES de
+  // testar — mesmo princípio da ordenação de `candidates` acima. Sem isso,
+  // "List Item" (2 tokens) bate por acidente dentro de "[dsc] Progress List
+  // Item" (norm contém os tokens "list" e "item") antes de chegar numa
+  // entrada mais específica — bug real encontrado em 2026-09-14 ao corrigir
+  // Progress List/Progress List Item pra 'stepper': mesmo com a entrada
+  // "List Item" removida de 'listas' pra essa lib, a ordem por declaração
+  // (não por especificidade) ainda deixava candidatos curtos capturarem nomes
+  // mais longos de outras entradas da tabela.
+  const curatedCandidates = [];
   for (const { shortName, libs } of A11Y_LIB_COMPONENT_MAP) {
     const names = libSlug ? libs[libSlug] : null;
     if (!names || !names.length) continue;
     for (const curatedName of names) {
-      if (wordMatch(curatedName, norm)) {
-        return { shortName, confidence: 'baixa', reason: `tabela curada (${libSlug}) "${curatedName}"` };
-      }
+      curatedCandidates.push({ shortName, curatedName });
+    }
+  }
+  curatedCandidates.sort((a, b) => tokensOf(b.curatedName).length - tokensOf(a.curatedName).length);
+  for (const { shortName, curatedName } of curatedCandidates) {
+    if (wordMatch(curatedName, norm)) {
+      return { shortName, confidence: 'baixa', reason: `tabela curada (${libSlug}) "${curatedName}"` };
     }
   }
 

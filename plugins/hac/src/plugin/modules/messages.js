@@ -184,6 +184,14 @@
       // contornar o elemento certo, não faz sentido reposicionar
       // manualmente); um cadeado na listagem destrava se precisar mexer.
       if (msg.type === "spec-created") {
+        // Loading de canvas do fluxo manual (confirmA11ySpec, else branch,
+        // accessibility.js) — o wizard já esconde o dele próprio em
+        // _advanceA11yBatchWizard/hideA11yWizardSavingIndicator, então isto
+        // só tem efeito quando a criação veio do caminho manual (fora do
+        // wizard) ou é redundante e inofensivo quando veio do wizard (o
+        // mesmo modal já estará fechado).
+        if (window._a11yManualSpecLoadingTimeout) { clearTimeout(window._a11yManualSpecLoadingTimeout); window._a11yManualSpecLoadingTimeout = null; }
+        if (typeof hideA11yCanvasLoading === 'function') hideA11yCanvasLoading();
         const newSpec = Object.assign({ pendingConfirmation: false, locked: true }, msg.spec || msg.data);
 
         // Edição de spec (delete+recreate, ver confirmA11ySpec em
@@ -217,7 +225,7 @@
           resolve(true);
           return;
         }
-        showToast('Especificação criada e posicionada — travada por padrão, use o cadeado pra ajustar.');
+        showToast('Especificação criada e posicionada, travada por padrão. Use o cadeado pra ajustar.');
       }
 
       if (msg.type === "selection-name") {

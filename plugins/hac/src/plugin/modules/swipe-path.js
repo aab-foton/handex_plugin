@@ -9,12 +9,33 @@
 
 // Resposta de 'swipe-path-copy-started' (messages.js) — espelha
 // handleTabOrderCopyStarted (2026-09-04-ac). cloneId null significa que o
-// backend não conseguiu clonar (área não encontrada/não clonável) — a
-// captura minimizada já foi ligada no frontend nesse ponto
-// (_a11yCaptureMiniBarEnter roda antes da resposta do backend chegar),
-// então sai da captura e cancela pra não deixar o designer preso numa
-// janela minimizada sem nenhuma cópia pra clicar.
+// backend não conseguiu clonar (área não encontrada/não clonável).
+//
+// 2026-09-14 (pedido do usuário com print real, mesma correção aplicada à
+// Ordem de Tabulação): a barra mini de captura NÃO entra mais
+// imediatamente ao clicar "Iniciar trilha de swipe" — o loading de canvas
+// (showA11yCanvasLoading, aberto em _startSwipePathManualModeInner) cobre
+// esse intervalo, e só AQUI, com a cópia confirmada, é que a captura de
+// fato começa. window._swipePathCopyStartPending distingue esta resposta
+// (do fluxo "Iniciar trilha") de qualquer outro uso futuro do mesmo evento.
 function handleSwipePathCopyStarted(cloneId) {
+  if (window._swipePathCopyStartPending) {
+    window._swipePathCopyStartPending = false;
+    if (typeof hideA11yCanvasLoading === 'function') hideA11yCanvasLoading();
+    if (!cloneId) {
+      showToast('Não foi possível criar a cópia de trabalho. Tente novamente.', 'error');
+      return;
+    }
+    if (typeof _a11yCaptureMiniBarEnter === 'function') _a11yCaptureMiniBarEnter('swipePath');
+    showToast('Cópia da tela criada. Segure shift e clique (ou use marquise) pra marcar os pontos dela. A janela foi minimizada para dar espaço ao canvas.');
+    return;
+  }
+  // Caminho legado defensivo — não deveria ser alcançável mais (todo
+  // disparo de start-swipe-path-mode agora passa por
+  // _startSwipePathManualModeInner, que sempre seta a flag acima antes),
+  // mantido como rede de segurança: se por algum motivo a barra mini já
+  // tiver sido ligada em outro ponto e a cópia falhar, sai da captura em
+  // vez de deixar o designer preso numa janela minimizada sem cópia.
   if (!cloneId) {
     if (typeof _a11yCaptureMiniBarExit === 'function') _a11yCaptureMiniBarExit();
     cancelSwipePathReview();
@@ -110,21 +131,41 @@ function startSwipePathManualMode(areaId, targetNodeId) {
     cancelTabOrderReview();
     showToast('A captura de Ordem de Tabulação em andamento foi cancelada.');
   }
+  // Dica educativa de Shift+clique (2026-09-14, pedido do usuário: "coloque
+  // o toast sobre o Shift também no swipe") — mesma dica que Tabulação já
+  // tinha, generalizada por feature (ver A11Y_SHIFT_HINT_CONTENT/
+  // _showA11yShiftHintThenStart, tab-order.js). Mostrada uma única vez por
+  // arquivo Figma, ANTES de minimizar a janela.
+  if (typeof _showA11yShiftHintThenStart === 'function') {
+    _showA11yShiftHintThenStart('swipe', { areaId, targetNodeId }, () => _startSwipePathManualModeInner(areaId, targetNodeId));
+  } else {
+    _startSwipePathManualModeInner(areaId, targetNodeId);
+  }
+}
+window.startSwipePathManualMode = startSwipePathManualMode;
+
+// Corpo real do fluxo manual — extraído de startSwipePathManualMode
+// (2026-09-14) pra poder ser chamado tanto direto (dica já vista) quanto
+// depois de fechar a dica educativa (1ª vez nesta feature no arquivo).
+// Mesmo padrão de _startTabOrderManualModeInner (tab-order.js).
+function _startSwipePathManualModeInner(areaId, targetNodeId) {
   ensureA11yProjectOriginThen(() => {
     window._swipePathPendingList = [];
     window._swipePathPendingAreaId = areaId;
     window._swipePathPendingTargetNodeId = targetNodeId || null;
-    // Modal de revisão NÃO abre mais aqui (2026-09-04-w, pedido do
-    // usuário) — mesma mudança aplicada à Ordem de Tabulação: a janela
-    // minimiza pra uma barra fina e o designer clica em toda a trilha em
-    // silêncio. O modal só abre depois, via finishSwipePathCapture
-    // (chamado por "Concluir seleção" na barra mini).
-    if (typeof _a11yCaptureMiniBarEnter === 'function') _a11yCaptureMiniBarEnter('swipePath');
+    // Loading de canvas (2026-09-14, mesmo motivo/print real de
+    // Tabulação — ver comentário completo em _startTabOrderManualModeInner,
+    // tab-order.js): a barra mini de captura só entra depois que
+    // 'swipe-path-copy-started' confirma que a cópia de trabalho terminou
+    // de ser clonada, nunca antes (ver handleSwipePathCopyStarted).
+    if (typeof showA11yCanvasLoading === 'function') showA11yCanvasLoading('Criando cópia de trabalho da tela…');
+    window._swipePathCopyStartPending = true;
+    // _swipePathSetCaptureMode é quem de fato dispara 'start-swipe-path-mode'
+    // (e mantém window._swipePathCaptureMode sincronizado) — não duplicar o
+    // postMessage aqui.
     _swipePathSetCaptureMode('continuous', areaId, targetNodeId || null, getA11yActiveSectionName());
-    showToast('Cópia da tela criada — segure shift e clique (ou use marquise) pra marcar os pontos dela. A janela foi minimizada para dar espaço ao canvas.');
   });
 }
-window.startSwipePathManualMode = startSwipePathManualMode;
 
 // "Gerar automaticamente" do Swipe (2026-09-08, pedido do usuário) —
 // reaproveita a sequência já mapeada e confirmada pela Ordem de
@@ -146,7 +187,7 @@ function startSwipePathFromTabOrder(areaId, targetNodeId) {
     .sort((a, b) => (a.number || 0) - (b.number || 0));
 
   if (items.length < 2) {
-    showToast('Esta tela ainda não tem Ordem de Tabulação com pelo menos 2 itens — marque a trilha manualmente.');
+    showToast('Esta tela ainda não tem Ordem de Tabulação com pelo menos 2 itens. Marque a trilha manualmente.');
     startSwipePathManualMode(areaId, targetNodeId);
     return;
   }
@@ -200,6 +241,9 @@ function startSwipePathAddPoint() {
   const btn = document.getElementById('btn-swipe-path-add-point');
   if (btn) btn.disabled = true;
   window._swipePathAddPointWaitingClone = true;
+  // Loading de canvas (2026-09-14) — mesmo motivo de startTabOrderAddItemsFromCard:
+  // resolve-swipe-path-clone pode precisar recriar a cópia de trabalho do zero.
+  if (typeof showA11yCanvasLoading === 'function') showA11yCanvasLoading('Preparando cópia de trabalho…');
   parent.postMessage({
     pluginMessage: {
       type: 'resolve-swipe-path-clone',
@@ -220,10 +264,11 @@ window.startSwipePathAddPoint = startSwipePathAddPoint;
 function handleSwipePathCloneResolved(areaId, ok) {
   if (!window._swipePathAddPointWaitingClone || areaId !== window._swipePathPendingAreaId) return;
   window._swipePathAddPointWaitingClone = false;
+  if (typeof hideA11yCanvasLoading === 'function') hideA11yCanvasLoading();
   const btn = document.getElementById('btn-swipe-path-add-point');
   if (!ok) {
     if (btn) btn.disabled = false;
-    showToast('Não foi possível localizar a cópia da tela no canvas — refaça a trilha.', 'error');
+    showToast('Não foi possível localizar a cópia da tela no canvas. Refaça a trilha.', 'error');
     return;
   }
   _swipePathStartAddPointWait();
@@ -242,7 +287,7 @@ function _swipePathStartAddPointWait() {
   parent.postMessage({ pluginMessage: { type: 'start-swipe-path-listen-only' } }, '*');
   if (label) label.textContent = 'Concluir seleção';
   if (btn) { btn.disabled = false; btn.onclick = () => finishSwipePathAddPointWait(); }
-  showToast('Segure shift e clique (ou use marquise) pra marcar quantos pontos novos precisar — clique em "Concluir seleção" quando terminar.');
+  showToast('Segure shift e clique (ou use marquise) pra marcar quantos pontos novos precisar. Clique em "Concluir seleção" quando terminar.');
 }
 
 // "Concluir seleção" do fluxo "+ Adicionar ponto" — lê tudo que foi
@@ -286,11 +331,11 @@ function openSwipePathReviewModal() {
   const confirmTextEl = document.getElementById('a11y-swipe-path-review-confirm-text');
   if (window._swipePathEditingExisting) {
     if (titleEl) titleEl.textContent = 'Editar Trilha de Ordem de Leitura';
-    if (instructionEl) instructionEl.textContent = 'Ajuste os pontos desta trilha — arraste para reordenar, remova ou adicione um novo ponto antes de salvar.';
+    if (instructionEl) instructionEl.textContent = 'Ajuste os pontos desta trilha: arraste para reordenar, remova ou adicione um novo ponto antes de salvar.';
     if (confirmTextEl) confirmTextEl.textContent = 'Salvar alterações';
   } else {
     if (titleEl) titleEl.textContent = 'Trilha de Ordem de Leitura';
-    if (instructionEl) instructionEl.textContent = 'Esta é a trilha marcada no canvas, já na ordem espacial resolvida automaticamente — arraste para reordenar ou remova um ponto antes de confirmar.';
+    if (instructionEl) instructionEl.textContent = 'Esta é a trilha marcada no canvas, já na ordem espacial resolvida automaticamente. Arraste para reordenar ou remova um ponto antes de confirmar.';
     if (confirmTextEl) confirmTextEl.textContent = 'Criar trilha de ordem de leitura';
   }
   openModal('a11y-swipe-path-review-modal');
@@ -586,6 +631,9 @@ function applySwipePathToCanvas() {
   if (applyBtn) applyBtn.disabled = true;
   if (confirmTextEl) confirmTextEl.textContent = 'Desenhando trilha…';
   window._swipePathLocked = true;
+  // Loading de canvas (2026-09-14) — ver showA11yCanvasLoading (accessibility.js).
+  // Escondido em handleSwipePathCreated (sucesso) e handleSwipePathCreateFailed.
+  if (typeof showA11yCanvasLoading === 'function') showA11yCanvasLoading('Desenhando trilha de swipe…');
 
   parent.postMessage({
     pluginMessage: {
@@ -619,6 +667,7 @@ window.applySwipePathToCanvas = applySwipePathToCanvas;
 // com o que está no canvas, mesmo que a trava falhe por algum motivo.
 function handleSwipePathCreated(msg) {
   if (!msg || !msg.areaId) return;
+  if (typeof hideA11yCanvasLoading === 'function') hideA11yCanvasLoading();
   hacData.a11ySwipePaths = (hacData.a11ySwipePaths || []).filter(p => p && p.areaId !== msg.areaId);
   hacData.a11ySwipePaths.push({
     id: msg.pathNodeId || null,
@@ -656,6 +705,7 @@ window.handleSwipePathCreated = handleSwipePathCreated;
 // assumir sempre "Criar trilha de swipe" (2026-09-09).
 function handleSwipePathCreateFailed(msg) {
   window._swipePathLocked = false;
+  if (typeof hideA11yCanvasLoading === 'function') hideA11yCanvasLoading();
   const applyBtn = document.getElementById('btn-swipe-path-apply');
   const confirmTextEl = document.getElementById('a11y-swipe-path-review-confirm-text');
   if (applyBtn) applyBtn.disabled = (window._swipePathPendingList || []).length < 2;

@@ -162,48 +162,90 @@ function _tabOrderNextTempId() {
 // desenhado sobre o node equivalente dentro da cópia, nunca mais no
 // original). Resposta tratada em handleTabOrderCopyStarted
 // (messages.js → aqui).
+// Conteúdo por feature do modal educativo de Shift+clique — ver
+// _showA11yShiftHintThenStart abaixo. 'tabulacao' preserva o texto
+// original (2026-09-10); 'swipe' adicionado em 2026-09-14 (pedido do
+// usuário: "coloque o toast sobre o Shift também no swipe" — Swipe nunca
+// teve esta dica, só Tabulação).
+const A11Y_SHIFT_HINT_CONTENT = {
+  tabulacao: {
+    onboardingKey: 'tabOrderShiftHint',
+    title: 'Selecionando elementos para a Ordem de Tabulação',
+    steps: '<li><strong>Segure Shift e clique</strong> em cada elemento, na ordem em que o teclado deve navegar por eles.</li>'
+      + '<li>Errou a ordem? Sem problema: <strong>arraste para reposicionar</strong> os itens depois, na lista de revisão.</li>',
+  },
+  swipe: {
+    onboardingKey: 'swipePathShiftHint',
+    title: 'Selecionando pontos para a Trilha de Swipe',
+    steps: '<li><strong>Segure Shift e clique</strong> em cada ponto, na ordem em que o gesto de swipe deve passar por eles.</li>'
+      + '<li>Errou a ordem? Sem problema: <strong>arraste para reposicionar</strong> os pontos depois, na lista de revisão.</li>',
+  },
+};
+
 function startTabOrderManualMode(areaId, targetNodeId) {
   if (!areaId || !targetNodeId) {
     showToast('Selecione uma tela antes de iniciar a ordem de tabulação.');
     return;
   }
-  // Dica educativa de Shift+clique/aprofundamento de seleção (2026-09-10) —
-  // mostrada uma única vez por arquivo Figma, ANTES de minimizar a janela
-  // e começar a escutar cliques (onboardingSeen, chave 'tabOrderShiftHint',
-  // mesmo mecanismo de onboarding.js). Se já foi vista, pula direto pro
-  // fluxo real (_startTabOrderManualModeInner) sem exibir nada.
-  if (!_onboardingSeen('tabOrderShiftHint')) {
-    window._pendingTabOrderShiftHintArgs = { areaId, targetNodeId };
-    if (typeof _refreshIcons === 'function') { openModal('a11y-tab-order-shift-hint-modal'); _refreshIcons(); }
-    else openModal('a11y-tab-order-shift-hint-modal');
-    return;
-  }
-  _startTabOrderManualModeInner(areaId, targetNodeId);
+  _showA11yShiftHintThenStart('tabulacao', { areaId, targetNodeId }, () => _startTabOrderManualModeInner(areaId, targetNodeId));
 }
 window.startTabOrderManualMode = startTabOrderManualMode;
 
-// Chamada pelo botão "Entendi, começar seleção" do modal educativo acima —
-// marca a chave como vista (nunca mais aparece sozinha neste arquivo) e
-// prossegue com o fluxo real que ficava dentro de startTabOrderManualMode.
-function _confirmTabOrderShiftHint() {
-  markOnboardingSeen('tabOrderShiftHint');
-  closeModal('a11y-tab-order-shift-hint-modal');
-  const args = window._pendingTabOrderShiftHintArgs;
-  window._pendingTabOrderShiftHintArgs = null;
-  if (args) _startTabOrderManualModeInner(args.areaId, args.targetNodeId);
+// Dica educativa de Shift+clique, generalizada por feature (2026-09-14) —
+// mostrada uma única vez por arquivo Figma POR FEATURE, ANTES de minimizar
+// a janela e começar a escutar cliques (onboardingSeen, chave própria por
+// feature, mesmo mecanismo de onboarding.js). Se já foi vista pra esta
+// feature, pula direto pro fluxo real (onConfirm) sem exibir nada.
+function _showA11yShiftHintThenStart(feature, pendingArgs, onConfirm) {
+  const content = A11Y_SHIFT_HINT_CONTENT[feature];
+  if (!content) { onConfirm(); return; }
+  if (_onboardingSeen(content.onboardingKey)) { onConfirm(); return; }
+  window._pendingA11yShiftHintFeature = feature;
+  window._pendingA11yShiftHintConfirm = onConfirm;
+  const titleEl = document.getElementById('a11y-shift-hint-title-text');
+  if (titleEl) titleEl.textContent = content.title;
+  const stepsEl = document.getElementById('a11y-shift-hint-steps');
+  if (stepsEl) stepsEl.innerHTML = content.steps;
+  if (typeof _refreshIcons === 'function') { openModal('a11y-tab-order-shift-hint-modal'); _refreshIcons(); }
+  else openModal('a11y-tab-order-shift-hint-modal');
 }
-window._confirmTabOrderShiftHint = _confirmTabOrderShiftHint;
 
-// Reabertura manual da dica (ícone "?" no modal de revisão da Ordem de
-// Tabulação) — puramente informativa, nunca marca/desmarca o estado de
-// "visto" e nunca reinicia o fluxo de captura (o designer já está no meio
-// da revisão/captura quando clica nisso).
-function openTabOrderShiftHintManually() {
-  window._pendingTabOrderShiftHintArgs = null;
+// Chamada pelo botão "Entendi, começar seleção" do modal educativo acima —
+// marca a chave da feature pendente como vista (nunca mais aparece
+// sozinha pra ELA, a outra feature ainda mostra a dica na sua 1ª vez) e
+// prossegue com o fluxo real (callback guardado por _showA11yShiftHintThenStart).
+function _confirmA11yShiftHint() {
+  const feature = window._pendingA11yShiftHintFeature;
+  const content = feature ? A11Y_SHIFT_HINT_CONTENT[feature] : null;
+  if (content) markOnboardingSeen(content.onboardingKey);
+  closeModal('a11y-tab-order-shift-hint-modal');
+  const onConfirm = window._pendingA11yShiftHintConfirm;
+  window._pendingA11yShiftHintFeature = null;
+  window._pendingA11yShiftHintConfirm = null;
+  if (typeof onConfirm === 'function') onConfirm();
+}
+window._confirmA11yShiftHint = _confirmA11yShiftHint;
+
+// Reabertura manual da dica (ícone "?" nos modais de revisão) —
+// puramente informativa, nunca marca/desmarca o estado de "visto" e nunca
+// reinicia o fluxo de captura (o designer já está no meio da revisão/
+// captura quando clica nisso). feature ∈ 'tabulacao' | 'swipe'.
+function openA11yShiftHintManually(feature) {
+  const content = A11Y_SHIFT_HINT_CONTENT[feature || 'tabulacao'];
+  if (!content) return;
+  window._pendingA11yShiftHintFeature = null;
+  window._pendingA11yShiftHintConfirm = null;
+  const titleEl = document.getElementById('a11y-shift-hint-title-text');
+  if (titleEl) titleEl.textContent = content.title;
+  const stepsEl = document.getElementById('a11y-shift-hint-steps');
+  if (stepsEl) stepsEl.innerHTML = content.steps;
   openModal('a11y-tab-order-shift-hint-modal');
   if (typeof _refreshIcons === 'function') _refreshIcons();
 }
-window.openTabOrderShiftHintManually = openTabOrderShiftHintManually;
+window.openA11yShiftHintManually = openA11yShiftHintManually;
+// Alias retrocompatível — o link "Como funciona a seleção?" do modal de
+// revisão da Ordem de Tabulação (modals.html) já chama este nome.
+window.openTabOrderShiftHintManually = function () { openA11yShiftHintManually('tabulacao'); };
 
 // Corpo real do fluxo manual — extraído de startTabOrderManualMode
 // (2026-09-10) pra poder ser chamado tanto direto (dica já vista) quanto
@@ -228,16 +270,18 @@ function _startTabOrderManualModeInner(areaId, targetNodeId) {
     window._tabOrderPendingTargetNodeId = targetNodeId;
     window._tabOrderActiveCloneId = null;
     window._tabOrderActiveCloneNodeMap = null;
+    // Loading de canvas (2026-09-14, pedido do usuário com print real: a
+    // barra mini de captura ("0 itens marcados") aparecia IMEDIATAMENTE ao
+    // clicar, antes da cópia de trabalho terminar de ser clonada no
+    // backend — em telas grandes/complexas isso dava a impressão de que o
+    // designer já podia clicar no canvas quando na verdade a réplica ainda
+    // não existia. Agora mostra o loading primeiro; a barra mini de
+    // captura (_a11yCaptureMiniBarEnter, mais o toast de instrução) só
+    // entra quando 'tab-order-copy-started' confirma que a cópia terminou
+    // — ver handleTabOrderCopyStarted abaixo.
+    if (typeof showA11yCanvasLoading === 'function') showA11yCanvasLoading('Criando cópia de trabalho da tela…');
+    window._tabOrderCopyStartPending = true;
     parent.postMessage({ pluginMessage: { type: 'start-tab-order-copy', areaId, targetNodeId, sectionName: getA11yActiveSectionName(), designerName: getA11yDesignerName(), designerId: getA11yDesignerId() } }, '*');
-    // Modal de revisão NÃO abre mais aqui (2026-09-04-w, pedido do
-    // usuário) — a janela minimiza pra uma barra fina (mais espaço de
-    // canvas visível) e o designer clica em toda a sequência EM SILÊNCIO,
-    // sem lista/modal aparecendo em tempo real. O modal só abre depois,
-    // quando "Concluir seleção" chamar finishTabOrderCapture (abaixo),
-    // já com a lista pendente completa pronta pra revisão.
-    if (typeof _a11yCaptureMiniBarEnter === 'function') _a11yCaptureMiniBarEnter('tabOrder');
-    _tabOrderSetCaptureMode('continuous');
-    showToast('Cópia da tela criada — segure shift e clique (ou use marquise) pra marcar os elementos dela. A janela foi minimizada para dar espaço ao canvas.');
   });
 }
 
@@ -250,6 +294,23 @@ function _startTabOrderManualModeInner(areaId, targetNodeId) {
 function handleTabOrderCopyStarted(cloneId, nodeMap) {
   window._tabOrderActiveCloneId = cloneId || null;
   window._tabOrderActiveCloneNodeMap = nodeMap || null;
+
+  // Fecha o loading de canvas e SÓ AGORA entra na barra mini de captura —
+  // ver comentário completo em _startTabOrderManualModeInner (2026-09-14).
+  // window._tabOrderCopyStartPending distingue esta resposta (do fluxo
+  // "Iniciar Ordem de Tabulação") de qualquer outro uso futuro do mesmo
+  // cloneId/nodeMap que não deva reabrir a barra mini.
+  if (window._tabOrderCopyStartPending) {
+    window._tabOrderCopyStartPending = false;
+    if (typeof hideA11yCanvasLoading === 'function') hideA11yCanvasLoading();
+    if (!cloneId) {
+      showToast('Não foi possível criar a cópia de trabalho. Tente novamente.', 'error');
+      return;
+    }
+    if (typeof _a11yCaptureMiniBarEnter === 'function') _a11yCaptureMiniBarEnter('tabOrder');
+    _tabOrderSetCaptureMode('continuous');
+    showToast('Cópia da tela criada. Segure shift e clique (ou use marquise) pra marcar os elementos dela. A janela foi minimizada para dar espaço ao canvas.');
+  }
 }
 window.handleTabOrderCopyStarted = handleTabOrderCopyStarted;
 
@@ -342,6 +403,12 @@ function startTabOrderAddItemsFromCard(areaId) {
   }));
 
   openTabOrderReviewModal();
+  // Loading de canvas (2026-09-14) — resolve-tab-order-clone normalmente só
+  // RECONHECE a cópia já existente (rápido), mas cai em recriá-la do zero
+  // (clonar a árvore inteira de novo) se o plugin foi fechado/reaberto
+  // desde a última vez — mesma readequação de layers de start-tab-order-copy,
+  // por isso mostra o mesmo loading aqui.
+  if (typeof showA11yCanvasLoading === 'function') showA11yCanvasLoading('Preparando cópia de trabalho…');
   // Garante que a cópia clonada existente seja reconhecida/reaproveitada
   // ANTES de armar a captura (2026-09-04-aj) — sem isto, se o plugin foi
   // fechado/reaberto desde a última vez que a cópia foi tocada, o
@@ -363,8 +430,9 @@ window.startTabOrderAddItemsFromCard = startTabOrderAddItemsFromCard;
 function handleTabOrderCloneResolved(areaId, ok) {
   if (areaId !== window._tabOrderAddItemsFromCardAreaId) return;
   window._tabOrderAddItemsFromCardAreaId = null;
+  if (typeof hideA11yCanvasLoading === 'function') hideA11yCanvasLoading();
   if (!ok) {
-    showToast('Não foi possível localizar a tela no canvas — selecione novamente.');
+    showToast('Não foi possível localizar a tela no canvas. Selecione novamente.');
     closeModal('a11y-tab-order-review-modal');
     return;
   }
@@ -401,7 +469,7 @@ function startTabOrderAddItemWait() {
   _tabOrderSetCaptureMode('continuous');
   if (label) label.textContent = 'Concluir seleção';
   if (btn) { btn.disabled = false; btn.onclick = () => finishTabOrderAddItemWait(); }
-  showToast('Segure shift e clique (ou use marquise) pra marcar quantos elementos novos precisar — clique em "Concluir seleção" quando terminar.');
+  showToast('Segure shift e clique (ou use marquise) pra marcar quantos elementos novos precisar. Clique em "Concluir seleção" quando terminar.');
 }
 window.startTabOrderAddItemWait = startTabOrderAddItemWait;
 
@@ -561,7 +629,7 @@ function _renderTabOrderPendingList() {
 
   containerEl.innerHTML = items.map((it, listIndex) => `
     <li class="list-none flex items-center gap-2 px-2.5 py-1.5 bg-white dark:bg-dark-surface rounded-dsc-small border border-gray-100 dark:border-dark-line shadow-dsc-elevation-1 cursor-pointer ${it.drawing ? 'opacity-60' : ''}"
-      title="${it.drawFailed ? 'Falha ao desenhar o selo — remova e tente novamente' : 'Destacar este elemento no canvas'}"
+      title="${it.drawFailed ? 'Falha ao desenhar o selo, remova e tente novamente' : 'Destacar este elemento no canvas'}"
       draggable="true"
       data-list-index="${listIndex}"
       onclick="_highlightTabOrderListItem('${escapeHtml(it.nodeId)}')"
@@ -697,7 +765,7 @@ function handleTabOrderBadgeDrawFailed(tempId) {
   if (it) {
     it.drawing = false;
     it.drawFailed = true;
-    showToast('Não foi possível desenhar o selo deste item — remova e adicione novamente.');
+    showToast('Não foi possível desenhar o selo deste item. Remova e adicione novamente.');
     _renderTabOrderPendingList();
   }
   _tabOrderResolveDrawWaiter(tempId);
@@ -778,21 +846,34 @@ async function applyTabOrderToCanvas() {
   const applyBtn = document.getElementById('btn-tab-order-apply');
   if (applyBtn) applyBtn.disabled = true;
 
+  // Loading de canvas (2026-09-14) — ver showA11yCanvasLoading (accessibility.js).
+  // O texto do botão ("Desenhando N de M...") já existia mas é discreto
+  // (some da vista se o modal de revisão estiver scrollado); o modal
+  // bloqueante deixa claro que o plugin está processando, não travado.
+  const _hasCanvasLoading = typeof showA11yCanvasLoading === 'function';
+  if (_hasCanvasLoading) showA11yCanvasLoading(`Desenhando 1 de ${list.length}...`);
+
   for (let i = 0; i < list.length; i++) {
     const it = list[i];
     if (it.canvasId) continue; // já desenhado (não deveria acontecer neste fluxo, mas idempotente)
     if (applyBtn) applyBtn.textContent = `Desenhando ${i + 1} de ${list.length}...`;
+    if (_hasCanvasLoading) {
+      const loadingText = document.getElementById('a11y-post-area-loading-text');
+      if (loadingText) loadingText.textContent = `Desenhando ${i + 1} de ${list.length}...`;
+    }
     it.drawing = true;
     _renderTabOrderPendingList();
     await _tabOrderDrawPendingBadgeAwaitable(it.tempId);
   }
+
+  if (_hasCanvasLoading) hideA11yCanvasLoading();
 
   const items = list.filter(it => it.canvasId);
   const failedCount = list.length - items.length;
 
   if (items.length === 0) {
     if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = 'Criar ordem de tabulação'; }
-    showToast('Não foi possível desenhar nenhum selo — tente novamente.');
+    showToast('Não foi possível desenhar nenhum selo. Tente novamente.');
     return;
   }
 
@@ -814,7 +895,7 @@ async function applyTabOrderToCanvas() {
   parent.postMessage({ pluginMessage: { type: 'clear-highlight' } }, '*');
   closeModal('a11y-tab-order-review-modal');
   showToast(failedCount > 0
-    ? `Ordem de tabulação concluída — ${failedCount} ${failedCount === 1 ? 'item falhou' : 'itens falharam'} ao desenhar e ${failedCount === 1 ? 'foi excluído' : 'foram excluídos'}.`
+    ? `Ordem de tabulação concluída: ${failedCount} ${failedCount === 1 ? 'item falhou' : 'itens falharam'} ao desenhar e ${failedCount === 1 ? 'foi excluído' : 'foram excluídos'}.`
     : 'Ordem de tabulação concluída.');
 }
 window.applyTabOrderToCanvas = applyTabOrderToCanvas;
@@ -892,8 +973,12 @@ function _confirmGenerateTabOrderFromLayers(areaId, targetNodeId) {
     window._tabOrderActiveCloneId = null;
     window._tabOrderActiveCloneNodeMap = null;
     window._tabOrderPendingGeneration = myGeneration;
+    // Loading de canvas (2026-09-14) — a operação mais pesada das 3:
+    // clona a tela inteira E varre a árvore de camadas em busca de
+    // elementos interativos. Fechado em addTabOrderItemsFromLayers, quando
+    // a resposta 'tab-order-generated-from-layers' chega.
+    if (typeof showA11yCanvasLoading === 'function') showA11yCanvasLoading('Varrendo elementos interativos da tela…');
     parent.postMessage({ pluginMessage: { type: 'generate-tab-order-from-layers', areaId, targetNodeId, sectionName: getA11yActiveSectionName(), designerName: getA11yDesignerName(), designerId: getA11yDesignerId(), generation: myGeneration } }, '*');
-    showToast('Varrendo elementos interativos da tela…');
   });
 }
 window._confirmGenerateTabOrderFromLayers = _confirmGenerateTabOrderFromLayers;
@@ -920,6 +1005,7 @@ async function addTabOrderItemsFromLayers(items, cloneId, nodeMap, generation) {
   // resposta em si, que pode chegar fora de ordem.
   if (generation !== undefined && generation !== window._tabOrderPendingGeneration) return;
   window._tabOrderScanInFlight = false;
+  if (typeof hideA11yCanvasLoading === 'function') hideA11yCanvasLoading();
 
   window._tabOrderActiveCloneId = cloneId || null;
   window._tabOrderActiveCloneNodeMap = nodeMap || null;
@@ -937,10 +1023,10 @@ async function addTabOrderItemsFromLayers(items, cloneId, nodeMap, generation) {
     : [];
   openTabOrderReviewModal();
   if (window._tabOrderPendingList.length === 0) {
-    showToast('Nenhum elemento interativo encontrado automaticamente — a cópia da tela já está pronta para marcação manual ("+ Adicionar item").');
+    showToast('Nenhum elemento interativo encontrado automaticamente. A cópia da tela já está pronta para marcação manual ("+ Adicionar item").');
     return;
   }
-  showToast(`${window._tabOrderPendingList.length} elemento${window._tabOrderPendingList.length === 1 ? '' : 's'} encontrado${window._tabOrderPendingList.length === 1 ? '' : 's'} — desenhando no canvas…`);
+  showToast(`${window._tabOrderPendingList.length} elemento${window._tabOrderPendingList.length === 1 ? '' : 's'} encontrado${window._tabOrderPendingList.length === 1 ? '' : 's'}, desenhando no canvas…`);
 
   for (const it of window._tabOrderPendingList.slice()) {
     // Aborta o loop se, no meio do caminho, uma geração mais nova assumiu

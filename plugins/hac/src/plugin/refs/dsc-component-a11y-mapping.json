@@ -1,7 +1,7 @@
 {
   "_meta": {
     "description": "Mapa containingFrame -> categoria de a11y, ESSENCIAL EM RUNTIME no hac (consumido por _getDscFrameToA11yMap em code.js para a Detecção Automática de a11y). Gerado por build-dsc-a11y-mapping.cjs a partir de refs/web-angular-react.json (dados reais da REST API do Figma, sem valores inventados). Adaptação do Handex Beta (onde este mesmo formato de arquivo é descrito como \"fundação de dados, não usado em runtime\" — desatualizado lá, mas aqui no hac o consumo em runtime é o desenho intencional desde o início).",
-    "generatedAt": "2026-09-09T18:49:17.020Z",
+    "generatedAt": "2026-09-14T19:11:29.138Z",
     "generator": "build-dsc-a11y-mapping.cjs (hac)",
     "sourceFile": "web-angular-react.json",
     "sourceFileKey": "8QvOeTODSBi3PquJT5CISP",
@@ -41,12 +41,12 @@
         "variantCount": 646
       },
       "baixaConfianca": {
-        "families": 20,
-        "variantCount": 700
+        "families": 19,
+        "variantCount": 692
       },
       "semMatch": {
-        "families": 24,
-        "variantCount": 547
+        "families": 25,
+        "variantCount": 555
       },
       "pctFamiliesAlta": 27.9,
       "pctVariantsAlta": 34.1
@@ -93,8 +93,8 @@
         "variantCount": 48
       },
       "snackbar": {
-        "families": 2,
-        "variantCount": 12
+        "families": 1,
+        "variantCount": 4
       },
       "stepper": {
         "families": 3,
@@ -120,8 +120,7 @@
         "families": 2,
         "variantCount": 18
       }
-    },
-    "curationNote": " [2026-09-09] [dsc] Alert adicionado manualmente como baixaConfianca->snackbar (achado da auditoria 2026-09), curadoria registrada em docs/changelog.html — ver decisão no relatório de auditoria."
+    }
   },
   "altaConfianca": [
     {
@@ -388,7 +387,7 @@
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "tabela curada (web-angular-react) \"Select\""
+        "reason": "tabela curada (web-angular-react) \"Select with Chips\""
       }
     },
     {
@@ -402,7 +401,7 @@
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "tabela curada (web-angular-react) \"Input\""
+        "reason": "tabela curada (web-angular-react) \"Input with Chips\""
       }
     },
     {
@@ -430,7 +429,7 @@
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "tabela curada (web-angular-react) \"Input\""
+        "reason": "tabela curada (web-angular-react) \"Input File\""
       }
     },
     {
@@ -444,7 +443,7 @@
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "tabela curada (web-angular-react) \"Input\""
+        "reason": "tabela curada (web-angular-react) \"Input Textarea\""
       }
     },
     {
@@ -500,7 +499,7 @@
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "tabela curada (web-angular-react) \"Input\""
+        "reason": "tabela curada (web-angular-react) \"Input Currency\""
       }
     },
     {
@@ -514,7 +513,7 @@
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "tabela curada (web-angular-react) \"Datepicker\""
+        "reason": "tabela curada (web-angular-react) \"Datepicker Range\""
       }
     },
     {
@@ -598,7 +597,7 @@
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "tabela curada (web-angular-react) \"Datepicker\""
+        "reason": "tabela curada (web-angular-react) \"Datepicker Calendar\""
       }
     },
     {
@@ -612,7 +611,7 @@
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "tabela curada (web-angular-react) \"Input\""
+        "reason": "tabela curada (web-angular-react) \"Dropdown Input with Chips\""
       }
     },
     {
@@ -626,20 +625,6 @@
         "shortName": "estrutura",
         "confidence": "baixa",
         "reason": "estrutura de página — marco de navegação \"header\""
-      }
-    },
-    {
-      "containingFrame": "[dsc] Alert",
-      "variantCount": 8,
-      "sampleKeys": [
-        "15e320d5a236df4f645c510650f4d34088303aad",
-        "326221e5f01f7b61f14058a967ad857e87c1d1c3",
-        "3a402daf651da18cca88a173efdf2163d8bb78dd"
-      ],
-      "match": {
-        "shortName": "snackbar",
-        "confidence": "baixa",
-        "reason": "role=\"alert\" (ARIA) é semanticamente próximo de snackbar/notificação, mas o nome do componente não contém a palavra \"snackbar\" — curadoria manual registrada na auditoria 2026-09"
       }
     }
   ],
@@ -781,6 +766,16 @@
         "15e22783892f754a9f1dd1f554eb98e4770bff92",
         "a526cc00237ab5663c3fc31f49b99e33ce6e1224",
         "53f0cb24f40df8b4e94506c2e1d1b927966ee1a7"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Alert",
+      "variantCount": 8,
+      "sampleKeys": [
+        "15e320d5a236df4f645c510650f4d34088303aad",
+        "326221e5f01f7b61f14058a967ad857e87c1d1c3",
+        "3a402daf651da18cca88a173efdf2163d8bb78dd"
       ],
       "match": null
     },

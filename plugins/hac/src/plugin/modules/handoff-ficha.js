@@ -186,6 +186,14 @@ function _fichaInsertSection(sectionKey) {
     payload.specs = areaSpecs.map(_fichaBuildSpecPayload);
   }
 
+  // Loading de canvas (2026-09-14, ver showA11yCanvasLoading em
+  // accessibility.js) — esta função é chamada em SEQUÊNCIA pelo "Gerar
+  // handoff completo" (_fichaGenerateCompleteHandoff, uma seção de cada
+  // vez): reabrir com texto novo antes do fechamento da chamada anterior é
+  // seguro (mesmo modal, só troca o texto), não pisca duas transições
+  // visuais distintas.
+  const _sectionLabel = sectionKey === 'tabulacao' ? 'Ordem de Tabulação' : sectionKey === 'swipe' ? 'Trilha de Swipe' : 'Leitor de Tela';
+  if (typeof showA11yCanvasLoading === 'function') showA11yCanvasLoading(`Inserindo ${_sectionLabel} no Handoff Completo…`);
   showToast('Inserindo no Handoff Completo…');
   parent.postMessage({ pluginMessage: Object.assign({ type: 'insert-ficha-section' }, payload) }, '*');
 }
@@ -216,6 +224,9 @@ function _fichaEditSection(sectionKey) {
     designerName: getA11yDesignerName(),
     designerId: getA11yDesignerId(),
   };
+  // Loading de canvas (2026-09-14) — recriar a réplica de trabalho a partir
+  // do frame original pode levar segundos, mesmo motivo de insert-ficha-section.
+  if (typeof showA11yCanvasLoading === 'function') showA11yCanvasLoading('Preparando réplica de trabalho…');
   parent.postMessage({ pluginMessage: Object.assign({ type: 'prepare-ficha-section-edit' }, payload) }, '*');
   switchA11yWorkspaceTab(sectionKey);
 }
@@ -226,13 +237,15 @@ window._fichaEditSection = _fichaEditSection;
 // clicado de novo, mesmo trade-off já documentado no cabeçalho deste
 // módulo: o estado "mente" até a próxima inserção real).
 function _fichaHandleSectionEditReady(msg) {
-  showToast('Réplica de trabalho pronta — edite e clique em "Atualizar Handoff" quando terminar.');
+  if (typeof hideA11yCanvasLoading === 'function') hideA11yCanvasLoading();
+  showToast('Réplica de trabalho pronta. Edite e clique em "Atualizar Handoff" quando terminar.');
 }
 window._fichaHandleSectionEditReady = _fichaHandleSectionEditReady;
 
 // Resposta de falha de prepare-ficha-section-edit — mesmo padrão de
 // _fichaHandleSectionInsertFailed.
 function _fichaHandleSectionEditFailed(msg) {
+  if (typeof hideA11yCanvasLoading === 'function') hideA11yCanvasLoading();
   showToast(msg && msg.reason ? msg.reason : 'Não foi possível preparar a edição desta seção.', 'error');
 }
 window._fichaHandleSectionEditFailed = _fichaHandleSectionEditFailed;
@@ -249,6 +262,7 @@ const _fichaPendingResolvers = {};
 // saveToStorage sincroniza) e persiste. Re-renderiza a tab ATIVA (o botão
 // que acabou de ser clicado precisa trocar de label na hora).
 function _fichaHandleSectionInserted(msg) {
+  if (typeof hideA11yCanvasLoading === 'function') hideA11yCanvasLoading();
   const area = _fichaLiveArea(msg.areaId);
   if (!area) {
     _fichaResolvePending(msg.sectionKey, false);
@@ -275,6 +289,7 @@ function _fichaHandleSectionInserted(msg) {
 window._fichaHandleSectionInserted = _fichaHandleSectionInserted;
 
 function _fichaHandleSectionInsertFailed(msg) {
+  if (typeof hideA11yCanvasLoading === 'function') hideA11yCanvasLoading();
   showToast(msg && msg.reason ? msg.reason : 'Não foi possível atualizar o Handoff Completo.', 'error');
   _fichaResolvePending(msg && msg.sectionKey, false);
 }
@@ -306,7 +321,7 @@ window._fichaViewOnCanvas = _fichaViewOnCanvas;
 // canvas (ex.: apagado manualmente) — sem isto, "Ver ficha no canvas" falha
 // em silêncio (achado real de QA, 2026-09-04).
 function _fichaHandleNodeNotFound(msg) {
-  showToast('O Handoff Completo desta tela não foi encontrado no canvas — talvez tenha sido apagado. Insira uma seção novamente para recriá-lo.', 'error');
+  showToast('O Handoff Completo desta tela não foi encontrado no canvas, talvez tenha sido apagado. Insira uma seção novamente para recriá-lo.', 'error');
 }
 window._fichaHandleNodeNotFound = _fichaHandleNodeNotFound;
 
@@ -375,7 +390,7 @@ function _fichaStatusCardHtml(area, sectionKey, label, countLabelFn) {
   if (stale) {
     icon = 'alert-circle';
     colorState = 'stale';
-    statusText = `${currentCount} agora — handoff tem ${count}, clique Atualizar`;
+    statusText = `${currentCount} agora, handoff tem ${count}. Clique Atualizar`;
   } else if (inserted) {
     icon = 'check-circle-2';
     colorState = 'inserted';

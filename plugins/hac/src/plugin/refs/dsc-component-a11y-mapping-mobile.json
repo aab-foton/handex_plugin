@@ -1,7 +1,7 @@
 {
   "_meta": {
     "description": "Mapa containingFrame -> categoria de a11y, ESSENCIAL EM RUNTIME no hac (consumido por _getDscFrameToA11yMap em code.js para a Detecção Automática de a11y). Gerado por build-dsc-a11y-mapping.cjs a partir de refs/web-angular-react.json (dados reais da REST API do Figma, sem valores inventados). Adaptação do Handex Beta (onde este mesmo formato de arquivo é descrito como \"fundação de dados, não usado em runtime\" — desatualizado lá, mas aqui no hac o consumo em runtime é o desenho intencional desde o início).",
-    "generatedAt": "2026-09-09T18:50:01.437Z",
+    "generatedAt": "2026-09-14T19:11:29.272Z",
     "generator": "build-dsc-a11y-mapping.cjs (hac)",
     "sourceFile": "super-app.json",
     "sourceFileKey": "epCGtlKQxedDxQVlK3lNcN",
@@ -73,16 +73,16 @@
         "variantCount": 16
       },
       "inputs": {
-        "families": 11,
-        "variantCount": 123
+        "families": 10,
+        "variantCount": 119
       },
       "link": {
         "families": 0,
         "variantCount": 0
       },
       "listas": {
-        "families": 5,
-        "variantCount": 76
+        "families": 4,
+        "variantCount": 73
       },
       "paginator": {
         "families": 0,
@@ -120,8 +120,7 @@
         "families": 0,
         "variantCount": 0
       }
-    },
-    "curationNote": " [2026-09-09] 3 achados de dsc-structural-review.json aplicados: [dsc-tc] Avatar Hero (nota de match reforçada -> imagem acompanhada de cabeçalho), [dsc-ts] Screen Input Money e [dsc-ts] Screen Item Select List removidos de baixaConfianca e movidos para semMatch (templates de tela completos, não componentes atômicos — decomposição em subcomponentes fica fora de escopo desta correção)."
+    }
   },
   "altaConfianca": [
     {
@@ -403,7 +402,7 @@
       "match": {
         "shortName": "listas",
         "confidence": "baixa",
-        "reason": "tabela curada (super-app) \"List Item\""
+        "reason": "tabela curada (super-app) \"Transaction List Item\""
       }
     },
     {
@@ -445,7 +444,7 @@
       "match": {
         "shortName": "imagem",
         "confidence": "baixa",
-        "reason": "Curadoria estrutural (dsc-structural-review.json, 2026-09-09): componente composto que une avatar/foto de perfil com nome do usuário e mensagem de boas-vindas — deve ser tratado como imagem acompanhada de cabeçalho, não como avatar isolado."
+        "reason": "tabela curada (super-app) \"Avatar Hero\""
       }
     },
     {
@@ -487,7 +486,7 @@
       "match": {
         "shortName": "imagem",
         "confidence": "baixa",
-        "reason": "tabela curada (super-app) \"Avatar\""
+        "reason": "tabela curada (super-app) \"Avatar Hero\""
       }
     },
     {
@@ -613,7 +612,7 @@
       "match": {
         "shortName": "inputs",
         "confidence": "baixa",
-        "reason": "tabela curada (super-app) \"Date Picker\""
+        "reason": "tabela curada (super-app) \"Date Picker Container\""
       }
     },
     {
@@ -1242,6 +1241,16 @@
       "match": null
     },
     {
+      "containingFrame": "[dsc-ts] Screen Input Money",
+      "variantCount": 4,
+      "sampleKeys": [
+        "d908b7393800afa8f9fdd02d7447960e9290f018",
+        "fd3f6729da97076f28a70af6d5cdd59509cc9abe",
+        "241ff22c0357557abdb832dbe3a4c94cfaf587ac"
+      ],
+      "match": null
+    },
+    {
       "containingFrame": "[dsc-ts] Screen Password",
       "variantCount": 4,
       "sampleKeys": [
@@ -1288,6 +1297,16 @@
         "12c64062e67b89cd4d582c2e0363b321975fcd84",
         "7fdd2a5ccffb32d4cd11f610b09511ac4c465902",
         "8826da669097280eef03777e3db90a28460d872a"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc-ts] Screen Item Select List",
+      "variantCount": 3,
+      "sampleKeys": [
+        "a69cb94fd9396c00c6d4934e7acf4a5ca3ba314b",
+        "fa4ace8b8449628b4bcf5f493b0e33d2565bbfbf",
+        "91c833d439d1bef39846bf995e53570fb217fcb9"
       ],
       "match": null
     },
@@ -14345,28 +14364,6 @@
         "ab75425a72f77d4803199012d8630b0a11d2597c"
       ],
       "match": null
-    },
-    {
-      "containingFrame": "[dsc-ts] Screen Input Money",
-      "variantCount": 4,
-      "sampleKeys": [
-        "d908b7393800afa8f9fdd02d7447960e9290f018",
-        "fd3f6729da97076f28a70af6d5cdd59509cc9abe",
-        "241ff22c0357557abdb832dbe3a4c94cfaf587ac"
-      ],
-      "match": null,
-      "structuralNote": "Removido como match de categoria única em 2026-09-09 (curadoria dsc-structural-review.json): é um template de tela completo (Screen Input Money), não um componente atômico — precisa ser decomposto em subcomponentes, fora de escopo do matching automático atual."
-    },
-    {
-      "containingFrame": "[dsc-ts] Screen Item Select List",
-      "variantCount": 3,
-      "sampleKeys": [
-        "a69cb94fd9396c00c6d4934e7acf4a5ca3ba314b",
-        "fa4ace8b8449628b4bcf5f493b0e33d2565bbfbf",
-        "91c833d439d1bef39846bf995e53570fb217fcb9"
-      ],
-      "match": null,
-      "structuralNote": "Removido como match de categoria única em 2026-09-09 (curadoria dsc-structural-review.json): é um template de tela completo (Screen Item Select List — modal de seleção com busca), não um componente atômico — precisa ser decomposto em subcomponentes, fora de escopo do matching automático atual."
     }
   ]
 }

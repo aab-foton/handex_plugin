@@ -2,7 +2,7 @@
   "meta": {
     "libraryName": "Super DSC | Web",
     "figmaFileKey": "erkqbRKIbaFWbkHe51BeiZ",
-    "exportedAt": "2026-09-09T18:48:11.208Z",
+    "exportedAt": "2026-09-14T17:23:09.387Z",
     "generator": "fetch-design-refs.cjs (hac)",
     "warnings": [
       "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
@@ -88,18 +88,18 @@
         "value": "#03453b"
       },
       {
-        "key": "178b280421e2efa7a88bfd25cbec1b305fc16f1c",
-        "name": "dsc/color/decorative/decorativeOutlined",
-        "resolvedType": "COLOR",
-        "collection": "dsc",
-        "value": "#d0f2ed"
-      },
-      {
         "key": "d042013351a71c7c1dc19ece7754c20590d1fbc2",
         "name": "dsc/color/accent/accentBg",
         "resolvedType": "COLOR",
         "collection": "dsc",
         "value": "#ffefd6"
+      },
+      {
+        "key": "178b280421e2efa7a88bfd25cbec1b305fc16f1c",
+        "name": "dsc/color/decorative/decorativeOutlined",
+        "resolvedType": "COLOR",
+        "collection": "dsc",
+        "value": "#d0f2ed"
       },
       {
         "key": "6da4e0966193e5e4d85e5a60812822577f8c8460",
@@ -1446,6 +1446,636 @@
         "value": 160
       },
       {
+        "key": "7575b7496a872b28dd5cd49e487ea79cb71edfa1",
+        "name": "Abrir/Abrir",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Abrir"
+      },
+      {
+        "key": "cde27af1b5e54c0918683e5f7432fe4cdaa38f43",
+        "name": "Abrir/Abrir comprovante",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Abrir comprovante"
+      },
+      {
+        "key": "f2551aa30f6bedcadb1f706f8fe0fad5f20c074a",
+        "name": "Abrir/Abrir conta digital",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Abrir conta digital"
+      },
+      {
+        "key": "841ba3235377973744e4296dcf8f22d49d853cdb",
+        "name": "Adicionar/Adicionar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Adicionar"
+      },
+      {
+        "key": "3a460f5d71452ecd32fb40e39801b2cb8d29274a",
+        "name": "Adicionar/Adicionar cartão",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Adicionar cartão"
+      },
+      {
+        "key": "5afbc4b887956edcf7410167ac08db8dd1767805",
+        "name": "Adicionar/Adicionar contato",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Adicionar contato"
+      },
+      {
+        "key": "d4f45f82e793ce512f0daee05794a30f682a1d43",
+        "name": "Adicionar/Adicionar widget",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Adicionar widget"
+      },
+      {
+        "key": "6364dd374ac04e7c37bc51dfc3ce05fecc312488",
+        "name": "Antecipar/Antecipar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Antecipar"
+      },
+      {
+        "key": "1f626b1ea958c3cff19043252ab4515ffc156e41",
+        "name": "Acessar/Acessar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Acessar"
+      },
+      {
+        "key": "ca631f5dd50edc1f34b8062f02cd815fe1a2b915",
+        "name": "Atualizar/Atualizar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Atualizar"
+      },
+      {
+        "key": "c34542120aa329d53ca919c2714f742f3f62129d",
+        "name": "Ativar/Ativar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ativar"
+      },
+      {
+        "key": "4d1b648579e088b4c7d612504b8c7b5c72c88e38",
+        "name": "Ativar/Ativar biometria",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ativar biometria"
+      },
+      {
+        "key": "3764cf061a4595fb021e1960651f767bf4e04f93",
+        "name": "Ativar/Ativar DDA",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ativar DDA"
+      },
+      {
+        "key": "fdbd3af7d049a6007435307af4083e975b541a77",
+        "name": "Ativar/Ativar lembrete",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ativar lembrete"
+      },
+      {
+        "key": "49ea23b990358ded15d568e48c25c37199ef5c6c",
+        "name": "Cadastrar/Cadastrar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cadastrar"
+      },
+      {
+        "key": "7fac299247a56db25032e6a422f7286becef9844",
+        "name": "Cadastrar/Cadastrar chave Pix",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cadastrar chave Pix"
+      },
+      {
+        "key": "acd7909315fd4f29735888d894a3c1b8c210ef11",
+        "name": "Cadastrar/Cadastrar débito automático",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cadastrar débito automático"
+      },
+      {
+        "key": "0c6c08504a879089142e528cd4863754a6eedf8f",
+        "name": "Cadastrar/Cadastrar Pix automático",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cadastrar Pix automático"
+      },
+      {
+        "key": "970d71d36e262fd535652d573684251ae3143b04",
+        "name": "Cancelar/Cancelar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cancelar"
+      },
+      {
+        "key": "621e2b0db4a437f1ca8d9285bbb50deedf12c1b0",
+        "name": "Cancelar/Cancelar autorização",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cancelar autorização"
+      },
+      {
+        "key": "7deeb0d4286e256a68eb93f8dbf6ef2d0ef5d329",
+        "name": "Cancelar/Cancelar débito automático",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cancelar débito automático"
+      },
+      {
+        "key": "2e7a7754da5e81f1da07871a1cdd4b9da66dacc9",
+        "name": "Cancelar/Cancelar portabilidade",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Cancelar portabilidade"
+      },
+      {
+        "key": "4a8bf755fc84e90a95a1767a6973177ade329a3f",
+        "name": "Compartilhar/Compartilhar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Compartilhar"
+      },
+      {
+        "key": "73b073957657a304a242f6920f20b252e9400284",
+        "name": "Compartilhar/Compartilhar chave Pix",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Compartilhar chave Pix"
+      },
+      {
+        "key": "7962242626b005fa3299855a13692a1ca7a8bc66",
+        "name": "Compartilhar/Compartilhar dados da conta",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Compartilhar dados da conta"
+      },
+      {
+        "key": "85fa2d12fce79977a0de3e7a86ef70e0a294cf9c",
+        "name": "Compartilhar/Compartilhar comprovante",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Compartilhar comprovante"
+      },
+      {
+        "key": "36c00e537434f816d153a1e471ef6e12174fab87",
+        "name": "Compartilhar/Compartilhar QR Code",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Compartilhar QR Code"
+      },
+      {
+        "key": "2b63e8cc3f77f2c4dbfa92f3662b2c984e8bf5fe",
+        "name": "Confirmar/Confirmar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Confirmar"
+      },
+      {
+        "key": "7fb9169ea3b7d86dc115bd432d95ae9465ad05e6",
+        "name": "Confirmar/Confirmar celular",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Confirmar celular"
+      },
+      {
+        "key": "07bc4eb81799184c3b955e900c040a58545ae3a3",
+        "name": "Continuar/Continuar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Continuar"
+      },
+      {
+        "key": "35f93d55fc39cb2fd9dc6671cf71a50a0dd3ee7e",
+        "name": "Criar/Criar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Criar"
+      },
+      {
+        "key": "a3730b5ac30a5f2166cf4d1b8119a8080fc500fe",
+        "name": "Criar/Criar lembrete",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Criar lembrete"
+      },
+      {
+        "key": "827deac4fe985e312bed38bef9f9f28f7b6875f9",
+        "name": "Entender/Ok, entendi",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ok, entendi"
+      },
+      {
+        "key": "ace67ea43afcd5e4cafb12bd7af456a385ad72ac",
+        "name": "Excluir/Excluir",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Excluir"
+      },
+      {
+        "key": "d1204cecc7dfe7b41205f67289046ab0bbda9f2b",
+        "name": "Excluir/Excluir Pix Programado",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Excluir Pix Programado"
+      },
+      {
+        "key": "c05e128d55440a8faed9d55edebce93dfb23ba88",
+        "name": "Excluir/Excluir chave Pix",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Excluir chave Pix"
+      },
+      {
+        "key": "86a64e9abcf1277020a948bb3ceecd456492c023",
+        "name": "Fazer/Fazer Pix",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Fazer Pix"
+      },
+      {
+        "key": "808c1b50f1b72495b2b72eaa494a11096d126eb1",
+        "name": "Fazer/Fazer novo Pix",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Fazer novo Pix"
+      },
+      {
+        "key": "99023cb295dd079ccd2f895e825cba3cb2789dc5",
+        "name": "Fazer/Fazer pagamento",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Fazer pagamento"
+      },
+      {
+        "key": "7f9d7e6059748df354e2db2b3320f6d4248d1698",
+        "name": "Fazer/Fazer novo pagamento",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Fazer novo pagamento"
+      },
+      {
+        "key": "98523099a0acd722c6250466525152ac48325923",
+        "name": "Gerar/Gerar QR Code",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Gerar QR Code"
+      },
+      {
+        "key": "a665d506d7e0acf95f9ae5ec3b57f2169744abc0",
+        "name": "Gerar/Gerar 2ª via do boleto",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Gerar 2ª via do boleto"
+      },
+      {
+        "key": "1ddb9fccfa883bd08a645884626aef1580577efc",
+        "name": "Ir e Voltar/Ir para início",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ir para início"
+      },
+      {
+        "key": "13d175095ec0382bb513437dd97954b3de22b8fb",
+        "name": "Ir e Voltar/Ir para Empréstimos",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Ir para Empréstimos"
+      },
+      {
+        "key": "3e964c68c9cb918232247ac32e60997a1ccef787",
+        "name": "Ir e Voltar/Voltar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Voltar"
+      },
+      {
+        "key": "b8508791173ad7b1e647230164b01bb60f4a7632",
+        "name": "Ir e Voltar/Voltar para início",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Voltar para início"
+      },
+      {
+        "key": "b3b06d3635a9b3ef2a73a2d9c4ec081cd5782fb5",
+        "name": "Mostrar/Mostrar senha",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Mostrar senha"
+      },
+      {
+        "key": "674e8982242af99721abede69ce8d194c0aeaf94",
+        "name": "Mostrar/Mostrar saldo",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Mostrar saldo"
+      },
+      {
+        "key": "e0cf2ecf4b11acef318c0913ee58ca8083f3e277",
+        "name": "Mostrar/Mostrar todos",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Mostrar todos"
+      },
+      {
+        "key": "70af83b4b8cd6cda2067315aaedb862f2169899a",
+        "name": "Pagar/Pagar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Pagar"
+      },
+      {
+        "key": "0d7cfa101ba0db407065ad8b558e71db0e844640",
+        "name": "Pagar/Pagar boleto",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Pagar boleto"
+      },
+      {
+        "key": "c6e218c7eff2040eba53654f5606a962e00809b8",
+        "name": "Pagar/Pagar parcela",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Pagar parcela"
+      },
+      {
+        "key": "700ede1712ede7e130cf23ea255f40892b8e0ae4",
+        "name": "Pagar/Pagar prestação",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Pagar prestação"
+      },
+      {
+        "key": "3fdeb05fc282d9ab9808abd2b19bcb39ec623a73",
+        "name": "Salvar/Salvar",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Salvar"
+      },
+      {
+        "key": "44e5a292aa3dbcfe1a1918f9f6fb8c4838e89d31",
+        "name": "Salvar/Salvar contato",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Salvar contato"
+      },
+      {
+        "key": "da2b36841fe792593a33dcc6fd26ffb387122f5f",
+        "name": "Salvar/Salvar mensagem",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Salvar mensagem"
+      },
+      {
+        "key": "4d74e16cae3b66fffd414709461528d166e27de9",
+        "name": "Usar/Usar chave Pix na CAIXA",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Usar chave Pix na CAIXA"
+      },
+      {
+        "key": "91581239c63c4f3270eb5eb4c3f01192d99ac6c8",
+        "name": "Usar/Usar em outro banco",
+        "resolvedType": "STRING",
+        "collection": "Terms dictionary",
+        "value": "Usar em outro banco"
+      },
+      {
+        "key": "e683b329fedb23d423b5daf08762ceb825932b17",
+        "name": "breakpoint 🔒",
+        "resolvedType": "STRING",
+        "collection": "responsive",
+        "value": "extra large"
+      },
+      {
+        "key": "5a252b9f4d10a79cb6a71f922d7c0d359e08b671",
+        "name": "device 🔒",
+        "resolvedType": "STRING",
+        "collection": "responsive",
+        "value": "desktop"
+      },
+      {
+        "key": "342dc2e8338a4bf48cf67858012acaac8f51b0dd",
+        "name": "device/width",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 1440
+      },
+      {
+        "key": "0c58f7f1c8bdee1fae04b483016807839d8bbeef",
+        "name": "device/min-width",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 1440
+      },
+      {
+        "key": "15b13fffa9bd485c000a60cf7352aeec864ac5cd",
+        "name": "device/max-width",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 1920
+      },
+      {
+        "key": "8c1c494e3d2189c0cda1a8b246a222679d4e7188",
+        "name": "device/min-height",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 900
+      },
+      {
+        "key": "b6fa6d7ea224162fc26bcd4feb3593a071c72aef",
+        "name": "grid/grid-column",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 12
+      },
+      {
+        "key": "b357d9876a6487bc6585ff05d6d34049168a686b",
+        "name": "show/device/desktop",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "f1fa37adfa4cfe8c8e83b226e2c309d2756590a8",
+        "name": "show/device/mobile",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "c656eb4c5adbf1f4d10d36ecc529a62d6ba847cb",
+        "name": "show/breakpoint/extra large",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "eb8218a3b520b76e4c9c5394b34a28e90b9381be",
+        "name": "show/breakpoint/large +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "de2f0274cba20369986d7eba540f66fed2f66cda",
+        "name": "show/breakpoint/large",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "f62abf263d76b9cb8859e065b36df4f4a092440d",
+        "name": "show/breakpoint/medium +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "55341000b43c6871ba95e3e9612136dbbd2a06ed",
+        "name": "show/breakpoint/medium",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "2a1182e3ade1087d17e5a4ed3202d0c3a77b2588",
+        "name": "show/breakpoint/small +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "0f238f4ba74855b4056b568dfee5c2f3a114445c",
+        "name": "show/breakpoint/small",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "3cf82aef55e2701ed26738822a1848886287a5ae",
+        "name": "show/breakpoint/extra small",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "d349b296f58c9f5cc80e92c1043cc59a4a3b79f2",
+        "name": "grid/grid-margin",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 48
+      },
+      {
+        "key": "e2c5440e36fc09559af6d652fa8bd67db3e11dbd",
+        "name": "grid/grid-gap",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 24
+      },
+      {
+        "key": "d5f0eddd47d5e547747cbd2f6b83c1170cfe6c7f",
+        "name": "hide/device/desktop",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "bbb5487ef1c40e5ddf426a45dc9a79c1c61a08f4",
+        "name": "components/container/width-compact",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 720
+      },
+      {
+        "key": "ba362c47468f7ffc3f4bacadc489386abdd3eaff",
+        "name": "components/container/width",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 1080
+      },
+      {
+        "key": "d5f604b4641b0f25ed4f4e86454f9c1597343fbc",
+        "name": "components/container/width-wide",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 1440
+      },
+      {
+        "key": "353f9e9a3a815706dcc7bf54d116db9f23285fe2",
+        "name": "hide/device/mobile",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "5cdf1997b0429ef16bd6c1be5bab9a2b12eda469",
+        "name": "hide/breakpoint/extra large",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "4f95e11f7498f15bd862c964ea6d213f77eacb04",
+        "name": "hide/breakpoint/large +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "2568ea599dbb0f5c54ba2e241554507f75f26411",
+        "name": "hide/breakpoint/large",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "759e7e9fc237cc7cf071ed04b65b5d280e884f26",
+        "name": "hide/breakpoint/medium +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "d3676bfcd938342e798fe2301907f26fe42fc5a0",
+        "name": "hide/breakpoint/medium",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "d18bfc2be43c65657374a7518a55295ea586102c",
+        "name": "hide/breakpoint/small +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "080f2ce8fe0de800c7174126adaeaac75e322b54",
+        "name": "hide/breakpoint/small",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "1b813038bcb7e2224d055ba5952e55add8faec73",
+        "name": "hide/breakpoint/extra small",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
         "key": "9c7fc4880bebc37c156e9bdf87c2ef6354bc2a6e",
         "name": "Texts/ComponentDescription",
         "resolvedType": "STRING",
@@ -2179,636 +2809,6 @@
         "resolvedType": "FLOAT",
         "collection": "GOSTPlugin",
         "value": 256
-      },
-      {
-        "key": "e683b329fedb23d423b5daf08762ceb825932b17",
-        "name": "breakpoint 🔒",
-        "resolvedType": "STRING",
-        "collection": "responsive",
-        "value": "extra large"
-      },
-      {
-        "key": "5a252b9f4d10a79cb6a71f922d7c0d359e08b671",
-        "name": "device 🔒",
-        "resolvedType": "STRING",
-        "collection": "responsive",
-        "value": "desktop"
-      },
-      {
-        "key": "342dc2e8338a4bf48cf67858012acaac8f51b0dd",
-        "name": "device/width",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1440
-      },
-      {
-        "key": "0c58f7f1c8bdee1fae04b483016807839d8bbeef",
-        "name": "device/min-width",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1440
-      },
-      {
-        "key": "15b13fffa9bd485c000a60cf7352aeec864ac5cd",
-        "name": "device/max-width",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1920
-      },
-      {
-        "key": "8c1c494e3d2189c0cda1a8b246a222679d4e7188",
-        "name": "device/min-height",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 900
-      },
-      {
-        "key": "b6fa6d7ea224162fc26bcd4feb3593a071c72aef",
-        "name": "grid/grid-column",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 12
-      },
-      {
-        "key": "b357d9876a6487bc6585ff05d6d34049168a686b",
-        "name": "show/device/desktop",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "f1fa37adfa4cfe8c8e83b226e2c309d2756590a8",
-        "name": "show/device/mobile",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "c656eb4c5adbf1f4d10d36ecc529a62d6ba847cb",
-        "name": "show/breakpoint/extra large",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "eb8218a3b520b76e4c9c5394b34a28e90b9381be",
-        "name": "show/breakpoint/large +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "de2f0274cba20369986d7eba540f66fed2f66cda",
-        "name": "show/breakpoint/large",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "f62abf263d76b9cb8859e065b36df4f4a092440d",
-        "name": "show/breakpoint/medium +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "55341000b43c6871ba95e3e9612136dbbd2a06ed",
-        "name": "show/breakpoint/medium",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "2a1182e3ade1087d17e5a4ed3202d0c3a77b2588",
-        "name": "show/breakpoint/small +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "0f238f4ba74855b4056b568dfee5c2f3a114445c",
-        "name": "show/breakpoint/small",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "3cf82aef55e2701ed26738822a1848886287a5ae",
-        "name": "show/breakpoint/extra small",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "d349b296f58c9f5cc80e92c1043cc59a4a3b79f2",
-        "name": "grid/grid-margin",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 48
-      },
-      {
-        "key": "e2c5440e36fc09559af6d652fa8bd67db3e11dbd",
-        "name": "grid/grid-gap",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 24
-      },
-      {
-        "key": "d5f0eddd47d5e547747cbd2f6b83c1170cfe6c7f",
-        "name": "hide/device/desktop",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "bbb5487ef1c40e5ddf426a45dc9a79c1c61a08f4",
-        "name": "components/container/width-compact",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 720
-      },
-      {
-        "key": "ba362c47468f7ffc3f4bacadc489386abdd3eaff",
-        "name": "components/container/width",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1080
-      },
-      {
-        "key": "d5f604b4641b0f25ed4f4e86454f9c1597343fbc",
-        "name": "components/container/width-wide",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1440
-      },
-      {
-        "key": "353f9e9a3a815706dcc7bf54d116db9f23285fe2",
-        "name": "hide/device/mobile",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "5cdf1997b0429ef16bd6c1be5bab9a2b12eda469",
-        "name": "hide/breakpoint/extra large",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "4f95e11f7498f15bd862c964ea6d213f77eacb04",
-        "name": "hide/breakpoint/large +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "2568ea599dbb0f5c54ba2e241554507f75f26411",
-        "name": "hide/breakpoint/large",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "759e7e9fc237cc7cf071ed04b65b5d280e884f26",
-        "name": "hide/breakpoint/medium +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "d3676bfcd938342e798fe2301907f26fe42fc5a0",
-        "name": "hide/breakpoint/medium",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "d18bfc2be43c65657374a7518a55295ea586102c",
-        "name": "hide/breakpoint/small +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "080f2ce8fe0de800c7174126adaeaac75e322b54",
-        "name": "hide/breakpoint/small",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "1b813038bcb7e2224d055ba5952e55add8faec73",
-        "name": "hide/breakpoint/extra small",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "7575b7496a872b28dd5cd49e487ea79cb71edfa1",
-        "name": "Abrir/Abrir",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Abrir"
-      },
-      {
-        "key": "cde27af1b5e54c0918683e5f7432fe4cdaa38f43",
-        "name": "Abrir/Abrir comprovante",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Abrir comprovante"
-      },
-      {
-        "key": "f2551aa30f6bedcadb1f706f8fe0fad5f20c074a",
-        "name": "Abrir/Abrir conta digital",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Abrir conta digital"
-      },
-      {
-        "key": "841ba3235377973744e4296dcf8f22d49d853cdb",
-        "name": "Adicionar/Adicionar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Adicionar"
-      },
-      {
-        "key": "3a460f5d71452ecd32fb40e39801b2cb8d29274a",
-        "name": "Adicionar/Adicionar cartão",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Adicionar cartão"
-      },
-      {
-        "key": "5afbc4b887956edcf7410167ac08db8dd1767805",
-        "name": "Adicionar/Adicionar contato",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Adicionar contato"
-      },
-      {
-        "key": "d4f45f82e793ce512f0daee05794a30f682a1d43",
-        "name": "Adicionar/Adicionar widget",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Adicionar widget"
-      },
-      {
-        "key": "6364dd374ac04e7c37bc51dfc3ce05fecc312488",
-        "name": "Antecipar/Antecipar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Antecipar"
-      },
-      {
-        "key": "1f626b1ea958c3cff19043252ab4515ffc156e41",
-        "name": "Acessar/Acessar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Acessar"
-      },
-      {
-        "key": "ca631f5dd50edc1f34b8062f02cd815fe1a2b915",
-        "name": "Atualizar/Atualizar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Atualizar"
-      },
-      {
-        "key": "c34542120aa329d53ca919c2714f742f3f62129d",
-        "name": "Ativar/Ativar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ativar"
-      },
-      {
-        "key": "4d1b648579e088b4c7d612504b8c7b5c72c88e38",
-        "name": "Ativar/Ativar biometria",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ativar biometria"
-      },
-      {
-        "key": "3764cf061a4595fb021e1960651f767bf4e04f93",
-        "name": "Ativar/Ativar DDA",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ativar DDA"
-      },
-      {
-        "key": "fdbd3af7d049a6007435307af4083e975b541a77",
-        "name": "Ativar/Ativar lembrete",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ativar lembrete"
-      },
-      {
-        "key": "49ea23b990358ded15d568e48c25c37199ef5c6c",
-        "name": "Cadastrar/Cadastrar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cadastrar"
-      },
-      {
-        "key": "7fac299247a56db25032e6a422f7286becef9844",
-        "name": "Cadastrar/Cadastrar chave Pix",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cadastrar chave Pix"
-      },
-      {
-        "key": "acd7909315fd4f29735888d894a3c1b8c210ef11",
-        "name": "Cadastrar/Cadastrar débito automático",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cadastrar débito automático"
-      },
-      {
-        "key": "0c6c08504a879089142e528cd4863754a6eedf8f",
-        "name": "Cadastrar/Cadastrar Pix automático",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cadastrar Pix automático"
-      },
-      {
-        "key": "970d71d36e262fd535652d573684251ae3143b04",
-        "name": "Cancelar/Cancelar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cancelar"
-      },
-      {
-        "key": "621e2b0db4a437f1ca8d9285bbb50deedf12c1b0",
-        "name": "Cancelar/Cancelar autorização",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cancelar autorização"
-      },
-      {
-        "key": "7deeb0d4286e256a68eb93f8dbf6ef2d0ef5d329",
-        "name": "Cancelar/Cancelar débito automático",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cancelar débito automático"
-      },
-      {
-        "key": "2e7a7754da5e81f1da07871a1cdd4b9da66dacc9",
-        "name": "Cancelar/Cancelar portabilidade",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Cancelar portabilidade"
-      },
-      {
-        "key": "4a8bf755fc84e90a95a1767a6973177ade329a3f",
-        "name": "Compartilhar/Compartilhar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Compartilhar"
-      },
-      {
-        "key": "73b073957657a304a242f6920f20b252e9400284",
-        "name": "Compartilhar/Compartilhar chave Pix",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Compartilhar chave Pix"
-      },
-      {
-        "key": "7962242626b005fa3299855a13692a1ca7a8bc66",
-        "name": "Compartilhar/Compartilhar dados da conta",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Compartilhar dados da conta"
-      },
-      {
-        "key": "85fa2d12fce79977a0de3e7a86ef70e0a294cf9c",
-        "name": "Compartilhar/Compartilhar comprovante",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Compartilhar comprovante"
-      },
-      {
-        "key": "36c00e537434f816d153a1e471ef6e12174fab87",
-        "name": "Compartilhar/Compartilhar QR Code",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Compartilhar QR Code"
-      },
-      {
-        "key": "2b63e8cc3f77f2c4dbfa92f3662b2c984e8bf5fe",
-        "name": "Confirmar/Confirmar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Confirmar"
-      },
-      {
-        "key": "7fb9169ea3b7d86dc115bd432d95ae9465ad05e6",
-        "name": "Confirmar/Confirmar celular",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Confirmar celular"
-      },
-      {
-        "key": "07bc4eb81799184c3b955e900c040a58545ae3a3",
-        "name": "Continuar/Continuar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Continuar"
-      },
-      {
-        "key": "35f93d55fc39cb2fd9dc6671cf71a50a0dd3ee7e",
-        "name": "Criar/Criar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Criar"
-      },
-      {
-        "key": "a3730b5ac30a5f2166cf4d1b8119a8080fc500fe",
-        "name": "Criar/Criar lembrete",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Criar lembrete"
-      },
-      {
-        "key": "827deac4fe985e312bed38bef9f9f28f7b6875f9",
-        "name": "Entender/Ok, entendi",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ok, entendi"
-      },
-      {
-        "key": "ace67ea43afcd5e4cafb12bd7af456a385ad72ac",
-        "name": "Excluir/Excluir",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Excluir"
-      },
-      {
-        "key": "d1204cecc7dfe7b41205f67289046ab0bbda9f2b",
-        "name": "Excluir/Excluir Pix Programado",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Excluir Pix Programado"
-      },
-      {
-        "key": "c05e128d55440a8faed9d55edebce93dfb23ba88",
-        "name": "Excluir/Excluir chave Pix",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Excluir chave Pix"
-      },
-      {
-        "key": "86a64e9abcf1277020a948bb3ceecd456492c023",
-        "name": "Fazer/Fazer Pix",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Fazer Pix"
-      },
-      {
-        "key": "808c1b50f1b72495b2b72eaa494a11096d126eb1",
-        "name": "Fazer/Fazer novo Pix",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Fazer novo Pix"
-      },
-      {
-        "key": "99023cb295dd079ccd2f895e825cba3cb2789dc5",
-        "name": "Fazer/Fazer pagamento",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Fazer pagamento"
-      },
-      {
-        "key": "7f9d7e6059748df354e2db2b3320f6d4248d1698",
-        "name": "Fazer/Fazer novo pagamento",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Fazer novo pagamento"
-      },
-      {
-        "key": "98523099a0acd722c6250466525152ac48325923",
-        "name": "Gerar/Gerar QR Code",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Gerar QR Code"
-      },
-      {
-        "key": "a665d506d7e0acf95f9ae5ec3b57f2169744abc0",
-        "name": "Gerar/Gerar 2ª via do boleto",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Gerar 2ª via do boleto"
-      },
-      {
-        "key": "1ddb9fccfa883bd08a645884626aef1580577efc",
-        "name": "Ir e Voltar/Ir para início",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ir para início"
-      },
-      {
-        "key": "13d175095ec0382bb513437dd97954b3de22b8fb",
-        "name": "Ir e Voltar/Ir para Empréstimos",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Ir para Empréstimos"
-      },
-      {
-        "key": "3e964c68c9cb918232247ac32e60997a1ccef787",
-        "name": "Ir e Voltar/Voltar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Voltar"
-      },
-      {
-        "key": "b8508791173ad7b1e647230164b01bb60f4a7632",
-        "name": "Ir e Voltar/Voltar para início",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Voltar para início"
-      },
-      {
-        "key": "b3b06d3635a9b3ef2a73a2d9c4ec081cd5782fb5",
-        "name": "Mostrar/Mostrar senha",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Mostrar senha"
-      },
-      {
-        "key": "674e8982242af99721abede69ce8d194c0aeaf94",
-        "name": "Mostrar/Mostrar saldo",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Mostrar saldo"
-      },
-      {
-        "key": "e0cf2ecf4b11acef318c0913ee58ca8083f3e277",
-        "name": "Mostrar/Mostrar todos",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Mostrar todos"
-      },
-      {
-        "key": "70af83b4b8cd6cda2067315aaedb862f2169899a",
-        "name": "Pagar/Pagar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Pagar"
-      },
-      {
-        "key": "0d7cfa101ba0db407065ad8b558e71db0e844640",
-        "name": "Pagar/Pagar boleto",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Pagar boleto"
-      },
-      {
-        "key": "c6e218c7eff2040eba53654f5606a962e00809b8",
-        "name": "Pagar/Pagar parcela",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Pagar parcela"
-      },
-      {
-        "key": "700ede1712ede7e130cf23ea255f40892b8e0ae4",
-        "name": "Pagar/Pagar prestação",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Pagar prestação"
-      },
-      {
-        "key": "3fdeb05fc282d9ab9808abd2b19bcb39ec623a73",
-        "name": "Salvar/Salvar",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Salvar"
-      },
-      {
-        "key": "44e5a292aa3dbcfe1a1918f9f6fb8c4838e89d31",
-        "name": "Salvar/Salvar contato",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Salvar contato"
-      },
-      {
-        "key": "da2b36841fe792593a33dcc6fd26ffb387122f5f",
-        "name": "Salvar/Salvar mensagem",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Salvar mensagem"
-      },
-      {
-        "key": "4d74e16cae3b66fffd414709461528d166e27de9",
-        "name": "Usar/Usar chave Pix na CAIXA",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Usar chave Pix na CAIXA"
-      },
-      {
-        "key": "91581239c63c4f3270eb5eb4c3f01192d99ac6c8",
-        "name": "Usar/Usar em outro banco",
-        "resolvedType": "STRING",
-        "collection": "Terms dictionary",
-        "value": "Usar em outro banco"
       }
     ]
   },
@@ -27931,13 +27931,6 @@
       "containingFrameNodeId": "26468:41997"
     },
     {
-      "key": "0b080eca64166896ce2158fa863d9e094099209c",
-      "name": "breakpoint=extra large, variant=warning",
-      "description": "",
-      "containingFrame": "[dsc-ts] Screen Feedback",
-      "containingFrameNodeId": "32488:117052"
-    },
-    {
       "key": "0b6a01710cfc43e34b45d6bab4fc0ab5dcba0a1b",
       "name": "type=vertical, count=4, position=middle",
       "description": "",
@@ -27959,25 +27952,11 @@
       "containingFrameNodeId": "24701:11192"
     },
     {
-      "key": "102d9de32e521c5a7d2ac4f5f650b89cccae33c7",
-      "name": "breakpoint=extra large, variant=success",
-      "description": "",
-      "containingFrame": "[dsc-ts] Screen Feedback",
-      "containingFrameNodeId": "32488:117052"
-    },
-    {
       "key": "1c059f4e360fe01f059e285cfa853399980d3a03",
       "name": "type=horizontal, count=3, position=middle",
       "description": "",
       "containingFrame": "[dsc-tc] card carousel",
       "containingFrameNodeId": "23766:2302"
-    },
-    {
-      "key": "125f8a2558eeb30421659a73183fa38fc5bcf5b6",
-      "name": "breakpoint=small, variant=warning",
-      "description": "",
-      "containingFrame": "[dsc-ts] Screen Feedback",
-      "containingFrameNodeId": "32488:117052"
     },
     {
       "key": "22e936263fad1df73801fcc8c0f891a89e0ad472",
@@ -28013,13 +27992,6 @@
       "description": "",
       "containingFrame": "[dsc-tc] Sidebar Menu",
       "containingFrameNodeId": "30957:342329"
-    },
-    {
-      "key": "3cc1263abd47aafe528a6948e9872d56b730991e",
-      "name": "breakpoint=small, variant=success",
-      "description": "",
-      "containingFrame": "[dsc-ts] Screen Feedback",
-      "containingFrameNodeId": "32488:117052"
     },
     {
       "key": "38ece60c9c30482089b558b12450d225de2fdd1a",
@@ -28290,13 +28262,6 @@
     {
       "key": "f167bd863c1c2978efacfa72abc57a0c2b39a2ac",
       "name": "breakpoint=extra large, variant=danger",
-      "description": "",
-      "containingFrame": "[dsc-ts] Screen Feedback",
-      "containingFrameNodeId": "32488:117052"
-    },
-    {
-      "key": "f4cd9270d1226dd027d0f92a39c01615d9961b8e",
-      "name": "breakpoint=medium, variant=success",
       "description": "",
       "containingFrame": "[dsc-ts] Screen Feedback",
       "containingFrameNodeId": "32488:117052"
@@ -28855,25 +28820,11 @@
       "containingFrameNodeId": "37145:1624"
     },
     {
-      "key": "249e30c0ad5ef9203c62abea8a4663a60601443b",
-      "name": "state=focus, status=error, filled=true",
-      "description": "",
-      "containingFrame": "[dsc] Input with Chips ",
-      "containingFrameNodeId": "25406:18726"
-    },
-    {
       "key": "a289b5b357783cc13dd47aafb1540b3dea35f109",
       "name": "variant=suggestions",
       "description": "",
       "containingFrame": "[dsc] Search Results",
       "containingFrameNodeId": "30709:29966"
-    },
-    {
-      "key": "aa506896c23ded18588d0820d7ed3e1b3ed6c5be",
-      "name": "state=default, status=error, filled=true",
-      "description": "",
-      "containingFrame": "[dsc] Input with Chips ",
-      "containingFrameNodeId": "25406:18726"
     },
     {
       "key": "bfe42a4eb2a7a7019671c257b620bce738b3ab57",
@@ -28883,39 +28834,11 @@
       "containingFrameNodeId": "30709:29966"
     },
     {
-      "key": "d048f0b5e331479065721ec1c5abc46b7bb2917b",
-      "name": "state=focus - collapsed chip, status=default, filled=true",
-      "description": "",
-      "containingFrame": "[dsc] Input with Chips ",
-      "containingFrameNodeId": "25406:18726"
-    },
-    {
-      "key": "e008d7099b6bd95f1c89879cd931ae6de9ba34db",
-      "name": "state=focus, status=default, filled=true",
-      "description": "",
-      "containingFrame": "[dsc] Input with Chips ",
-      "containingFrameNodeId": "25406:18726"
-    },
-    {
       "key": "e1aeca57ec1c0419c3b35880f50f042f43d50bcf",
       "name": "variant=no results",
       "description": "",
       "containingFrame": "[dsc] Search Results",
       "containingFrameNodeId": "30709:29966"
-    },
-    {
-      "key": "e336ccaee484ae434edb9fa3b512c00c0731fb06",
-      "name": "state=hover, status=error, filled=true",
-      "description": "",
-      "containingFrame": "[dsc] Input with Chips ",
-      "containingFrameNodeId": "25406:18726"
-    },
-    {
-      "key": "e809098fbc988a8d5a946c2a85fa96ade0d639f4",
-      "name": "state=disabled, status=default, filled=false",
-      "description": "",
-      "containingFrame": "[dsc] Input with Chips ",
-      "containingFrameNodeId": "25406:18726"
     },
     {
       "key": "51e2fd4ab5791dc8b42c27fc39a61dffe794d666",
@@ -28988,13 +28911,6 @@
       "containingFrameNodeId": "37240:3075"
     },
     {
-      "key": "01b800ce517368ca13484915112529a55eee84f6",
-      "name": "type=button, state=hover, selected=false",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
       "key": "0449cc1beb9da8f5aafb5a93cba7728888185f7e",
       "name": "variant=default, configuration=checkbox, state=disabled, status=unchecked",
       "description": "",
@@ -29051,32 +28967,11 @@
       "containingFrameNodeId": "26303:4747"
     },
     {
-      "key": "13a2851594c3fa8c9b8db0bebfa6931c247607dd",
-      "name": "type=selectable, state=disabled, selected=true",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
       "key": "1618751f8ce6979214f40ddc774806fc00f007f0",
       "name": "variant=default, configuration=checkbox, state=default, status=unchecked",
       "description": "",
       "containingFrame": "[dsc] Card",
       "containingFrameNodeId": "26303:4747"
-    },
-    {
-      "key": "1686a555c4420c7a90d95293ca67ed3393f1a19c",
-      "name": "type=selectable, state=read-only, selected=false",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
-      "key": "1b5a08bad90d17147a64b3cbfebf32191b1136ae",
-      "name": "type=removable, state=read-only, selected=false",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
     },
     {
       "key": "1f48a42ecb92ae3e72efc6605dbaece808805d22",
@@ -29107,13 +29002,6 @@
       "containingFrameNodeId": "26303:4747"
     },
     {
-      "key": "27975cc624be39c1d1a0852d171879ae9fd5db44",
-      "name": "type=removable, state=disabled, selected=false",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
       "key": "27f9422d281582335d1a596d014a163824acff33",
       "name": "pattern=feedback - danger, wide=false",
       "description": "",
@@ -29128,20 +29016,6 @@
       "containingFrameNodeId": "26303:4747"
     },
     {
-      "key": "2c159bcda58fe6e8f6812d72deb45a936466111b",
-      "name": "type=dropdown, state=hover, selected=true",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
-      "key": "31bdb468ac4f5a38fc86f44538d2ec9f56763248",
-      "name": "type=dropdown, state=default, selected=true",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
       "key": "33d02f72fcef125a1450de9492e4dbc756fd647e",
       "name": "variant=inline, configuration=checkbox, state=focus, status=checked",
       "description": "",
@@ -29154,13 +29028,6 @@
       "description": "",
       "containingFrame": "[dsc] Card",
       "containingFrameNodeId": "26303:4747"
-    },
-    {
-      "key": "36693d1009b4b6b12b05bf437750a0a48ffa2d00",
-      "name": "type=selectable, state=pressed, selected=true",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
     },
     {
       "key": "39869d82a3a54b914d51448858b6d9161b70c08b",
@@ -29191,32 +29058,11 @@
       "containingFrameNodeId": "26303:4747"
     },
     {
-      "key": "410f9e2eae38e49611af1861813655b953c5ccaa",
-      "name": "type=dropdown, state=read-only, selected=false",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
       "key": "42b5bf9150b98b667f7540ee03028b0a1de2747c",
       "name": "variant=default, configuration=radio button, state=focus, status=checked",
       "description": "",
       "containingFrame": "[dsc] Card",
       "containingFrameNodeId": "26303:4747"
-    },
-    {
-      "key": "4a1cf070e1660109fec89c466e7a9c1c454b7369",
-      "name": "type=button, state=focus, selected=true",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
-      "key": "4a8c4f56c2a96497a916d2bd1f81631450a458f2",
-      "name": "type=button, state=disabled, selected=false",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
     },
     {
       "key": "4bf484c40bbdea60317baaa73a3846a2711fca44",
@@ -29231,13 +29077,6 @@
       "description": "",
       "containingFrame": "[dsc] Card",
       "containingFrameNodeId": "26303:4747"
-    },
-    {
-      "key": "4d6e876762be122c037f4ae49b6bc3ea2ad2c1f7",
-      "name": "type=dropdown, state=focus, selected=false",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
     },
     {
       "key": "552e36bdf74c3ebd4df5dddf90df2faca4075468",
@@ -29261,53 +29100,11 @@
       "containingFrameNodeId": "26303:4747"
     },
     {
-      "key": "56ec60915b795a1611a4d582d42d0d6c40891034",
-      "name": "type=input chip, state=hover, selected=false",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
       "key": "57a516ab87fb6b916ddbe9c8aa21c6588878cd8f",
       "name": "variant=inline, configuration=radio button, state=focus, status=unchecked",
       "description": "",
       "containingFrame": "[dsc] Card",
       "containingFrameNodeId": "26303:4747"
-    },
-    {
-      "key": "591df2d34d00954e2197d56915484bbbec9c3b8c",
-      "name": "type=button, state=disabled, selected=true",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
-      "key": "5dbd31c23f1dfbf0aaf5df46c9a3227eaa61e1e0",
-      "name": "type=dropdown, state=hover, selected=false",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
-      "key": "61a1f1d97697f98c71c9c2e27de2617aba43b1bd",
-      "name": "type=removable, state=default, selected=false",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
-      "key": "637478a98ccc3d4cbc49e3c1c22bd6bc6251c41d",
-      "name": "type=button, state=hover, selected=true",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
-      "key": "649c4ce385ee0f31c02a2a756cc6fa4168c61db7",
-      "name": "type=input chip, state=disabled, selected=false",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
     },
     {
       "key": "64c92042cf7ec100a4bfe97773ed19156ffff834",
@@ -29317,25 +29114,11 @@
       "containingFrameNodeId": "26303:4747"
     },
     {
-      "key": "65357f2ba8f811c2a20e00f44c97792a7e2f84e4",
-      "name": "type=button, state=pressed, selected=false",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
       "key": "65a3ea271a62353f8bf3645abf24f58ed64d38c1",
       "name": "variant=default, configuration=button, state=default, status=none",
       "description": "",
       "containingFrame": "[dsc] Card",
       "containingFrameNodeId": "26303:4747"
-    },
-    {
-      "key": "6633e54915045895bec533e699450bc8a21081a1",
-      "name": "type=dropdown, state=read-only, selected=true",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
     },
     {
       "key": "66590d8be8584efc6de0e02b61b0cb73d3b1102b",
@@ -29345,46 +29128,11 @@
       "containingFrameNodeId": "26303:4747"
     },
     {
-      "key": "69eb6632b8698d91105d0860476ae68439358b58",
-      "name": "type=selectable, state=focus, selected=false",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
-      "key": "6fd21fa795ac3a0125199dc358dc8e8c1caf3466",
-      "name": "type=button, state=default, selected=true",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
       "key": "71c5310c146e431e709b155c0cc3812ca7744fb1",
       "name": "variant=default, configuration=checkbox, state=hover, status=unchecked",
       "description": "",
       "containingFrame": "[dsc] Card",
       "containingFrameNodeId": "26303:4747"
-    },
-    {
-      "key": "71f01def406521896b99928616e2f7c0475935c0",
-      "name": "type=removable, state=pressed, selected=false",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
-      "key": "7252e8887fafa3b3eab3adf7943084baabf40429",
-      "name": "type=selectable, state=pressed, selected=false",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
-      "key": "77f85116931c63c88883cbd163f0d31bf6880742",
-      "name": "type=dropdown, state=focus, selected=true",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
     },
     {
       "key": "789863f34f3af67fbf46bce704d5535fe5cb635a",
@@ -29394,13 +29142,6 @@
       "containingFrameNodeId": "26303:4747"
     },
     {
-      "key": "78dc68b7511f4a778c05781ecf8ac21dfca8e056",
-      "name": "type=input chip, state=focus, selected=false",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
       "key": "7b5b803e78e0209a9863c1cf57e4199a376e17c7",
       "name": "variant=inline, configuration=checkbox, state=hover, status=unchecked",
       "description": "",
@@ -29408,74 +29149,11 @@
       "containingFrameNodeId": "26303:4747"
     },
     {
-      "key": "7bcad894e7ef131c35859bd24dbd6a86898d6529",
-      "name": "type=dropdown, state=pressed, selected=false",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
-      "key": "7d646e4bd052e362b29ed35080822d3b198ca85e",
-      "name": "type=removable, state=hover, selected=false",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
-      "key": "87504aa0ef417923f2e53324bbc2becf0b7ec952",
-      "name": "type=selectable, state=hover, selected=false",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
-      "key": "8e7c35a6877ac2eabe8fc1ad4de2a94b01f68efb",
-      "name": "type=dropdown, state=disabled, selected=false",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
-      "key": "8e9edb948a6587339e3f6e3f38491fa7c7b1b27b",
-      "name": "type=button, state=pressed, selected=true",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
-      "key": "8f2e12dcdded56e53ced66da1992f459155d7efb",
-      "name": "type=selectable, state=default, selected=true",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
       "key": "9123e75ca62a475418cee2bfe47c9596795d46ca",
       "name": "variant=default, configuration=checkbox, state=focus, status=unchecked",
       "description": "",
       "containingFrame": "[dsc] Card",
       "containingFrameNodeId": "26303:4747"
-    },
-    {
-      "key": "92633748aa15cbbf5a9d9ac339e0a395962549da",
-      "name": "type=input chip, state=read-only, selected=false",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
-      "key": "93287fa0ed9e4eeaafc7b87216aacad677e0bdaf",
-      "name": "type=input chip, state=pressed, selected=false",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
-      "key": "937c8de364bc6bef7a611aa0e03ba86270feef51",
-      "name": "type=button, state=read-only, selected=false",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
     },
     {
       "key": "9c6f57544a2cd6100bb7086a1e516d6600b54e45",
@@ -29499,13 +29177,6 @@
       "containingFrameNodeId": "26303:4747"
     },
     {
-      "key": "a9862c97e3aee2f174afdd43e2cc59757a2cfee3",
-      "name": "type=button, state=default, selected=false",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
       "key": "a5e87e8985b2e18d5a9295f62e3d0bb455aa5d92",
       "name": "configuration=wide, show overlay=true",
       "description": "",
@@ -29527,25 +29198,11 @@
       "containingFrameNodeId": "26303:4747"
     },
     {
-      "key": "b9a10d4d1749928ac179ad6bb54a4905bf1fbe62",
-      "name": "type=dropdown, state=pressed, selected=true",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
       "key": "bba7178bdb76e88366d8b8d849240f7c782f30a9",
       "name": "pattern=feedback - informative, wide=false",
       "description": "",
       "containingFrame": "[dsc-tc] Drawer Panel",
       "containingFrameNodeId": "32796:20696"
-    },
-    {
-      "key": "c40cc89236ceb3d2abeb4fcaff7c7dd72ca02cb1",
-      "name": "type=selectable, state=disabled, selected=false",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
     },
     {
       "key": "c2d3503040e3b535e25bbd358f02a52d5c7c0115",
@@ -29625,13 +29282,6 @@
       "containingFrameNodeId": "26303:4747"
     },
     {
-      "key": "ece07945c4f8ed81c24e9ef5516b253dbc96b353",
-      "name": "type=dropdown, state=default, selected=false",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
       "key": "edcefa697dbd3447f829ad32ff94e748a4fcfebd",
       "name": "variant=inline, configuration=radio button, state=disabled, status=checked",
       "description": "",
@@ -29639,39 +29289,11 @@
       "containingFrameNodeId": "26303:4747"
     },
     {
-      "key": "ee34da8445fc8e21945acd2742721bcbdb768b6e",
-      "name": "type=selectable, state=hover, selected=true",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
       "key": "ef19301e7af1f0289a715cbaf2a47928413fc6e0",
       "name": "variant=default, configuration=checkbox, state=default, status=checked",
       "description": "",
       "containingFrame": "[dsc] Card",
       "containingFrameNodeId": "26303:4747"
-    },
-    {
-      "key": "f5bf1687c1337510de5f0f454d98dd76cf6476da",
-      "name": "type=dropdown, state=disabled, selected=true",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
-      "key": "f83f6b8b425376d2024dbdfa4539b76e32c53046",
-      "name": "type=selectable, state=read-only, selected=true",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
-      "key": "f99185260d6d3ac52ac631498ede289606eb633e",
-      "name": "type=button, state=focus, selected=false",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
     },
     {
       "key": "fad21f3e1e4808568313c8b0d04dcf37f99c8806",
@@ -29744,25 +29366,11 @@
       "containingFrameNodeId": "35643:4592"
     },
     {
-      "key": "c80a705b10bb1d8005bbac2e26db1d8d493aa7c7",
-      "name": "state=default, status=error, filled=false",
-      "description": "",
-      "containingFrame": "[dsc] Input with Chips ",
-      "containingFrameNodeId": "25406:18726"
-    },
-    {
       "key": "c58fddf280417daf18560a90d9bd4787a36422b0",
       "name": "state=default",
       "description": "",
       "containingFrame": "[dsc] Batch Button",
       "containingFrameNodeId": "35643:4592"
-    },
-    {
-      "key": "f58141d235abfb276497b4371294038a30d8dd0a",
-      "name": "state=read-only, status=default, filled=true",
-      "description": "",
-      "containingFrame": "[dsc] Input with Chips ",
-      "containingFrameNodeId": "25406:18726"
     },
     {
       "key": "fe67daa4774790584bcc4745928aece3f599f8af",
@@ -29772,43 +29380,8 @@
       "containingFrameNodeId": "35643:4592"
     },
     {
-      "key": "0ebedc660ee2e2de2c1b1d90f8bdb6a59de702c5",
-      "name": "state=disabled, status=error, filled=false",
-      "description": "",
-      "containingFrame": "[dsc] Input with Chips ",
-      "containingFrameNodeId": "25406:18726"
-    },
-    {
-      "key": "0f3438d1eb5212003ce791cb8316ac48a0f92eb7",
-      "name": "state=disabled, status=default, filled=true",
-      "description": "",
-      "containingFrame": "[dsc] Input with Chips ",
-      "containingFrameNodeId": "25406:18726"
-    },
-    {
-      "key": "19dfdf9bba2538139a3c5406b1a8d109f71e30d0",
-      "name": "state=read-only, status=error, filled=false",
-      "description": "",
-      "containingFrame": "[dsc] Input with Chips ",
-      "containingFrameNodeId": "25406:18726"
-    },
-    {
-      "key": "3193cedf99ef72698bd8c42d01f2bb47fd0754a0",
-      "name": "state=read-only, status=error, filled=true",
-      "description": "",
-      "containingFrame": "[dsc] Input with Chips ",
-      "containingFrameNodeId": "25406:18726"
-    },
-    {
       "key": "35f0e4ce657a7530bf565b4d42e0c66150201916",
       "name": "state=focus, status=error, filled=false",
-      "description": "",
-      "containingFrame": "[dsc] Input with Chips ",
-      "containingFrameNodeId": "25406:18726"
-    },
-    {
-      "key": "449c317d7cd906f201a6c59cd5ce9e0ce749b494",
-      "name": "state=disabled, status=error, filled=true",
       "description": "",
       "containingFrame": "[dsc] Input with Chips ",
       "containingFrameNodeId": "25406:18726"
@@ -29819,83 +29392,6 @@
       "description": "",
       "containingFrame": "[dsc] Input with Chips ",
       "containingFrameNodeId": "25406:18726"
-    },
-    {
-      "key": "75a743e1ec5456b9382828291321c068c4d489e0",
-      "name": "state=read-only, status=default, filled=false",
-      "description": "",
-      "containingFrame": "[dsc] Input with Chips ",
-      "containingFrameNodeId": "25406:18726"
-    },
-    {
-      "key": "931ca70a3a3ff3842f14aeecd9737adabf1eb913",
-      "name": "state=focus, status=default, filled=false",
-      "description": "",
-      "containingFrame": "[dsc] Input with Chips ",
-      "containingFrameNodeId": "25406:18726"
-    },
-    {
-      "key": "947f03b36dd6d3844c1c6b98a276246d07300b2e",
-      "name": "state=default, status=default, filled=false",
-      "description": "",
-      "containingFrame": "[dsc] Input with Chips ",
-      "containingFrameNodeId": "25406:18726"
-    },
-    {
-      "key": "a1c85e9bf82cf483e193aeb7dd5c0ba2b813a67f",
-      "name": "state=default, status=default, filled=true",
-      "description": "",
-      "containingFrame": "[dsc] Input with Chips ",
-      "containingFrameNodeId": "25406:18726"
-    },
-    {
-      "key": "ca8b01f62168244a29a712e069ca81fd7a5930ca",
-      "name": "state=hover, status=default, filled=true",
-      "description": "",
-      "containingFrame": "[dsc] Input with Chips ",
-      "containingFrameNodeId": "25406:18726"
-    },
-    {
-      "key": "dc7dfb1b655f3538d916d407fd4b49bf16c36018",
-      "name": "state=hover, status=default, filled=false",
-      "description": "",
-      "containingFrame": "[dsc] Input with Chips ",
-      "containingFrameNodeId": "25406:18726"
-    },
-    {
-      "key": "dccb2c0c1d339f4a2b63a8fca806012108507a99",
-      "name": "type=button, state=read-only, selected=true",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
-      "key": "0755edb14c836de66145f843560d1b7fe547cc73",
-      "name": "type=removable, state=focus, selected=false",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
-      "key": "15ca829149af6980f72df6c30bafcff37579c6e0",
-      "name": "type=selectable, state=default, selected=false",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
-      "key": "1cc9c21678ecb3f0d3fdeae0cc7bfa444e6cfc8d",
-      "name": "type=input chip, state=default, selected=false",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
-    },
-    {
-      "key": "ecc489f5e1034809c4f3da2065809f88be8f3ab8",
-      "name": "type=selectable, state=focus, selected=true",
-      "description": "",
-      "containingFrame": "[dsc] Chip",
-      "containingFrameNodeId": "36586:4314"
     },
     {
       "key": "8c90b79c2410ae9d3f7b2de1e9d111fc00d6113a",
@@ -30022,13 +29518,6 @@
       "description": "",
       "containingFrame": "[dsc] Badge Text",
       "containingFrameNodeId": "6791:5353"
-    },
-    {
-      "key": "6d4d0a9be93dc52dc57dc03eab4cbfa2ee7414e3",
-      "name": "breakpoint=small, variant=danger",
-      "description": "",
-      "containingFrame": "[dsc-ts] Screen Feedback",
-      "containingFrameNodeId": "32488:117052"
     },
     {
       "key": "03cc957537ef70b4bb1e8dec988a42009165ffd5",
@@ -35141,20 +34630,6 @@
       "containingFrameNodeId": "19932:69648"
     },
     {
-      "key": "1543fa02f24bddbd0bb47472cca2d96397d3f5dd",
-      "name": "breakpoint=large, variant=warning",
-      "description": "",
-      "containingFrame": "[dsc-ts] Screen Feedback",
-      "containingFrameNodeId": "32488:117052"
-    },
-    {
-      "key": "1d650ede033f826e42ef153a31f540ccc9a70378",
-      "name": "breakpoint=large, variant=success",
-      "description": "",
-      "containingFrame": "[dsc-ts] Screen Feedback",
-      "containingFrameNodeId": "32488:117052"
-    },
-    {
       "key": "1e83b0ce9119010402228da04d973c179d54dc3f",
       "name": "breakpoint=small, container=default",
       "description": "",
@@ -35169,39 +34644,11 @@
       "containingFrameNodeId": "19973:13281"
     },
     {
-      "key": "4175dc8e809615011fe6f6ea5c56eaf116dc96c4",
-      "name": "breakpoint=large, variant=danger",
-      "description": "",
-      "containingFrame": "[dsc-ts] Screen Feedback",
-      "containingFrameNodeId": "32488:117052"
-    },
-    {
       "key": "4b36b174c8173fe4caaac5c025592acb6c5dc412",
       "name": "breakpoint=extra large, type=search bar + multi account, configuration=search open",
       "description": "",
       "containingFrame": "[dsc] Header",
       "containingFrameNodeId": "21918:15091"
-    },
-    {
-      "key": "4c5283f050cd87943756f988058f3fc99a780125",
-      "name": "breakpoint=extra small, variant=success",
-      "description": "",
-      "containingFrame": "[dsc-ts] Screen Feedback",
-      "containingFrameNodeId": "32488:117052"
-    },
-    {
-      "key": "68389356ad0e2e0f596140316423c9746e808a3e",
-      "name": "breakpoint=medium, variant=warning",
-      "description": "",
-      "containingFrame": "[dsc-ts] Screen Feedback",
-      "containingFrameNodeId": "32488:117052"
-    },
-    {
-      "key": "68dac9890ea41b71a30ad86c4f417b9830a5c89b",
-      "name": "breakpoint=extra small, variant=warning",
-      "description": "",
-      "containingFrame": "[dsc-ts] Screen Feedback",
-      "containingFrameNodeId": "32488:117052"
     },
     {
       "key": "6e131a605104c4643d4a860dafe013ca15cd35c5",
@@ -35223,20 +34670,6 @@
       "description": "",
       "containingFrame": "[dsc] Header",
       "containingFrameNodeId": "21918:15091"
-    },
-    {
-      "key": "8af1c457f61963d1759c0863bccc1561977b7202",
-      "name": "breakpoint=large, variant=informative",
-      "description": "",
-      "containingFrame": "[dsc-ts] Screen Feedback",
-      "containingFrameNodeId": "32488:117052"
-    },
-    {
-      "key": "8b02e22bcf0241f9086ddc82fc9d2c924d83708d",
-      "name": "breakpoint=extra small, variant=informative",
-      "description": "",
-      "containingFrame": "[dsc-ts] Screen Feedback",
-      "containingFrameNodeId": "32488:117052"
     },
     {
       "key": "93776bf7c8dc8184e9f958e986431a6fb3975878",
@@ -35281,39 +34714,11 @@
       "containingFrameNodeId": "19932:69648"
     },
     {
-      "key": "cb54b6b9b87837e184223d9132ff82f41d56608d",
-      "name": "breakpoint=small, variant=informative",
-      "description": "",
-      "containingFrame": "[dsc-ts] Screen Feedback",
-      "containingFrameNodeId": "32488:117052"
-    },
-    {
-      "key": "cddbb43187a6df3128fce23139134c3905df8c7b",
-      "name": "breakpoint=extra small, variant=danger",
-      "description": "",
-      "containingFrame": "[dsc-ts] Screen Feedback",
-      "containingFrameNodeId": "32488:117052"
-    },
-    {
-      "key": "d46bc3e6ca8d3303bc80756dfcf7e69a6f49a19b",
-      "name": "breakpoint=extra large, variant=informative",
-      "description": "",
-      "containingFrame": "[dsc-ts] Screen Feedback",
-      "containingFrameNodeId": "32488:117052"
-    },
-    {
       "key": "d7270cc6b4d38bc4a2a1c6cddc62fe88cc045011",
       "name": "breakpoint=large, container=default",
       "description": "",
       "containingFrame": "[dsc-ts] Basic Layout",
       "containingFrameNodeId": "19932:69648"
-    },
-    {
-      "key": "ed62cb8d927a872a2c0b8fb9907230bf2f970aac",
-      "name": "breakpoint=medium, variant=danger",
-      "description": "",
-      "containingFrame": "[dsc-ts] Screen Feedback",
-      "containingFrameNodeId": "32488:117052"
     },
     {
       "key": "f93c82d4fe1548cc86b28867c546c6ec4935b9bb",
@@ -35678,6 +35083,601 @@
       "description": "",
       "containingFrame": "[dsc-ts] Print Receipt - Comprovantes",
       "containingFrameNodeId": "38056:9909"
+    },
+    {
+      "key": "01b800ce517368ca13484915112529a55eee84f6",
+      "name": "type=button, state=hover, selected=false",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "0755edb14c836de66145f843560d1b7fe547cc73",
+      "name": "type=removable, state=focus, selected=false",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "0b080eca64166896ce2158fa863d9e094099209c",
+      "name": "breakpoint=extra large, variant=warning",
+      "description": "",
+      "containingFrame": "[dsc-ts] Screen Feedback",
+      "containingFrameNodeId": "32488:117052"
+    },
+    {
+      "key": "0ebedc660ee2e2de2c1b1d90f8bdb6a59de702c5",
+      "name": "state=disabled, status=error, filled=false",
+      "description": "",
+      "containingFrame": "[dsc] Input with Chips ",
+      "containingFrameNodeId": "25406:18726"
+    },
+    {
+      "key": "0f3438d1eb5212003ce791cb8316ac48a0f92eb7",
+      "name": "state=disabled, status=default, filled=true",
+      "description": "",
+      "containingFrame": "[dsc] Input with Chips ",
+      "containingFrameNodeId": "25406:18726"
+    },
+    {
+      "key": "102d9de32e521c5a7d2ac4f5f650b89cccae33c7",
+      "name": "breakpoint=extra large, variant=success",
+      "description": "",
+      "containingFrame": "[dsc-ts] Screen Feedback",
+      "containingFrameNodeId": "32488:117052"
+    },
+    {
+      "key": "125f8a2558eeb30421659a73183fa38fc5bcf5b6",
+      "name": "breakpoint=small, variant=warning",
+      "description": "",
+      "containingFrame": "[dsc-ts] Screen Feedback",
+      "containingFrameNodeId": "32488:117052"
+    },
+    {
+      "key": "13a2851594c3fa8c9b8db0bebfa6931c247607dd",
+      "name": "type=selectable, state=disabled, selected=true",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "1543fa02f24bddbd0bb47472cca2d96397d3f5dd",
+      "name": "breakpoint=large, variant=warning",
+      "description": "",
+      "containingFrame": "[dsc-ts] Screen Feedback",
+      "containingFrameNodeId": "32488:117052"
+    },
+    {
+      "key": "15ca829149af6980f72df6c30bafcff37579c6e0",
+      "name": "type=selectable, state=default, selected=false",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "1686a555c4420c7a90d95293ca67ed3393f1a19c",
+      "name": "type=selectable, state=read-only, selected=false",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "19dfdf9bba2538139a3c5406b1a8d109f71e30d0",
+      "name": "state=read-only, status=error, filled=false",
+      "description": "",
+      "containingFrame": "[dsc] Input with Chips ",
+      "containingFrameNodeId": "25406:18726"
+    },
+    {
+      "key": "1b5a08bad90d17147a64b3cbfebf32191b1136ae",
+      "name": "type=removable, state=read-only, selected=false",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "1cc9c21678ecb3f0d3fdeae0cc7bfa444e6cfc8d",
+      "name": "type=input chip, state=default, selected=false",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "1d650ede033f826e42ef153a31f540ccc9a70378",
+      "name": "breakpoint=large, variant=success",
+      "description": "",
+      "containingFrame": "[dsc-ts] Screen Feedback",
+      "containingFrameNodeId": "32488:117052"
+    },
+    {
+      "key": "249e30c0ad5ef9203c62abea8a4663a60601443b",
+      "name": "state=focus, status=error, filled=true",
+      "description": "",
+      "containingFrame": "[dsc] Input with Chips ",
+      "containingFrameNodeId": "25406:18726"
+    },
+    {
+      "key": "27975cc624be39c1d1a0852d171879ae9fd5db44",
+      "name": "type=removable, state=disabled, selected=false",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "2c159bcda58fe6e8f6812d72deb45a936466111b",
+      "name": "type=dropdown, state=hover, selected=true",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "3193cedf99ef72698bd8c42d01f2bb47fd0754a0",
+      "name": "state=read-only, status=error, filled=true",
+      "description": "",
+      "containingFrame": "[dsc] Input with Chips ",
+      "containingFrameNodeId": "25406:18726"
+    },
+    {
+      "key": "31bdb468ac4f5a38fc86f44538d2ec9f56763248",
+      "name": "type=dropdown, state=default, selected=true",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "36693d1009b4b6b12b05bf437750a0a48ffa2d00",
+      "name": "type=selectable, state=pressed, selected=true",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "3cc1263abd47aafe528a6948e9872d56b730991e",
+      "name": "breakpoint=small, variant=success",
+      "description": "",
+      "containingFrame": "[dsc-ts] Screen Feedback",
+      "containingFrameNodeId": "32488:117052"
+    },
+    {
+      "key": "410f9e2eae38e49611af1861813655b953c5ccaa",
+      "name": "type=dropdown, state=read-only, selected=false",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "4175dc8e809615011fe6f6ea5c56eaf116dc96c4",
+      "name": "breakpoint=large, variant=danger",
+      "description": "",
+      "containingFrame": "[dsc-ts] Screen Feedback",
+      "containingFrameNodeId": "32488:117052"
+    },
+    {
+      "key": "449c317d7cd906f201a6c59cd5ce9e0ce749b494",
+      "name": "state=disabled, status=error, filled=true",
+      "description": "",
+      "containingFrame": "[dsc] Input with Chips ",
+      "containingFrameNodeId": "25406:18726"
+    },
+    {
+      "key": "4a1cf070e1660109fec89c466e7a9c1c454b7369",
+      "name": "type=button, state=focus, selected=true",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "4a8c4f56c2a96497a916d2bd1f81631450a458f2",
+      "name": "type=button, state=disabled, selected=false",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "4c5283f050cd87943756f988058f3fc99a780125",
+      "name": "breakpoint=extra small, variant=success",
+      "description": "",
+      "containingFrame": "[dsc-ts] Screen Feedback",
+      "containingFrameNodeId": "32488:117052"
+    },
+    {
+      "key": "4d6e876762be122c037f4ae49b6bc3ea2ad2c1f7",
+      "name": "type=dropdown, state=focus, selected=false",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "56ec60915b795a1611a4d582d42d0d6c40891034",
+      "name": "type=input chip, state=hover, selected=false",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "591df2d34d00954e2197d56915484bbbec9c3b8c",
+      "name": "type=button, state=disabled, selected=true",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "5dbd31c23f1dfbf0aaf5df46c9a3227eaa61e1e0",
+      "name": "type=dropdown, state=hover, selected=false",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "61a1f1d97697f98c71c9c2e27de2617aba43b1bd",
+      "name": "type=removable, state=default, selected=false",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "637478a98ccc3d4cbc49e3c1c22bd6bc6251c41d",
+      "name": "type=button, state=hover, selected=true",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "649c4ce385ee0f31c02a2a756cc6fa4168c61db7",
+      "name": "type=input chip, state=disabled, selected=false",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "65357f2ba8f811c2a20e00f44c97792a7e2f84e4",
+      "name": "type=button, state=pressed, selected=false",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "6633e54915045895bec533e699450bc8a21081a1",
+      "name": "type=dropdown, state=read-only, selected=true",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "68389356ad0e2e0f596140316423c9746e808a3e",
+      "name": "breakpoint=medium, variant=warning",
+      "description": "",
+      "containingFrame": "[dsc-ts] Screen Feedback",
+      "containingFrameNodeId": "32488:117052"
+    },
+    {
+      "key": "68dac9890ea41b71a30ad86c4f417b9830a5c89b",
+      "name": "breakpoint=extra small, variant=warning",
+      "description": "",
+      "containingFrame": "[dsc-ts] Screen Feedback",
+      "containingFrameNodeId": "32488:117052"
+    },
+    {
+      "key": "69eb6632b8698d91105d0860476ae68439358b58",
+      "name": "type=selectable, state=focus, selected=false",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "6d4d0a9be93dc52dc57dc03eab4cbfa2ee7414e3",
+      "name": "breakpoint=small, variant=danger",
+      "description": "",
+      "containingFrame": "[dsc-ts] Screen Feedback",
+      "containingFrameNodeId": "32488:117052"
+    },
+    {
+      "key": "6fd21fa795ac3a0125199dc358dc8e8c1caf3466",
+      "name": "type=button, state=default, selected=true",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "71f01def406521896b99928616e2f7c0475935c0",
+      "name": "type=removable, state=pressed, selected=false",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "7252e8887fafa3b3eab3adf7943084baabf40429",
+      "name": "type=selectable, state=pressed, selected=false",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "75a743e1ec5456b9382828291321c068c4d489e0",
+      "name": "state=read-only, status=default, filled=false",
+      "description": "",
+      "containingFrame": "[dsc] Input with Chips ",
+      "containingFrameNodeId": "25406:18726"
+    },
+    {
+      "key": "77f85116931c63c88883cbd163f0d31bf6880742",
+      "name": "type=dropdown, state=focus, selected=true",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "78dc68b7511f4a778c05781ecf8ac21dfca8e056",
+      "name": "type=input chip, state=focus, selected=false",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "7bcad894e7ef131c35859bd24dbd6a86898d6529",
+      "name": "type=dropdown, state=pressed, selected=false",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "7d646e4bd052e362b29ed35080822d3b198ca85e",
+      "name": "type=removable, state=hover, selected=false",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "87504aa0ef417923f2e53324bbc2becf0b7ec952",
+      "name": "type=selectable, state=hover, selected=false",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "8af1c457f61963d1759c0863bccc1561977b7202",
+      "name": "breakpoint=large, variant=informative",
+      "description": "",
+      "containingFrame": "[dsc-ts] Screen Feedback",
+      "containingFrameNodeId": "32488:117052"
+    },
+    {
+      "key": "8b02e22bcf0241f9086ddc82fc9d2c924d83708d",
+      "name": "breakpoint=extra small, variant=informative",
+      "description": "",
+      "containingFrame": "[dsc-ts] Screen Feedback",
+      "containingFrameNodeId": "32488:117052"
+    },
+    {
+      "key": "8e7c35a6877ac2eabe8fc1ad4de2a94b01f68efb",
+      "name": "type=dropdown, state=disabled, selected=false",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "8e9edb948a6587339e3f6e3f38491fa7c7b1b27b",
+      "name": "type=button, state=pressed, selected=true",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "8f2e12dcdded56e53ced66da1992f459155d7efb",
+      "name": "type=selectable, state=default, selected=true",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "92633748aa15cbbf5a9d9ac339e0a395962549da",
+      "name": "type=input chip, state=read-only, selected=false",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "931ca70a3a3ff3842f14aeecd9737adabf1eb913",
+      "name": "state=focus, status=default, filled=false",
+      "description": "",
+      "containingFrame": "[dsc] Input with Chips ",
+      "containingFrameNodeId": "25406:18726"
+    },
+    {
+      "key": "93287fa0ed9e4eeaafc7b87216aacad677e0bdaf",
+      "name": "type=input chip, state=pressed, selected=false",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "937c8de364bc6bef7a611aa0e03ba86270feef51",
+      "name": "type=button, state=read-only, selected=false",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "947f03b36dd6d3844c1c6b98a276246d07300b2e",
+      "name": "state=default, status=default, filled=false",
+      "description": "",
+      "containingFrame": "[dsc] Input with Chips ",
+      "containingFrameNodeId": "25406:18726"
+    },
+    {
+      "key": "a1c85e9bf82cf483e193aeb7dd5c0ba2b813a67f",
+      "name": "state=default, status=default, filled=true",
+      "description": "",
+      "containingFrame": "[dsc] Input with Chips ",
+      "containingFrameNodeId": "25406:18726"
+    },
+    {
+      "key": "a9862c97e3aee2f174afdd43e2cc59757a2cfee3",
+      "name": "type=button, state=default, selected=false",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "aa506896c23ded18588d0820d7ed3e1b3ed6c5be",
+      "name": "state=default, status=error, filled=true",
+      "description": "",
+      "containingFrame": "[dsc] Input with Chips ",
+      "containingFrameNodeId": "25406:18726"
+    },
+    {
+      "key": "b9a10d4d1749928ac179ad6bb54a4905bf1fbe62",
+      "name": "type=dropdown, state=pressed, selected=true",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "c40cc89236ceb3d2abeb4fcaff7c7dd72ca02cb1",
+      "name": "type=selectable, state=disabled, selected=false",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "c80a705b10bb1d8005bbac2e26db1d8d493aa7c7",
+      "name": "state=default, status=error, filled=false",
+      "description": "",
+      "containingFrame": "[dsc] Input with Chips ",
+      "containingFrameNodeId": "25406:18726"
+    },
+    {
+      "key": "ca8b01f62168244a29a712e069ca81fd7a5930ca",
+      "name": "state=hover, status=default, filled=true",
+      "description": "",
+      "containingFrame": "[dsc] Input with Chips ",
+      "containingFrameNodeId": "25406:18726"
+    },
+    {
+      "key": "cb54b6b9b87837e184223d9132ff82f41d56608d",
+      "name": "breakpoint=small, variant=informative",
+      "description": "",
+      "containingFrame": "[dsc-ts] Screen Feedback",
+      "containingFrameNodeId": "32488:117052"
+    },
+    {
+      "key": "cddbb43187a6df3128fce23139134c3905df8c7b",
+      "name": "breakpoint=extra small, variant=danger",
+      "description": "",
+      "containingFrame": "[dsc-ts] Screen Feedback",
+      "containingFrameNodeId": "32488:117052"
+    },
+    {
+      "key": "d048f0b5e331479065721ec1c5abc46b7bb2917b",
+      "name": "state=focus - collapsed chip, status=default, filled=true",
+      "description": "",
+      "containingFrame": "[dsc] Input with Chips ",
+      "containingFrameNodeId": "25406:18726"
+    },
+    {
+      "key": "d46bc3e6ca8d3303bc80756dfcf7e69a6f49a19b",
+      "name": "breakpoint=extra large, variant=informative",
+      "description": "",
+      "containingFrame": "[dsc-ts] Screen Feedback",
+      "containingFrameNodeId": "32488:117052"
+    },
+    {
+      "key": "dc7dfb1b655f3538d916d407fd4b49bf16c36018",
+      "name": "state=hover, status=default, filled=false",
+      "description": "",
+      "containingFrame": "[dsc] Input with Chips ",
+      "containingFrameNodeId": "25406:18726"
+    },
+    {
+      "key": "dccb2c0c1d339f4a2b63a8fca806012108507a99",
+      "name": "type=button, state=read-only, selected=true",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "e008d7099b6bd95f1c89879cd931ae6de9ba34db",
+      "name": "state=focus, status=default, filled=true",
+      "description": "",
+      "containingFrame": "[dsc] Input with Chips ",
+      "containingFrameNodeId": "25406:18726"
+    },
+    {
+      "key": "e336ccaee484ae434edb9fa3b512c00c0731fb06",
+      "name": "state=hover, status=error, filled=true",
+      "description": "",
+      "containingFrame": "[dsc] Input with Chips ",
+      "containingFrameNodeId": "25406:18726"
+    },
+    {
+      "key": "e809098fbc988a8d5a946c2a85fa96ade0d639f4",
+      "name": "state=disabled, status=default, filled=false",
+      "description": "",
+      "containingFrame": "[dsc] Input with Chips ",
+      "containingFrameNodeId": "25406:18726"
+    },
+    {
+      "key": "ecc489f5e1034809c4f3da2065809f88be8f3ab8",
+      "name": "type=selectable, state=focus, selected=true",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "ece07945c4f8ed81c24e9ef5516b253dbc96b353",
+      "name": "type=dropdown, state=default, selected=false",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "ed62cb8d927a872a2c0b8fb9907230bf2f970aac",
+      "name": "breakpoint=medium, variant=danger",
+      "description": "",
+      "containingFrame": "[dsc-ts] Screen Feedback",
+      "containingFrameNodeId": "32488:117052"
+    },
+    {
+      "key": "ee34da8445fc8e21945acd2742721bcbdb768b6e",
+      "name": "type=selectable, state=hover, selected=true",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "f4cd9270d1226dd027d0f92a39c01615d9961b8e",
+      "name": "breakpoint=medium, variant=success",
+      "description": "",
+      "containingFrame": "[dsc-ts] Screen Feedback",
+      "containingFrameNodeId": "32488:117052"
+    },
+    {
+      "key": "f58141d235abfb276497b4371294038a30d8dd0a",
+      "name": "state=read-only, status=default, filled=true",
+      "description": "",
+      "containingFrame": "[dsc] Input with Chips ",
+      "containingFrameNodeId": "25406:18726"
+    },
+    {
+      "key": "f5bf1687c1337510de5f0f454d98dd76cf6476da",
+      "name": "type=dropdown, state=disabled, selected=true",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "f83f6b8b425376d2024dbdfa4539b76e32c53046",
+      "name": "type=selectable, state=read-only, selected=true",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "f99185260d6d3ac52ac631498ede289606eb633e",
+      "name": "type=button, state=focus, selected=false",
+      "description": "",
+      "containingFrame": "[dsc] Chip",
+      "containingFrameNodeId": "36586:4314"
     }
   ],
   "spacing": [],
