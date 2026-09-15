@@ -594,4 +594,12 @@
         }
         if (typeof renderA11yGroupedList === 'function') renderA11yGroupedList();
       }
+      // Resposta do botão de teste isolado da Fase 1 (dev-test-hac-page,
+      // onmessage.js/accessibility.js) — só confirma visualmente que
+      // _getOrCreateHacPage funcionou; figma.notify já cobriu o feedback
+      // principal no backend, isto é só um segundo sinal no console pra
+      // depuração durante o desenvolvimento.
+      if (msg.type === 'dev-test-hac-page-result') {
+        console.log('[hac][dev-test-hac-page]', msg.ok ? 'ok' : 'falhou', msg);
+      }
     };

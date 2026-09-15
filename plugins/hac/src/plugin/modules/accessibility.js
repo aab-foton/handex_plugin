@@ -61,6 +61,13 @@
 const A11Y_AUTO_MAPPING_HIDDEN_LEITOR = false;
 const A11Y_AUTO_MAPPING_HIDDEN_TAB_SWIPE = true;
 
+// Botão de teste isolado da Fase 1 do plano de seleção múltipla de telas
+// (2026-09-15) — flag única liga/desliga o botão inteiro na aba Handoff.
+// true durante o desenvolvimento da Fase 1; virar false (ou remover o
+// botão + handler dev-test-hac-page em onmessage.js) quando a Fase 3
+// estiver integrada e este caminho de teste não for mais necessário.
+const A11Y_DEV_TEST_HAC_PAGE_BUTTON_VISIBLE = true;
+
 // Cores reais extraídas dos fills dos componentes publicados na lib "Design
 // Acessível". O selo (Tag/Chip) de cada categoria usa a cor "color" no
 // stroke/texto e "fill" como tinta de fundo.
@@ -3617,9 +3624,31 @@ function _a11yWorkspaceTabHandoffDashboard(area, areaSpecs) {
         </button>
         ${typeof _fichaDashboardHtml === 'function' ? _fichaDashboardHtml(area) : ''}
       </div>
+      ${A11Y_DEV_TEST_HAC_PAGE_BUTTON_VISIBLE ? `
+      <!-- Botão de TESTE (Fase 1 do plano de seleção múltipla de telas,
+           2026-09-15) — valida _getOrCreateHacPage isoladamente (criação/
+           reaproveitamento da página dedicada + navegação) antes de
+           qualquer fluxo real depender dela. Remover junto do handler
+           dev-test-hac-page (onmessage.js) quando a Fase 3 estiver pronta
+           — ver A11Y_DEV_TEST_HAC_PAGE_BUTTON_VISIBLE logo acima, flag
+           única que controla a visibilidade deste botão inteiro. -->
+      <button type="button" onclick="_devTestHacPage()"
+        class="w-full flex items-center justify-center gap-dsc-nano h-7 rounded-dsc-medium text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 border border-dashed border-amber-300 dark:border-amber-700/50 hover:bg-amber-50 dark:hover:bg-amber-900/10 transition-all">
+        <i data-lucide="flask-conical" class="w-3 h-3" aria-hidden="true"></i>
+        DEV: criar/abrir página do Handoff
+      </button>` : ''}
     </div>
   `;
 }
+
+// Dispara o handler de teste isolado (dev-test-hac-page, onmessage.js) —
+// resposta tratada em messages.js (dev-test-hac-page-result), que só
+// mostra um toast com o resultado. Nenhum efeito colateral além de criar/
+// reaproveitar a página e navegar o designer até ela.
+function _devTestHacPage() {
+  parent.postMessage({ pluginMessage: { type: 'dev-test-hac-page' } }, '*');
+}
+window._devTestHacPage = _devTestHacPage;
 
 // Dropdown "⋯" do CARD da listagem (2026-09-04-f, pedido do usuário: hoje
 // não dá pra excluir uma área sem entrar na workspace primeiro, já que

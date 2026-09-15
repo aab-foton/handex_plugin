@@ -1522,6 +1522,52 @@ export function _computeNextA11ySectionName() {
   return `${A11Y_SECTION_NAME} v${maxVersion + 1}`;
 }
 
+// ── Página dedicada de Handoff (2026-09-15) ─────────────────────────────
+// Fundação da jornada de seleção múltipla de telas: em vez de cada Área
+// nascer avulsa na página onde o designer está trabalhando, o fluxo novo
+// cria (ou reaproveita) uma página PRÓPRIA no arquivo, só pro handoff.
+// Nenhum outro lugar do hac hoje cria/navega páginas — este é o primeiro
+// precedente, testado isolado (Fase 1 do plano) antes de qualquer fluxo
+// real depender dele.
+const HAC_PAGE_NAME = '👐 | HAC - Handoff de Acessibilidade CAIXA';
+
+// Resolve a página dedicada, criando se necessário. NUNCA navega o
+// designer até ela — quem decide QUANDO trocar de página é o chamador
+// (figma.setCurrentPageAsync, só depois que as cópias já existirem, ver
+// Fase 3 do plano — trocar de página antes disso deixaria o designer sem
+// as telas de origem à vista pra selecionar).
+//
+// Identificação por NOME é o caminho primário (figma.root.children é
+// legível direto sob documentAccess "dynamic-page", sem
+// loadAllPagesAsync — só o CONTEÚDO de página é lazy, a lista de páginas
+// não) — mas o pluginData 'hacDedicatedPage' é gravado na criação como
+// fallback, mesma lição já aprendida em _getOrCreateA11ySessionSection
+// (linha ~1573: "identificada por pluginData, nunca por nome" — o nome
+// sobrevive a um rename manual do designer, o pluginData não sobrevive a
+// nada além de apagar a página, que aí realmente não existe mais).
+export async function _getOrCreateHacPage() {
+  let page = figma.root.children.find(p => p.name === HAC_PAGE_NAME);
+  if (!page) {
+    // pluginData não é indexável — precisa varrer, mas só cai aqui se a
+    // busca por nome falhou (designer renomeou a página manualmente).
+    page = figma.root.children.find(p => {
+      try { return p.getPluginData && p.getPluginData('hacDedicatedPage') === 'true'; }
+      catch (e) { return false; }
+    }) || null;
+  }
+  if (page) {
+    // Página que já existia antes desta chamada (não foi criada agora) —
+    // sob dynamic-page, ler .children de uma página que não é a corrente
+    // exige carregar o conteúdo dela primeiro.
+    await page.loadAsync();
+    return page;
+  }
+  page = figma.createPage();
+  page.name = HAC_PAGE_NAME;
+  page.setPluginData('hacDedicatedPage', 'true');
+  return page;
+}
+
 // legacyName (opcional, 2026-09-09): usado só pela Section-mãe da Ficha
 // (renomeada de "hac — Ficha de Handoff" pra "hac — Handoff Completo",
 // pedido de produto) — arquivos já existentes têm essa Section gravada no

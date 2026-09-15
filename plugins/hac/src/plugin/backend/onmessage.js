@@ -83,6 +83,7 @@ import {
   _getOrCreateCloneOverlayGroup,
   _getOrCreateFichaAreaGroup,
   _getOrCreateFichaItensFrame,
+  _getOrCreateHacPage,
   _getOrCreateNamedSection,
   _insertFichaSectionInOrder,
   _isHacOwnedNode,
@@ -3295,6 +3296,28 @@ figma.ui.onmessage = async (msg) => {
         if (!(id in order)) order[id] = null;
       }
       figma.ui.postMessage({ type: "layer-order-resolved", areaId, areaTargetNodeId, order });
+    })();
+    return;
+  }
+
+  // Handler de TESTE ISOLADO (Fase 1 do plano de seleção múltipla de
+  // telas, 2026-09-15) — valida as 3 APIs novas (figma.root.children,
+  // figma.createPage, figma.setCurrentPageAsync, page.loadAsync dentro de
+  // _getOrCreateHacPage) sem tocar em nenhum fluxo real ainda. Acionado
+  // por um botão escondido na UI (ver dev-tools em specifications.html).
+  // Remover quando a Fase 3 (criação em lote) estiver integrada e este
+  // caminho de teste não for mais necessário.
+  if (msg.type === "dev-test-hac-page") {
+    (async () => {
+      try {
+        const page = await _getOrCreateHacPage();
+        await figma.setCurrentPageAsync(page);
+        figma.notify(`Página "${page.name}" ok — ${page.children.length} filho(s) hoje.`);
+        figma.ui.postMessage({ type: "dev-test-hac-page-result", ok: true, pageId: page.id, childCount: page.children.length });
+      } catch (e) {
+        figma.notify('Falhou: ' + (e && e.message), { error: true });
+        figma.ui.postMessage({ type: "dev-test-hac-page-result", ok: false, error: e && e.message });
+      }
     })();
     return;
   }
