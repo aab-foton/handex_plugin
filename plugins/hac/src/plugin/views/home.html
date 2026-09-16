@@ -1,15 +1,14 @@
 <!-- VIEW: HOME -->
 <!-- hac é 100% dedicado a acessibilidade — sem grid de 6 ferramentas
-     (como no Handex). Home vira uma tela de intro curta com um resumo do
-     fluxo (Marcar Área → Especificar → Ordem de Tabulação) e um botão único
-     "Começar", que navega pra view-specifications (onde vive toda a
-     funcionalidade real). Decisão de produto: uma tela de passagem, mesmo
-     mínima, orienta melhor um designer que abre o plugin pela primeira vez
-     do que pular direto pra uma lista vazia sem contexto nenhum — o Handex
-     resolve isso com o card "Como usar o plugin" dentro do grid de
-     ferramentas; aqui, sem grid, a introdução vira a própria Home.
+     (como no Handex). Home vira uma tela de intro curta que pergunta a
+     plataforma/lib do projeto e navega direto pra view-specifications
+     (onde vive toda a funcionalidade real) assim que a escolha é feita —
+     ver chooseA11yHomeOrigin, accessibility.js.
 
-     3 ETAPAS internas (2026-09-04), nunca duas visíveis ao mesmo tempo:
+     2 ETAPAS internas (2026-09-04, reduzido de 3 em 2026-09-08 — a antiga
+     Etapa 2 de resumo do fluxo + "Começar" foi removida porque escolher a
+     lib já navega direto pra view-specifications, tornando aquele resumo
+     redundante), nunca as duas visíveis ao mesmo tempo:
        Etapa 1 (#a11y-home-step-origin): objetiva, só Web ou Mobile —
        nenhuma explicação de fluxo aqui, pra não competir com a decisão que
        precisa vir primeiro. Mobile resolve direto (só 1 lib real hoje,
@@ -19,20 +18,45 @@
        "DSC Web Angular & React" vs nova "Super DSC Web") —
        _showA11yHomeWebSublibStep/_hideA11yHomeWebSublibStep
        (accessibility.js).
-       Etapa 2 (#a11y-home-step-summary): resumo do fluxo (3 cards) + botão
-       "Começar", mostrada só depois de uma lib escolhida (ou já salva de
-       antes — arquivo já configurado pula direto pra cá). Alternância das
-       3 etapas via _renderA11yHomeOriginPicker/_showA11yHomeWebSublibStep/
-       _hideA11yHomeWebSublibStep, todas em accessibility.js, sempre via
-       classList.toggle('hidden', ...). -->
+     Alternância das 2 etapas via _renderA11yHomeOriginPicker/
+     _showA11yHomeWebSublibStep/_hideA11yHomeWebSublibStep, todas em
+     accessibility.js, sempre via classList.toggle('hidden', ...).
+
+     Desde 2026-09-16 (2ª iteração da sessão), navigate('view-home') SÓ é
+     chamado quando o designer já decidiu ver a Etapa 1 de novo — não há
+     mais nenhum caminho que chegue em view-home sem querer:
+       - Botão genérico "Voltar para a página inicial" (specifications.html)
+         → chama confirmBackToHome() (accessibility.js), NÃO navigate()
+         diretamente. Se hacData.projectOrigin já está definido, abre antes
+         o modal de confirmação genérico #a11y-confirm-modal ("Deseja trocar
+         de plataforma?"); só ao confirmar seta
+         window._a11yForceHomeOriginStep = true e chama navigate('view-home').
+         Cancelar não navega nada. Se projectOrigin ainda não existe (nunca
+         deveria acontecer vindo deste botão, mas é tratado), navega direto
+         sem perguntar.
+       - Botão "Trocar" na modal "Sobre o hac" (openA11yProjectOriginPrompt,
+         accessibility.js) → já É um pedido explícito, então NÃO passa por
+         confirmação de novo — seta window._a11yForceHomeOriginStep = true
+         e navega direto pra Etapa 1.
+       - Arquivo "em branco" (sem projectOrigin, ou com nada real
+         documentado — reset feito por
+         _resetA11yProjectOriginIfNothingDocumented, accessibility.js,
+         chamado só no boot) → sempre mostra a Etapa 1.
+     O bloco `viewId === 'view-home'` em navigate() (core.js) mantém, como
+     rede de segurança, o skip pra view-specifications quando
+     window._a11yForceHomeOriginStep não foi setada e projectOrigin já
+     existe — mas nenhum caminho real do produto hoje aciona esse skip
+     partindo de fora (só existiria se algo chamasse navigate('view-home')
+     direto, sem passar por confirmBackToHome nem openA11yProjectOriginPrompt).
+     Quando a Etapa 1 É de fato renderizada (_renderA11yHomeOriginPicker,
+     accessibility.js), o comportamento interno dela não mudou: monta
+     sempre a Etapa 1 (nunca decide sozinha se pula — essa função também é
+     chamada no boot e sempre que a plataforma muda de qualquer view via
+     _refreshUiForProjectOrigin, contextos onde navegar embutido seria
+     incorreto). -->
 <main id="view-home" class="view active flex flex-col h-full overflow-hidden">
   <!-- Etapa 1 usa o PRÓPRIO container como área de centralização vertical
-       (flex + justify-center) — diferente da Etapa 2, que é conteúdo longo
-       e scrollável do jeito normal. As duas nunca ficam visíveis ao mesmo
-       tempo (_renderA11yHomeOriginPicker), então o container pode se
-       comportar diferente pra cada uma sem conflito: Etapa 1 é uma decisão
-       única, ganha destaque centralizado; Etapa 2 é a lista de conteúdo de
-       sempre, com scroll do topo. -->
+       (flex + pt-10) — única etapa "de conteúdo" que resta nesta view. -->
   <div class="flex-1 min-h-0 overflow-y-auto px-5 py-6 flex flex-col" onscroll="handleScroll(this)">
 
     <!-- Etapa 1: escolha de plataforma, objetiva e centralizada. -->
@@ -152,81 +176,6 @@
         </div>
         <button type="button" onclick="_hideA11yHomeWebSublibStep()" class="text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-400 dark:text-dark-muted hover:text-slate-600 dark:hover:text-white transition-colors">Voltar</button>
       </div>
-    </div>
-
-    <!-- Etapa 2: resumo do fluxo + Começar — só depois de escolher (ou já
-         escolhido de antes). -->
-    <div id="a11y-home-step-summary" class="hidden space-y-6">
-      <div class="max-w-sm mx-auto w-full space-y-6">
-
-        <div class="flex items-start gap-3.5 text-left">
-          <div class="w-14 h-14 shrink-0 rounded-dsc-large bg-[#0891B2]/10 dark:bg-cyan-900/20 flex items-center justify-center">
-            <i data-lucide="person-standing" class="w-7 h-7 text-[#0891B2]" aria-hidden="true"></i>
-          </div>
-          <div class="min-w-0 space-y-1">
-            <h2 class="text-[16px] font-bold text-slate-800 dark:text-white">Documentação de Acessibilidade</h2>
-            <p class="text-dsc-label-tiny normal-case tracking-normal font-normal text-slate-500 dark:text-dark-muted leading-relaxed">
-              Selecione telas, especifique como cada elemento deve ser lido por leitores de tela e documente a ordem de tabulação, tudo direto no canvas do Figma.
-            </p>
-          </div>
-        </div>
-
-        <div class="space-y-2.5">
-          <div class="flex items-start gap-dsc-micro p-dsc-micro bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-dsc-large">
-            <div class="w-7 h-7 rounded-dsc-circ bg-[#0070AF] text-white flex items-center justify-center text-dsc-label-tiny normal-case tracking-normal font-extrabold shrink-0">1</div>
-            <div class="min-w-0">
-              <p class="text-[12px] font-bold text-slate-700 dark:text-white">Selecione uma tela</p>
-              <p class="text-dsc-label-tiny normal-case tracking-normal font-normal text-slate-500 dark:text-dark-muted leading-snug">Selecione uma seção da tela e dê um rótulo: organiza as especificações em grupos.</p>
-            </div>
-          </div>
-          <div class="flex items-start gap-dsc-micro p-dsc-micro bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-dsc-large">
-            <div class="w-7 h-7 rounded-dsc-circ bg-[#0891B2] text-white flex items-center justify-center shrink-0">
-              <i data-lucide="person-standing" class="w-3.5 h-3.5" aria-hidden="true"></i>
-            </div>
-            <div class="min-w-0">
-              <p class="text-[12px] font-bold text-slate-700 dark:text-white">Especifique cada elemento</p>
-              <p class="text-dsc-label-tiny normal-case tracking-normal font-normal text-slate-500 dark:text-dark-muted leading-snug">5 categorias: Elementos e Imagens, Estrutura da Página, Nível de Título, Elemento Decorativo e Informações Adicionais. Use a Detecção Automática para agilizar.</p>
-            </div>
-          </div>
-          <div class="flex items-start gap-dsc-micro p-dsc-micro bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-dsc-large">
-            <div class="w-7 h-7 rounded-dsc-circ bg-[#0891B2] text-white flex items-center justify-center shrink-0">
-              <i data-lucide="list-ordered" class="w-3.5 h-3.5" aria-hidden="true"></i>
-            </div>
-            <div class="min-w-0">
-              <p class="text-[12px] font-bold text-slate-700 dark:text-white">Documente a ordem de tabulação</p>
-              <p class="text-dsc-label-tiny normal-case tracking-normal font-normal text-slate-500 dark:text-dark-muted leading-snug">Clique nos elementos em sequência (ou gere automaticamente) e aplique numa cópia do frame, sem tocar no original.</p>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-    </div>
-  </div>
-
-  <!-- Barra de ação (Voltar + Começar) fixa na extremidade inferior do
-       plugin (2026-09-04-i, pedido do usuário) — antes vivia DENTRO do
-       container scrollável da Etapa 2, soltando os botões logo depois do
-       conteúdo (posição variava com a altura do card). Movida pra FORA do
-       scroll, como footer próprio da view (mesmo padrão shrink-0/border-t
-       já usado em rodapés de modal, ver views/modals.html) — só visível
-       durante a Etapa 2 (id compartilhado, mesmo toggle de
-       _renderA11yHomeOriginPicker que já escondia/mostrava o resto da
-       etapa). Card "Documentando projeto X / Trocar" removido antes
-       (2026-09-04-h) — "Voltar" cobre o mesmo caso de uso
-       (openA11yProjectOriginPrompt, já usada por "Trocar"/"Sobre o hac"). -->
-  <div id="a11y-home-step-summary-actions" class="hidden shrink-0 p-dsc-tiny border-t border-gray-100 dark:border-dark-line">
-    <div class="max-w-sm w-full mx-auto flex items-center gap-2.5">
-      <button type="button" onclick="openA11yProjectOriginPrompt()"
-        class="w-11 h-11 flex items-center justify-center rounded-dsc-large border border-gray-200 dark:border-dark-line text-slate-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-line/20 transition-colors shrink-0"
-        aria-label="Voltar e trocar a plataforma/lib" title="Voltar">
-        <i data-lucide="arrow-left" class="w-4.5 h-4.5" aria-hidden="true"></i>
-      </button>
-      <button type="button" onclick="navigate('view-specifications')"
-        class="flex-1 flex items-center justify-center gap-dsc-nano h-11 rounded-dsc-large text-[13px] font-bold text-white bg-[#0891B2] hover:bg-cyan-700 active:scale-[0.99] shadow-lg shadow-cyan-500/20 transition-all">
-        Começar
-        <i data-lucide="arrow-right" class="w-4 h-4" aria-hidden="true"></i>
-      </button>
     </div>
   </div>
 </main>

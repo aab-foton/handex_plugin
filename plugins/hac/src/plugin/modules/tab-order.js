@@ -75,7 +75,7 @@ function _tabOrderSectionHtml(uid, area) {
              Automaticamente" pra "Mapeamento Automático" (mesmo motivo da
              correção em "Mapeamento Automatizado" — não é geração final,
              o resultado ainda passa por revisão). -->
-        <button type="button" onclick="event.stopPropagation(); startTabOrderManualMode('${escapeHtml(areaIdAttr)}', '${escapeHtml(area.targetNodeId || '')}')"
+        <button type="button" onclick="event.stopPropagation(); openA11yInstructionThenStart('tabulacao', '${escapeHtml(areaIdAttr)}', '${escapeHtml(area.targetNodeId || '')}')"
           class="w-full flex items-center justify-center gap-2 h-8 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
           <i data-lucide="list-ordered" class="w-3.5 h-3.5" aria-hidden="true"></i>
           Iniciar Ordem de Tabulação
@@ -166,12 +166,22 @@ function _tabOrderNextTempId() {
 // (pedido do usuário: "coloque o toast sobre o Shift também no swipe" —
 // Swipe nunca teve esta dica, só Tabulação).
 const A11Y_SHIFT_HINT_STEP_BY_FEATURE = {
-  tabulacao: 'Sugestão de uso: <strong>segure Shift e clique</strong> em cada elemento, na ordem em que o teclado deve navegar por eles. Errou a ordem? Sem problema: <strong>arraste para reposicionar</strong> os itens depois, na lista de revisão.',
-  swipe: 'Sugestão de uso: <strong>segure Shift e clique</strong> em cada ponto, na ordem em que o gesto de swipe deve passar por eles. Errou a ordem? Sem problema: <strong>arraste para reposicionar</strong> os pontos depois, na lista de revisão.',
+  // "Errou a ordem? Sem problema" removido (2026-09-16, pedido do usuário):
+  // dava a entender que dá pra reordenar durante a própria captura, mas o
+  // arrastar-para-reposicionar só existe DEPOIS de concluir a seleção, na
+  // lista de revisão — texto reescrito pra descrever o fluxo real em vez de
+  // sugerir uma correção "no ato".
+  tabulacao: 'Sugestão de uso: <strong>segure Shift e clique</strong> em cada elemento, na ordem em que o teclado deve navegar por eles. Ao concluir a seleção, você pode <strong>arrastar para reposicionar</strong> os itens na lista de revisão.',
+  swipe: 'Sugestão de uso: <strong>segure Shift e clique</strong> em cada ponto, na ordem em que o gesto de swipe deve passar por eles. Ao concluir a seleção, você pode <strong>arrastar para reposicionar</strong> os pontos na lista de revisão.',
 };
 
 function startTabOrderManualMode(areaId, targetNodeId) {
   if (!areaId || !targetNodeId) {
+    // Diagnóstico (2026-09-16): se este toast aparece logo depois de
+    // "Entendi, começar seleção", areaId/targetNodeId chegaram vazios ao
+    // callback armado por openA11yInstructionThenStart — não é falha do
+    // modal em si, é a Área de origem sem targetNodeId resolvido.
+    console.warn('[hac] startTabOrderManualMode: areaId ou targetNodeId ausente.', { areaId, targetNodeId });
     showToast('Selecione uma tela antes de iniciar a ordem de tabulação.');
     return;
   }
@@ -190,22 +200,62 @@ window.startTabOrderManualMode = startTabOrderManualMode;
 // _a11yCaptureBarRenderInstructions) quanto pelo modal do Leitor de Tela
 // (accessibility.js, openA11yCategoryPickerModal) — cada um passa os
 // próprios ids de elemento (`ids`), o conteúdo/lógica é o mesmo.
-function _renderA11yInstructionContent(feature, ids) {
+//
+// `reduced` (2026-09-16, pedido do usuário): DEPOIS que a captura já
+// começou, a barra mini mostra só a dica prática de interação (Shift+clique/
+// arrastar) — sem repetir a introdução institucional completa nem os passos
+// formais do template, que já foram vistos na modal ANTES de iniciar
+// (openA11yInstructionThenStart). Esconde os cards de
+// instructionsHeading/Body e o heading "Como fazer", deixando só uma linha
+// de texto com a dica de A11Y_SHIFT_HINT_STEP_BY_FEATURE dentro do bloco de
+// steps. Não se aplica ao Leitor de Tela (chamado sempre com reduced=false/
+// omitido) nem ao modal pré-captura, que continuam com o conteúdo completo.
+function _renderA11yInstructionContent(feature, ids, reduced) {
   const content = (typeof FICHA_INSTRUCTION_CONTENT_UI !== 'undefined') ? FICHA_INSTRUCTION_CONTENT_UI[feature] : null;
   if (!content) return false;
   const titleEl = document.getElementById(ids.title);
   if (titleEl) titleEl.textContent = content.title || '';
+
+  const instrBlockEl = ids.instructionsBlock ? document.getElementById(ids.instructionsBlock) : null;
+  if (instrBlockEl) instrBlockEl.classList.toggle('hidden', !!reduced);
   const instrHeadingEl = document.getElementById(ids.instructionsHeading);
   if (instrHeadingEl) instrHeadingEl.textContent = content.instructionsHeading || 'Instruções sobre a documentação';
   const instrBodyEl = document.getElementById(ids.instructionsBody);
   if (instrBodyEl) instrBodyEl.textContent = content.instructionsBody || '';
+
   const stepsHeadingEl = document.getElementById(ids.stepsHeading);
-  if (stepsHeadingEl) stepsHeadingEl.textContent = content.stepsHeading || 'Como fazer';
   const stepsEl = document.getElementById(ids.steps);
   const shiftStep = A11Y_SHIFT_HINT_STEP_BY_FEATURE[feature];
+
+  if (reduced) {
+    // Versão reduzida: só a dica prática, sem heading "Como fazer" nem lista
+    // numerada — um parágrafo simples, coerente com o espaço curto da barra.
+    if (stepsHeadingEl) stepsHeadingEl.classList.add('hidden');
+    if (stepsEl) {
+      stepsEl.classList.remove('list-decimal', 'list-inside');
+      stepsEl.innerHTML = shiftStep ? `<li class="list-none">${shiftStep}</li>` : '';
+    }
+    const stepsBlockEl = ids.stepsBlock ? document.getElementById(ids.stepsBlock) : null;
+    if (stepsBlockEl) stepsBlockEl.classList.toggle('hidden', !shiftStep);
+    return true;
+  }
+
+  if (stepsHeadingEl) {
+    stepsHeadingEl.classList.remove('hidden');
+    stepsHeadingEl.textContent = content.stepsHeading || 'Como fazer';
+  }
+  // Dica de Shift+clique só é injetada quando o JSON já tem steps reais
+  // (ex.: Leitor de Tela) — pra Tabulação/Swipe, hoje com steps=[] porque o
+  // parágrafo único de instructionsBody já cobre o gesto de captura
+  // (2026-09-16, pedido do usuário: bloco "Como fazer" ficava repetindo a
+  // mesma dica que já aparecia acima, mesmo sem nenhum step real no JSON —
+  // antes essa dica era sempre anexada incondicionalmente).
+  const hasRealSteps = Array.isArray(content.steps) && content.steps.length > 0;
+  const finalShiftStep = hasRealSteps ? shiftStep : null;
   const steps = [...(content.steps || [])];
-  if (shiftStep) steps.push(shiftStep);
+  if (finalShiftStep) steps.push(finalShiftStep);
   if (stepsEl) {
+    stepsEl.classList.add('list-decimal', 'list-inside');
     stepsEl.innerHTML = steps.map(s => {
       const boldMatch = /^([^:]{1,80}):\s*(.*)$/s.exec(s);
       return boldMatch
@@ -213,54 +263,146 @@ function _renderA11yInstructionContent(feature, ids) {
         : `<li>${s.includes('<') ? s : escapeHtml(s)}</li>`;
     }).join('');
   }
+  const stepsBlockEl = ids.stepsBlock ? document.getElementById(ids.stepsBlock) : null;
+  if (stepsBlockEl) stepsBlockEl.classList.toggle('hidden', steps.length === 0);
   return true;
 }
 
-// ids do modal usado hoje só pelo Leitor de Tela (ver
-// openA11yCategoryPickerModal, accessibility.js) — Tabulação/Swipe usam o
-// bloco de instrução embutido na própria barra de captura (core.js), não
-// mais este modal (2026-09-15, pedido do usuário: "quero que as instruções
-// fiquem sendo exibidas, o designer recolhe se quiser", em vez de um modal
-// bloqueante antes de minimizar).
+// ids do modal — usado pelo Leitor de Tela (openA11yCategoryPickerModal,
+// accessibility.js) e, desde 2026-09-16, também por Tabulação/Swipe ANTES
+// de iniciar a captura (openA11yInstructionThenStart abaixo). As instruções
+// continuam visíveis também dentro da própria barra de captura depois que
+// ela já começou (#a11y-capture-bar-instructions, core.js) — este modal
+// cobre o momento anterior ao clique em "Iniciar", que a barra (que só
+// nasce depois da cópia de trabalho criada) não cobre.
 const A11Y_INSTRUCTION_MODAL_IDS = {
   title: 'a11y-instruction-modal-title-text',
+  instructionsBlock: 'a11y-instruction-modal-instructions-block',
   instructionsHeading: 'a11y-instruction-modal-instructions-heading',
   instructionsBody: 'a11y-instruction-modal-instructions-body',
   stepsHeading: 'a11y-instruction-modal-steps-heading',
   steps: 'a11y-instruction-modal-steps',
+  stepsBlock: 'a11y-instruction-modal-steps-block',
 };
 
+// Modal PRÉ-captura: sempre conteúdo COMPLETO (introdução + passos do
+// template), nas 3 features. A versão REDUZIDA (só "Sugestão de uso") é
+// exclusiva da barra mini de captura, DEPOIS que a captura já começou
+// (2026-09-16, pedido do usuário — tentativa anterior de aplicar reduced
+// aqui no modal estava errada e foi revertida: "aqui é pra ela ficar como
+// estava antes... a sugestão de uso é apenas quando está sendo criada a
+// ordem"). Ver _a11yCaptureBarRenderInstructions (core.js).
 function _renderA11yInstructionModal(feature) {
   return _renderA11yInstructionContent(feature, A11Y_INSTRUCTION_MODAL_IDS);
 }
 
-// Reabertura manual da instrução (ícone "?" nos modais de revisão de
-// Tabulação/Swipe) — abre o MODAL (não o bloco embutido da barra, que seria
-// redundante já que a barra já está visível nesse momento). Puramente
-// informativa, nunca reinicia o fluxo de captura. feature ∈ 'tabulacao' |
-// 'swipe'.
+// Reabertura manual da instrução (ícone "?" no header do modal de REVISÃO,
+// pós-captura) — abre o MODAL (não o bloco embutido da barra, que seria
+// redundante já que a barra já está visível nesse momento, quando
+// aplicável). Puramente informativa, nunca inicia/reinicia o fluxo de
+// captura — não seta callback nenhum. feature ∈ 'tabulacao' | 'swipe'.
 function openA11yInstructionManually(feature) {
   if (!_renderA11yInstructionModal(feature || 'tabulacao')) return;
   window._pendingA11yInstructionConfirm = null;
+  // Sem callback pendente aqui (puramente informativa) — garante que o
+  // texto do botão não fique preso em "Entendi, adicionar itens" de uma
+  // abertura anterior via openA11yInstructionThenStart (2026-09-16-b).
+  const continueBtn = document.getElementById('btn-a11y-instruction-modal-continue');
+  if (continueBtn) continueBtn.textContent = 'Entendi, começar seleção';
   openModal('a11y-instruction-modal');
   if (typeof _refreshIcons === 'function') _refreshIcons();
 }
 window.openA11yInstructionManually = openA11yInstructionManually;
 
+// Abertura ANTES de iniciar a captura (botões "Iniciar Ordem de
+// Tabulação"/"Iniciar trilha de ordem de leitura"/"Refazer trilha de ordem
+// de leitura", 2026-09-16, bug real reportado pelo usuário: "clicar Entendi
+// começar seleção deve ser como se tivesse clicado em Iniciar — vale pro
+// swipe e pro leitor de tela também"). Diferente de
+// openA11yInstructionManually acima: SETA window._pendingA11yInstructionConfirm
+// com a função de início real (mesma chamada que o botão "Iniciar" faria
+// direto), então o botão "Entendi, começar seleção" do modal
+// (_confirmA11yInstructionModal) de fato dispara a captura — mesmo
+// mecanismo já usado pelo Leitor de Tela (openA11yCategoryPickerModal,
+// accessibility.js), agora também para Tabulação/Swipe. feature ∈
+// 'tabulacao' | 'swipe'.
+//
+// Refinamento 2026-09-16-b (pedido do usuário): quando a Área já tem
+// conteúdo documentado para a feature (itens de Ordem de Tabulação ou
+// pontos de Trilha de Swipe já salvos), esta modal NÃO pode recomeçar do
+// zero ao confirmar — precisa continuar a partir do que já existe, mesmo
+// caminho que os botões "Adicionar itens"/"Adicionar ponto" já usam fora
+// da modal (_a11yWorkspaceTabTabulacao/_a11yWorkspaceTabSwipe,
+// accessibility.js). Detecta isso ANTES de decidir o callback e troca
+// também o texto do botão de confirmação, pra não sugerir "início" quando
+// na verdade vai só somar aos itens existentes.
+function openA11yInstructionThenStart(feature, areaId, targetNodeId) {
+  if (!_renderA11yInstructionModal(feature)) {
+    // Falha silenciosa real possível: FICHA_INSTRUCTION_CONTENT_UI[feature]
+    // não existe/veio vazio no bundle carregado (ex.: build desatualizado
+    // ou chave de feature errada). Sem este log, o clique no botão
+    // "Iniciar..." simplesmente não fazia nada visível — diagnóstico já
+    // reportado 2026-09-16.
+    console.warn('[hac] openA11yInstructionThenStart: _renderA11yInstructionModal retornou false para feature=', feature, '— modal não será aberto, captura não iniciará.');
+    return;
+  }
+
+  const hasExisting = feature === 'swipe'
+    ? !!(hacData.a11ySwipePaths || []).find(p => p && p.areaId === areaId && Array.isArray(p.points) && p.points.length > 0)
+    : (typeof _currentTabOrderItems === 'function' && _currentTabOrderItems(areaId).length > 0);
+
+  window._pendingA11yInstructionConfirm = hasExisting
+    ? (feature === 'swipe'
+      ? () => openSwipePathEditMode(areaId, targetNodeId)
+      : () => startTabOrderAddItemsFromCard(areaId))
+    : (feature === 'swipe'
+      ? () => startSwipePathManualMode(areaId, targetNodeId)
+      : () => startTabOrderManualMode(areaId, targetNodeId));
+
+  const continueBtn = document.getElementById('btn-a11y-instruction-modal-continue');
+  if (continueBtn) continueBtn.textContent = hasExisting ? 'Entendi, adicionar itens' : 'Entendi, começar seleção';
+
+  openModal('a11y-instruction-modal');
+  if (typeof _refreshIcons === 'function') _refreshIcons();
+}
+window.openA11yInstructionThenStart = openA11yInstructionThenStart;
+
 // Botão "Entendi, começar seleção" do modal — fecha e, se havia um
-// callback pendente (window._pendingA11yInstructionConfirm, setado só por
-// openA11yCategoryPickerModal/accessibility.js pro fluxo do Leitor de
-// Tela), executa-o. Reabertura manual de Tabulação/Swipe
-// (openA11yInstructionManually acima) nunca seta esse callback, então aqui
-// só fecha o modal nesse caso — é puramente informativa, não reinicia
-// nada.
+// callback pendente (window._pendingA11yInstructionConfirm, setado por
+// openA11yInstructionThenStart pra Tabulação/Swipe, ou por
+// openA11yCategoryPickerModal/accessibility.js pro Leitor de Tela),
+// executa-o. Reabertura manual (openA11yInstructionManually acima) nunca
+// seta esse callback, então aqui só fecha o modal nesse caso — é
+// puramente informativa, não reinicia nada.
 function _confirmA11yInstructionModal() {
   closeModal('a11y-instruction-modal');
   const onConfirm = window._pendingA11yInstructionConfirm;
   window._pendingA11yInstructionConfirm = null;
-  if (typeof onConfirm === 'function') onConfirm();
+  if (typeof onConfirm === 'function') {
+    onConfirm();
+  } else {
+    // Diagnóstico (2026-09-16): se este modal foi aberto por
+    // openA11yInstructionThenStart, sempre deve haver um callback pendente
+    // aqui — cair neste ramo com feature=tabulacao/swipe indica que o
+    // callback foi perdido/zerado por outro caminho entre a abertura e a
+    // confirmação (ex.: outra chamada a openA11yInstructionManually, que
+    // seta null, disparada por engano no meio do fluxo).
+    console.warn('[hac] _confirmA11yInstructionModal: nenhum callback pendente ao confirmar — modal fechado sem iniciar nenhuma captura.');
+  }
 }
 window._confirmA11yInstructionModal = _confirmA11yInstructionModal;
+
+// Botão "X"/clique no backdrop — fecha SEM executar nenhum callback
+// pendente (2026-09-16, bug real corrigido: antes os dois usavam o mesmo
+// onclick de "Entendi", então fechar a modal por engano disparava a mesma
+// ação de confirmar — iniciar captura do zero ou adicionar itens). Zera
+// window._pendingA11yInstructionConfirm sem chamá-lo, pra também não
+// vazar pro próximo openModal('a11y-instruction-modal').
+function _cancelA11yInstructionModal() {
+  closeModal('a11y-instruction-modal');
+  window._pendingA11yInstructionConfirm = null;
+}
+window._cancelA11yInstructionModal = _cancelA11yInstructionModal;
 // Alias retrocompatível — o link "Como funciona a seleção?" do modal de
 // revisão da Ordem de Tabulação (modals.html) já chama este nome.
 window.openTabOrderShiftHintManually = function () { openA11yInstructionManually('tabulacao'); };
@@ -1163,8 +1305,32 @@ function _tabOrderDrop(ev, targetListIndex, areaId) {
 
   saveToStorage();
   renderA11yGroupedList();
+  // Reordenar SÓ atualiza `number` em memória — o canvas (e canvasNumber)
+  // continua com o valor antigo até "Atualizar" ser clicado. O botão
+  // "Atualizar" da tab de trabalho (accessibility.js,
+  // _a11yWorkspaceTabTabulacao) nasce desabilitado quando não há nada
+  // pendente; este drop é o único evento que de fato cria divergência,
+  // então é o único que precisa reabilitá-lo (2026-09-16).
+  _tabOrderSyncUpdateButton(areaId);
 }
 window._tabOrderDrop = _tabOrderDrop;
+
+// Reavalia se existe alguma divergência number≠canvasNumber pendente nesta
+// área e sincroniza o estado disabled do botão "Atualizar" da tab de
+// trabalho pelo id (sem re-renderizar a tab inteira) — chamado depois de
+// qualquer ação que possa mudar essa divergência sem passar por um render
+// completo (_tabOrderDrop acima; deleteTabOrderItem já autocorrige o canvas
+// na hora, então não precisa chamar isto, mas não há problema em chamar de
+// qualquer lugar que só mexa em `number`/`canvasNumber`). Sai em silêncio
+// se o botão não estiver no DOM (ex.: outra tab aberta) — puramente
+// cosmético, nunca crítico pro dado.
+function _tabOrderSyncUpdateButton(areaId) {
+  const btn = document.querySelector(`[id^="tab-order-update-btn-workspace-"]`);
+  if (!btn || window._a11yWorkspaceAreaId !== areaId) return;
+  const needsSync = _currentTabOrderItems(areaId).some(it => it.id && it.number !== it.canvasNumber);
+  btn.disabled = !needsSync;
+}
+window._tabOrderSyncUpdateButton = _tabOrderSyncUpdateButton;
 
 // Clique em "Atualizar" (escopado a uma área) — só ENTÃO o canvas é
 // tocado. Compara number (já recalculado pelo drag-and-drop) contra
@@ -1190,6 +1356,10 @@ function updateTabOrderNumbering(areaId) {
 
   saveToStorage();
   showToast('Ordem atualizada no canvas.');
+  // number/canvasNumber acabaram de ser igualados acima — reavalia o botão
+  // pra ele voltar a nascer desabilitado até a próxima divergência real
+  // (2026-09-16, mesmo helper usado por _tabOrderDrop).
+  _tabOrderSyncUpdateButton(areaId);
 }
 window.updateTabOrderNumbering = updateTabOrderNumbering;
 

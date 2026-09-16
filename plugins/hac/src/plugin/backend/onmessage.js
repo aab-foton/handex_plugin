@@ -1286,7 +1286,31 @@ figma.ui.onmessage = async (msg) => {
         // () => _getOrCreateA11ySessionSection(...))). Trocado pra a MESMA
         // função usada pelo reparenting real, unificando os dois pontos —
         // nunca mais cria uma Section a mais.
+        // Bug real corrigido (2026-09-16, reportado com print): a Section de
+        // sessão pode conter VÁRIOS frames de tela lado a lado (ex.: "Swipe",
+        // o frame de trabalho, e outro — caso real do usuário). Antes deste
+        // fix, o scan abaixo somava specs de QUALQUER frame dentro da Section
+        // inteira num único `_letterMap` global, sem levar em conta a qual
+        // tela cada spec pertence. Resultado: ao criar uma spec de letra
+        // inédita (não bate com nenhuma entrada existente em `_letterMap`),
+        // o branch seguinte (`Object.keys(_letterMap).length > 0`, mais
+        // abaixo) pegava o `_rightmost`/`_leftmost` entre TODAS as specs da
+        // Section — inclusive de uma tela vizinha nada relacionada — e
+        // ancorava o card novo colado nela, "vazando" pra longe do frame
+        // real de origem. Filtra o scan pra só considerar specs cuja faixa
+        // vertical (Y) tem interseção com a faixa vertical de
+        // `_anchorBounds` (o mesmo frame de tela / clone de área do node
+        // sendo documentado agora, já resolvido acima) — usa só o eixo Y
+        // (não X) porque o card de uma spec sempre fica ao LADO do próprio
+        // frame (side left/right, offset de 64-164px), fora da faixa X dele
+        // por design; comparar bounding box X+Y completo rejeitaria até
+        // specs legítimas da mesma tela. Frames de tela lado a lado
+        // tipicamente têm X diferente mas Y igual/sobreposto — mesma faixa Y
+        // é o sinal confiável de "mesma tela", sem precisar de novo
+        // pluginData pra registrar o frame de origem de cada spec.
         const _stackScanNodes = _getOrCreateA11ySessionSection(opts.designerName, opts.designerId).children || [];
+        const _yRangesIntersect = (bb, anchor) =>
+          bb.y < anchor.y + anchor.height && bb.y + bb.height > anchor.y;
         if (opts.a11yType !== 'titulo') _stackScanNodes.forEach(n => {
           if (n.type !== 'GROUP') return;
           const newFmt = n.name.match(new RegExp('^\\[' + _layerTag + ' \\| ([A-Z]\\d*(?:\\.\\d+)*) \\| ([a-z]+)\\] '));
@@ -1295,7 +1319,9 @@ figma.ui.onmessage = async (msg) => {
           const specNotes = n.children.find(c => (c.type === 'FRAME' || c.type === 'INSTANCE') && c.name === 'Spec Notes' && c !== specCard);
           if (!specNotes) return;
           const bb = 'absoluteRenderBounds' in specNotes ? (specNotes.absoluteBoundingBox || specNotes.absoluteRenderBounds) : specNotes.absoluteBoundingBox;
-          if (bb) _updateLetterMap(newFmt[1], bb);
+          if (!bb) return;
+          if (_anchorBounds && !_yRangesIntersect(bb, _anchorBounds)) return;
+          _updateLetterMap(newFmt[1], bb);
         });
 
         // Specs com Área Marcada (opts.a11yAreaId) ficam organizadas em
@@ -1329,8 +1355,36 @@ figma.ui.onmessage = async (msg) => {
           }
         }
 
+        // Bug real corrigido (2026-09-16, 2ª tentativa — a 1ª mexeu só no
+        // scan de `_letterMap`/faixa Y abaixo, que nunca é o caminho usado
+        // aqui: áreas com `opts.a11yAreaId` sempre caem neste bloco de
+        // colunas por categoria, nunca no `_letterMap`). Causa raiz real:
+        // este branch só registrava o `right` (borda direita) da spec mais
+        // à direita entre TODAS as categorias da área, sem nenhum teto —
+        // cada categoria NOVA que aparece pela primeira vez numa área
+        // (rotina normal do wizard de revisão em lote, que passa por várias
+        // categorias em sequência, caso real do print "Item 6 de 30")
+        // nascia numa coluna inteiramente nova, sempre mais uma
+        // `cardW + _SPEC_COL_GAP` à direita da anterior — sem nunca voltar.
+        // Com 5 categorias reais (A11Y_CATEGORIES) e cards de ~260-320px,
+        // a 5ª coluna nova já nasce ~1500-1800px à direita do frame de
+        // origem — fora da faixa visível de qualquer frame mobile
+        // (~375-414px), aparecendo "solta bem à direita de toda a Section"
+        // exatamente como no print. Agora também registra `bottom` (ponto
+        // mais baixo ocupado por QUALQUER spec da área) e aplica WRAP: uma
+        // nova coluna de categoria só nasce ao lado da anterior enquanto
+        // isso mantém o conjunto dentro de `_AREA_MAX_COLS` larguras de
+        // frame a partir de `_anchorBounds` (o mesmo frame/clone de origem,
+        // já resolvido acima) — ao ultrapassar esse teto, quebra pra uma
+        // nova "linha" de colunas, voltando ao X do frame e empilhando
+        // abaixo do ponto mais baixo já ocupado por qualquer spec da área
+        // (nunca sobrepõe o que já existe). Mantém specs sempre próximas do
+        // frame real, sem depender de heurística de faixa Y (que nunca era
+        // consultada neste caminho) nem de reescrever o schema pra gravar
+        // o frame de origem em pluginData (mudança maior, ainda não feita).
         let _areaRightmostOtherCategory = null;
-        if (opts.a11yAreaId && !_areaMap[_areaColKey] && Array.isArray(opts.existingAreaAllSpecIds) && opts.existingAreaAllSpecIds.length > 0) {
+        let _areaBottomMost = null;
+        if (opts.a11yAreaId && Array.isArray(opts.existingAreaAllSpecIds) && opts.existingAreaAllSpecIds.length > 0) {
           for (const _sid of opts.existingAreaAllSpecIds) {
             if (!_sid) continue;
             const _sibling = await _getSceneNodeById(_sid);
@@ -1339,8 +1393,11 @@ figma.ui.onmessage = async (msg) => {
             const _bb = (_siblingNotes && ('absoluteRenderBounds' in _siblingNotes ? (_siblingNotes.absoluteBoundingBox || _siblingNotes.absoluteRenderBounds) : _siblingNotes.absoluteBoundingBox))
               || ('absoluteRenderBounds' in _sibling ? (_sibling.absoluteBoundingBox || _sibling.absoluteRenderBounds) : _sibling.absoluteBoundingBox);
             if (!_bb) continue;
-            if (!_areaRightmostOtherCategory || _bb.x + _bb.width > _areaRightmostOtherCategory.right) {
+            if (!_areaMap[_areaColKey] && (!_areaRightmostOtherCategory || _bb.x + _bb.width > _areaRightmostOtherCategory.right)) {
               _areaRightmostOtherCategory = { topY: _bb.y, right: _bb.x + _bb.width };
+            }
+            if (!_areaBottomMost || _bb.y + _bb.height > _areaBottomMost) {
+              _areaBottomMost = _bb.y + _bb.height;
             }
           }
         }
@@ -1349,6 +1406,11 @@ figma.ui.onmessage = async (msg) => {
         const _SPEC_COL_GAP = 64;
         const cardW = specCard.width;
         const cardH = specCard.height;
+        // Teto de colunas por "linha" de categorias, relativo à largura do
+        // próprio frame/clone de origem (_anchorBounds) — acima disso, a
+        // próxima categoria nova quebra pra uma linha abaixo em vez de
+        // continuar se afastando pra sempre.
+        const _AREA_MAX_COLS = 3;
         let targetX, targetY;
 
         if (opts.pinnedPosition) {
@@ -1360,8 +1422,18 @@ figma.ui.onmessage = async (msg) => {
           targetX = _areaMap[_areaColKey].x;
           targetY = _areaMap[_areaColKey].bottom + _SPEC_GAP;
         } else if (opts.a11yAreaId && _areaRightmostOtherCategory) {
-          targetX = _areaRightmostOtherCategory.right + _SPEC_COL_GAP;
-          targetY = _areaRightmostOtherCategory.topY;
+          const _anchorRight = _anchorBounds ? (_anchorBounds.x + _anchorBounds.width) : _areaRightmostOtherCategory.right;
+          const _maxRight = _anchorRight + (_AREA_MAX_COLS * (cardW + _SPEC_COL_GAP));
+          const _wouldBeRight = _areaRightmostOtherCategory.right + _SPEC_COL_GAP + cardW;
+          if (_wouldBeRight > _maxRight && _anchorBounds) {
+            // Wrap: volta pra 1ª coluna (ao lado do frame), abaixo de tudo
+            // que já existe na área — nunca mais longe do que isso.
+            targetX = _anchorRight + _SPEC_COL_GAP;
+            targetY = (_areaBottomMost != null ? _areaBottomMost : _anchorBounds.y) + _SPEC_GAP;
+          } else {
+            targetX = _areaRightmostOtherCategory.right + _SPEC_COL_GAP;
+            targetY = _areaRightmostOtherCategory.topY;
+          }
         } else if (_letterMap[_specLetter]) {
           targetX = _letterMap[_specLetter].x;
           if (side === 'top') {
@@ -2372,10 +2444,71 @@ figma.ui.onmessage = async (msg) => {
     return { clone, nodeMap };
   }
 
+  // Race condition real corrigida (2026-09-16, pista do usuário: "quando eu
+  // consolido a ficha, aí sim ele adequa" — sintoma de card nascendo fora
+  // da Section só na criação inicial, nunca na consolidação). Causa raiz:
+  // desde 2026-09-15/16, o clone de trabalho é adiantado via 'start-spec-copy'
+  // assim que o designer clica "+ Nova spec"/abre um item do wizard — e
+  // _createSpecCloneForArea (chamada de dentro de _resolveActiveSpecClone)
+  // não é instantânea: tem vários `await` (loadFontAsync ×3+,
+  // _createOrGetFichaFrame, _getOrCreateFichaItensFrame) antes de mover o
+  // clone pra dentro do handoffFrame da Ficha via _ensureLegendBesideClone.
+  // O formulário de categoria (chooseA11yType/openA11yModal, accessibility.js)
+  // NUNCA espera essa promise terminar — só o foco/loading do canvas esperam
+  // (ver spec-copy-started, messages.js). Se o designer confirmar "Aplicar"
+  // (create-unified-spec) antes desse `await` encadeado terminar, uma
+  // SEGUNDA chamada a _resolveActiveSpecClone para a MESMA área roda em
+  // paralelo à primeira: como _activeSpecCloneMaps só é populado DEPOIS que
+  // a criação termina, a segunda chamada não encontra nada em cache, acha o
+  // clone já criado mas AINDA SOLTO na Section de sessão (via
+  // _findSpecCloneForArea, que também acha nesse estado intermediário) e
+  // usa esse `clone.parent` desatualizado como âncora — o specGroup nasce
+  // irmão do clone ENQUANTO ele ainda está solto na Section "crua". Quando a
+  // primeira chamada termina pouco depois e move SÓ o clone (não o specGroup
+  // recém-criado, que ela não tem como saber que existe) pro handoffFrame, o
+  // specGroup fica pra trás, órfão na Section. A consolidação manual
+  // ("Preencher"/"Atualizar Handoff", insert-ficha-section →
+  // _buildFichaLeitorSection) "corrige" isso não porque tem uma lógica de
+  // posicionamento melhor, mas porque relê o clone já ESTÁVEL (todo `await`
+  // concluído) e move o overlay INTEIRO (com o specGroup órfão dentro dele,
+  // achado por busca na página inteira via _findCloneOverlaySibling, não por
+  // parentesco) em bloco pro handoffFrame — mascarando o sintoma sem
+  // eliminar a causa. Fix real: serializar chamadas concorrentes a
+  // _resolveActiveSpecClone pela MESMA área — a segunda chamada aguarda a
+  // promise da primeira em vez de rodar em paralelo contra um estado
+  // intermediário. Mesmo padrão vulnerável existe em
+  // _resolveActiveTabOrderClone/_resolveActiveSwipePathClone (nenhuma delas
+  // tem hoje qualquer serialização), mas só Leitor de Tela foi reportado com
+  // sintoma real — escopo da correção restrito a ele.
+  const _specCloneResolutionInFlight = new Map();
+  function _resolveActiveSpecClone(areaId, targetNodeId, sectionName, designerName, currentUserId) {
+    if (!areaId) return _resolveActiveSpecCloneInner(areaId, targetNodeId, sectionName, designerName, currentUserId);
+    const pending = _specCloneResolutionInFlight.get(areaId);
+    const chained = (pending || Promise.resolve()).then(
+      () => _resolveActiveSpecCloneInner(areaId, targetNodeId, sectionName, designerName, currentUserId),
+      () => _resolveActiveSpecCloneInner(areaId, targetNodeId, sectionName, designerName, currentUserId)
+    );
+    // Guarda a promise encadeada pra próxima chamada esperar por ESTA,
+    // não pela original — corrente serializada, uma de cada vez. Limpa a
+    // entrada só se ninguém mais entrou na fila enquanto esta rodava
+    // (compara identidade antes de deletar, senão uma 3ª chamada que já
+    // substituiu a entrada seria apagada por engano).
+    _specCloneResolutionInFlight.set(areaId, chained);
+    chained.finally(() => {
+      if (_specCloneResolutionInFlight.get(areaId) === chained) {
+        _specCloneResolutionInFlight.delete(areaId);
+      }
+    });
+    return chained;
+  }
+
   // Resolve a cópia ativa de specs de uma área, ou cria do zero se não
   // houver nenhuma em memória/canvas — mesmo padrão de
-  // _resolveActiveTabOrderClone/_resolveActiveSwipePathClone.
-  async function _resolveActiveSpecClone(areaId, targetNodeId, sectionName, designerName, currentUserId) {
+  // _resolveActiveTabOrderClone/_resolveActiveSwipePathClone. Renomeada de
+  // _resolveActiveSpecClone (2026-09-16) — o nome original agora é o
+  // wrapper de serialização acima; esta é a lógica real, sempre chamada em
+  // sequência, nunca mais concorrente pra mesma área.
+  async function _resolveActiveSpecCloneInner(areaId, targetNodeId, sectionName, designerName, currentUserId) {
     const root = await _getSceneNodeById(targetNodeId);
     if (!root || !root.absoluteBoundingBox) return null;
     if (typeof root.clone !== 'function') return null;
@@ -3425,12 +3558,18 @@ figma.ui.onmessage = async (msg) => {
     if (existingLegend) {
       instrucoes.appendChild(existingLegend);
     } else {
-      // Tabulação/Swipe (2026-09-14, pedido do usuário) usam a legenda
-      // enxuta (só título + instruções, sem passos/Assets) — Leitor de
-      // Tela é a única com a legenda completa via _buildFichaLegendColumn.
-      const legendBuilder = cfg.instructionKey === 'leitorTela'
-        ? _buildFichaLegendColumn
-        : _buildFichaInstructionOnlyLegendColumn;
+      // Tabulação/Swipe/Leitor de Tela: as 3 usam a legenda COMPLETA
+      // (título + introdução + passos numerados do template) na Ficha final
+      // — 2026-09-16, correção de mal-entendido: uma sessão anterior tinha
+      // removido a instrução da Ficha pra Tabulação/Swipe interpretando
+      // errado um pedido que era só sobre a UI do plugin ("retire da aba,
+      // viva só na modal"); o usuário nunca pediu pra tirar da Ficha
+      // entregável, e a reclamou explicitamente ao ver o frame sem o texto.
+      // _buildFichaInstructionOnlyLegendColumn (só título) permanece
+      // definida em code.js pra não perder o código, mas não é mais
+      // chamada por nenhum caminho — reintroduzir exigiria pedido explícito
+      // novo do usuário.
+      const legendBuilder = _buildFichaLegendColumn;
       const legend = await legendBuilder(
         FICHA_INSTRUCTION_CONTENT[cfg.instructionKey],
         cfg.legendTitle,
@@ -3992,7 +4131,25 @@ figma.ui.onmessage = async (msg) => {
 
       try { await figma.loadFontAsync({ family: 'Inter', style: 'Bold' }); } catch (e) { }
       for (const item of (items || [])) {
-        const mappedNode = item && item.targetNodeId ? nodeMap.get(item.targetNodeId) : null;
+        // Bug real corrigido (2026-09-16, reportado pelo usuário: aba
+        // Handoff sempre mostrava Tabulação como pendente/desatualizada,
+        // mesmo logo depois de "Preencher"/"Atualizar Handoff"). Causa: os
+        // itens de tabOrderItems guardam targetNodeId como o id do node
+        // DENTRO DO CLONE de trabalho ativo no momento em que o selo foi
+        // desenhado (_createTabOrderBadge recebe o node já mapeado, e usa
+        // node.id — não o id original, ver comentário completo em
+        // _resolveOriginalNodeIdFromTabOrderClone, code.js). `nodeMap` aqui
+        // é Map<originalId, cloneNode> (_buildOriginalToCloneMap) — buscar
+        // direto por item.targetNodeId (id de clone) contra um Map chaveado
+        // por id ORIGINAL só batia por coincidência, deixando a maioria dos
+        // itens fora da contagem (itemCount sempre menor que
+        // tabOrderItems.length) e o card da aba Handoff preso em "stale"
+        // pra sempre. Mesma tradução já usada por insert-swipe-path
+        // (startSwipePathFromTabOrder) — reaproveitada aqui.
+        const originalNodeId = item && item.targetNodeId
+          ? _resolveOriginalNodeIdFromTabOrderClone(area.id, item.targetNodeId)
+          : null;
+        const mappedNode = originalNodeId ? nodeMap.get(originalNodeId) : null;
         if (!mappedNode || !mappedNode.absoluteBoundingBox) continue;
         itemCount++;
         if (existingBadgeTargetIds.has(mappedNode.id) || existingBadgeNumbers.has(item.number)) continue;

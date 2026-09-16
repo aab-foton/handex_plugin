@@ -88,6 +88,22 @@
         // instrução única de vida inteira virou orientação repetida no gate
         // de seleção (openA11yCategoryPickerModal, accessibility.js).
 
+        // Zera hacData.projectOrigin/projectLib se o arquivo estiver
+        // genuinamente em branco (nenhuma Área/Spec/Tabulação/Swipe
+        // documentada) — único ponto onde este reset roda (2026-09-16, bug
+        // real corrigido: antes rodava a cada _renderA11yHomeOriginPicker(),
+        // inclusive o disparo indireto de dentro do próprio
+        // setA11yProjectOrigin ao escolher a lib pela primeira vez, o que
+        // zerava a escolha recém-feita antes do designer conseguir Marcar a
+        // primeira Área). Precisa rodar ANTES de _renderA11yHomeOriginPicker
+        // logo abaixo, e só aqui — uma vez por carregamento do arquivo,
+        // nunca de novo durante o uso normal da sessão atual. Ver comentário
+        // em _renderA11yHomeOriginPicker (accessibility.js) para o histórico
+        // completo.
+        if (typeof _resetA11yProjectOriginIfNothingDocumented === 'function') {
+          _resetA11yProjectOriginIfNothingDocumented();
+        }
+
         // A escolha de plataforma (picker Web/Mobile) vive na própria
         // view-home, que já nasce ativa no boot sem passar por navigate() —
         // diferente do banner acima, precisa ser avaliada aqui, assim que
@@ -336,15 +352,29 @@
           handleSwipePathCopyStarted(msg.cloneId);
         }
       }
-      // Resposta de start-spec-copy (2026-09-15). O wizard de Detecção
-      // Automática dispara e ignora — só precisa que a réplica exista antes
-      // do primeiro highlight. Já o fluxo manual ("+ Nova spec",
-      // openA11yCategoryPickerModal) precisa FOCAR a réplica assim que ela
-      // fica pronta, e por isso marca _a11ySpecCopyPendingFocusAreaId antes
-      // de disparar. Sem essa flag, focar aqui roubaria o foco do canvas
-      // também durante o wizard, que tem seu próprio controle de foco item
-      // a item.
+      // Resposta de start-spec-copy (2026-09-15). Dois consumidores possíveis,
+      // mutuamente exclusivos por construção (só um dos dois é setado antes
+      // de disparar 'start-spec-copy' em cada fluxo):
+      //   1) Wizard de Detecção Automática (startA11yBatchWizard,
+      //      accessibility.js) — window._a11yBatchWizardCopyPendingAreaId.
+      //      Bug real corrigido (2026-09-16): até então esta resposta era
+      //      IGNORADA aqui ("dispara e ignora"), então o wizard abria o
+      //      primeiro item ANTES da réplica terminar de ser clonada, sem
+      //      nenhum loading cobrindo essa espera (o modal "Detectando
+      //      componentes…" já tinha fechado ao fim do scan, corretamente,
+      //      mas nada reabria pra esta etapa seguinte). Agora fecha o
+      //      loading e só então abre o primeiro item do wizard.
+      //   2) Fluxo manual "+ Nova spec" (openA11yCategoryPickerModal) —
+      //      window._a11ySpecCopyPendingFocusAreaId — precisa FOCAR a
+      //      réplica assim que ela fica pronta.
       if (msg.type === "spec-copy-started") {
+        const _wizardPendingAreaId = window._a11yBatchWizardCopyPendingAreaId;
+        if (_wizardPendingAreaId && msg.areaId === _wizardPendingAreaId) {
+          window._a11yBatchWizardCopyPendingAreaId = null;
+          if (typeof hideA11yCanvasLoading === 'function') hideA11yCanvasLoading();
+          if (typeof _advanceA11yBatchWizard === 'function') _advanceA11yBatchWizard();
+        }
+
         const _pendingAreaId = window._a11ySpecCopyPendingFocusAreaId;
         if (_pendingAreaId && msg.areaId === _pendingAreaId) {
           window._a11ySpecCopyPendingFocusAreaId = null;

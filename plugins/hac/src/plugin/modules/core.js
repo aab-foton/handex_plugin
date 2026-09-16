@@ -272,21 +272,27 @@ function _a11yCaptureMiniBarEnter(feature) {
 }
 window._a11yCaptureMiniBarEnter = _a11yCaptureMiniBarEnter;
 
-// Popula o bloco de instrução da barra (título + "Instruções sobre..." +
-// "Como fazer...") a partir do template oficial — mesmo helper genérico
-// usado pelo modal do Leitor de Tela (_renderA11yInstructionContent,
-// tab-order.js), só muda o mapa de ids de destino.
+// Popula o bloco de instrução da barra (título + "Como fazer...") a partir
+// do template oficial — mesmo helper genérico usado pelo modal (
+// _renderA11yInstructionContent, tab-order.js), só muda o mapa de ids de
+// destino. Sempre reduced=true aqui (2026-09-16, pedido do usuário): a
+// barra, visível DURANTE a captura, mostra só a "Sugestão de uso"
+// (Shift+clique/arrastar) — a introdução institucional e os passos formais
+// do template já foram vistos no modal ANTES de iniciar (que continua
+// completo, _renderA11yInstructionModal).
 const A11Y_CAPTURE_BAR_INSTRUCTION_IDS = {
   title: 'a11y-capture-bar-instructions-title-text',
+  instructionsBlock: 'a11y-capture-bar-instructions-block',
   instructionsHeading: 'a11y-capture-bar-instructions-heading',
   instructionsBody: 'a11y-capture-bar-instructions-body',
   stepsHeading: 'a11y-capture-bar-steps-heading',
   steps: 'a11y-capture-bar-steps',
+  stepsBlock: 'a11y-capture-bar-steps-block',
 };
 function _a11yCaptureBarRenderInstructions(feature) {
   const contentKey = feature === 'tabOrder' ? 'tabulacao' : 'swipe';
   if (typeof _renderA11yInstructionContent === 'function') {
-    _renderA11yInstructionContent(contentKey, A11Y_CAPTURE_BAR_INSTRUCTION_IDS);
+    _renderA11yInstructionContent(contentKey, A11Y_CAPTURE_BAR_INSTRUCTION_IDS, true);
   }
   if (typeof _refreshIcons === 'function') _refreshIcons();
 }
@@ -345,7 +351,11 @@ function _a11yCaptureBarApplyInstructionsVisibility() {
   const icon = document.getElementById('a11y-capture-mini-bar-help-icon');
   const visible = window._a11yCaptureBarInstructionsVisible;
   if (block) block.classList.toggle('hidden', !visible);
-  if (icon) icon.setAttribute('data-lucide', visible ? 'chevron-up' : 'chevron-down');
+  // Recolhido: ícone de dica (convida a abrir). Expandido: chevron-up (só
+  // ação possível é recolher) — antes alternava entre chevron-up/down nos
+  // dois estados, sem sinalizar visualmente que o estado padrão é "há uma
+  // dica aqui" (2026-09-16, pedido do usuário).
+  if (icon) icon.setAttribute('data-lucide', visible ? 'chevron-up' : 'circle-help');
   _a11yCaptureBarSyncTooltips();
   if (typeof _refreshIcons === 'function') _refreshIcons();
   // Mede no próximo frame: a troca de 'hidden' acima (e a troca de ícone
@@ -631,8 +641,44 @@ function navigate(viewId) {
     if (typeof renderA11yGroupedList === 'function') renderA11yGroupedList();
     if (typeof _applyA11yHeaderOriginTitle === 'function') _applyA11yHeaderOriginTitle();
   }
-  if (viewId === 'view-home' && typeof _renderA11yHomeOriginPicker === 'function') {
-    _renderA11yHomeOriginPicker();
+  if (viewId === 'view-home') {
+    // Skip pra view-specifications (2026-09-16, 1ª correção da sessão):
+    // reverte seletivamente o "Home sempre reexibe a Etapa 1" de 2026-09-08.
+    // Hoje (2ª correção, mesmo dia) esse skip é só uma rede de segurança —
+    // nenhum caminho real do produto chama navigate('view-home') sem ANTES
+    // decidir se quer forçar a Etapa 1: o botão genérico "Voltar para a
+    // página inicial" (specifications.html) agora chama confirmBackToHome()
+    // (accessibility.js), que só chega em navigate('view-home') depois de o
+    // usuário confirmar "Deseja trocar de plataforma?" num modal — e nesse
+    // caso já seta a flag abaixo antes de navegar, então este skip nem
+    // dispara. Ele só acionaria se algum código futuro chamasse
+    // navigate('view-home') direto, ignorando confirmBackToHome.
+    // Diferencia "força Etapa 1" (confirmBackToHome após confirmar, e
+    // "Trocar" na modal "Sobre o hac") de "skip" (qualquer outra chamada)
+    // pela flag window._a11yForceHomeOriginStep: setada por
+    // openA11yProjectOriginPrompt (botão "Trocar") e por confirmBackToHome
+    // (accessibility.js) antes de chamar navigate('view-home'). Consumida
+    // aqui (one-shot) pra não grudar na navegação seguinte.
+    // NÃO chama mais _resetA11yProjectOriginIfNothingDocumented() aqui (bug
+    // real corrigido em 2026-09-16, mesmo dia da introdução): rodar o reset
+    // a cada navigate('view-home') — inclusive o disparado indiretamente
+    // por setA11yProjectOrigin via _refreshUiForProjectOrigin →
+    // _renderA11yHomeOriginPicker — zerava hacData.projectOrigin segundos
+    // depois de escolhido, antes mesmo do usuário conseguir Marcar a
+    // primeira Área (ensureA11yProjectOriginThen reabria o picker "Plataforma
+    // do Projeto" de novo, mesmo a escolha tendo acabado de ser feita). O
+    // reset por "arquivo genuinamente em branco" agora roda uma única vez,
+    // no BOOT (messages.js, handler 'init-plugin') — não em toda navegação
+    // de volta pra Home dentro da mesma sessão de uso. Ver comentário em
+    // _renderA11yHomeOriginPicker (accessibility.js) para o histórico
+    // completo.
+    const forceStep1 = window._a11yForceHomeOriginStep === true;
+    window._a11yForceHomeOriginStep = false;
+    if (!forceStep1 && typeof hacData !== 'undefined' && hacData && hacData.projectOrigin) {
+      navigate('view-specifications');
+      return;
+    }
+    if (typeof _renderA11yHomeOriginPicker === 'function') _renderA11yHomeOriginPicker();
   }
   // Primeira sub-navegação real do hac (ver comentário no HTML de
   // view-area-workspace, specifications.html) — o contexto (qual área, qual
@@ -741,6 +787,31 @@ function collapseAllAccordions(containerEl) {
 function handleScroll(el) {
   const btnTop = document.getElementById('btn-top');
   if (!btnTop) return;
+  // Bug real corrigido (2026-09-16, print do usuário: botão "Preencher
+  // Swipe"/"Preencher Ficha" aparecendo "colado na borda, sem respiro" nas
+  // abas Tabulação/Swipe da workspace de área — 2ª tentativa depois de um
+  // mb-4 no botão em si não ter resolvido nada). Causa real: NUNCA foi
+  // falta de padding — #btn-top é `position:fixed; bottom-6 right-6;
+  // z-[100]` (build.cjs), relativo à JANELA INTEIRA, não ao container que
+  // rola. Ele está ligado via onscroll="handleScroll(this)" em VÁRIOS
+  // containers (ver grep — home, specs, todos os modais e também
+  // #a11y-workspace-scroll-container), mas só faz sentido como atalho de
+  // "voltar ao topo" nas listas longas de view-specifications/view-home.
+  // Dentro da workspace de área (view-area-workspace) o conteúdo de cada
+  // aba é curto e o último elemento é sempre um botão de ação
+  // (_fichaInsertButtonHtml) que ocupa a largura toda — o círculo
+  // translúcido com backdrop-blur do #btn-top nascia exatamente sobre o
+  // canto inferior direito desse botão assim que o designer rolava até o
+  // fim pra alcançá-lo (scrollTop > 100), dando a impressão visual de
+  // "sem respiro"/borda estranha. Escondê-lo nesta view resolve na causa
+  // raiz, sem precisar (e sem conseguir, como já provado) empurrar o botão
+  // com mais margin.
+  const inAreaWorkspace = !!document.getElementById('view-area-workspace')?.classList.contains('active');
+  if (inAreaWorkspace) {
+    btnTop.classList.add('opacity-0', 'pointer-events-none', 'translate-y-10');
+    btnTop.classList.remove('opacity-100', 'pointer-events-auto', 'translate-y-0');
+    return;
+  }
   // Bug real corrigido (2026-09-14, reportado com print pelo usuário): a
   // janela encolhe pra ~52-60px de altura durante a barra mini de captura
   // (Ordem de Tabulação/Trilha de Swipe, ver _a11yCaptureMiniBarEnter) —

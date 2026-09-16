@@ -103,9 +103,16 @@ function _fichaInsertButtonHtml(area, sectionKey, hasItems) {
   const already = !!(state && state.insertedAt);
   const label = _fichaButtonLabel(area, sectionKey);
   const icon = already ? 'refresh-cw' : 'file-plus-2';
+  // mb-4 (2026-09-16, pedido do usuário com print real: botão colado na
+  // borda inferior do plugin quando a aba tem conteúdo longo o bastante
+  // pra rolar — o pb-10 do container pai #a11y-workspace-scroll-container
+  // dá respiro só quando o conteúdo é curto o bastante pra não estourar a
+  // altura visível; com scroll ativo esse padding fica fora da área
+  // percebida como "fim da lista", então o respiro real precisa vir do
+  // próprio botão, não só do container). Era mb-1 (4px), insuficiente.
   return `
     <button type="button" onclick="_fichaInsertSection('${escapeHtml(sectionKey)}')"
-      class="w-full flex items-center justify-center gap-dsc-nano h-9 mt-auto mb-1 pt-1 rounded-dsc-medium text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-white dark:bg-dark-surface text-cyan-700 dark:text-cyan-400 shadow-sm hover:shadow active:scale-[0.99] shrink-0">
+      class="w-full flex items-center justify-center gap-dsc-nano h-9 mt-auto mb-4 pt-1 rounded-dsc-medium text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-white dark:bg-dark-surface text-cyan-700 dark:text-cyan-400 shadow-sm hover:shadow active:scale-[0.99] shrink-0">
       <i data-lucide="${icon}" class="w-3.5 h-3.5" aria-hidden="true"></i>
       ${label}
     </button>
@@ -174,10 +181,17 @@ function _fichaBuildSpecFields(spec) {
 // só existe no frontend.
 function _fichaBuildSpecPayload(spec) {
   const meta = A11Y_CATEGORIES[spec.a11yType] || { label: 'Acessibilidade', color: '#0891B2', fill: '#EBF4FB' };
+  // categoryLabel por ORIGEM DA SPEC (spec.a11yOrigin), não meta.label cru —
+  // a Ficha é o documento final consumido pelo dev; uma spec 'titulo' criada
+  // em contexto mobile precisa chegar lá como "Títulos", nunca "Nível de
+  // Título" (RN não tem hierarquia H1-H6). Ver getA11yCategoryLabel.
+  const categoryLabel = spec.a11yType
+    ? (getA11yCategoryLabel(spec.a11yType, spec.a11yOrigin) || meta.label)
+    : meta.label;
   return {
     letter: spec.letter || '',
     targetNodeName: spec.targetNodeName || spec.name || '',
-    categoryLabel: meta.label,
+    categoryLabel,
     categoryColor: meta.color,
     categoryFill: meta.fill,
     fields: _fichaBuildSpecFields(spec),

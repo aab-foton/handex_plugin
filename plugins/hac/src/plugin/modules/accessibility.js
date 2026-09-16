@@ -64,13 +64,166 @@ const A11Y_AUTO_MAPPING_HIDDEN_TAB_SWIPE = true;
 // Cores reais extraídas dos fills dos componentes publicados na lib "Design
 // Acessível". O selo (Tag/Chip) de cada categoria usa a cor "color" no
 // stroke/texto e "fill" como tinta de fundo.
+//
+// "shape" (2026-09-16) — forma geométrica REAL do marcador na lib publicada,
+// confirmada inspecionando o arquivo Figma (fileKey Wy0IhXRVZMSOOr8E609UqI):
+// círculo cheio (elemento/titulo/decorativo), estrela de 5 pontas cheia
+// (estrutura) ou quadrado arredondado cheio (informacoes).
+//
+// "badge" continua sendo o CONTEÚDO textual gravado de fato em spec.letter
+// quando a categoria tem selo fixo (ver confirmA11ySpec: `letter =
+// meta.badge` pro caso 'decorativo') — não pode virar null só por causa do
+// SVG novo, sob risco de specs decorativas perderem a letra 'Ø' salva no
+// dado real e exibida no card da listagem (_a11ySpecItemHtml). O SVG de
+// badge (renderA11yCategoryBadgeSvg) NÃO usa badge='Ø' como texto: pra
+// categoryKey === 'decorativo' ele ignora badge e desenha o ícone vetorial
+// de "proibido" (círculo vazado + barra diagonal) por cima da forma, que é a
+// representação fiel do componente real — 'Ø' continua existindo só como
+// selo textual gravado no dado (specs/Ficha/Ordem de Tabulação). Pra
+// 'titulo', badge='H' é só o valor MOBILE (sem distinção de nível) — o valor
+// web ("H1", número do nível real) é resolvido em runtime dentro de
+// renderA11yCategoryBadgeSvg via isA11yMobileProject(), não hardcoded aqui.
 const A11Y_CATEGORIES = {
-  elemento:    { label: 'Elementos e Imagens',     icon: 'image',   color: '#FCBE05', fill: '#FFF6DC', badge: null },
-  estrutura:   { label: 'Estrutura da Página',     icon: 'star',    color: '#EF765E', fill: '#FDEAE6', badge: null },
-  titulo:      { label: 'Nível de Título',         icon: 'heading', color: '#AFCA0B', fill: '#F5F9DA', badge: 'H' },
-  decorativo:  { label: 'Elemento Decorativo',     icon: 'ban',     color: '#D93636', fill: '#FBE4E4', badge: 'Ø' },
-  informacoes: { label: 'Informações Adicionais',  icon: 'info',    color: '#F39200', fill: '#FEF1DE', badge: null },
+  elemento:    { label: 'Elementos e Imagens',     icon: 'image',   color: '#FCBE05', fill: '#FFF6DC', badge: null, shape: 'circle' },
+  estrutura:   { label: 'Estrutura da Página',     icon: 'star',    color: '#EF765E', fill: '#FDEAE6', badge: null, shape: 'star' },
+  // label abaixo é o valor WEB (default/fallback quando a origem não está
+  // disponível no ponto de consumo) — RN não tem hierarquia H1-H6, então o
+  // rótulo correto em contexto mobile é "Títulos" (sem "Nível"), confirmado
+  // no print real da modal "[HAC] Handoff Super DSC Mobile e Web",
+  // 2026-09-16. Nunca ler A11Y_CATEGORIES[key].label diretamente para a
+  // categoria 'titulo' fora daqui — use getA11yCategoryLabel(key, origin).
+  titulo:      { label: 'Nível de Título',         icon: 'heading', color: '#AFCA0B', fill: '#F5F9DA', badge: 'H', shape: 'circle' },
+  decorativo:  { label: 'Elemento Decorativo',     icon: 'ban',     color: '#D93636', fill: '#FBE4E4', badge: 'Ø', shape: 'circle' },
+  informacoes: { label: 'Informações Adicionais',  icon: 'info',    color: '#F39200', fill: '#FEF1DE', badge: null, shape: 'square' },
 };
+
+// Rótulo mobile de 'titulo' — só essa categoria varia por origem (RN não tem
+// hierarquia de nível; as outras 4 categorias têm o mesmo nome nas duas
+// plataformas). Ponto único de correção se a lib mudar o nome publicado.
+const A11Y_CATEGORY_LABEL_MOBILE_OVERRIDES = {
+  titulo: 'Títulos',
+};
+
+// Resolve o label de exibição de uma categoria já considerando a origem
+// (web/mobile) — fonte única para qualquer consumidor (cards de spec,
+// accordions de contagem, título do modal de especificação, picker,
+// modal "Entendendo as categorias"), evitando duplicar a condicional em
+// cada ponto de uso. `origin` aceita 'web'/'mobile' explícito (ex.:
+// spec.a11yOrigin, modal.dataset.a11yOrigin); quando omitido, cai no
+// projeto atual via isA11yMobileProject().
+function getA11yCategoryLabel(categoryKey, origin) {
+  const cat = A11Y_CATEGORIES[categoryKey];
+  if (!cat) return '';
+  const isMobile = origin ? origin === 'mobile' : (typeof isA11yMobileProject === 'function' && isA11yMobileProject());
+  if (isMobile && A11Y_CATEGORY_LABEL_MOBILE_OVERRIDES[categoryKey]) {
+    return A11Y_CATEGORY_LABEL_MOBILE_OVERRIDES[categoryKey];
+  }
+  return cat.label;
+}
+window.getA11yCategoryLabel = getA11yCategoryLabel;
+
+// ── Badge SVG unificado das 5 categorias ────────────────────────────────────
+// Reproduz fielmente a forma real de cada categoria na lib "Design Acessível"
+// (círculo/estrela/quadrado cheios, cor sólida da categoria) em vez do ícone
+// Lucide semântico genérico usado até 2026-09-16. Usado na modal "Entendendo
+// as categorias" (renderA11yCategoriesHelpBadges) e no picker de categoria
+// (a11y-category-picker-modal) — ambos só ilustrativos, nunca uma spec real.
+// O card real de spec na listagem (_a11ySpecItemHtml) usa a letra VERDADEIRA
+// da instância (spec.letter) num círculo simples — não foi migrado pra este
+// SVG porque nem toda categoria é círculo (estrela/quadrado exigiriam
+// reescrever esse template com risco de regressão visual na listagem;
+// decisão: manter como está).
+//
+// Conteúdo interno por categoria, confirmado nos prints reais da modal
+// "Especificações para Leitores de Tela" (2026-09-16):
+//   - elemento: letra ilustrativa fixa "A" (exemplo, não é dado real)
+//   - estrutura: estrela SEM nenhuma letra/conteúdo (vazia) — só existe na
+//     versão web, nunca chamada em contexto mobile
+//   - titulo: badge muda por origem — "H1" (web, número do nível real; aqui
+//     é sempre "1" fixo, ilustrativo) ou "H" genérico (mobile, sem
+//     distinção de nível) — decidido em runtime via isA11yMobileProject()
+//   - decorativo: sem letra, ícone vetorial de "proibido"
+//   - informacoes: letra ilustrativa fixa "A" (sem referência nova, mantido)
+//
+// size: lado do viewBox em px (o SVG é sempre quadrado, a estrela/quadrado
+// ficam inscritos nesse quadrado). letterOverride: usado pra sobrescrever a
+// letra ilustrativa das categorias sem badge fixo (elemento/informacoes)
+// quando o chamador quiser outra letra que não "A".
+function renderA11yCategoryBadgeSvg(categoryKey, size, letterOverride) {
+  const cat = A11Y_CATEGORIES[categoryKey];
+  if (!cat) return '';
+  size = size || 28;
+  const cx = size / 2;
+  const cy = size / 2;
+  const color = cat.color;
+
+  let shapeSvg = '';
+  if (cat.shape === 'star') {
+    shapeSvg = '<polygon points="' + _a11yStarPoints(cx, cy, size * 0.48, size * 0.19) + '" fill="' + color + '"/>';
+  } else if (cat.shape === 'square') {
+    const rectSize = size * 0.86;
+    const rectOffset = (size - rectSize) / 2;
+    const rx = size * 0.18;
+    shapeSvg = '<rect x="' + rectOffset + '" y="' + rectOffset + '" width="' + rectSize + '" height="' + rectSize + '" rx="' + rx + '" fill="' + color + '"/>';
+  } else {
+    shapeSvg = '<circle cx="' + cx + '" cy="' + cy + '" r="' + (size * 0.48) + '" fill="' + color + '"/>';
+  }
+
+  // Conteúdo interno: ícone vetorial de "proibido" (decorativo, sem letra),
+  // estrela vazia (estrutura, sem letra), badge por origem (título:
+  // "H1" web / "H" mobile) ou letra de exemplo ilustrativa.
+  let contentSvg = '';
+  if (categoryKey === 'decorativo') {
+    contentSvg = _a11yBanIconSvg(cx, cy, size * 0.30);
+  } else if (categoryKey === 'estrutura') {
+    contentSvg = ''; // estrela sempre vazia nos prints de referência — nunca chamada em contexto mobile
+  } else {
+    let letter;
+    if (categoryKey === 'titulo') {
+      letter = (typeof isA11yMobileProject === 'function' && isA11yMobileProject()) ? 'H' : 'H1';
+    } else {
+      letter = cat.badge || letterOverride || 'A';
+    }
+    // Fonte reduzida pra badges de 2+ caracteres (ex.: "H1"), senão vaza do
+    // círculo — 1 caractere (A, H, Ø...) continua no tamanho original.
+    const fontSize = Math.round(size * (letter.length > 1 ? 0.34 : 0.46));
+    contentSvg = '<text x="' + cx + '" y="' + cy + '" text-anchor="middle" dominant-baseline="central" ' +
+      'font-family="inherit" font-weight="800" font-size="' + fontSize + '" fill="#FFFFFF">' + escapeHtml(letter) + '</text>';
+  }
+
+  return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '" ' +
+    'xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">' + shapeSvg + contentSvg + '</svg>';
+}
+window.renderA11yCategoryBadgeSvg = renderA11yCategoryBadgeSvg;
+
+// Pontos da estrela de 5 pontas (Estrutura da Página), cheia, apontada pra
+// cima — outerR/innerR calculados a partir do size recebido em
+// renderA11yCategoryBadgeSvg (proporção fixa 0.48/0.19, igual à estrela
+// publicada na lib real).
+function _a11yStarPoints(cx, cy, outerR, innerR) {
+  const points = [];
+  const spikes = 5;
+  const step = Math.PI / spikes;
+  let rot = -Math.PI / 2; // primeira ponta apontando pra cima
+  for (let i = 0; i < spikes; i++) {
+    points.push((cx + Math.cos(rot) * outerR) + ',' + (cy + Math.sin(rot) * outerR));
+    rot += step;
+    points.push((cx + Math.cos(rot) * innerR) + ',' + (cy + Math.sin(rot) * innerR));
+    rot += step;
+  }
+  return points.join(' ');
+}
+
+// Ícone universal de "proibido" (círculo vazado + barra diagonal), desenhado
+// em vetor puro branco sobre o fundo vermelho sólido de "decorativo" — mesma
+// leitura visual do componente real da lib (círculo vazado riscado), sem
+// depender do glyph Lucide "ban".
+function _a11yBanIconSvg(cx, cy, r) {
+  const strokeWidth = Math.max(1.5, r * 0.18);
+  const diag = r * 0.68;
+  return '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="#FFFFFF" stroke-width="' + strokeWidth + '"/>' +
+    '<line x1="' + (cx - diag) + '" y1="' + (cy + diag) + '" x2="' + (cx + diag) + '" y2="' + (cy - diag) + '" stroke="#FFFFFF" stroke-width="' + strokeWidth + '" stroke-linecap="round"/>';
+}
 
 // Conteúdo real da lib (Descrição / Observações / Notas de Código). Mantido
 // como literal JS (não JSON importado) porque o bundle do frontend é um
@@ -594,10 +747,20 @@ function _findA11yAreaById(areaId) {
 function openA11yCategoryPickerModal(areaId) {
   if (typeof _renderA11yInstructionModal === 'function' && _renderA11yInstructionModal('leitorTela')) {
     // Callback consumido por _confirmA11yInstructionModal (tab-order.js) ao
-    // fechar o modal — ver comentário lá pra por que este é o ÚNICO
-    // consumidor de callback pendente (Tabulação/Swipe não usam mais o
-    // modal pra iniciar captura, só pra reabertura manual informativa).
+    // fechar o modal — mesmo mecanismo usado por
+    // openA11yInstructionThenStart (tab-order.js) pros botões "Iniciar
+    // Ordem de Tabulação"/"Iniciar trilha de ordem de leitura" (2026-09-16,
+    // bug real corrigido: "Entendi, começar seleção" não iniciava nada
+    // pra esses dois fluxos).
     window._pendingA11yInstructionConfirm = () => _openA11yCategoryPickerModalAfterInstruction(areaId);
+    // Reset defensivo (2026-09-16-b): o Leitor de Tela sempre inicia do
+    // zero (não tem "Adicionar itens" aqui, é o próprio picker de
+    // categoria quem decide o que criar) — garante que o texto do botão
+    // não fique preso em "Entendi, adicionar itens" deixado por uma
+    // chamada anterior a openA11yInstructionThenStart (tab-order.js) na
+    // mesma sessão da UI.
+    const continueBtn = document.getElementById('btn-a11y-instruction-modal-continue');
+    if (continueBtn) continueBtn.textContent = 'Entendi, começar seleção';
     openModal('a11y-instruction-modal');
     if (typeof _refreshIcons === 'function') _refreshIcons();
     return;
@@ -687,6 +850,11 @@ function _applyA11yCategoryPickerOriginFilter() {
     const btn = document.getElementById('a11y-category-btn-' + category);
     if (btn) btn.classList.toggle('hidden', mobileOnly);
   });
+  // "Nível de Título" (web) / "Títulos" (mobile) — única categoria cujo
+  // NOME muda por origem (RN não tem hierarquia H1-H6). Ver
+  // getA11yCategoryLabel/A11Y_CATEGORY_LABEL_MOBILE_OVERRIDES.
+  const tituloLabelEl = document.getElementById('a11y-category-btn-titulo-label');
+  if (tituloLabelEl) tituloLabelEl.textContent = getA11yCategoryLabel('titulo');
 }
 
 // Chamado por messages.js quando o backend confirma que a lib está acessível
@@ -820,13 +988,10 @@ function chooseA11yType(category) {
 }
 window.chooseA11yType = chooseA11yType;
 
-const A11Y_MODAL_TITLE = {
-  elemento: 'Elementos e Imagens',
-  estrutura: 'Estrutura da Página',
-  titulo: 'Nível de Título',
-  decorativo: 'Elemento Decorativo',
-  informacoes: 'Informações Adicionais',
-};
+// Título do modal de especificação por categoria — resolvido via
+// getA11yCategoryLabel (não mais um mapa fixo) para que 'titulo' mostre
+// "Nível de Título" (web) ou "Títulos" (mobile) conforme a origem já
+// resolvida em modal.dataset.a11yOrigin. Ver chamada em openA11yModal.
 
 // Categorias que usam tag manual (A, A1, A1.1...) — Título usa selo fixo por
 // nível, Decorativo usa selo fixo de ícone.
@@ -948,7 +1113,7 @@ function openA11yModal(category, options) {
   _renderA11yModalDscComponentName('a11y-modal-dsc-component-name', dscComponentName, a11yOrigin);
 
   const title = document.getElementById('a11y-modal-title-text');
-  if (title) title.textContent = A11Y_MODAL_TITLE[category] || 'Especificação de Acessibilidade';
+  if (title) title.textContent = getA11yCategoryLabel(category, a11yOrigin) || 'Especificação de Acessibilidade';
 
   const titleIconWrap = document.getElementById('a11y-modal-title-icon');
   if (titleIconWrap) {
@@ -2765,7 +2930,7 @@ function confirmA11ySpec() {
 
   const opts = {
     category: 'acessibilidade',
-    categoryLabel: meta.label,
+    categoryLabel: getA11yCategoryLabel(category, (modal && modal.dataset.a11yOrigin) || 'web'),
     letter,
     color: meta.color,
     fillColor: meta.fill,
@@ -2957,6 +3122,10 @@ window.confirmA11ySpec = confirmA11ySpec;
 // normal (o bucket "Sem área" só acolhe dado legado/órfão).
 function _a11ySpecItemHtml(spec) {
   const meta = A11Y_CATEGORIES[spec.a11yType] || { label: 'Acessibilidade', icon: 'accessibility' };
+  // Label por ORIGEM DA PRÓPRIA SPEC (spec.a11yOrigin), não a lib atualmente
+  // selecionada no projeto — uma spec 'titulo' criada em contexto mobile
+  // continua rotulada "Títulos" mesmo que o designer troque a lib depois.
+  const categoryLabel = spec.a11yType ? (getA11yCategoryLabel(spec.a11yType, spec.a11yOrigin) || meta.label) : meta.label;
   const color = spec.color || meta.color || '#0891B2';
   const fill = spec.fillColor || meta.fill || '#E0F5FA';
   const props = spec.properties || [];
@@ -2966,7 +3135,7 @@ function _a11ySpecItemHtml(spec) {
   const dscComponentLabel = spec.a11yDscComponentName ? _cleanDscContainingFrameName(spec.a11yDscComponentName) : null;
 
   const searchText = _normalizeSearchText(
-    [spec.letter, spec.targetNodeName, spec.name, meta.label, spec.a11yType, spec.a11ySourceLib?.label, dscComponentLabel]
+    [spec.letter, spec.targetNodeName, spec.name, categoryLabel, spec.a11yType, spec.a11ySourceLib?.label, dscComponentLabel]
       .concat(props.flatMap(p => [p.label, p.value]))
       .filter(Boolean)
       .join(' ')
@@ -2981,7 +3150,7 @@ function _a11ySpecItemHtml(spec) {
           <p class="text-dsc-label-tiny normal-case tracking-normal font-semibold text-slate-700 dark:text-white truncate">${escapeHtml(spec.targetNodeName || spec.name || 'Elemento')}</p>
           <div class="flex items-center flex-wrap gap-dsc-quark mt-0.5">
             <span class="inline-flex items-center gap-dsc-quark px-1.5 py-0.5 rounded-dsc-circ border text-dsc-label-tiny normal-case tracking-normal font-bold" style="background-color:${fill};border-color:${color};color:${color};">
-              <i data-lucide="${meta.icon}" class="w-2.5 h-2.5"></i> ${meta.label}
+              <i data-lucide="${meta.icon}" class="w-2.5 h-2.5"></i> ${escapeHtml(categoryLabel)}
             </span>
             ${spec.a11ySourceLib ? `
             <span class="inline-flex items-center px-1.5 py-0.5 rounded-dsc-circ border text-dsc-label-tiny normal-case tracking-normal font-medium bg-slate-50 dark:bg-dark-bg/60 border-slate-200 dark:border-dark-line text-slate-500 dark:text-dark-muted">
@@ -3071,16 +3240,20 @@ window.toggleA11yAreaAccordion = toggleA11yAreaAccordion;
 window._a11yExpandedTabOrderIds = window._a11yExpandedTabOrderIds || new Set();
 
 // Ação em massa disparada pelos botões "Expandir todos"/"Recolher todos"
-// dentro de UMA área (nunca afeta outras áreas). `btn` é o próprio elemento
-// clicado — sobe até o accordion-content da ÁREA (que contém os
-// subaccordions de categoria + Ordem de Tabulação) via closest(), depois
-// localiza cada `.accordion-content` filho nesse escopo. Sincroniza os dois
-// Sets de estado pra um toggle individual posterior não reabrir/fechar algo
-// que a ação em massa acabou de definir.
+// dentro da aba "Leitor de Tela" da workspace de UMA área (nunca afeta
+// outras áreas/abas). `btn` é o próprio elemento clicado — sobe até
+// #a11y-workspace-tab-content (bug real corrigido 2026-09-16: antes subia
+// até `.accordion-content`, herdado de uma versão anterior da UI —
+// listagem em accordion, pré-reforma pra workspace por abas — que não
+// existe mais nesse contexto; closest() sempre retornava null e a função
+// saía sem fazer nada, então os botões nunca funcionavam dentro da
+// workspace), depois localiza cada `.accordion-content` filho nesse
+// escopo. Sincroniza os dois Sets de estado pra um toggle individual
+// posterior não reabrir/fechar algo que a ação em massa acabou de definir.
 function _a11ySetAllSubaccordions(btn, expand) {
-  const areaBody = btn.closest('.accordion-content');
+  const areaBody = btn.closest('#a11y-workspace-tab-content') || btn.closest('.accordion-content');
   if (!areaBody) return;
-  areaBody.querySelectorAll(':scope > .accordion-content, :scope > div > .accordion-content').forEach(body => {
+  areaBody.querySelectorAll('.accordion-content').forEach(body => {
     body.classList.toggle('hidden', !expand);
     const idSuffix = body.id.replace(/^(body-|tab-order-body-|undoc-body-)/, '');
     const chevronPrefix = body.id.startsWith('tab-order-body-') ? 'tab-order-chevron-'
@@ -3123,6 +3296,11 @@ window.toggleA11yCategoryAccordion = toggleA11yCategoryAccordion;
 
 function _a11yCategoryAccordionEl(uid, catKey, catSpecs) {
   const meta = A11Y_CATEGORIES[catKey] || { label: _capitalizeFirst(catKey), icon: 'accessibility', color: '#0891B2', fill: '#E0F5FA' };
+  // Origem pela PRIMEIRA spec do grupo — todas as specs de uma mesma
+  // área/categoria compartilham a mesma origem (a área inteira pertence a
+  // uma única lib), então basta uma amostra em vez de recalcular por item.
+  const groupOrigin = (catSpecs && catSpecs[0] && catSpecs[0].a11yOrigin) || null;
+  const categoryLabel = getA11yCategoryLabel(catKey, groupOrigin) || meta.label;
   const expand = window._a11yExpandedCategoryIds.has(uid);
   return `
     <div class="rounded-dsc-small border border-gray-100 dark:border-dark-line overflow-hidden ml-1 bg-white dark:bg-dark-surface" data-a11y-subcat="${escapeHtml(catKey)}">
@@ -3131,7 +3309,7 @@ function _a11yCategoryAccordionEl(uid, catKey, catSpecs) {
         <div class="w-4.5 h-4.5 rounded-dsc-circ flex items-center justify-center shrink-0" style="background-color:${meta.fill}">
           <i data-lucide="${meta.icon}" class="w-2.5 h-2.5" style="color:${meta.color}"></i>
         </div>
-        <p class="flex-1 min-w-0 text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-600 dark:text-dark-muted truncate">${escapeHtml(meta.label)} (${catSpecs.length})</p>
+        <p class="flex-1 min-w-0 text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-600 dark:text-dark-muted truncate">${escapeHtml(categoryLabel)} (${catSpecs.length})</p>
         <i data-lucide="chevron-down" id="chevron-${uid}" class="w-3.5 h-3.5 text-gray-400 transition-transform shrink-0" style="transform:${expand ? 'rotate(180deg)' : 'rotate(0deg)'}"></i>
       </div>
       <div id="body-${uid}" class="accordion-content ${expand ? '' : 'hidden'} border-t border-gray-100 dark:border-dark-line p-1.5 space-y-1.5">
@@ -3271,12 +3449,41 @@ function _a11yWorkspaceTabTabulacao(area) {
   // já documentados à mão). Mesmo critério usado por
   // _renderTabOrderListForArea pra saber se a área já tem itens.
   const hasManualItems = typeof _currentTabOrderItems === 'function' && _currentTabOrderItems(area.id).length > 0;
+  // "Atualizar" só aparece quando existe de fato uma renumeração pendente
+  // pra empurrar pro canvas (2026-09-16, ajuste de escopo — o botão ficava
+  // sempre visível mesmo sem nenhuma mudança, e clicar nesse estado só
+  // mostrava o toast "A ordem já está atualizada no canvas", uma ação sem
+  // efeito nenhum). Mesmo critério de comparação já usado dentro de
+  // updateTabOrderNumbering (tab-order.js): compara `number` (ordem em
+  // memória) com `canvasNumber` (último valor de fato desenhado) —
+  // reordenar a lista (drag-and-drop) é o que desalinha os dois.
+  const needsCanvasSync = hasManualItems && _currentTabOrderItems(area.id).some(it => it.id && it.number !== it.canvasNumber);
   return `
     <div class="space-y-2 flex flex-col flex-1">
-      <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-relaxed">
-        Documente a sequência de ordem por tabulação (Tecla Tab) da interface, segure o Shift e vá clicando para selecionar os elementos acionáveis (Links, Buttons e Campos de Texto) um por um e confirme no final para selecionar tudo de uma vez.
-      </p>
-      <div class="flex items-center gap-dsc-nano">
+      <!-- Texto instrucional (introdução + passos) NUNCA mais fica inline
+           na aba (2026-09-16, correção de escopo pedida pelo usuário — o
+           parágrafo fixo que existia aqui era, na verdade, cópia do texto
+           de Tabulação vazado também na aba Swipe, ver comentário completo
+           em _a11yWorkspaceTabSwipe). Ele vive só na modal de ajuda
+           (a11y-instruction-modal, modals.html), aberta sob demanda por
+           este botão — mesmo conteúdo de ficha-instruction-content.json.tabulacao.
+           Usa openA11yInstructionThenStart (não openA11yInstructionManually):
+           bug real corrigido (2026-09-16) — os dois botões ("Instruções
+           sobre esta documentação" aqui e "Iniciar Ordem de Tabulação" logo
+           abaixo) abrem visualmente o MESMO modal, com o MESMO botão
+           "Entendi, começar seleção"; usar openA11yInstructionManually aqui
+           fazia esse botão comum fechar o modal SEM iniciar a captura,
+           porque só openA11yInstructionThenStart seta o callback que
+           _confirmA11yInstructionModal executa. Reportado pelo usuário como
+           "clico em Entendi e não inicia nada" — ele estava entrando pelo
+           botão de instruções, não pelo de iniciar, e os dois precisam se
+           comportar igual já que abrem a mesma UI. -->
+      <button type="button" onclick="openA11yInstructionThenStart('tabulacao', '${escapeHtml(areaIdAttr)}', '${escapeHtml(area.targetNodeId || '')}')"
+        class="w-full flex items-center justify-center gap-1.5 h-7 rounded-dsc-small text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-500 dark:text-dark-muted bg-slate-50 dark:bg-dark-surface hover:bg-slate-100 dark:hover:bg-dark-line/40 active:scale-[0.99] transition-all">
+        <i data-lucide="circle-help" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i>
+        Instruções sobre esta documentação
+      </button>
+      <div class="flex items-center gap-dsc-nano${hasManualItems ? '' : ' justify-center'}">
         ${hasManualItems ? `
         <!-- Área já documentada (manual ou Mapeamento Automático,
              2026-09-04-aj, pedido do usuário): não faz sentido "Iniciar"
@@ -3289,8 +3496,17 @@ function _a11yWorkspaceTabTabulacao(area) {
           <i data-lucide="plus" class="w-3.5 h-3.5" aria-hidden="true"></i>
           Adicionar itens
         </button>` : `
-        <button type="button" onclick="startTabOrderManualMode('${escapeHtml(areaIdAttr)}', '${escapeHtml(area.targetNodeId || '')}')"
-          class="flex-1 flex items-center justify-center gap-dsc-nano h-9 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
+        <!-- Centralizado (2026-09-16, pedido do usuário) em vez de
+             flex-1/largura total: sem nenhuma ordem documentada ainda, este
+             é o único botão da linha (a lixeira "Apagar tudo" só existe com
+             hasManualItems) — largura intrínseca + wrapper com
+             justify-center, mesmo princípio do empty-state "Nenhuma tela
+             selecionada" (ícone/texto/botão centralizados), sem repetir a
+             estrutura inteira daquele empty-state por não haver espaço
+             vertical sobrando aqui (a aba já mostra o botão de ajuda acima
+             e a lista, vazia, logo abaixo). -->
+        <button type="button" onclick="openA11yInstructionThenStart('tabulacao', '${escapeHtml(areaIdAttr)}', '${escapeHtml(area.targetNodeId || '')}')"
+          class="flex items-center justify-center gap-dsc-nano h-9 px-5 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
           <i data-lucide="list-ordered" class="w-3.5 h-3.5" aria-hidden="true"></i>
           Iniciar Ordem de Tabulação
         </button>`}
@@ -3351,11 +3567,23 @@ function _a11yWorkspaceTabTabulacao(area) {
           <option value="2.5">2.5x</option>
         </select>
       </div>` : ''}
-      <button type="button" onclick="updateTabOrderNumbering('${escapeHtml(areaIdAttr)}')"
-        class="w-full flex items-center justify-center gap-dsc-nano h-8 mt-1 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm hover:shadow transition-all">
+      ${hasManualItems ? `
+      <!-- "Atualizar" (2026-09-16, ajuste de escopo): antes ficava sempre
+           habilitado mesmo sem nenhuma renumeração pendente — clicar nesse
+           estado só mostrava o toast "A ordem já está atualizada no
+           canvas", uma ação sem efeito nenhum. Agora nasce desabilitado
+           quando needsCanvasSync é false. Reordenar (drag-and-drop,
+           _tabOrderDrop) e apagar um item (deleteTabOrderItem) não
+           re-renderizam a tab inteira (só o <ul> escopado, ver
+           _renderTabOrderListForArea) — _tabOrderSyncUpdateButton
+           (tab-order.js) reavalia e reativa/desativa este botão pelo id
+           logo depois de cada uma dessas duas ações, sem precisar de um
+           re-render pesado da tab inteira. -->
+      <button type="button" id="tab-order-update-btn-${uid}" onclick="updateTabOrderNumbering('${escapeHtml(areaIdAttr)}')" ${needsCanvasSync ? '' : 'disabled'}
+        class="w-full flex items-center justify-center gap-dsc-nano h-8 mt-1 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm hover:shadow transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-sm">
         <i data-lucide="refresh-cw" class="w-3.5 h-3.5" aria-hidden="true"></i>
         Atualizar
-      </button>
+      </button>` : ''}
       ${typeof _fichaInsertButtonHtml === 'function' ? _fichaInsertButtonHtml(area, 'tabulacao', hasManualItems) : ''}
     </div>
   `;
@@ -3396,9 +3624,27 @@ function _a11yWorkspaceTabSwipe(area) {
 
   return `
     <div class="space-y-2 flex flex-col flex-1">
-      <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-relaxed">
-        Documente a sequência de ordem por tabulação (Tecla Tab) da interface, segure o Shift e vá clicando para selecionar os elementos acionáveis (Links, Buttons e Campos de Texto) um por um e confirme no final para selecionar tudo de uma vez.
-      </p>
+      <!-- Texto instrucional (introdução + passos) NUNCA mais fica inline
+           na aba (2026-09-16, correção de escopo pedida pelo usuário) — o
+           parágrafo fixo que existia aqui já tinha sido reescrito uma vez
+           pra falar de Swipe em vez de reusar o texto de Tabulação, mas o
+           bug real não era só o CONTEÚDO errado: era existir inline aqui,
+           sempre visível, em vez de só na modal de ajuda sob demanda,
+           mesmo princípio já aplicado à Ordem de Tabulação (ver comentário
+           completo em _a11yWorkspaceTabTabulacao). Ele vive só na modal
+           a11y-instruction-modal (modals.html), aberta sob demanda por
+           este botão, com o conteúdo CORRETO de
+           ficha-instruction-content.json.swipe. Usa
+           openA11yInstructionThenStart (não openA11yInstructionManually):
+           mesmo bug real corrigido em _a11yWorkspaceTabTabulacao (2026-09-16)
+           — este botão e "Iniciar/Refazer trilha de ordem de leitura" abrem
+           o MESMO modal com o MESMO botão "Entendi, começar seleção", então
+           os dois precisam iniciar a captura de fato ao confirmar. -->
+      <button type="button" onclick="openA11yInstructionThenStart('swipe', '${escapeHtml(areaIdAttr)}', '${escapeHtml(targetNodeIdAttr)}')"
+        class="w-full flex items-center justify-center gap-1.5 h-7 rounded-dsc-small text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-500 dark:text-dark-muted bg-slate-50 dark:bg-dark-surface hover:bg-slate-100 dark:hover:bg-dark-line/40 active:scale-[0.99] transition-all">
+        <i data-lucide="circle-help" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i>
+        Instruções sobre esta documentação
+      </button>
       ${existingPath ? `
       <div class="flex items-center gap-dsc-nano px-dsc-micro py-dsc-nano rounded-dsc-medium bg-cyan-50 dark:bg-cyan-900/10 border border-cyan-100 dark:border-cyan-900/30">
         <i data-lucide="route" class="w-3.5 h-3.5 text-cyan-700 dark:text-cyan-400 shrink-0" aria-hidden="true"></i>
@@ -3424,7 +3670,7 @@ function _a11yWorkspaceTabSwipe(area) {
         <i data-lucide="plus" class="w-3.5 h-3.5" aria-hidden="true"></i>
         Adicionar ponto
       </button>` : ''}
-      <button type="button" onclick="startSwipePathManualMode('${escapeHtml(areaIdAttr)}', '${escapeHtml(targetNodeIdAttr)}')"
+      <button type="button" onclick="openA11yInstructionThenStart('swipe', '${escapeHtml(areaIdAttr)}', '${escapeHtml(targetNodeIdAttr)}')"
         class="w-full flex items-center justify-center gap-dsc-nano h-9 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
         <i data-lucide="route" class="w-3.5 h-3.5" aria-hidden="true"></i>
         ${startLabel}
@@ -3744,7 +3990,17 @@ window.deleteA11yAreaFromCard = deleteA11yAreaFromCard;
 // A11Y_CATEGORIES nem a areaSpecs, então o resumo precisa chegar pronto.
 function _a11yComputeCategoryBreakdown(areaSpecs) {
   return Object.keys(A11Y_CATEGORIES)
-    .map(catKey => ({ catKey, meta: A11Y_CATEGORIES[catKey], count: (areaSpecs || []).filter(s => s.a11yType === catKey).length }))
+    .map(catKey => {
+      const specsInCat = (areaSpecs || []).filter(s => s.a11yType === catKey);
+      // Origem pela primeira spec do subgrupo (mesma premissa de
+      // _a11yCategoryAccordionEl: specs da mesma área/categoria compartilham
+      // origem) — resolve "Nível de Título" vs "Títulos" aqui, uma vez só,
+      // pra handoff-ficha.js (sem acesso a A11Y_CATEGORIES) reaproveitar
+      // via categoryLabel já pronto, sem duplicar a lógica de origem lá.
+      const groupOrigin = (specsInCat[0] && specsInCat[0].a11yOrigin) || null;
+      const meta = A11Y_CATEGORIES[catKey];
+      return { catKey, meta, categoryLabel: getA11yCategoryLabel(catKey, groupOrigin) || (meta && meta.label), count: specsInCat.length };
+    })
     .filter(({ count }) => count > 0);
 }
 window._a11yComputeCategoryBreakdown = _a11yComputeCategoryBreakdown;
@@ -3768,9 +4024,9 @@ function _a11yAreaAccordionEl(area, areaSpecs) {
 
   const categoryBreakdownData = _a11yComputeCategoryBreakdown(areaSpecs);
   const categoryBreakdown = categoryBreakdownData
-    .map(({ meta, count }) => `
+    .map(({ meta, categoryLabel, count }) => `
       <span class="inline-flex items-center gap-dsc-quark h-5 px-2 rounded-dsc-circ text-dsc-label-tiny normal-case tracking-normal font-bold" style="background-color:${meta.fill};color:${meta.color}">
-        ${count} ${escapeHtml(meta.label)}
+        ${count} ${escapeHtml(categoryLabel || meta.label)}
       </span>
     `).join('');
 
@@ -4229,11 +4485,39 @@ window.chooseA11yHomeOrigin = chooseA11yHomeOrigin;
 // ETAPA 1b (sub-escolha de lib web) — nunca as duas ao mesmo tempo. A
 // antiga ETAPA 2 (resumo do fluxo + "Voltar"/"Começar") foi removida
 // (2026-09-08): escolher a lib agora navega direto pra view-specifications
-// (ver chooseA11yHomeOrigin), então a Home sempre volta a mostrar a Etapa 1
-// quando revisitada — nunca mais existe uma "escolha já feita" pra pular
-// pra outra etapa aqui. Chamado ao entrar na Home e também por
+// (ver chooseA11yHomeOrigin). Chamado ao entrar na Home e também por
 // openA11yProjectOriginPrompt ("Sobre o hac" → Trocar), que precisa forçar
 // a Etapa 1 de volta mesmo com hacData.projectOrigin já preenchido.
+//
+// Renderiza SEMPRE a Etapa 1 quando chamada — a decisão de "pular" essa
+// função inteira quando a origem já está definida e a navegação não é um
+// pedido explícito de troca (2026-09-16, reversão seletiva do "Home sempre
+// reexibe a Etapa 1" de 2026-09-08) vive em navigate() (core.js), não
+// aqui, DE PROPÓSITO: esta função também é chamada por
+// _refreshUiForProjectOrigin (toda vez que a plataforma muda, de qualquer
+// view) e no boot (messages.js, antes de qualquer navigate() rodar) —
+// nesses dois casos ela só precisa atualizar/preencher o DOM da Home nos
+// bastidores, nunca navegar pra outra view por conta própria. Só
+// navigate('view-home') (o botão "Voltar", especificamente) deve decidir
+// se pula a Etapa 1 — ver comentário em core.js.
+//
+// NÃO chama mais _resetA11yProjectOriginIfNothingDocumented() aqui (bug
+// real corrigido em 2026-09-16, mesmo dia): esta função é chamada por
+// _refreshUiForProjectOrigin, que por sua vez é chamada de DENTRO do
+// próprio setA11yProjectOrigin — ou seja, ao escolher a lib pela primeira
+// vez (chooseA11yHomeOrigin), a sequência era: hacData.projectOrigin =
+// 'web' → saveToStorage() → _refreshUiForProjectOrigin() →
+// _renderA11yHomeOriginPicker() → _resetA11yProjectOriginIfNothingDocumented()
+// via aqui, que via os 4 arrays ainda vazios (nenhuma Área/Spec/Tabulação/
+// Swipe existe — é literalmente a escolha inicial) e zerava
+// hacData.projectOrigin de volta pra null NO MESMO INSTANTE em que acabara
+// de ser definido. O picker "Plataforma do Projeto" reabria ao tentar
+// Marcar Área logo em seguida, porque ensureA11yProjectOriginThen lia null.
+// O reset por "nada documentado" agora roda uma única vez, no BOOT (ver
+// messages.js, handler 'init-plugin', antes desta função ser chamada pela
+// primeira vez) — nunca mais durante o uso normal da sessão atual, onde
+// uma escolha recém-feita pelo usuário é sempre válida mesmo sem nenhum
+// dado documentado ainda.
 function _renderA11yHomeOriginPicker() {
   const step1 = document.getElementById('a11y-home-step-origin');
   const stepWebSublib = document.getElementById('a11y-home-step-web-sublib');
@@ -4245,6 +4529,28 @@ function _renderA11yHomeOriginPicker() {
   if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
 }
 window._renderA11yHomeOriginPicker = _renderA11yHomeOriginPicker;
+
+// Critério de "nada real documentado ainda" pra decisão acima: nenhuma
+// Área Marcada, nenhuma spec de categoria, nenhum item de Ordem de
+// Tabulação e nenhuma Trilha de Swipe. Qualquer um presente significa que
+// o designer já está "dentro" do fluxo daquela plataforma, mesmo que
+// ainda não tenha documentado nenhum elemento — nesse caso a origem NÃO é
+// zerada, mesmo com a Home sendo reexibida (ex.: botão "Voltar" a partir
+// de view-specifications). Só zera de fato quando os 4 arrays estão
+// vazios — arquivo genuinamente "em branco" do ponto de vista de a11y.
+function _resetA11yProjectOriginIfNothingDocumented() {
+  if (!hacData || !hacData.projectOrigin) return;
+  const hasAreas = Array.isArray(a11yAreas) && a11yAreas.length > 0;
+  const hasSpecs = Array.isArray(a11ySpecs) && a11ySpecs.length > 0;
+  const hasTabOrder = Array.isArray(tabOrderItems) && tabOrderItems.length > 0;
+  const hasSwipePaths = Array.isArray(hacData.a11ySwipePaths) && hacData.a11ySwipePaths.length > 0;
+  if (hasAreas || hasSpecs || hasTabOrder || hasSwipePaths) return;
+
+  hacData.projectOrigin = null;
+  hacData.projectLib = null;
+  if (typeof saveToStorage === 'function') saveToStorage();
+}
+window._resetA11yProjectOriginIfNothingDocumented = _resetA11yProjectOriginIfNothingDocumented;
 
 // Avança da Etapa 1 (Web/Mobile) pra Etapa 1b (sub-escolha de lib web) —
 // Mobile não passa por aqui, resolve direto em chooseA11yHomeOrigin('super-app')
@@ -4389,15 +4695,101 @@ window.ensureA11yProjectOriginThen = ensureA11yProjectOriginThen;
 // única forma de mudar hacData.projectLib/projectOrigin depois de já
 // definido. Em vez de um modal pequeno com 2 botões fixos (Web/Mobile),
 // redireciona pra Home, que já tem a escolha real de 3 libs (Etapa 1) —
-// evita duplicar essa UI em dois lugares. Força a Etapa 1 aparecer mesmo
-// com projectLib/projectOrigin já definidos (senão a Home mostraria direto
-// a Etapa 2, já que "escolha feita" é o estado padrão dela).
+// evita duplicar essa UI em dois lugares. Seta
+// window._a11yForceHomeOriginStep = true ANTES de navegar — é a flag que
+// navigate('view-home') (core.js) lê para diferenciar este pedido
+// EXPLÍCITO de troca do botão genérico "Voltar para a página inicial"
+// (specifications.html) de um clique comum. Diferente de confirmBackToHome
+// logo abaixo, este é um pedido explícito de trocar ("Trocar" na modal
+// "Sobre o hac") — vai direto pra Etapa 1 sem perguntar de novo, pois
+// perguntar "deseja trocar?" depois de já ter clicado em "Trocar" seria
+// redundante.
 function openA11yProjectOriginPrompt() {
   if (typeof closeModal === 'function') closeModal('about-hac-modal');
   window._a11yForceHomeOriginStep = true;
   if (typeof navigate === 'function') navigate('view-home');
 }
 window.openA11yProjectOriginPrompt = openA11yProjectOriginPrompt;
+
+// Botão genérico "Voltar para a página inicial" (specifications.html) —
+// 2026-09-16, 2ª iteração da mesma sessão. A 1ª correção (ver comentário em
+// openA11yProjectOriginPrompt acima) fez "Voltar" pular direto pra
+// view-specifications sem perguntar nada quando já havia plataforma
+// escolhida; o usuário testou e pediu uma 3ª opção: nem "sempre volta pra
+// Home" (comportamento original, perdia contexto sem aviso) nem "nunca
+// pergunta" (o skip silencioso da 1ª correção) — em vez disso, SEMPRE
+// intercepta com uma confirmação quando já há plataforma escolhida, e só
+// navega de fato pro picker (Etapa 1) se o usuário confirmar. Reaproveita o
+// modal de confirmação genérico #a11y-confirm-modal (modals.html) em vez de
+// criar um modal dedicado — ver openA11yConfirmModal abaixo.
+//
+// Se hacData.projectOrigin ainda não está definido (arquivo "em branco"; na
+// prática este botão só existe dentro de view-specifications, que hoje só é
+// alcançável depois de escolher plataforma na Home — mas sem essa guarda um
+// arquivo legado/estado intermediário cairia num diálogo sem sentido
+// perguntando "deseja trocar" de algo que nunca foi escolhido), navega
+// direto sem perguntar — não há nada a "trocar" ainda.
+function confirmBackToHome() {
+  if (typeof hacData === 'undefined' || !hacData || !hacData.projectOrigin) {
+    if (typeof navigate === 'function') navigate('view-home');
+    return;
+  }
+  openA11yConfirmModal({
+    title: 'Deseja trocar de plataforma?',
+    body: 'Voltar para a página inicial abre novamente a escolha entre Web e Mobile. O trabalho já documentado neste arquivo é mantido.',
+    confirmLabel: 'Trocar plataforma',
+    cancelLabel: 'Cancelar',
+    onConfirm: () => {
+      window._a11yForceHomeOriginStep = true;
+      if (typeof navigate === 'function') navigate('view-home');
+    }
+  });
+}
+window.confirmBackToHome = confirmBackToHome;
+
+// Modal de confirmação GENÉRICO (sim/não) — #a11y-confirm-modal (modals.html).
+// Reutilizável por qualquer fluxo futuro que precise de uma pausa de
+// confirmação antes de agir (hoje só confirmBackToHome usa). Callback fica
+// em window._a11yConfirmModalOnConfirm porque onclick inline no HTML não
+// consegue receber uma função como argumento; é one-shot, sempre limpo ao
+// fechar (_closeA11yConfirmModal) pra não vazar pro próximo uso do modal.
+function openA11yConfirmModal(opts) {
+  const o = opts || {};
+  const titleEl = document.getElementById('a11y-confirm-modal-title-text');
+  const bodyEl = document.getElementById('a11y-confirm-modal-body');
+  const confirmBtn = document.getElementById('a11y-confirm-modal-confirm-btn');
+  const cancelBtn = document.getElementById('a11y-confirm-modal-cancel-btn');
+  if (titleEl) titleEl.textContent = o.title || 'Confirmar ação';
+  if (bodyEl) bodyEl.textContent = o.body || '';
+  if (confirmBtn) confirmBtn.textContent = o.confirmLabel || 'Confirmar';
+  if (cancelBtn) cancelBtn.textContent = o.cancelLabel || 'Cancelar';
+  window._a11yConfirmModalOnConfirm = typeof o.onConfirm === 'function' ? o.onConfirm : null;
+  if (typeof openModal === 'function') openModal('a11y-confirm-modal');
+  if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
+}
+window.openA11yConfirmModal = openA11yConfirmModal;
+
+// Botão "Confirmar" do #a11y-confirm-modal — dispara o callback guardado e
+// fecha. Fechar ANTES de chamar onConfirm (em vez de depois) porque
+// callbacks como o de confirmBackToHome chamam navigate(), que já teria que
+// lidar com o modal de confirmação ainda visível por cima da view nova.
+function _confirmA11yConfirmModal() {
+  const cb = window._a11yConfirmModalOnConfirm;
+  window._a11yConfirmModalOnConfirm = null;
+  if (typeof closeModal === 'function') closeModal('a11y-confirm-modal');
+  if (typeof cb === 'function') cb();
+}
+window._confirmA11yConfirmModal = _confirmA11yConfirmModal;
+
+// Botão "Cancelar"/"X"/backdrop/Escape do #a11y-confirm-modal — fecha sem
+// fazer nada (nenhuma navegação, nenhum efeito colateral). Limpa o callback
+// pendente pra garantir que um Escape não deixe uma ação "presa" pro
+// próximo uso do modal.
+function _closeA11yConfirmModal() {
+  window._a11yConfirmModalOnConfirm = null;
+  if (typeof closeModal === 'function') closeModal('a11y-confirm-modal');
+}
+window._closeA11yConfirmModal = _closeA11yConfirmModal;
 
 // Abre a modal "Sobre o hac" (botão CAIXA|HAC no header) já preenchendo
 // #about-hac-project-origin com a plataforma atual do arquivo (ou "Não
@@ -4565,12 +4957,19 @@ function chooseA11yDetectionOrigin(origin) {
 }
 window.chooseA11yDetectionOrigin = chooseA11yDetectionOrigin;
 
-// Restaura o título/ícone padrão ("Detecção Automática") da modal
-// reaproveitada — chamado depois que openA11yProjectOriginPrompt (troca
-// manual via "Sobre o hac") troca temporariamente esse título.
+// Restaura o título/ícone padrão ("Processando") da modal reaproveitada —
+// chamado depois que openA11yProjectOriginPrompt (troca manual via "Sobre o
+// hac") troca temporariamente esse título. Nome genérico (2026-09-16, pedido
+// do usuário) porque este mesmo modal de loading é reaproveitado por vários
+// fluxos além da Detecção Automática (Ordem de Tabulação, Trilha de Swipe,
+// wizard de specs, salvamento manual) — "Detecção Automática" era enganoso
+// nesses outros contextos. O texto do estado "loading"
+// (#a11y-post-area-loading-text) já é customizado por chamada
+// (showA11yCanvasLoading) e continua descrevendo a ação real em curso; só o
+// título do dialog precisava generalizar.
 function _restoreA11yPostAreaModalTitle() {
   const originTitle = document.getElementById('a11y-post-area-title');
-  if (originTitle) originTitle.innerHTML = '<i data-lucide="radar" class="w-4 h-4 text-[#0070af]" aria-hidden="true"></i> Detecção Automática';
+  if (originTitle) originTitle.innerHTML = '<i data-lucide="radar" class="w-4 h-4 text-[#0070af]" aria-hidden="true"></i> Processando';
   if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
 }
 
@@ -5363,13 +5762,31 @@ function startA11yBatchWizard() {
   // réplica", mesmo timing que Tabulação já usa (start-tab-order-copy antes
   // de abrir a escuta de cliques). Sem isso, o botão "Focar" do wizard caía
   // no Frame Principal até a primeira spec ser de fato aplicada (ver
-  // handler start-spec-copy, code.js). Silencioso e best-effort: a área sem
-  // targetNodeId resolvível não deve travar o wizard, só perde o
-  // adiantamento (highlight-spec-copy-node ainda cria a réplica sob demanda
-  // dentro de create-unified-spec, como já fazia antes desta mudança).
+  // handler start-spec-copy, code.js).
+  //
+  // Bug real corrigido (2026-09-16, print do usuário: "hoje ele para o
+  // loading antes de criar a estrutura do Leitor de Tela"): até aqui esta
+  // função disparava 'start-spec-copy' e IGNORAVA a resposta (ver comentário
+  // antigo em messages.js, "o wizard dispara e ignora") — _advanceA11yBatchWizard
+  // já abria o formulário do primeiro item em seguida, sem nenhum loading
+  // visível cobrindo a clonagem da réplica (_createSpecCloneForArea, code.js
+  // — clone do frame inteiro + rebuild do mapa de nós + reposicionamento +
+  // legenda, pode levar segundos em telas grandes). O modal de "Detectando
+  // componentes…" já tinha fechado corretamente ao fim do scan (ver
+  // handleA11yPostAreaDetectionResult) — faltava reabri-lo pra esta etapa
+  // seguinte, exatamente como o fluxo manual "+ Nova spec" já faz
+  // (_openA11yCategoryPickerModalAfterInstruction, showA11yCanvasLoading +
+  // 'Preparando a réplica de trabalho…'). Agora o wizard só abre o primeiro
+  // item depois que 'spec-copy-started' confirma (ver
+  // window._a11yBatchWizardCopyPendingAreaId, messages.js) — best-effort
+  // preservado: área sem targetNodeId resolvível segue direto, sem loading.
   const area = _findA11yAreaById(areaId);
   if (area && area.targetNodeId) {
+    window._a11yBatchWizardCopyPendingAreaId = areaId;
+    if (typeof showA11yCanvasLoading === 'function') showA11yCanvasLoading('Preparando a réplica de trabalho…');
     parent.postMessage({ pluginMessage: { type: 'start-spec-copy', areaId, targetNodeId: area.targetNodeId, sectionName: getA11yActiveSectionName(), designerName: getA11yDesignerName(), designerId: getA11yDesignerId() } }, '*');
+    closeA11yBatchSummaryModal();
+    return;
   }
 
   closeA11yBatchSummaryModal();
@@ -6123,6 +6540,10 @@ function _applyA11yCategoriesHelpOriginFilter() {
     const block = document.getElementById('a11y-categories-help-' + category);
     if (block) block.classList.toggle('hidden', mobileOnly);
   });
+  // Mesma correção de nome do picker (_applyA11yCategoryPickerOriginFilter):
+  // "Nível de Título" (web) / "Títulos" (mobile).
+  const tituloLabelEl = document.getElementById('a11y-categories-help-titulo-label');
+  if (tituloLabelEl) tituloLabelEl.textContent = getA11yCategoryLabel('titulo');
   // "Nível de título" e "Elementos interativos e imagens" continuam visíveis
   // nas duas plataformas, mas com um parágrafo de explicação DIFERENTE por
   // origem (data-a11y-help-origin="web"/"mobile") — nunca os dois ao mesmo

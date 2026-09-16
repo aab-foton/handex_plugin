@@ -4664,6 +4664,18 @@ export async function _buildFichaLegendColumn(richContent, fallbackTitle, fallba
 // legenda diferentes, cada uma modularizada na sua função. O conteúdo de
 // steps/assets permanece intacto em ficha-instruction-content.json (nada
 // apagado da fonte), só não é mais desenhado por este caminho.
+//
+// Revisão 2026-09-16 (pedido do usuário): o texto de instrução (heading +
+// parágrafo de "instructionsBody") TAMBÉM deixou de ser desenhado na Ficha
+// para Tabulação/Swipe — esse texto agora vive só na modal/aba do plugin
+// (_renderA11yInstructionContent, tab-order.js; A11Y_CAPTURE_BAR_
+// INSTRUCTION_IDS, core.js), nunca no documento final entregue ao dev, que
+// já teria o texto duplicado com o card de instrução da própria barra de
+// captura. A legenda aqui passa a desenhar SÓ o título (mesmo card
+// cinza/260px de sempre, pra não alterar o layout HORIZONTAL de
+// "[HAC] Instruções de {Func}" nem o dimensionamento medido do bloco pai) —
+// o texto explicativo completo (fallback sem richContent) permanece
+// intacto, é usado por qualquer chamador futuro sem título rico configurado.
 export async function _buildFichaInstructionOnlyLegendColumn(richContent, fallbackTitle, fallbackDescription) {
   const hasRichContent = !!(richContent && richContent.title);
 
@@ -4708,28 +4720,8 @@ export async function _buildFichaInstructionOnlyLegendColumn(richContent, fallba
     return col;
   }
 
-  if (richContent.instructionsHeading) {
-    const heading = figma.createText();
-    heading.name = 'Subtítulo';
-    heading.textAutoResize = 'HEIGHT';
-    await _applyFichaTypography(heading, 'label/tiny', 500);
-    heading.characters = richContent.instructionsHeading;
-    heading.fills = [{ type: 'SOLID', color: { r: 0.1, g: 0.1, b: 0.1 } }];
-    col.appendChild(heading);
-    heading.resizeWithoutConstraints(colInnerWidth, Math.max(1, Math.round(heading.height)));
-  }
-
-  if (richContent.instructionsBody) {
-    const paragraph = figma.createText();
-    paragraph.name = 'Parágrafo';
-    paragraph.textAutoResize = 'HEIGHT';
-    await _applyFichaTypography(paragraph, 'label/tiny', 400);
-    paragraph.characters = richContent.instructionsBody;
-    paragraph.fills = [{ type: 'SOLID', color: { r: 0.4, g: 0.4, b: 0.4 } }];
-    col.appendChild(paragraph);
-    paragraph.resizeWithoutConstraints(colInnerWidth, Math.max(1, Math.round(paragraph.height)));
-  }
-
+  // heading/instructionsBody NÃO são mais desenhados aqui (2026-09-16) — só
+  // o título acima. Ver comentário da função.
   return col;
 }
 

@@ -230,11 +230,11 @@ ${css}
       <h3 id="a11y-capture-bar-instructions-title" class="font-bold text-[13px] text-slate-800 dark:text-white flex items-center gap-1.5 mt-2">
         <i data-lucide="book-open-check" class="w-3.5 h-3.5 text-[#0891B2]" aria-hidden="true"></i> <span id="a11y-capture-bar-instructions-title-text">Ordem de Tabulação</span>
       </h3>
-      <div class="rounded-dsc-medium border border-gray-100 dark:border-dark-line p-3">
+      <div id="a11y-capture-bar-instructions-block" class="rounded-dsc-medium border border-gray-100 dark:border-dark-line p-3">
         <h4 id="a11y-capture-bar-instructions-heading" class="font-bold text-[11px] text-slate-800 dark:text-white mb-1.5">Instruções sobre o tipo de documentação</h4>
         <p id="a11y-capture-bar-instructions-body" class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed"></p>
       </div>
-      <div class="rounded-dsc-medium border border-gray-100 dark:border-dark-line p-3">
+      <div id="a11y-capture-bar-steps-block" class="rounded-dsc-medium border border-gray-100 dark:border-dark-line p-3">
         <h4 id="a11y-capture-bar-steps-heading" class="font-bold text-[11px] text-slate-800 dark:text-white mb-1.5">Como fazer</h4>
         <ol id="a11y-capture-bar-steps" class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed list-decimal list-inside space-y-2"></ol>
       </div>
