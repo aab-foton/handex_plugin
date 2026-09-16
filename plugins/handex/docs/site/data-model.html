@@ -328,8 +328,8 @@
   └── {base} / Interface                           ← card 3: tokens e componentes DSC</code></pre>
 <hr>
 <h3 id="42-secoes-internas">4.2 Seções internas</h3>
-<pre><code>[Seção | {tipo}] {titulo}</code></pre>
-<div class="table-wrap"><table><thead><tr><th>Meta <code>tipo</code></th><th>Conteúdo</th></tr></thead><tbody><tr><td><code>info</code></td><td>Informações básicas do projeto</td></tr><tr><td><code>equipe</code></td><td>Membros da equipe</td></tr><tr><td><code>regras</code></td><td>Regras de negócio e HUs</td></tr><tr><td><code>excecoes</code></td><td>Cenários de exceção</td></tr><tr><td><code>docs</code></td><td>Links de documentação</td></tr><tr><td><code>frames</code></td><td>Frames documentados</td></tr><tr><td><code>medidas</code></td><td>Medidas por frame</td></tr><tr><td><code>specs</code></td><td>Especificações por frame</td></tr><tr><td><code>fluxos</code></td><td>Fluxos de tela</td></tr><tr><td><code>briefing</code></td><td>Briefing estratégico</td></tr></tbody></table></div>
+<p>Nome real gravado pelo código (<code>_hdCreateSection</code>/<code>_hdBuildSectionShell</code>, <code>code.js</code>): <strong><code>[Seção] {titulo}</code></strong> — sem meta-tipo no nome (documentação anterior indicava <code>[Seção | {tipo}] {titulo}</code>, desatualizada em relação ao código; corrigido em 2026-09-15). A busca por subseção (usada pelo handler <code>insert-ficha-section</code>, ver 6.1) é feita pelo título literal, não por um tipo separado.</p>
+<div class="table-wrap"><table><thead><tr><th><code>{titulo}</code> usado hoje</th><th>Conteúdo</th></tr></thead><tbody><tr><td><code>Informações Básicas</code></td><td>Informações básicas do projeto</td></tr><tr><td><code>Equipe e Responsáveis</code></td><td>Membros da equipe</td></tr><tr><td><code>Regras de Negócio e HUs</code></td><td>Regras de negócio e HUs</td></tr><tr><td><code>Cenários de Exceção</code></td><td>Cenários de exceção</td></tr><tr><td><code>Documentação</code></td><td>Links de documentação</td></tr><tr><td><code>Frames Documentados</code></td><td>Frames documentados</td></tr><tr><td><code>Medidas</code></td><td>Medidas por frame</td></tr><tr><td><code>Especificações</code></td><td>Especificações por frame</td></tr><tr><td><code>Fluxos de Tela</code></td><td>Fluxos de tela</td></tr><tr><td><code>Briefing Estratégico</code></td><td>Briefing estratégico (card 2, fora de <code>content</code>)</td></tr></tbody></table></div>
 <hr>
 <h3 id="43-campos-de-dados">4.3 Campos de dados</h3>
 <pre><code>[Campo | {chave}] {rotulo}</code></pre>
@@ -347,8 +347,11 @@
 <hr>
 <h3 id="45-frames-documentados-dentro-da-ficha">4.5 Frames documentados (dentro da ficha)</h3>
 <pre><code>[Frame | {figmaId}] {nomeFrame}
-  ├── Badge         (FRAME, opcional) ← "Novo componente"
-  └── Auditoria     (FRAME, opcional) ← resultado DSC</code></pre>
+  ├── Badge                    (FRAME, opcional) ← "Novo componente"
+  ├── Auditoria                (FRAME, opcional) ← resultado DSC
+  ├── Snapshot com Specs       (FRAME, opcional) ← ver abaixo
+  └── Snapshot com Medidas     (FRAME, opcional) ← ver abaixo</code></pre>
+<p><strong>Snapshots visuais (2026-09-15):</strong> cada card de frame pode ganhar até 2 prévias PNG geradas na hora da geração/atualização da Ficha (<code>_hdSnapshotFrameWithNodes</code>, <code>code.js</code>): uma composição do frame original + os <code>specGroup</code>/<code>contour</code> de <code>frame.createdSpecs[]</code> (nas posições reais do canvas), outra do frame + os grupos de <code>frame.measurements[]</code>. Nunca inclui specs/medidas avulsas (<code>__loose__</code>) — só as explicitamente vinculadas àquele frame. Cada preview é um <code>FRAME</code> (label + <code>RECTANGLE</code> 432×243 com fill <code>IMAGE</code>); ausente quando o frame não tem specs/medidas vinculadas, ou quando o nó original/vinculado foi apagado do canvas manualmente (tolerado silenciosamente, sem quebrar a geração da Ficha). <strong>É conteúdo derivado do canvas no momento da geração — não é persistido em <code>handoffData</code>.</strong></p>
 <hr>
 <h3 id="46-medidas-dentro-da-ficha">4.6 Medidas (dentro da ficha)</h3>
 <pre><code>[Medidas | {figmaId}] {nomeFrame}          ← agrupador por frame
@@ -390,9 +393,9 @@
             └── Prop/{label}</code></pre>
 <hr>
 <h2 id="5-schema-de-persistencia-handoffdata">5. Schema de Persistência (<code>handoffData</code>)</h2>
-<p>Armazenado em <code>localStorage</code> via <code>saveToStorage()</code> / <code>saveSpecsToStorage()</code>. Versão atual: <code>_schemaVersion: 2</code></p>
+<p>Armazenado em <code>localStorage</code> via <code>saveToStorage()</code> / <code>saveSpecsToStorage()</code>. Versão atual: <code>_schemaVersion: 3</code></p>
 <pre><code class="lang-js">{
-  _schemaVersion: 2,
+  _schemaVersion: 3,
 
   // ── Card 1: Informações do Projeto ─────────────────────────────────
   step1: {
@@ -425,6 +428,17 @@
   // ── Metadados globais ───────────────────────────────────────────────
   currentUser: null | User,
   _fichaGenerated: boolean,
+  // Sincronização por subseção da Ficha (botão "Inserir [X] na Ficha" nas
+  // 4 telas, handler backend insert-ficha-section) -- paralelo a
+  // _fichaGenerated, mas por seção em vez de global. Ausente em dados
+  // salvos antes de _schemaVersion 3; todo ponto de leitura usa fallback
+  // (handoffData._fichaSections || {}).
+  _fichaSections: {
+    tokens:  { insertedAt: string | null, itemCount: number | null },
+    specs:   { insertedAt: string | null, itemCount: number | null },
+    medidas: { insertedAt: string | null, itemCount: number | null },
+    fluxos:  { insertedAt: string | null, itemCount: number | null }
+  },
   specs: Spec[],   // specs globais fora de frame
   specLinesVisible: Record&lt;string, boolean&gt;,  // estado de linhas/conectores ocultos por letra (grupo), specs globais
   docs: {
@@ -561,6 +575,15 @@
 [Briefing | 1] {pergunta}               ←→     step2.briefingQuestions[0]
 [Frame | abc123] Tela de Login          ←→     frames[i] (figmaId = abc123)</code></pre>
 <p><strong>Fonte de verdade para posicionamento:</strong> canvas (leitura via <code>absoluteBoundingBox</code>). <strong>Fonte de verdade para dados:</strong> localStorage (leitura via <code>getFrame</code>, <code>handoffData</code>).</p>
+<hr>
+<h3 id="61-insercao-incremental-por-subsecao-2026-09-15">6.1 Inserção incremental por subseção (2026-09-15)</h3>
+<p>Além do fluxo global "Gerar Ficha" (<code>create-handoff</code>, sempre remove e reconstrói a Ficha inteira), cada uma das 4 telas (Escanear Tokens, Anotar Specs, Anotar Medidas, Fluxos de Tela) tem um botão próprio <strong>"Inserir [X] na Ficha"</strong> (<code>insertSectionInFicha()</code>, <code>modules/handoff.js</code>) que sincroniza <strong>só a subseção correspondente</strong> no canvas, preservando as demais como estavam:</p>
+<pre><code>Botão "Inserir Tokens na Ficha"    → insert-ficha-section { section: 'tokens'  } → [Seção] Frames Documentados
+Botão "Inserir Specs na Ficha"     → insert-ficha-section { section: 'specs'   } → [Seção] Especificações
+Botão "Inserir Medidas na Ficha"   → insert-ficha-section { section: 'medidas' } → [Seção] Medidas
+Botão "Inserir Fluxos na Ficha"    → insert-ficha-section { section: 'fluxos'  } → [Seção] Fluxos de Tela</code></pre>
+<p>O handler (<code>code.js</code>) localiza a Ficha existente do projeto (<code>_hdFindExistingFicha</code>) e, dentro dela, o container <code>Handex | Content</code> (nome fixo, ver 4.1) — substitui só a subseção pedida no mesmo índice (<code>_hdReplaceSection</code>), reaproveitando as mesmas funções de montagem (<code>_hdRebuildFramesSection</code>/<code>_hdRebuildMeasuresSection</code>/<code>_hdRebuildSpecsSection</code>/<code>_hdRebuildFlowsSection</code>) usadas por <code>create-handoff</code> — nunca duplica a lógica de montagem entre os dois caminhos. Se a Ficha do projeto ainda não existe no canvas, o backend não cria uma versão parcial: devolve <code>ficha-section-needs-full-create</code> e o frontend dispara <code>createHandoffOnCanvas()</code> normalmente, que cria a Ficha completa (mesmo comportamento de sempre para "primeira geração").</p>
+<p>Diferente de <code>finalizeSection()</code> (confirmação leve, 100% local, nunca toca o canvas — continua existindo separada), o botão "Inserir [X] na Ficha" sincroniza de fato. Metadado de sincronização por seção: ver <code>_fichaSections</code> (seção 5).</p>
 <hr>
 <h2 id="7-roadmap-htmlsharepoint">7. Roadmap HTML/SharePoint</h2>
 <p>Cada entidade persistida tem campos suficientes para gerar um card HTML autônomo.</p>

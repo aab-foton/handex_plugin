@@ -9,3 +9,5 @@ coverage/
 backup/
 handex-plugin/
 handex-plugin-beta/
+.ua/
+.vscode/

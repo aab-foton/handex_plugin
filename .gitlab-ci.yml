@@ -5,12 +5,22 @@
 # seus próprios jobs aqui (ou via `include:`). Hoje só temos o job do handex.
 #
 # Os bots de atualização automática (refresh-dsc-skeleton, check-npm-deps)
-# migraram para GitHub Actions em 22/07/2026 (.github/workflows/) -- o runner
-# de projeto do GitLab ("notebook-augusto-temp") é uma máquina pessoal e
-# ficava Stale, travando jobs agendados sem executor disponível. Além disso,
-# este é o repositório compartilhado do design-foton (múltiplos projetos) --
+# migraram para GitHub Actions em 22/07/2026 -- o runner de projeto do
+# GitLab ("notebook-augusto-temp") é uma máquina pessoal e ficava Stale,
+# travando jobs agendados sem executor disponível. Além disso, este é o
+# repositório compartilhado do design-foton (múltiplos projetos) --
 # preferimos não ter bots abrindo MR aqui sem supervisão de quem administra
 # o repo inteiro. GitHub (handex_plugin) é exclusivo do Handex.
+#
+# Os workflows migrados vivem dentro de plugins/handex/.github/workflows/
+# (não em .github/workflows/ na raiz do monorepo) -- publicados via
+# `git subtree push --prefix=plugins/handex origin main`, mesmo padrão já
+# usado pelo hac (ver plugins/hac/.github/workflows/). Corrigido em
+# 2026-09-16: uma versão anterior vivia na raiz do monorepo com
+# `working-directory: plugins/handex`, o que nunca funcionaria no
+# handex_plugin real (repo isolado, sem pasta plugins/) -- por isso nunca
+# foi incluída em nenhum subtree split, e o skeleton ficou sem atualização
+# automática por semanas sem que ninguém percebesse.
 #
 # Único job que continua aqui: handex-lint, porque roda em todo push/MR
 # (gate de qualidade local ao repo principal), não é um bot agendado.

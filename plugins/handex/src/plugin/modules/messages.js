@@ -585,6 +585,48 @@
         return;
       }
 
+      // Respostas de insert-ficha-section (botão "Inserir [X] na Ficha" nas
+      // 4 telas) -- sectionKey aqui usa a nomenclatura do backend (tokens/
+      // specs/medidas/fluxos), _btnKey traduz de volta pra nomenclatura do
+      // botão/finalizeSection (tokens/specs/measurements/flows) usada em
+      // insertSectionInFicha (handoff.js).
+      if (msg.type === 'ficha-section-inserted' || msg.type === 'ficha-section-insert-error' || msg.type === 'ficha-section-needs-full-create') {
+        const _btnKeyMap = { tokens: 'tokens', specs: 'specs', medidas: 'measurements', fluxos: 'flows' };
+        const _labelMap = { tokens: 'Tokens', specs: 'Specs', medidas: 'Medidas', fluxos: 'Fluxos' };
+        const btnKey = _btnKeyMap[msg.section] || msg.section;
+        const btn = document.getElementById('btn-insert-ficha-' + btnKey);
+        const _restoreButton = () => {
+          if (btn) {
+            btn.disabled = false;
+            if (btn.dataset._label) btn.innerHTML = btn.dataset._label;
+            _refreshIcons();
+          }
+        };
+
+        if (msg.type === 'ficha-section-needs-full-create') {
+          // Ficha do projeto ainda não existe no canvas -- o backend não
+          // duplica a lógica de criação completa (create-handoff), então o
+          // frontend dispara o fluxo já existente e validado. O clique
+          // original em "Inserir [X] na Ficha" acaba criando a Ficha inteira
+          // na primeira vez (comportamento aceito e documentado).
+          _restoreButton();
+          if (typeof createHandoffOnCanvas === 'function') createHandoffOnCanvas();
+          return;
+        }
+
+        _restoreButton();
+
+        if (msg.type === 'ficha-section-inserted') {
+          handoffData._fichaSections = handoffData._fichaSections || {};
+          handoffData._fichaSections[msg.section] = { insertedAt: new Date().toISOString(), itemCount: null };
+          if (typeof saveToStorage === 'function') saveToStorage();
+          showToast((_labelMap[msg.section] || 'Seção') + ' inserido na Ficha!');
+        } else {
+          showToast('Erro ao inserir na Ficha: ' + (msg.message || 'Verifique o console do plugin.'), 'error');
+        }
+        return;
+      }
+
       if (msg.type === 'spec-connector-edited') {
         // Busca em createdSpecs (a variável global renderizada na tela, que
         // já cobre specs avulsas e por-frame via _mergeLooseAndFramed) --

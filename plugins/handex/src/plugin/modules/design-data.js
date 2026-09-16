@@ -563,7 +563,7 @@
       // sobreviverem ao reset, e o saveToStorage() abaixo REGRAVAVA esse
       // lixo no clientStorage -- nem fechar e reabrir o plugin resolvia.
       Object.assign(handoffData, {
-        _schemaVersion: 2,
+        _schemaVersion: 3,
         _projectId: null,
         step1: { titulo: '', versao: 'v1.0', objetivo: '', status: 'rascunho', jornada: '', feature: '', equipe: [] },
         step2: { briefingEnabled: true, regrasEnabled: true, linksEnabled: true, briefingQuestions: [], regras: [], anexos: [], auditAutoBundle: null, selectedLibSlugs: [], auditReferences: [] },
@@ -577,6 +577,12 @@
         nextFlowNumber: 1,
         currentUser: null,
         _fichaGenerated: false,
+        _fichaSections: {
+          tokens:  { insertedAt: null, itemCount: 0 },
+          specs:   { insertedAt: null, itemCount: 0 },
+          medidas: { insertedAt: null, itemCount: 0 },
+          fluxos:  { insertedAt: null, itemCount: 0 }
+        },
         _history: [],
         docs: {},
         setup: {},

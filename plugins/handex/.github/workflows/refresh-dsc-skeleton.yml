@@ -4,6 +4,17 @@
 # fila sem executor disponível e estouravam timeout sem nem começar a rodar.
 # Runners hospedados do GitHub não dependem de nenhuma máquina específica.
 #
+# Este arquivo vive dentro de plugins/handex/ (não na raiz do monorepo) --
+# publicado via `git subtree push --prefix=plugins/handex origin main` para
+# aab-foton/handex_plugin, onde este arquivo efetivamente roda como raiz do
+# repositório (sem prefixo plugins/handex, que só existe no monorepo).
+# Achado 2026-09-16: uma versão anterior deste arquivo vivia na raiz do
+# monorepo com `working-directory: plugins/handex` -- isso nunca funcionaria
+# no handex_plugin real (repo isolado, sem pasta plugins/), e por isso nunca
+# foi incluída em nenhum subtree split. O padrão correto (mesmo já usado
+# pelo hac, ver plugins/hac/.github/workflows/refresh-dsc-refs.yml) é este:
+# o workflow mora dentro da pasta do plugin, sem working-directory.
+#
 # Busca style/component keys das libs DSC via REST API do Figma e regenera
 # o skeleton agregado. Se houver diferença, abre PR para revisão humana --
 # nunca push direto em main.
@@ -21,9 +32,6 @@ permissions:
 jobs:
   refresh-dsc-skeleton:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: plugins/handex
     steps:
       - uses: actions/checkout@v4
 

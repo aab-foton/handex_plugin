@@ -180,22 +180,25 @@ Handex | Ficha de Projeto | {titulo} | {ts}        (FRAME horizontal)
 
 ### 4.2 Seções internas
 
-```
-[Seção | {tipo}] {titulo}
-```
+Nome real gravado pelo código (`_hdCreateSection`/`_hdBuildSectionShell`,
+`code.js`): **`[Seção] {titulo}`** — sem meta-tipo no nome (documentação
+anterior indicava `[Seção | {tipo}] {titulo}`, desatualizada em relação ao
+código; corrigido aqui em 2026-09-15). A busca por subseção (usada pelo
+handler `insert-ficha-section`, ver 5.2) é feita pelo título literal, não
+por um tipo separado.
 
-| Meta `tipo` | Conteúdo |
+| `{titulo}` usado hoje | Conteúdo |
 |---|---|
-| `info` | Informações básicas do projeto |
-| `equipe` | Membros da equipe |
-| `regras` | Regras de negócio e HUs |
-| `excecoes` | Cenários de exceção |
-| `docs` | Links de documentação |
-| `frames` | Frames documentados |
-| `medidas` | Medidas por frame |
-| `specs` | Especificações por frame |
-| `fluxos` | Fluxos de tela |
-| `briefing` | Briefing estratégico |
+| `Informações Básicas` | Informações básicas do projeto |
+| `Equipe e Responsáveis` | Membros da equipe |
+| `Regras de Negócio e HUs` | Regras de negócio e HUs |
+| `Cenários de Exceção` | Cenários de exceção |
+| `Documentação` | Links de documentação |
+| `Frames Documentados` | Frames documentados |
+| `Medidas` | Medidas por frame |
+| `Especificações` | Especificações por frame |
+| `Fluxos de Tela` | Fluxos de tela |
+| `Briefing Estratégico` | Briefing estratégico (card 2, fora de `content`) |
 
 ---
 
@@ -239,9 +242,23 @@ Handex | Ficha de Projeto | {titulo} | {ts}        (FRAME horizontal)
 
 ```
 [Frame | {figmaId}] {nomeFrame}
-  ├── Badge         (FRAME, opcional) ← "Novo componente"
-  └── Auditoria     (FRAME, opcional) ← resultado DSC
+  ├── Badge                    (FRAME, opcional) ← "Novo componente"
+  ├── Auditoria                (FRAME, opcional) ← resultado DSC
+  ├── Snapshot com Specs       (FRAME, opcional) ← ver abaixo
+  └── Snapshot com Medidas     (FRAME, opcional) ← ver abaixo
 ```
+
+**Snapshots visuais (2026-09-15):** cada card de frame pode ganhar até 2
+prévias PNG geradas na hora da geração/atualização da Ficha
+(`_hdSnapshotFrameWithNodes`, `code.js`): uma composição do frame original +
+os `specGroup`/`contour` de `frame.createdSpecs[]` (nas posições reais do
+canvas), outra do frame + os grupos de `frame.measurements[]`. Nunca inclui
+specs/medidas avulsas (`__loose__`) — só as explicitamente vinculadas àquele
+frame. Cada preview é um `FRAME` (label + `RECTANGLE` 432×243 com fill
+`IMAGE`); ausente quando o frame não tem specs/medidas vinculadas, ou quando
+o nó original/vinculado foi apagado do canvas manualmente (tolerado
+silenciosamente, sem quebrar a geração da Ficha). **É conteúdo derivado do
+canvas no momento da geração — não é persistido em `handoffData`.**
 
 ---
 
@@ -312,11 +329,11 @@ Handex | Ficha de Projeto | {titulo} | {ts}        (FRAME horizontal)
 ## 5. Schema de Persistência (`handoffData`)
 
 Armazenado em `localStorage` via `saveToStorage()` / `saveSpecsToStorage()`.
-Versão atual: `_schemaVersion: 2`
+Versão atual: `_schemaVersion: 3`
 
 ```js
 {
-  _schemaVersion: 2,
+  _schemaVersion: 3,
 
   // ── Card 1: Informações do Projeto ─────────────────────────────────
   step1: {
@@ -349,6 +366,17 @@ Versão atual: `_schemaVersion: 2`
   // ── Metadados globais ───────────────────────────────────────────────
   currentUser: null | User,
   _fichaGenerated: boolean,
+  // Sincronização por subseção da Ficha (botão "Inserir [X] na Ficha" nas
+  // 4 telas, handler backend insert-ficha-section) -- paralelo a
+  // _fichaGenerated, mas por seção em vez de global. Ausente em dados
+  // salvos antes de _schemaVersion 3; todo ponto de leitura usa fallback
+  // (handoffData._fichaSections || {}).
+  _fichaSections: {
+    tokens:  { insertedAt: string | null, itemCount: number | null },
+    specs:   { insertedAt: string | null, itemCount: number | null },
+    medidas: { insertedAt: string | null, itemCount: number | null },
+    fluxos:  { insertedAt: string | null, itemCount: number | null }
+  },
   specs: Spec[],   // specs globais fora de frame
   specLinesVisible: Record<string, boolean>,  // estado de linhas/conectores ocultos por letra (grupo), specs globais
   docs: {
@@ -538,6 +566,41 @@ Canvas (Figma)                                  Persistência (localStorage)
 
 **Fonte de verdade para posicionamento:** canvas (leitura via `absoluteBoundingBox`).
 **Fonte de verdade para dados:** localStorage (leitura via `getFrame`, `handoffData`).
+
+---
+
+### 6.1 Inserção incremental por subseção (2026-09-15)
+
+Além do fluxo global "Gerar Ficha" (`create-handoff`, sempre remove e
+reconstrói a Ficha inteira), cada uma das 4 telas (Escanear Tokens, Anotar
+Specs, Anotar Medidas, Fluxos de Tela) tem um botão próprio **"Inserir [X]
+na Ficha"** (`insertSectionInFicha()`, `modules/handoff.js`) que sincroniza
+**só a subseção correspondente** no canvas, preservando as demais como
+estavam:
+
+```
+Botão "Inserir Tokens na Ficha"    → insert-ficha-section { section: 'tokens'  } → [Seção] Frames Documentados
+Botão "Inserir Specs na Ficha"     → insert-ficha-section { section: 'specs'   } → [Seção] Especificações
+Botão "Inserir Medidas na Ficha"   → insert-ficha-section { section: 'medidas' } → [Seção] Medidas
+Botão "Inserir Fluxos na Ficha"    → insert-ficha-section { section: 'fluxos'  } → [Seção] Fluxos de Tela
+```
+
+O handler (`code.js`) localiza a Ficha existente do projeto
+(`_hdFindExistingFicha`) e, dentro dela, o container `Handex | Content`
+(nome fixo, ver 4.1) — substitui só a subseção pedida no mesmo índice
+(`_hdReplaceSection`), reaproveitando as mesmas funções de montagem
+(`_hdRebuildFramesSection`/`_hdRebuildMeasuresSection`/
+`_hdRebuildSpecsSection`/`_hdRebuildFlowsSection`) usadas por `create-handoff`
+— nunca duplica a lógica de montagem entre os dois caminhos. Se a Ficha do
+projeto ainda não existe no canvas, o backend não cria uma versão parcial:
+devolve `ficha-section-needs-full-create` e o frontend dispara
+`createHandoffOnCanvas()` normalmente, que cria a Ficha completa (mesmo
+comportamento de sempre para "primeira geração").
+
+Diferente de `finalizeSection()` (confirmação leve, 100% local, nunca toca
+o canvas — continua existindo separada), o botão "Inserir [X] na Ficha"
+sincroniza de fato. Metadado de sincronização por seção: ver
+`_fichaSections` (seção 5).
 
 ---
 

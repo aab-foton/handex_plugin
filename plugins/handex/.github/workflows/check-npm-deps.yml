@@ -4,6 +4,14 @@
 # GITHUB_TOKEN é gerado automaticamente pelo runner, sem precisar cadastrar
 # nenhum secret manualmente.
 #
+# Este arquivo vive dentro de plugins/handex/ (não na raiz do monorepo) --
+# publicado via `git subtree push --prefix=plugins/handex origin main` para
+# aab-foton/handex_plugin, onde este arquivo efetivamente roda como raiz do
+# repositório (sem prefixo plugins/handex, que só existe no monorepo). Ver
+# nota histórica em refresh-dsc-skeleton.yml (mesma pasta) sobre por que a
+# versão anterior (com working-directory, na raiz do monorepo) nunca chegou
+# a rodar no handex_plugin real.
+#
 # Atualiza dependencias do Handex so dentro dos ranges semver ja declarados
 # em package.json (nunca bump de major sozinho) e abre um PR para revisao
 # humana -- nunca faz push direto em main.
@@ -21,9 +29,6 @@ permissions:
 jobs:
   check-npm-deps:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: plugins/handex
     steps:
       - uses: actions/checkout@v4
 

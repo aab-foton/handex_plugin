@@ -76,7 +76,7 @@ function getItemAuditBreakdown(item) {
 }
 
 let handoffData = {
-  _schemaVersion: 2,
+  _schemaVersion: 3,
   step1: {
     titulo: '',
     versao: 'v1.0',
@@ -104,6 +104,17 @@ let handoffData = {
   nextFlowNumber: 1,
   currentUser: null,
   _fichaGenerated: false,
+  // Metadado de sincronização por subseção da Ficha (inserção incremental
+  // via botão "Inserir [X] na Ficha") -- paralelo a _fichaGenerated, mas
+  // por seção em vez de global. Ausente em dados salvos antes de
+  // _schemaVersion 3; todo ponto de leitura usa fallback
+  // (handoffData._fichaSections || {}).
+  _fichaSections: {
+    tokens:  { insertedAt: null, itemCount: 0 },
+    specs:   { insertedAt: null, itemCount: 0 },
+    medidas: { insertedAt: null, itemCount: 0 },
+    fluxos:  { insertedAt: null, itemCount: 0 }
+  },
   _history: []
 };
 

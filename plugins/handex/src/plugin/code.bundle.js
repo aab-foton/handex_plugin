@@ -500,19 +500,6 @@
       } else if (node.type === "TEXT") node.textAutoResize = "HEIGHT";
     }
   }
-  function _hdCreateSection(parent, titleText) {
-    const section = _hdCreateFrame("VERTICAL", 24, 16, { r: 1, g: 1, b: 1 });
-    section.name = `[Se\xE7\xE3o] ${titleText}`;
-    parent.appendChild(section);
-    _hdSetFillAndHug(section);
-    section.cornerRadius = 8;
-    section.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
-    section.strokeWeight = 1;
-    const title = _hdCreateText(titleText, 16, "Bold", { r: 0.24, g: 0.24, b: 1 });
-    section.appendChild(title);
-    _hdSetFillAndHug(title);
-    return section;
-  }
   function _hdCreateRow(parent, label, value) {
     const row = _hdCreateFrame("VERTICAL", 0, 4);
     row.name = `[Campo] ${label}`;
@@ -526,7 +513,7 @@
     _hdSetFillAndHug(val);
     return row;
   }
-  function _hdBuildFrameCard(f, fi) {
+  async function _hdBuildFrameCard(f, fi) {
     const fRow = _hdCreateFrame("VERTICAL", 12, 8, { r: 0.98, g: 0.99, b: 1 });
     fRow.name = `[Frame] ${f.nome || "Frame " + (fi + 1)}`;
     fRow.cornerRadius = 8;
@@ -550,7 +537,96 @@
     if (f.audit && f.audit.status) {
       _hdCreateRow(fRow, "Auditoria DSC", f.audit.status + (f.audit.justificativa ? " \u2014 " + f.audit.justificativa : ""));
     }
+    const _frameNode = f.figmaId ? await figma.getNodeByIdAsync(f.figmaId) : null;
+    if (_frameNode) {
+      const _specIds = await _hdCollectSpecSnapshotNodeIds(f);
+      const _measureIds = (f.measurements || []).map((m) => m.nodeId).filter(Boolean);
+      const _addPreview = async (label, nodeIds) => {
+        if (nodeIds.length === 0) return;
+        const bytes = await _hdSnapshotFrameWithNodes(_frameNode, nodeIds);
+        if (!bytes) return;
+        try {
+          const imageHash = figma.createImage(bytes).hash;
+          const wrap = _hdCreateFrame("VERTICAL", 0, 4);
+          wrap.appendChild(_hdCreateText(label, 10, "Bold", { r: 0.39, g: 0.45, b: 0.55 }));
+          const rect = figma.createRectangle();
+          rect.resize(432, 243);
+          rect.fills = [{ type: "IMAGE", imageHash, scaleMode: "FIT" }];
+          rect.cornerRadius = 8;
+          wrap.appendChild(rect);
+          fRow.appendChild(wrap);
+          _hdSetFillAndHug(wrap);
+        } catch (e) {
+        }
+      };
+      await _addPreview("Snapshot com Specs", _specIds);
+      await _addPreview("Snapshot com Medidas", _measureIds);
+    }
     return fRow;
+  }
+  async function _hdSnapshotFrameWithNodes(frameNode, extraNodeIds) {
+    if (!frameNode || !("exportAsync" in frameNode)) return null;
+    const extraNodes = [];
+    for (const id of extraNodeIds || []) {
+      if (!id) continue;
+      let n = null;
+      try {
+        n = await figma.getNodeByIdAsync(id);
+      } catch (e) {
+        n = null;
+      }
+      if (n) extraNodes.push(n);
+    }
+    if (extraNodes.length === 0) {
+      try {
+        return await frameNode.exportAsync({ format: "PNG", constraint: { type: "SCALE", value: 2 } });
+      } catch (e) {
+        return null;
+      }
+    }
+    const allNodes = [frameNode, ...extraNodes];
+    const originalInfo = allNodes.map((n) => ({
+      node: n,
+      parent: n.parent,
+      index: n.parent && "children" in n.parent ? n.parent.children.indexOf(n) : -1
+    }));
+    let tempGroup = null;
+    let bytes = null;
+    try {
+      tempGroup = figma.group(allNodes, figma.currentPage);
+      bytes = await tempGroup.exportAsync({ format: "PNG", constraint: { type: "SCALE", value: 2 } });
+    } catch (e) {
+      bytes = null;
+    } finally {
+      for (const info of originalInfo) {
+        try {
+          if (info.parent && "insertChild" in info.parent) {
+            const idx = Math.min(info.index >= 0 ? info.index : 0, info.parent.children.length);
+            info.parent.insertChild(idx, info.node);
+          }
+        } catch (e) {
+        }
+      }
+      try {
+        if (tempGroup && tempGroup.type !== "REMOVED") tempGroup.remove();
+      } catch (e) {
+      }
+    }
+    return bytes;
+  }
+  async function _hdCollectSpecSnapshotNodeIds(f) {
+    const ids = [];
+    for (const s of f.createdSpecs || []) {
+      if (!s || !s.id) continue;
+      ids.push(s.id);
+      try {
+        const specGroup = await figma.getNodeByIdAsync(s.id);
+        const markerId = specGroup && specGroup.getPluginData("handexSpecMarkerId");
+        if (markerId) ids.push(markerId);
+      } catch (e) {
+      }
+    }
+    return ids;
   }
   function _hdBuildMeasuresSubgroup(f) {
     const fGroup = _hdCreateFrame("VERTICAL", 0, 6);
@@ -768,6 +844,93 @@
     fichas.sort((a, b) => a.name.localeCompare(b.name));
     return fichas[fichas.length - 1];
   }
+  function _hdBuildSectionShell(titleText) {
+    const section = _hdCreateFrame("VERTICAL", 24, 16, { r: 1, g: 1, b: 1 });
+    section.name = `[Se\xE7\xE3o] ${titleText}`;
+    _hdSetFillAndHug(section);
+    section.cornerRadius = 8;
+    section.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
+    section.strokeWeight = 1;
+    const title = _hdCreateText(titleText, 16, "Bold", { r: 0.24, g: 0.24, b: 1 });
+    section.appendChild(title);
+    _hdSetFillAndHug(title);
+    return section;
+  }
+  function _hdReplaceSection(content, titleText, newSection) {
+    const _name = `[Se\xE7\xE3o] ${titleText}`;
+    const existing = content.children.find((n) => n.type === "FRAME" && n.name === _name);
+    let idx = content.children.length;
+    if (existing) {
+      idx = content.children.indexOf(existing);
+      try {
+        existing.remove();
+      } catch (e) {
+      }
+    }
+    if (!newSection) return;
+    content.insertChild(Math.min(idx, content.children.length), newSection);
+    _hdSetFillAndHug(newSection);
+  }
+  async function _hdRebuildFramesSection(frames) {
+    const _frames = frames || [];
+    if (_frames.length === 0) return null;
+    const framesSection = _hdBuildSectionShell("Frames Documentados");
+    for (const [fi, f] of _frames.entries()) {
+      const fRow = await _hdBuildFrameCard(f, fi);
+      framesSection.appendChild(fRow);
+      _hdSetFillAndHug(fRow);
+    }
+    return framesSection;
+  }
+  function _hdRebuildMeasuresSection(frames, looseMeasures) {
+    const _framesWithMeasures = (frames || []).filter((f) => (f.measurements || []).length > 0);
+    const _loose = looseMeasures || [];
+    if (_framesWithMeasures.length === 0 && _loose.length === 0) return null;
+    const measSection = _hdBuildSectionShell("Medidas");
+    _framesWithMeasures.forEach((f) => {
+      const fGroup = _hdBuildMeasuresSubgroup(f);
+      measSection.appendChild(fGroup);
+      _hdSetFillAndHug(fGroup);
+    });
+    if (_loose.length > 0) {
+      const looseFrame = { nome: "Sem frame vinculado", measurements: _loose };
+      const looseGroup = _hdBuildMeasuresSubgroup(looseFrame);
+      looseGroup.setPluginData("handexFrameId", "__loose__");
+      measSection.appendChild(looseGroup);
+      _hdSetFillAndHug(looseGroup);
+    }
+    return measSection;
+  }
+  async function _hdRebuildSpecsSection(frames, looseSpecs) {
+    const _framesWithSpecs = (frames || []).filter((f) => (f.createdSpecs || []).length > 0);
+    const _loose = looseSpecs || [];
+    if (_framesWithSpecs.length === 0 && _loose.length === 0) return null;
+    const annotSection = _hdBuildSectionShell("Especifica\xE7\xF5es");
+    for (const f of _framesWithSpecs) {
+      const fGroup = await _hdBuildSpecsSubgroup(f);
+      annotSection.appendChild(fGroup);
+      _hdSetFillAndHug(fGroup);
+    }
+    if (_loose.length > 0) {
+      const looseFrame = { nome: "Sem frame vinculado", createdSpecs: _loose, specGroupNames: {}, specGroupVisible: {} };
+      const looseGroup = await _hdBuildSpecsSubgroup(looseFrame);
+      looseGroup.setPluginData("handexFrameId", "__loose__");
+      annotSection.appendChild(looseGroup);
+      _hdSetFillAndHug(looseGroup);
+    }
+    return annotSection;
+  }
+  function _hdRebuildFlowsSection(flows) {
+    const _flows = flows || [];
+    if (_flows.length === 0) return null;
+    const flowsSection = _hdBuildSectionShell("Fluxos de Tela");
+    _flows.forEach((flow, fi) => {
+      const fRow = _hdBuildFlowCard(flow, fi);
+      flowsSection.appendChild(fRow);
+      _hdSetFillAndHug(fRow);
+    });
+    return flowsSection;
+  }
   function rgbToHex(r, g, b) {
     const toHex = (c) => {
       const hex = Math.round(c * 255).toString(16);
@@ -775,7 +938,7 @@
     };
     return "#" + toHex(r) + toHex(g) + toHex(b);
   }
-  var PLUGIN_VERSION = true ? "6.12.0" : "dev";
+  var PLUGIN_VERSION = true ? "6.13.0" : "dev";
   var DSC_HANDOFF_SUMMARY_ENABLED = false;
   async function _writeSharedPluginData(data) {
     var _a, _b, _c, _d, _e, _f, _g;
@@ -1211,7 +1374,7 @@
     return _flowResult;
   }
   figma.ui.onmessage = async (msg) => {
-    var _a, _b;
+    var _a, _b, _c;
     if (msg.type === "ui-ready") {
       const currentUser = figma.currentUser ? { id: figma.currentUser.id, name: figma.currentUser.name, photoUrl: figma.currentUser.photoUrl } : null;
       const theme = figma.ui.theme || "light";
@@ -1569,6 +1732,57 @@
       }
       return;
     }
+    if (msg.type === "insert-ficha-section") {
+      try {
+        const data = msg.data;
+        const _titulo = (((_a = data.step1) == null ? void 0 : _a.titulo) || "Projeto").replace(/\//g, "-");
+        const existingFicha = _hdFindExistingFicha(_titulo);
+        if (!existingFicha) {
+          figma.ui.postMessage({ type: "ficha-section-needs-full-create", section: msg.section });
+          return;
+        }
+        const content = existingFicha.findOne((n) => n.type === "FRAME" && n.name === "Handex | Content");
+        if (!content) {
+          throw new Error("Ficha existente sem container de conte\xFAdo reconhecido. Gere a Ficha completa uma vez para habilitar inser\xE7\xE3o por se\xE7\xE3o.");
+        }
+        const fonts = [
+          { family: "Inter", style: "Regular" },
+          { family: "Inter", style: "Medium" },
+          { family: "Inter", style: "SemiBold" },
+          { family: "Inter", style: "Semi Bold" },
+          { family: "Inter", style: "Bold" }
+        ];
+        for (const font of fonts) {
+          try {
+            await figma.loadFontAsync(font);
+          } catch (e) {
+            console.log("Font not loaded:", font);
+          }
+        }
+        const _frames = data.frames || [];
+        if (msg.section === "tokens") {
+          const framesSection = await _hdRebuildFramesSection(_frames);
+          _hdReplaceSection(content, "Frames Documentados", framesSection);
+        } else if (msg.section === "medidas") {
+          const measSection = _hdRebuildMeasuresSection(_frames, data.measurements || []);
+          _hdReplaceSection(content, "Medidas", measSection);
+        } else if (msg.section === "specs") {
+          const _framedSpecIds = new Set(_frames.flatMap((f) => (f.createdSpecs || []).map((s) => s.id)));
+          const _looseSpecs = (data.specs || []).filter((s) => !_framedSpecIds.has(s.id));
+          const annotSection = await _hdRebuildSpecsSection(_frames, _looseSpecs);
+          _hdReplaceSection(content, "Especifica\xE7\xF5es", annotSection);
+        } else if (msg.section === "fluxos") {
+          const flowsSection = _hdRebuildFlowsSection(data.createdFlows || []);
+          _hdReplaceSection(content, "Fluxos de Tela", flowsSection);
+        }
+        figma.currentPage.selection = [existingFicha];
+        figma.viewport.scrollAndZoomIntoView([existingFicha]);
+        figma.ui.postMessage({ type: "ficha-section-inserted", section: msg.section });
+      } catch (err) {
+        console.error("Insert Ficha Section Error:", err);
+        figma.ui.postMessage({ type: "ficha-section-insert-error", section: msg.section, message: err.message });
+      }
+    }
     if (msg.type === "create-handoff") {
       try {
         let createText = function(text, size = 14, weight = "Regular", color = { r: 0.12, g: 0.16, b: 0.23 }) {
@@ -1727,7 +1941,7 @@
         if (_pendingSpecsLocked > 0) {
           figma.notify(`${_pendingSpecsLocked} especifica\xE7\xE3o(\xF5es) pendente(s) foram travadas automaticamente ao gerar a ficha.`);
         }
-        const _titulo = (((_a = data.step1) == null ? void 0 : _a.titulo) || "Projeto").replace(/\//g, "-");
+        const _titulo = (((_b = data.step1) == null ? void 0 : _b.titulo) || "Projeto").replace(/\//g, "-");
         const _handoffBase = `Handex | Ficha de Projeto | ${_titulo}`;
         const _existingFicha = _hdFindExistingFicha(_titulo);
         let _inheritedX = null, _inheritedY = null;
@@ -1742,7 +1956,7 @@
         }
         const _now = /* @__PURE__ */ new Date();
         const _ts = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, "0")}-${String(_now.getDate()).padStart(2, "0")} ${String(_now.getHours()).padStart(2, "0")}:${String(_now.getMinutes()).padStart(2, "0")}`;
-        const _versaoLabel = (((_b = data.step1) == null ? void 0 : _b.versao) || "").trim();
+        const _versaoLabel = (((_c = data.step1) == null ? void 0 : _c.versao) || "").trim();
         const _containerName = `${_handoffBase} | ${_ts}${_versaoLabel ? " | " + _versaoLabel : ""}`;
         const mainContainer = createFrame("HORIZONTAL", 64, 48, hexToRgb2("#00325b"));
         mainContainer.name = _containerName;
@@ -1937,65 +2151,27 @@
           }
         }
         const _frames = data.frames || [];
-        if (_frames.length > 0) {
-          const framesSection = _hdCreateSection(content, "Frames Documentados");
-          _frames.forEach((f, fi) => {
-            const fRow = _hdBuildFrameCard(f, fi);
-            framesSection.appendChild(fRow);
-            _hdSetFillAndHug(fRow);
-          });
+        const framesSection = await _hdRebuildFramesSection(_frames);
+        if (framesSection) {
           content.appendChild(framesSection);
-          setFillAndHug(framesSection);
+          _hdSetFillAndHug(framesSection);
         }
-        const _framesWithMeasures = (_frames || []).filter((f) => (f.measurements || []).length > 0);
-        const _looseMeasures = data.measurements || [];
-        if (_framesWithMeasures.length > 0 || _looseMeasures.length > 0) {
-          const measSection = _hdCreateSection(content, "Medidas");
-          _framesWithMeasures.forEach((f) => {
-            const fGroup = _hdBuildMeasuresSubgroup(f);
-            measSection.appendChild(fGroup);
-            _hdSetFillAndHug(fGroup);
-          });
-          if (_looseMeasures.length > 0) {
-            const looseFrame = { nome: "Sem frame vinculado", measurements: _looseMeasures };
-            const looseGroup = _hdBuildMeasuresSubgroup(looseFrame);
-            looseGroup.setPluginData("handexFrameId", "__loose__");
-            measSection.appendChild(looseGroup);
-            _hdSetFillAndHug(looseGroup);
-          }
+        const measSection = _hdRebuildMeasuresSection(_frames, data.measurements || []);
+        if (measSection) {
           content.appendChild(measSection);
-          setFillAndHug(measSection);
+          _hdSetFillAndHug(measSection);
         }
         const _framedSpecIds = new Set((_frames || []).flatMap((f) => (f.createdSpecs || []).map((s) => s.id)));
         const _looseSpecs = (data.specs || []).filter((s) => !_framedSpecIds.has(s.id));
-        const _framesWithSpecs = (_frames || []).filter((f) => (f.createdSpecs || []).length > 0);
-        if (_framesWithSpecs.length > 0 || _looseSpecs.length > 0) {
-          const annotSection = _hdCreateSection(content, "Especifica\xE7\xF5es");
-          for (const f of _framesWithSpecs) {
-            const fGroup = await _hdBuildSpecsSubgroup(f);
-            annotSection.appendChild(fGroup);
-            _hdSetFillAndHug(fGroup);
-          }
-          if (_looseSpecs.length > 0) {
-            const looseFrame = { nome: "Sem frame vinculado", createdSpecs: _looseSpecs, specGroupNames: {}, specGroupVisible: {} };
-            const looseGroup = await _hdBuildSpecsSubgroup(looseFrame);
-            looseGroup.setPluginData("handexFrameId", "__loose__");
-            annotSection.appendChild(looseGroup);
-            _hdSetFillAndHug(looseGroup);
-          }
+        const annotSection = await _hdRebuildSpecsSection(_frames, _looseSpecs);
+        if (annotSection) {
           content.appendChild(annotSection);
-          setFillAndHug(annotSection);
+          _hdSetFillAndHug(annotSection);
         }
-        const _flows = data.createdFlows || [];
-        if (_flows.length > 0) {
-          const flowsSection = _hdCreateSection(content, "Fluxos de Tela");
-          _flows.forEach((flow, fi) => {
-            const fRow = _hdBuildFlowCard(flow, fi);
-            flowsSection.appendChild(fRow);
-            _hdSetFillAndHug(fRow);
-          });
+        const flowsSection = _hdRebuildFlowsSection(data.createdFlows || []);
+        if (flowsSection) {
           content.appendChild(flowsSection);
-          setFillAndHug(flowsSection);
+          _hdSetFillAndHug(flowsSection);
         }
         fichaTecnica.appendChild(content);
         mainContainer.appendChild(fichaTecnica);

@@ -474,14 +474,10 @@ ${(handoffData.createdFlows || []).length === 0
     }
     window._markFichaGenerated = _markFichaGenerated;
 
-    // "Finalizar Registros" — confirmação leve por tela. Cada funcionalidade
-    // (Tokens, Specs, Medidas, Fluxos) só documenta e salva localmente; a
-    // sincronização com o canvas é responsabilidade exclusiva de "Gerar
-    // Ficha de Handoff" (única etapa que percorre tudo, respeitando
-    // versionamento). Antes existia inserção incremental por tela
-    // (insert-frame-in-ficha/insert-flows-in-ficha via modal compartilhado)
-    // -- removida: manter dado só no backend e materializar tudo de uma vez
-    // em Gerar Ficha evita duplicar lógica de idempotência em 5 lugares.
+    // "Finalizar Registros" — confirmação leve por tela, 100% local (nunca
+    // toca o canvas). Continua existindo separada de "Inserir na Ficha"
+    // (abaixo) para quem só quer marcar "terminei de documentar esta aba"
+    // sem forçar uma escrita no canvas agora.
     const _FINALIZE_SECTION_LABEL = {
       tokens: 'Escaneamento de tokens',
       specs: 'Especificações',
@@ -493,6 +489,62 @@ ${(handoffData.createdFlows || []).length === 0
       saveAndGoHome(true, `${label} documentado — será incluído na próxima geração da ficha.`);
     }
     window.finalizeSection = finalizeSection;
+
+    // "Inserir [Funcionalidade] na Ficha" — ação distinta de finalizeSection:
+    // sincroniza de fato aquela subseção no canvas imediatamente (via handler
+    // backend insert-ficha-section), sem tocar as demais subseções da mesma
+    // Ficha. Reaproveita a mesma validação de campos obrigatórios de
+    // createHandoffOnCanvas, mas nunca abre o modal de versionamento (não é
+    // um bump de versão, é um patch pontual).
+    // sectionKey usa a nomenclatura de finalizeSection (tokens/specs/
+    // measurements/flows); traduzido para o nome de seção esperado pelo
+    // backend (tokens/specs/medidas/fluxos) via _FICHA_SECTION_BACKEND_KEY.
+    const _FICHA_SECTION_BACKEND_KEY = { tokens: 'tokens', specs: 'specs', measurements: 'medidas', flows: 'fluxos' };
+    const _FICHA_SECTION_LABEL = { tokens: 'Tokens', specs: 'Specs', measurements: 'Medidas', flows: 'Fluxos' };
+    function insertSectionInFicha(sectionKey) {
+      collectHandoffData();
+
+      const titulo   = (handoffData.step1.titulo  || '').trim();
+      const versao   = (handoffData.step1.versao  || '').trim();
+      const objetivo = (handoffData.step1.objetivo || '').trim();
+      const designer = (handoffData.step1.equipe  || []).find(
+        m => (m.papel || '').toLowerCase() === 'designer' && (m.nome || '').trim()
+      );
+
+      const missing = [];
+      if (!titulo)   missing.push('nome do projeto');
+      if (!designer) missing.push('nome do designer');
+      if (!versao)   missing.push('versão');
+      if (!objetivo) missing.push('objetivo da entrega');
+
+      if (missing.length > 0) {
+        const label = missing.length === 1
+          ? `Preencha o ${missing[0]} antes de inserir na ficha.`
+          : `Preencha antes de inserir na ficha: ${missing.join(', ')}.`;
+        showToast(label, 'error');
+        if (missing.includes('nome do designer')) {
+          navigate('view-dados-projeto');
+        } else if (typeof openDadosProjetoModal === 'function') {
+          openDadosProjetoModal();
+        }
+        return;
+      }
+
+      const btn = document.getElementById('btn-insert-ficha-' + sectionKey);
+      if (btn) {
+        btn.disabled = true;
+        btn.dataset._label = btn.innerHTML;
+        btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> <span>Inserindo...</span>';
+        _refreshIcons();
+      }
+
+      parent.postMessage({ pluginMessage: {
+        type: 'insert-ficha-section',
+        section: _FICHA_SECTION_BACKEND_KEY[sectionKey] || sectionKey,
+        data: handoffData
+      } }, '*');
+    }
+    window.insertSectionInFicha = insertSectionInFicha;
 
     async function exportHandoff() {
       const btn = document.getElementById("btn-final-export");

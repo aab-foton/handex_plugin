@@ -1034,10 +1034,16 @@ body {
 
           </div>
 
-          <!-- Finalizar Registros — ação única de fechamento, tom discreto (outline)
-               para não competir com "Inserir medida" no header, a ação mais
-               frequente da tela. Só aparece com medidas criadas (ver renderMeasurementsResults). -->
-          <div id="btn-finalize-measurements-wrap" class="hidden pt-4 pb-2">
+          <!-- Inserir na Ficha — ação mais forte (preenchida), sincroniza esta
+               seção no canvas imediatamente. Finalizar Registros continua
+               discreta (outline) logo abaixo. Ambas só aparecem com medidas
+               criadas (ver renderMeasurementsResults). -->
+          <div id="btn-finalize-measurements-wrap" class="hidden pt-4 pb-2 space-y-2">
+            <button id="btn-insert-ficha-measurements" onclick="insertSectionInFicha('measurements')"
+              class="w-full flex items-center justify-center gap-2 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl text-[12px] font-bold transition-all shadow-sm">
+              <i data-lucide="file-plus-2" class="w-4 h-4" aria-hidden="true"></i>
+              Inserir Medidas na Ficha
+            </button>
             <button onclick="finalizeSection('measurements')"
               class="w-full flex items-center justify-center gap-2 py-3 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 hover:border-slate-300 transition-all shadow-sm">
               <i data-lucide="clipboard-check" class="w-4 h-4" aria-hidden="true"></i>
@@ -1494,10 +1500,16 @@ body {
             </div>
           </div>
 
-          <!-- Finalizar Registros — ação única de fechamento, tom discreto (outline)
-               para não competir com "Nova spec" no header, a ação mais
-               frequente da tela. Só aparece com specs criadas (ver renderSpecsList). -->
-          <div id="btn-finalize-specs-wrap" class="hidden pt-4 pb-2">
+          <!-- Inserir na Ficha — ação mais forte (preenchida), sincroniza esta
+               seção no canvas imediatamente. Finalizar Registros continua
+               discreta (outline) logo abaixo. Ambas só aparecem com specs
+               criadas (ver renderSpecsList). -->
+          <div id="btn-finalize-specs-wrap" class="hidden pt-4 pb-2 space-y-2">
+            <button id="btn-insert-ficha-specs" onclick="insertSectionInFicha('specs')"
+              class="w-full flex items-center justify-center gap-2 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl text-[12px] font-bold transition-all shadow-sm">
+              <i data-lucide="file-plus-2" class="w-4 h-4" aria-hidden="true"></i>
+              Inserir Specs na Ficha
+            </button>
             <button onclick="finalizeSection('specs')"
               class="w-full flex items-center justify-center gap-2 py-3 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 hover:border-slate-300 transition-all shadow-sm">
               <i data-lucide="clipboard-check" class="w-4 h-4" aria-hidden="true"></i>
@@ -1601,10 +1613,17 @@ body {
       <!-- renderFrameCard() insere aqui -->
     </ul>
 
-    <!-- Finalizar Registros — ação única de fechamento, tom discreto (outline)
-         para não competir com "Registrar Frame" no header, a ação mais
-         frequente da tela. Só aparece com frames registrados (ver updateEmptyFramesState). -->
-    <div id="btn-finalize-tokens-wrap" class="hidden pt-2 pb-2">
+    <!-- Inserir na Ficha — ação mais forte (preenchida), sincroniza esta
+         seção no canvas imediatamente. Finalizar Registros continua
+         discreta (outline) logo abaixo, para quem só quer marcar "pronto"
+         sem escrever no canvas ainda. Ambas só aparecem com frames
+         registrados (ver updateEmptyFramesState). -->
+    <div id="btn-finalize-tokens-wrap" class="hidden pt-2 pb-2 space-y-2">
+      <button id="btn-insert-ficha-tokens" onclick="insertSectionInFicha('tokens')"
+        class="w-full flex items-center justify-center gap-2 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl text-[12px] font-bold transition-all shadow-sm">
+        <i data-lucide="file-plus-2" class="w-4 h-4" aria-hidden="true"></i>
+        Inserir Tokens na Ficha
+      </button>
       <button onclick="finalizeSection('tokens')"
         class="w-full flex items-center justify-center gap-2 py-3 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 hover:border-slate-300 transition-all shadow-sm">
         <i data-lucide="clipboard-check" class="w-4 h-4" aria-hidden="true"></i>
@@ -1695,10 +1714,16 @@ body {
       <!-- renderFlowsList() insere aqui -->
     </ul>
 
-    <!-- Finalizar Registros — ação única de fechamento, tom discreto (outline)
-         para não competir com "Conectar Frames" no header, a ação mais
-         frequente da tela. Só aparece com fluxos criados (ver renderFlowsList). -->
-    <div id="btn-finalize-flows-wrap" class="hidden pt-4 pb-2">
+    <!-- Inserir na Ficha — ação mais forte (preenchida), sincroniza esta
+         seção no canvas imediatamente. Finalizar Registros continua
+         discreta (outline) logo abaixo. Ambas só aparecem com fluxos
+         criados (ver renderFlowsList). -->
+    <div id="btn-finalize-flows-wrap" class="hidden pt-4 pb-2 space-y-2">
+      <button id="btn-insert-ficha-flows" onclick="insertSectionInFicha('flows')"
+        class="w-full flex items-center justify-center gap-2 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl text-[12px] font-bold transition-all shadow-sm">
+        <i data-lucide="file-plus-2" class="w-4 h-4" aria-hidden="true"></i>
+        Inserir Fluxos na Ficha
+      </button>
       <button onclick="finalizeSection('flows')"
         class="w-full flex items-center justify-center gap-2 py-3 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 hover:border-slate-300 transition-all shadow-sm">
         <i data-lucide="clipboard-check" class="w-4 h-4" aria-hidden="true"></i>
@@ -4119,7 +4144,7 @@ function getItemAuditBreakdown(item) {
 }
 
 let handoffData = {
-  _schemaVersion: 2,
+  _schemaVersion: 3,
   step1: {
     titulo: '',
     versao: 'v1.0',
@@ -4147,6 +4172,17 @@ let handoffData = {
   nextFlowNumber: 1,
   currentUser: null,
   _fichaGenerated: false,
+  // Metadado de sincronização por subseção da Ficha (inserção incremental
+  // via botão "Inserir [X] na Ficha") -- paralelo a _fichaGenerated, mas
+  // por seção em vez de global. Ausente em dados salvos antes de
+  // _schemaVersion 3; todo ponto de leitura usa fallback
+  // (handoffData._fichaSections || {}).
+  _fichaSections: {
+    tokens:  { insertedAt: null, itemCount: 0 },
+    specs:   { insertedAt: null, itemCount: 0 },
+    medidas: { insertedAt: null, itemCount: 0 },
+    fluxos:  { insertedAt: null, itemCount: 0 }
+  },
   _history: []
 };
 
@@ -8259,6 +8295,48 @@ document.addEventListener('DOMContentLoaded', _applyHomeCardOrder);
       if (msg.type === 'handoff-error') {
         if (typeof hideHandoffLoading === 'function') hideHandoffLoading();
         showToast('Erro ao gerar ficha: ' + (msg.message || 'Verifique o console do plugin.'), 'error');
+        return;
+      }
+
+      // Respostas de insert-ficha-section (botão "Inserir [X] na Ficha" nas
+      // 4 telas) -- sectionKey aqui usa a nomenclatura do backend (tokens/
+      // specs/medidas/fluxos), _btnKey traduz de volta pra nomenclatura do
+      // botão/finalizeSection (tokens/specs/measurements/flows) usada em
+      // insertSectionInFicha (handoff.js).
+      if (msg.type === 'ficha-section-inserted' || msg.type === 'ficha-section-insert-error' || msg.type === 'ficha-section-needs-full-create') {
+        const _btnKeyMap = { tokens: 'tokens', specs: 'specs', medidas: 'measurements', fluxos: 'flows' };
+        const _labelMap = { tokens: 'Tokens', specs: 'Specs', medidas: 'Medidas', fluxos: 'Fluxos' };
+        const btnKey = _btnKeyMap[msg.section] || msg.section;
+        const btn = document.getElementById('btn-insert-ficha-' + btnKey);
+        const _restoreButton = () => {
+          if (btn) {
+            btn.disabled = false;
+            if (btn.dataset._label) btn.innerHTML = btn.dataset._label;
+            _refreshIcons();
+          }
+        };
+
+        if (msg.type === 'ficha-section-needs-full-create') {
+          // Ficha do projeto ainda não existe no canvas -- o backend não
+          // duplica a lógica de criação completa (create-handoff), então o
+          // frontend dispara o fluxo já existente e validado. O clique
+          // original em "Inserir [X] na Ficha" acaba criando a Ficha inteira
+          // na primeira vez (comportamento aceito e documentado).
+          _restoreButton();
+          if (typeof createHandoffOnCanvas === 'function') createHandoffOnCanvas();
+          return;
+        }
+
+        _restoreButton();
+
+        if (msg.type === 'ficha-section-inserted') {
+          handoffData._fichaSections = handoffData._fichaSections || {};
+          handoffData._fichaSections[msg.section] = { insertedAt: new Date().toISOString(), itemCount: null };
+          if (typeof saveToStorage === 'function') saveToStorage();
+          showToast((_labelMap[msg.section] || 'Seção') + ' inserido na Ficha!');
+        } else {
+          showToast('Erro ao inserir na Ficha: ' + (msg.message || 'Verifique o console do plugin.'), 'error');
+        }
         return;
       }
 
@@ -13755,7 +13833,7 @@ window.closeOnboarding = closeOnboarding;
       // sobreviverem ao reset, e o saveToStorage() abaixo REGRAVAVA esse
       // lixo no clientStorage -- nem fechar e reabrir o plugin resolvia.
       Object.assign(handoffData, {
-        _schemaVersion: 2,
+        _schemaVersion: 3,
         _projectId: null,
         step1: { titulo: '', versao: 'v1.0', objetivo: '', status: 'rascunho', jornada: '', feature: '', equipe: [] },
         step2: { briefingEnabled: true, regrasEnabled: true, linksEnabled: true, briefingQuestions: [], regras: [], anexos: [], auditAutoBundle: null, selectedLibSlugs: [], auditReferences: [] },
@@ -13769,6 +13847,12 @@ window.closeOnboarding = closeOnboarding;
         nextFlowNumber: 1,
         currentUser: null,
         _fichaGenerated: false,
+        _fichaSections: {
+          tokens:  { insertedAt: null, itemCount: 0 },
+          specs:   { insertedAt: null, itemCount: 0 },
+          medidas: { insertedAt: null, itemCount: 0 },
+          fluxos:  { insertedAt: null, itemCount: 0 }
+        },
         _history: [],
         docs: {},
         setup: {},
@@ -14351,14 +14435,10 @@ ${(handoffData.createdFlows || []).length === 0
     }
     window._markFichaGenerated = _markFichaGenerated;
 
-    // "Finalizar Registros" — confirmação leve por tela. Cada funcionalidade
-    // (Tokens, Specs, Medidas, Fluxos) só documenta e salva localmente; a
-    // sincronização com o canvas é responsabilidade exclusiva de "Gerar
-    // Ficha de Handoff" (única etapa que percorre tudo, respeitando
-    // versionamento). Antes existia inserção incremental por tela
-    // (insert-frame-in-ficha/insert-flows-in-ficha via modal compartilhado)
-    // -- removida: manter dado só no backend e materializar tudo de uma vez
-    // em Gerar Ficha evita duplicar lógica de idempotência em 5 lugares.
+    // "Finalizar Registros" — confirmação leve por tela, 100% local (nunca
+    // toca o canvas). Continua existindo separada de "Inserir na Ficha"
+    // (abaixo) para quem só quer marcar "terminei de documentar esta aba"
+    // sem forçar uma escrita no canvas agora.
     const _FINALIZE_SECTION_LABEL = {
       tokens: 'Escaneamento de tokens',
       specs: 'Especificações',
@@ -14370,6 +14450,62 @@ ${(handoffData.createdFlows || []).length === 0
       saveAndGoHome(true, `${label} documentado — será incluído na próxima geração da ficha.`);
     }
     window.finalizeSection = finalizeSection;
+
+    // "Inserir [Funcionalidade] na Ficha" — ação distinta de finalizeSection:
+    // sincroniza de fato aquela subseção no canvas imediatamente (via handler
+    // backend insert-ficha-section), sem tocar as demais subseções da mesma
+    // Ficha. Reaproveita a mesma validação de campos obrigatórios de
+    // createHandoffOnCanvas, mas nunca abre o modal de versionamento (não é
+    // um bump de versão, é um patch pontual).
+    // sectionKey usa a nomenclatura de finalizeSection (tokens/specs/
+    // measurements/flows); traduzido para o nome de seção esperado pelo
+    // backend (tokens/specs/medidas/fluxos) via _FICHA_SECTION_BACKEND_KEY.
+    const _FICHA_SECTION_BACKEND_KEY = { tokens: 'tokens', specs: 'specs', measurements: 'medidas', flows: 'fluxos' };
+    const _FICHA_SECTION_LABEL = { tokens: 'Tokens', specs: 'Specs', measurements: 'Medidas', flows: 'Fluxos' };
+    function insertSectionInFicha(sectionKey) {
+      collectHandoffData();
+
+      const titulo   = (handoffData.step1.titulo  || '').trim();
+      const versao   = (handoffData.step1.versao  || '').trim();
+      const objetivo = (handoffData.step1.objetivo || '').trim();
+      const designer = (handoffData.step1.equipe  || []).find(
+        m => (m.papel || '').toLowerCase() === 'designer' && (m.nome || '').trim()
+      );
+
+      const missing = [];
+      if (!titulo)   missing.push('nome do projeto');
+      if (!designer) missing.push('nome do designer');
+      if (!versao)   missing.push('versão');
+      if (!objetivo) missing.push('objetivo da entrega');
+
+      if (missing.length > 0) {
+        const label = missing.length === 1
+          ? `Preencha o ${missing[0]} antes de inserir na ficha.`
+          : `Preencha antes de inserir na ficha: ${missing.join(', ')}.`;
+        showToast(label, 'error');
+        if (missing.includes('nome do designer')) {
+          navigate('view-dados-projeto');
+        } else if (typeof openDadosProjetoModal === 'function') {
+          openDadosProjetoModal();
+        }
+        return;
+      }
+
+      const btn = document.getElementById('btn-insert-ficha-' + sectionKey);
+      if (btn) {
+        btn.disabled = true;
+        btn.dataset._label = btn.innerHTML;
+        btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> <span>Inserindo...</span>';
+        _refreshIcons();
+      }
+
+      parent.postMessage({ pluginMessage: {
+        type: 'insert-ficha-section',
+        section: _FICHA_SECTION_BACKEND_KEY[sectionKey] || sectionKey,
+        data: handoffData
+      } }, '*');
+    }
+    window.insertSectionInFicha = insertSectionInFicha;
 
     async function exportHandoff() {
       const btn = document.getElementById("btn-final-export");

@@ -19,7 +19,7 @@ Plugin Figma que automatiza o handoff de design. Permite ao designer:
 - Mapear fluxos de tela
 - Gerar uma ficha técnica completa no canvas do Figma
 
-**Versão atual:** v6.12.0  
+**Versão atual:** v6.13.0  
 **Documentação:** `BUSINESS_RULES.md` (regras de negócio) · `CHANGELOG.md` (histórico)
 
 ---
@@ -143,6 +143,8 @@ git push origin main && git push gitlab main
 | `isDS` por propriedade **não influencia** os toggles de auditoria | São camadas distintas: scan automatizado vs. declaração humana |
 | Accordions do botão `⇅` incluem **cards de frame** | Antes só recolhia accordions internos |
 | Spec permanece **GROUP + nó solto (`contour`) vinculado por pluginData** — não migrar para FRAME único | Testado em 2026-08: FRAME único exigia duplo-clique para mover Conector/card sem arrastar o marcador junto; não ficou bom na prática. Revertido para o esquema original (clique simples move só o grupo móvel, marcador nunca acompanha) |
+| Inserção incremental por subseção **volta a existir** (v6.13.0, 2026-09-15), via handler único `insert-ficha-section` | Tinha sido removida antes (`insert-frame-in-ficha`/`insert-flows-in-ficha`) por duplicar lógica de idempotência entre handlers quase-idênticos; a reintrodução resolve isso reaproveitando as mesmas funções `_hdRebuild*Section` também usadas por `create-handoff`, sem duplicar a montagem |
+| Snapshots visuais na Ficha (Snapshot com Specs / Snapshot com Medidas) usam **PNG estático** (`exportAsync`), não réplica de camadas | Avaliação 2026-09-15 comparando com o plugin irmão hac (que usa clone real + snapshot PNG): o Handex já desenha specs/medidas direto sobre o frame original (não precisa de um "canvas de rascunho" separado como o hac), então só o snapshot isolado (sem a réplica de trabalho clonada) resolve o problema real — dar contexto visual na Ficha sem tocar a arquitetura de specs existente |
 
 ---
 

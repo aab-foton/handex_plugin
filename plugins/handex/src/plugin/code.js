@@ -337,10 +337,11 @@ function _hdCreateRow(parent, label, value) {
   return row;
 }
 
-// Card de "Frame Documentado" (nome, badge "Novo componente", auditoria DSC).
+// Card de "Frame Documentado" (nome, badge "Novo componente", auditoria DSC,
+// snapshots visuais de specs/medidas).
 // handexFrameId identifica o card entre gerações para permitir substituir em
 // vez de duplicar quando a ficha já existe.
-function _hdBuildFrameCard(f, fi) {
+async function _hdBuildFrameCard(f, fi) {
   const fRow = _hdCreateFrame("VERTICAL", 12, 8, { r: 0.98, g: 0.99, b: 1 });
   fRow.name = `[Frame] ${f.nome || 'Frame ' + (fi + 1)}`;
   fRow.cornerRadius = 8;
@@ -364,7 +365,114 @@ function _hdBuildFrameCard(f, fi) {
   if (f.audit && f.audit.status) {
     _hdCreateRow(fRow, "Auditoria DSC", f.audit.status + (f.audit.justificativa ? ' — ' + f.audit.justificativa : ''));
   }
+
+  const _frameNode = f.figmaId ? await figma.getNodeByIdAsync(f.figmaId) : null;
+  if (_frameNode) {
+    const _specIds = await _hdCollectSpecSnapshotNodeIds(f);
+    const _measureIds = (f.measurements || []).map(m => m.nodeId).filter(Boolean);
+
+    const _addPreview = async (label, nodeIds) => {
+      if (nodeIds.length === 0) return; // nunca gera preview vazio
+      const bytes = await _hdSnapshotFrameWithNodes(_frameNode, nodeIds);
+      if (!bytes) return;
+      try {
+        const imageHash = figma.createImage(bytes).hash;
+        const wrap = _hdCreateFrame("VERTICAL", 0, 4);
+        wrap.appendChild(_hdCreateText(label, 10, "Bold", { r: 0.39, g: 0.45, b: 0.55 }));
+        const rect = figma.createRectangle();
+        rect.resize(432, 243);
+        rect.fills = [{ type: "IMAGE", imageHash, scaleMode: "FIT" }];
+        rect.cornerRadius = 8;
+        wrap.appendChild(rect);
+        fRow.appendChild(wrap);
+        _hdSetFillAndHug(wrap);
+      } catch (e) { /* tolera falha de imagem isolada, não derruba o card inteiro */ }
+    };
+
+    await _addPreview("Snapshot com Specs", _specIds);
+    await _addPreview("Snapshot com Medidas", _measureIds);
+  }
+
   return fRow;
+}
+
+// Gera um PNG (bytes) do frame + nós auxiliares vinculados (specs ou
+// medidas), agrupando temporariamente para computar o bounding box da união
+// e desfazendo o agrupamento logo em seguida. figma.group() não desloca nós
+// que já estão soltos em figma.currentPage (mesma premissa já usada para
+// criar specGroup, ver create-spec) -- nunca reposiciona nada. Desfaz via
+// reparent manual (insertChild no índice/parent originais) em vez de
+// figma.ungroup() (API nunca exercitada neste código), replicando o mesmo
+// padrão de preservação de posição absoluta já usado por
+// _hdMoveToCategorySection. Tolera nós ausentes (getNodeByIdAsync -> null)
+// pulando o item, nunca lança.
+async function _hdSnapshotFrameWithNodes(frameNode, extraNodeIds) {
+  if (!frameNode || !('exportAsync' in frameNode)) return null;
+
+  const extraNodes = [];
+  for (const id of (extraNodeIds || [])) {
+    if (!id) continue;
+    let n = null;
+    try { n = await figma.getNodeByIdAsync(id); } catch (e) { n = null; }
+    if (n) extraNodes.push(n);
+  }
+
+  if (extraNodes.length === 0) {
+    // Nada para compor: exporta só o frame, sem tocar em parentesco.
+    try {
+      return await frameNode.exportAsync({ format: 'PNG', constraint: { type: 'SCALE', value: 2 } });
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Guarda parentesco/índice originais de TODOS os nós envolvidos (frame +
+  // extras) para poder devolver cada um ao lugar exato depois.
+  const allNodes = [frameNode, ...extraNodes];
+  const originalInfo = allNodes.map(n => ({
+    node: n,
+    parent: n.parent,
+    index: n.parent && 'children' in n.parent ? n.parent.children.indexOf(n) : -1,
+  }));
+
+  let tempGroup = null;
+  let bytes = null;
+  try {
+    tempGroup = figma.group(allNodes, figma.currentPage);
+    bytes = await tempGroup.exportAsync({ format: 'PNG', constraint: { type: 'SCALE', value: 2 } });
+  } catch (e) {
+    bytes = null;
+  } finally {
+    // Desfaz o agrupamento SEMPRE, mesmo se o export falhou -- nunca deixar
+    // um group temporário órfão no canvas.
+    for (const info of originalInfo) {
+      try {
+        if (info.parent && 'insertChild' in info.parent) {
+          const idx = Math.min(info.index >= 0 ? info.index : 0, info.parent.children.length);
+          info.parent.insertChild(idx, info.node);
+        }
+      } catch (e) { /* nó pode ter sido removido nesse meio-tempo; ignora */ }
+    }
+    try { if (tempGroup && tempGroup.type !== 'REMOVED') tempGroup.remove(); } catch (e) {}
+  }
+  return bytes;
+}
+
+// Resolve os IDs de nós de spec (specGroup + contour) vinculados a um frame,
+// só os explicitamente ligados via frame.createdSpecs -- nunca __loose__,
+// nunca busca geométrica.
+async function _hdCollectSpecSnapshotNodeIds(f) {
+  const ids = [];
+  for (const s of (f.createdSpecs || [])) {
+    if (!s || !s.id) continue;
+    ids.push(s.id);
+    try {
+      const specGroup = await figma.getNodeByIdAsync(s.id);
+      const markerId = specGroup && specGroup.getPluginData('handexSpecMarkerId');
+      if (markerId) ids.push(markerId);
+    } catch (e) { /* specGroup ausente: ids já tem só o id direto, tolerado no snapshot */ }
+  }
+  return ids;
 }
 
 // Subgrupo de medidas de 1 frame. handexFrameId identifica o subgrupo entre
@@ -610,6 +718,124 @@ function _hdFindExistingFicha(titulo) {
   if (fichas.length === 0) return null;
   fichas.sort((a, b) => a.name.localeCompare(b.name));
   return fichas[fichas.length - 1];
+}
+
+// ============================================================
+// Reconstrução por subseção da Ficha ("insert-ficha-section") -- cada
+// função monta a subseção do zero (mesma lógica usada por create-handoff)
+// e a devolve SOLTA, sem anexar a nenhum pai: o chamador decide entre
+// content.insertChild(idx, secao) (update no lugar, preservando a posição
+// das demais subseções) ou content.appendChild(secao) (subseção nova, sem
+// posição anterior a preservar). Não reutilizam _hdCreateSection porque
+// aquela sempre faz parent.appendChild internamente.
+// ============================================================
+
+function _hdBuildSectionShell(titleText) {
+  const section = _hdCreateFrame("VERTICAL", 24, 16, { r: 1, g: 1, b: 1 });
+  section.name = `[Seção] ${titleText}`;
+  _hdSetFillAndHug(section);
+  section.cornerRadius = 8;
+  section.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
+  section.strokeWeight = 1;
+  const title = _hdCreateText(titleText, 16, "Bold", { r: 0.24, g: 0.24, b: 1 });
+  section.appendChild(title);
+  _hdSetFillAndHug(title);
+  return section;
+}
+
+// Localiza a subseção existente de um dado título dentro de `content` (a
+// busca é sempre por nome fixo, mesmo padrão já usado por
+// pull-ficha-version-from-canvas) e substitui pelo conteúdo novo no MESMO
+// índice, ou anexa ao final se a subseção ainda não existir (ela nasce
+// vazia hoje, ex: projeto nunca teve medidas). Se `newSection` for null
+// (subseção ficou sem conteúdo), só remove a existente, sem recriar.
+function _hdReplaceSection(content, titleText, newSection) {
+  const _name = `[Seção] ${titleText}`;
+  const existing = content.children.find(n => n.type === 'FRAME' && n.name === _name);
+  let idx = content.children.length;
+  if (existing) {
+    idx = content.children.indexOf(existing);
+    try { existing.remove(); } catch (e) {}
+  }
+  if (!newSection) return;
+  content.insertChild(Math.min(idx, content.children.length), newSection);
+  _hdSetFillAndHug(newSection);
+}
+
+// 1.7 FRAMES DOCUMENTADOS -- reconstrói a subseção inteira a partir de
+// data.frames. Retorna a seção solta (nunca vazia sem chamador saber:
+// retorna null se não houver frames, para o chamador decidir remover).
+async function _hdRebuildFramesSection(frames) {
+  const _frames = frames || [];
+  if (_frames.length === 0) return null;
+  const framesSection = _hdBuildSectionShell("Frames Documentados");
+  for (const [fi, f] of _frames.entries()) {
+    const fRow = await _hdBuildFrameCard(f, fi);
+    framesSection.appendChild(fRow);
+    _hdSetFillAndHug(fRow);
+  }
+  return framesSection;
+}
+
+// 1.8 MEDIDAS -- mesmo critério de avulsas ("__loose__") já usado em
+// create-handoff: frames com measurements + data.measurements (avulsas).
+function _hdRebuildMeasuresSection(frames, looseMeasures) {
+  const _framesWithMeasures = (frames || []).filter(f => (f.measurements || []).length > 0);
+  const _loose = looseMeasures || [];
+  if (_framesWithMeasures.length === 0 && _loose.length === 0) return null;
+  const measSection = _hdBuildSectionShell("Medidas");
+  _framesWithMeasures.forEach(f => {
+    const fGroup = _hdBuildMeasuresSubgroup(f);
+    measSection.appendChild(fGroup);
+    _hdSetFillAndHug(fGroup);
+  });
+  if (_loose.length > 0) {
+    const looseFrame = { nome: 'Sem frame vinculado', measurements: _loose };
+    const looseGroup = _hdBuildMeasuresSubgroup(looseFrame);
+    looseGroup.setPluginData('handexFrameId', '__loose__');
+    measSection.appendChild(looseGroup);
+    _hdSetFillAndHug(looseGroup);
+  }
+  return measSection;
+}
+
+// 1.9 ESPECIFICAÇÕES ANOTADAS -- mesmo filtro de duplicidade
+// avulsa-vs-por-frame já usado em create-handoff (ver comentário histórico
+// no call site original sobre a spec "ressuscitada", CHANGELOG v6.1.1/v6.2.0):
+// `looseSpecs` já deve chegar filtrado (sem specs que também estão em algum
+// frame.createdSpecs) -- responsabilidade do chamador, replicada em ambos
+// create-handoff e insert-ficha-section.
+async function _hdRebuildSpecsSection(frames, looseSpecs) {
+  const _framesWithSpecs = (frames || []).filter(f => (f.createdSpecs || []).length > 0);
+  const _loose = looseSpecs || [];
+  if (_framesWithSpecs.length === 0 && _loose.length === 0) return null;
+  const annotSection = _hdBuildSectionShell("Especificações");
+  for (const f of _framesWithSpecs) {
+    const fGroup = await _hdBuildSpecsSubgroup(f);
+    annotSection.appendChild(fGroup);
+    _hdSetFillAndHug(fGroup);
+  }
+  if (_loose.length > 0) {
+    const looseFrame = { nome: 'Sem frame vinculado', createdSpecs: _loose, specGroupNames: {}, specGroupVisible: {} };
+    const looseGroup = await _hdBuildSpecsSubgroup(looseFrame);
+    looseGroup.setPluginData('handexFrameId', '__loose__');
+    annotSection.appendChild(looseGroup);
+    _hdSetFillAndHug(looseGroup);
+  }
+  return annotSection;
+}
+
+// 1.10 FLUXOS DE TELA
+function _hdRebuildFlowsSection(flows) {
+  const _flows = flows || [];
+  if (_flows.length === 0) return null;
+  const flowsSection = _hdBuildSectionShell("Fluxos de Tela");
+  _flows.forEach((flow, fi) => {
+    const fRow = _hdBuildFlowCard(flow, fi);
+    flowsSection.appendChild(fRow);
+    _hdSetFillAndHug(fRow);
+  });
+  return flowsSection;
 }
 
 function rgbToHex(r, g, b) {
@@ -1556,6 +1782,66 @@ figma.ui.onmessage = async (msg) => {
     return;
   }
 
+  // insert-ficha-section: atualiza SÓ uma subseção da Ficha existente
+  // (tokens/specs/medidas/fluxos), preservando as demais como estavam.
+  // Se a Ficha ainda não existe para este projeto, não duplica a lógica de
+  // criação completa (create-handoff tem ~1050 linhas) -- devolve um sinal
+  // pro frontend disparar create-handoff normalmente, que já cobre esse
+  // caso (ficha nova) pelo caminho já validado.
+  if (msg.type === 'insert-ficha-section') {
+    try {
+      const data = msg.data;
+      const _titulo = (data.step1?.titulo || 'Projeto').replace(/\//g, '-');
+      const existingFicha = _hdFindExistingFicha(_titulo);
+
+      if (!existingFicha) {
+        figma.ui.postMessage({ type: 'ficha-section-needs-full-create', section: msg.section });
+        return;
+      }
+
+      const content = existingFicha.findOne(n => n.type === 'FRAME' && n.name === 'Handex | Content');
+      if (!content) {
+        throw new Error('Ficha existente sem container de conteúdo reconhecido. Gere a Ficha completa uma vez para habilitar inserção por seção.');
+      }
+
+      const fonts = [
+        { family: "Inter", style: "Regular" },
+        { family: "Inter", style: "Medium" },
+        { family: "Inter", style: "SemiBold" },
+        { family: "Inter", style: "Semi Bold" },
+        { family: "Inter", style: "Bold" }
+      ];
+      for (const font of fonts) {
+        try { await figma.loadFontAsync(font); } catch (e) { console.log("Font not loaded:", font); }
+      }
+
+      const _frames = data.frames || [];
+
+      if (msg.section === 'tokens') {
+        const framesSection = await _hdRebuildFramesSection(_frames);
+        _hdReplaceSection(content, "Frames Documentados", framesSection);
+      } else if (msg.section === 'medidas') {
+        const measSection = _hdRebuildMeasuresSection(_frames, data.measurements || []);
+        _hdReplaceSection(content, "Medidas", measSection);
+      } else if (msg.section === 'specs') {
+        const _framedSpecIds = new Set(_frames.flatMap(f => (f.createdSpecs || []).map(s => s.id)));
+        const _looseSpecs = (data.specs || []).filter(s => !_framedSpecIds.has(s.id));
+        const annotSection = await _hdRebuildSpecsSection(_frames, _looseSpecs);
+        _hdReplaceSection(content, "Especificações", annotSection);
+      } else if (msg.section === 'fluxos') {
+        const flowsSection = _hdRebuildFlowsSection(data.createdFlows || []);
+        _hdReplaceSection(content, "Fluxos de Tela", flowsSection);
+      }
+
+      figma.currentPage.selection = [existingFicha];
+      figma.viewport.scrollAndZoomIntoView([existingFicha]);
+      figma.ui.postMessage({ type: 'ficha-section-inserted', section: msg.section });
+    } catch (err) {
+      console.error('Insert Ficha Section Error:', err);
+      figma.ui.postMessage({ type: 'ficha-section-insert-error', section: msg.section, message: err.message });
+    }
+  }
+
   if (msg.type === "create-handoff") {
     try {
       // Carrega as fontes antes de escrever e ignora erros caso alguma nao exista
@@ -2020,88 +2306,29 @@ figma.ui.onmessage = async (msg) => {
         }
       }
 
-      // 1.7 FRAMES DOCUMENTADOS
+      // 1.7-1.10 -- delega para as funções _hdRebuild*Section (mesma lógica
+      // de montagem, extraída para ser reaproveitada também pelo handler
+      // insert-ficha-section). Aqui é sempre uma ficha nova/recriada, então
+      // sempre appendChild ao final, nunca insertChild em índice existente.
       const _frames = data.frames || [];
-      if (_frames.length > 0) {
-        const framesSection = _hdCreateSection(content, "Frames Documentados");
-        _frames.forEach((f, fi) => {
-          const fRow = _hdBuildFrameCard(f, fi);
-          framesSection.appendChild(fRow);
-          _hdSetFillAndHug(fRow);
-        });
-        content.appendChild(framesSection);
-        setFillAndHug(framesSection);
-      }
 
-      // 1.8 MEDIDAS (seção independente, agrupada por frame + avulsas)
-      // Medidas criadas sem nenhum frame ativo/selecionado ficam em data.measurements
-      // (nível superior) -- mesmo padrão de "__loose__" já usado pra specs
-      // avulsas (ver 1.9 abaixo). Sem este bloco, medidas avulsas (ex: um
-      // grupo de medida solto na página, sem frame vinculado) ficavam de
-      // fora da Ficha por completo -- achado real, 2026-09-11.
-      const _framesWithMeasures = (_frames || []).filter(f => (f.measurements || []).length > 0);
-      const _looseMeasures = data.measurements || [];
-      if (_framesWithMeasures.length > 0 || _looseMeasures.length > 0) {
-        const measSection = _hdCreateSection(content, "Medidas");
-        _framesWithMeasures.forEach(f => {
-          const fGroup = _hdBuildMeasuresSubgroup(f);
-          measSection.appendChild(fGroup);
-          _hdSetFillAndHug(fGroup);
-        });
-        if (_looseMeasures.length > 0) {
-          const looseFrame = { nome: 'Sem frame vinculado', measurements: _looseMeasures };
-          const looseGroup = _hdBuildMeasuresSubgroup(looseFrame);
-          looseGroup.setPluginData('handexFrameId', '__loose__');
-          measSection.appendChild(looseGroup);
-          _hdSetFillAndHug(looseGroup);
-        }
-        content.appendChild(measSection);
-        setFillAndHug(measSection);
-      }
+      const framesSection = await _hdRebuildFramesSection(_frames);
+      if (framesSection) { content.appendChild(framesSection); _hdSetFillAndHug(framesSection); }
 
-      // 1.9 ESPECIFICAÇÕES ANOTADAS (seção independente, agrupada por frame)
-      // Specs criadas sem nenhum frame ativo/selecionado ficam em data.specs
-      // (nível superior), não em nenhum frame.createdSpecs -- identificadas
-      // pela chave fixa 'handexFrameId' = '__loose__' (mesmo padrão usado
-      // pela inserção incremental), já que não têm frame.figmaId real.
-      // data.specs pode conter specs que JÁ estão em algum frame.createdSpecs
-      // (contaminação por saveSpecsToStorage/_mergeLooseAndFramed, mesma
-      // duplicidade de fonte que já causou o bug de spec "ressuscitada" --
-      // ver CHANGELOG v6.1.1/v6.2.0) -- sem este filtro, a spec apareceria
-      // duas vezes na ficha: no card do frame real E no card de avulsas.
+      const measSection = _hdRebuildMeasuresSection(_frames, data.measurements || []);
+      if (measSection) { content.appendChild(measSection); _hdSetFillAndHug(measSection); }
+
+      // Mesmo filtro de duplicidade avulsa-vs-por-frame de sempre (ver
+      // comentário histórico em _hdRebuildSpecsSection sobre a spec
+      // "ressuscitada", CHANGELOG v6.1.1/v6.2.0) -- replicado também em
+      // insert-ficha-section para as duas pontas nunca divergirem.
       const _framedSpecIds = new Set((_frames || []).flatMap(f => (f.createdSpecs || []).map(s => s.id)));
       const _looseSpecs = (data.specs || []).filter(s => !_framedSpecIds.has(s.id));
-      const _framesWithSpecs = (_frames || []).filter(f => (f.createdSpecs || []).length > 0);
-      if (_framesWithSpecs.length > 0 || _looseSpecs.length > 0) {
-        const annotSection = _hdCreateSection(content, "Especificações");
-        for (const f of _framesWithSpecs) {
-          const fGroup = await _hdBuildSpecsSubgroup(f);
-          annotSection.appendChild(fGroup);
-          _hdSetFillAndHug(fGroup);
-        }
-        if (_looseSpecs.length > 0) {
-          const looseFrame = { nome: 'Sem frame vinculado', createdSpecs: _looseSpecs, specGroupNames: {}, specGroupVisible: {} };
-          const looseGroup = await _hdBuildSpecsSubgroup(looseFrame);
-          looseGroup.setPluginData('handexFrameId', '__loose__');
-          annotSection.appendChild(looseGroup);
-          _hdSetFillAndHug(looseGroup);
-        }
-        content.appendChild(annotSection);
-        setFillAndHug(annotSection);
-      }
+      const annotSection = await _hdRebuildSpecsSection(_frames, _looseSpecs);
+      if (annotSection) { content.appendChild(annotSection); _hdSetFillAndHug(annotSection); }
 
-      // 1.10 FLUXOS DE TELA
-      const _flows = data.createdFlows || [];
-      if (_flows.length > 0) {
-        const flowsSection = _hdCreateSection(content, "Fluxos de Tela");
-        _flows.forEach((flow, fi) => {
-          const fRow = _hdBuildFlowCard(flow, fi);
-          flowsSection.appendChild(fRow);
-          _hdSetFillAndHug(fRow);
-        });
-        content.appendChild(flowsSection);
-        setFillAndHug(flowsSection);
-      }
+      const flowsSection = _hdRebuildFlowsSection(data.createdFlows || []);
+      if (flowsSection) { content.appendChild(flowsSection); _hdSetFillAndHug(flowsSection); }
 
       fichaTecnica.appendChild(content);
       mainContainer.appendChild(fichaTecnica);
