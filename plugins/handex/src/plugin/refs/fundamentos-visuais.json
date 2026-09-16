@@ -2,7 +2,7 @@
   "meta": {
     "libraryName": "Fundamentos Visuais",
     "figmaFileKey": "nbv8CUA2nbukjSkhK44kgQ",
-    "exportedAt": "2026-09-04T02:08:35.026Z",
+    "exportedAt": "2026-09-16T12:43:29.008Z",
     "generator": "fetch-design-refs.cjs",
     "warnings": [
       "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
@@ -347,13 +347,6 @@
         "value": "#4fbed2"
       },
       {
-        "key": "031c2c3f5320821cf85264c09d222d9c12ad7d9d",
-        "name": "color/bg/information/2 (informative 30)",
-        "resolvedType": "COLOR",
-        "collection": "DSC",
-        "value": "#9bdae5"
-      },
-      {
         "key": "c7c4853b85406c88b4a4938532627129f2b46f99",
         "name": "color/content/highlight/2 (primary 110)",
         "resolvedType": "COLOR",
@@ -361,11 +354,11 @@
         "value": "#00437a"
       },
       {
-        "key": "efcc594aa6a398b8eebc4f49d3450f24afd86764",
-        "name": "color/content/highlight/1 (azul cx - primary 90)",
+        "key": "031c2c3f5320821cf85264c09d222d9c12ad7d9d",
+        "name": "color/bg/information/2 (informative 30)",
         "resolvedType": "COLOR",
         "collection": "DSC",
-        "value": "#005ca9"
+        "value": "#9bdae5"
       },
       {
         "key": "89977aaaec7fb1a8b7b58c297f0ee77321027a33",
@@ -373,6 +366,13 @@
         "resolvedType": "COLOR",
         "collection": "DSC",
         "value": "#e5f5f8"
+      },
+      {
+        "key": "efcc594aa6a398b8eebc4f49d3450f24afd86764",
+        "name": "color/content/highlight/1 (azul cx - primary 90)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#005ca9"
       },
       {
         "key": "f2e4cfdfa15eafe472098b2644fc7d43739a848a",
@@ -1131,18 +1131,18 @@
         "value": "#00437a"
       },
       {
-        "key": "1f5d400c8fa25e99b664d1a1e843ae18472088ac",
-        "name": "font/family/1",
-        "resolvedType": "STRING",
-        "collection": "DSC",
-        "value": "CAIXA Std"
-      },
-      {
         "key": "6099bbbae595d30ad63ef41af4100764a7b7082a",
         "name": "color/fixed/content/neutral/2",
         "resolvedType": "COLOR",
         "collection": "DSC",
         "value": "#22292e"
+      },
+      {
+        "key": "1f5d400c8fa25e99b664d1a1e843ae18472088ac",
+        "name": "font/family/1",
+        "resolvedType": "STRING",
+        "collection": "DSC",
+        "value": "CAIXA Std"
       },
       {
         "key": "1ed60f8d383053662d6b36131209f7a6b7910f96",
@@ -1593,13 +1593,6 @@
         "value": 1
       },
       {
-        "key": "c523a3149018f48d4af8b9b5fe2ae767c203c1f9",
-        "name": "shadow/spread/1",
-        "resolvedType": "FLOAT",
-        "collection": "DSC",
-        "value": 1
-      },
-      {
         "key": "5d9bcb90c2ba8eeae632e0739ea0cee516fdc39c",
         "name": "shadow/y/2",
         "resolvedType": "FLOAT",
@@ -1607,18 +1600,18 @@
         "value": 2
       },
       {
+        "key": "c523a3149018f48d4af8b9b5fe2ae767c203c1f9",
+        "name": "shadow/spread/1",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 1
+      },
+      {
         "key": "5990db89bc4ec9867de67eb0edd7545f0b1ce774",
         "name": "shadow/blur/3",
         "resolvedType": "FLOAT",
         "collection": "DSC",
         "value": 3
-      },
-      {
-        "key": "9be3095c2f46715738b4132395219aa60bcff10c",
-        "name": "shadow/blur/4",
-        "resolvedType": "FLOAT",
-        "collection": "DSC",
-        "value": 4
       },
       {
         "key": "3d6fa4838ce2ed9593edc2e5e3f419a1acb69b8c",
@@ -1633,6 +1626,13 @@
         "resolvedType": "FLOAT",
         "collection": "DSC",
         "value": 2
+      },
+      {
+        "key": "9be3095c2f46715738b4132395219aa60bcff10c",
+        "name": "shadow/blur/4",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 4
       },
       {
         "key": "c02abd137e7c6cb857be42f405f9e90c882adf1f",
@@ -1663,13 +1663,6 @@
         "value": 8
       },
       {
-        "key": "50dd310e9c69e36606fbd2e92480c937247edea5",
-        "name": "shadow/y/8",
-        "resolvedType": "FLOAT",
-        "collection": "DSC",
-        "value": 8
-      },
-      {
         "key": "0bf2c0c6be4ba5c8968c3f851d713022cd786f7e",
         "name": "shadow/spread/4",
         "resolvedType": "FLOAT",
@@ -1677,11 +1670,11 @@
         "value": 4
       },
       {
-        "key": "bdb442b5c42a2d37b6b321f79582c778c76667b0",
-        "name": "shadow/blur/10",
+        "key": "50dd310e9c69e36606fbd2e92480c937247edea5",
+        "name": "shadow/y/8",
         "resolvedType": "FLOAT",
         "collection": "DSC",
-        "value": 10
+        "value": 8
       },
       {
         "key": "b61447cd71fd390a84e10b419bbb66a80e180d50",
@@ -1689,6 +1682,13 @@
         "resolvedType": "FLOAT",
         "collection": "DSC",
         "value": 6
+      },
+      {
+        "key": "bdb442b5c42a2d37b6b321f79582c778c76667b0",
+        "name": "shadow/blur/10",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 10
       },
       {
         "key": "6362258161d52e9dadbaabe7859e779fea9e154e",

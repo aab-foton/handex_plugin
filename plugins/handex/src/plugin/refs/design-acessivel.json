@@ -2,7 +2,7 @@
   "meta": {
     "libraryName": "Design Acessível",
     "figmaFileKey": "Wy0IhXRVZMSOOr8E609UqI",
-    "exportedAt": "2026-09-04T02:11:54.658Z",
+    "exportedAt": "2026-09-16T12:46:45.412Z",
     "generator": "fetch-design-refs.cjs",
     "warnings": [
       "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
@@ -872,18 +872,18 @@
         "value": "Em HTML <aside> possui um significado semântico, indicando que o conteúdo é \"à parte\",  mas relacionado. "
       },
       {
-        "key": "9fb826cb3106b524ea3b7c24bc34e86d23d1f268",
-        "name": "itens interativos/lista/ordenada/descricao",
-        "resolvedType": "STRING",
-        "collection": "[a11y]specification",
-        "value": "Construir como lista ordenada."
-      },
-      {
         "key": "6549fe3b3f19153b25001fb272dd6bb3a20c611b",
         "name": "estruturais/marcos/header/descricao",
         "resolvedType": "STRING",
         "collection": "[a11y]specification",
         "value": "Indicar como cabeçalho. "
+      },
+      {
+        "key": "9fb826cb3106b524ea3b7c24bc34e86d23d1f268",
+        "name": "itens interativos/lista/ordenada/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Construir como lista ordenada."
       },
       {
         "key": "dcc66b5accd20fd977ad8adddf8573fe938fba64",
@@ -900,18 +900,18 @@
         "value": "Em HTML utilize a tag <ol>."
       },
       {
-        "key": "3c17610e4228bf785764215fc58d4406848f1ff9",
-        "name": "estruturais/marcos/header/nota",
-        "resolvedType": "STRING",
-        "collection": "[a11y]specification",
-        "value": "Em HTML use a tag <header> para um cabeçalho de uma seção ou página."
-      },
-      {
         "key": "6506ef617dbb027d6c7714f609a07b82d41338c8",
         "name": "itens interativos/lista/nao ordenada/descricao",
         "resolvedType": "STRING",
         "collection": "[a11y]specification",
         "value": "Construir como lista não ordenada."
+      },
+      {
+        "key": "3c17610e4228bf785764215fc58d4406848f1ff9",
+        "name": "estruturais/marcos/header/nota",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Em HTML use a tag <header> para um cabeçalho de uma seção ou página."
       },
       {
         "key": "6e4aed443c5b6cfe318c637887897d3cce78b139",
@@ -928,18 +928,18 @@
         "value": "Em HTML utilize a tag <ul>."
       },
       {
-        "key": "0c5e36755c9ffeace223ac70479e3cc06a33c013",
-        "name": "itens interativos/lista/de definição/descricao",
-        "resolvedType": "STRING",
-        "collection": "[a11y]specification",
-        "value": "Construir como lista de definição."
-      },
-      {
         "key": "dc0385fb306fc9c6e13c48bc6d6f6939457545ba",
         "name": "estruturais/marcos/footer/observacoes",
         "resolvedType": "STRING",
         "collection": "[a11y]specification",
         "value": "É um elemento que oferece um local centralizado para informações importantes para serem acessadas facilmente."
+      },
+      {
+        "key": "0c5e36755c9ffeace223ac70479e3cc06a33c013",
+        "name": "itens interativos/lista/de definição/descricao",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": "Construir como lista de definição."
       },
       {
         "key": "2cacfd2766356cba69327f85d9b015f7d33bd399",
