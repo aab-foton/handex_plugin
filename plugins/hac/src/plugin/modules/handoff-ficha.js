@@ -105,7 +105,7 @@ function _fichaInsertButtonHtml(area, sectionKey, hasItems) {
   const icon = already ? 'refresh-cw' : 'file-plus-2';
   return `
     <button type="button" onclick="_fichaInsertSection('${escapeHtml(sectionKey)}')"
-      class="w-full flex items-center justify-center gap-dsc-nano h-9 mt-auto pt-1 rounded-dsc-medium text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-white dark:bg-dark-surface text-cyan-700 dark:text-cyan-400 shadow-sm hover:shadow active:scale-[0.99] shrink-0">
+      class="w-full flex items-center justify-center gap-dsc-nano h-9 mt-auto mb-1 pt-1 rounded-dsc-medium text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-white dark:bg-dark-surface text-cyan-700 dark:text-cyan-400 shadow-sm hover:shadow active:scale-[0.99] shrink-0">
       <i data-lucide="${icon}" class="w-3.5 h-3.5" aria-hidden="true"></i>
       ${label}
     </button>
