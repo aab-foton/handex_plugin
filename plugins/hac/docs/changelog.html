@@ -2580,6 +2580,94 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <hr>
 
+    <h2>2026-09-15 — Página dedicada de Handoff (Fase 1); travamento ao criar
+    spec do Leitor de Tela; rolagem quebrada + tooltips na workspace</h2>
+
+    <p>Sessão iniciou um plano maior — jornada de seleção múltipla de telas
+    para uma página dedicada de Handoff — mas a parte de seleção múltipla
+    (captura shift+clique, criação em lote) acabou revertida desta branch
+    depois de uma cadeia de bugs de clone via Plugin API; ficou isolada em
+    <code>feat/multi-screen-selection</code>, ainda não integrada aqui.
+    Histórico completo dessa tentativa, incluindo as causas raiz e a decisão
+    de simplificar o modelo, está registrado no changelog dessa branch e na
+    seção <a href="tecnico.html#s8v">8v</a> de <code>tecnico.html</code>
+    (ambos só existem lá, não nesta branch). Esta entrada cobre só o que de
+    fato ficou na branch estável.</p>
+
+    <h3>Página dedicada (Fase 1, ESTÁVEL)</h3>
+    <p><code>_getOrCreateHacPage()</code> cria/reaproveita a página
+    <code>👐 | HAC - Handoff de Acessibilidade CAIXA</code>, identificada por
+    <code>pluginData('hacDedicatedPage')</code> (sobrevive a rename manual).
+    Testada isoladamente no Figma real — criação, reaproveitamento por nome
+    e navegação confirmados. Ainda não tem nenhum fluxo real que a use (a
+    seleção múltipla que a consumiria está na outra branch); existe como
+    fundação pronta.</p>
+
+    <h3>Travamento ao criar spec do Leitor de Tela (corrigido)</h3>
+    <p>Ciclo infinito real entre render e mensagem: <code>resolve-layer-order</code>
+    só devolvia os <code>targetNodeId</code> efetivamente encontrados na
+    árvore da Área — qualquer id nunca encontrado (ancestral oculto, frame
+    apagado) nunca entrava no cache do frontend, e
+    <code>_a11yQueueLayerOrderResolution</code> voltava a pedi-lo a cada
+    render, que sempre re-renderiza, fechando o ciclo sem debounce (DOM
+    destruído/reconstruído em loop apertado — "pisca, ícones somem e trava").
+    Corrigido em duas camadas: o backend marca explicitamente todo id não
+    encontrado como <code>null</code> ("procurei e não existe"), e o frontend
+    ganha um guard de requisição em voo por área.</p>
+
+    <h3>Jornada do Leitor de Tela revisada</h3>
+    <p>A réplica de trabalho passa a ser criada/reaproveitada e o canvas foca
+    nela assim que "+ Nova spec" é clicado, não mais só ao aplicar a primeira
+    spec — mesmo adiantamento que Tabulação/Swipe já tinham. Loading de
+    canvas cobre a espera; toast de instrução removido por ficar redundante
+    com o modal.</p>
+
+    <h3>Bug de rolagem/sobreposição na workspace</h3>
+    <p>Print real do usuário: itens de lista (Tabulação, Swipe) apareciam
+    sobrepostos pelos botões de ação ao final da aba ("Atualizar",
+    "Preencher..."), em vez de rolarem normalmente. Causa em duas partes: (1)
+    <code>#a11y-workspace-scroll-container</code> não tinha
+    <code>min-h-0</code> — sem ele, o default <code>min-height: auto</code>
+    do flexbox impede o filho de encolher abaixo do próprio conteúdo, e o
+    <code>overflow-y-auto</code> nunca chega a rolar de fato; (2) o wrapper
+    de cada aba (<code>_a11yWorkspaceTab*</code>) tinha <code>flex-1
+    min-h-0</code> também — esse <code>min-h-0</code> no nível ERRADO
+    colapsava o wrapper abaixo do próprio conteúdo (sem overflow declarado
+    ali), vazando o excesso visualmente por cima do que vinha depois no
+    fluxo. Corrigido com <code>min-h-0</code> só no ancestral de scroll,
+    removido do wrapper interno. Respiro final (<code>pb-10</code> no
+    container + <code>mb-1</code> direto no botão "Preencher...") reforçado
+    depois que a primeira tentativa (<code>pb-6</code>) não foi suficiente —
+    o botão só tinha <code>pt-1</code> (respiro em cima), nenhuma margem
+    própria embaixo.</p>
+
+    <h3>Tooltips</h3>
+    <p>Removidos de botões com texto claro já autoexplicativo (Adicionar
+    itens, Iniciar Ordem de Tabulação, Simular leitura, Mapeamento
+    Automático, Iniciar/Refazer trilha de Swipe, Adicionar ponto, Remover
+    trilha, Nova spec, Preencher/Atualizar [seção], Cancelar/Concluir seleção
+    da barra de captura) — mantidos só nos 2 botões ícone-only (lixeira
+    "Apagar todos os selos", chevron de recolher instruções). Corrigida a
+    classe do chevron: usava <code>tooltip-left</code> (vazava pela borda
+    superior da janela, já que ele fica no topo), correto é
+    <code>tooltip-bottom</code>.</p>
+
+    <h3>Regra de versionamento formalizada</h3>
+    <p><code>package.json</code> ficou travado em <code>0.1.0-beta.1</code>
+    desde o commit inicial do plugin até <code>412588d</code> — dezenas de
+    commits reais (fixes, features, refactors) sem nenhum bump, tornando
+    impossível saber, olhando o plugin exportado, qual entrega ele reflete.
+    Documentado em <code>CLAUDE.md</code>: todo commit que muda
+    <code>src/plugin/</code> bumpa a versão antes de <code>bundle:code</code>.
+    Esta branch está em <code>v0.1.0-beta.7</code> ao final desta entrada.</p>
+
+    <p><strong>Validação</strong>: <code>npx tsc --noEmit</code>,
+    <code>npm run bundle:ui</code>, <code>npm run bundle:code</code> e
+    <code>npm run lint</code> — limpos a cada rodada de correção. Enviado ao
+    GitLab (<code>beta/a11y-mobile-handoff</code>).</p>
+
+    <hr>
+
     <p><em>Entradas anteriores a 2026-08-24 pertencem ao histórico do plugin Handex
     (produto de origem, antes da extração do hac) e não são replicadas aqui.</em></p>
 
