@@ -388,14 +388,26 @@ async function _a11yScanArea(rootNode) {
     return false;
   }
 
+  // Teto de descida DENTRO do modo restrito (visitando descendentes de um
+  // componente DSC já resolvido, ver _hasResolvedDscMatch abaixo) — conta
+  // separado do `depth` geral da árvore. Ampliado de 1 para 3 (2026-09-18,
+  // pedido do usuário: cobrir ícone/decorativo aninhado mais fundo dentro
+  // de componentes compostos, ex. um ícone dentro de um Badge dentro de um
+  // Card DSC). A REGRA que evita fragmentação (só ícone/decorativo isolado
+  // vira item, categoria abaixo desse limite é sempre descartada) não muda
+  // — só o ALCANCE vertical aumenta. Ver comentário original do caso
+  // "[dsc-tc] Actions - Button Row" (2026-09-09) mais abaixo.
+  const RESTRICTED_MODE_MAX_DEPTH = 3;
+
   // `parentComponentMatch` (2026-09-09): preenchido só quando esta chamada
-  // de _extract está visitando um filho DIRETO de um componente DSC já
+  // de _extract está visitando um descendente de um componente DSC já
   // resolvido (ver _hasResolvedDscMatch/_hasExposedSlotProperties abaixo)
-  // — nunca mais fundo que 1 nível. Sinaliza pro bloco de classificação
-  // "só aceite este node se ele for um ÍCONE isolado (categoria 'icons'),
-  // ignore qualquer outra categoria e não desça mais fundo" — ver uso mais
-  // abaixo. Fora desse modo (undefined), o comportamento é o de sempre.
-  async function _extract(n, depth, parentComponentMatch) {
+  // — até RESTRICTED_MODE_MAX_DEPTH níveis abaixo dele (contados em
+  // `restrictedDepth`, separado do `depth` geral da árvore). Sinaliza pro
+  // bloco de classificação "só aceite este node se ele for um ÍCONE
+  // isolado (categoria 'icons'), ignore qualquer outra categoria" — ver uso
+  // mais abaixo. Fora desse modo (undefined), o comportamento é o de sempre.
+  async function _extract(n, depth, parentComponentMatch, restrictedDepth) {
     if ((depth || 0) > 16) return;
     if (n.visible === false) return;
     if (n !== rootNode && _isClippedByAncestor(n)) return;
@@ -633,40 +645,48 @@ async function _a11yScanArea(rootNode) {
       const _hasExposedSlotProperties = n.type === 'INSTANCE' && mainComp && mainComp.remote &&
         n.componentPropertyReferences && Object.keys(n.componentPropertyReferences).length > 0;
 
-      // Já estamos DENTRO do modo restrito (visitando filho direto de um
-      // componente pai resolvido, ver ramo abaixo) — nunca desce mais
-      // fundo que esse 1 nível, mesmo que este próprio filho seja um
-      // FRAME/GROUP com filhos, e mesmo que ele próprio resolva como
-      // outro componente DSC. Isso é o que garante "só 1 nível", sem
-      // depender de _hasResolvedDscMatch/_hasExposedSlotProperties
-      // calculados de novo pra este filho.
+      // Já estamos DENTRO do modo restrito (visitando descendente de um
+      // componente pai resolvido, ver ramo abaixo) — desce até
+      // RESTRICTED_MODE_MAX_DEPTH níveis abaixo dele (2026-09-18, antes era
+      // sempre 1), mesmo que este próprio filho seja um FRAME/GROUP com
+      // filhos, e mesmo que ele próprio resolva como outro componente DSC.
+      // Isso é o que garante o teto, sem depender de
+      // _hasResolvedDscMatch/_hasExposedSlotProperties calculados de novo
+      // pra este filho — a regra "só ícone/decorativo isolado vira item"
+      // (aplicada no bloco de classificação acima, via `category !== 'icons'
+      // vira frames`) continua valendo em TODOS esses níveis, evitando
+      // fragmentação mesmo com o alcance maior.
       if (parentComponentMatch) {
-        // não desce.
+        if ((restrictedDepth || 0) < RESTRICTED_MODE_MAX_DEPTH && 'children' in n && n.children) {
+          for (const child of n.children) {
+            await _extract(child, (depth || 0) + 1, parentComponentMatch, (restrictedDepth || 0) + 1);
+          }
+        }
       } else if (!_hasResolvedDscMatch && !_hasExposedSlotProperties && 'children' in n && n.children) {
         for (const child of n.children) {
           await _extract(child, (depth || 0) + 1);
         }
       } else if (_hasResolvedDscMatch && !_hasExposedSlotProperties && 'children' in n && n.children) {
-        // Regra nova (2026-09-09, caso real: "[dsc-tc] Actions - Button
+        // Regra original (2026-09-09, caso real: "[dsc-tc] Actions - Button
         // Row" — cada botão tem um ícone interno que precisa virar spec
         // própria de Elemento Decorativo, hoje invisível porque a
-        // recursão parava aqui). Em vez de bloquear totalmente, desce SÓ
-        // 1 nível (os filhos diretos — o guard `if (parentComponentMatch)`
-        // acima impede qualquer nível além deste) — cada filho é
-        // classificado normalmente pela lógica acima, mas só é aceito se
-        // for um ÍCONE isolado (parentComponentMatch !== null &&
-        // category !== 'icons' vira 'frames', descartado). Não reintroduz
-        // o bug original: qualquer OUTRA INSTANCE de componente DSC
-        // dentro (ex. um Badge) nunca bate na heurística de ícone, então
-        // nunca vira item concorrente — e mesmo que batesse, o guard
-        // acima impediria ela de descer mais fundo ainda. Aplicado só ao
-        // caso _hasResolvedDscMatch — _hasExposedSlotProperties (conteúdo
-        // de slot dinâmico, ex. Footer/Badge do Value Section) continua
-        // bloqueado por completo, caso conceitualmente diferente
-        // (conteúdo configurável via property, não decoração fixa do
-        // design).
+        // recursão parava aqui). Em vez de bloquear totalmente, desce até
+        // RESTRICTED_MODE_MAX_DEPTH níveis (o guard acima, no ramo
+        // `if (parentComponentMatch)`, impede qualquer nível além desse
+        // teto) — cada filho é classificado normalmente pela lógica acima,
+        // mas só é aceito se for um ÍCONE isolado (parentComponentMatch
+        // !== null && category !== 'icons' vira 'frames', descartado). Não
+        // reintroduz o bug original: qualquer OUTRA INSTANCE de componente
+        // DSC dentro (ex. um Badge) nunca bate na heurística de ícone,
+        // então nunca vira item concorrente — e mesmo que batesse, o guard
+        // acima impediria ela de descer além do teto. Aplicado só ao caso
+        // _hasResolvedDscMatch — _hasExposedSlotProperties (conteúdo de
+        // slot dinâmico, ex. Footer/Badge do Value Section) continua
+        // bloqueado por completo, caso conceitualmente diferente (conteúdo
+        // configurável via property, não decoração fixa do design) — não
+        // ampliado nesta mudança (decisão explícita do usuário, 2026-09-18).
         for (const child of n.children) {
-          await _extract(child, (depth || 0) + 1, _dscRemoteMatch);
+          await _extract(child, (depth || 0) + 1, _dscRemoteMatch, 1);
         }
       }
     } catch (err) {

@@ -282,6 +282,7 @@ hr {
         <li><a href="#s8s">Gate de seleção + matching determinístico no fluxo manual + alerta de handoff honesto (2026-09-11)</a></li>
         <li><a href="#s8t">Correção de tipografia da Ficha: escala real do DSC (2026-09-11)</a></li>
         <li><a href="#s8u"><strong>Árvore de layers atual da Ficha e dimensionamento — ESTÁVEL (2026-09-11 a 2026-09-14)</strong></a></li>
+        <li><a href="#s8v">Badge da lib errada na Ficha, Mapeamento Automático do Swipe recuperado, Design System alinhado ao Handex (2026-09-18)</a></li>
         <li><a href="#s9">Contrato de mensagens (UI ↔ backend)</a></li>
         <li><a href="#s10">Escala da UI e <code>position</code> dos modais</a></li>
         <li><a href="#s10a">Onboarding — 1 jornada por origem</a></li>
@@ -3593,6 +3594,183 @@ hr {
     completos de cada causa raiz (com trechos de código e o print que a
     motivou) em <code>docs/changelog.html</code>, entrada de mesma data, e
     em <code>docs/funcionalidades-protegidas.md</code>.</p>
+
+    <h2 id="s8v">8v. Badge da lib errada na Ficha, Mapeamento Automático do Swipe recuperado, Design System alinhado ao Handex (2026-09-18)</h2>
+
+    <h3>Badge de categoria na Ficha usava dicionário da lib antiga</h3>
+    <p>O usuário flagrou, no painel de propriedades do Figma, que o badge
+    de categoria do card de instrução "Como fazer as especificações para
+    Leitor de Tela" vinha do componente <code>[a11y] Conectores</code> da
+    lib <strong>"Design Acessível | Desktop Web"</strong> (antiga,
+    <code>Wy0IhXRVZMSOOr8E609UqI</code>) — não da lib nova/oficial
+    (<code>HhriLSpKnCB2dHhyiU16iB</code>). Causa raiz: <code>A11Y_AGRUPAMENTO_KEYS</code>
+    e <code>A11Y_CONECTOR_LINHA_KEYS</code> (as constantes "desktop"/web,
+    usadas em <code>_tryImportA11yConectorLinha</code> sempre que
+    <code>a11yOrigin==='web'</code>, ou como fallback de qualquer
+    categoria/direção ausente no dicionário mobile) nunca tinham sido
+    migradas de fato na sessão de 2026-09-17 — só a variante
+    <code>_MOBILE</code> foi atualizada. Um comentário no código afirmava
+    erroneamente que ambas já estavam na lib nova, mascarando o bug.
+    Corrigido re-obtendo as 4 categorias existentes na lib nova via
+    <code>GET /v1/files/HhriLSpKnCB2dHhyiU16iB/components</code> —
+    "informações" permanece na lib antiga por lacuna real confirmada (a
+    lib nova ainda não publicou nenhuma variante dessa categoria). A
+    diferenciação web/mobile do badge (pedido explícito do usuário,
+    "os itens levados pra ficha do canvas tem de ser específicos de cada
+    tipo") já estava implementada corretamente — o sintoma percebido era
+    só efeito colateral do dicionário web estar errado.</p>
+
+    <p>Corrigido também que os badges de categoria dos passos da instrução
+    (<code>_buildFichaLegendColumn</code>) desenhavam o conector com
+    <code>guideSide: 'right'</code> (orientação "direita", com traço) —
+    incorreto, já que esse badge só ilustra a categoria dentro do texto,
+    não representa um conector real apontando pra um elemento do canvas.
+    <code>_tryImportA11yConectorLinha</code> ganhou um parâmetro
+    <code>orientacao</code> (prioridade sobre <code>guideSide</code>) para
+    permitir a variante <code>desativado</code> (sem traço) nesse caso
+    específico, sem afetar os demais chamadores (Assets da legenda,
+    marcador de Área), que continuam usando direção real.</p>
+
+    <h3>Detecção Automática: alcance dentro de componentes já resolvidos</h3>
+    <p><code>_a11yScanArea</code> (<code>dsc-matching.js</code>) tinha um
+    teto deliberado de 1 nível de descida dentro de um componente DSC já
+    resolvido (<code>_hasResolvedDscMatch</code>) — só aceitando ícone/
+    decorativo isolado nesse nível, pra não fragmentar o componente pai em
+    itens concorrentes (bug corrigido em 2026-09-04/09). Ampliado para até
+    3 níveis (<code>RESTRICTED_MODE_MAX_DEPTH</code>), mantendo intacta a
+    mesma regra restritiva de classificação — só o alcance vertical
+    aumenta. Slot exposto via <code>componentPropertyReferences</code>
+    (ex.: <code>[dsc] Value Section</code>, cujo conteúdo de Footer/Badge
+    já é coberto pelas properties do próprio componente pai) continua
+    bloqueado por completo, por decisão explícita do usuário — não
+    ampliado nesta mudança.</p>
+
+    <p><strong>Investigação relacionada, guardada sem implementar</strong>:
+    o usuário notou, via Dev Mode, que "Value Section" na verdade é uma
+    variante de um componente-base oculto
+    (<code>.[base][template] Screen Miniapp Home - Slot Hero</code>) com
+    property <code>variant</code> selecionando entre sub-tipos totalmente
+    diferentes. Confirmado via REST API que o deep-scan offline
+    (<code>fetch-component-properties.cjs</code>) não alcança esse nível —
+    o node real está a 7 níveis de profundidade a partir da raiz do
+    documento, mas <code>DEEP_SCAN_MAX_DEPTH</code> é 4. O padrão existe
+    mas é concentrado (3 ocorrências confirmadas, todas do mesmo componente
+    pai <code>[dsc-ts] Screen Mini App Home</code>) — decisão do usuário foi
+    não investir agora. Detalhes completos (node_ids, keys, achados) na
+    memória do projeto, não replicados aqui por não afetarem o
+    comportamento atual do plugin.</p>
+
+    <h3>Mapeamento Automático próprio do Swipe recuperado</h3>
+    <p>Decisão de produto da vertical de a11y (2026-09-16): o gesto de
+    swipe (VoiceOver/TalkBack) percorre TODOS os componentes com conteúdo
+    real da tela, interativos e não-interativos — não só os elementos
+    Tab-navegáveis já mapeados pela Ordem de Tabulação
+    (<code>startSwipePathFromTabOrder</code>, que só reaproveita esse
+    array). Essa feature (<code>generate-swipe-path-from-layers</code>,
+    <code>_confirmGenerateSwipePathFromLayers</code>) foi implementada em
+    16/09 mas perdida sem querer no revert do dia seguinte
+    (<code>b228343</code>), que voltou o branch inteiro a um ponto anterior
+    a esse commit — arrastada junto por ser um revert de escopo maior
+    (feature de seleção múltipla de telas, com bugs reais), não por
+    problema próprio.</p>
+
+    <p>Reimplementada em 2026-09-18 contra o código atual (não copiada
+    literalmente do commit antigo, que já estava defasado): novo handler
+    no backend reaproveita <code>_a11yScanArea</code> (mesmo motor da
+    Detecção Automática do Leitor de Tela — dedupe, composição de ícone,
+    clipping por ancestral já maduros), filtra fora ícones/vetores/frames
+    e containers sem match DSC real, mantém componentes/tipografia/imagens
+    com <code>dscComponentMatch</code> válido, ordena por zigue-zague
+    visual (<code>_orderNodesInZigzagReadingOrder</code>, mesmo critério da
+    Tabulação).</p>
+
+    <p><strong>Bug real corrigido durante a reimplementação</strong>
+    (reportado com print: "elemento '9:30' não existe mais na cópia da
+    tela"): a 1ª versão do novo handler escaneava o CLONE de trabalho, mas
+    devolvia os <code>nodeId</code> do próprio clone como se já fossem
+    originais — sem nenhuma tradução. <code>insert-swipe-path</code>
+    sempre espera ids ORIGINAIS pra resolver contra o seu próprio mapa
+    original→clone ao desenhar; recebendo um id-de-clone, a busca sempre
+    falhava. Corrigido invertendo o <code>nodeMap</code>
+    (<code>cloneIdToOriginalId</code>) e traduzindo cada candidato antes
+    de virar <code>item</code>.</p>
+
+    <p>Estado atual: o botão de entrada
+    (<code>A11Y_AUTO_MAPPING_HIDDEN_SWIPE</code>) está oculto de novo — a
+    ordenação por zigue-zague ainda produz uma trilha reta/errática em
+    telas reais (elementos lado a lado na mesma linha visual viram pontos
+    empilhados verticalmente), causa raiz não investigada a fundo ainda.
+    Toda a lógica do scan/handler permanece intacta e funcional, só
+    desconectada da UI.</p>
+
+    <h3>Design System alinhado ao Handex</h3>
+    <p>Pedido explícito do usuário: "quero que o HAC tenha a mesma
+    estrutura de design do Handex". Investigação prévia (agente
+    <code>Explore</code>) comparou tokens/padrões dos dois projetos —
+    achados completos preservados na memória do projeto. Aplicado:
+    escala <code>blue-*</code> do <code>tailwind.config.cjs</code>
+    substituída pela escala real do Handex (só o <code>blue-500</code>
+    já batia, <code>#005ca9</code>); cor de acento própria do hac (cyan
+    <code>#0891B2</code>/<code>#0e7490</code>) e a cor de marca residual
+    <code>#0070af</code>/<code>#00335c</code> (fora do escopo da primeira
+    rodada, corrigida numa segunda a pedido do usuário) substituídas pelo
+    azul institucional (<code>#005ca9</code>/<code>#00325b</code>) em toda
+    a base — decisão explícita de visual 100% idêntico ao Handex, sem
+    manter identidade visual própria do hac. <code>rounded-xl</code>
+    convergido para <code>rounded-2xl</code> (mesma decisão que o Handex já
+    tinha tomado pra si). Bug espelhado nos dois projetos corrigido: botão
+    <code>bg-green-500</code>/<code>bg-green-600</code> herdava a cor do
+    override de laranja de alerta em vez do verde real. Ícones de ação do
+    card de spec (Focar, Mostrar/Ocultar, Travar/Destravar, Editar,
+    Remover) aumentados de <code>w-6 h-6</code> (24px) para
+    <code>w-10 h-10</code> (40px) — piso de área de toque que o Handex já
+    documenta/aplica aos seus próprios botões-ícone.</p>
+
+    <h3>UX das abas de trabalho (Tabulação, Swipe, Leitor de Tela)</h3>
+    <p>Botão "Instruções sobre esta documentação" (barra larga, sempre
+    visível, sempre abrindo a modal completa a cada clique em "Iniciar")
+    reestruturado em duas direções por pedido do usuário: (1) no estado com
+    algo já documentado, vira um ícone compacto (<code>circle-help</code>)
+    posicionado ao lado do botão de ação — ordem final Hint → Ação →
+    Lixeira; (2) no estado sem nada documentado, vira um alerta com botão
+    embutido (fundo <code>blue-50</code>, ícone <code>info</code>, frase
+    curta + botão "Ver instruções" sublinhado dentro dele).</p>
+
+    <p>A modal de instrução passa a abrir sozinha só na 1ª vez que o
+    designer clica em "Iniciar Ordem de Tabulação"/"Criar ordem de leitura"
+    em cada projeto — mesmo padrão já usado pelo Leitor de Tela
+    (<code>hacData.a11yLeitorInstructionSeen</code>), agora estendido via
+    <code>hacData.a11yTabulacaoInstructionSeen</code>/<code>a11ySwipeInstructionSeen</code>
+    (flags independentes, por feature, marcadas só na CONFIRMAÇÃO, nunca
+    na abertura — se o designer fechar pelo X/backdrop sem confirmar, a
+    modal reaparece no próximo clique). A reabertura manual pelo ícone de
+    hint nunca depende dessa flag.</p>
+
+    <p>No estado vazio, a estrutura de cada aba virou uma coluna
+    centralizada no espaço vertical restante (hint/alerta fica fixo no
+    topo): texto explicativo próprio de cada aba ("Nenhuma ordem de
+    tabulação"/"Nenhuma trilha de swipe"/"Nenhuma especificação nesta tela
+    ainda") posicionado ACIMA do botão — mesmo texto que no Leitor de Tela
+    vivia solto lá embaixo, dentro da lista de resultados, removido de lá
+    pra não duplicar a mesma informação em 2 lugares. Nomenclatura dos
+    botões de partida unificada nas 3 abas: <strong>"Criar ordem de
+    tabulação"</strong> / <strong>"Criar ordem de leitura"</strong> (ícone
+    trocado de <code>route</code> pra <code>move-horizontal</code>, mesmo
+    ícone da aba na barra de tabs) / <strong>"Criar especificações"</strong>
+    — o antigo "+ Nova spec"/"Iniciar Ordem de Tabulação"/"Iniciar trilha
+    de swipe" volta a aparecer só no estado já documentado/recolhido.
+    "Mapeamento Automático" (quando visível) ganhou respiro próprio
+    (<code>mt-1</code>) em vez de ficar colado ao botão principal, e teve o
+    prefixo "ou usar" removido do texto nas 3 abas.</p>
+
+    <p><strong>Validação</strong>: <code>node --check</code> em cada
+    arquivo tocado (via cópia temporária <code>.mjs</code> para os módulos
+    ESM do backend, que o Node não reconhece como módulo por extensão),
+    <code>npm run bundle:ui</code>, <code>npm run bundle:code</code>,
+    <code>npm run export:plugin</code>, <code>npx tsc --noEmit</code> e
+    <code>npm run lint:figma-api</code> — limpos a cada rodada de
+    correção. Nenhum bump de versão feito durante a sessão de trabalho —
+    reservado pro commit final.</p>
 
     <h2 id="s9">9. Contrato de mensagens (UI ↔ backend)</h2>
 

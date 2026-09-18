@@ -47,7 +47,7 @@ const ONBOARDING_TOOLS = {
     view: 'view-specifications',
     title: 'Documentação de Acessibilidade: Web',
     icon: 'monitor',
-    color: '#0891B2',
+    color: '#005ca9',
     format: 'stepper',
     // Onboarding é só o essencial pra começar a usar — não tenta cobrir
     // toda regra da vertical de acessibilidade (categorias, quando cada
@@ -55,7 +55,7 @@ const ONBOARDING_TOOLS = {
     // aprofundar vai direto na lib real "Design Acessível", fonte de
     // verdade de tudo que o hac referencia (mesmo link usado em
     // _renderA11yModalDscComponentName pra abrir um componente específico).
-    purpose: 'O hac documenta, direto no canvas do Figma, como cada elemento da tela deve ser interpretado por um leitor de tela e em que ordem o teclado deve navegar por ela, para o time de desenvolvimento implementar acessibilidade sem depender de especificação à parte. O hac reconhece componentes das libs <strong>DSC Web Angular & React</strong> (legado) e <strong>Super DSC Web</strong> na mesma tela, já que as duas coexistem enquanto a migração de design system não termina. Os passos a seguir cobrem só o essencial para começar; para as regras completas de cada categoria, consulte a lib <a href="https://www.figma.com/design/3zdtN13YvPlCGPdXeL0Y2i" target="_blank" rel="noopener noreferrer" class="text-[#0891B2] dark:text-cyan-400 underline decoration-dotted hover:decoration-solid font-semibold">Design Acessível</a>.',
+    purpose: 'O hac documenta, direto no canvas do Figma, como cada elemento da tela deve ser interpretado por um leitor de tela e em que ordem o teclado deve navegar por ela, para o time de desenvolvimento implementar acessibilidade sem depender de especificação à parte. O hac reconhece componentes das libs <strong>DSC Web Angular & React</strong> (legado) e <strong>Super DSC Web</strong> na mesma tela, já que as duas coexistem enquanto a migração de design system não termina. Os passos a seguir cobrem só o essencial para começar; para as regras completas de cada categoria, consulte a lib <a href="https://www.figma.com/design/3zdtN13YvPlCGPdXeL0Y2i" target="_blank" rel="noopener noreferrer" class="text-[#005ca9] dark:text-blue-400 underline decoration-dotted hover:decoration-solid font-semibold">Design Acessível</a>.',
     steps: [
       { text: 'Clique em <strong>Selecionar Tela</strong> no topo da tela e selecione a seção que você quer documentar: vira um selo azul numerado no canvas. Pense na tela selecionada como uma "pasta": ela não carrega regra de acessibilidade nenhuma sozinha, só organiza, e as especificações criadas dentro dela aparecem juntas na listagem lateral do plugin, mesmo ficando soltas ao lado no canvas.' },
       { text: 'Dentro do espaço de trabalho da tela, na aba Leitor de Tela, use <strong>Mapeamento Automático</strong> para o hac sugerir a categoria de cada componente do DSC ali dentro, comparando com o catálogo da lib "Design Acessível", ou o botão <strong>Nova spec</strong> para começar do zero, manualmente, quando o elemento não bate com nenhum componente reconhecido (por exemplo, uma composição customizada que não existe no DSC).' },
@@ -81,9 +81,9 @@ const ONBOARDING_TOOLS = {
     view: 'view-specifications',
     title: 'Documentação de Acessibilidade: Mobile',
     icon: 'smartphone',
-    color: '#0891B2',
+    color: '#005ca9',
     format: 'stepper',
-    purpose: 'O hac documenta, direto no canvas do Figma, como cada elemento da tela deve ser interpretado por um leitor de tela e em que ordem o teclado/gesto deve navegar por ela, para o time de desenvolvimento implementar acessibilidade sem depender de especificação à parte. O hac reconhece componentes da lib <strong>Super DSC Mobile</strong> (DSC | Super App, React Native); algumas categorias e regras são diferentes das libs web, cobertas nos passos abaixo. Os passos a seguir cobrem só o essencial para começar; para as regras completas de cada categoria, consulte a lib <a href="https://www.figma.com/design/3zdtN13YvPlCGPdXeL0Y2i" target="_blank" rel="noopener noreferrer" class="text-[#0891B2] dark:text-cyan-400 underline decoration-dotted hover:decoration-solid font-semibold">Design Acessível</a>.',
+    purpose: 'O hac documenta, direto no canvas do Figma, como cada elemento da tela deve ser interpretado por um leitor de tela e em que ordem o teclado/gesto deve navegar por ela, para o time de desenvolvimento implementar acessibilidade sem depender de especificação à parte. O hac reconhece componentes da lib <strong>Super DSC Mobile</strong> (DSC | Super App, React Native); algumas categorias e regras são diferentes das libs web, cobertas nos passos abaixo. Os passos a seguir cobrem só o essencial para começar; para as regras completas de cada categoria, consulte a lib <a href="https://www.figma.com/design/3zdtN13YvPlCGPdXeL0Y2i" target="_blank" rel="noopener noreferrer" class="text-[#005ca9] dark:text-blue-400 underline decoration-dotted hover:decoration-solid font-semibold">Design Acessível</a>.',
     steps: [
       { text: 'Clique em <strong>Selecionar Tela</strong> no topo da tela e selecione a seção que você quer documentar: vira um selo azul numerado no canvas. Pense na tela selecionada como uma "pasta": ela não carrega regra de acessibilidade nenhuma sozinha, só organiza, e as especificações criadas dentro dela aparecem juntas na listagem lateral do plugin, mesmo ficando soltas ao lado no canvas.' },
       { text: 'Dentro do espaço de trabalho da tela, na aba Leitor de Tela, use <strong>Mapeamento Automático</strong> para o hac sugerir a categoria de cada componente do DSC ali dentro, comparando com o catálogo da lib "Design Acessível", ou o botão <strong>Nova spec</strong> para começar do zero, manualmente, quando o elemento não bate com nenhum componente reconhecido (por exemplo, uma composição customizada que não existe no DSC).' },

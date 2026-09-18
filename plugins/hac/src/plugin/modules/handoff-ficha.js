@@ -112,7 +112,7 @@ function _fichaInsertButtonHtml(area, sectionKey, hasItems) {
   // próprio botão, não só do container). Era mb-1 (4px), insuficiente.
   return `
     <button type="button" onclick="_fichaInsertSection('${escapeHtml(sectionKey)}')"
-      class="w-full flex items-center justify-center gap-dsc-nano h-9 mt-auto mb-4 pt-1 rounded-dsc-medium text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-white dark:bg-dark-surface text-cyan-700 dark:text-cyan-400 shadow-sm hover:shadow active:scale-[0.99] shrink-0">
+      class="w-full flex items-center justify-center gap-dsc-nano h-9 mt-auto mb-4 pt-1 rounded-dsc-medium text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-white dark:bg-dark-surface text-blue-700 dark:text-blue-400 shadow-sm hover:shadow active:scale-[0.99] shrink-0">
       <i data-lucide="${icon}" class="w-3.5 h-3.5" aria-hidden="true"></i>
       ${label}
     </button>
@@ -180,7 +180,7 @@ function _fichaBuildSpecFields(spec) {
 // opts.fillColor já usado por create-unified-spec) porque A11Y_CATEGORIES
 // só existe no frontend.
 function _fichaBuildSpecPayload(spec) {
-  const meta = A11Y_CATEGORIES[spec.a11yType] || { label: 'Acessibilidade', color: '#0891B2', fill: '#EBF4FB' };
+  const meta = A11Y_CATEGORIES[spec.a11yType] || { label: 'Acessibilidade', color: '#005ca9', fill: '#EBF4FB' };
   // categoryLabel por ORIGEM DA SPEC (spec.a11yOrigin), não meta.label cru —
   // a Ficha é o documento final consumido pelo dev; uma spec 'titulo' criada
   // em contexto mobile precisa chegar lá como "Títulos", nunca "Nível de
@@ -450,7 +450,7 @@ function _fichaStatusCardHtml(area, sectionKey, label, countLabelFn) {
         <p class="text-dsc-label-tiny normal-case tracking-normal ${colorClass}">${statusText}</p>
       </div>
       <button type="button" onclick="_fichaEditSection('${sectionKey === 'leitor' ? 'leitor' : sectionKey}')"
-        class="shrink-0 inline-flex items-center gap-dsc-quark h-7 px-dsc-nano rounded-dsc-circ border border-cyan-200 dark:border-cyan-800/40 text-cyan-700 dark:text-cyan-400 text-dsc-label-tiny normal-case tracking-normal font-bold hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-95 transition-all">
+        class="shrink-0 inline-flex items-center gap-dsc-quark h-7 px-dsc-nano rounded-dsc-circ border border-blue-200 dark:border-blue-800/40 text-blue-700 dark:text-blue-400 text-dsc-label-tiny normal-case tracking-normal font-bold hover:bg-blue-50 dark:hover:bg-blue-900/20 active:scale-95 transition-all">
         <i data-lucide="pencil" class="w-3 h-3"></i> Editar
       </button>
     </div>
@@ -485,7 +485,7 @@ function _fichaDashboardHtml(area) {
     </div>
     ${hasAnyInserted ? `
     <button type="button" onclick="_fichaViewOnCanvas()"
-      class="w-full flex items-center justify-center gap-dsc-nano h-9 mt-3 rounded-dsc-large bg-[#0891B2] text-white text-dsc-label-tiny normal-case tracking-normal font-bold hover:bg-cyan-700 active:scale-95 shadow-sm shadow-cyan-500/20 transition-all">
+      class="w-full flex items-center justify-center gap-dsc-nano h-9 mt-3 rounded-dsc-large bg-[#005ca9] text-white text-dsc-label-tiny normal-case tracking-normal font-bold hover:bg-blue-700 active:scale-95 shadow-sm shadow-blue-500/20 transition-all">
       <i data-lucide="scan-eye" class="w-4 h-4" aria-hidden="true"></i>
       Ver handoff no canvas
     </button>` : ''}

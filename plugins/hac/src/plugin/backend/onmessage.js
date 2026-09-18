@@ -2208,6 +2208,135 @@ figma.ui.onmessage = async (msg) => {
     return;
   }
 
+  // Mapeamento Automático PRÓPRIO da Trilha de Swipe (2026-09-16, decisão
+  // original da vertical de a11y — perdido sem querer no revert b228343 de
+  // 2026-09-15, que voltou o branch inteiro a um ponto anterior a este
+  // commit; reimplementado em 2026-09-18 a pedido do usuário, contra o
+  // código atual, não copiado literalmente do commit antigo, que já estava
+  // defasado). O gesto de swipe (VoiceOver/TalkBack) percorre TODOS os
+  // componentes com conteúdo real da tela — interativos e não-interativos
+  // — diferente de startSwipePathFromTabOrder (que só REUTILIZA a sequência
+  // já mapeada pela Ordem de Tabulação, estritamente Tab-navegável). Este é
+  // um scan PRÓPRIO, independente da Tabulação.
+  //
+  // Reaproveita _a11yScanArea — mesmo motor da Detecção Automática do
+  // Leitor de Tela, com suas heurísticas já maduras de dedupe (não
+  // fragmentar um componente DSC já resolvido em sub-itens), composição de
+  // ícone, e clipping por ancestral — em vez de escrever um scanner
+  // próprio como generate-tab-order-from-layers faz (aquele filtra só
+  // interativos via _isA11yInteractiveComponentKey; aqui o critério é
+  // oposto: manter tudo que tem CONTEÚDO real, decorativo por fora).
+  // Descarta os buckets 'icons'/'vectors' (puramente decorativo — decisão
+  // da vertical: gesto de swipe nunca foca elemento decorativo) e 'frames'
+  // (nunca documentável); mantém components/typography/images, só quando
+  // resolveram algum dscComponentMatch (mesmo filtro usado pelo picker
+  // manual, evita nó estrutural sem relevância de a11y virar ponto de
+  // trilha). Ordena por zigue-zague visual (_orderNodesInZigzagReadingOrder),
+  // mesmo critério já usado pela Ordem de Tabulação — não ordem de
+  // camadas/DOM (critério da Detecção Automática do Leitor de Tela; os dois
+  // critérios coexistem no hac por decisões de produto tomadas em momentos
+  // diferentes).
+  if (msg.type === "generate-swipe-path-from-layers") {
+    (async () => {
+      // Mesmo motivo do try/catch em generate-tab-order-from-layers: sem
+      // ele, uma rejeição não prevista morre como unhandled rejection e o
+      // designer fica preso no toast inicial pra sempre, sem erro visível.
+      try {
+        const root = await _getSceneNodeById(msg.targetNodeId);
+        if (!root || !root.absoluteBoundingBox) {
+          figma.notify("Tela não encontrada no canvas — selecione novamente.");
+          figma.ui.postMessage({ type: "swipe-path-generated-from-layers", areaId: msg.areaId, generation: msg.generation, items: [] });
+          return;
+        }
+        if (typeof root.clone !== 'function') {
+          figma.notify("Este elemento não pode ser copiado — selecione a tela sobre um frame/grupo.");
+          figma.ui.postMessage({ type: "swipe-path-generated-from-layers", areaId: msg.areaId, generation: msg.generation, items: [] });
+          return;
+        }
+
+        const { clone, nodeMap } = await _createSwipePathCloneForArea(root, msg.areaId, msg.sectionName, msg.designerName, msg.designerId);
+        if (msg.areaId) _activeSwipePathCloneMaps.set(msg.areaId, nodeMap);
+
+        figma.currentPage.selection = [clone];
+        figma.viewport.scrollAndZoomIntoView([clone]);
+
+        // Scan roda sobre o CLONE, não o original — os nodeId coletados por
+        // _a11yScanArea referenciam a réplica de trabalho (mesmo padrão do
+        // scan-frame manual). Precisam ser traduzidos de volta pro id
+        // ORIGINAL antes de virarem items: `nodeMap` (de
+        // _createSwipePathCloneForArea) mapeia originalId → nó-no-clone, e
+        // insert-swipe-path (_buildSwipePathConnection) sempre espera
+        // receber ids ORIGINAIS pra resolver contra o SEU PRÓPRIO nodeMap
+        // ao desenhar (mesmo princípio de _originalTargetNodeId em
+        // create-unified-spec) — diferente da Tabulação automática, que
+        // desenha direto sobre o clone item a item.
+        //
+        // BUG REAL CORRIGIDO (2026-09-18, reportado com print: "elemento
+        // '9:30' não existe mais na cópia da tela"): a 1ª versão desta
+        // função pulava essa tradução por completo — usava o nodeId do
+        // CLONE (vindo direto do scan) como se já fosse original, então
+        // insert-swipe-path tentava achar um id-de-clone dentro do MAPA
+        // ORIGINAL→clone daquele momento (que nunca teria essa chave) e
+        // falhava sempre que o node não sobrevivia por coincidência
+        // posicional a um detachInstance() intermediário. cloneIdToOriginalId
+        // inverte nodeMap (clonedNode.id → originalId) pra fazer a tradução
+        // que faltava, mesmo sentido de uso de plainNodeMap logo abaixo
+        // (que serve só para o FRONTEND cachear _activeSwipePathCloneMaps,
+        // não para esta tradução).
+        const scanned = await _a11yScanArea(clone);
+        // BUG REAL CORRIGIDO (2026-09-18, reportado com print: itens
+        // genéricos como "Actions - Button Row"/"Swap Slot" — nomes de
+        // FRAME/slot estrutural, não componentes de conteúdo real — na
+        // trilha final). `dscComponentMatch` truthy sozinho não basta como
+        // filtro: _a11yScanArea sempre preenche esse campo, mesmo para um
+        // container SEM nenhum match real (isUnmapped: true, a11yCategory:
+        // null, containingFrame: nome cru do node — ver comentário
+        // "instância sem match DSC resolvido" em dsc-matching.js), porque a
+        // varredura precisa continuar descendo dentro dele pra achar os
+        // componentes reais aninhados (ver _hasResolvedDscMatch logo
+        // abaixo, no mesmo arquivo). O container em si não é um ponto de
+        // conteúdo — só os filhos resolvidos são. Exigir a11yCategory
+        // truthy exclui esses containers estruturais sem descartar nenhum
+        // componente/texto/imagem com match real.
+        const candidates = [
+          ...(scanned.components || []),
+          ...(scanned.typography || []),
+          ...(scanned.images || []),
+        ].filter(item => item && item.dscComponentMatch && !item.dscComponentMatch.isUnmapped && item.dscComponentMatch.a11yCategory);
+
+        const plainNodeMap = {};
+        const cloneIdToOriginalId = new Map();
+        nodeMap.forEach((clonedNode, originalId) => {
+          plainNodeMap[originalId] = clonedNode.id;
+          cloneIdToOriginalId.set(clonedNode.id, originalId);
+        });
+
+        if (candidates.length === 0) {
+          figma.ui.postMessage({ type: "swipe-path-generated-from-layers", areaId: msg.areaId, generation: msg.generation, items: [], cloneId: clone.id, nodeMap: plainNodeMap });
+          return;
+        }
+
+        const resolvedNodes = [];
+        for (const c of candidates) {
+          const originalId = cloneIdToOriginalId.get(c.nodeId);
+          if (!originalId) continue; // node do clone sem correspondente original mapeado (nunca deveria ocorrer, defesa silenciosa)
+          const n = await _getSceneNodeById(originalId);
+          if (n && n.absoluteBoundingBox) resolvedNodes.push(n);
+        }
+        const items = _orderNodesInZigzagReadingOrder(resolvedNodes)
+          .map(node => ({ nodeId: node.id, nodeName: _findVisibleLabelText(node) || node.name }));
+
+        figma.ui.postMessage({ type: "swipe-path-generated-from-layers", areaId: msg.areaId, generation: msg.generation, items, cloneId: clone.id, nodeMap: plainNodeMap });
+        figma.notify(`${items.length} elemento${items.length === 1 ? '' : 's'} encontrado${items.length === 1 ? '' : 's'} — revise no modal antes de aplicar.`);
+      } catch (e) {
+        console.error('[hac] generate-swipe-path-from-layers falhou:', e && e.stack || e);
+        figma.notify("Não foi possível varrer a tela automaticamente — tente novamente.");
+        figma.ui.postMessage({ type: "swipe-path-generated-from-layers", areaId: msg.areaId, generation: msg.generation, items: [] });
+      }
+    })();
+    return;
+  }
+
   // Simulação de leitura por voz da Ordem de Tabulação (2026-09-09) — a
   // Web Speech API (speechSynthesis) só existe no frontend (iframe), mas o
   // "tipo" falado por parada (ex. "Botão") depende do matching DSC→a11y,
@@ -3167,7 +3296,7 @@ figma.ui.onmessage = async (msg) => {
       throw new Error('São necessários pelo menos 2 pontos para desenhar uma trilha de swipe.');
     }
 
-    const strokeColor = { r: 0.03, g: 0.55, b: 0.62 }; // #0891B2, cor de destaque do hac
+    const strokeColor = { r: 0, g: 0.361, b: 0.663 }; // #005ca9, azul institucional (alinhado ao Handex, 2026-09-18)
     const strokeWeight = 4;
     const arrowSize = 10;
 

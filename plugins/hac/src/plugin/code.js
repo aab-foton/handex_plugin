@@ -1158,35 +1158,63 @@ export async function _tryImportA11yComponent(opts) {
 // Marcadores visuais — Agrupamento (contorno/moldura) e Conector linha
 // ============================================================
 
-// Keys publicadas do component set "[a11y] Agrupamento" — o selo/marcador
+// Keys publicadas do component set "[hac] Agrupamento" — o selo/marcador
 // PEQUENO (badge + moldura, ~40×40) que a vertical usa pra indicar QUAL
 // elemento a spec documenta, com uma "orientação" que já embute a direção do
 // conector. É o modo "Área" do formulário (drawMode === 'contorno', default).
+//
+// BUG REAL CORRIGIDO (2026-09-18): até esta correção, TODAS as keys aqui
+// vinham da lib DESKTOP ANTIGA ("Design Acessível | Desktop Web", fileKey
+// Wy0IhXRVZMSOOr8E609UqI) — confirmado que o usuário via, no painel de
+// propriedades do Figma, o componente sendo puxado dessa lib errada em vez
+// da lib oficial "[HAC] Handoff Super DSC Mobile e Web" (fileKey
+// HhriLSpKnCB2dHhyiU16iB). A migração de 2026-09-17 só trocou
+// A11Y_AGRUPAMENTO_KEYS_MOBILE (abaixo) — este dicionário "desktop" (usado
+// sempre que a11yOrigin==='web', e também como fallback quando a origem é
+// mobile mas a categoria/orientação não existe no dicionário mobile) tinha
+// ficado esquecido apontando pra lib antiga. Corrigido re-obtendo as 4
+// categorias abaixo via GET /v1/files/HhriLSpKnCB2dHhyiU16iB/components —
+// são os MESMOS valores já usados em A11Y_AGRUPAMENTO_KEYS_MOBILE (a lib
+// nova não separa web/mobile neste component set, um único "[hac]
+// Agrupamento" serve as duas plataformas). "informacoes" segue apontando
+// pra lib antiga: confirmado via API que a lib nova não tem NENHUMA
+// variante "informações"/"informacoes" publicada (lacuna real, não erro de
+// mapeamento) — mantido como único fallback restante pra essa categoria.
 const A11Y_AGRUPAMENTO_KEYS = {
   elemento: {
-    direita:  '1a32480d314943f85d5bf48e97beda44be37233b',
-    esquerda: '918dc37577a8ba0b0b9b421bbfa4c0e831696b7a',
-    superior: 'e58a10ad987b3cc2feb7c7acf4b77e4e132c0b62',
-    inferior: 'f70dae1493341f9839a3a2e11b93855ddb78192b',
+    direita:  'ea54a0cca62bc6d8abee539efe989a18b1e322a7',
+    esquerda: '2165d66fcd65d977bc2cdcd86c26d68a07e65eaf',
+    superior: '83a72d71793cde67cb11c38df56e8f9bd1cb2acf',
+    inferior: '97c0d6479a58b03397515b664e3d3de64b594706',
   },
   decorativo: {
-    direita:  'db8057dd5440ba35593fed4823b6b0746d2a5d3a',
-    esquerda: 'a638d41c126fc85074ecfb6b5c013ded77a7ca30',
-    superior: '625a28708db4453614eb3d18f2163f53a01738fc',
-    inferior: 'a8abbf67336b205d944ec2a97a62879c7f8a378e',
+    direita:  '1f552b66bc48721b9be3160b02ac6a4762af0086',
+    esquerda: '143e04b04c302c1be1b0fe081bb3bf43d0a5a004',
+    superior: '73f5b3d53cd673a4846b60e251e0108805644951',
+    inferior: 'edb2b2b5aaabb8649461ceee62307c0d27134982',
   },
+  // "Estrutura da Página" — na lib nova é o mesmo node visual que antes
+  // (lib antiga) se chamava "estrutura"; ver achado da migração 2026-09-17
+  // acima em A11Y_AGRUPAMENTO_KEYS_MOBILE sobre a variante antiga ter sido
+  // RENOMEADA para "títulos". Estas 4 keys são a variante "Estrutura da
+  // Página" NOVA, criada do zero na lib nova (node_ids 10766:210/218/226/
+  // 234), confirmada via API — não confundir com "titulo" abaixo.
   estrutura: {
-    direita:  '2f62f4c09d769578d3c5f9f7c42de94ea4b5a559',
-    esquerda: '0736255a49a164a93dbe5913925e8cd94474c102',
-    superior: 'cb88b4fe2d7a34fa5db191e1e29e99a462eaa88e',
-    inferior: 'd1de84d4afe1d169d51471b049e3b55191319b72',
+    direita:  '7b57c21d29e28b96a4b9d040cd77602a583783ac',
+    esquerda: 'b16123a85a77b6f39b134d689e9ba18f966cc949',
+    superior: '2bf9e00f39fb195a017a6697177a325121576073',
+    inferior: '7c9dca5e5312553824b84dfbb602097468be0bc4',
   },
   titulo: {
-    direita:  '4df3d05e26dd4168c7d7de71fe689515c9b1895c',
-    esquerda: '5b759c2904110d3c60891be859e24f64d15833e9',
-    superior: '75e44fd1fc2f346fdaa7c6c59a9af09356bb045f',
-    inferior: 'f18bae60d1e9109c2ecd1b3c5e49bacdb3c6267a',
+    direita:  'ed17abfec856f9ca286f6bb4b828319af73f9851',
+    esquerda: 'e30f1468b18340bcce7e6937c9f655c2ebffc372',
+    superior: '517ba6be813cc42c1d296a5e3c7161137aad4488',
+    inferior: '2a317e3e61483a5fc0de41424ce82273f4c53a25',
   },
+  // SEM key publicada na lib nova (confirmado via API, 2026-09-18) — segue
+  // na lib antiga (Wy0IhXRVZMSOOr8E609UqI) até a lib nova publicar esta
+  // categoria. Único ponto remanescente deste dicionário fora da lib
+  // oficial — documentar/revisar quando a lib for republicada.
   informacoes: {
     direita:  '42eafe50b7b07e5cdacbbc1845c05af877768337',
     esquerda: 'b1155ae94b549e7de188458b1289b8ba476af73d',
@@ -1222,18 +1250,23 @@ const A11Y_AGRUPAMENTO_KEYS = {
 // semanticamente errado agora (a variante real virou "títulos"). A lib
 // nova tem uma variante "Estrutura da Página" DE VERDADE, criada do zero
 // em node_ids novos (Agrupamento: 10766:210/218/226/234; Conectores:
-// 10768:280/283/287/291/295) — confirmado via GET /v1/files/.../nodes
-// (componentPropertyDefinitions.tipo inclui "Estrutura da Página" com 4/5
-// variantOptions completos). PORÉM esses node_ids novos NÃO aparecem no
-// endpoint /components (que só lista o que já foi publicado como
-// biblioteca) — o arquivo foi editado hoje (histórico de /versions mostra
-// 3 edições de Gabriela Costa em 2026-09-17, a mais recente às 12:40) mas
-// aparentemente ainda não foi republicado como lib depois dessa edição.
-// Sem key publicada, importComponentByKeyAsync não tem como importar esses
-// componentes ainda. Por isso "estrutura" continua ausente nos dois
-// dicionários mobile abaixo (mesma lacuna de antes, por motivo novo) —
-// documentado como pendente de nova verificação após a próxima publicação
-// da lib, NÃO implementado com key aproximada.
+// 10768:280/283/287/291/295).
+//
+// ATUALIZAÇÃO 2026-09-18: em 2026-09-17 esses node_ids novos ainda não
+// apareciam no endpoint /components (lib editada mas não republicada). Na
+// investigação de hoje (bug do badge puxando a lib antiga — ver
+// A11Y_AGRUPAMENTO_KEYS/A11Y_CONECTOR_LINHA_KEYS acima), nova consulta via
+// GET /v1/files/HhriLSpKnCB2dHhyiU16iB/components confirmou que a lib FOI
+// republicada nesse meio-tempo: "Estrutura da Página" (Agrupamento e
+// Conectores, 4/5 variantes) agora aparece publicada com key real. Essas
+// keys foram promovidas para os dicionários "desktop"
+// (A11Y_AGRUPAMENTO_KEYS/A11Y_CONECTOR_LINHA_KEYS) — como este component
+// set não distingue web/mobile na lib nova (um único "[hac] Agrupamento"/
+// "[hac] Conectores" serve as duas plataformas), a MESMA key também é
+// usada aqui no dicionário mobile por completude (evita depender do
+// fallback desktop pra um caso que já tem key mobile-compatível real).
+// "informacoes" segue como a única lacuna real confirmada (nenhuma
+// variante publicada em nenhuma das duas plataformas).
 //
 // Também identificado (cosmético, fora de escopo): o texto de
 // variantOptions do component set "[hac] Conectores" tem um typo de
@@ -1242,18 +1275,14 @@ const A11Y_AGRUPAMENTO_KEYS = {
 // key corresponde a qual variante (confirmado por node_id), não corrigido
 // aqui por não ser problema do hac.
 //
-// A lib mobile continua tendo LACUNAS REAIS confirmadas por varredura
-// completa (250 componentes na lib nova, muito mais que os 39 da antiga,
-// mas a maioria são "Leitor de Tela=..." de outros componentes DSC — os
-// 4 marcadores visuais a11y continuam com a mesma cobertura de antes):
+// Cobertura atual (após a atualização de 2026-09-18):
 //
-//   [hac] Agrupamento: 3 categorias com key publicada (elemento/
-//     decorativo/titulo, sendo que o antigo "estrutura" virou "titulo"
-//     nesta lib — ver achado acima) × 4 orientações. "estrutura" nova e
-//     "informacoes" seguem SEM key publicada.
-//   [hac] Conectores: 3 categorias com key publicada (elemento/titulo/
-//     decorativo) × 5 direções (incluindo "desativado"). "estrutura" nova
-//     e "informacoes" seguem SEM key publicada.
+//   [hac] Agrupamento: 4 categorias com key publicada (elemento/
+//     decorativo/titulo/estrutura) × 4 orientações. "informacoes" segue
+//     SEM key publicada (única lacuna real restante).
+//   [hac] Conectores: 4 categorias com key publicada (elemento/titulo/
+//     decorativo/estrutura) × 5 direções (incluindo "desativado").
+//     "informacoes" segue SEM key publicada.
 //   [hac] Identificação da tela (ex-"Número da tela"): 5 componentes (4
 //     direções + desativado), paridade completa com
 //     A11Y_ITEM_NUMBER_KEYS_DESKTOP — apenas re-chaveado, sem mudança de
@@ -1264,14 +1293,9 @@ const A11Y_AGRUPAMENTO_KEYS = {
 // undefined, ou key da orientação específica undefined), cai pro
 // dicionário DESKTOP equivalente ANTES de lançar erro — nunca quebra a
 // criação da spec. Implementado em _tryImportA11yAgrupamento/
-// _tryImportA11yConectorLinha logo abaixo. Como as 5 categorias fixas do
-// hac (elemento/estrutura/titulo/decorativo/informacoes) SEMPRE existem
-// completas nos dicionários desktop, esse fallback nunca deveria de fato
-// lançar — é uma segunda rede de segurança, não o caminho esperado na
-// prática (a maioria das specs mobile usa elemento/decorativo, que TÊM
-// marcador mobile próprio). "titulo" mobile já está completo (5/5 em
-// Agrupamento e Conectores) desde antes desta migração — não havia
-// fallback pra remover aqui (ver investigação na migração 2026-09-17).
+// _tryImportA11yConectorLinha logo abaixo. Na prática hoje só "informacoes"
+// aciona esse fallback (nas duas plataformas, pra ambos os modos) — as
+// outras 4 categorias têm key própria completa nos dois dicionários.
 const A11Y_AGRUPAMENTO_KEYS_MOBILE = {
   elemento: {
     esquerda: '2165d66fcd65d977bc2cdcd86c26d68a07e65eaf',
@@ -1287,17 +1311,24 @@ const A11Y_AGRUPAMENTO_KEYS_MOBILE = {
   },
   // titulo: mesmos 4 node_ids que antes eram "estrutura da página" na lib
   // antiga (1:196/301:437/1:201/301:442) — RENOMEADOS para "títulos" na lib
-  // nova (ver achado acima). Mantido fora deste dicionário porque
-  // _tryImportA11yAgrupamento resolve "titulo" mobile hoje via fallback
-  // desktop (nunca existiu key mobile própria pra título antes desta
-  // migração) — poderia futuramente usar estas 4 keys novas como key mobile
-  // real de "titulo", mas isso é uma mudança de comportamento (categoria
-  // que nunca teve marcador mobile passaria a ter) fora do escopo desta
-  // correção de migração, não implementado sem pedido explícito.
-  // estrutura/informacoes: SEM key mobile PUBLICADA ainda (ver achado
-  // acima — variantes novas existem no arquivo mas a lib não foi
-  // republicada depois delas) — typeKeys undefined, _tryImportA11yAgrupamento
-  // cai no dicionário desktop.
+  // nova (ver achado acima).
+  titulo: {
+    esquerda: 'e30f1468b18340bcce7e6937c9f655c2ebffc372',
+    direita:  'ed17abfec856f9ca286f6bb4b828319af73f9851',
+    superior: '517ba6be813cc42c1d296a5e3c7161137aad4488',
+    inferior: '2a317e3e61483a5fc0de41424ce82273f4c53a25',
+  },
+  // "Estrutura da Página" nova — promovida em 2026-09-18 (ver ATUALIZAÇÃO
+  // acima), mesmas keys de A11Y_AGRUPAMENTO_KEYS.estrutura.
+  estrutura: {
+    esquerda: 'b16123a85a77b6f39b134d689e9ba18f966cc949',
+    direita:  '7b57c21d29e28b96a4b9d040cd77602a583783ac',
+    superior: '2bf9e00f39fb195a017a6697177a325121576073',
+    inferior: '7c9dca5e5312553824b84dfbb602097468be0bc4',
+  },
+  // informacoes: SEM key publicada ainda em nenhuma plataforma — typeKeys
+  // undefined, _tryImportA11yAgrupamento cai no dicionário desktop
+  // (A11Y_AGRUPAMENTO_KEYS.informacoes, lib antiga).
 };
 
 const A11Y_CONECTOR_LINHA_KEYS_MOBILE = {
@@ -1322,11 +1353,20 @@ const A11Y_CONECTOR_LINHA_KEYS_MOBILE = {
     inferior: 'b054d91b10030c6aded2df65a801a425e1c1843f',
     desativado: '7e1c5465b4c1ff00dfb05baaa6bd7aaa2a508829',
   },
-  // estrutura/informacoes: SEM key mobile PUBLICADA ainda (mesmo achado do
-  // Agrupamento acima — variante "Estrutura da Página" nova existe no
-  // arquivo, node_ids 10768:280/283/287/291/295, mas sem key publicada) —
+  // "Estrutura da Página" nova — promovida em 2026-09-18 (lib republicada
+  // com estas 5 variantes desde a migração de 2026-09-17, ver ATUALIZAÇÃO
+  // em A11Y_AGRUPAMENTO_KEYS_MOBILE acima), mesmas keys de
+  // A11Y_CONECTOR_LINHA_KEYS.estrutura.
+  estrutura: {
+    esquerda: '26fa2e6f7f6a16f35054f29cd12de90bbf190ba0',
+    direita:  '9b9aa1cfd2bb4327be1d72bfb125b326b90bc62e',
+    superior: '9ab20cfc07ba0de6fe15754d53804d491ab728bf',
+    inferior: '575e5b4fe3d2be90721a46cad9e30473503684fa',
+    desativado: 'afedf7e06bde8d754bae4309a121b5760723bb96',
+  },
+  // informacoes: SEM key publicada ainda em nenhuma plataforma —
   // typeKeys undefined, _tryImportA11yConectorLinha cai no dicionário
-  // desktop.
+  // desktop (A11Y_CONECTOR_LINHA_KEYS.informacoes, lib antiga).
 };
 
 // "[hac] Identificação da tela" (ex-"[a11y mob] Número da tela", mesmos
@@ -1423,40 +1463,60 @@ export async function _tryImportA11yAgrupamento(opts) {
   return instance;
 }
 
-// Keys publicadas do component set "tipo=<categoria>, conector=<direção>" —
-// frame "Conectores  [Handoff]" do arquivo da lib (25 componentes = 5
-// categorias × 5 direções, incluindo "desativado"). Direção "desativado"
-// catalogada mas ainda não usada por _tryImportA11yConectorLinha — o modo
-// Linha sempre nasce com uma direção real.
+// Keys publicadas do component set "[hac] Conectores" — frame "Conectores
+// [Handoff]" do arquivo da lib. Direção "desativado" catalogada mas ainda
+// não usada por _tryImportA11yConectorLinha — o modo Linha sempre nasce com
+// uma direção real.
+//
+// BUG REAL CORRIGIDO (2026-09-18): mesmo bug de A11Y_AGRUPAMENTO_KEYS acima
+// — este dicionário inteiro (25 keys) vinha da lib DESKTOP ANTIGA
+// (Wy0IhXRVZMSOOr8E609UqI, componente "[a11y] Conectores"), não da lib
+// oficial nova (HhriLSpKnCB2dHhyiU16iB). Foi este dicionário especificamente
+// que o usuário flagrou no painel de propriedades do Figma — o badge da
+// categoria "Elementos e Imagens" no card de instrução "Como fazer as
+// especificações para Leitor de Tela" (_buildFichaLegendColumn, via
+// _tryImportA11yConectorLinha) estava puxando o componente errado sempre
+// que a11yOrigin==='web' (e também como fallback de qualquer categoria/
+// direção ausente no dicionário mobile). Corrigido re-obtendo as 4
+// categorias abaixo via GET /v1/files/HhriLSpKnCB2dHhyiU16iB/components —
+// são os MESMOS valores já usados em A11Y_CONECTOR_LINHA_KEYS_MOBILE (este
+// component set não separa web/mobile na lib nova). "informacoes" segue na
+// lib antiga: confirmado via API que a lib nova não publicou nenhuma
+// variante "informações" (mesma lacuna real de A11Y_AGRUPAMENTO_KEYS).
 const A11Y_CONECTOR_LINHA_KEYS = {
   elemento: {
-    esquerda: '9c1f1679ab73055ef68dbcbd11b89fc711629f6a',
-    direita:  'eec4d7b2153d9eb6bc300787c861b8cfee10dcbf',
-    superior: 'fcdb189d2cbdcda11488030e4d4c523d08d95865',
-    inferior: '509491cd5e458ec0cf974b00390f8f65d078c326',
-    desativado: 'eb12c7da71c1b661a72438ff4e27462ce798c07e',
+    esquerda: '711ff70084002beb5484985790d313785826b041',
+    direita:  '48c0a893abb2859bf28fe660db2ef5a8ed998389',
+    superior: 'd103d6403ab8f289c44499cf931de5d08e1c80a2',
+    inferior: '406b93c17f12ce592b2854a126b67e23c87a97e4',
+    desativado: '5506fa7159f82aa6984493ed9e8ef60372c3dd72',
   },
+  // "Estrutura da Página" nova (ver nota equivalente em
+  // A11Y_AGRUPAMENTO_KEYS) — node_ids 10768:280/283/287/291/295.
   estrutura: {
-    esquerda: '13141fdadb7e8675d8a47ba70be1b6d24d4ed35c',
-    direita:  '2621f5cdadea32e0802c8196aad03db1da20bf72',
-    superior: '76d6ba85e4fed4a5d0bd67c709860877fe236d2f',
-    inferior: '3021c901640ffb86e8228dd12bd730ee3f770ebb',
-    desativado: '63e22dc70dde84d0aa43c1592388751e6bb8c44e',
+    esquerda: '26fa2e6f7f6a16f35054f29cd12de90bbf190ba0',
+    direita:  '9b9aa1cfd2bb4327be1d72bfb125b326b90bc62e',
+    superior: '9ab20cfc07ba0de6fe15754d53804d491ab728bf',
+    inferior: '575e5b4fe3d2be90721a46cad9e30473503684fa',
+    desativado: 'afedf7e06bde8d754bae4309a121b5760723bb96',
   },
   titulo: {
-    esquerda: '670c7c055ed7ebc01a523add5b69499680076419',
-    direita:  'f63a82ad250bcc8569d83affbcc39d6f226d64ca',
-    superior: 'baf0b4ea8417911a42f7d890654ad8dc3d047881',
-    inferior: '3dafdf7d0543989b82c25686abb88134c879a94c',
-    desativado: 'ba1aa8640e1593f93ed1e0ee03cd59ed4ff54ae8',
+    esquerda: '3bda769bd18a3bcb0dedb3691deaa9548644a3dd',
+    direita:  '19fa60fe8f30a98e26eff0d2d1c75e973a87dfca',
+    superior: 'bbea0b89885808fb9af379a23573b2f9360f6b88',
+    inferior: 'ef9578ce7fd51d26cdccc22fbc862bdd716050ce',
+    desativado: '938d4f64c6272528b49c22da2cb03cf54c1ddeff',
   },
   decorativo: {
-    esquerda: '4866349b6246fbd45cf493cce308f7da2c312569',
-    direita:  '85ff209c592f55cc2149b256909ac65e2e06a66b',
-    superior: 'ad87c4797c992bfaadbb41d8d05e9c81fc4207c2',
-    inferior: 'a419476ffe6c0b6c10a32c080d624091cf083171',
-    desativado: '08ec11bff941a75a75bbe248b822da7715140da7',
+    esquerda: '3bae568e0f46c702d1a34c9d1d7545352f0af488',
+    direita:  '7f737bd2821b3360c3a77a256c68a1aa2b43baa0',
+    superior: '79fae2a5d1438938ff3072d3e677196f78c471f8',
+    inferior: 'b054d91b10030c6aded2df65a801a425e1c1843f',
+    desativado: '7e1c5465b4c1ff00dfb05baaa6bd7aaa2a508829',
   },
+  // SEM key publicada na lib nova (confirmado via API, 2026-09-18) — segue
+  // na lib antiga (Wy0IhXRVZMSOOr8E609UqI) até a lib nova publicar esta
+  // categoria.
   informacoes: {
     esquerda: 'edb9fed9e58a7bf279d8804014f8755ffc4e711d',
     direita:  'ceff0c518ef33fc326eec74af0320255a6ba53a8',
@@ -1475,7 +1535,13 @@ const A11Y_CONECTOR_LINHA_KEYS = {
 // específica não existir no dicionário mobile, cai pro desktop ANTES de
 // lançar erro.
 export async function _tryImportA11yConectorLinha(opts) {
-  const orientacao = _A11Y_SIDE_TO_ORIENTACAO[opts.guideSide || 'right'];
+  // `opts.orientacao` (2026-09-18) tem prioridade sobre guideSide — usado
+  // pelo badge de passo da Ficha (_buildFichaLegendColumn), que não é um
+  // conector vinculado a nenhum elemento real do canvas e por isso precisa
+  // da variante "desativado" (sem traço), nunca "esquerda/direita/superior/
+  // inferior". guideSide continua resolvendo os demais chamadores (Assets,
+  // marcador de Área), que sempre representam um lado real.
+  const orientacao = opts.orientacao || _A11Y_SIDE_TO_ORIENTACAO[opts.guideSide || 'right'];
   const mobileTypeKeys = opts.a11yOrigin === 'mobile' ? A11Y_CONECTOR_LINHA_KEYS_MOBILE[opts.a11yType] : null;
   const typeKeys = (mobileTypeKeys && mobileTypeKeys[orientacao]) ? mobileTypeKeys : A11Y_CONECTOR_LINHA_KEYS[opts.a11yType];
   if (!typeKeys) throw new Error('a11y-conector-linha-tipo-desconhecido: ' + opts.a11yType);
@@ -4735,14 +4801,30 @@ export async function _buildFichaLegendColumn(richContent, fallbackTitle, fallba
           // explicitamente o componente "Conectores" da lib "Design
           // Acessível | Super App" (fileKey HhriLSpKnCB2dHhyiU16iB) —
           // _tryImportA11yConectorLinha já resolve exatamente isso, via
-          // A11Y_CONECTOR_LINHA_KEYS/_MOBILE (já migradas pra lib nova
-          // nesta mesma sessão), com a mesma assinatura de
+          // A11Y_CONECTOR_LINHA_KEYS/_MOBILE, com a mesma assinatura de
           // _tryImportA11yAgrupamento (a11yType/a11yOrigin/guideSide/
-          // letter) — nenhuma key nova precisou ser confirmada via API.
-          // guideSide 'right' (orientação "direita") mantido como padrão
-          // neutro ao lado do número do passo, mesma escolha já usada nos
-          // Assets logo abaixo.
-          badge = await _tryImportA11yConectorLinha({ a11yType: stepCategory, a11yOrigin, guideSide: 'right', letter: stepCategory === 'titulo' ? 'H' : null });
+          // letter). guideSide 'right' (orientação "direita") mantido como
+          // padrão neutro ao lado do número do passo, mesma escolha já
+          // usada nos Assets logo abaixo.
+          //
+          // BUG REAL CORRIGIDO (2026-09-18): na sessão de ontem
+          // A11Y_CONECTOR_LINHA_KEYS (variante "desktop"/web do dicionário,
+          // usada aqui sempre que a11yOrigin==='web') NÃO tinha sido
+          // migrada de fato — continuava com keys da lib antiga
+          // (Wy0IhXRVZMSOOr8E609UqI). O comentário anterior aqui afirmava
+          // erroneamente que as duas variantes do dicionário já estavam na
+          // lib nova; só a _MOBILE estava. Corrigido na declaração de
+          // A11Y_CONECTOR_LINHA_KEYS (acima, no arquivo) — confirmado via
+          // REST API antes da troca, ver comentário lá.
+          //
+          // orientacao: 'desativado' (2026-09-18, pedido do usuário com
+          // print do painel de propriedades): este badge só ilustra a
+          // categoria dentro do texto de instrução — não representa um
+          // conector real apontando pra um elemento no canvas — então não
+          // deve nascer com traço/direção nenhuma. Antes usava guideSide:
+          // 'right' (herdado por engano do padrão dos Assets, que SÃO
+          // conectores reais e precisam de direção).
+          badge = await _tryImportA11yConectorLinha({ a11yType: stepCategory, a11yOrigin, orientacao: 'desativado', letter: stepCategory === 'titulo' ? 'H' : null });
           // 20x20 — um pouco menor que o marcador dos Assets (24px): aqui
           // divide a linha com o número do passo, não fica sozinho.
           badge.resize(20, 20);

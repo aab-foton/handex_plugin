@@ -446,6 +446,18 @@
         }
       }
 
+      // Espelha tab-order-generated-from-layers acima, mas para o
+      // Mapeamento Automático PRÓPRIO da Trilha de Swipe (generate-swipe-
+      // path-from-layers, onmessage.js — reimplementado 2026-09-18). items
+      // já vem com nodeId ORIGINAL (backend traduz clone→original antes de
+      // enviar); addSwipePathItemsFromLayers popula a lista pendente e
+      // dispara o desenho da trilha.
+      if (msg.type === "swipe-path-generated-from-layers") {
+        if (typeof addSwipePathItemsFromLayers === 'function') {
+          addSwipePathItemsFromLayers(msg.items, msg.cloneId, msg.nodeMap, msg.generation);
+        }
+      }
+
       // Resposta de 'draw-tab-order-badge' (code.js) — o selo real do item
       // recém-adicionado à lista pendente já foi desenhado na cópia; guarda
       // o id real (canvasId) no item pendente correspondente (por tempId).

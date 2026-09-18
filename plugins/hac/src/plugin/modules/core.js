@@ -101,7 +101,17 @@ let hacData = {
   // nunca afeta a reabertura MANUAL via botão "Instruções sobre esta
   // documentação" (openA11yInstructionManually), que sempre abre
   // independente desta flag.
-  a11yLeitorInstructionSeen: false
+  a11yLeitorInstructionSeen: false,
+  // Mesmo padrão/mesma razão de a11yLeitorInstructionSeen acima, agora
+  // estendido a Tabulação/Swipe (2026-09-18, pedido do usuário) — até aqui
+  // esses 2 fluxos abriam a modal em TODO clique em "Iniciar..."
+  // (openA11yInstructionThenStart, tab-order.js), sem "não repetir". Só
+  // controla a abertura AUTOMÁTICA ao clicar no botão primário "Iniciar
+  // Ordem de Tabulação"/"Iniciar trilha de swipe" — a reabertura MANUAL via
+  // ícone de hint (openA11yInstructionManually) sempre abre, independente
+  // do valor da flag.
+  a11yTabulacaoInstructionSeen: false,
+  a11ySwipeInstructionSeen: false
 };
 
 // Expose functions to window IMMEDIATELY
@@ -500,8 +510,8 @@ function showSnackbar(message, options) {
   const actionLabel = options && options.actionLabel;
   const onAction = options && options.onAction;
   const snackbar = document.createElement('div');
-  snackbar.className = 'bg-slate-800 text-white px-4 py-3 rounded-dsc-large shadow-xl text-xs font-medium animate-in fade-in slide-in-from-bottom-4 duration-300 flex items-start gap-2 border border-cyan-600 max-w-sm pointer-events-auto';
-  snackbar.innerHTML = `<i data-lucide="info" class="w-3.5 h-3.5 text-cyan-400 mt-0.5 flex-shrink-0"></i>`;
+  snackbar.className = 'bg-slate-800 text-white px-4 py-3 rounded-dsc-large shadow-xl text-xs font-medium animate-in fade-in slide-in-from-bottom-4 duration-300 flex items-start gap-2 border border-blue-600 max-w-sm pointer-events-auto';
+  snackbar.innerHTML = `<i data-lucide="info" class="w-3.5 h-3.5 text-blue-400 mt-0.5 flex-shrink-0"></i>`;
   const dismiss = () => {
     snackbar.classList.add('fade-out');
     setTimeout(() => snackbar.remove(), 300);
@@ -515,7 +525,7 @@ function showSnackbar(message, options) {
   if (actionLabel && typeof onAction === 'function') {
     const actionBtn = document.createElement('button');
     actionBtn.type = 'button';
-    actionBtn.className = 'self-start text-cyan-400 hover:text-cyan-300 font-bold underline transition-colors';
+    actionBtn.className = 'self-start text-blue-400 hover:text-blue-300 font-bold underline transition-colors';
     actionBtn.textContent = actionLabel;
     actionBtn.addEventListener('click', () => {
       dismiss();
@@ -715,9 +725,9 @@ function navigate(viewId) {
         const activeTab = window._a11yWorkspaceActiveTab || 'tabulacao';
         document.querySelectorAll('.a11y-workspace-tab-btn').forEach(btn => {
           const isActive = btn.getAttribute('data-a11y-workspace-tab') === activeTab;
-          btn.classList.toggle('text-cyan-700', isActive);
-          btn.classList.toggle('dark:text-cyan-400', isActive);
-          btn.classList.toggle('border-cyan-600', isActive);
+          btn.classList.toggle('text-blue-700', isActive);
+          btn.classList.toggle('dark:text-blue-400', isActive);
+          btn.classList.toggle('border-blue-600', isActive);
           btn.classList.toggle('text-slate-400', !isActive);
           btn.classList.toggle('dark:text-dark-muted', !isActive);
           btn.classList.toggle('border-transparent', !isActive);
@@ -874,7 +884,7 @@ function autoScrollToNewItem(containerId, targetElement = null) {
 window.autoScrollToNewItem = autoScrollToNewItem;
 
 function focusNode(id) {
-  parent.postMessage({ pluginMessage: { type: 'highlight-node', id, highlight: true, shouldScroll: true, color: '#0070af' } }, '*');
+  parent.postMessage({ pluginMessage: { type: 'highlight-node', id, highlight: true, shouldScroll: true, color: '#005ca9' } }, '*');
 }
 
 // Foca a RÉPLICA DE TRABALHO de uma etapa de a11y (Leitor de Tela/

@@ -205,6 +205,82 @@ function startSwipePathFromTabOrder(areaId, targetNodeId) {
 }
 window.startSwipePathFromTabOrder = startSwipePathFromTabOrder;
 
+// Mapeamento Automático PRÓPRIO da Trilha de Swipe (2026-09-16, decisão da
+// vertical de a11y — perdido sem querer no revert b228343 do dia seguinte,
+// que voltou o branch a um ponto anterior a esse commit; reimplementado em
+// 2026-09-18 a pedido do usuário). Swipe (VoiceOver/TalkBack) percorre
+// TODOS os componentes com conteúdo real da tela (interativos e
+// não-interativos), não só o que a Ordem de Tabulação já mapeou (que é
+// estritamente Tab-navegável) — diferente de startSwipePathFromTabOrder
+// (que só REUTILIZA um array já existente em hacData), esta função dispara
+// um SCAN novo no backend (generate-swipe-path-from-layers, onmessage.js),
+// mesmo padrão de _confirmGenerateTabOrderFromLayers (tab-order.js): guard
+// de scan em voo, geração pra descartar respostas obsoletas, loading de
+// canvas.
+let _swipePathScanGeneration = 0;
+function _confirmGenerateSwipePathFromLayers(areaId, targetNodeId) {
+  if (!areaId || !targetNodeId) return;
+  if (window._swipePathScanInFlight) {
+    showToast('Aguarde a varredura em andamento terminar antes de iniciar outra.');
+    return;
+  }
+  if (window._tabOrderCaptureMode && typeof cancelTabOrderReview === 'function') {
+    cancelTabOrderReview();
+    showToast('A captura de Ordem de Tabulação em andamento foi cancelada.');
+  }
+  ensureA11yProjectOriginThen((origin) => {
+    const myGeneration = ++_swipePathScanGeneration;
+    window._swipePathScanInFlight = true;
+    window._swipePathPendingGeneration = myGeneration;
+    window._swipePathPendingAreaId = areaId;
+    window._swipePathPendingTargetNodeId = targetNodeId;
+    window._swipePathPendingList = [];
+    if (typeof showA11yCanvasLoading === 'function') showA11yCanvasLoading('Varrendo todos os componentes da tela…');
+    parent.postMessage({ pluginMessage: { type: 'generate-swipe-path-from-layers', areaId, targetNodeId, sectionName: getA11yActiveSectionName(), designerName: getA11yDesignerName(), designerId: getA11yDesignerId(), generation: myGeneration } }, '*');
+  });
+}
+window._confirmGenerateSwipePathFromLayers = _confirmGenerateSwipePathFromLayers;
+
+// Resposta de 'swipe-path-generated-from-layers' (messages.js) — `items`
+// traz {nodeId, nodeName}[] já referenciando o nó ORIGINAL (o backend já
+// traduz clone→original antes de montar `items`, ver comentário do handler
+// generate-swipe-path-from-layers) — diferente do fluxo de Tabulação
+// automática, que desenha direto sobre o clone item a item, o Swipe sempre
+// trabalha com o id original como fonte de verdade (mesmo princípio de
+// _originalTargetNodeId em create-unified-spec). `nodeMap` continua vindo
+// {originalId: cloneId} só para manter o cache _activeSwipePathCloneMaps do
+// backend em paridade com o resto do fluxo — não precisa ser invertido
+// aqui, `items` já chega pronto.
+async function addSwipePathItemsFromLayers(items, cloneId, nodeMap, generation) {
+  if (generation !== undefined && generation !== window._swipePathPendingGeneration) return;
+  window._swipePathScanInFlight = false;
+  if (typeof hideA11yCanvasLoading === 'function') hideA11yCanvasLoading();
+
+  if (!cloneId) {
+    window._swipePathPendingList = [];
+    return;
+  }
+
+  const list = Array.isArray(items) ? items : [];
+  if (list.length === 0) {
+    showToast('Nenhum componente encontrado automaticamente. A cópia da tela já está pronta para marcação manual.');
+    return;
+  }
+  if (list.length < 2) {
+    showToast('Só 1 componente encontrado — marque a trilha manualmente (mínimo de 2 pontos).');
+    return;
+  }
+
+  window._swipePathPendingList = list.map(it => ({
+    nodeId: it.nodeId,
+    nodeName: it.nodeName || '',
+    tempId: _swipePathNextTempId(),
+  }));
+  showToast(`${list.length} componente${list.length === 1 ? '' : 's'} encontrado${list.length === 1 ? '' : 's'}, desenhando a trilha…`);
+  applySwipePathToCanvas();
+}
+window.addSwipePathItemsFromLayers = addSwipePathItemsFromLayers;
+
 // Botão "Concluir seleção" da barra de captura minimizada — mesma lógica
 // de finishTabOrderCapture (ver comentário lá, 2026-09-04-aa): pede ao
 // backend tudo que foi acumulado em silêncio (get-swipe-path-accumulated-selection);
@@ -417,7 +493,7 @@ window.handleSwipePathAccumulatedSelectionResult = handleSwipePathAccumulatedSel
 // por este fluxo.
 function _highlightSwipePathListItem(nodeId) {
   if (!nodeId) return;
-  parent.postMessage({ pluginMessage: { type: 'highlight-swipe-path-copy-node', id: nodeId, areaId: window._swipePathPendingAreaId, highlight: true, color: '#0891B2', selectNode: false, shouldScroll: true } }, '*');
+  parent.postMessage({ pluginMessage: { type: 'highlight-swipe-path-copy-node', id: nodeId, areaId: window._swipePathPendingAreaId, highlight: true, color: '#005ca9', selectNode: false, shouldScroll: true } }, '*');
 }
 window._highlightSwipePathListItem = _highlightSwipePathListItem;
 
@@ -446,7 +522,7 @@ function _renderSwipePathPendingList() {
       <span class="text-gray-300 dark:text-dark-muted cursor-grab active:cursor-grabbing shrink-0" title="Arrastar para reordenar" aria-hidden="true">
         <i data-lucide="grip-vertical" class="w-3.5 h-3.5"></i>
       </span>
-      <div class="w-6 h-6 rounded-dsc-circ flex items-center justify-center text-dsc-label-tiny normal-case tracking-normal font-extrabold text-white shrink-0" style="background-color:#0891B2">${listIndex + 1}</div>
+      <div class="w-6 h-6 rounded-dsc-circ flex items-center justify-center text-dsc-label-tiny normal-case tracking-normal font-extrabold text-white shrink-0" style="background-color:#005ca9">${listIndex + 1}</div>
       <p class="flex-1 min-w-0 text-dsc-label-tiny normal-case tracking-normal text-slate-700 dark:text-white truncate">${escapeHtml(it.nodeName || '')}</p>
       <button type="button" title="Remover da lista" aria-label="Remover da lista"
         onclick="event.stopPropagation(); deleteSwipePathPendingItem('${escapeHtml(it.tempId)}')"
@@ -498,7 +574,7 @@ function _renderSwipePathTabList(areaId, targetNodeId) {
       <span class="text-gray-300 dark:text-dark-muted cursor-grab active:cursor-grabbing shrink-0" title="Arrastar para reordenar" aria-hidden="true">
         <i data-lucide="grip-vertical" class="w-3.5 h-3.5"></i>
       </span>
-      <div class="w-6 h-6 rounded-dsc-circ flex items-center justify-center text-dsc-label-tiny normal-case tracking-normal font-extrabold text-white shrink-0" style="background-color:#0891B2">${listIndex + 1}</div>
+      <div class="w-6 h-6 rounded-dsc-circ flex items-center justify-center text-dsc-label-tiny normal-case tracking-normal font-extrabold text-white shrink-0" style="background-color:#005ca9">${listIndex + 1}</div>
       <p class="flex-1 min-w-0 text-dsc-label-tiny normal-case tracking-normal text-slate-700 dark:text-white truncate">${escapeHtml(it.nodeName || '')}</p>
       <button type="button" title="Remover da lista" aria-label="Remover da lista"
         onclick="event.stopPropagation(); deleteSwipePathPendingItem('${escapeHtml(it.tempId)}', true)"

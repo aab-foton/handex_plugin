@@ -58,7 +58,7 @@ function _tabOrderSectionHtml(uid, area) {
       <div class="flex items-center gap-2 px-2 py-1.5 cursor-pointer select-none bg-gray-50/60 dark:bg-dark-bg/30 hover:bg-gray-100/60 dark:hover:bg-dark-line/20 transition-colors"
         onclick="toggleA11yTabOrderAccordion('${uid}')">
         <div class="w-4.5 h-4.5 rounded-dsc-circ flex items-center justify-center shrink-0" style="background-color:#E0F5FA">
-          <i data-lucide="list-ordered" class="w-2.5 h-2.5" style="color:#0891B2"></i>
+          <i data-lucide="list-ordered" class="w-2.5 h-2.5" style="color:#005ca9"></i>
         </div>
         <p class="flex-1 min-w-0 text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wide truncate">Ordem de Tabulação</p>
         <i data-lucide="chevron-down" id="tab-order-chevron-${uid}" class="w-3.5 h-3.5 text-gray-400 transition-transform shrink-0" style="transform:${chevronStyle}"></i>
@@ -76,13 +76,13 @@ function _tabOrderSectionHtml(uid, area) {
              correção em "Mapeamento Automatizado" — não é geração final,
              o resultado ainda passa por revisão). -->
         <button type="button" onclick="event.stopPropagation(); openA11yInstructionThenStart('tabulacao', '${escapeHtml(areaIdAttr)}', '${escapeHtml(area.targetNodeId || '')}')"
-          class="w-full flex items-center justify-center gap-2 h-8 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
+          class="w-full flex items-center justify-center gap-2 h-8 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#005ca9] text-white hover:bg-blue-700 active:scale-[0.99] shadow-sm shadow-blue-500/20">
           <i data-lucide="list-ordered" class="w-3.5 h-3.5" aria-hidden="true"></i>
           Iniciar Ordem de Tabulação
         </button>
         ${(typeof _currentTabOrderItems === 'function' && _currentTabOrderItems(area.id).length > 0) ? '' : `
         <button type="button" onclick="event.stopPropagation(); _confirmGenerateTabOrderFromLayers('${escapeHtml(areaIdAttr)}', '${escapeHtml(area.targetNodeId || '')}')"
-          class="w-full flex items-center justify-center gap-1.5 h-6 mt-0.5 rounded-dsc-small text-dsc-label-tiny normal-case tracking-normal font-bold text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99] transition-all">
+          class="w-full flex items-center justify-center gap-1.5 h-6 mt-0.5 rounded-dsc-small text-dsc-label-tiny normal-case tracking-normal font-bold text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 active:scale-[0.99] transition-all">
           <i data-lucide="sparkles" class="w-3 h-3" aria-hidden="true"></i>
           ou usar Mapeamento Automático
         </button>`}
@@ -337,6 +337,32 @@ window.openA11yInstructionManually = openA11yInstructionManually;
 // também o texto do botão de confirmação, pra não sugerir "início" quando
 // na verdade vai só somar aos itens existentes.
 function openA11yInstructionThenStart(feature, areaId, targetNodeId) {
+  const hasExisting = feature === 'swipe'
+    ? !!(hacData.a11ySwipePaths || []).find(p => p && p.areaId === areaId && Array.isArray(p.points) && p.points.length > 0)
+    : (typeof _currentTabOrderItems === 'function' && _currentTabOrderItems(areaId).length > 0);
+
+  const startAction = hasExisting
+    ? (feature === 'swipe'
+      ? () => openSwipePathEditMode(areaId, targetNodeId)
+      : () => startTabOrderAddItemsFromCard(areaId))
+    : (feature === 'swipe'
+      ? () => startSwipePathManualMode(areaId, targetNodeId)
+      : () => startTabOrderManualMode(areaId, targetNodeId));
+
+  // Flag "já visto" por feature (2026-09-18, pedido do usuário — mesmo
+  // padrão de hacData.a11yLeitorInstructionSeen, ver core.js): antes, TODO
+  // clique em "Iniciar Ordem de Tabulação"/"Iniciar trilha de swipe" abria
+  // esta modal, sem exceção. Agora só abre na 1ª vez de cada feature nesse
+  // projeto — cliques seguintes vão direto pra captura, mesma UX que o
+  // Leitor de Tela já tinha. A reabertura MANUAL continua sempre abrindo
+  // (ver openA11yInstructionManually acima, chamada pelo ícone de hint, que
+  // nunca passa por aqui).
+  const seenKey = feature === 'swipe' ? 'a11ySwipeInstructionSeen' : 'a11yTabulacaoInstructionSeen';
+  if (hacData[seenKey]) {
+    startAction();
+    return;
+  }
+
   if (!_renderA11yInstructionModal(feature)) {
     // Falha silenciosa real possível: FICHA_INSTRUCTION_CONTENT_UI[feature]
     // não existe/veio vazio no bundle carregado (ex.: build desatualizado
@@ -344,20 +370,20 @@ function openA11yInstructionThenStart(feature, areaId, targetNodeId) {
     // "Iniciar..." simplesmente não fazia nada visível — diagnóstico já
     // reportado 2026-09-16.
     console.warn('[hac] openA11yInstructionThenStart: _renderA11yInstructionModal retornou false para feature=', feature, '— modal não será aberto, captura não iniciará.');
+    startAction();
     return;
   }
 
-  const hasExisting = feature === 'swipe'
-    ? !!(hacData.a11ySwipePaths || []).find(p => p && p.areaId === areaId && Array.isArray(p.points) && p.points.length > 0)
-    : (typeof _currentTabOrderItems === 'function' && _currentTabOrderItems(areaId).length > 0);
-
-  window._pendingA11yInstructionConfirm = hasExisting
-    ? (feature === 'swipe'
-      ? () => openSwipePathEditMode(areaId, targetNodeId)
-      : () => startTabOrderAddItemsFromCard(areaId))
-    : (feature === 'swipe'
-      ? () => startSwipePathManualMode(areaId, targetNodeId)
-      : () => startTabOrderManualMode(areaId, targetNodeId));
+  window._pendingA11yInstructionConfirm = () => {
+    // Marca "visto" só na CONFIRMAÇÃO (não na abertura) — mesmo cuidado de
+    // a11yLeitorInstructionSeen: se o designer fechar pelo X/backdrop
+    // (_cancelA11yInstructionModal) sem confirmar, a modal deve aparecer de
+    // novo no próximo "Iniciar", já que ele não chegou a "ver" o conteúdo
+    // até o fim.
+    hacData[seenKey] = true;
+    saveToStorage();
+    startAction();
+  };
 
   const continueBtn = document.getElementById('btn-a11y-instruction-modal-continue');
   if (continueBtn) continueBtn.textContent = hasExisting ? 'Entendi, adicionar itens' : 'Entendi, começar seleção';
@@ -766,7 +792,7 @@ function _highlightTabOrderListItem(nodeId) {
   // areaId incluído (2026-09-08): o cache de clone ativo virou por área
   // (Map<areaId, nodeMap>, ver code.js) — sem isso o backend teria que
   // adivinhar de qual área é o nodeId clicado.
-  parent.postMessage({ pluginMessage: { type: 'highlight-tab-order-copy-node', id: nodeId, areaId: window._tabOrderPendingAreaId, highlight: true, color: '#0891B2', selectNode: false, shouldScroll: true } }, '*');
+  parent.postMessage({ pluginMessage: { type: 'highlight-tab-order-copy-node', id: nodeId, areaId: window._tabOrderPendingAreaId, highlight: true, color: '#005ca9', selectNode: false, shouldScroll: true } }, '*');
 }
 window._highlightTabOrderListItem = _highlightTabOrderListItem;
 
@@ -800,7 +826,7 @@ function _renderTabOrderPendingList() {
       <span class="text-gray-300 dark:text-dark-muted cursor-grab active:cursor-grabbing shrink-0" title="Arrastar para reordenar" aria-hidden="true">
         <i data-lucide="grip-vertical" class="w-3.5 h-3.5"></i>
       </span>
-      <div class="w-6 h-6 rounded-dsc-circ flex items-center justify-center text-dsc-label-tiny normal-case tracking-normal font-extrabold text-white shrink-0" style="background-color:${it.drawFailed ? '#DC2626' : '#0891B2'}">${listIndex + 1}</div>
+      <div class="w-6 h-6 rounded-dsc-circ flex items-center justify-center text-dsc-label-tiny normal-case tracking-normal font-extrabold text-white shrink-0" style="background-color:${it.drawFailed ? '#DC2626' : '#005ca9'}">${listIndex + 1}</div>
       <p class="flex-1 min-w-0 text-dsc-label-tiny normal-case tracking-normal text-slate-700 dark:text-white truncate">${escapeHtml(it.nodeName || '')}</p>
       ${it.drawFailed ? '<i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-red-500 shrink-0" title="Selo não desenhado"></i>' : ''}
       <button type="button" title="Remover da lista" aria-label="Remover da lista"
@@ -1246,11 +1272,11 @@ function _renderTabOrderListForArea(areaId, containerEl) {
       ${readOnly ? '' : `<span class="text-gray-300 dark:text-dark-muted cursor-grab active:cursor-grabbing shrink-0" title="Arrastar para reordenar" aria-hidden="true">
         <i data-lucide="grip-vertical" class="w-3.5 h-3.5"></i>
       </span>`}
-      <div class="w-6 h-6 rounded-dsc-circ flex items-center justify-center text-dsc-label-tiny normal-case tracking-normal font-extrabold text-white shrink-0" style="background-color:#0891B2">${escapeHtml(String(it.number))}</div>
+      <div class="w-6 h-6 rounded-dsc-circ flex items-center justify-center text-dsc-label-tiny normal-case tracking-normal font-extrabold text-white shrink-0" style="background-color:#005ca9">${escapeHtml(String(it.number))}</div>
       <p class="flex-1 min-w-0 text-dsc-label-tiny normal-case tracking-normal text-slate-700 dark:text-white truncate">${escapeHtml(it.targetNodeName || '')}</p>
       <button type="button" title="Focar no canvas" aria-label="Focar no canvas"
         onclick="focusNode('${it.id}')"
-        class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-[#0070af] transition-colors shrink-0">
+        class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-[#005ca9] transition-colors shrink-0">
         <i data-lucide="locate" class="w-3.5 h-3.5"></i>
       </button>
       <button type="button" title="Remover da ordem de tabulação" aria-label="Remover da ordem de tabulação"

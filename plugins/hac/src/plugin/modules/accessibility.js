@@ -54,12 +54,25 @@
 // melhoria separada, ainda a investigar/planejar.
 //
 // Correção de escopo (2026-09-11): o pedido de reativação era só para
-// Leitor de Tela — Tabulação e Swipe continuam ocultos por enquanto (a
-// flag única acima cobria os 3 pontos por engano). Duas flags
-// independentes agora: A11Y_AUTO_MAPPING_HIDDEN_LEITOR (reativado) e
-// A11Y_AUTO_MAPPING_HIDDEN_TAB_SWIPE (continua oculto).
+// Leitor de Tela — Tabulação e Swipe continuaram ocultos sob a MESMA flag
+// (A11Y_AUTO_MAPPING_HIDDEN_TAB_SWIPE), apesar de controlarem 2 botões
+// conceitualmente distintos: "Mapeamento Automático" de Tabulação (scan de
+// camadas/zigue-zague, _confirmGenerateTabOrderFromLayers) e "usar a Ordem
+// de Tabulação já mapeada" no Swipe (startSwipePathFromTabOrder — nunca
+// deixou de existir/funcionar, só o botão ficou escondido). Separado em
+// 2026-09-18 (pedido do usuário: testar SÓ o Swipe automático de novo, sem
+// reativar o Mapeamento Automático de Tabulação) — cada botão agora tem sua
+// própria flag, independentes.
 const A11Y_AUTO_MAPPING_HIDDEN_LEITOR = false;
-const A11Y_AUTO_MAPPING_HIDDEN_TAB_SWIPE = true;
+const A11Y_AUTO_MAPPING_HIDDEN_TABULACAO = true;
+// Ocultado de novo (2026-09-18, pedido do usuário): o scan próprio
+// (generate-swipe-path-from-layers) ficou funcional depois da correção de
+// tradução clone→original, mas a ORDEM final (zigue-zague sobre os
+// componentes reais encontrados) ainda produz uma trilha reta/errática em
+// telas reais — fica pra depois, com a lógica intacta (nada foi apagado,
+// só o botão de entrada esconde de novo, mesmo padrão já usado antes pra
+// Tabulação). Manter só o caminho manual visível por enquanto.
+const A11Y_AUTO_MAPPING_HIDDEN_SWIPE = true;
 
 // Cores reais extraídas dos fills dos componentes publicados na lib "Design
 // Acessível". O selo (Tag/Chip) de cada categoria usa a cor "color" no
@@ -587,7 +600,7 @@ function _renderA11yModalDscComponentName(elId, dscComponentNameRaw, a11yOrigin)
   }
   const url = nodeId ? _buildA11yMobileComponentDeepLink(nodeId) : '';
   if (url) {
-    el.innerHTML = `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" title="Abrir componente na lib DSC" class="text-[#0891B2] dark:text-cyan-400 underline decoration-dotted hover:decoration-solid">${escapeHtml(clean)}</a>`;
+    el.innerHTML = `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" title="Abrir componente na lib DSC" class="text-[#005ca9] dark:text-blue-400 underline decoration-dotted hover:decoration-solid">${escapeHtml(clean)}</a>`;
   } else {
     el.textContent = clean;
   }
@@ -976,7 +989,7 @@ function _applyA11yManualMatchToPicker() {
   // realce de uma seleção anterior.
   document.querySelectorAll('#a11y-category-picker-modal [data-a11y-suggested]').forEach(el => {
     el.removeAttribute('data-a11y-suggested');
-    el.classList.remove('ring-2', 'ring-cyan-500', 'bg-cyan-50', 'dark:bg-cyan-900/20');
+    el.classList.remove('ring-2', 'ring-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
     const badge = el.querySelector('[data-a11y-suggested-badge]');
     if (badge) badge.remove();
   });
@@ -996,10 +1009,10 @@ function _applyA11yManualMatchToPicker() {
   const btn = document.getElementById('a11y-category-btn-' + category);
   if (btn) {
     btn.setAttribute('data-a11y-suggested', 'true');
-    btn.classList.add('ring-2', 'ring-cyan-500', 'bg-cyan-50', 'dark:bg-cyan-900/20');
+    btn.classList.add('ring-2', 'ring-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
     const badge = document.createElement('span');
     badge.setAttribute('data-a11y-suggested-badge', 'true');
-    badge.className = 'ml-auto shrink-0 text-[9px] font-bold uppercase tracking-wider text-white bg-cyan-600 rounded-full px-1.5 py-0.5';
+    badge.className = 'ml-auto shrink-0 text-[9px] font-bold uppercase tracking-wider text-white bg-blue-600 rounded-full px-1.5 py-0.5';
     badge.textContent = 'Sugerido';
     btn.appendChild(badge);
   }
@@ -1538,7 +1551,7 @@ function _renderA11yElementoVariants(selectValue) {
     row.innerHTML = `
       <label class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">${escapeHtml(_capitalizeFirst(f.name))}</label>
       <select data-a11y-variant-name="${escapeHtml(f.rawName)}"
-        class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all">
+        class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all">
         ${optionsHtml}
       </select>
     `;
@@ -1605,13 +1618,13 @@ function _renderA11yElementoToggles(selectValue) {
       <label class="flex items-center gap-dsc-nano px-dsc-micro py-2.5 cursor-pointer select-none">
         <input type="checkbox" data-a11y-toggle-key="${t.key}"
           onchange="_onA11yElementoToggleChange(this)"
-          class="w-4 h-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500 cursor-pointer shrink-0" />
+          class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer shrink-0" />
         <span class="text-[12px] font-bold text-slate-700 dark:text-white">${escapeHtml(t.label)}</span>
       </label>
       <div class="hidden px-dsc-micro pb-3" data-a11y-toggle-textarea-wrap>
         <textarea data-a11y-toggle-value maxlength="${max}" rows="2" placeholder="Insira seu texto de ${escapeHtml(t.label.toLowerCase())}."
           oninput="updateA11yCharCounterEl(this, this.nextElementSibling)"
-          class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-dsc-small px-2.5 py-dsc-nano text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all resize-none"></textarea>
+          class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-dsc-small px-2.5 py-dsc-nano text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all resize-none"></textarea>
         <span class="block text-right text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted mt-0.5">0/${max}</span>
       </div>
     `;
@@ -1835,13 +1848,13 @@ function _renderA11yElementoMobileFields() {
       <label class="flex items-center gap-dsc-nano px-dsc-micro py-2.5 cursor-pointer select-none">
         <input type="checkbox" data-a11y-toggle-key="${key}"
           onchange="_onA11yElementoToggleChange(this)"
-          class="w-4 h-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500 cursor-pointer shrink-0" />
+          class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer shrink-0" />
         <span class="text-[12px] font-bold text-slate-700 dark:text-white">${escapeHtml(label)}</span>
       </label>
       <div class="hidden px-dsc-micro pb-3" data-a11y-toggle-textarea-wrap>
         <textarea data-a11y-toggle-value maxlength="${max}" rows="2" placeholder="${escapeHtml(placeholder)}"
           oninput="updateA11yCharCounterEl(this, this.nextElementSibling)"
-          class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-dsc-small px-2.5 py-dsc-nano text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all resize-none"></textarea>
+          class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-dsc-small px-2.5 py-dsc-nano text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all resize-none"></textarea>
         <span class="block text-right text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted mt-0.5">0/${max}</span>
       </div>
     </div>`;
@@ -1869,7 +1882,7 @@ function _renderA11yElementoMobileFields() {
         </div>
         <textarea id="a11y-el-mobile-alt-descricao" maxlength="180" rows="2" placeholder="Insira aqui o texto alternativo da imagem/mídia."
           oninput="updateA11yCharCounter(this)"
-          class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all resize-none"></textarea>
+          class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all resize-none"></textarea>
       </div>
       ${toggleRowHtml('observacoes', A11Y_TOGGLE_LABELS.observacoes, 'Insira seu texto de observações.')}
     `;
@@ -1905,7 +1918,7 @@ function _renderA11yElementoMobileFields() {
     nomeAcessivelRow.id = 'a11y-el-mobile-nome-acessivel-row';
     nomeAcessivelRow.className = 'hidden flex items-center gap-dsc-nano px-dsc-micro py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium';
     nomeAcessivelRow.innerHTML = `
-      <i data-lucide="check-circle-2" class="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0"></i>
+      <i data-lucide="check-circle-2" class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0"></i>
       <span class="text-[12px] font-bold text-slate-700 dark:text-white">${escapeHtml(A11Y_TOGGLE_LABELS.nomeAcessivel)}</span>
       <span class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted ml-auto">Preenchido pelo Label acima</span>
     `;
@@ -1928,23 +1941,35 @@ function _renderA11yElementoMobileFields() {
     // campo novo, só deixar o rótulo/placeholder explícitos sobre esse uso.
     // Pré-seleção automática (UX, 2026-09): se o nome do componente DSC já
     // resolvido pelo backend (modal.dataset.dscComponentName, ex: "[dsc] Top
-    // App Bar") bater EXATAMENTE — após limpar o prefixo "[dsc]" — com uma
-    // das opções fixas do catálogo, usa essa opção como default em vez de
-    // "Personalizado". Match exato apenas (case-insensitive/trim, sem
-    // aproximação por substring: nomes reais divergem editorialmente da
-    // lista curada em vários casos — ex. "[dsc] Chip" vs "Chips", "[dsc]
-    // Text Field Single" vs "Input/Text Field - Single" — e não há como
-    // resolver isso com heurística segura, mesma razão pela qual
-    // A11Y_MOBILE_COMPONENT_LINK_NODE_IDS também só cobre 46/64 por nome
-    // exato). Só entra em specs NOVAS: em edição, _restoreA11yElementoMobileToggles
-    // roda DEPOIS deste render e sobrescreve linkSelect.value com o dado
-    // salvo (sub.linkComponenteNome), então a escolha do designer sempre
-    // prevalece.
+    // App Bar") bater com uma das opções fixas do catálogo, usa essa opção
+    // como default em vez de "Personalizado" — é só uma SUGESTÃO editável, o
+    // designer sempre pode trocar. Dois passos, do mais para o menos
+    // confiável: 1) match EXATO (case-insensitive/trim) após limpar o
+    // prefixo "[dsc]"; 2) se não houver exato, match APROXIMADO por
+    // substring nos dois sentidos (nome limpo contém a opção OU é contido
+    // por ela — ex. "[dsc] Value Section" -> "Value Section" exato; "[dsc]
+    // Text Field Single Line" -> sugere "Text Field" se essa for a única
+    // opção contida). Ambíguo (mais de 1 opção aproximada bate) não sugere
+    // nada — evita adivinhar errado quando duas opções são candidatas.
+    // Decisão de produto (2026-09-18): antes só o match exato era aceito
+    // (nomes reais divergem editorialmente da lista curada em vários casos —
+    // ex. "[dsc] Chip" vs "Chips" — e por isso a sugestão aproximada é
+    // sempre editável, nunca tratada como certeza). Só entra em specs
+    // NOVAS: em edição, _restoreA11yElementoMobileToggles roda DEPOIS deste
+    // render e sobrescreve linkSelect.value com o dado salvo
+    // (sub.linkComponenteNome), então a escolha do designer sempre prevalece.
     const dscNameRaw = modal ? modal.dataset.dscComponentName : '';
     const dscNameClean = dscNameRaw ? _cleanDscContainingFrameName(dscNameRaw).trim().toLowerCase() : '';
-    const autoMatchedOption = dscNameClean
+    let autoMatchedOption = dscNameClean
       ? A11Y_MOBILE_LINK_COMPONENT_OPTIONS.find(name => name.trim().toLowerCase() === dscNameClean) || null
       : null;
+    if (!autoMatchedOption && dscNameClean) {
+      const approx = A11Y_MOBILE_LINK_COMPONENT_OPTIONS.filter(name => {
+        const opt = name.trim().toLowerCase();
+        return opt.length > 2 && (dscNameClean.includes(opt) || opt.includes(dscNameClean));
+      });
+      if (approx.length === 1) autoMatchedOption = approx[0];
+    }
     // "Personalizado" NÃO existe mais como opção real na lib nova (ver
     // buildMobileLinkOptions em build-a11y-constants.cjs — decisão de
     // produto: o catálogo real não tem opção de exceção). Mantido aqui como
@@ -1967,14 +1992,14 @@ function _renderA11yElementoMobileFields() {
       <div>
         <label for="a11y-el-mobile-link-select" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Componente do DSC (escolha "Personalizado" se não encontrar)</label>
         <select id="a11y-el-mobile-link-select"
-          class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-dsc-small px-2.5 py-dsc-nano text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all">
+          class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-dsc-small px-2.5 py-dsc-nano text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all">
           ${linkOptionsHtml}
         </select>
       </div>
       <div id="a11y-el-mobile-screen-reader-variant-wrap" class="hidden">
         <label for="a11y-el-mobile-screen-reader-variant-select" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Leitor de Tela</label>
         <select id="a11y-el-mobile-screen-reader-variant-select"
-          class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-dsc-small px-2.5 py-dsc-nano text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all">
+          class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-dsc-small px-2.5 py-dsc-nano text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all">
         </select>
       </div>
       <div>
@@ -1984,7 +2009,7 @@ function _renderA11yElementoMobileFields() {
         </div>
         <input type="text" id="a11y-el-mobile-link-url" maxlength="300" placeholder="${escapeHtml(A11Y_MOBILE_LINK_URL_PLACEHOLDER)}"
           oninput="updateA11yCharCounter(this)"
-          class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-dsc-small px-2.5 py-dsc-nano text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all" />
+          class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-dsc-small px-2.5 py-dsc-nano text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all" />
         <p id="a11y-el-mobile-link-url-lock-hint" class="hidden flex items-center gap-dsc-quark mt-1 ml-1 text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted">
           <i data-lucide="lock" class="w-2.5 h-2.5"></i> Preenchido automaticamente a partir do componente do DSC. Escolha "Personalizado" acima para editar.
         </p>
@@ -2486,9 +2511,9 @@ window._deleteA11yAreaFromWorkspace = _deleteA11yAreaFromWorkspace;
 function _applyA11yWorkspaceTabStyles(activeTab) {
   document.querySelectorAll('.a11y-workspace-tab-btn').forEach(btn => {
     const isActive = btn.getAttribute('data-a11y-workspace-tab') === activeTab;
-    btn.classList.toggle('text-cyan-700', isActive);
-    btn.classList.toggle('dark:text-cyan-400', isActive);
-    btn.classList.toggle('border-cyan-600', isActive);
+    btn.classList.toggle('text-blue-700', isActive);
+    btn.classList.toggle('dark:text-blue-400', isActive);
+    btn.classList.toggle('border-blue-600', isActive);
     btn.classList.toggle('text-slate-400', !isActive);
     btn.classList.toggle('dark:text-dark-muted', !isActive);
     btn.classList.toggle('border-transparent', !isActive);
@@ -2711,13 +2736,13 @@ function _renderA11yFixedToggles(wrapId, listId, shortName) {
       <label class="flex items-center gap-dsc-nano px-dsc-micro py-2.5 cursor-pointer select-none">
         <input type="checkbox" data-a11y-toggle-key="${t.key}"
           onchange="_onA11yElementoToggleChange(this)"
-          class="w-4 h-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500 cursor-pointer shrink-0" />
+          class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer shrink-0" />
         <span class="text-[12px] font-bold text-slate-700 dark:text-white">${escapeHtml(t.label)}</span>
       </label>
       <div class="hidden px-dsc-micro pb-3" data-a11y-toggle-textarea-wrap>
         <textarea data-a11y-toggle-value maxlength="${max}" rows="2" placeholder="Insira seu texto de ${escapeHtml(t.label.toLowerCase())}."
           oninput="updateA11yCharCounterEl(this, this.nextElementSibling)"
-          class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-dsc-small px-2.5 py-dsc-nano text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all resize-none"></textarea>
+          class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-dsc-small px-2.5 py-dsc-nano text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all resize-none"></textarea>
         <span class="block text-right text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted mt-0.5">0/${max}</span>
       </div>
     `;
@@ -2863,6 +2888,15 @@ function _applyA11yTituloOriginLock(select, isMobile) {
   // default correto em vez de deixar uma opção oculta selecionada.
   const currentIsMobile = select.value === 'mobile';
   if (currentIsMobile !== isMobile) select.value = _defaultTituloNivelForOrigin(isMobile ? 'mobile' : 'web');
+
+  // Mobile só tem 1 opção real ("mobile") — um <select> sem escolha de
+  // verdade é interação supérflua (pedido do usuário, 2026-09-18). Esconde
+  // o <select> e mostra o texto fixo equivalente; select continua no DOM
+  // (só oculto) e com o valor certo, pra updateA11yTituloFields/
+  // confirmA11ySpec lerem normalmente sem mudança de lógica.
+  const fixedDisplay = document.getElementById('a11y-titulo-nivel-fixed');
+  select.classList.toggle('hidden', isMobile);
+  if (fixedDisplay) fixedDisplay.classList.toggle('hidden', !isMobile);
 }
 
 // ── Nível de Título ──────────────────────────────────────────────────────
@@ -3575,7 +3609,7 @@ function _a11ySpecItemHtml(spec) {
   // selecionada no projeto — uma spec 'titulo' criada em contexto mobile
   // continua rotulada "Títulos" mesmo que o designer troque a lib depois.
   const categoryLabel = spec.a11yType ? (getA11yCategoryLabel(spec.a11yType, spec.a11yOrigin) || meta.label) : meta.label;
-  const color = spec.color || meta.color || '#0891B2';
+  const color = spec.color || meta.color || '#005ca9';
   const fill = spec.fillColor || meta.fill || '#E0F5FA';
   const props = spec.properties || [];
   const isHidden = spec.visible === false;
@@ -3619,28 +3653,28 @@ function _a11ySpecItemHtml(spec) {
         </div>
         <button type="button" title="Focar no elemento no canvas" aria-label="Focar no elemento no canvas"
           onclick="_highlightSpecListItem('${escapeHtml(spec.targetNodeId)}', '${escapeHtml(spec.a11yAreaId || '')}')"
-          class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-[#0070af] transition-colors shrink-0">
-          <i data-lucide="locate" class="w-3.5 h-3.5"></i>
+          class="w-10 h-10 flex items-center justify-center rounded-2xl text-gray-400 hover:text-[#005ca9] transition-colors shrink-0">
+          <i data-lucide="locate" class="w-5 h-5"></i>
         </button>
         <button type="button" title="${isHidden ? 'Mostrar' : 'Ocultar'} no canvas" aria-label="${isHidden ? 'Mostrar' : 'Ocultar'} no canvas"
           onclick="toggleA11ySpecVisibility('${escapeHtml(spec.id)}')"
-          class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-[#0070af] transition-colors shrink-0">
-          <i data-lucide="${isHidden ? 'eye-off' : 'eye'}" class="w-3.5 h-3.5"></i>
+          class="w-10 h-10 flex items-center justify-center rounded-2xl text-gray-400 hover:text-[#005ca9] transition-colors shrink-0">
+          <i data-lucide="${isHidden ? 'eye-off' : 'eye'}" class="w-5 h-5"></i>
         </button>
         <button type="button" title="${isUnlocked ? 'Travar' : 'Destravar'}" aria-label="${isUnlocked ? 'Travar' : 'Destravar'}"
           onclick="toggleA11ySpecLock('${escapeHtml(spec.id)}')"
-          class="w-6 h-6 flex items-center justify-center ${isUnlocked ? 'text-amber-500' : 'text-gray-400'} hover:text-[#0070af] transition-colors shrink-0">
-          <i data-lucide="${isUnlocked ? 'lock-open' : 'lock'}" class="w-3.5 h-3.5"></i>
+          class="w-10 h-10 flex items-center justify-center rounded-2xl ${isUnlocked ? 'text-amber-500' : 'text-gray-400'} hover:text-[#005ca9] transition-colors shrink-0">
+          <i data-lucide="${isUnlocked ? 'lock-open' : 'lock'}" class="w-5 h-5"></i>
         </button>
         <button type="button" title="Editar" aria-label="Editar especificação de acessibilidade"
           onclick="editA11ySpec('${escapeHtml(spec.id)}')"
-          class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-[#0070af] transition-colors shrink-0">
-          <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+          class="w-10 h-10 flex items-center justify-center rounded-2xl text-gray-400 hover:text-[#005ca9] transition-colors shrink-0">
+          <i data-lucide="pencil" class="w-5 h-5"></i>
         </button>
         <button type="button" title="Remover" aria-label="Remover especificação de acessibilidade"
           onclick="deleteA11ySpec('${escapeHtml(spec.id)}')"
-          class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors shrink-0">
-          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          class="w-10 h-10 flex items-center justify-center rounded-2xl text-gray-400 hover:text-red-500 transition-colors shrink-0">
+          <i data-lucide="trash-2" class="w-5 h-5"></i>
         </button>
       </div>
       ${props.length > 0 ? `
@@ -3648,7 +3682,7 @@ function _a11ySpecItemHtml(spec) {
         ${props.map(p => {
           const isLink = p.key === 'linkComponente' && /^https?:\/\//.test(String(p.value || ''));
           const valueHtml = isLink
-            ? `<a href="${escapeHtml(p.value)}" target="_blank" rel="noopener noreferrer" title="Abrir componente no Figma" class="text-[10px] leading-snug font-semibold text-[#0070af] dark:text-cyan-300 text-right break-all min-w-0 underline hover:no-underline">${escapeHtml(String(p.value))}</a>`
+            ? `<a href="${escapeHtml(p.value)}" target="_blank" rel="noopener noreferrer" title="Abrir componente no Figma" class="text-[10px] leading-snug font-semibold text-[#005ca9] dark:text-blue-300 text-right break-all min-w-0 underline hover:no-underline">${escapeHtml(String(p.value))}</a>`
             : `<span class="text-dsc-label-tiny normal-case tracking-normal font-semibold text-slate-700 dark:text-white text-right break-all min-w-0">${escapeHtml(String(p.value))}</span>`;
           return `
           <div class="flex items-start justify-between gap-dsc-nano px-2 py-1 bg-white dark:bg-dark-surface rounded-dsc-small">
@@ -3744,7 +3778,7 @@ function toggleA11yCategoryAccordion(uid) {
 window.toggleA11yCategoryAccordion = toggleA11yCategoryAccordion;
 
 function _a11yCategoryAccordionEl(uid, catKey, catSpecs) {
-  const meta = A11Y_CATEGORIES[catKey] || { label: _capitalizeFirst(catKey), icon: 'accessibility', color: '#0891B2', fill: '#E0F5FA' };
+  const meta = A11Y_CATEGORIES[catKey] || { label: _capitalizeFirst(catKey), icon: 'accessibility', color: '#005ca9', fill: '#E0F5FA' };
   // Origem pela PRIMEIRA spec do grupo — todas as specs de uma mesma
   // área/categoria compartilham a mesma origem (a área inteira pertence a
   // uma única lib), então basta uma amostra em vez de recalcular por item.
@@ -3835,12 +3869,12 @@ function _a11yUndocumentedItemHtml(areaId, entry) {
       </div>
       <button type="button" title="Focar no canvas" aria-label="Focar no canvas"
         onclick="focusNode('${item.nodeId}')"
-        class="shrink-0 w-6 h-6 flex items-center justify-center rounded-dsc-small text-gray-400 hover:text-[#0070af] transition-colors">
+        class="shrink-0 w-6 h-6 flex items-center justify-center rounded-dsc-small text-gray-400 hover:text-[#005ca9] transition-colors">
         <i data-lucide="crosshair" class="w-3.5 h-3.5" aria-hidden="true"></i>
       </button>
       <button type="button" title="Criar especificação" aria-label="Criar especificação de acessibilidade para ${escapeHtml(name)}"
         onclick="openA11yFormFromUndocumented('${areaId}', '${kind}', '${encodedItem}')"
-        class="shrink-0 inline-flex items-center gap-dsc-quark h-7 px-2 rounded-dsc-circ bg-[#0891B2] text-white text-dsc-label-tiny normal-case tracking-normal font-bold hover:bg-cyan-700 active:scale-95 transition-all">
+        class="shrink-0 inline-flex items-center gap-dsc-quark h-7 px-2 rounded-dsc-circ bg-[#005ca9] text-white text-dsc-label-tiny normal-case tracking-normal font-bold hover:bg-blue-700 active:scale-95 transition-all">
         <i data-lucide="plus" class="w-3 h-3"></i> Criar spec
       </button>
     </div>
@@ -3907,79 +3941,87 @@ function _a11yWorkspaceTabTabulacao(area) {
   // memória) com `canvasNumber` (último valor de fato desenhado) —
   // reordenar a lista (drag-and-drop) é o que desalinha os dois.
   const needsCanvasSync = hasManualItems && _currentTabOrderItems(area.id).some(it => it.id && it.number !== it.canvasNumber);
+  // Ícone de hint compacto (2026-09-18) — usado SÓ no estado já documentado
+  // (hasManualItems), ao lado dos botões de ação. Reabertura MANUAL da
+  // modal completa (openA11yInstructionManually, nunca seta callback).
+  // tooltip-bottom (correção 2026-09-18, bug real reportado com print: a
+  // tooltip não aparecia) — "tooltip-top" não existe como classe no CSS
+  // (só tooltip-left/tooltip-right/tooltip-bottom existem, ver plugin.css);
+  // mesmo se existisse, o padrão default já desenha ACIMA do elemento, e
+  // este botão vive perto do TOPO da área com scroll da workspace
+  // (#a11y-workspace-scroll-container, overflow-y-auto) — a tooltip nascia
+  // cortada pelo próprio scroll container. tooltip-bottom é o padrão já
+  // usado (2026-09-15) exatamente para "controles que vivem no topo da
+  // janela do plugin".
+  const tabulacaoHintIconBtn = `
+    <button type="button" onclick="openA11yInstructionManually('tabulacao')"
+      data-tooltip="Instruções sobre esta documentação" aria-label="Instruções sobre esta documentação"
+      class="tooltip-bottom shrink-0 w-9 h-9 flex items-center justify-center rounded-dsc-large border border-gray-200 dark:border-dark-line text-slate-500 dark:text-dark-muted hover:bg-slate-50 dark:hover:bg-dark-line/40 active:scale-[0.99] transition-all">
+      <i data-lucide="circle-help" class="w-3.5 h-3.5" aria-hidden="true"></i>
+    </button>`;
   return `
     <div class="space-y-2 flex flex-col flex-1">
-      <!-- Texto instrucional (introdução + passos) NUNCA mais fica inline
-           na aba (2026-09-16, correção de escopo pedida pelo usuário — o
-           parágrafo fixo que existia aqui era, na verdade, cópia do texto
-           de Tabulação vazado também na aba Swipe, ver comentário completo
-           em _a11yWorkspaceTabSwipe). Ele vive só na modal de ajuda
-           (a11y-instruction-modal, modals.html), aberta sob demanda por
-           este botão — mesmo conteúdo de ficha-instruction-content.json.tabulacao.
-           Usa openA11yInstructionThenStart (não openA11yInstructionManually):
-           bug real corrigido (2026-09-16) — os dois botões ("Instruções
-           sobre esta documentação" aqui e "Iniciar Ordem de Tabulação" logo
-           abaixo) abrem visualmente o MESMO modal, com o MESMO botão
-           "Entendi, começar seleção"; usar openA11yInstructionManually aqui
-           fazia esse botão comum fechar o modal SEM iniciar a captura,
-           porque só openA11yInstructionThenStart seta o callback que
-           _confirmA11yInstructionModal executa. Reportado pelo usuário como
-           "clico em Entendi e não inicia nada" — ele estava entrando pelo
-           botão de instruções, não pelo de iniciar, e os dois precisam se
-           comportar igual já que abrem a mesma UI. -->
-      <button type="button" onclick="openA11yInstructionThenStart('tabulacao', '${escapeHtml(areaIdAttr)}', '${escapeHtml(area.targetNodeId || '')}')"
-        class="w-full flex items-center justify-center gap-1.5 h-7 rounded-dsc-small text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-500 dark:text-dark-muted bg-slate-50 dark:bg-dark-surface hover:bg-slate-100 dark:hover:bg-dark-line/40 active:scale-[0.99] transition-all">
-        <i data-lucide="circle-help" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i>
-        Instruções sobre esta documentação
-      </button>
-      <div class="flex items-center gap-dsc-nano${hasManualItems ? '' : ' justify-center'}">
-        ${hasManualItems ? `
+      ${hasManualItems ? '' : `
+      <!-- Alert com botão embutido (2026-09-18, pedido do usuário: trocar
+           o botão-link "Instruções sobre esta documentação" por um alerta
+           mais chamativo) — SÓ no estado VAZIO (sem nada documentado); o
+           estado já documentado continua com o ícone de hint compacto
+           (tabulacaoHintIconBtn, ao lado do botão de ação), sem mudança.
+           Fica FIXO no topo — o botão "Iniciar" abaixo desce pro CENTRO
+           VERTICAL do espaço vazio da aba, mesmo princípio visual do
+           empty-state "Nenhuma tela selecionada" da Home/lista de telas
+           (#a11y-select-frame-btn em home.html). -->
+      <div class="flex items-center gap-dsc-nano px-dsc-micro py-dsc-nano rounded-dsc-medium bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30">
+        <i data-lucide="info" class="w-4 h-4 text-blue-700 dark:text-blue-400 shrink-0" aria-hidden="true"></i>
+        <p class="flex-1 min-w-0 text-dsc-label-tiny normal-case tracking-normal text-blue-700 dark:text-blue-400">Antes de começar, veja como documentar corretamente.</p>
+        <button type="button" onclick="openA11yInstructionManually('tabulacao')"
+          class="shrink-0 text-dsc-label-tiny normal-case tracking-normal font-bold text-blue-700 dark:text-blue-400 underline hover:no-underline">
+          Ver instruções
+        </button>
+      </div>`}
+      ${hasManualItems ? `
+      <div class="flex items-center gap-dsc-nano">
         <!-- Área já documentada (manual ou Mapeamento Automático,
              2026-09-04-aj, pedido do usuário): não faz sentido "Iniciar"
              de novo (recriaria a cópia do zero) — o botão vira "Adicionar
              itens", que abre o modal já populado com a ordem existente e
              arma a captura de novo(s) elemento(s), reaproveitando a MESMA
              cópia clonada (nenhum selo já desenhado é tocado). -->
+        ${tabulacaoHintIconBtn}
         <button type="button" onclick="startTabOrderAddItemsFromCard('${escapeHtml(areaIdAttr)}')"
-          class="flex-1 flex items-center justify-center gap-dsc-nano h-9 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
-          <i data-lucide="plus" class="w-3.5 h-3.5" aria-hidden="true"></i>
-          Adicionar itens
-        </button>` : `
-        <!-- Centralizado (2026-09-16, pedido do usuário) em vez de
-             flex-1/largura total: sem nenhuma ordem documentada ainda, este
-             é o único botão da linha (a lixeira "Apagar tudo" só existe com
-             hasManualItems) — largura intrínseca + wrapper com
-             justify-center, mesmo princípio do empty-state "Nenhuma tela
-             selecionada" (ícone/texto/botão centralizados), sem repetir a
-             estrutura inteira daquele empty-state por não haver espaço
-             vertical sobrando aqui (a aba já mostra o botão de ajuda acima
-             e a lista, vazia, logo abaixo). -->
-        <button type="button" onclick="openA11yInstructionThenStart('tabulacao', '${escapeHtml(areaIdAttr)}', '${escapeHtml(area.targetNodeId || '')}')"
-          class="flex items-center justify-center gap-dsc-nano h-9 px-5 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
-          <i data-lucide="list-ordered" class="w-3.5 h-3.5" aria-hidden="true"></i>
-          Iniciar Ordem de Tabulação
-        </button>`}
-        ${hasManualItems ? `
+          class="flex-1 min-w-0 flex items-center justify-center gap-dsc-nano h-9 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#005ca9] text-white hover:bg-blue-700 active:scale-[0.99] shadow-sm shadow-blue-500/20">
+          <i data-lucide="plus" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i>
+          <span class="truncate">Adicionar itens</span>
+        </button>
         <button type="button" onclick="deleteAllTabOrderForArea('${escapeHtml(areaIdAttr)}')"
           data-tooltip="Apagar todos os selos desta tela e recomeçar a ordem do zero" aria-label="Apagar toda a ordem de tabulação desta tela"
-          class="tooltip-left shrink-0 w-9 h-9 flex items-center justify-center rounded-dsc-large border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 active:scale-[0.99] transition-all">
+          class="tooltip-bottom shrink-0 w-9 h-9 flex items-center justify-center rounded-dsc-large border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 active:scale-[0.99] transition-all">
           <i data-lucide="trash-2" class="w-3.5 h-3.5" aria-hidden="true"></i>
-        </button>` : ''}
-      </div>
-      ${A11Y_AUTO_MAPPING_HIDDEN_TAB_SWIPE ? '' : (hasManualItems ? '' : `
-      <!-- Hierarquia visual (2026-09-04-e, pedido explícito com
-           screenshot): Manual é o caminho PRIMÁRIO — o automático vira um
-           link secundário abaixo, de propósito, pra que o designer
-           aprenda o fluxo manual primeiro neste momento inicial.
-           Renomeado de "Gerar Automaticamente" pra "Mapeamento
-           Automático" (mesmo motivo da correção em "Mapeamento
-           Automatizado" — não é geração final, o resultado ainda passa
-           por revisão). -->
-      <button type="button" onclick="_confirmGenerateTabOrderFromLayers('${escapeHtml(areaIdAttr)}', '${escapeHtml(area.targetNodeId || '')}')"
-        class="w-full flex items-center justify-center gap-1.5 h-7 mt-0.5 rounded-dsc-small text-dsc-label-tiny normal-case tracking-normal font-bold text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99] transition-all">
-        <i data-lucide="sparkles" class="w-3.5 h-3.5" aria-hidden="true"></i>
-        ou usar Mapeamento Automático
-      </button>`)}
+        </button>
+      </div>` : `
+      <!-- Estado VAZIO (2026-09-18, reestruturado) — coluna centralizada
+           no espaço restante da aba: texto explicativo ACIMA do botão
+           (mesmo texto/posição adotados nas 3 abas, adequado ao domínio de
+           cada uma — ver equivalentes em Swipe/Leitor de Tela), botão
+           "Criar ordem de tabulação" (renomeado de "Iniciar Ordem de
+           Tabulação" — nomenclatura unificada nas 3 abas: Criar ordem de
+           tabulação / Criar ordem de leitura / Criar especificações), e
+           "Mapeamento Automático" com respiro próprio abaixo (antes vinha
+           colado, mt-0.5, e com o prefixo "ou usar" — removido). -->
+      <div class="flex-1 flex flex-col items-center justify-center gap-2">
+        <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted text-center">Nenhuma ordem de tabulação nesta tela ainda. Use o botão abaixo.</p>
+        <button type="button" onclick="openA11yInstructionThenStart('tabulacao', '${escapeHtml(areaIdAttr)}', '${escapeHtml(area.targetNodeId || '')}')"
+          class="flex items-center justify-center gap-dsc-nano h-9 px-5 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#005ca9] text-white hover:bg-blue-700 active:scale-[0.99] shadow-sm shadow-blue-500/20">
+          <i data-lucide="list-ordered" class="w-3.5 h-3.5" aria-hidden="true"></i>
+          Criar ordem de tabulação
+        </button>
+        ${A11Y_AUTO_MAPPING_HIDDEN_TABULACAO ? '' : `
+        <button type="button" onclick="_confirmGenerateTabOrderFromLayers('${escapeHtml(areaIdAttr)}', '${escapeHtml(area.targetNodeId || '')}')"
+          class="mt-1 flex items-center justify-center gap-1.5 h-7 px-3 rounded-dsc-small text-dsc-label-tiny normal-case tracking-normal font-bold text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 active:scale-[0.99] transition-all">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5" aria-hidden="true"></i>
+          Mapeamento Automático
+        </button>`}
+      </div>`}
       <ul id="${ulId}" class="flex flex-col gap-1.5 min-h-[10px]"></ul>
       ${hasManualItems ? `
       <div class="flex items-center gap-1.5 mt-1">
@@ -4071,33 +4113,29 @@ function _a11yWorkspaceTabSwipe(area) {
   const areaIdAttr = area.id;
   const targetNodeIdAttr = area.targetNodeId || '';
 
+  // Ícone de hint (2026-09-18, pedido do usuário — substitui o antigo botão
+  // largo "Instruções sobre esta documentação" que ficava sempre no topo,
+  // mesmo padrão de tabulacaoHintIconBtn em _a11yWorkspaceTabTabulacao):
+  // reabertura MANUAL da modal completa (openA11yInstructionManually, nunca
+  // seta callback). Usado SÓ no estado com trilha já existente
+  // (existingPath), ao lado do botão "Refazer trilha" — no estado vazio o
+  // layout ORIGINAL volta (barra larga no topo, ver abaixo).
+  // tooltip-bottom (correção 2026-09-18, ver comentário completo em
+  // tabulacaoHintIconBtn) — "tooltip-top" não existe no CSS e, mesmo o
+  // default (acima) existisse, seria cortado pelo scroll container do topo
+  // da workspace.
+  const swipeHintIconBtn = `
+    <button type="button" onclick="openA11yInstructionManually('swipe')"
+      data-tooltip="Instruções sobre esta documentação" aria-label="Instruções sobre esta documentação"
+      class="tooltip-bottom shrink-0 w-9 h-9 flex items-center justify-center rounded-dsc-large border border-gray-200 dark:border-dark-line text-slate-500 dark:text-dark-muted hover:bg-slate-50 dark:hover:bg-dark-line/40 active:scale-[0.99] transition-all">
+      <i data-lucide="circle-help" class="w-3.5 h-3.5" aria-hidden="true"></i>
+    </button>`;
   return `
     <div class="space-y-2 flex flex-col flex-1">
-      <!-- Texto instrucional (introdução + passos) NUNCA mais fica inline
-           na aba (2026-09-16, correção de escopo pedida pelo usuário) — o
-           parágrafo fixo que existia aqui já tinha sido reescrito uma vez
-           pra falar de Swipe em vez de reusar o texto de Tabulação, mas o
-           bug real não era só o CONTEÚDO errado: era existir inline aqui,
-           sempre visível, em vez de só na modal de ajuda sob demanda,
-           mesmo princípio já aplicado à Ordem de Tabulação (ver comentário
-           completo em _a11yWorkspaceTabTabulacao). Ele vive só na modal
-           a11y-instruction-modal (modals.html), aberta sob demanda por
-           este botão, com o conteúdo CORRETO de
-           ficha-instruction-content.json.swipe. Usa
-           openA11yInstructionThenStart (não openA11yInstructionManually):
-           mesmo bug real corrigido em _a11yWorkspaceTabTabulacao (2026-09-16)
-           — este botão e "Iniciar/Refazer trilha de ordem de leitura" abrem
-           o MESMO modal com o MESMO botão "Entendi, começar seleção", então
-           os dois precisam iniciar a captura de fato ao confirmar. -->
-      <button type="button" onclick="openA11yInstructionThenStart('swipe', '${escapeHtml(areaIdAttr)}', '${escapeHtml(targetNodeIdAttr)}')"
-        class="w-full flex items-center justify-center gap-1.5 h-7 rounded-dsc-small text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-500 dark:text-dark-muted bg-slate-50 dark:bg-dark-surface hover:bg-slate-100 dark:hover:bg-dark-line/40 active:scale-[0.99] transition-all">
-        <i data-lucide="circle-help" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i>
-        Instruções sobre esta documentação
-      </button>
       ${existingPath ? `
-      <div class="flex items-center gap-dsc-nano px-dsc-micro py-dsc-nano rounded-dsc-medium bg-cyan-50 dark:bg-cyan-900/10 border border-cyan-100 dark:border-cyan-900/30">
-        <i data-lucide="route" class="w-3.5 h-3.5 text-cyan-700 dark:text-cyan-400 shrink-0" aria-hidden="true"></i>
-        <span class="text-dsc-label-tiny normal-case tracking-normal font-semibold text-cyan-700 dark:text-cyan-400">Trilha de Ordem de Leitura (${pointCount} ${pointCount === 1 ? 'ponto' : 'pontos'})</span>
+      <div class="flex items-center gap-dsc-nano px-dsc-micro py-dsc-nano rounded-dsc-medium bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30">
+        <i data-lucide="route" class="w-3.5 h-3.5 text-blue-700 dark:text-blue-400 shrink-0" aria-hidden="true"></i>
+        <span class="text-dsc-label-tiny normal-case tracking-normal font-semibold text-blue-700 dark:text-blue-400">Trilha de Ordem de Leitura (${pointCount} ${pointCount === 1 ? 'ponto' : 'pontos'})</span>
       </div>
       <!-- Lista editável dos pontos já salvos, direto na aba (2026-09-11,
            paridade pedida pelo usuário com a aba Tabulação — inicialmente
@@ -4118,32 +4156,58 @@ function _a11yWorkspaceTabSwipe(area) {
         class="w-full flex items-center justify-center gap-dsc-nano h-8 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm hover:shadow transition-all">
         <i data-lucide="plus" class="w-3.5 h-3.5" aria-hidden="true"></i>
         Adicionar ponto
-      </button>` : ''}
-      <button type="button" onclick="openA11yInstructionThenStart('swipe', '${escapeHtml(areaIdAttr)}', '${escapeHtml(targetNodeIdAttr)}')"
-        class="w-full flex items-center justify-center gap-dsc-nano h-9 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
-        <i data-lucide="route" class="w-3.5 h-3.5" aria-hidden="true"></i>
-        ${startLabel}
-      </button>
-      <!-- "Gerar automaticamente" do Swipe (2026-09-08, pedido do
-           usuário) — NÃO faz scan/critério próprio (zigue-zague etc.):
-           reaproveita a MESMA sequência já mapeada pela Ordem de
-           Tabulação desta área, na ordem exata dos números 1,2,3...
-           já confirmados ali. Só existe reaproveitamento porque a
-           captura de seleção múltipla (shift+clique/marquise) não tem
-           ordem garantida pela Plugin API do Figma ("The ordering of
-           nodes in the selection is unspecified" — doc oficial) — a
-           Ordem de Tabulação já resolve isso corretamente hoje (não
-           mexida aqui), então o Swipe correspondente aproveita esse
-           trabalho já feito em vez de tentar resolver ordem de novo por
-           conta própria. Sem itens de Tabulação nesta área,
-           startSwipePathFromTabOrder cai no fluxo manual normal (mesmo
-           startSwipePathManualMode do botão acima) — nunca bloqueia. -->
-      ${A11Y_AUTO_MAPPING_HIDDEN_TAB_SWIPE ? '' : `
-      <button type="button" onclick="startSwipePathFromTabOrder('${escapeHtml(areaIdAttr)}', '${escapeHtml(targetNodeIdAttr)}')"
-        class="w-full flex items-center justify-center gap-1.5 h-7 mt-0.5 rounded-dsc-small text-dsc-label-tiny normal-case tracking-normal font-bold text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99] transition-all">
-        <i data-lucide="sparkles" class="w-3.5 h-3.5" aria-hidden="true"></i>
-        ou usar a Ordem de Tabulação já mapeada
-      </button>`}
+      </button>` : `
+      <!-- Alert com botão embutido (2026-09-18) — mesmo padrão de
+           tabulacaoHintIconBtn/o bloco correspondente em
+           _a11yWorkspaceTabTabulacao; SÓ no estado VAZIO (sem trilha ainda).
+           Com trilha já existente, continua o ícone de hint compacto
+           (swipeHintIconBtn), sem mudança. -->
+      <div class="flex items-center gap-dsc-nano px-dsc-micro py-dsc-nano rounded-dsc-medium bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30">
+        <i data-lucide="info" class="w-4 h-4 text-blue-700 dark:text-blue-400 shrink-0" aria-hidden="true"></i>
+        <p class="flex-1 min-w-0 text-dsc-label-tiny normal-case tracking-normal text-blue-700 dark:text-blue-400">Antes de começar, veja como documentar corretamente.</p>
+        <button type="button" onclick="openA11yInstructionManually('swipe')"
+          class="shrink-0 text-dsc-label-tiny normal-case tracking-normal font-bold text-blue-700 dark:text-blue-400 underline hover:no-underline">
+          Ver instruções
+        </button>
+      </div>`}
+      ${existingPath ? `
+      <div class="flex items-center gap-dsc-nano">
+        ${swipeHintIconBtn}
+        <button type="button" onclick="openA11yInstructionThenStart('swipe', '${escapeHtml(areaIdAttr)}', '${escapeHtml(targetNodeIdAttr)}')"
+          class="flex-1 min-w-0 flex items-center justify-center gap-dsc-nano h-9 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#005ca9] text-white hover:bg-blue-700 active:scale-[0.99] shadow-sm shadow-blue-500/20">
+          <i data-lucide="route" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i>
+          <span class="truncate">${startLabel}</span>
+        </button>
+      </div>` : `
+      <!-- Estado VAZIO (2026-09-18, reestruturado) — coluna centralizada no
+           CENTRO VERTICAL do espaço restante da aba (hint fica fixo no
+           topo, ver acima): texto explicativo ACIMA do botão (mesmo
+           padrão de Tabulação/Leitor de Tela, adequado ao domínio desta
+           aba), botão "Criar ordem de leitura" (renomeado de "Iniciar
+           trilha de swipe"/"route" — ícone trocado pra move-horizontal,
+           mesmo ícone da aba na barra de tabs, pedido do usuário), e
+           "Mapeamento Automático" com respiro próprio abaixo (2026-09-16,
+           perdido sem querer no revert b228343, reimplementado 2026-09-18
+           — faz um SCAN PRÓPRIO via _confirmGenerateSwipePathFromLayers,
+           reaproveitando _a11yScanArea; diferente do antigo
+           startSwipePathFromTabOrder, que só reutilizava a Ordem de
+           Tabulação já mapeada — ver comentário completo em swipe-path.js).
+           "ou usar" removido do texto (mesma correção de Tabulação/Leitor
+           de Tela). -->
+      <div class="flex-1 flex flex-col items-center justify-center gap-2">
+        <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted text-center">Nenhuma trilha de swipe nesta tela ainda. Use o botão abaixo.</p>
+        <button type="button" onclick="openA11yInstructionThenStart('swipe', '${escapeHtml(areaIdAttr)}', '${escapeHtml(targetNodeIdAttr)}')"
+          class="flex items-center justify-center gap-dsc-nano h-9 px-5 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#005ca9] text-white hover:bg-blue-700 active:scale-[0.99] shadow-sm shadow-blue-500/20">
+          <i data-lucide="move-horizontal" class="w-3.5 h-3.5" aria-hidden="true"></i>
+          Criar ordem de leitura
+        </button>
+        ${A11Y_AUTO_MAPPING_HIDDEN_SWIPE ? '' : `
+        <button type="button" onclick="_confirmGenerateSwipePathFromLayers('${escapeHtml(areaIdAttr)}', '${escapeHtml(targetNodeIdAttr)}')"
+          class="mt-1 flex items-center justify-center gap-1.5 h-7 px-3 rounded-dsc-small text-dsc-label-tiny normal-case tracking-normal font-bold text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 active:scale-[0.99] transition-all">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5" aria-hidden="true"></i>
+          Mapeamento Automático
+        </button>`}
+      </div>`}
       ${existingPath ? `
       <button type="button" onclick="deleteSwipePathForArea('${escapeHtml(areaIdAttr)}')"
         class="w-full flex items-center justify-center gap-dsc-nano h-8 mt-1 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-all">
@@ -4241,48 +4305,80 @@ function _a11yWorkspaceTabLeitorDeTela(area, areaSpecs) {
            (ver openA11yCategoryPickerModal acima, flag
            hacData.a11yLeitorInstructionSeen) — sem este botão, depois da
            1ª vez não haveria como revê-la. -->
-      <button type="button" onclick="openA11yInstructionManually('leitorTela')"
-        class="w-full flex items-center justify-center gap-1.5 h-7 rounded-dsc-small text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-500 dark:text-dark-muted bg-slate-50 dark:bg-dark-surface hover:bg-slate-100 dark:hover:bg-dark-line/40 active:scale-[0.99] transition-all">
-        <i data-lucide="circle-help" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i>
-        Instruções sobre esta documentação
-      </button>
+      ${hasManualSpecs ? '' : `
+      <!-- Alert com botão embutido (2026-09-18) — mesmo padrão das outras
+           2 abas; SÓ no estado VAZIO (sem specs ainda). Com specs já
+           existentes, continua o ícone de hint compacto ao lado de "Nova
+           spec", sem mudança. -->
+      <div class="flex items-center gap-dsc-nano px-dsc-micro py-dsc-nano rounded-dsc-medium bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30">
+        <i data-lucide="info" class="w-4 h-4 text-blue-700 dark:text-blue-400 shrink-0" aria-hidden="true"></i>
+        <p class="flex-1 min-w-0 text-dsc-label-tiny normal-case tracking-normal text-blue-700 dark:text-blue-400">Antes de começar, veja como documentar corretamente.</p>
+        <button type="button" onclick="openA11yInstructionManually('leitorTela')"
+          class="shrink-0 text-dsc-label-tiny normal-case tracking-normal font-bold text-blue-700 dark:text-blue-400 underline hover:no-underline">
+          Ver instruções
+        </button>
+      </div>`}
       <!-- Botão primário no mesmo padrão visual de "Iniciar Ordem de
            Tabulação"/"Iniciar trilha de swipe" (2026-09-04-x, pedido do
            usuário) — antes era um pill pequeno ao lado do texto
-           descritivo, inconsistente com as outras 2 tabs. -->
-      <button type="button" onclick="openA11yCategoryPickerModal('${area.id}')"
-        class="w-full flex items-center justify-center gap-dsc-nano h-9 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
-        <i data-lucide="plus" class="w-3.5 h-3.5" aria-hidden="true"></i>
-        Nova spec
-      </button>
-      ${A11Y_AUTO_MAPPING_HIDDEN_LEITOR ? '' : (hasManualSpecs ? '' : `
-      <!-- Mapeamento Automático migrou pra cá (2026-09-04-g, pedido do
-           usuário) — deixou de ser uma escolha feita uma única vez no
-           momento de Marcar Área (radio "Detecção Automática vs Manual"
-           no #a11y-area-modal) e virou uma ação disponível a qualquer
-           momento dentro da aba de trabalho, ao lado das outras
-           funcionalidades automáticas (mesmo espírito do "ou usar
-           Mapeamento Automático" já secundário em Tabulação). Reaproveita
-           openA11yPostAreaDetectModal(area) tal como está — mesmo caminho
-           já usado hoje por _resumeA11yBatchWizardForArea pra retomar
-           detecção numa área já existente; nenhuma lógica nova de scan. -->
-      <button type="button" onclick="_startA11yMappingFromLeitorTab('${escapeHtml(area.id)}')"
-        class="w-full flex items-center justify-center gap-1.5 h-7 mt-0.5 rounded-dsc-small text-dsc-label-tiny normal-case tracking-normal font-bold text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.99] transition-all">
-        <i data-lucide="radar" class="w-3.5 h-3.5" aria-hidden="true"></i>
-        ou usar Mapeamento Automático
-      </button>`)}
+           descritivo, inconsistente com as outras 2 tabs. Estrutura de hint
+           igual às outras 2 abas (2026-09-18): barra larga no topo só no
+           estado vazio (acima); com specs já existentes, vira ícone
+           compacto na mesma linha deste botão, mesmo padrão de
+           tabulacaoHintIconBtn/swipeHintIconBtn. -->
+      ${hasManualSpecs ? `
+      <div class="flex items-center gap-dsc-nano">
+        <button type="button" onclick="openA11yInstructionManually('leitorTela')"
+          data-tooltip="Instruções sobre esta documentação" aria-label="Instruções sobre esta documentação"
+          class="tooltip-bottom shrink-0 w-9 h-9 flex items-center justify-center rounded-dsc-large border border-gray-200 dark:border-dark-line text-slate-500 dark:text-dark-muted hover:bg-slate-50 dark:hover:bg-dark-line/40 active:scale-[0.99] transition-all">
+          <i data-lucide="circle-help" class="w-3.5 h-3.5" aria-hidden="true"></i>
+        </button>
+        <button type="button" onclick="openA11yCategoryPickerModal('${area.id}')"
+          class="flex-1 min-w-0 flex items-center justify-center gap-dsc-nano h-9 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#005ca9] text-white hover:bg-blue-700 active:scale-[0.99] shadow-sm shadow-blue-500/20">
+          <i data-lucide="plus" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i>
+          <span class="truncate">Nova spec</span>
+        </button>
+      </div>` : `
+      <!-- Estado VAZIO (2026-09-18, reestruturado) — coluna centralizada
+           no CENTRO VERTICAL do espaço restante da aba (hint fica fixo no
+           topo, ver acima): texto explicativo ACIMA do botão (mesmo texto
+           que antes vivia solto lá embaixo, dentro da lista de resultados
+           — removido de lá, ver div.space-y-2 mais abaixo, pra não
+           duplicar a mesma informação em 2 lugares), botão "Criar
+           especificações" (renomeado de "Nova spec" — "+ Nova spec" é o
+           rótulo certo pro estado JÁ documentado/recolhido, não pra
+           partida inicial, mesma nomenclatura unificada das 3 abas: Criar
+           ordem de tabulação / Criar ordem de leitura / Criar
+           especificações), e "Mapeamento Automático" com respiro próprio
+           abaixo ("ou usar" removido do texto, 2026-09-04-g). -->
+      <div class="flex-1 flex flex-col items-center justify-center gap-2">
+        <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted text-center">Nenhuma especificação nesta tela ainda. Use o botão abaixo.</p>
+        <button type="button" onclick="openA11yCategoryPickerModal('${area.id}')"
+          class="flex items-center justify-center gap-dsc-nano h-9 px-5 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#005ca9] text-white hover:bg-blue-700 active:scale-[0.99] shadow-sm shadow-blue-500/20">
+          <i data-lucide="plus" class="w-3.5 h-3.5" aria-hidden="true"></i>
+          Criar especificações
+        </button>
+        ${A11Y_AUTO_MAPPING_HIDDEN_LEITOR ? '' : `
+        <button type="button" onclick="_startA11yMappingFromLeitorTab('${escapeHtml(area.id)}')"
+          class="mt-1 flex items-center justify-center gap-1.5 h-7 px-3 rounded-dsc-small text-dsc-label-tiny normal-case tracking-normal font-bold text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 active:scale-[0.99] transition-all">
+          <i data-lucide="radar" class="w-3.5 h-3.5" aria-hidden="true"></i>
+          Mapeamento Automático
+        </button>`}
+      </div>`}
       ${(areaSpecs.length > 0 || undocumentedEntries.length > 0) ? `
       <div class="flex items-center justify-end gap-dsc-quark px-0.5 -mb-0.5">
         <button type="button" onclick="_a11ySetAllSubaccordions(this, true)"
-          class="text-dsc-label-tiny normal-case tracking-normal font-bold text-cyan-700 dark:text-cyan-400 hover:underline px-1">Expandir todos</button>
+          class="text-dsc-label-tiny normal-case tracking-normal font-bold text-blue-700 dark:text-blue-400 hover:underline px-1">Expandir todos</button>
         <span class="text-dsc-label-tiny normal-case tracking-normal text-gray-300 dark:text-dark-line">·</span>
         <button type="button" onclick="_a11ySetAllSubaccordions(this, false)"
           class="text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-500 dark:text-dark-muted hover:underline px-1">Recolher todos</button>
       </div>` : ''}
       <div class="space-y-2">
-        ${areaSpecs.length > 0
-          ? categoryHtml
-          : (undocumentedEntries.length === 0 ? `<p class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted text-center py-3">Nenhuma especificação nesta tela ainda. Use o botão "Nova spec" acima.</p>` : '')}
+        <!-- Mensagem de "nenhuma especificação" migrou pro bloco centralizado
+             do estado vazio, acima (2026-09-18) — não duplicar aqui: quando
+             hasManualSpecs é false, areaSpecs também é sempre [] (mesmo
+             critério), então este ramo nunca precisou de texto próprio. -->
+        ${areaSpecs.length > 0 ? categoryHtml : ''}
         ${_a11yUndocumentedAccordionEl(`${uid}-undoc`, area.id, undocumentedEntries)}
       </div>
       ${typeof _fichaInsertButtonHtml === 'function' ? _fichaInsertButtonHtml(area, 'leitor', hasManualSpecs) : ''}
@@ -4315,7 +4411,7 @@ function _a11yWorkspaceTabHandoffDashboard(area, areaSpecs) {
              com "sparkles" (já usado em "ou usar Mapeamento Automático"
              nesta mesma workspace, em outro contexto). -->
         <button type="button" onclick="_fichaGenerateCompleteHandoff('${escapeHtml(area.id)}')"
-          class="w-full flex items-center justify-center gap-dsc-nano h-9 mb-2 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#0891B2] text-white hover:bg-cyan-700 active:scale-[0.99] shadow-sm shadow-cyan-500/20">
+          class="w-full flex items-center justify-center gap-dsc-nano h-9 mb-2 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#005ca9] text-white hover:bg-blue-700 active:scale-[0.99] shadow-sm shadow-blue-500/20">
           <i data-lucide="layers" class="w-3.5 h-3.5" aria-hidden="true"></i>
           Gerar Handoff
         </button>
@@ -4553,8 +4649,8 @@ function _a11yAreaAccordionEl(area, areaSpecs) {
       ${categoryBreakdown ? `<div class="flex items-center gap-dsc-quark flex-wrap pl-[38px]">${categoryBreakdown}</div>` : ''}
 
       <div class="flex items-center gap-1.5 pl-[38px]">
-        <i data-lucide="file-output" class="w-3 h-3 shrink-0" style="color:${fichaInsertedCount > 0 ? '#0891B2' : '#94a3b8'}"></i>
-        <span class="text-dsc-label-tiny normal-case tracking-normal font-semibold" style="color:${fichaInsertedCount > 0 ? '#0891B2' : '#94a3b8'}">
+        <i data-lucide="file-output" class="w-3 h-3 shrink-0" style="color:${fichaInsertedCount > 0 ? '#005ca9' : '#94a3b8'}"></i>
+        <span class="text-dsc-label-tiny normal-case tracking-normal font-semibold" style="color:${fichaInsertedCount > 0 ? '#005ca9' : '#94a3b8'}">
           Handoff de Acessibilidade: ${fichaInsertedCount}/${fichaSectionKeys.length} seções inseridas
         </span>
       </div>
@@ -4738,7 +4834,7 @@ function renderA11yGroupedList() {
         </div>
         <p class="w-full text-[13px] font-bold text-slate-600 dark:text-white text-center px-4 mb-1">Nenhuma tela selecionada</p>
         <p class="w-full text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted text-center px-6 mb-4 max-w-[260px] mx-auto leading-relaxed">Selecione um frame no figma e clique no botão a seguir para iniciar as etapas de preenchimento do handoff.</p>
-        <button type="button" onclick="openA11yAreaModal()" class="flex items-center gap-dsc-nano h-11 px-6 rounded-dsc-large text-[13px] font-bold text-white bg-[#0891B2] hover:bg-cyan-700 active:scale-[0.99] shadow-lg shadow-cyan-500/20 transition-all">
+        <button type="button" onclick="openA11yAreaModal()" class="flex items-center gap-dsc-nano h-11 px-6 rounded-dsc-large text-[13px] font-bold text-white bg-[#005ca9] hover:bg-blue-700 active:scale-[0.99] shadow-lg shadow-blue-500/20 transition-all">
           <i data-lucide="scan" class="w-4 h-4 shrink-0" aria-hidden="true"></i>
           Selecionar Tela
         </button>
@@ -5152,7 +5248,7 @@ function ensureA11yProjectOriginThen(onReady) {
     onReady(origin);
   };
   const originTitle = document.getElementById('a11y-post-area-title');
-  if (originTitle) originTitle.innerHTML = '<i data-lucide="smartphone" class="w-4 h-4 text-[#0070af]" aria-hidden="true"></i> Plataforma do Projeto';
+  if (originTitle) originTitle.innerHTML = '<i data-lucide="smartphone" class="w-4 h-4 text-[#005ca9]" aria-hidden="true"></i> Plataforma do Projeto';
   _setA11yPostAreaModalStage('origin');
   openModal('a11y-post-area-detect-modal');
   if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
@@ -5348,13 +5444,13 @@ function renderA11yPriorSessionAlert(priorSession) {
     : 'Handoff já iniciado neste arquivo';
 
   el.innerHTML = `
-    <i data-lucide="history" class="w-4 h-4 text-[#0891B2] dark:text-cyan-300 shrink-0 mt-0.5" aria-hidden="true"></i>
+    <i data-lucide="history" class="w-4 h-4 text-[#005ca9] dark:text-blue-300 shrink-0 mt-0.5" aria-hidden="true"></i>
     <div class="flex-1 min-w-0">
-      <p class="text-dsc-label-tiny normal-case tracking-normal font-bold text-[#0891B2] dark:text-cyan-300">${whenBy}</p>
-      <p class="text-dsc-label-tiny normal-case tracking-normal text-[#0891B2]/80 dark:text-cyan-300/80 leading-relaxed mt-0.5">${areaCount} tela${areaCount === 1 ? '' : 's'}, versão ${version}.</p>
-      ${sectionId ? `<button type="button" onclick="focusNode('${sectionId}')" class="mt-1 text-dsc-label-tiny normal-case tracking-normal font-bold text-[#0891B2] dark:text-cyan-300 underline hover:no-underline">Ver no canvas</button>` : ''}
+      <p class="text-dsc-label-tiny normal-case tracking-normal font-bold text-[#005ca9] dark:text-blue-300">${whenBy}</p>
+      <p class="text-dsc-label-tiny normal-case tracking-normal text-[#005ca9]/80 dark:text-blue-300/80 leading-relaxed mt-0.5">${areaCount} tela${areaCount === 1 ? '' : 's'}, versão ${version}.</p>
+      ${sectionId ? `<button type="button" onclick="focusNode('${sectionId}')" class="mt-1 text-dsc-label-tiny normal-case tracking-normal font-bold text-[#005ca9] dark:text-blue-300 underline hover:no-underline">Ver no canvas</button>` : ''}
     </div>
-    <button type="button" onclick="this.closest('#a11y-prior-session-alert').classList.add('hidden')" title="Dispensar" aria-label="Dispensar" class="p-1 text-[#0891B2]/60 hover:text-[#0891B2] dark:text-cyan-300/60 dark:hover:text-cyan-300 transition-colors shrink-0">
+    <button type="button" onclick="this.closest('#a11y-prior-session-alert').classList.add('hidden')" title="Dispensar" aria-label="Dispensar" class="p-1 text-[#005ca9]/60 hover:text-[#005ca9] dark:text-blue-300/60 dark:hover:text-blue-300 transition-colors shrink-0">
       <i data-lucide="x" class="w-3.5 h-3.5" aria-hidden="true"></i>
     </button>
   `;
@@ -5437,7 +5533,7 @@ window.chooseA11yDetectionOrigin = chooseA11yDetectionOrigin;
 // título do dialog precisava generalizar.
 function _restoreA11yPostAreaModalTitle() {
   const originTitle = document.getElementById('a11y-post-area-title');
-  if (originTitle) originTitle.innerHTML = '<i data-lucide="radar" class="w-4 h-4 text-[#0070af]" aria-hidden="true"></i> Processando';
+  if (originTitle) originTitle.innerHTML = '<i data-lucide="radar" class="w-4 h-4 text-[#005ca9]" aria-hidden="true"></i> Processando';
   if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
 }
 

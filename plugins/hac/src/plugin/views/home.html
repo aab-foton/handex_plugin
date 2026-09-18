@@ -75,11 +75,11 @@
              sem quebrar o layout (ícone/anel continuam visíveis parados). -->
           <!-- w-20 h-20 (era w-28 h-28) e ícone interno w-10 h-10 (era w-14 h-14) — 2026-09-11, pedido do usuário: reduzir pra evitar rolagem depois que título (3 linhas) e textos (piso 12px, tokens DSC) cresceram e empurraram o conteúdo pra baixo da área visível. -->
           <div class="relative w-20 h-20 shrink-0 flex items-center justify-center">
-            <div class="a11y-home-icon-halo absolute inset-0 rounded-dsc-circ bg-[#0891B2]/10 dark:bg-cyan-900/20"></div>
-            <svg viewBox="0 0 100 100" class="a11y-home-icon-orbit absolute inset-0 w-full h-full text-[#0891B2]/40 dark:text-cyan-400/30" fill="none" aria-hidden="true">
+            <div class="a11y-home-icon-halo absolute inset-0 rounded-dsc-circ bg-[#005ca9]/10 dark:bg-blue-900/20"></div>
+            <svg viewBox="0 0 100 100" class="a11y-home-icon-orbit absolute inset-0 w-full h-full text-[#005ca9]/40 dark:text-blue-400/30" fill="none" aria-hidden="true">
               <circle cx="50" cy="50" r="47" stroke="currentColor" stroke-width="1.5" stroke-dasharray="1 7" stroke-linecap="round" />
             </svg>
-            <svg viewBox="0 0 256 256" class="relative w-10 h-10 text-[#0891B2]" fill="currentColor" aria-hidden="true">
+            <svg viewBox="0 0 256 256" class="relative w-10 h-10 text-[#005ca9]" fill="currentColor" aria-hidden="true">
               <path d="M160,40a32,32,0,1,0-32,32A32,32,0,0,0,160,40ZM128,56a16,16,0,1,1,16-16A16,16,0,0,1,128,56ZM231.5,87.71A19.62,19.62,0,0,0,212,72H44a20,20,0,0,0-8.38,38.16l.13,0,50.75,22.35-21,79.72A20,20,0,0,0,102,228.8l26-44.87,26,44.87a20,20,0,0,0,36.4-16.52l-21-79.72,50.75-22.35.13,0A19.64,19.64,0,0,0,231.5,87.71Zm-17.8,7.9-56.93,25.06a8,8,0,0,0-4.51,9.36L175.13,217a7,7,0,0,0,.49,1.35,4,4,0,0,1-5,5.45,4,4,0,0,1-2.25-2.07,6.31,6.31,0,0,0-.34-.63L134.92,164a8,8,0,0,0-13.84,0L88,221.05a6.31,6.31,0,0,0-.34.63,4,4,0,0,1-2.25,2.07,4,4,0,0,1-5-5.45,7,7,0,0,0,.49-1.35L103.74,130a8,8,0,0,0-4.51-9.36L42.3,95.61A4,4,0,0,1,44,88H212a4,4,0,0,1,1.73,7.61Z"/>
             </svg>
           </div>
@@ -116,7 +116,7 @@
             <button type="button" id="a11y-home-origin-btn-mobile" onclick="chooseA11yHomeOrigin('super-app')"
               class="w-full flex items-center gap-dsc-micro p-3.5 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-dsc-large shadow-dsc-elevation-1 hover:shadow-md hover:-translate-y-0.5 transition-all text-left">
               <div class="w-10 h-10 flex items-center justify-center bg-blue-50 dark:bg-blue-900/20 rounded-dsc-medium shrink-0">
-                <i data-lucide="smartphone" class="w-5 h-5 text-[#0070af] dark:text-blue-400" aria-hidden="true"></i>
+                <i data-lucide="smartphone" class="w-5 h-5 text-[#005ca9] dark:text-blue-400" aria-hidden="true"></i>
               </div>
               <p class="font-extrabold text-[13px] tracking-tight text-slate-800 dark:text-white leading-tight">Super DSC Mobile</p>
             </button>
@@ -126,7 +126,7 @@
                    Web ainda está em fase de validação no hac. -->
               <span class="absolute top-2 right-2 px-dsc-quark py-1 rounded-dsc-circ bg-amber-400/90 text-dsc-label-tiny font-extrabold uppercase tracking-wide text-amber-950 leading-none">Em teste</span>
               <div class="w-10 h-10 flex items-center justify-center bg-blue-50 dark:bg-blue-900/20 rounded-dsc-medium shrink-0">
-                <i data-lucide="monitor" class="w-5 h-5 text-[#0070af] dark:text-blue-400" aria-hidden="true"></i>
+                <i data-lucide="monitor" class="w-5 h-5 text-[#005ca9] dark:text-blue-400" aria-hidden="true"></i>
               </div>
               <p class="font-extrabold text-[13px] tracking-tight text-slate-800 dark:text-white leading-tight">Super DSC Web</p>
             </button>
@@ -156,7 +156,7 @@
           <button type="button" onclick="chooseA11yHomeOrigin('web-angular-react')"
             class="flex items-center gap-dsc-micro px-3.5 py-dsc-micro bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-dsc-large shadow-dsc-elevation-1 hover:shadow-md hover:-translate-y-0.5 transition-all text-left">
             <div class="w-10 h-10 flex items-center justify-center bg-blue-50 dark:bg-blue-900/20 rounded-dsc-medium shrink-0">
-              <i data-lucide="monitor" class="w-5 h-5 text-[#0070af] dark:text-blue-400" aria-hidden="true"></i>
+              <i data-lucide="monitor" class="w-5 h-5 text-[#005ca9] dark:text-blue-400" aria-hidden="true"></i>
             </div>
             <span class="min-w-0">
               <span class="block font-extrabold text-[13px] tracking-tight text-slate-800 dark:text-white leading-tight">DSC Web Angular &amp; React</span>
@@ -166,7 +166,7 @@
           <button type="button" onclick="chooseA11yHomeOrigin('super-dsc-web')"
             class="flex items-center gap-dsc-micro px-3.5 py-dsc-micro bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-dsc-large shadow-dsc-elevation-1 hover:shadow-md hover:-translate-y-0.5 transition-all text-left">
             <div class="w-10 h-10 flex items-center justify-center bg-blue-50 dark:bg-blue-900/20 rounded-dsc-medium shrink-0">
-              <i data-lucide="monitor" class="w-5 h-5 text-[#0070af] dark:text-blue-400" aria-hidden="true"></i>
+              <i data-lucide="monitor" class="w-5 h-5 text-[#005ca9] dark:text-blue-400" aria-hidden="true"></i>
             </div>
             <span class="min-w-0">
               <span class="block font-extrabold text-[13px] tracking-tight text-slate-800 dark:text-white leading-tight">Super DSC Web</span>

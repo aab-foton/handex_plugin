@@ -10,17 +10,24 @@ module.exports = {
     extend: {
       colors: {
         blue: {
-          50:  '#f0f7ff',
-          100: '#e0effe',
-          200: '#bae0fd',
-          300: '#7cc7fb',
-          400: '#38a9f8',
+          // Azul institucional CAIXA — alinhado ao mesmo azul do Handex
+          // (migração do DS visual do hac para paridade com o irmão,
+          // 2026-09-18). Extraído de refs/fundamentos-visuais.json
+          // (color/bg/highlight, escala "primary" do DSC) — 500 ancorado em
+          // "azul cx" (primary 90, #005ca9), degraus interpolados a partir
+          // dos 7 valores reais do DSC (10/30/50/70/90/110/130). Substitui a
+          // escala azul própria do hac que existia antes desta migração.
+          50:  '#f7fbfe',
+          100: '#eaf5fd',
+          200: '#c2e2fc',
+          300: '#8cc8fb',
+          400: '#479de6',
           500: '#005ca9',
-          600: '#004782',
-          700: '#00335c',
-          800: '#001f38',
-          900: '#000c17',
-          950: '#000308',
+          600: '#004d8d',
+          700: '#004075',
+          800: '#00325b',
+          900: '#002442',
+          950: '#00182a',
         },
         light: {
           bg:      '#eef2f7',

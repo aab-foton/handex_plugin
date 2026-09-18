@@ -72,10 +72,10 @@ body {
     }
 
     .checklist-pill:has(input:checked) {
-      background: #005ca9;
-      border-color: #005ca9;
+      background: #004d8d;
+      border-color: #004d8d;
       color: white;
-      box-shadow: 0 4px 12px rgba(0, 92, 169, 0.2);
+      box-shadow: 0 4px 12px rgba(0, 77, 141, 0.2);
     }
 
     /* Global overrides for buttons matching the Design System */
@@ -83,73 +83,79 @@ body {
       border-radius: 8px !important; /* rounded-lg equivalent — fallback apenas para botões sem classe de raio explícita */
     }
 
-    button.bg-\[\#0070af\], button.bg-blue-600, button.bg-blue-500 {
-      background-color: #005ca9 !important;
+    button.bg-\[\#005ca9\], button.bg-blue-600, button.bg-blue-500 {
+      background-color: #004d8d !important;
       color: #ffffff !important;
       font-weight: 700 !important;
       border: none !important;
       transition: background-color 0.2s ease !important;
     }
-    button.bg-\[\#0070af\]:hover, button.bg-blue-600:hover, button.bg-blue-500:hover {
-      background-color: #004782 !important;
+    button.bg-\[\#005ca9\]:hover, button.bg-blue-600:hover, button.bg-blue-500:hover {
+      background-color: #004075 !important;
     }
 
     button.bg-orange-500, button.bg-orange-600 {
-      background-color: #d36a00 !important;
+      background-color: #935300 !important;
       color: #ffffff !important;
       font-weight: 700 !important;
       border: none !important;
       transition: background-color 0.2s ease !important;
     }
     button.bg-orange-500:hover, button.bg-orange-600:hover {
-      background-color: #b25a00 !important;
+      background-color: #5f3600 !important;
     }
 
+    /* Verde de sucesso/confirmação real (green-500 nativo do Tailwind,
+       #22c55e) — antes desta correção (2026-09-18), esta regra herdava por
+       engano o hex de override do LARANJA de alerta (#d36a00/#b25a00),
+       fazendo qualquer botão bg-green-500/600 renderizar laranja. Bug
+       adormecido idêntico ao já documentado e corrigido no Handex
+       (design-system-handex.md, dívida técnica item 2). */
     button.bg-green-600, button.bg-green-500 {
-      background-color: #d36a00 !important;
+      background-color: #22c55e !important;
       color: #ffffff !important;
       font-weight: 700 !important;
       border: none !important;
       transition: background-color 0.2s ease !important;
     }
     button.bg-green-600:hover, button.bg-green-500:hover {
-      background-color: #b25a00 !important;
+      background-color: #16a34a !important;
     }
 
-    button.border-\[\#0070af\], button.border-blue-500 {
+    button.border-\[\#005ca9\], button.border-blue-500 {
       background-color: #ffffff !important;
-      color: #005ca9 !important;
-      border: 1.5px solid #005ca9 !important;
+      color: #004d8d !important;
+      border: 1.5px solid #004d8d !important;
       font-weight: 700 !important;
       transition: all 0.2s ease !important;
     }
-    button.border-\[\#0070af\]:hover, button.border-blue-500:hover {
-      background-color: #f0f7ff !important;
+    button.border-\[\#005ca9\]:hover, button.border-blue-500:hover {
+      background-color: #f7fbfe !important;
     }
 
     /* Dark mode support for primary buttons */
-    .dark button.bg-\[\#0070af\], .dark button.bg-blue-600, .dark button.bg-blue-500 {
-      background-color: #005ca9 !important;
+    .dark button.bg-\[\#005ca9\], .dark button.bg-blue-600, .dark button.bg-blue-500 {
+      background-color: #004d8d !important;
     }
     .dark button.bg-orange-500, .dark button.bg-orange-600 {
-      background-color: #d36a00 !important;
+      background-color: #935300 !important;
     }
-    .dark button.border-\[\#0070af\], .dark button.border-blue-500 {
+    .dark button.border-\[\#005ca9\], .dark button.border-blue-500 {
       background-color: #1e293b !important;
-      color: #38a9f8 !important;
-      border-color: #38a9f8 !important;
+      color: #8cc8fb !important;
+      border-color: #8cc8fb !important;
     }
-    
+
     /* Enhanced focus states for accessibility */
-    button:focus-visible, 
-    input:focus-visible, 
-    select:focus-visible, 
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
     textarea:focus-visible {
-      outline: 2px solid #005ca9;
+      outline: 2px solid #004d8d;
       outline-offset: 2px;
     }
     .dark button:focus-visible {
-      outline-color: #38a9f8;
+      outline-color: #8cc8fb;
     }
 
     /* Inline action button (sits in view header) — ícone + label sempre visíveis. */
@@ -161,9 +167,9 @@ body {
       gap: 6px;
       padding: 0 12px;
       border-radius: 999px;
-      background: rgba(0, 112, 175, 0.13);
-      border: 1px solid rgba(0, 112, 175, 0.28);
-      color: #0070af;
+      background: rgba(0, 92, 169, 0.13);
+      border: 1px solid rgba(0, 92, 169, 0.28);
+      color: #005ca9;
       cursor: pointer;
       flex-shrink: 0;
       transition: background 0.18s ease, transform 0.15s ease, padding 0.18s ease, gap 0.18s ease;
@@ -177,43 +183,53 @@ body {
       overflow: hidden;
       transition: max-width 0.18s ease, opacity 0.18s ease;
     }
-    .fab-inline:hover { background: rgba(0, 112, 175, 0.24); }
+    .fab-inline:hover { background: rgba(0, 92, 169, 0.24); }
     .fab-inline:active { transform: scale(0.92); }
     /* Empate de especificidade com a utility .hidden do Tailwind (ambas 1 classe) —
        este CSS é injetado depois do compilado do Tailwind, então .fab-inline vencia
        e o botão nunca sumia mesmo com a classe "hidden" aplicada. */
     .fab-inline.hidden { display: none; }
-    .dark .fab-inline { background: rgba(0,112,175,0.18); border-color: rgba(96,165,250,0.35); color: #60a5fa; }
-    .dark .fab-inline:hover { background: rgba(0,112,175,0.3); }
+    .dark .fab-inline { background: rgba(0,92,169,0.18); border-color: rgba(96,165,250,0.35); color: #60a5fa; }
+    .dark .fab-inline:hover { background: rgba(0,92,169,0.3); }
 
-    /* Fab-inline sobre header secundário azul — ghost branco para contraste */
+    /* Fab-inline sobre header secundário azul — branco sólido: é a ação de
+       documentar (mais frequente da tela), por isso precisa do maior peso
+       visual — mesmo padrão do Handex (fundo branco sólido, não ghost
+       translúcido, ver design-system-handex.md seção 5). */
     .subheader-brand .fab-inline,
     .dark .subheader-brand .fab-inline {
-      background: rgba(255,255,255,0.16);
-      border-color: rgba(255,255,255,0.4);
-      color: #ffffff;
+      background: #ffffff;
+      border-color: #ffffff;
+      color: #005ca9;
     }
     .subheader-brand .fab-inline:hover,
     .dark .subheader-brand .fab-inline:hover {
-      background: rgba(255,255,255,0.28);
+      background: rgba(255,255,255,0.88);
     }
 
-    /* Back-to-top button — ghost at rest, highlighted on hover */
+    /* Back-to-top button — ghost at rest, highlighted on hover. Mesmo
+       padrão visível do Handex (era quase 100% transparente antes desta
+       migração, rgba(148,163,184,0.08)). */
     #btn-top {
-      background: rgba(148, 163, 184, 0.08);
-      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: rgba(255, 255, 255, 0.55);
+      border: 1px solid rgba(100, 116, 139, 0.4);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
-      color: rgba(148, 163, 184, 0.55);
-      box-shadow: none;
+      color: rgb(71, 85, 105);
+      box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.2);
       transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease, opacity 0.3s ease, translate 0.3s ease;
     }
     #btn-top:hover {
-      background: rgba(0, 112, 175, 0.65);
-      border-color: rgba(0, 112, 175, 0.5);
+      background: rgba(0, 92, 169, 0.75);
+      border-color: rgba(0, 92, 169, 0.5);
       color: white;
-      box-shadow: 0 4px 16px -4px rgba(0, 112, 175, 0.5);
+      box-shadow: 0 4px 16px -4px rgba(0, 92, 169, 0.5);
       transform: scale(1.1);
+    }
+    .dark #btn-top {
+      background: rgba(30, 41, 59, 0.55);
+      border-color: rgba(148, 163, 184, 0.3);
+      color: rgb(226, 232, 240);
     }
 
     /* Standardized FAB Styling */
@@ -238,7 +254,7 @@ body {
       min-width: 160px;
       padding: 0 20px;
       justify-content: flex-start;
-      box-shadow: 0 8px 24px -4px rgba(0,112,175,0.45);
+      box-shadow: 0 8px 24px -4px rgba(0,92,169,0.45);
     }
 
     .fab-main span {
@@ -509,7 +525,7 @@ body {
     }
 
     /* 2. Uniform Typography & Hierarchy */
-    h1, h2, h3, .text-\[\#0070af\], .text-slate-800 {
+    h1, h2, h3, .text-\[\#005ca9\], .text-slate-800 {
       font-family: 'Inter', sans-serif !important;
       letter-spacing: -0.01em !important;
     }
@@ -540,16 +556,16 @@ body {
     }
 
     input[type="text"]:focus, input[type="search"]:focus, select:focus, textarea:focus {
-      border-color: #005ca9 !important;
+      border-color: #004d8d !important;
       background-color: #ffffff !important;
-      box-shadow: 0 0 0 3px rgba(0, 92, 169, 0.15) !important;
+      box-shadow: 0 0 0 3px rgba(0, 77, 141, 0.15) !important;
       outline: none !important;
     }
 
     .dark input[type="text"]:focus, .dark input[type="search"]:focus, .dark select:focus, .dark textarea:focus {
-      border-color: #38a9f8 !important;
+      border-color: #8cc8fb !important;
       background-color: #0f172a !important;
-      box-shadow: 0 0 0 3px rgba(56, 169, 248, 0.15) !important;
+      box-shadow: 0 0 0 3px rgba(140, 200, 251, 0.15) !important;
     }
 
     /* Textarea Resizing */

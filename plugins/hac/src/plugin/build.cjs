@@ -134,7 +134,7 @@ ${css}
           </g>
         </svg>
         <span class="text-slate-200 dark:text-slate-700 font-bold text-sm">|</span>
-        <i data-lucide="person-standing" class="w-4 h-4 text-[#0070af]" aria-hidden="true"></i>
+        <i data-lucide="person-standing" class="w-4 h-4 text-[#005ca9]" aria-hidden="true"></i>
         <h1 class="font-bold text-[#1E293B] dark:text-white text-[12px] tracking-[0.15em] uppercase">
           HAC
         </h1>
@@ -186,7 +186,7 @@ ${css}
   <div id="a11y-capture-mini-bar" class="hidden flex-col w-full shrink-0">
     <div class="flex items-center justify-between w-full gap-2 px-4 py-2.5 shrink-0">
       <div class="flex items-center gap-2 min-w-0">
-        <span class="w-2 h-2 rounded-full bg-[#0891B2] animate-pulse shrink-0" aria-hidden="true"></span>
+        <span class="w-2 h-2 rounded-full bg-[#005ca9] animate-pulse shrink-0" aria-hidden="true"></span>
         <span id="a11y-capture-mini-bar-count" class="text-[11px] font-bold text-slate-700 dark:text-white truncate">
           0 pontos marcados
         </span>
@@ -204,17 +204,17 @@ ${css}
              (itens de Tabulação vs. pontos de Swipe) — os valores abaixo
              são só o estado inicial. -->
         <button type="button" id="a11y-capture-mini-bar-help" onclick="_a11yCaptureBarToggleInstructions()"
-          data-tooltip="Recolher as instruções e liberar espaço no canvas" class="tooltip-bottom w-7 h-7 flex items-center justify-center text-slate-400 dark:text-dark-muted hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-light-line dark:hover:bg-dark-surface rounded-xl transition-colors shrink-0"
+          data-tooltip="Recolher as instruções e liberar espaço no canvas" class="tooltip-bottom w-7 h-7 flex items-center justify-center text-slate-400 dark:text-dark-muted hover:text-blue-600 dark:hover:text-blue-400 hover:bg-light-line dark:hover:bg-dark-surface rounded-2xl transition-colors shrink-0"
           aria-label="Recolher instruções">
           <i data-lucide="chevron-up" id="a11y-capture-mini-bar-help-icon" class="w-4 h-4"></i>
         </button>
         <button type="button" id="a11y-capture-mini-bar-cancel" onclick="_a11yCaptureMiniBarCancel()"
-          class="px-2.5 py-1.5 text-[10.5px] font-bold text-slate-500 dark:text-dark-muted hover:bg-light-line dark:hover:bg-dark-surface rounded-xl transition-colors"
+          class="px-2.5 py-1.5 text-[10.5px] font-bold text-slate-500 dark:text-dark-muted hover:bg-light-line dark:hover:bg-dark-surface rounded-2xl transition-colors"
           aria-label="Cancelar seleção e descartar o que foi marcado">
           Cancelar
         </button>
         <button type="button" id="a11y-capture-mini-bar-finish" onclick="_a11yCaptureMiniBarFinish()"
-          class="px-3 py-1.5 text-[10.5px] font-bold text-white bg-[#0891B2] hover:bg-cyan-700 rounded-xl transition-colors shadow-lg shadow-cyan-500/20"
+          class="px-3 py-1.5 text-[10.5px] font-bold text-white bg-[#005ca9] hover:bg-blue-700 rounded-2xl transition-colors shadow-lg shadow-blue-500/20"
           aria-label="Concluir seleção e revisar a lista">
           Concluir seleção
         </button>
@@ -228,7 +228,7 @@ ${css}
          cortar o texto e criar a barra de rolagem. -->
     <div id="a11y-capture-bar-instructions" class="w-full px-4 pb-3 pt-1 space-y-2.5 border-t border-gray-100 dark:border-dark-line">
       <h3 id="a11y-capture-bar-instructions-title" class="font-bold text-[13px] text-slate-800 dark:text-white flex items-center gap-1.5 mt-2">
-        <i data-lucide="book-open-check" class="w-3.5 h-3.5 text-[#0891B2]" aria-hidden="true"></i> <span id="a11y-capture-bar-instructions-title-text">Ordem de Tabulação</span>
+        <i data-lucide="book-open-check" class="w-3.5 h-3.5 text-[#005ca9]" aria-hidden="true"></i> <span id="a11y-capture-bar-instructions-title-text">Ordem de Tabulação</span>
       </h3>
       <div id="a11y-capture-bar-instructions-block" class="rounded-dsc-medium border border-gray-100 dark:border-dark-line p-3">
         <h4 id="a11y-capture-bar-instructions-heading" class="font-bold text-[11px] text-slate-800 dark:text-white mb-1.5">Instruções sobre o tipo de documentação</h4>
