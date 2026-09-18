@@ -89,7 +89,19 @@ let hacData = {
   // arquivo, escolhe explicitamente "Iniciar nova Section" em vez de
   // continuar na Section atual (ver getA11yActiveSectionName/
   // setA11yActiveSectionName e openA11yAreaModal em accessibility.js).
-  activeSectionName: null
+  activeSectionName: null,
+  // Flag "já visto" do modal de instrução do Leitor de Tela (2026-09-16-c,
+  // pedido do usuário: "preciso ver a modal apenas na primeira vez que eu
+  // clicar em nova spec ou na spec automática") — mesmo padrão de campo
+  // simples de configuração de projeto que projectOrigin/activeSectionName
+  // acima (persistido em hacData, migração automática por ausência: arquivo
+  // salvo antes desta versão simplesmente não tem o campo e se comporta como
+  // false/"nunca visto"). Só controla a abertura AUTOMÁTICA da modal ao
+  // clicar "+ Nova spec" (openA11yCategoryPickerModal, accessibility.js) —
+  // nunca afeta a reabertura MANUAL via botão "Instruções sobre esta
+  // documentação" (openA11yInstructionManually), que sempre abre
+  // independente desta flag.
+  a11yLeitorInstructionSeen: false
 };
 
 // Expose functions to window IMMEDIATELY

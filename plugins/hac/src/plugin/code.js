@@ -15,7 +15,16 @@
 // ============================================================
 
 import A11Y_CONTENT from './refs/design-acessivel-content.json';
-import A11Y_COMPONENT_PROPERTIES_RAW from './refs/design-acessivel-component-properties.json';
+// Bug real corrigido (2026-09-16): este import apontava para
+// design-acessivel-component-properties.json, um snapshot de 2026-08-19
+// gerado por fetch-a11y-component-properties.cjs (script do Handex Beta,
+// nunca portado pro hac — só o dado ficou, órfão). O pipeline vigente e
+// reexecutável (refs/fetch-component-properties.cjs) escreve em
+// design-acessivel-properties.json, que ninguém em runtime lia — rodar o
+// scan atualizado nunca teria efeito real no plugin. Schema idêntico
+// (mesmos 25 component sets, mesmas chaves + campo `source` novo),
+// confirmado por comparação direta antes da troca.
+import A11Y_COMPONENT_PROPERTIES_RAW from './refs/design-acessivel-properties.json';
 import A11Y_MOBILE_WRAPPER_RAW from './refs/design-acessivel-mobile-wrapper.generated.json';
 // FICHA_INSTRUCTION_CONTENT (import de JSON) foi junto pro onmessage.js
 // (2026-09-14) — só era usado dentro do dispatcher (_buildFichaInstructionOnlyLegendColumn/
@@ -927,8 +936,22 @@ export async function _tryImportA11yComponent(opts) {
       throw new Error('a11y-instancia-aninhada-nao-encontrada: prop~=' + propCandidates.join('|'));
     }
 
+    // Bug real corrigido (2026-09-17): o component set base "[NÃO
+    // UTILIZAR][a11y base] componentes/icones/imagens" (nodeId 31:902,
+    // confirmado via REST API) tem DUAS dimensões de VARIANT no mesmo nível —
+    // "variante" (componente | texto alternativo para imagens) e
+    // "componente" (15 opções reais, SEM "imagem" — "imagem" só existe como
+    // combinação de variante="texto alternativo para imagens"). Das 16
+    // variantes publicadas, a única com componente="imagem" é
+    // variante="texto alternativo para imagens" — setar só
+    // {componente:'imagem'} mantendo variante no default ("componente") não
+    // corresponde a nenhuma variante real publicada. Precisa setar as duas
+    // properties JUNTAS na mesma chamada de setProperties.
+    const extraProps = (type === 'elemento' && !sub.isOutro && sub.componente === 'imagem')
+      ? { variante: 'texto alternativo para imagens' }
+      : null;
     try {
-      found.instance.setProperties({ [found.key]: propValue });
+      found.instance.setProperties(extraProps ? { [found.key]: propValue, ...extraProps } : { [found.key]: propValue });
     } catch (e) {
       instance.remove();
       throw new Error('a11y-set-properties-falhou: ' + (e && e.message ? e.message : e));
@@ -1039,16 +1062,39 @@ export async function _tryImportA11yComponent(opts) {
   if (_toggleShortName && _toggleTargetInstance) {
     const toggleMap = _getA11yComponentToggleMap(_toggleShortName);
     if (toggleMap) {
-      for (const p of (opts.properties || [])) {
-        if (!p || !p.value || !_dynamicToggleKeys.has(p.key)) continue;
-        const toggleDef = toggleMap[p.key];
-        if (!toggleDef) continue; // componente/subtipo não tem esse toggle — ignora silenciosamente
+      // Bug real corrigido (2026-09-17): os componentes BOOLEAN publicados na
+      // lib "Design Acessível" (ex.: 'notas'/'observacoes' de "ED gerais"/"ED
+      // imagem"/"niveis de titulo") têm defaultValue=true na própria lib
+      // (confirmado via REST API) — ou seja, toda INSTANCE nova já nasce com
+      // esses campos LIGADOS e mostrando o texto placeholder da lib, mesmo
+      // sem nenhuma ação do designer. Antes desta correção, o loop só
+      // chamava setProperties(...: true) para os toggles presentes em
+      // opts.properties (os que o designer marcou no formulário) e nunca
+      // desligava os demais — então, para categorias cujo formulário está
+      // simplificado (Título/Elemento Decorativo, ver updateA11yTituloFields/
+      // updateA11yDecorativoFields, 2026-09-17: accordion "Campos do
+      // componente" sempre oculto pra specs novas), opts.properties nunca
+      // contém 'observacoes'/'notas', e a instância ficava com esses campos
+      // sempre visíveis e com texto genérico não solicitado — mais visível
+      // em Elemento Decorativo por serem 2 campos redundantes (Observações +
+      // Notas de Código) somados ao card fixo de Descrição/Nota de Código já
+      // exibido. Agora itera por TODA key do catálogo (toggleMap), não só as
+      // presentes em opts.properties: liga quando o designer marcou (com
+      // texto), desliga explicitamente (false) caso contrário — replica o
+      // mesmo padrão já usado corretamente no wrapper MOBILE
+      // (_fillA11yMobileElementosEImagensFields e afins, setProperties com
+      // !!texto) que nunca teve esse defeito.
+      for (const key of Object.keys(toggleMap)) {
+        if (!_dynamicToggleKeys.has(key)) continue;
+        const toggleDef = toggleMap[key];
+        const p = (opts.properties || []).find(prop => prop && prop.key === key && prop.value);
         try {
-          _toggleTargetInstance.setProperties({ [toggleDef.rawKey]: true });
-        } catch (e) { continue; } // toggle não ativou — não adianta procurar o texto
-        const defaultText = p.key === 'observacoes' ? defaultEntry.observacoes
-          : p.key === 'notas' ? defaultEntry.notasCodigo
-          : p.key === 'nomeAcessivel' ? defaultEntry.nomeAcessivel
+          _toggleTargetInstance.setProperties({ [toggleDef.rawKey]: !!p });
+        } catch (e) { continue; } // toggle não ativou/desativou — não adianta procurar o texto
+        if (!p) continue; // desligado: fica no texto padrão do componente, nunca reescrito
+        const defaultText = key === 'observacoes' ? defaultEntry.observacoes
+          : key === 'notas' ? defaultEntry.notasCodigo
+          : key === 'nomeAcessivel' ? defaultEntry.nomeAcessivel
           : null;
         if (!defaultText) continue;
         const fieldNode = _findTextNodeByCurrentValue(instance, defaultText);
@@ -1149,7 +1195,7 @@ const A11Y_AGRUPAMENTO_KEYS = {
   },
 };
 
-// ── Integração com a lib mobile "[a11y mob]" (2026-08-25) ──────────────────
+// ── Integração com a lib mobile "[hac]" (migrada em 2026-09-17) ────────────
 // Segunda lib DSC ("DSC | Super App", mobile/React Native) mapeada para a11y
 // — ver dsc-component-a11y-mapping-mobile.json e REF_SKELETON.libraries
 // (slug 'super-app'). A Detecção Automática agora reconhece sozinha se um
@@ -1157,23 +1203,61 @@ const A11Y_AGRUPAMENTO_KEYS = {
 // origem — nunca colide entre libs), sem o designer escolher manualmente
 // (ver _resolveDscComponentA11yMatch acima, campo `origin`).
 //
-// KEYS CONFIRMADAS via REST API em 2026-08-25 (GET /v1/files/
-// 3zdtN13YvPlCGPdXeL0Y2i/components, fileKey da lib "[a11y mob]" — arquivo
-// DIFERENTE da lib de componentes reais 'super-app', que é o template/
-// handoff de marcadores visuais). A lib mobile tem só 39 componentes reais
-// no total (varredura completa, não amostra) e, DIFERENTE da lib desktop
-// "[a11y]" (25 = 5 categorias × 5 direções em cada modo), tem LACUNAS REAIS:
+// MIGRAÇÃO 2026-09-17: o arquivo "[a11y mob]" antigo (fileKey
+// 3zdtN13YvPlCGPdXeL0Y2i) foi republicado como "[HAC] Handoff Super DSC
+// Mobile e Web" (fileKey HhriLSpKnCB2dHhyiU16iB, nomes de component set
+// "[hac] Agrupamento"/"[hac] Conectores"/"[hac] Identificação da
+// tela"/"[hac] Ordenação"). Confirmado via REST API que os node_ids
+// internos de cada variante são IDÊNTICOS entre os dois arquivos — mas as
+// component keys publicadas mudaram todas. Todas as keys abaixo foram
+// re-obtidas via GET /v1/files/HhriLSpKnCB2dHhyiU16iB/components usando o
+// node_id como ponte de correspondência (não o nome — ver ressalva abaixo).
 //
-//   [a11y mob] Agrupamento: só 3 categorias (elemento/estrutura/decorativo)
-//     × 4 orientações = 12 componentes. NÃO existe "titulo" nem
-//     "informacoes" no Agrupamento mobile — confirmado, não é lacuna de
-//     amostragem.
-//   [a11y mob] Conectores: só 3 categorias (elemento/titulo/decorativo) × 5
-//     direções (incluindo "desativado") = 15 componentes. NÃO existe
-//     "estrutura" nem "informacoes" no modo Conectores/Linha mobile —
-//     também confirmado por varredura completa.
-//   [a11y mob] Número da tela: 5 componentes (4 direções + desativado),
-//     paridade completa com A11Y_ITEM_NUMBER_KEYS desktop.
+// ACHADO REAL durante a migração — variantes de "orientação"/"conector"
+// RENOMEADAS, não apenas re-chaveadas: os 4 node_ids que na lib antiga
+// eram rotulados "tipo=estrutura da página" (Agrupamento: 1:196, 301:437,
+// 1:201, 301:442) foram RENOMEADOS na lib nova para "tipo=títulos" — o
+// mesmo componente visual passou a representar outra categoria. Isso NÃO É
+// uma simples troca de key: usar essas 4 keys para "estrutura" seria
+// semanticamente errado agora (a variante real virou "títulos"). A lib
+// nova tem uma variante "Estrutura da Página" DE VERDADE, criada do zero
+// em node_ids novos (Agrupamento: 10766:210/218/226/234; Conectores:
+// 10768:280/283/287/291/295) — confirmado via GET /v1/files/.../nodes
+// (componentPropertyDefinitions.tipo inclui "Estrutura da Página" com 4/5
+// variantOptions completos). PORÉM esses node_ids novos NÃO aparecem no
+// endpoint /components (que só lista o que já foi publicado como
+// biblioteca) — o arquivo foi editado hoje (histórico de /versions mostra
+// 3 edições de Gabriela Costa em 2026-09-17, a mais recente às 12:40) mas
+// aparentemente ainda não foi republicado como lib depois dessa edição.
+// Sem key publicada, importComponentByKeyAsync não tem como importar esses
+// componentes ainda. Por isso "estrutura" continua ausente nos dois
+// dicionários mobile abaixo (mesma lacuna de antes, por motivo novo) —
+// documentado como pendente de nova verificação após a próxima publicação
+// da lib, NÃO implementado com key aproximada.
+//
+// Também identificado (cosmético, fora de escopo): o texto de
+// variantOptions do component set "[hac] Conectores" tem um typo de
+// duplicação em "Elementos interativos e Imagensinterativos e imagens"
+// (property "tipo", só no rótulo do dropdown de variante) — não afeta qual
+// key corresponde a qual variante (confirmado por node_id), não corrigido
+// aqui por não ser problema do hac.
+//
+// A lib mobile continua tendo LACUNAS REAIS confirmadas por varredura
+// completa (250 componentes na lib nova, muito mais que os 39 da antiga,
+// mas a maioria são "Leitor de Tela=..." de outros componentes DSC — os
+// 4 marcadores visuais a11y continuam com a mesma cobertura de antes):
+//
+//   [hac] Agrupamento: 3 categorias com key publicada (elemento/
+//     decorativo/titulo, sendo que o antigo "estrutura" virou "titulo"
+//     nesta lib — ver achado acima) × 4 orientações. "estrutura" nova e
+//     "informacoes" seguem SEM key publicada.
+//   [hac] Conectores: 3 categorias com key publicada (elemento/titulo/
+//     decorativo) × 5 direções (incluindo "desativado"). "estrutura" nova
+//     e "informacoes" seguem SEM key publicada.
+//   [hac] Identificação da tela (ex-"Número da tela"): 5 componentes (4
+//     direções + desativado), paridade completa com
+//     A11Y_ITEM_NUMBER_KEYS_DESKTOP — apenas re-chaveado, sem mudança de
+//     variantes.
 //
 // FALLBACK (decisão de produto, não questionar sem alinhamento): quando uma
 // categoria/orientação não existir no dicionário mobile (typeKeys
@@ -1185,80 +1269,93 @@ const A11Y_AGRUPAMENTO_KEYS = {
 // completas nos dicionários desktop, esse fallback nunca deveria de fato
 // lançar — é uma segunda rede de segurança, não o caminho esperado na
 // prática (a maioria das specs mobile usa elemento/decorativo, que TÊM
-// marcador mobile próprio).
+// marcador mobile próprio). "titulo" mobile já está completo (5/5 em
+// Agrupamento e Conectores) desde antes desta migração — não havia
+// fallback pra remover aqui (ver investigação na migração 2026-09-17).
 const A11Y_AGRUPAMENTO_KEYS_MOBILE = {
   elemento: {
-    esquerda: 'd93c8cf698d12840af7f3c3ea0bda4b9cd5a0728',
-    direita:  'de08af167290b5220aa75ae757603a26b48c6a68',
-    superior: '55144e19b4306199ceb1de0dff2abd4f01c01b72',
-    inferior: '01acc2917e26866d5b468f8aef3a8bfb99881202',
-  },
-  estrutura: {
-    esquerda: '9b25c0b70cb75cc162ad2f2bb9ed34fe52f32f0f',
-    direita:  '584e699ec0cf98c45ea17d5a9615932f81aa1e8a',
-    superior: 'd78117bfb35d40e98dd4071e772413b959d37c3e',
-    inferior: 'a74142992e0968ade98fbe97590d45b31fc3f35a',
+    esquerda: '2165d66fcd65d977bc2cdcd86c26d68a07e65eaf',
+    direita:  'ea54a0cca62bc6d8abee539efe989a18b1e322a7',
+    superior: '83a72d71793cde67cb11c38df56e8f9bd1cb2acf',
+    inferior: '97c0d6479a58b03397515b664e3d3de64b594706',
   },
   decorativo: {
-    esquerda: '1cecb187f29bfed5c7d6648dd227b3f852b4ebb5',
-    direita:  'c1c3ba0100e3315569a4ed75cd5ee6922d7150d4',
-    superior: 'f93ce3228aa430bde1858891eae64b78c957b781',
-    inferior: 'c266a6bab1277efdac43ecea9171efb60961ed47',
+    esquerda: '143e04b04c302c1be1b0fe081bb3bf43d0a5a004',
+    direita:  '1f552b66bc48721b9be3160b02ac6a4762af0086',
+    superior: '73f5b3d53cd673a4846b60e251e0108805644951',
+    inferior: 'edb2b2b5aaabb8649461ceee62307c0d27134982',
   },
-  // titulo/informacoes: SEM key mobile (lacuna real da lib) — typeKeys
-  // undefined, _tryImportA11yAgrupamento cai no dicionário desktop.
+  // titulo: mesmos 4 node_ids que antes eram "estrutura da página" na lib
+  // antiga (1:196/301:437/1:201/301:442) — RENOMEADOS para "títulos" na lib
+  // nova (ver achado acima). Mantido fora deste dicionário porque
+  // _tryImportA11yAgrupamento resolve "titulo" mobile hoje via fallback
+  // desktop (nunca existiu key mobile própria pra título antes desta
+  // migração) — poderia futuramente usar estas 4 keys novas como key mobile
+  // real de "titulo", mas isso é uma mudança de comportamento (categoria
+  // que nunca teve marcador mobile passaria a ter) fora do escopo desta
+  // correção de migração, não implementado sem pedido explícito.
+  // estrutura/informacoes: SEM key mobile PUBLICADA ainda (ver achado
+  // acima — variantes novas existem no arquivo mas a lib não foi
+  // republicada depois delas) — typeKeys undefined, _tryImportA11yAgrupamento
+  // cai no dicionário desktop.
 };
 
 const A11Y_CONECTOR_LINHA_KEYS_MOBILE = {
   elemento: {
-    esquerda: '8e397918ad10aeb63b2e747d2834c8105a0aa1d1',
-    direita:  '90bbec6996ca447f3594497f0a35854544de3021',
-    superior: 'a6c7e7dab90b9b23a06b072331c246fd4392b749',
-    inferior: '978a6433237eefdf540d82bcba40e74e39aeecba',
-    desativado: '4c060718da4b3350ee5f290742a3a6cd1db23618',
+    esquerda: '711ff70084002beb5484985790d313785826b041',
+    direita:  '48c0a893abb2859bf28fe660db2ef5a8ed998389',
+    superior: 'd103d6403ab8f289c44499cf931de5d08e1c80a2',
+    inferior: '406b93c17f12ce592b2854a126b67e23c87a97e4',
+    desativado: '5506fa7159f82aa6984493ed9e8ef60372c3dd72',
   },
   titulo: {
-    esquerda: 'd9d79daa2318b2b6758376123899a40329222b48',
-    direita:  'b52cb9d60f6ca81eaf82492d4b110b105bc76305',
-    superior: '1bd8c85dbdc47d3bef93ac9b71ad5f6d875d810b',
-    inferior: '66c4100b5d1b1432ebeb3e9202fca08d173a02be',
-    desativado: '966f90f2fc56afdb7e2b8025ba83b48a9622a698',
+    esquerda: '3bda769bd18a3bcb0dedb3691deaa9548644a3dd',
+    direita:  '19fa60fe8f30a98e26eff0d2d1c75e973a87dfca',
+    superior: 'bbea0b89885808fb9af379a23573b2f9360f6b88',
+    inferior: 'ef9578ce7fd51d26cdccc22fbc862bdd716050ce',
+    desativado: '938d4f64c6272528b49c22da2cb03cf54c1ddeff',
   },
   decorativo: {
-    esquerda: '2709c008c084daaba24063ccf42da4a8c1db0745',
-    direita:  '1865f8ed37ac6a33cccbcd874f02238c39b0ff39',
-    superior: '06c9ac2cae9926e57456ddad6eda7a70ffc9bca0',
-    inferior: '638d682d97a2f82bc35cbb76ae9f6b05132a7176',
-    desativado: '4f478e385d22c92b1df3b53883a9a97abe61be6f',
+    esquerda: '3bae568e0f46c702d1a34c9d1d7545352f0af488',
+    direita:  '7f737bd2821b3360c3a77a256c68a1aa2b43baa0',
+    superior: '79fae2a5d1438938ff3072d3e677196f78c471f8',
+    inferior: 'b054d91b10030c6aded2df65a801a425e1c1843f',
+    desativado: '7e1c5465b4c1ff00dfb05baaa6bd7aaa2a508829',
   },
-  // estrutura/informacoes: SEM key mobile (lacuna real da lib) — typeKeys
-  // undefined, _tryImportA11yConectorLinha cai no dicionário desktop.
+  // estrutura/informacoes: SEM key mobile PUBLICADA ainda (mesmo achado do
+  // Agrupamento acima — variante "Estrutura da Página" nova existe no
+  // arquivo, node_ids 10768:280/283/287/291/295, mas sem key publicada) —
+  // typeKeys undefined, _tryImportA11yConectorLinha cai no dicionário
+  // desktop.
 };
 
-// "[a11y mob] Número da tela" — usado SÓ pro selo de ÁREA MARCADA (ver
-// handler create-a11y-area). Desenha um Connector visual (traço) por
-// direção, igual "[a11y] Item Number" no desktop — confirmado via REST API
-// (children da variante incluem um RECTANGLE "Connector" em toda direção
-// exceto "desativado"). Item de tabulação mobile usa A11Y_TAB_ORDER_ITEM_KEY
-// _MOBILE (abaixo), componente diferente e sem conector.
+// "[hac] Identificação da tela" (ex-"[a11y mob] Número da tela", mesmos
+// node_ids, apenas re-chaveado na migração 2026-09-17) — usado SÓ pro selo
+// de ÁREA MARCADA (ver handler create-a11y-area). Desenha um Connector
+// visual (traço) por direção, igual "[a11y] Item Number" no desktop —
+// confirmado via REST API (children da variante incluem um RECTANGLE
+// "Connector" em toda direção exceto "desativado"). Item de tabulação
+// mobile usa A11Y_TAB_ORDER_ITEM_KEY_MOBILE (abaixo), componente diferente
+// e sem conector.
 export const A11Y_ITEM_NUMBER_KEYS_MOBILE = {
-  superior:   '8165d5888c8a03c7affb955a9b5364cec563ee63',
-  inferior:   '4b03dd0857a71158da36bab09707538ecf047620',
-  esquerda:   'aebd2221d0238799706e54521cccd7bcee24733d',
-  direita:    'f7977c26c71f36e05bf2b92e645ecd1d1491d458',
-  desativado: 'd88850d40989bbd99cdc98b29a1f2cc516278699',
+  superior:   '30bc07a9462265a9c69b28f2389c25578fec3a75',
+  inferior:   'bcaca4f76c4fc4f045706fee17d00432f0e1ed5b',
+  esquerda:   'ad35c5a35f919c325fac63197f72d80988a99599',
+  direita:    'c1827f24908f990a0983b0519c2800c302d9f113',
+  desativado: '64dd33125f08835d3561647ebf1a21bd0221b3f1',
 };
 
-// "[a11y mob] Ordenação" (variante tamanho=pequeno) — selo de ITEM dentro da
-// Ordem de Tabulação no mobile. Confirmado via REST API (fileKey
-// 3zdtN13YvPlCGPdXeL0Y2i, node 5222:4270): só tem properties "tamanho"
-// (grande/pequeno) e "número" — SEM variante de direção/conector, porque a
-// posição do selo já é resolvida por x/y absoluto em _createTabOrderBadge
-// (a lib não desenha conector pra esse caso, diferente de "Número da tela").
-// Não tem equivalente separado no desktop — lá "[a11y] Item Number" é o
-// único componente e é reaproveitado também pro selo de Área (mesmas keys
-// de A11Y_AREA_CONECTOR_KEYS), assimetria real entre as duas libs.
-export const A11Y_TAB_ORDER_ITEM_KEY_MOBILE = 'a7b50306053bb1a4fb834f26c432dc7613ef9b13';
+// "[hac] Ordenação" (variante tamanho=pequeno, mesmo node_id 5222:4269 da
+// lib antiga, apenas re-chaveado na migração 2026-09-17) — selo de ITEM
+// dentro da Ordem de Tabulação no mobile. Confirmado via REST API (fileKey
+// HhriLSpKnCB2dHhyiU16iB): só tem properties "tamanho" (grande/pequeno) e
+// "número" — SEM variante de direção/conector, porque a posição do selo já
+// é resolvida por x/y absoluto em _createTabOrderBadge (a lib não desenha
+// conector pra esse caso, diferente de "Identificação da tela"). Não tem
+// equivalente separado no desktop — lá "[a11y] Item Number" é o único
+// componente e é reaproveitado também pro selo de Área (mesmas keys de
+// A11Y_AREA_CONECTOR_KEYS), assimetria real entre as duas libs.
+export const A11Y_TAB_ORDER_ITEM_KEY_MOBILE = '860c9f70d42c05f23e00c8414df16911d3292cab';
 
 // "[a11y] Item Number" desktop — MESMA key já usada hoje em 2 lugares do
 // closure figma.ui.onmessage (create-a11y-area, como A11Y_AREA_CONECTOR_KEYS;
@@ -3188,7 +3285,32 @@ export function _rectsOverlap(a, b) {
   return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
 }
 
-export async function _findFreeTabOrderCopyPosition(cloneWidth, cloneHeight, originBounds) {
+// `verticalAnchorBounds` (2026-09-17, correção de bug real reportado com
+// print pelo usuário: spec nova da Área 2 nascendo alinhada com a ALTURA da
+// Área 1, em vez da altura real do frame da Área 2 — "cada tela documentada
+// deve ter suas próprias colunas de cards crescendo à direita dela, na
+// MESMA faixa Y do próprio frame; telas diferentes ficam EMPILHADAS
+// VERTICALMENTE uma abaixo da outra, nunca competindo pela mesma faixa Y").
+// Causa raiz: esta função sempre ancorava `y = oy` (Y do frame ORIGINAL que
+// está sendo clonado) e só varria X em busca de espaço livre — correto
+// quando a 2ª/3ª réplica (Tabulação/Swipe/Leitor) nasce para a MESMA área
+// (elas devem mesmo ficar lado a lado, na mesma faixa Y — decisão de
+// 2026-09-09, comentário abaixo). Mas quando é a PRIMEIRA réplica de uma
+// área NOVA que já tem outras áreas documentadas antes dela no mesmo
+// arquivo, `y = oy` ainda usa a altura do frame ORIGINAL — se dois frames
+// originais (Área 1 e Área 2) estão na mesma faixa Y no design fonte
+// (comum: telas de um fluxo lado a lado), a busca por X livre só empurra a
+// réplica/Ficha da Área 2 pra DIREITA da Área 1, nunca pra BAIXO — as duas
+// acabam competindo pela mesma faixa horizontal.
+// Parâmetro opcional: quando o chamador sabe que esta é a PRIMEIRA réplica
+// de uma área que entra numa sessão/Ficha já povoada por outras áreas, passa
+// aqui os bounds já ocupados por elas (ex.: bounding box do "[HAC]
+// Documentação" existente, ou de tudo já síncrono na Section de sessão) —
+// o Y de partida passa a ser o maior entre `oy` e o fundo desses bounds,
+// then a busca por colisão continua igual (varre X, mesma faixa Y). Sem o
+// parâmetro (comportamento antigo, preservado): réplicas subsequentes da
+// MESMA área continuam nascendo exatamente ao lado uma da outra.
+export async function _findFreeTabOrderCopyPosition(cloneWidth, cloneHeight, originBounds, verticalAnchorBounds) {
   let occupied;
   try {
     occupied = await _collectA11yOccupiedBounds();
@@ -3216,8 +3338,16 @@ export async function _findFreeTabOrderCopyPosition(cloneWidth, cloneHeight, ori
   // incrementos de _TAB_ORDER_ROW_GAP a partir de logo depois do original,
   // até achar uma faixa livre. Sem limite de tentativas: numa página real,
   // sempre existe espaço mais à direita.
+  //
+  // Exceção (2026-09-17, ver comentário de `verticalAnchorBounds` acima):
+  // se este é o primeiro artefato de uma área nova que entra numa sessão já
+  // com conteúdo de OUTRAS áreas, o ponto de partida vertical é o maior
+  // entre `oy` e o fundo do que já existe — a área nova sempre nasce
+  // EMPILHADA ABAIXO das anteriores, nunca competindo pela mesma faixa Y.
   let x = Math.round(ox + ow + _TAB_ORDER_ROW_GAP);
-  const y = Math.round(oy);
+  const y = verticalAnchorBounds
+    ? Math.round(Math.max(oy, verticalAnchorBounds.y + verticalAnchorBounds.height + _TAB_ORDER_ROW_GAP))
+    : Math.round(oy);
   for (let guard = 0; guard < 500; guard++) {
     const rect = { left: x, top: y, right: x + cloneWidth, bottom: y + cloneHeight };
     const collidingBounds = occupied.filter(b => _rectsOverlap(rect, b));
@@ -3228,6 +3358,60 @@ export async function _findFreeTabOrderCopyPosition(cloneWidth, cloneHeight, ori
     x = Math.round(rightmostConflict + _TAB_ORDER_ROW_GAP);
   }
   return { x, y };
+}
+
+// Calcula o `verticalAnchorBounds` (ver comentário completo em
+// _findFreeTabOrderCopyPosition) pra área `areaId` — usado pelos 3
+// criadores de réplica de trabalho (_createTabOrderCloneForArea/
+// _createSwipePathCloneForArea/_createSpecCloneForArea, backend/
+// onmessage.js) ANTES de clonar. Só retorna bounds (forçando a nova
+// réplica pra BAIXO de tudo) quando as duas condições batem:
+//   1) já existe "[HAC] Documentação" pro designer atual (currentUserId) —
+//      sem isso, `areaId` é a primeira área do designer nesta sessão, e o
+//      comportamento antigo (ancorar no próprio frame original) é o
+//      correto, não há "outra área" pra empilhar abaixo.
+//   2) `areaId` AINDA NÃO tem seu próprio "Tela N" dentro dele — se já tem
+//      (2ª/3ª réplica da MESMA área: Tabulação depois de Leitor de Tela,
+//      etc.), o comportamento antigo ("ao lado", 2026-09-09) continua
+//      valendo — código idêntico ao usado por _findFichaItensFrame/
+//      _getOrCreateFichaAreaGroup pra reconhecer o "Tela N" de uma área.
+// Retorna `null` em qualquer um dos dois casos acima — o chamador então
+// não passa `verticalAnchorBounds`, preservando o comportamento de sempre.
+export function _getVerticalAnchorForNewArea(areaId, currentUserId) {
+  if (!areaId) return null;
+  let sessionSection = null;
+  for (const n of figma.currentPage.children) {
+    if (n.type !== 'SECTION') continue;
+    try {
+      if (n.getPluginData && n.getPluginData('hacSessionSection') === 'true') {
+        const ownerId = n.getPluginData('hacSessionOwnerId') || '';
+        if (!currentUserId || ownerId === currentUserId || !ownerId) { sessionSection = n; break; }
+      }
+    } catch (e) { }
+  }
+  if (!sessionSection) return null;
+
+  let docFrame = null;
+  for (const child of (sessionSection.children || [])) {
+    try {
+      if (child.getPluginData && child.getPluginData('hacFichaDocumentacaoFrame') === 'true') {
+        docFrame = child;
+        break;
+      }
+    } catch (e) { }
+  }
+  if (!docFrame || !docFrame.absoluteBoundingBox || !('children' in docFrame)) return null;
+
+  const docFrameChildren = docFrame.children || [];
+  const hasOwnTelaFrame = docFrameChildren.some(c => {
+    try { return c.getPluginData && c.getPluginData('hacFichaTelaForArea') === areaId; } catch (e) { return false; }
+  });
+  if (hasOwnTelaFrame) return null;
+
+  // "[HAC] Documentação" já tem OUTRAS áreas e ainda não tem a atual —
+  // ancora a nova réplica abaixo de tudo que ele já ocupa.
+  if (docFrameChildren.length === 0) return null;
+  return docFrame.absoluteBoundingBox;
 }
 
 // Cria (ou retorna, se já existir) o frame-container da Ficha de uma área —
@@ -4213,9 +4397,17 @@ function _fichaLegendAssetColor(label) {
 // mesmo por definição (mesmas 3 categorias, mesmos textos).
 function _fichaLegendAssetCategory(label) {
   const l = (label || '').toLowerCase();
-  if (l.includes('interativ') || l.includes('imagens')) return 'elemento';
-  if (l.includes('título') || l.includes('titulo')) return 'titulo';
+  // Bug real corrigido (2026-09-17): "decorativ" precisa ser checado ANTES
+  // de "interativ"/"imagens" — o passo 3 do template de Leitor de Tela
+  // ("Ignore itens decorativos: Imagens e ícones puramente ilustrativos...
+  // classifique-os com o conector Elementos Decorativos") contém a palavra
+  // "Imagens" mesmo sendo sobre a categoria decorativo, então a ordem
+  // antiga sempre casava "elemento" primeiro e nunca chegava a testar
+  // "decorativ" para esse texto — badge errado ("A" em vez de "Ø") no
+  // último passo, reportado pelo usuário com print real.
   if (l.includes('decorativ')) return 'decorativo';
+  if (l.includes('título') || l.includes('titulo')) return 'titulo';
+  if (l.includes('interativ') || l.includes('imagens')) return 'elemento';
   return null;
 }
 
@@ -4305,7 +4497,22 @@ export async function _appendFichaBlockTitle(section, text) {
   return t;
 }
 
-export async function _buildFichaLegendColumn(richContent, fallbackTitle, fallbackDescription) {
+// `feature` (2026-09-17, correção de bug real reportado com print: badges
+// circulares coloridos vazando pra Ficha de "Ordem de Tabulação", nunca
+// pedidos ali — o pedido original ("isso para o leitor de tela") era só pro
+// Leitor de Tela). _buildFichaLegendColumn é COMPARTILHADA pelas 3 features
+// (leitorTela/tabulacao/swipe, ver _FICHA_BLOCK_CONFIG.instructionKey) e o
+// bloco de badge de passo decidia se desenhava o selo só pelo TEXTO do
+// passo (_fichaLegendAssetCategory), sem saber QUAL feature estava sendo
+// montada — como o texto de Tabulação também menciona "componentes
+// interativos" (casa com a categoria "elemento"), o badge aparecia lá
+// também. `feature` é o 5º parâmetro, valor de `cfg.instructionKey`
+// ('leitorTela'|'tabulacao'|'swipe'), propagado desde a chamada real em
+// onmessage.js (_getOrCreateFichaInstrucoesFrame). Só usado para restringir
+// o badge de PASSO — a seção "Assets" mais abaixo (_tryImportA11yAgrupamento
+// via _fichaLegendAssetCategory) não faz parte desta queixa e continua
+// desenhando normalmente em qualquer feature.
+export async function _buildFichaLegendColumn(richContent, fallbackTitle, fallbackDescription, a11yOrigin, feature) {
   const hasRichContent = !!(richContent && richContent.title);
 
   const col = figma.createFrame();
@@ -4495,6 +4702,64 @@ export async function _buildFichaLegendColumn(richContent, fallbackTitle, fallba
       number.fills = [{ type: 'SOLID', color: { r: 0.1, g: 0.1, b: 0.1 } }];
       row.appendChild(number);
 
+      // Badge de categoria (2026-09-16, pedido do usuário: replicar o
+      // badge circular colorido do category picker da modal "Nova
+      // especificação" — não um ícone genérico de cabeçalho) — cada um dos
+      // 3 passos deste template menciona por nome exatamente um
+      // conector/categoria ("Elementos Interativos e Imagens", "Títulos",
+      // "Elementos Decorativos") — a detecção é por palavra-chave no
+      // PRÓPRIO texto do passo (mesma função usada pros Assets), não por
+      // índice fixo, então sobrevive a reordenação/edição do texto no JSON.
+      // "Estrutura"/"Informações Adicionais" não aparecem no texto de
+      // nenhum passo deste template (confirmado lendo
+      // ficha-instruction-content.json) e por isso nunca geram badge aqui —
+      // comportamento correto, não uma lacuna.
+      //
+      // `feature === 'leitorTela'` (2026-09-17, correção de bug real, ver
+      // comentário na assinatura da função): SÓ o Leitor de Tela ganha
+      // badge de passo — Tabulação/Swipe desenham número + texto puro,
+      // como era antes de o badge existir. Sem essa checagem o badge
+      // vazava pra Tabulação/Swipe porque a detecção de categoria olha só o
+      // TEXTO do passo, que também menciona "componentes interativos"
+      // (casa com a categoria "elemento") no template de Tabulação.
+      let badge = null;
+      const stepCategory = feature === 'leitorTela' ? _fichaLegendAssetCategory(stepText) : null;
+      if (stepCategory) {
+        try {
+          // Componente "Conectores" (2026-09-17, correção de bug real —
+          // print do painel "Swap instance" do Figma confirmou que o badge
+          // vinha do componente ERRADO): antes usava
+          // _tryImportA11yAgrupamento (família "[a11y mob] Agrupamento" /
+          // "[a11y] Agrupamento"), só correto para os marcadores de ÁREA e
+          // para os Assets desta mesma legenda. O usuário pediu
+          // explicitamente o componente "Conectores" da lib "Design
+          // Acessível | Super App" (fileKey HhriLSpKnCB2dHhyiU16iB) —
+          // _tryImportA11yConectorLinha já resolve exatamente isso, via
+          // A11Y_CONECTOR_LINHA_KEYS/_MOBILE (já migradas pra lib nova
+          // nesta mesma sessão), com a mesma assinatura de
+          // _tryImportA11yAgrupamento (a11yType/a11yOrigin/guideSide/
+          // letter) — nenhuma key nova precisou ser confirmada via API.
+          // guideSide 'right' (orientação "direita") mantido como padrão
+          // neutro ao lado do número do passo, mesma escolha já usada nos
+          // Assets logo abaixo.
+          badge = await _tryImportA11yConectorLinha({ a11yType: stepCategory, a11yOrigin, guideSide: 'right', letter: stepCategory === 'titulo' ? 'H' : null });
+          // 20x20 — um pouco menor que o marcador dos Assets (24px): aqui
+          // divide a linha com o número do passo, não fica sozinho.
+          badge.resize(20, 20);
+        } catch (e) {
+          badge = null;
+        }
+      }
+      if (!badge && stepCategory) {
+        badge = figma.createEllipse();
+        badge.name = 'Badge';
+        badge.resizeWithoutConstraints(16, 16);
+        badge.fills = [{ type: 'SOLID', color: hexToRgb(_fichaLegendAssetColor(stepText)) }];
+      }
+      if (badge) {
+        row.appendChild(badge);
+      }
+
       const text = figma.createText();
       text.name = 'Texto';
       // Bug real corrigido (2026-09-11) — ordem, ver comentário em
@@ -4510,9 +4775,10 @@ export async function _buildFichaLegendColumn(richContent, fallbackTitle, fallba
       row.appendChild(text);
       // Largura numérica explícita, NÃO layoutGrow (2026-09-14) — mesmo
       // abandono do resto da função: a largura disponível pro texto é a de
-      // `row` (colInnerWidth) menos o "Número" (medido, WIDTH_AND_HEIGHT) e
-      // o itemSpacing entre os dois.
-      const numberSlot = Math.round(number.width) + (row.itemSpacing || 0);
+      // `row` (colInnerWidth) menos o "Número" (medido, WIDTH_AND_HEIGHT), o
+      // badge (quando existe) e o itemSpacing entre os itens da linha.
+      const badgeSlot = badge ? (Math.round(badge.width) + (row.itemSpacing || 0)) : 0;
+      const numberSlot = Math.round(number.width) + (row.itemSpacing || 0) + badgeSlot;
       const stepTextWidth = Math.max(1, colInnerWidth - numberSlot);
       text.resizeWithoutConstraints(stepTextWidth, Math.max(1, Math.round(text.height)));
     }
@@ -4576,7 +4842,7 @@ export async function _buildFichaLegendColumn(richContent, fallbackTitle, fallba
       const category = _fichaLegendAssetCategory(asset.label);
       if (category) {
         try {
-          marker = await _tryImportA11yAgrupamento({ a11yType: category, guideSide: 'right', letter: category === 'titulo' ? 'H' : null });
+          marker = await _tryImportA11yAgrupamento({ a11yType: category, a11yOrigin, guideSide: 'right', letter: category === 'titulo' ? 'H' : null });
           // 24x24 (não 16x16 como o círculo sólido de fallback) — o
           // componente real tem moldura tracejada + badge central;
           // redimensionar pra 16px distorceria a moldura fina demais pra

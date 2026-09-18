@@ -148,7 +148,7 @@
           a11ySpecs: [],
           tabOrderItems: [],
           a11ySwipePaths: [],
-          currentUser: hacData.currentUser
+          currentUser: hacData.currentUser,
           // projectOrigin NÃO é preservado (decisão revisada): "Limpar Cache"
           // deve resetar o projeto ao estado zero, incluindo a plataforma
           // declarada do arquivo — o designer volta a responder Web/Mobile
@@ -159,6 +159,13 @@
           // omitido de propósito, volta a null — a próxima Área Marcada
           // depois de "Limpar Cache" nasce na Section fixa original, não
           // numa versionada que o designer possa ter escolhido antes.
+          //
+          // a11yLeitorInstructionSeen (2026-09-16-c) é explicitado como
+          // false (em vez de omitido) — "Limpar Cache" reseta o projeto ao
+          // estado zero, então a modal de instrução do Leitor de Tela deve
+          // voltar a aparecer na próxima "+ Nova spec", mesmo comportamento
+          // de um arquivo nunca usado.
+          a11yLeitorInstructionSeen: false
         };
         a11yAreas = [];
         a11ySpecs = [];

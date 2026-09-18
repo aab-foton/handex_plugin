@@ -431,27 +431,34 @@ const A11Y_TOGGLE_MAXLENGTH = {
 };
 const A11Y_TOGGLE_MAXLENGTH_DEFAULT = 400;
 
-// Toggle que só existe no wrapper mobile, na sub-variante "componente" —
-// nunca renderizado quando a spec é de origem web (o componente real
-// desktop não tem esse campo). Chave própria, fora de
-// A11Y_COMPONENT_PROPERTIES (catálogo desktop): a origem desse campo é o
-// texto oficial da lib mobile ("📍 Instruções (comece por aqui)", node
-// 811:866), não uma property BOOLEAN de um component set "[a11y base]"
-// desktop.
+// Toggle que só existia no wrapper mobile ANTIGO, na sub-variante
+// "componente" — chave própria, fora de A11Y_COMPONENT_PROPERTIES (catálogo
+// desktop): a origem desse campo era o texto da lib mobile ANTIGA (fileKey
+// 3zdtN13YvPlCGPdXeL0Y2i, DESCONTINUADA — "📍 Instruções (comece por aqui)",
+// node 811:866), confirmado via REST API em 2026-08-31 (ver
+// refs/design-acessivel-mobile-link-property.json).
 //
-// Confirmado via REST API em 2026-08-31 (ver
-// refs/design-acessivel-mobile-link-property.json) no wrapper "[a11y mob]
-// Box specs leitor de tela", variante "Elementos e imagens": "Dica Leitor de
-// Tela" tem toggle BOOLEAN real (defaultValue true na definição do
-// component set base; a instância do wrapper publicado usa false —
-// replicado aqui como default desligado). "Link do componente" NÃO tem
-// toggle no componente publicado (instância sempre presente, sem
-// componentPropertyReferences de visible) — por isso NÃO está mais nesta
-// lista de toggles opcionais, virou campo sempre-visível na sub-variante
-// "componente" (ver A11Y_MOBILE_LINK_OPTIONS/_renderA11yElementoMobileFields).
+// Removido do FORMULÁRIO de specs NOVAS em 2026-09-17: não corresponde a
+// nenhuma property real confirmada na lib NOVA (fileKey HhriLSpKnCB2dHhyiU16iB)
+// — nem no component set ".[hac mob base] Elementos e imagens" (nível do
+// set), nem em nenhuma das 66 instâncias aninhadas por variante (ver
+// extractPerVariantProperties/A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL,
+// mesmo dado real usado pra confirmar "Nome Acessível" — "Dica Leitor de
+// Tela"/"Dica para Leitor de Tela" não aparece em nenhuma delas).
+//
+// A constante e o array seguem existindo (não removidos) só pra alimentar a
+// RESTAURAÇÃO de specs antigas que já salvaram esse campo preenchido — ver
+// A11Y_MOBILE_ONLY_TOGGLE_KEYS_LEGACY (chaves aceitas em
+// _restoreA11yElementoMobileToggles) e o princípio de dado histórico já
+// aplicado a 'nomeAcessivel' no restante deste arquivo. Nenhum ponto de
+// RENDERIZAÇÃO de spec nova itera mais A11Y_MOBILE_ONLY_TOGGLES.
 const A11Y_MOBILE_ONLY_TOGGLES = [
   { key: 'accessibilityHint', label: 'Dica para Leitor de Tela', placeholder: 'Inserir o seguinte accessibilityHint: [explicação sobre o que acontecerá após a ação].' },
 ];
+// Chaves aceitas por _restoreA11yElementoMobileToggles (dado histórico) —
+// mesma lista de sempre, só nomeada explicitamente agora que
+// A11Y_MOBILE_ONLY_TOGGLES não é mais usada para renderizar specs novas.
+const A11Y_MOBILE_ONLY_TOGGLE_KEYS_LEGACY = A11Y_MOBILE_ONLY_TOGGLES.map(t => t.key);
 
 // As 3 sub-variantes mutuamente exclusivas de "Elementos e Imagens" mobile —
 // strings EXATAS da property VARIANT real "Variante" do component set
@@ -467,26 +474,37 @@ const A11Y_ELEMENTO_MOBILE_VARIANTS = {
   textoAlternativo: 'texto alternativo',
 };
 
-// As 64 opções reais do dropdown VARIANT "Link" do component set interno
-// ".[a11y mob base] Link do Componente" (node 5536:8553) — nomes exatos, na
-// mesma ordem retornada pela API. Fonte de verdade agora é o arquivo GERADO
-// refs/_a11y-constants.generated.js (concatenado no bundle ANTES deste
-// módulo, ver build.cjs), produzido por refs/build-a11y-constants.cjs a
-// partir de refs/design-acessivel-mobile-properties.json. Alias mantido com
-// o nome histórico para não exigir alterar todos os pontos de consumo já
-// espalhados neste arquivo. "Personalizado" é o default (última opção da
-// lista real). Este dropdown é só um RÓTULO textual (type VARIANT, não
-// INSTANCE_SWAP) — não há vínculo de componente real por trás de cada
-// opção. Regenerar via: npm run refs:a11y-constants (NÃO editar
-// A11Y_MOBILE_LINK_COMPONENT_OPTIONS à mão).
+// As opções reais do dropdown VARIANT "Componente" do component set
+// ".[hac mob base] Elementos e imagens" (fileKey HhriLSpKnCB2dHhyiU16iB, lib
+// NOVA — migrado 2026-09-15 da lib antiga ".[a11y mob base] Link do
+// Componente", fileKey 3zdtN13YvPlCGPdXeL0Y2i, DESCONTINUADA) — hoje 78
+// nomes exatos, na mesma ordem retornada pela API. Fonte de verdade é o
+// arquivo GERADO refs/_a11y-constants.generated.js (concatenado no bundle
+// ANTES deste módulo, ver build.cjs), produzido por
+// refs/build-a11y-constants.cjs a partir de
+// refs/design-acessivel-mobile-properties.json. Alias mantido com o nome
+// histórico ("Link") para não exigir alterar todos os pontos de consumo já
+// espalhados neste arquivo — o campo em si documenta o COMPONENTE
+// vinculado, não um link avulso. Diferente da lib antiga, NÃO existe opção
+// "Personalizado"/"Outro" no catálogo real: quando o auto-match por nome
+// exato não encontra nada, o formulário cai no modo de texto livre (ver
+// buildMobileLinkOptions em build-a11y-constants.cjs). Este dropdown é só
+// um RÓTULO textual (type VARIANT, não INSTANCE_SWAP) — não há vínculo de
+// componente real por trás de cada opção. Regenerar via: npm run
+// refs:a11y-constants (NÃO editar A11Y_MOBILE_LINK_COMPONENT_OPTIONS à
+// mão).
 const A11Y_MOBILE_LINK_COMPONENT_OPTIONS = A11Y_MOBILE_LINK_COMPONENT_OPTIONS_GENERATED;
 const A11Y_MOBILE_LINK_URL_PLACEHOLDER = '[insira aqui o link do componente]. Se o componente não estiver na lista acima, escreva o nome real dele aqui: é assim que a vertical de a11y sabe que falta mapear esse componente na lib.';
 
 // Tabela nome-do-dropdown -> node_id do component set REAL na lib "DSC |
 // Super App" (fileKey abaixo) — só os nomes com match EXATO e sem
-// ambiguidade contra os containingFrame reais (hoje 46 dos 64; os outros 18,
-// incl. "Personalizado", não têm correspondência segura e ficam de fora,
-// mantendo o preenchimento manual). Gerada 100% a partir do dado extraído
+// ambiguidade contra os containingFrame reais (hoje 46 dos 66 nomes reais do
+// catálogo da lib "Elementos e imagens"; os demais, incl. a opção sintética
+// "Personalizado" — ver _renderA11yElementoMobileFields —, não têm
+// correspondência segura e ficam de fora, mantendo o preenchimento manual).
+// Números batem exatamente com o array/tabela gerados em
+// refs/_a11y-constants.generated.js; não hardcodar de novo se mudarem — só
+// documentativo aqui. Gerada 100% a partir do dado extraído
 // via REST API (refs/super-app.json + refs/_manifest.json) por
 // refs/build-a11y-constants.cjs — NÃO editar à mão, e nunca usar como tabela
 // estática: se o componente mudar de nodeId/for renomeado na lib real, o
@@ -494,6 +512,32 @@ const A11Y_MOBILE_LINK_URL_PLACEHOLDER = '[insira aqui o link do componente]. Se
 // build-a11y-constants.cjs, o mesmo pipeline do CI semanal) já atualiza este
 // arquivo gerado. Consumida por _autofillA11yMobileLinkUrlFromComponentName.
 const A11Y_MOBILE_COMPONENT_LINK_NODE_IDS = A11Y_MOBILE_COMPONENT_LINK_NODE_IDS_GENERATED;
+
+// Nomes dos componentes reais (mesma grafia de A11Y_MOBILE_LINK_COMPONENT_
+// OPTIONS) cuja instância aninhada, no component set real ".[hac mob base]
+// Elementos e imagens", declara a property BOOLEAN "Nome Acessível" — dado
+// 100% extraído via REST API (extractPerVariantProperties em
+// fetch-component-properties.cjs, camada "instância aninhada por variante"),
+// nunca hardcodado à mão. Hoje 26/65 componentes reais (confirmado
+// 2026-09-17). Consumido por _updateA11yMobileNomeAcessivelVisibility pra
+// mostrar/esconder o toggle informativo "Nome Acessível" (só indicativo — o
+// texto em si continua vindo do campo Label do topo do formulário, ver
+// A11Y_TOGGLE_LABELS.nomeAcessivel/_buildA11yElementoPayload equivalente
+// mobile) conforme o componente escolhido no dropdown "Link do Componente".
+const A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL = A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL_GENERATED;
+
+// Dropdown "Leitor de Tela" (decisão de produto 2026-09-17): mapa {
+// [nomeComponente]: { subModeProperty, variants: [{name, hasNomeAcessivel}] } }
+// — só contém os componentes cuja instância aninhada é, ela mesma, uma folha
+// de um SEGUNDO component set oculto com sub-variantes de sub-modo (ex:
+// "Leitor de Tela"={Baseline,Disabled,Loading} do Button). Presença de uma
+// chave aqui é o sinal para o formulário renderizar o dropdown novo; ausência
+// = componente "folha simples", sem dropdown, comportamento antigo mantido.
+// 100% derivado de screenReaderVariants (fetch-component-properties.cjs,
+// --deep-scan) — nunca hardcodar à mão. Consumido por
+// _renderA11yElementoMobileFields/_updateA11yMobileScreenReaderVariantOptions/
+// _updateA11yMobileNomeAcessivelVisibility.
+const A11Y_MOBILE_SCREEN_READER_VARIANTS = A11Y_MOBILE_SCREEN_READER_VARIANTS_GENERATED;
 const A11Y_SUPER_APP_FILE_KEY = A11Y_SUPER_APP_FILE_KEY_GENERATED;
 const A11Y_SUPER_APP_FILE_NAME = A11Y_SUPER_APP_FILE_NAME_GENERATED;
 
@@ -508,18 +552,19 @@ function _buildA11yMobileComponentDeepLink(nodeId) {
 }
 
 // Handler do <select> "Componente do DSC" (dropdown "Link do Componente") —
-// se o nome escolhido tiver nodeId real conhecido (um dos 46 com match
-// seguro), preenche AUTOMATICAMENTE o campo de texto companheiro com a URL
-// do deep-link real. Nunca sobrescreve um valor que o designer já tenha
-// digitado manualmente (nem ao trocar de opção depois) — só entra quando o
-// campo de URL está vazio. Nomes sem match seguro (18 restantes, incl.
-// "Personalizado") não alteram o campo: comportamento manual de sempre.
+// se o nome escolhido tiver nodeId real conhecido (um dos cobertos por
+// A11Y_MOBILE_COMPONENT_LINK_NODE_IDS), preenche AUTOMATICAMENTE o campo de
+// texto companheiro com a URL do deep-link real. Nunca sobrescreve um valor
+// que o designer já tenha digitado manualmente (nem ao trocar de opção
+// depois) — só entra quando o campo de URL está vazio. Nomes sem match
+// seguro (incl. a opção sintética "Personalizado") não alteram o campo:
+// comportamento manual de sempre.
 // Renderiza "Componente DSC: <nome>" no cabeçalho do modal — vira link
 // clicável (deep-link real do Figma pra lib "DSC | Super App") só quando dá
 // pra resolver um nodeId com confiança: origem mobile + nome limpo batendo
 // EXATO contra A11Y_MOBILE_COMPONENT_LINK_NODE_IDS (mesmo critério/mesma
-// tabela usada em _autofillA11yMobileLinkUrlFromComponentName — 46/64 nomes
-// reais cobertos). A lib desktop ("Web Angular & React"/"Super DSC Web") não
+// tabela usada em _autofillA11yMobileLinkUrlFromComponentName). A lib
+// desktop ("Web Angular & React"/"Super DSC Web") não
 // entra aqui: o dado extraído dela (refs/web-angular-react.json,
 // refs/super-dsc-web.json) não tem containingFrameNodeId, só componentKey de
 // variante — sem nodeId real de component set não dá pra montar um deep-link
@@ -565,7 +610,7 @@ function _autofillA11yMobileLinkUrlFromComponentName() {
 // Trava #a11y-el-mobile-link-url sempre que o <select> companheiro aponta
 // para um componente real conhecido (qualquer opção != "Personalizado") —
 // nesses casos o texto já foi resolvido automaticamente (ou é a escolha
-// deliberada do designer dentre as 64 opções reais) e não deve divergir do
+// deliberada do designer dentre as opções reais do catálogo) e não deve divergir do
 // nome escolhido. Só fica editável quando "Personalizado" está selecionado
 // (equivalente ao "Outro" desktop: único jeito de documentar componente fora
 // do catálogo). readOnly em vez de disabled: mantém o valor acessível via
@@ -726,25 +771,43 @@ function _findA11yAreaById(areaId) {
 // o picker abre normalmente assim que a checagem da lib responder,
 // independente do estado da seleção ou do matching.
 //
-// Decisão de UX (ambiguidade do plano): a instrução aparece SEMPRE que
-// "Nova spec" é clicado, sem lógica de "não repetir na sessão" — substituiu
-// a antiga dica única de vida inteira (window._a11ySpecModalInstructionShown,
-// removida de dentro de openA11yModal) porque as duas mensagens competiam
-// pelo mesmo momento. Como é um snackbar curto e de leitura rápida (uma
-// frase), repetir a cada clique não deveria incomodar — e evita a
-// complexidade de duas flags de "já vi" concorrentes para o mesmo instante
-// do fluxo. Se no futuro isso se mostrar repetitivo demais, dá pra persistir
-// via figma.clientStorage seguindo o mesmo padrão que já existia.
+// Decisão de UX (revisada 2026-09-16-c, pedido do usuário com print real):
+// a instrução aparecia SEMPRE que "Nova spec" era clicado (decisão anterior,
+// registrada abaixo por histórico) — o usuário reportou que isso "reinicia o
+// processo" a cada clique, incômodo real em uso repetido. Agora a modal
+// aparece só na PRIMEIRA vez (flag hacData.a11yLeitorInstructionSeen,
+// core.js — mesmo padrão de campo simples de configuração de projeto que
+// projectOrigin/activeSectionName, persistido via saveToStorage()); nas
+// vezes seguintes pula direto pro picker de categoria. A flag só afeta esta
+// abertura AUTOMÁTICA — a reabertura MANUAL (botão "Instruções sobre esta
+// documentação" na aba Leitor de Tela, _a11yWorkspaceTabLeitorDeTela, que
+// chama openA11yInstructionManually('leitorTela')) sempre abre a modal
+// completa, independente do valor da flag, e nunca grava nada nela.
+//
+// Histórico (decisão anterior, substituída pela acima): "a instrução
+// aparece SEMPRE que 'Nova spec' é clicado, sem lógica de 'não repetir na
+// sessão' — substituiu a antiga dica única de vida inteira
+// (window._a11ySpecModalInstructionShown, removida de dentro de
+// openA11yModal) porque as duas mensagens competiam pelo mesmo momento.
+// Como é um snackbar curto e de leitura rápida (uma frase), repetir a cada
+// clique não deveria incomodar". Na prática o modal cresceu (virou o modal
+// rico do template oficial, 2026-09-15) e deixou de ser um snackbar curto,
+// invalidando essa premissa original.
+//
 // Modal de instrução rico do template oficial de "Especificações para
 // Leitor de Tela" (2026-09-15) — diferente de Tabulação/Swipe (que hoje
 // mostram as instruções embutidas na própria barra de captura, sempre
 // visíveis por padrão, ver core.js/tab-order.js), o Leitor de Tela não tem
-// um "modo contínuo" minimizado (é spec por spec) — o modal aparece TODA
-// VEZ que "+ Nova spec" é clicado, decisão do usuário. Cobre as 5
-// categorias de uma vez só (todas fazem parte do mesmo bloco "Leitor de
-// Tela" na Ficha final) — aparece ANTES do designer escolher qual
-// categoria vai documentar, então nunca marca/desmarca onboardingSeen.
+// um "modo contínuo" minimizado (é spec por spec). Cobre as 5 categorias de
+// uma vez só (todas fazem parte do mesmo bloco "Leitor de Tela" na Ficha
+// final) — aparece ANTES do designer escolher qual categoria vai
+// documentar, então nunca marca/desmarca onboardingSeen (mecanismo
+// diferente, ver setOnboardingSeenState).
 function openA11yCategoryPickerModal(areaId) {
+  if (hacData.a11yLeitorInstructionSeen) {
+    _openA11yCategoryPickerModalAfterInstruction(areaId);
+    return;
+  }
   if (typeof _renderA11yInstructionModal === 'function' && _renderA11yInstructionModal('leitorTela')) {
     // Callback consumido por _confirmA11yInstructionModal (tab-order.js) ao
     // fechar o modal — mesmo mecanismo usado por
@@ -752,7 +815,15 @@ function openA11yCategoryPickerModal(areaId) {
     // Ordem de Tabulação"/"Iniciar trilha de ordem de leitura" (2026-09-16,
     // bug real corrigido: "Entendi, começar seleção" não iniciava nada
     // pra esses dois fluxos).
-    window._pendingA11yInstructionConfirm = () => _openA11yCategoryPickerModalAfterInstruction(areaId);
+    window._pendingA11yInstructionConfirm = () => {
+      // Marca "visto" só na CONFIRMAÇÃO (não na abertura) — se o designer
+      // fechar pelo X/backdrop (_cancelA11yInstructionModal) sem confirmar,
+      // a modal deve aparecer de novo no próximo "+ Nova spec", já que ele
+      // não chegou a "ver" o conteúdo até o fim.
+      hacData.a11yLeitorInstructionSeen = true;
+      saveToStorage();
+      _openA11yCategoryPickerModalAfterInstruction(areaId);
+    };
     // Reset defensivo (2026-09-16-b): o Leitor de Tela sempre inicia do
     // zero (não tem "Adicionar itens" aqui, é o próprio picker de
     // categoria quem decide o que criar) — garante que o texto do botão
@@ -1162,9 +1233,32 @@ function openA11yModal(category, options) {
 
   if (category === 'elemento') {
     const select = document.getElementById('a11y-el-componente-select');
+    // Preset "imagem" (2026-09-17): "Imagem" saiu do <select> de 15
+    // componentes e virou a opção 'imagem' do radio a11y-el-variante (ver
+    // comentário de reestruturação em modals.html) — reflete a property REAL
+    // "variante" do component set base. Se a Detecção Automática/match
+    // manual sugerir presetComponente === 'imagem', marca o radio certo em
+    // vez de tentar selecionar 'imagem' no <select> (que não tem mais essa
+    // opção).
+    const isPresetImagem = presetComponente === 'imagem';
+    const varianteRadio = document.querySelector(`input[name="a11y-el-variante"][value="${isPresetImagem ? 'imagem' : 'componente'}"]`);
+    if (varianteRadio) varianteRadio.checked = true;
     if (select) {
-      const validPreset = presetComponente && A11Y_CONTENT.elemento.componentes[presetComponente];
-      select.value = validPreset ? presetComponente : Object.keys(A11Y_CONTENT.elemento.componentes)[0];
+      // Sem preset válido (nenhum match real de componente DSC), o select
+      // cai em "outro" — opção neutra explícita do catálogo (ver comentário
+      // em _resolveA11yFormPresetFromItem/isUnmapped acima) — nunca na
+      // primeira chave do objeto (Object.keys(...)[0] === 'accordion', bug
+      // real reportado 2026-09-17: usuário via "Accordion" pré-selecionado
+      // no dropdown sem nenhuma lógica de match ativa, só o efeito colateral
+      // de indexar Object.keys em vez de usar a opção neutra que o próprio
+      // <select> já tem). "outro" não é chave de A11Y_CONTENT.elemento.
+      // componentes (é tratado à parte, ver isOutro em updateA11yElementoFields).
+      // "imagem" nunca é um valor válido do <select> desde a reestruturação
+      // acima — cai em "outro" como qualquer preset não reconhecido (o radio
+      // já foi marcado como 'imagem' acima, então updateA11yElementoFields
+      // esconde este <select> de qualquer forma).
+      const validPreset = !isPresetImagem && presetComponente && A11Y_CONTENT.elemento.componentes[presetComponente];
+      select.value = validPreset ? presetComponente : 'outro';
     }
     // Reset do seletor de sub-variante mobile pro default real da property
     // ("componente") — editA11ySpec restaura o valor salvo depois, via
@@ -1202,7 +1296,7 @@ function openA11yModal(category, options) {
   const tagInputId = A11Y_TAG_INPUT_ID[category];
   if (tagInputId) {
     const tagInput = document.getElementById(tagInputId);
-    if (tagInput) tagInput.value = _suggestNextA11yTagForArea(modal.dataset.areaId);
+    if (tagInput) tagInput.value = _suggestNextA11yTagForArea(modal.dataset.areaId, category);
   }
   validateA11yTagInput();
 
@@ -1264,11 +1358,24 @@ function updateA11yCharCounterEl(el, counterEl) {
 }
 window.updateA11yCharCounterEl = updateA11yCharCounterEl;
 
-// Tag manual (A, A1, A1.1...) — mesmo formato e mesma lógica de validação das
-// specs normais. Resolve o input/erro certo a partir da categoria aberta no
+// Tag manual — formato varia por categoria (ver A11Y_TAG_PATTERN_BY_CATEGORY
+// abaixo). Resolve o input/erro certo a partir da categoria aberta no
 // momento (modal.dataset.category). Título e Elemento Decorativo usam selo
 // fixo, não participam dessa numeração — nesse caso não há o que validar,
 // botão sempre habilitado.
+//
+// "elemento" (Elementos e Imagens) mudou de alfanumérico (A, A1, A1.1...)
+// pra puramente numérico (1, 1.1, 1.2...) em 2026-09-18, pedido explícito do
+// usuário: "pra não conflitar com o nível de título" — o marcador de Título
+// usa letra "H"/"H1"-"H6", então uma tag de Elemento também começando por
+// letra podia se confundir visualmente/logicamente com ele. "estrutura" e
+// "informacoes" continuam alfanuméricas (A, A1...) — não fazem parte deste
+// pedido, mantidas como estavam.
+const A11Y_TAG_PATTERN_BY_CATEGORY = {
+  elemento: /^\d+(\.\d+)*$/,
+  estrutura: /^[A-Z]\d*(\.\d+)*$/,
+  informacoes: /^[A-Z]\d*(\.\d+)*$/,
+};
 function validateA11yTagInput() {
   const modal = document.getElementById('a11y-spec-modal');
   const category = modal ? modal.dataset.category : '';
@@ -1282,8 +1389,9 @@ function validateA11yTagInput() {
   const error = document.getElementById(A11Y_TAG_ERROR_ID[category]);
   if (!input) return true;
   updateA11yCharCounter(input);
-  const value = input.value.toUpperCase();
-  const isValid = /^[A-Z]\d*(\.\d+)*$/.test(value);
+  const pattern = A11Y_TAG_PATTERN_BY_CATEGORY[category] || /^[A-Z]\d*(\.\d+)*$/;
+  const value = category === 'elemento' ? input.value : input.value.toUpperCase();
+  const isValid = pattern.test(value);
   if (error) error.classList.toggle('hidden', isValid);
   if (confirmBtn) confirmBtn.disabled = !isValid;
   return isValid;
@@ -1291,39 +1399,72 @@ function validateA11yTagInput() {
 window.validateA11yTagInput = validateA11yTagInput;
 
 // A origem filtra tudo (decisão de produto, 2026-09): specs mobile de
-// "Elementos e Imagens" nunca compartilham tela com o catálogo desktop de 16
-// categorias. Esconde/mostra de uma vez só o bloco do <select> "Componente"
-// (trigger + menu, coluna inteira do grid) e o bloco #a11y-el-desktop-block
-// ("Outro", preview de Descrição/Nota de Código) + variantes/toggles do
-// catálogo (#a11y-el-variants-wrap/#a11y-el-toggles-wrap, que já têm sua
-// própria lógica condicional de "tem conteúdo catalogado" — aqui só
-// sobrepomos com 'hidden' por cima quando mobile). Chamada sempre do topo de
-// updateA11yElementoFields, antes de qualquer outra decisão.
+// "Elementos e Imagens" nunca compartilham tela com o catálogo desktop de 15
+// componentes + Imagem. Esconde/mostra de uma vez só o seletor "Tipo de
+// elemento" (a11y-el-desktop-variante-wrap), o bloco do <select> "Componente"
+// (trigger + menu) e o bloco #a11y-el-desktop-block ("Outro", preview de
+// Descrição/Nota de Código) + variantes/toggles do catálogo
+// (#a11y-el-variants-wrap/#a11y-el-toggles-wrap, que já têm sua própria
+// lógica condicional de "tem conteúdo catalogado" — aqui só sobrepomos com
+// 'hidden' por cima quando mobile). Chamada sempre do topo de
+// updateA11yElementoFields, antes de qualquer outra decisão — a decisão
+// "componente vs imagem" (isImagem, dentro de updateA11yElementoFields) só é
+// avaliada depois, e só é relevante quando isMobile === false.
 function _toggleA11yElementoDesktopBlock(isMobile) {
+  const varianteWrap = document.getElementById('a11y-el-desktop-variante-wrap');
   const componenteCol = document.getElementById('a11y-el-desktop-componente-col');
+  const imagemInfoWrap = document.getElementById('a11y-el-imagem-info-wrap');
   const desktopBlock = document.getElementById('a11y-el-desktop-block');
   const variantsWrap = document.getElementById('a11y-el-variants-wrap');
   const togglesWrap = document.getElementById('a11y-el-toggles-wrap');
+  if (varianteWrap) varianteWrap.classList.toggle('hidden', isMobile);
   if (componenteCol) componenteCol.classList.toggle('hidden', isMobile);
   if (desktopBlock) desktopBlock.classList.toggle('hidden', isMobile);
   if (isMobile) {
     // Sobrepõe o 'hidden' condicional que _renderA11yElementoVariants/
-    // _renderA11yElementoToggles já controlam (baseado no componente
-    // desktop escolhido) — em mobile nenhum dos dois deve aparecer, mesmo
-    // que o <select> escondido ainda guarde um valor residual de sessão
+    // _renderA11yElementoToggles/updateA11yElementoFields (isImagem) já
+    // controlam — em mobile nenhum bloco desktop deve aparecer, mesmo que o
+    // <select>/radio escondidos ainda guardem um valor residual de sessão
     // anterior.
+    if (imagemInfoWrap) imagemInfoWrap.classList.add('hidden');
     if (variantsWrap) variantsWrap.classList.add('hidden');
     if (togglesWrap) togglesWrap.classList.add('hidden');
   }
 }
 
 // ── Elementos e Imagens ──────────────────────────────────────────────────
-// Select com o catálogo real de 16 componentes do DSC + "Outro" (texto
-// livre, pra telas com componentes fora do catálogo). Ao escolher um item do
-// catálogo, mostra preview somente-leitura de Descrição/Nota de Código.
-// Specs mobile (modal.dataset.a11yOrigin === 'mobile') pulam esse catálogo
-// inteiro — só a lib de Acessibilidade MOBILE alimenta essas specs, nunca a
-// desktop (ver _toggleA11yElementoDesktopBlock acima).
+// Lê o radio "Componente ou Imagem" (a11y-el-variante) — reflete a property
+// REAL "variante" do component set base (2 opções publicadas: "componente" |
+// "texto alternativo para imagens", confirmadas via REST API, fileKey
+// Wy0IhXRVZMSOOr8E609UqI, nodeId 31:902). Default 'componente' (mesmo
+// default real da property). Só relevante em specs desktop — specs mobile
+// nem têm este radio visível (bloco inteiro escondido, ver
+// _toggleA11yElementoDesktopBlock).
+function _getA11yElementoVariante() {
+  const checked = document.querySelector('input[name="a11y-el-variante"]:checked');
+  return checked ? checked.value : 'componente';
+}
+window._getA11yElementoVariante = _getA11yElementoVariante;
+
+// onchange do radio "Componente ou Imagem" — só alterna a visibilidade do
+// dropdown de catálogo vs. o bloco informativo de Imagem e força o rerender
+// dos campos condicionais (updateA11yElementoFields resolve o shortName real
+// a consultar a partir daqui).
+function updateA11yElementoVariante() {
+  updateA11yElementoFields();
+}
+window.updateA11yElementoVariante = updateA11yElementoVariante;
+
+// Select com o catálogo real de 15 componentes do DSC + "Outro" (texto
+// livre, pra telas com componentes fora do catálogo) — usado só quando
+// a11y-el-variante === 'componente'. Quando === 'imagem', o dropdown fica
+// escondido e o shortName consultado passa a ser fixo 'imagem' (mesmo
+// componente real "texto alternativo para imagens" de sempre — não existe
+// catálogo de imagens separado no plugin). Ao escolher um item, mostra
+// preview somente-leitura de Descrição/Nota de Código. Specs mobile
+// (modal.dataset.a11yOrigin === 'mobile') pulam esse catálogo inteiro — só a
+// lib de Acessibilidade MOBILE alimenta essas specs, nunca a desktop (ver
+// _toggleA11yElementoDesktopBlock acima).
 function updateA11yElementoFields() {
   const modal = document.getElementById('a11y-spec-modal');
   const isMobile = !!modal && modal.dataset.a11yOrigin === 'mobile';
@@ -1336,21 +1477,32 @@ function updateA11yElementoFields() {
   const select = document.getElementById('a11y-el-componente-select');
   const outroWrap = document.getElementById('a11y-el-componente-outro-wrap');
   const previewWrap = document.getElementById('a11y-el-preview');
+  const componenteCol = document.getElementById('a11y-el-desktop-componente-col');
+  const imagemInfoWrap = document.getElementById('a11y-el-imagem-info-wrap');
   if (!select) return;
+
+  const isImagem = _getA11yElementoVariante() === 'imagem';
+  if (componenteCol) componenteCol.classList.toggle('hidden', isImagem);
+  if (imagemInfoWrap) imagemInfoWrap.classList.toggle('hidden', !isImagem);
+
   const triggerLabel = document.getElementById('a11y-el-componente-trigger-label');
   if (triggerLabel) {
     const opt = select.options[select.selectedIndex];
     if (opt) triggerLabel.textContent = opt.textContent;
   }
-  const isOutro = select.value === 'outro';
+  const isOutro = !isImagem && select.value === 'outro';
   if (outroWrap) outroWrap.classList.toggle('hidden', !isOutro);
   if (previewWrap) previewWrap.classList.toggle('hidden', isOutro);
-  _renderA11yElementoVariants(isOutro ? null : select.value);
-  _renderA11yElementoToggles(isOutro ? null : select.value);
+  // shortName real a consultar: 'imagem' quando a variante é Imagem
+  // (independente do valor residual do <select>, que fica escondido/
+  // irrelevante nesse modo); senão, o valor do <select> (ou null se "Outro").
+  const shortNameKey = isImagem ? 'imagem' : (isOutro ? null : select.value);
+  _renderA11yElementoVariants(shortNameKey);
+  _renderA11yElementoToggles(shortNameKey);
   _renderA11yElementoMobileFields();
   if (isOutro) return;
 
-  const entry = A11Y_CONTENT.elemento.componentes[select.value];
+  const entry = A11Y_CONTENT.elemento.componentes[isImagem ? 'imagem' : select.value];
   const descEl = document.getElementById('a11y-el-preview-descricao');
   const notaWrap = document.getElementById('a11y-el-preview-nota-wrap');
   const notaEl = document.getElementById('a11y-el-preview-nota');
@@ -1571,7 +1723,7 @@ window.updateA11yElementoMobileVariant = updateA11yElementoMobileVariant;
 // #a11y-el-label — ver comentário em _renderA11yElementoMobileFields):
 //   - "componente": Descrição/Dica Leitor de Tela/Observação (toggles
 //     opcionais, cada um com textarea) + Link do Componente (SEMPRE
-//     visível, sem toggle — dropdown de 64 nomes + URL obrigatória).
+//     visível, sem toggle — dropdown com o catálogo real de nomes + URL obrigatória).
 //   - "link": Descrição fixa e travada (A11Y_CONTENT.elemento.mobileLink) +
 //     Observação opcional. Sem Dica Leitor de Tela, sem Link do Componente
 //     (não existem nessa variante na lib real).
@@ -1581,6 +1733,39 @@ window.updateA11yElementoMobileVariant = updateA11yElementoMobileVariant;
 // Visibilidade do bloco inteiro decidida por modal.dataset.a11yOrigin
 // ('mobile'), setado por openA11yModal — nunca aparece em specs web, porque
 // o wrapper real desktop ("[a11y] Box specs LT") não tem essa sub-variação.
+//
+// 2026-09-17 (pedido explícito do usuário): a escolha manual dos radios
+// "Link"/"Texto Alternativo" (ver a11y-el-mobile-variant-wrap, modals.html)
+// foi removida da UI — motivo: "isso já vem como propriedade do componente".
+// Investigado via REST API (lib "DSC | Super App", fileKey
+// epCGtlKQxedDxQVlK3lNcN, refs/super-app-properties.json): os
+// componentPropertyDefinitions reais dessa lib não têm nenhuma property que
+// carregue link/vínculo pro componente — os 20 INSTANCE_SWAP reais
+// existentes (Card/Accordion "swap slot", Button/Icon Button/Badge "change
+// icon" etc.) são todos de composição visual interna, nenhum aponta de volta
+// pro próprio componente. O único dado real de vínculo disponível hoje é o
+// NOME do component set (containingFrame), resolvido a partir do
+// componentKey da instância via _resolveDscComponentA11yMatch
+// (backend/dsc-matching.js) — e esse nome já chega automaticamente em
+// modal.dataset.dscComponentName, já alimenta o cabeçalho do modal
+// ("Componente do DSC") e já pré-seleciona/preenche automaticamente o
+// dropdown+URL de "Link do Componente" mais abaixo (ver
+// autoMatchedOption/_autofillA11yMobileLinkUrlFromComponentName). Ou seja, a
+// automação pedida (usar o vínculo real em vez de pedir pro designer
+// declarar manualmente) JÁ EXISTIA antes deste pedido — o que faltava
+// remover era só a escolha manual redundante "Link"/"Texto Alternativo", que
+// não tinha lastro em nenhuma property real (a property real "Variante" do
+// component set ".[a11y mob base] Elementos e imagens" é um rótulo textual
+// do WRAPPER de documentação de a11y, não do componente DSC em si — não
+// existe fonte de dado real que preencha esses 2 radios automaticamente a
+// partir do componente vinculado, diferente do que se cogitou).
+// Os branches `variant === link` e `variant === textoAlternativo` abaixo
+// continuam existindo (nunca mais alcançáveis a partir da UI de specs NOVAS,
+// já que o radio correspondente só existe hidden — ver modals.html) só para
+// _restoreA11yElementoMobileToggles/_prefillA11ySpecForEdit conseguirem
+// reconstruir corretamente o formulário ao EDITAR specs mobile ANTIGAS que
+// tenham usado essas variantes — dado histórico nunca se perde. Não remover
+// esses branches sem migrar antes os dados de specs antigas.
 function _renderA11yElementoMobileFields() {
   const modal = document.getElementById('a11y-spec-modal');
   const wrap = document.getElementById('a11y-el-mobile-toggles-wrap');
@@ -1588,8 +1773,32 @@ function _renderA11yElementoMobileFields() {
   const variantWrap = document.getElementById('a11y-el-mobile-variant-wrap');
   if (!wrap || !list) return;
   const isMobile = modal && modal.dataset.a11yOrigin === 'mobile';
+  // 2026-09-17 (pedido explícito do usuário, mesmo padrão de
+  // updateA11yTituloFields/updateA11yDecorativoFields): só o grupo de radios
+  // "Variante (mobile)" (Componente/Link/Texto Alternativo — a11y-el-mobile-
+  // variant-wrap) fica sempre oculto com `hidden` pra specs NOVAS,
+  // independente da origem, porque a escolha manual "Link"/"Texto
+  // Alternativo" não tem mais lastro em nenhuma property real (ver
+  // comentário grande acima da função). Os <input> continuam no DOM só para
+  // _prefillA11ySpecForEdit reconstruir o valor salvo de specs mobile
+  // ANTIGAS.
+  //
+  // BUG CORRIGIDO (2026-09-17, regressão real): o wrapper "Campos exclusivos
+  // mobile" (#a11y-el-mobile-toggles-wrap — Observações, Nome Acessível e
+  // TODO o bloco "Link do Componente"/dropdown de Componente DSC/Leitor de
+  // Tela) tinha sido colocado no MESMO `wrap.classList.add('hidden')`
+  // incondicional por engano, herdando o tratamento que só deveria valer
+  // para variantWrap. Isso escondia o formulário inteiro reconstruído nesta
+  // sessão (Nome Acessível condicional, Leitor de Tela condicional, Link do
+  // Componente) para toda spec NOVA de "Elementos e Imagens" mobile — só os
+  // campos genéricos fora deste wrap (Tag/Label/Modo de Marcação/Lado da
+  // Guia) permaneciam visíveis, reproduzindo exatamente o modal
+  // "praticamente vazio" reportado no teste real. `wrap` precisa continuar
+  // condicionado a isMobile (mesma regra de sempre): é ele quem contém o
+  // conteúdo real do formulário mobile, não um resquício de UI descontinuada
+  // como variantWrap.
   wrap.classList.toggle('hidden', !isMobile);
-  if (variantWrap) variantWrap.classList.toggle('hidden', !isMobile);
+  if (variantWrap) variantWrap.classList.add('hidden');
   if (!isMobile) { list.innerHTML = ''; return; }
 
   const variant = _getA11yElementoMobileVariant();
@@ -1666,27 +1875,52 @@ function _renderA11yElementoMobileFields() {
     `;
     list.appendChild(wrapDiv);
   } else {
-    // "componente" — toggles opcionais (Dica Leitor de Tela vem de
-    // A11Y_MOBILE_ONLY_TOGGLES; Observação reaproveita o rótulo canônico do
-    // catálogo desktop, sempre renderizado, já que o catálogo desktop nunca
-    // compartilha tela com este bloco) + Link do Componente sempre visível.
+    // "componente" — toggle opcional Observações (reaproveita o rótulo
+    // canônico do catálogo desktop, sempre renderizado, já que o catálogo
+    // desktop nunca compartilha tela com este bloco) + Nome Acessível
+    // (informativo, condicional — ver abaixo) + Link do Componente sempre
+    // visível. "Dica para Leitor de Tela" (A11Y_MOBILE_ONLY_TOGGLES) NÃO é
+    // mais renderizada aqui — ver comentário na declaração da constante:
+    // não corresponde a nenhuma property real da lib nova, só existia na
+    // lib antiga descontinuada. Fica só na restauração de dado histórico
+    // (_restoreA11yElementoMobileToggles).
     const wrapDiv = document.createElement('div');
     wrapDiv.className = 'space-y-2.5';
-    wrapDiv.innerHTML = [
-      ...A11Y_MOBILE_ONLY_TOGGLES.map(t => toggleRowHtml(t.key, t.label, t.placeholder)),
-      toggleRowHtml('observacoes', A11Y_TOGGLE_LABELS.observacoes, 'Insira seu texto de observações.'),
-    ].join('');
+    wrapDiv.innerHTML = toggleRowHtml('observacoes', A11Y_TOGGLE_LABELS.observacoes, 'Insira seu texto de observações.');
     list.appendChild(wrapDiv);
+
+    // "Nome Acessível" (informativo, decisão de produto 2026-09-17) — sem
+    // textarea próprio (o texto continua vindo só do campo Label do topo,
+    // #a11y-el-label, mesmo princípio "fonte única" já aplicado ao restante
+    // do formulário mobile/desktop — ver comentário em
+    // _renderA11yElementoToggles). Só aparece quando o componente escolhido
+    // no dropdown "Link do Componente" (abaixo) está em
+    // A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL — dado real extraído da
+    // instância aninhada de cada variante da lib (não lista hardcoded).
+    // Sempre "ligado" (não é um toggle que o designer desmarca — é uma
+    // confirmação de que aquele componente real tem a property e ela será
+    // preenchida a partir do Label), sincronizado por
+    // _updateA11yMobileNomeAcessivelVisibility a cada troca do select.
+    const nomeAcessivelRow = document.createElement('div');
+    nomeAcessivelRow.id = 'a11y-el-mobile-nome-acessivel-row';
+    nomeAcessivelRow.className = 'hidden flex items-center gap-dsc-nano px-dsc-micro py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium';
+    nomeAcessivelRow.innerHTML = `
+      <i data-lucide="check-circle-2" class="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0"></i>
+      <span class="text-[12px] font-bold text-slate-700 dark:text-white">${escapeHtml(A11Y_TOGGLE_LABELS.nomeAcessivel)}</span>
+      <span class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted ml-auto">Preenchido pelo Label acima</span>
+    `;
+    list.appendChild(nomeAcessivelRow);
+    _refreshIcons(nomeAcessivelRow);
 
     // Link do Componente — sempre visível, sem toggle (reflete a árvore real
     // do Figma: a instância "Link do componente" não tem visible vinculado a
     // nenhum BOOLEAN, ver estruturaCompletaVarianteElementosEImagens no JSON
-    // extraído). Dropdown de 64 nomes fixos (default "Personalizado") + campo
-    // de texto livre obrigatório (companheiro do dropdown).
-    // "Personalizado" (default real da property, confirmado via REST API em
-    // refs/design-acessivel-mobile-link-property.json) É o equivalente mobile
+    // extraído). Dropdown com o catálogo real de nomes (default "Personalizado",
+    // opção sintética adicionada na renderização — ver comentário acima de
+    // A11Y_MOBILE_LINK_COMPONENT_OPTIONS) + campo de texto livre obrigatório
+    // (companheiro do dropdown). "Personalizado" É o equivalente mobile
     // do "Outro (fora do catálogo)" desktop: quando o designer não encontra o
-    // componente real nas 64 opções, deixa "Personalizado" selecionado e usa
+    // componente real nas opções do catálogo, deixa "Personalizado" selecionado e usa
     // o campo de texto livre abaixo pra documentar o NOME REAL do componente
     // não mapeado — sinal formal pra vertical de a11y criar essa spec na lib.
     // Reaproveita a mesma key 'linkComponente'/'linkComponenteNome' de sempre
@@ -1695,7 +1929,7 @@ function _renderA11yElementoMobileFields() {
     // Pré-seleção automática (UX, 2026-09): se o nome do componente DSC já
     // resolvido pelo backend (modal.dataset.dscComponentName, ex: "[dsc] Top
     // App Bar") bater EXATAMENTE — após limpar o prefixo "[dsc]" — com uma
-    // das 64 opções fixas, usa essa opção como default em vez de
+    // das opções fixas do catálogo, usa essa opção como default em vez de
     // "Personalizado". Match exato apenas (case-insensitive/trim, sem
     // aproximação por substring: nomes reais divergem editorialmente da
     // lista curada em vários casos — ex. "[dsc] Chip" vs "Chips", "[dsc]
@@ -1711,7 +1945,16 @@ function _renderA11yElementoMobileFields() {
     const autoMatchedOption = dscNameClean
       ? A11Y_MOBILE_LINK_COMPONENT_OPTIONS.find(name => name.trim().toLowerCase() === dscNameClean) || null
       : null;
-    const linkOptionsHtml = A11Y_MOBILE_LINK_COMPONENT_OPTIONS
+    // "Personalizado" NÃO existe mais como opção real na lib nova (ver
+    // buildMobileLinkOptions em build-a11y-constants.cjs — decisão de
+    // produto: o catálogo real não tem opção de exceção). Mantido aqui como
+    // opção SINTÉTICA, fora do array gerado, só na renderização do <select>:
+    // é o equivalente mobile do "Outro (fora do catálogo)" desktop, preserva
+    // a mecânica de lock/autofill (_syncA11yMobileLinkUrlLockState,
+    // _autofillA11yMobileLinkUrlFromComponentName) e o dado histórico de
+    // specs antigas que salvaram linkComponenteNome:'Personalizado'
+    // (_restoreA11yElementoMobileToggles) sem exigir tocar nesses pontos.
+    const linkOptionsHtml = [A11Y_MOBILE_LINK_COMPONENT_OPTIONS, ['Personalizado']].flat()
       .map(name => {
         const isSelected = autoMatchedOption ? name === autoMatchedOption : name === 'Personalizado';
         return `<option value="${escapeHtml(name)}"${isSelected ? ' selected' : ''}>${escapeHtml(name)}</option>`;
@@ -1726,6 +1969,12 @@ function _renderA11yElementoMobileFields() {
         <select id="a11y-el-mobile-link-select"
           class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-dsc-small px-2.5 py-dsc-nano text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all">
           ${linkOptionsHtml}
+        </select>
+      </div>
+      <div id="a11y-el-mobile-screen-reader-variant-wrap" class="hidden">
+        <label for="a11y-el-mobile-screen-reader-variant-select" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Leitor de Tela</label>
+        <select id="a11y-el-mobile-screen-reader-variant-select"
+          class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-dsc-small px-2.5 py-dsc-nano text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-cyan-100 transition-all">
         </select>
       </div>
       <div>
@@ -1751,7 +2000,27 @@ function _renderA11yElementoMobileFields() {
     // então não sobrescreve valores salvos. O listener também reavalia o
     // lock (_syncA11yMobileLinkUrlLockState) a cada troca manual do select.
     const linkSelectEl = linkRow.querySelector('#a11y-el-mobile-link-select');
-    if (linkSelectEl) linkSelectEl.addEventListener('change', _autofillA11yMobileLinkUrlFromComponentName);
+    if (linkSelectEl) {
+      linkSelectEl.addEventListener('change', _autofillA11yMobileLinkUrlFromComponentName);
+      linkSelectEl.addEventListener('change', () => {
+        // Troca de componente sempre reconstrói o dropdown "Leitor de Tela"
+        // do zero (as opções pertencem a outro componente, o valor anterior
+        // não faz mais sentido) — default para a PRIMEIRA sub-variante real
+        // da lib (nenhum <option> marcado explicitamente "selected", o
+        // <select> nativo assume o primeiro item), mesmo padrão já usado
+        // pelos <select> de variante secundária do catálogo desktop
+        // (_renderA11yElementoVariants: só marca "selected" quando bate
+        // com um defaultValue conhecido; component sets deep-scan não têm
+        // "default" declarado entre as sub-variantes de Leitor de Tela,
+        // então a 1ª da lista real é o default mais conservador).
+        _updateA11yMobileScreenReaderVariantOptions();
+        _updateA11yMobileNomeAcessivelVisibility();
+      });
+    }
+    const screenReaderSelectEl = linkRow.querySelector('#a11y-el-mobile-screen-reader-variant-select');
+    if (screenReaderSelectEl) {
+      screenReaderSelectEl.addEventListener('change', _updateA11yMobileNomeAcessivelVisibility);
+    }
 
     // Se a pré-seleção automática encontrou match, preenche a URL de bônus
     // já nesta primeira renderização (equivalente a disparar o 'change' que
@@ -1759,10 +2028,87 @@ function _renderA11yElementoMobileFields() {
     // restauração de dados salvos (_restoreA11yElementoMobileToggles, ver
     // openA11yModal/editA11ySpec) roda DEPOIS, sobrescreve select/URL com os
     // valores da spec original e reaplica o lock por conta própria.
+    // Constrói o dropdown "Leitor de Tela" (oculto se o componente inicial
+    // não tiver sub-variantes reais) já na primeira renderização, ANTES de
+    // avaliar a visibilidade de "Nome Acessível" (que agora depende da
+    // combinação componente+sub-variante, ver comentário abaixo).
+    _updateA11yMobileScreenReaderVariantOptions();
     if (autoMatchedOption) _autofillA11yMobileLinkUrlFromComponentName();
     else _syncA11yMobileLinkUrlLockState();
+    _updateA11yMobileNomeAcessivelVisibility();
   }
 }
+
+// Reconstrói as opções do dropdown "Leitor de Tela" (#a11y-el-mobile-screen-
+// reader-variant-select) a partir do componente atualmente selecionado em
+// #a11y-el-mobile-link-select, usando A11Y_MOBILE_SCREEN_READER_VARIANTS
+// (dado real, ver comentário na declaração). Quando o componente não tem
+// sub-variantes (chave ausente no mapa — maioria dos casos, "folha
+// simples"), esconde o wrap inteiro e limpa as opções — comportamento
+// idêntico ao que existia antes deste dropdown existir. Quando tem, mostra o
+// wrap e preenche <option> por sub-variante real; nenhuma option leva
+// "selected" explícito — o <select> nativo assume a primeira da lista como
+// default (mesmo padrão conservador de _renderA11yElementoVariants quando
+// não há defaultValue conhecido). Chamada na renderização inicial e a cada
+// 'change' de #a11y-el-mobile-link-select; _restoreA11yElementoMobileToggles
+// (modo edição) roda esta função primeiro e só DEPOIS aplica o valor salvo
+// (sub.leitorDeTela), pra não perder a seleção real ao reconstruir a lista.
+function _updateA11yMobileScreenReaderVariantOptions() {
+  const linkSelect = document.getElementById('a11y-el-mobile-link-select');
+  const wrap = document.getElementById('a11y-el-mobile-screen-reader-variant-wrap');
+  const select = document.getElementById('a11y-el-mobile-screen-reader-variant-select');
+  if (!linkSelect || !wrap || !select) return;
+
+  const entry = A11Y_MOBILE_SCREEN_READER_VARIANTS[linkSelect.value];
+  const variants = (entry && Array.isArray(entry.variants)) ? entry.variants : [];
+  wrap.classList.toggle('hidden', variants.length === 0);
+  select.innerHTML = variants
+    .map(v => `<option value="${escapeHtml(v.name)}">${escapeHtml(v.name)}</option>`)
+    .join('');
+}
+window._updateA11yMobileScreenReaderVariantOptions = _updateA11yMobileScreenReaderVariantOptions;
+
+// Mostra/esconde a linha informativa "Nome Acessível" (ver render acima)
+// conforme a COMBINAÇÃO componente (#a11y-el-mobile-link-select) + sub-
+// variante de Leitor de Tela (#a11y-el-mobile-screen-reader-variant-select,
+// quando aplicável) — decisão de produto 2026-09-17, substitui o critério
+// anterior "existe em qualquer sub-variante" (que ficava em
+// A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL, mantida como está pra resolver
+// a lista de opções do <select> "Componente do DSC" independentemente desta
+// função). Dois caminhos:
+//   1. Componente TEM sub-variantes reais (chave presente em
+//      A11Y_MOBILE_SCREEN_READER_VARIANTS): a visibilidade depende só do
+//      hasNomeAcessivel da sub-variante ATUALMENTE selecionada — ignora
+//      A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL nesse caso (seria menos
+//      preciso, já temos o dado exato aqui). Sub-variante ainda não
+//      populada (select.value vazio, ex. innerHTML acabou de ser limpo)
+//      conta como "sem Nome Acessível" — nunca mostra a linha por engano
+//      antes do <select> nativo assumir a primeira option.
+//   2. Componente NÃO tem sub-variantes (chave ausente — "folha simples"):
+//      comportamento antigo inalterado, critério único
+//      A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL.includes(componente).
+// Chamada na renderização inicial, a cada 'change' de qualquer um dos dois
+// selects, e por _restoreA11yElementoMobileToggles (modo edição) depois de
+// restaurar linkComponenteNome/leitorDeTela — sempre reavalia a partir do
+// valor ATUAL dos selects, nunca guarda estado próprio.
+function _updateA11yMobileNomeAcessivelVisibility() {
+  const select = document.getElementById('a11y-el-mobile-link-select');
+  const row = document.getElementById('a11y-el-mobile-nome-acessivel-row');
+  if (!select || !row) return;
+
+  const srvEntry = A11Y_MOBILE_SCREEN_READER_VARIANTS[select.value];
+  let has;
+  if (srvEntry && Array.isArray(srvEntry.variants) && srvEntry.variants.length > 0) {
+    const variantSelect = document.getElementById('a11y-el-mobile-screen-reader-variant-select');
+    const currentVariantName = variantSelect ? variantSelect.value : '';
+    const activeVariant = srvEntry.variants.find(v => v.name === currentVariantName);
+    has = !!(activeVariant && activeVariant.hasNomeAcessivel);
+  } else {
+    has = A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL.includes(select.value);
+  }
+  row.classList.toggle('hidden', !has);
+}
+window._updateA11yMobileNomeAcessivelVisibility = _updateA11yMobileNomeAcessivelVisibility;
 
 // Lê os toggles mobile ligados com texto preenchido de volta em
 // properties[], mais o campo de Descrição livre (variante "texto
@@ -1798,6 +2144,18 @@ function _collectA11yElementoMobileToggleProperties() {
     result.push({ key: 'linkComponente', label: A11Y_TOGGLE_LABELS.linkComponente, value: linkUrl.value.trim() });
   }
 
+  // "Leitor de Tela" (sub-variante, decisão de produto 2026-09-17) — só
+  // coletado quando o wrap está visível (componente selecionado tem
+  // sub-variantes reais em A11Y_MOBILE_SCREEN_READER_VARIANTS, ver
+  // _updateA11yMobileScreenReaderVariantOptions). Mesmo padrão de
+  // linkComponenteNome acima: persistido em properties[] (aparece na spec
+  // renderizada) pra registrar QUAL sub-variante foi documentada.
+  const screenReaderWrap = document.getElementById('a11y-el-mobile-screen-reader-variant-wrap');
+  const screenReaderSelect = document.getElementById('a11y-el-mobile-screen-reader-variant-select');
+  if (screenReaderWrap && !screenReaderWrap.classList.contains('hidden') && screenReaderSelect && screenReaderSelect.value) {
+    result.push({ key: 'leitorDeTela', label: 'Leitor de Tela', value: screenReaderSelect.value });
+  }
+
   return result;
 }
 
@@ -1811,8 +2169,22 @@ function _restoreA11yElementoMobileToggles(props) {
   const list = document.getElementById('a11y-el-mobile-toggles-list');
   if (!list) return;
   const mobileToggleKeys = new Set(A11Y_MOBILE_ONLY_TOGGLES.map(t => t.key).concat(['observacoes']));
+  // "Leitor de Tela" (sub-variante) precisa ser aplicado DEPOIS que
+  // linkComponenteNome já restaurou o componente e o dropdown novo já foi
+  // reconstruído com as opções REAIS daquele componente (ver
+  // _updateA11yMobileScreenReaderVariantOptions) — não dá pra confiar na
+  // ordem em que 'linkComponenteNome'/'leitorDeTela' aparecem dentro de
+  // props (array reflete a ordem de coleta no momento em que a spec foi
+  // salva, não uma ordem garantida). Guarda o valor bruto aqui e só atribui
+  // ao <select> no fim da função, já com as options certas no lugar. Specs
+  // ANTIGAS (criadas antes deste campo existir) simplesmente não têm essa
+  // key em props — leitorDeTelaValue fica null, _updateA11yMobileScreenReader
+  // VariantOptions já terá marcado a 1ª option como default (fallback
+  // gracioso, sem erro).
+  let leitorDeTelaValue = null;
   (props || []).forEach(p => {
     if (!p) return;
+    if (p.key === 'leitorDeTela') { leitorDeTelaValue = p.value || null; return; }
     // Migração: specs mobile ANTIGAS podiam ter properties['nomeAcessivel']
     // preenchido pelo toggle "Nome Acessível" removido em 2026-09 (duplicava
     // o campo "Label (accessibilityLabel)" sempre visível no topo do
@@ -1853,11 +2225,22 @@ function _restoreA11yElementoMobileToggles(props) {
       if (linkSelect) linkSelect.value = p.value || 'Personalizado';
     }
   });
+  // Reconstrói o dropdown "Leitor de Tela" com as opções do componente já
+  // restaurado (linkComponenteNome acima) e SÓ ENTÃO aplica o valor salvo —
+  // se leitorDeTelaValue for null (spec antiga sem o campo, ou componente
+  // sem sub-variantes) o <select> nativo mantém a 1ª option como default,
+  // sem lançar erro (fallback gracioso, dado histórico preservado).
+  _updateA11yMobileScreenReaderVariantOptions();
+  if (leitorDeTelaValue) {
+    const screenReaderSelect = document.getElementById('a11y-el-mobile-screen-reader-variant-select');
+    if (screenReaderSelect) screenReaderSelect.value = leitorDeTelaValue;
+  }
   // Atribuição direta de .value acima não dispara 'change' — reaplica o
   // lock aqui pra refletir o estado final restaurado (select.value pode ter
   // sido setado antes ou depois de linkUrl.value neste forEach, dependendo
   // da ordem em que a spec salvou 'linkComponenteNome'/'linkComponente').
   _syncA11yMobileLinkUrlLockState();
+  _updateA11yMobileNomeAcessivelVisibility();
 }
 
 // Menu customizado do "Componente" — o <select> nativo escondido continua
@@ -2213,6 +2596,22 @@ function prefillA11yComponentName(name, mainText, dscComponentName, targetNodeId
   // sem passar por aqui.
   const targetNodeNameEl = document.getElementById('a11y-modal-target-node-name');
   if (targetNodeNameEl && name) targetNodeNameEl.textContent = name;
+  // Fixa o alvo real da spec NO MOMENTO em que "Camada no canvas" é exibido
+  // (bug real reportado 2026-09-17: campo mostrava "Top App Bar" mas a spec
+  // era criada sobre "Actions", um node diferente). Causa raiz: o fluxo
+  // manual nunca gravava modal.dataset.pendingTargetNodeId — só o fluxo
+  // automático/wizard fazia isso (ver _resolveA11yFormPresetFromItem). Sem
+  // essa gravação, confirmA11ySpec (mais abaixo) não tinha targetNodeId fixo
+  // pra usar, e create-unified-spec (backend) caía no fallback de ler
+  // figma.currentPage.selection[0] NO INSTANTE do "Aplicar" — se a seleção
+  // do canvas mudasse entre abrir o modal e confirmar (drill-in, clique
+  // acidental, foco em outro elemento), a spec era criada sobre um node
+  // diferente do que o formulário exibia, sem qualquer aviso. Nunca
+  // sobrescreve em modo edição (editingSpecId já usa editingSpec.targetNodeId,
+  // fixado desde a criação original) nem quando falta id (sem seleção real).
+  if (targetNodeId && !modal.dataset.editingSpecId) {
+    modal.dataset.pendingTargetNodeId = targetNodeId;
+  }
   if (dscComponentName) {
     _renderA11yModalDscComponentName('a11y-modal-dsc-component-name', dscComponentName, modal.dataset.a11yOrigin || 'web');
   }
@@ -2485,19 +2884,34 @@ function updateA11yTituloFields() {
   if (notaWrap) notaWrap.classList.toggle('hidden', !isMobile);
   if (notaEl) notaEl.textContent = (isMobile && entry && entry.notaCodigo) || '';
 
-  // Toggle real do component set "niveis de titulo" (só "observacoes").
-  // Modo mobile ("H", sem nível) não tem componente real catalogado, então
-  // não faz sentido mostrar o campo — cai sempre no card procedural.
-  _renderA11yFixedToggles('a11y-titulo-toggles-wrap', 'a11y-titulo-toggles-list', isMobile ? null : 'niveis de titulo');
+  // 2026-09-17 (pedido explícito do usuário): o formulário de Título mostra
+  // só Nível + Modo de Marcação + Lado da Guia — o accordion "Campos do
+  // componente" (toggle "Observações", único campo realmente digitável desta
+  // categoria) fica sempre oculto pra specs NOVAS, com shortName forçado a
+  // null (nunca renderiza a lista, então nunca há checkbox pra marcar).
+  // Descrição/Nota de Código continuam sendo escritas nos nós escondidos
+  // acima (#a11y-fixed-descricao/#a11y-fixed-nota) porque nunca foram
+  // digitáveis — são texto fixo do catálogo (A11Y_CONTENT.titulo), que
+  // confirmA11ySpec ainda lê de lá pra montar properties.descricao/
+  // notaCodigo sem mudança de comportamento. Specs de Título já existentes
+  // com Observações salvas de sessões anteriores continuam sendo
+  // restauradas em memória por _restoreA11yFixedToggles (ver
+  // _prefillA11ySpecForEdit) — só não ficam mais visíveis/editáveis neste
+  // formulário simplificado; o dado não é apagado ao reabrir/reeditar a
+  // spec, seguindo intacto no properties[] até uma nova gravação.
+  _renderA11yFixedToggles('a11y-titulo-toggles-wrap', 'a11y-titulo-toggles-list', null);
 }
 window.updateA11yTituloFields = updateA11yTituloFields;
 
 // ── Elemento Decorativo ──────────────────────────────────────────────────
 // Sub-select entre "Gerais" e "Imagem" — mesma Descrição, Nota de Código
 // diferente (alt="" em HTML pra imagem, anotação genérica pra gerais). Cada
-// subtipo abre um component set PRÓPRIO com toggles diferentes.
-const _A11Y_DECORATIVO_SHORTNAME = { gerais: 'ED gerais', imagem: 'ED imagem' };
-
+// subtipo abria um component set PRÓPRIO com toggles diferentes (mapeamento
+// que existia aqui em `_A11Y_DECORATIVO_SHORTNAME`), mas desde 2026-09-17 o
+// accordion "Campos do componente" fica sempre oculto pra specs NOVAS (ver
+// comentário em updateA11yDecorativoFields) — o dicionário de shortName
+// ficou sem uso e foi removido; specs antigas continuam restauradas por
+// _restoreA11yFixedToggles, que lê direto de `props`, sem depender dele.
 function updateA11yDecorativoFields() {
   const select = document.getElementById('a11y-decorativo-subtipo-select');
   if (!select) return;
@@ -2507,7 +2921,19 @@ function updateA11yDecorativoFields() {
   if (descEl) descEl.textContent = (entry && entry.descricao) || '';
   if (notaEl) notaEl.textContent = (entry && entry.notasCodigo) || '';
 
-  _renderA11yFixedToggles('a11y-decorativo-toggles-wrap', 'a11y-decorativo-toggles-list', _A11Y_DECORATIVO_SHORTNAME[select.value] || null);
+  // 2026-09-17 (pedido explícito do usuário, complementar à simplificação de
+  // Título): o formulário de Elemento Decorativo mostra só Subtipo + card
+  // fixo de Descrição/Nota de Código + Modo de Marcação (Contorno/Linha,
+  // nenhuma opção removida) + Lado da Guia. O accordion "Campos do
+  // componente" (toggles "Observações"/"Notas de Código") fica sempre
+  // oculto pra specs NOVAS, com shortName forçado a null (mesmo padrão de
+  // updateA11yTituloFields) — nunca renderiza a lista, então nunca há
+  // checkbox pra marcar. Specs de Elemento Decorativo já existentes com
+  // esses campos preenchidos de sessões anteriores continuam restauradas em
+  // memória por _restoreA11yFixedToggles (ver _prefillA11ySpecForEdit) e
+  // persistidas normalmente; só não ficam mais visíveis/editáveis neste
+  // formulário simplificado — nenhum dado é apagado ao reabrir/reeditar.
+  _renderA11yFixedToggles('a11y-decorativo-toggles-wrap', 'a11y-decorativo-toggles-list', null);
 }
 window.updateA11yDecorativoFields = updateA11yDecorativoFields;
 
@@ -2712,9 +3138,9 @@ function confirmA11ySpec() {
   let a11ySubtype = null;
 
   if (category === 'elemento') {
-    const tag = g('a11y-el-tag-input').toUpperCase();
+    const tag = g('a11y-el-tag-input');
     if (!validateA11yTagInput()) {
-      showToast('Tag inválida. Use o formato A, B, A1, A1.1...');
+      showToast('Tag inválida. Use o formato 1, 2, 1.1, 1.2...');
       return;
     }
     const select = document.getElementById('a11y-el-componente-select');
@@ -2728,7 +3154,12 @@ function confirmA11ySpec() {
     // O branch `if (isOutro)` abaixo continua existindo só pra edição de
     // specs mobile ANTIGAS que já nasceram com isOutro=true (antes desta
     // correção) — não é mais alcançável a partir do formulário mobile atual.
-    const isOutro = !isMobile && select && select.value === 'outro';
+    // "Imagem" (2026-09-17): reflete o radio a11y-el-variante (property REAL
+    // "variante" do component set base) — quando marcado, o <select> de 15
+    // componentes fica escondido/irrelevante e o shortName real a usar é
+    // sempre 'imagem', independente do valor residual do <select>.
+    const isImagem = !isMobile && _getA11yElementoVariante() === 'imagem';
+    const isOutro = !isMobile && !isImagem && select && select.value === 'outro';
     const label = g('a11y-el-label');
     // Sub-variante mobile ('componente' | 'link' | 'texto alternativo') — só
     // relevante/lida quando a origem é mobile; ausente em specs web (ver
@@ -2736,21 +3167,20 @@ function confirmA11ySpec() {
     const mobileVariant = isMobile ? _getA11yElementoMobileVariant() : null;
 
     // Validações obrigatórias exclusivas de cada sub-variante mobile — a doc
-    // da vertical exige esses campos antes de confirmar a spec.
-    if (isMobile && mobileVariant === A11Y_ELEMENTO_MOBILE_VARIANTS.componente) {
-      const linkUrl = document.getElementById('a11y-el-mobile-link-url');
-      if (!linkUrl || !linkUrl.value.trim()) {
-        showToast('Informe o Link do Componente.');
-        return;
-      }
-    }
-    if (isMobile && mobileVariant === A11Y_ELEMENTO_MOBILE_VARIANTS.textoAlternativo) {
-      const altDescricao = document.getElementById('a11y-el-mobile-alt-descricao');
-      if (!altDescricao || !altDescricao.value.trim()) {
-        showToast('Informe a Descrição (texto alternativo).');
-        return;
-      }
-    }
+    // da vertical exigia esses campos antes de confirmar a spec.
+    // 2026-09-17: removidas (pedido explícito do usuário) porque "Variante
+    // (mobile)"/"Campos exclusivos mobile" (Link do Componente/Descrição
+    // alternativa inclusos) ficaram sempre ocultos pra specs NOVAS (ver
+    // _renderA11yElementoMobileFields) — o radio de variante permanece
+    // travado em "componente" (default real da property) porque o designer
+    // não tem mais como trocá-lo nesta tela simplificada, então
+    // mobileVariant nunca chega aqui como "link"/"texto alternativo" pra uma
+    // spec nova; manter a validação bloquearia a confirmação de todo mundo,
+    // já que o campo exigido nem aparece mais pra ser preenchido. Specs
+    // mobile ANTIGAS com variante "link"/"texto alternativo" e esses campos
+    // já preenchidos continuam sendo restauradas e salvas normalmente em modo
+    // edição (_restoreA11yElementoMobileToggles), só não passam mais por
+    // validação obrigatória ao reconfirmar.
 
     if (isOutro) {
       const componenteOutro = g('a11y-el-componente-outro');
@@ -2819,8 +3249,11 @@ function confirmA11ySpec() {
       // Notas de Código, conforme disponíveis naquele componente específico).
       // Só entram os que o designer ligou E preencheu; o backend usa
       // properties[].key pra saber qual property ativar via setProperties na
-      // instância aninhada certa.
-      const built = _buildA11yElementoPayload(tag, select.value, label, {
+      // instância aninhada certa. componenteKey é 'imagem' quando o radio
+      // "Tipo de elemento" está em Imagem (select.value fica escondido/
+      // residual nesse modo, nunca a fonte de verdade — ver isImagem acima).
+      const componenteKey = isImagem ? 'imagem' : select.value;
+      const built = _buildA11yElementoPayload(tag, componenteKey, label, {
         tipo,
         toggleProperties: _collectA11yElementoToggleProperties(),
       });
@@ -2869,9 +3302,25 @@ function confirmA11ySpec() {
       const notaEl = document.getElementById('a11y-fixed-nota');
       if (notaEl && notaEl.textContent) properties.push({ key: 'notaCodigo', label: 'Nota de Código', value: notaEl.textContent });
     }
-    // Toggle real "observacoes" do set "niveis de titulo" — não aparece no
-    // modo mobile (updateA11yTituloFields já esvazia a lista nesse caso).
-    properties.push(..._collectA11yFixedToggleProperties('a11y-titulo-toggles-list'));
+    // Toggle real "observacoes" do set "niveis de titulo" — formulário
+    // simplificado (2026-09-17, pedido explícito do usuário) escondeu o
+    // accordion "Campos do componente" pra sempre, então
+    // _collectA11yFixedToggleProperties nunca mais encontra o checkbox (a
+    // lista nem é renderizada, ver updateA11yTituloFields) e retornaria
+    // sempre []. Sem este fallback, reabrir e salvar de novo uma spec de
+    // Título ANTIGA que já tinha Observações preenchidas apagaria esse dado
+    // silenciosamente. Preserva o valor salvo anteriormente (se houver)
+    // quando editando; specs novas simplesmente não têm essa property.
+    const collectedToggles = _collectA11yFixedToggleProperties('a11y-titulo-toggles-list');
+    if (collectedToggles.length) {
+      properties.push(...collectedToggles);
+    } else if (editingOriginalIndex > -1) {
+      const previousSpec = a11ySpecs[editingOriginalIndex];
+      const previousObservacoes = previousSpec && Array.isArray(previousSpec.properties)
+        ? previousSpec.properties.find(p => p && p.key === 'observacoes')
+        : null;
+      if (previousObservacoes) properties.push(previousObservacoes);
+    }
     a11ySubtype = { nivel };
   } else if (category === 'decorativo') {
     letter = meta.badge;
@@ -3777,7 +4226,26 @@ function _a11yWorkspaceTabLeitorDeTela(area, areaSpecs) {
   const hasManualSpecs = areaSpecs.length > 0;
   return `
     <div class="space-y-2 flex flex-col flex-1">
-      <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-relaxed">Crie, edite ou remova especificações desta tela, por categoria.</p>
+      <!-- Botão de instruções (2026-09-16-c, pedido do usuário: "clicar no
+           campos de instruções da documentação do leitor de tela (inclusive
+           está sem o botão)") — mesmo padrão visual/estrutural do botão
+           "Instruções sobre esta documentação" já existente em
+           _a11yWorkspaceTabTabulacao/_a11yWorkspaceTabSwipe. Chama
+           openA11yInstructionManually('leitorTela') (tab-order.js) — NUNCA
+           openA11yCategoryPickerModal/openA11yInstructionThenStart: esta
+           reabertura é puramente informativa e não pode setar
+           window._pendingA11yInstructionConfirm, senão "Entendi, começar
+           seleção" reiniciaria o picker de categoria/a réplica de trabalho
+           sem o designer ter pedido isso. Passou a existir porque a modal
+           de instrução deixou de abrir sozinha em toda "+ Nova spec"
+           (ver openA11yCategoryPickerModal acima, flag
+           hacData.a11yLeitorInstructionSeen) — sem este botão, depois da
+           1ª vez não haveria como revê-la. -->
+      <button type="button" onclick="openA11yInstructionManually('leitorTela')"
+        class="w-full flex items-center justify-center gap-1.5 h-7 rounded-dsc-small text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-500 dark:text-dark-muted bg-slate-50 dark:bg-dark-surface hover:bg-slate-100 dark:hover:bg-dark-line/40 active:scale-[0.99] transition-all">
+        <i data-lucide="circle-help" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i>
+        Instruções sobre esta documentação
+      </button>
       <!-- Botão primário no mesmo padrão visual de "Iniciar Ordem de
            Tabulação"/"Iniciar trilha de swipe" (2026-09-04-x, pedido do
            usuário) — antes era um pill pequeno ao lado do texto
@@ -5660,14 +6128,31 @@ function _collectAreaAllSpecIds(areaId) {
     .map(s => s.id);
 }
 
-// Próxima letra livre DENTRO DA ÁREA de destino. Cada área tem seu próprio
-// namespace de letras — sem isso o lote poderia começar em letras tipo "K"
-// mesmo numa área nova, sem nenhuma relação com o que já existe ali.
-// Reaproveitada também por openA11yModal (equivalente do
-// _suggestNextSpecTag do Handex, que olhava createdSpecs/a11ySpecs por
-// frame — aqui não há frame, então a próxima tag é sempre por área).
-function _suggestNextA11yTagForArea(areaId) {
+// Próxima tag livre DENTRO DA ÁREA de destino. Cada área tem seu próprio
+// namespace de tags — sem isso o lote poderia começar em "K" (ou "5") mesmo
+// numa área nova, sem nenhuma relação com o que já existe ali. Reaproveitada
+// também por openA11yModal (equivalente do _suggestNextSpecTag do Handex,
+// que olhava createdSpecs/a11ySpecs por frame — aqui não há frame, então a
+// próxima tag é sempre por área).
+//
+// "elemento" (Elementos e Imagens) sugere NÚMERO (1, 2, 3...) desde
+// 2026-09-18, pedido explícito do usuário: "pra não conflitar com o nível
+// de título" (marcador de Título usa letra "H"/"H1"-"H6"). "estrutura" e
+// "informacoes" continuam sugerindo LETRA (A, B, C...) — mantidas como
+// estavam, fora deste pedido.
+function _suggestNextA11yTagForArea(areaId, category) {
   const specs = (a11ySpecs || []).filter(s => s && s.a11yAreaId === areaId);
+  if (category === 'elemento') {
+    const usedBaseNumbers = new Set();
+    specs.forEach(s => {
+      const raw = String((s && s.letter) || '').trim();
+      const match = raw.match(/^(\d+)/);
+      if (match) usedBaseNumbers.add(Number(match[1]));
+    });
+    let n = 1;
+    while (usedBaseNumbers.has(n)) n++;
+    return String(n);
+  }
   const usedBaseLetters = new Set();
   specs.forEach(s => {
     const raw = String((s && s.letter) || '').trim().toUpperCase();
@@ -6241,7 +6726,7 @@ function _prefillA11ySpecForEdit(spec) {
   };
 
   const tagInputId = A11Y_TAG_INPUT_ID[category];
-  if (tagInputId) setVal(tagInputId, spec.letter || 'A');
+  if (tagInputId) setVal(tagInputId, spec.letter || (category === 'elemento' ? '1' : 'A'));
 
   if (category === 'elemento') {
     const modal = document.getElementById('a11y-spec-modal');
@@ -6253,10 +6738,21 @@ function _prefillA11ySpecForEdit(spec) {
     // exclusão mútua existia) simplesmente ignoram esse campo aqui, sem
     // quebrar o resto do formulário.
     if (!isMobile) {
+      // "Imagem" (2026-09-17): sub.componente === 'imagem' continua sendo o
+      // MESMO valor persistido de sempre (formato de dado inalterado —
+      // specs antigas e novas usam a mesma chave) — só a UI que consulta esse
+      // valor mudou: 'imagem' agora marca o radio a11y-el-variante em vez de
+      // uma opção do <select> (que não tem mais essa opção, ver
+      // reestruturação em modals.html). Precisa vir ANTES de
+      // updateA11yElementoFields(), chamada logo abaixo, pra ela já enxergar
+      // o radio certo ao decidir isImagem.
+      const isImagemSpec = !sub.isOutro && sub.componente === 'imagem';
+      const varianteRadio = document.querySelector(`input[name="a11y-el-variante"][value="${isImagemSpec ? 'imagem' : 'componente'}"]`);
+      if (varianteRadio) varianteRadio.checked = true;
       if (sub.isOutro) {
         if (select) select.value = 'outro';
         setVal('a11y-el-componente-outro', getProp('componente'));
-      } else if (sub.componente && select) {
+      } else if (sub.componente && select && !isImagemSpec) {
         select.value = sub.componente;
       }
     } else if (sub.isOutro) {

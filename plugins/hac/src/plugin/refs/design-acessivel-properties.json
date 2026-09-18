@@ -4,7 +4,7 @@
     "slug": "design-acessivel",
     "libraryName": "Design Acessível (desktop)",
     "fileKey": "Wy0IhXRVZMSOOr8E609UqI",
-    "generatedAt": "2026-09-15T13:32:23.288Z",
+    "generatedAt": "2026-09-17T23:59:14.479Z",
     "generator": "fetch-component-properties.cjs",
     "deepScan": true,
     "discoverySignature": "a37a068e829c9d746e1fc59649e89dbd8ad063f975dfaf84a2fd312b05899f3d",
@@ -29,6 +29,8 @@
       "components[].properties[].variantOptions": "presente só quando type === \"VARIANT\" — lista de valores aceitos",
       "components[].properties[].preferredValues": "presente só quando type === \"INSTANCE_SWAP\" — lista de {type, key} de componentes preferidos",
       "components[].propertiesByType": "mesmos dados de properties, separados por type e reduzidos a nomes",
+      "components[].perVariantProperties": "array — presente só quando o set segue o padrão \"instância aninhada por variante\" (wrapper com property VARIANT tipo \"Componente\" + 1 INSTANCE filha por variante carregando as componentProperties reais, ex: \".[hac mob/web base] Elementos e imagens\"). Cada item: {variantName, variantId, nestedInstanceName, nestedInstanceId, nestedComponentId, properties[], toggles[], screenReaderVariants?}. properties[].value é o valor ATUAL da instância (não uma definição/default, já que instâncias não têm componentPropertyDefinitions). toggles é o mesmo dado filtrado a BOOLEAN com {name, value:boolean}, atalho para UI — CUIDADO: toggles[].value reflete só o default herdado do SET, não se a property tem uso real na sub-variante atualmente configurada (ver screenReaderVariants). Ausente/[] nos demais sets — não é um campo obrigatório do schema.",
+      "components[].perVariantProperties[].screenReaderVariants": "presente só quando --deep-scan está ativo E o nestedComponentId é filho de um SEGUNDO component set oculto com uma property VARIANT de sub-modo (achado real 2026-09-17: ex. \".Button\" com \"Leitor de Tela\"={Baseline,Disabled,Loading}, \".Icon Button\" com \"Propriedade 1\"={Padrão,Variante 2,Variante 3}). componentPropertyDefinitions desse SET-neto é herdado igualmente por TODAS as sub-variantes (por isso toggles[] acima não diferencia) — mas o BINDING REAL de visibilidade de cada property no desenho (componentPropertyReferences) varia por sub-variante e só é resolvível aqui. Schema: {setName, setId, subModeProperty, variants: [{variantName, variantId, activeToggles: string[]}]}. activeToggles lista só os nomes BOOLEAN que têm de fato um nó do desenho vinculado (visible) àquela property NAQUELA sub-variante específica — ex.: Switch tem Nome Acessível na definição do SET mas activeToggles vem [] em Baseline E em Disabled (falso-positivo real do toggles[] acima, já confirmado); Button só tem \"Nome Acessível\" em activeToggles da sub-variante Loading, não em Baseline/Disabled.",
       "warnings": "lista de avisos não fatais — JSON pode estar parcial se não vazio (ver counts.failed)"
     },
     "warnings": []
@@ -73,7 +75,8 @@
           "nivel"
         ],
         "instanceSwaps": []
-      }
+      },
+      "perVariantProperties": []
     },
     {
       "nodeId": "31:482",
@@ -118,7 +121,8 @@
           "tipo"
         ],
         "instanceSwaps": []
-      }
+      },
+      "perVariantProperties": []
     },
     {
       "nodeId": "31:535",
@@ -147,7 +151,175 @@
           "variacao"
         ],
         "instanceSwaps": []
-      }
+      },
+      "perVariantProperties": [
+        {
+          "variantName": "variacao=idiomas",
+          "variantId": "31:538",
+          "nestedInstanceName": "Content",
+          "nestedInstanceId": "31:539",
+          "nestedComponentId": "31:384",
+          "properties": [
+            {
+              "rawKey": "notas#1417:0",
+              "name": "notas",
+              "syncId": "1417:0",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "letter#7500:37",
+              "name": "letter",
+              "syncId": "7500:37",
+              "type": "TEXT",
+              "value": "A"
+            },
+            {
+              "rawKey": "observacoes#7489:0",
+              "name": "observacoes",
+              "syncId": "7489:0",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "tipo",
+              "name": "tipo",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "da pagina"
+            }
+          ],
+          "toggles": [
+            {
+              "name": "notas",
+              "value": true
+            },
+            {
+              "name": "observacoes",
+              "value": true
+            }
+          ],
+          "screenReaderVariants": {
+            "setName": "[NÃO UTILIZAR][a11y base] EE idiomas",
+            "setId": "31:383",
+            "subModeProperty": "tipo",
+            "variants": [
+              {
+                "variantName": "tipo=da pagina",
+                "variantId": "31:384",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=das partes",
+                "variantId": "31:392",
+                "activeToggles": []
+              },
+              {
+                "variantName": "tipo=customizável",
+                "variantId": "31:400",
+                "activeToggles": [
+                  "notas",
+                  "observacoes"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "variantName": "variacao=marco de navegacao",
+          "variantId": "31:540",
+          "nestedInstanceName": "Content",
+          "nestedInstanceId": "31:541",
+          "nestedComponentId": "31:425",
+          "properties": [
+            {
+              "rawKey": "letter#7500:37",
+              "name": "letter",
+              "syncId": "7500:37",
+              "type": "TEXT",
+              "value": "A"
+            },
+            {
+              "rawKey": "observacoes#7489:0",
+              "name": "observacoes",
+              "syncId": "7489:0",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "tipo",
+              "name": "tipo",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "main"
+            }
+          ],
+          "toggles": [
+            {
+              "name": "observacoes",
+              "value": true
+            }
+          ],
+          "screenReaderVariants": {
+            "setName": "[NÃO UTILIZAR][a11y base] EE marco de navegacao",
+            "setId": "31:408",
+            "subModeProperty": "tipo",
+            "variants": [
+              {
+                "variantName": "tipo=header",
+                "variantId": "31:409",
+                "activeToggles": []
+              },
+              {
+                "variantName": "tipo=nav",
+                "variantId": "31:417",
+                "activeToggles": []
+              },
+              {
+                "variantName": "tipo=main",
+                "variantId": "31:425",
+                "activeToggles": []
+              },
+              {
+                "variantName": "tipo=aside",
+                "variantId": "31:433",
+                "activeToggles": []
+              },
+              {
+                "variantName": "tipo=footer",
+                "variantId": "31:441",
+                "activeToggles": []
+              },
+              {
+                "variantName": "tipo=customizável",
+                "variantId": "31:449",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "variantName": "variacao=titulo da pagina",
+          "variantId": "31:542",
+          "nestedInstanceName": "Content",
+          "nestedInstanceId": "31:543",
+          "nestedComponentId": "31:457",
+          "properties": [
+            {
+              "rawKey": "letter#7500:38",
+              "name": "letter",
+              "syncId": "7500:38",
+              "type": "TEXT",
+              "value": "A"
+            }
+          ],
+          "toggles": []
+        }
+      ]
     },
     {
       "nodeId": "31:865",
@@ -209,7 +381,8 @@
           "tipo"
         ],
         "instanceSwaps": []
-      }
+      },
+      "perVariantProperties": []
     },
     {
       "nodeId": "31:598",
@@ -274,7 +447,8 @@
           "tipo"
         ],
         "instanceSwaps": []
-      }
+      },
+      "perVariantProperties": []
     },
     {
       "nodeId": "31:632",
@@ -339,7 +513,8 @@
           "tipo"
         ],
         "instanceSwaps": []
-      }
+      },
+      "perVariantProperties": []
     },
     {
       "nodeId": "31:408",
@@ -389,7 +564,8 @@
           "tipo"
         ],
         "instanceSwaps": []
-      }
+      },
+      "perVariantProperties": []
     },
     {
       "nodeId": "31:233",
@@ -457,7 +633,8 @@
           "tipo"
         ],
         "instanceSwaps": []
-      }
+      },
+      "perVariantProperties": []
     },
     {
       "nodeId": "31:702",
@@ -526,7 +703,8 @@
           "tipo"
         ],
         "instanceSwaps": []
-      }
+      },
+      "perVariantProperties": []
     },
     {
       "nodeId": "31:880",
@@ -589,7 +767,8 @@
           "tipo"
         ],
         "instanceSwaps": []
-      }
+      },
+      "perVariantProperties": []
     },
     {
       "nodeId": "31:850",
@@ -651,7 +830,8 @@
           "tipo"
         ],
         "instanceSwaps": []
-      }
+      },
+      "perVariantProperties": []
     },
     {
       "nodeId": "31:765",
@@ -715,7 +895,8 @@
           "tipo"
         ],
         "instanceSwaps": []
-      }
+      },
+      "perVariantProperties": []
     },
     {
       "nodeId": "31:331",
@@ -763,7 +944,8 @@
           "tipo"
         ],
         "instanceSwaps": []
-      }
+      },
+      "perVariantProperties": []
     },
     {
       "nodeId": "31:383",
@@ -818,7 +1000,8 @@
           "tipo"
         ],
         "instanceSwaps": []
-      }
+      },
+      "perVariantProperties": []
     },
     {
       "nodeId": "31:668",
@@ -883,7 +1066,8 @@
           "tipo"
         ],
         "instanceSwaps": []
-      }
+      },
+      "perVariantProperties": []
     },
     {
       "nodeId": "31:931",
@@ -945,7 +1129,8 @@
           "tipo"
         ],
         "instanceSwaps": []
-      }
+      },
+      "perVariantProperties": []
     },
     {
       "nodeId": "31:364",
@@ -992,7 +1177,8 @@
           "tipo"
         ],
         "instanceSwaps": []
-      }
+      },
+      "perVariantProperties": []
     },
     {
       "nodeId": "31:793",
@@ -1055,7 +1241,8 @@
           "tipo"
         ],
         "instanceSwaps": []
-      }
+      },
+      "perVariantProperties": []
     },
     {
       "nodeId": "31:814",
@@ -1118,7 +1305,8 @@
           "tipo"
         ],
         "instanceSwaps": []
-      }
+      },
+      "perVariantProperties": []
     },
     {
       "nodeId": "31:508",
@@ -1180,7 +1368,8 @@
           "tipo"
         ],
         "instanceSwaps": []
-      }
+      },
+      "perVariantProperties": []
     },
     {
       "nodeId": "31:557",
@@ -1246,7 +1435,8 @@
           "tipo"
         ],
         "instanceSwaps": []
-      }
+      },
+      "perVariantProperties": []
     },
     {
       "nodeId": "31:835",
@@ -1308,7 +1498,8 @@
           "tipo"
         ],
         "instanceSwaps": []
-      }
+      },
+      "perVariantProperties": []
     },
     {
       "nodeId": "31:495",
@@ -1353,7 +1544,8 @@
           "tipo"
         ],
         "instanceSwaps": []
-      }
+      },
+      "perVariantProperties": []
     },
     {
       "nodeId": "31:902",
@@ -1407,7 +1599,1485 @@
           "componente"
         ],
         "instanceSwaps": []
-      }
+      },
+      "perVariantProperties": [
+        {
+          "variantName": "variante=componente, componente=accordion",
+          "variantId": "31:903",
+          "nestedInstanceName": "Accordion",
+          "nestedInstanceId": "31:904",
+          "nestedComponentId": "31:932",
+          "properties": [
+            {
+              "rawKey": "letter#1325:12",
+              "name": "letter",
+              "syncId": "1325:12",
+              "type": "TEXT",
+              "value": "A"
+            },
+            {
+              "rawKey": "observacoes#742:57",
+              "name": "observacoes",
+              "syncId": "742:57",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "notas de codigo#742:54",
+              "name": "notas de codigo",
+              "syncId": "742:54",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "nome acessivel#742:51",
+              "name": "nome acessivel",
+              "syncId": "742:51",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "tipo",
+              "name": "tipo",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "default"
+            }
+          ],
+          "toggles": [
+            {
+              "name": "observacoes",
+              "value": true
+            },
+            {
+              "name": "notas de codigo",
+              "value": true
+            },
+            {
+              "name": "nome acessivel",
+              "value": true
+            }
+          ],
+          "screenReaderVariants": {
+            "setName": "[NÃO UTILIZAR][a11y base] accordion",
+            "setId": "31:931",
+            "subModeProperty": "tipo",
+            "variants": [
+              {
+                "variantName": "tipo=default",
+                "variantId": "31:932",
+                "activeToggles": []
+              },
+              {
+                "variantName": "tipo=customizável",
+                "variantId": "31:939",
+                "activeToggles": [
+                  "nome acessivel",
+                  "notas de codigo",
+                  "observacoes"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "variantName": "variante=componente, componente=breadcrumb",
+          "variantId": "31:905",
+          "nestedInstanceName": "Breadcrumb",
+          "nestedInstanceId": "31:906",
+          "nestedComponentId": "31:599",
+          "properties": [
+            {
+              "rawKey": "letter#1303:0",
+              "name": "letter",
+              "syncId": "1303:0",
+              "type": "TEXT",
+              "value": "A"
+            },
+            {
+              "rawKey": "notas#1325:25",
+              "name": "notas",
+              "syncId": "1325:25",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "nome acessível#741:15",
+              "name": "nome acessível",
+              "syncId": "741:15",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "observacao#1325:19",
+              "name": "observacao",
+              "syncId": "1325:19",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "tipo",
+              "name": "tipo",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "link inicio"
+            }
+          ],
+          "toggles": [
+            {
+              "name": "notas",
+              "value": true
+            },
+            {
+              "name": "nome acessível",
+              "value": true
+            },
+            {
+              "name": "observacao",
+              "value": true
+            }
+          ],
+          "screenReaderVariants": {
+            "setName": "[NÃO UTILIZAR][a11y base] breadcrumb",
+            "setId": "31:598",
+            "subModeProperty": "tipo",
+            "variants": [
+              {
+                "variantName": "tipo=link inicio",
+                "variantId": "31:599",
+                "activeToggles": [
+                  "observacao"
+                ]
+              },
+              {
+                "variantName": "tipo=link secundario",
+                "variantId": "31:605",
+                "activeToggles": [
+                  "observacao"
+                ]
+              },
+              {
+                "variantName": "tipo=texto truncado",
+                "variantId": "31:611",
+                "activeToggles": [
+                  "observacao"
+                ]
+              },
+              {
+                "variantName": "tipo=pagina atual",
+                "variantId": "31:618",
+                "activeToggles": []
+              },
+              {
+                "variantName": "tipo=customizável",
+                "variantId": "31:625",
+                "activeToggles": [
+                  "nome acessível",
+                  "observacao",
+                  "notas"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "variantName": "variante=componente, componente=button",
+          "variantId": "31:907",
+          "nestedInstanceName": "Button",
+          "nestedInstanceId": "31:908",
+          "nestedComponentId": "31:234",
+          "properties": [
+            {
+              "rawKey": "notas#7489:18",
+              "name": "notas",
+              "syncId": "7489:18",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "letter#7489:9",
+              "name": "letter",
+              "syncId": "7489:9",
+              "type": "TEXT",
+              "value": "A"
+            },
+            {
+              "rawKey": "nome acessivel#742:67",
+              "name": "nome acessivel",
+              "syncId": "742:67",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "observacoes#7489:0",
+              "name": "observacoes",
+              "syncId": "7489:0",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "tipo",
+              "name": "tipo",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "default"
+            }
+          ],
+          "toggles": [
+            {
+              "name": "notas",
+              "value": true
+            },
+            {
+              "name": "nome acessivel",
+              "value": true
+            },
+            {
+              "name": "observacoes",
+              "value": true
+            }
+          ],
+          "screenReaderVariants": {
+            "setName": "[NÃO UTILIZAR][a11y base] button",
+            "setId": "31:233",
+            "subModeProperty": "tipo",
+            "variants": [
+              {
+                "variantName": "tipo=default",
+                "variantId": "31:234",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=desabilitado",
+                "variantId": "31:240",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=com expansao",
+                "variantId": "31:247",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=agrupado",
+                "variantId": "31:254",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=de icone",
+                "variantId": "31:260",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=de icone com expansao",
+                "variantId": "31:267",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=com nome acessivel",
+                "variantId": "31:274",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=customizável",
+                "variantId": "31:281",
+                "activeToggles": [
+                  "nome acessivel",
+                  "notas"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "variantName": "variante=componente, componente=checkbox",
+          "variantId": "31:909",
+          "nestedInstanceName": "Checkbox",
+          "nestedInstanceId": "31:910",
+          "nestedComponentId": "31:766",
+          "properties": [
+            {
+              "rawKey": "notas#1325:37",
+              "name": "notas",
+              "syncId": "1325:37",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "letter#1303:0",
+              "name": "letter",
+              "syncId": "1303:0",
+              "type": "TEXT",
+              "value": "A"
+            },
+            {
+              "rawKey": "nome acessivel#742:46",
+              "name": "nome acessivel",
+              "syncId": "742:46",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "observacoes#1325:31",
+              "name": "observacoes",
+              "syncId": "1325:31",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "tipo",
+              "name": "tipo",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "somente caixa"
+            }
+          ],
+          "toggles": [
+            {
+              "name": "notas",
+              "value": true
+            },
+            {
+              "name": "nome acessivel",
+              "value": true
+            },
+            {
+              "name": "observacoes",
+              "value": true
+            }
+          ],
+          "screenReaderVariants": {
+            "setName": "[NÃO UTILIZAR][a11y base] checkbox",
+            "setId": "31:765",
+            "subModeProperty": "tipo",
+            "variants": [
+              {
+                "variantName": "tipo=somente caixa",
+                "variantId": "31:766",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=Indeterminada em grupo",
+                "variantId": "31:773",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=caixa e rotulo",
+                "variantId": "31:780",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=customizável",
+                "variantId": "31:786",
+                "activeToggles": [
+                  "nome acessivel",
+                  "observacoes",
+                  "notas"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "variantName": "variante=componente, componente=dialog",
+          "variantId": "31:911",
+          "nestedInstanceName": "Dialog",
+          "nestedInstanceId": "31:912",
+          "nestedComponentId": "31:836",
+          "properties": [
+            {
+              "rawKey": "notas#1325:46",
+              "name": "notas",
+              "syncId": "1325:46",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "observacoes#1325:43",
+              "name": "observacoes",
+              "syncId": "1325:43",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "letter#1303:0",
+              "name": "letter",
+              "syncId": "1303:0",
+              "type": "TEXT",
+              "value": "A"
+            },
+            {
+              "rawKey": "nome acessivel#742:35",
+              "name": "nome acessivel",
+              "syncId": "742:35",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "tipo",
+              "name": "tipo",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "default"
+            }
+          ],
+          "toggles": [
+            {
+              "name": "notas",
+              "value": true
+            },
+            {
+              "name": "observacoes",
+              "value": true
+            },
+            {
+              "name": "nome acessivel",
+              "value": true
+            }
+          ],
+          "screenReaderVariants": {
+            "setName": "[NÃO UTILIZAR][a11y base] dialog",
+            "setId": "31:835",
+            "subModeProperty": "tipo",
+            "variants": [
+              {
+                "variantName": "tipo=default",
+                "variantId": "31:836",
+                "activeToggles": []
+              },
+              {
+                "variantName": "tipo=customizável",
+                "variantId": "31:843",
+                "activeToggles": [
+                  "nome acessivel",
+                  "observacoes",
+                  "notas"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "variantName": "variante=componente, componente=inputs",
+          "variantId": "31:913",
+          "nestedInstanceName": "Inputs",
+          "nestedInstanceId": "31:914",
+          "nestedComponentId": "31:703",
+          "properties": [
+            {
+              "rawKey": "observacoes#1325:49",
+              "name": "observacoes",
+              "syncId": "1325:49",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "letter#1303:0",
+              "name": "letter",
+              "syncId": "1303:0",
+              "type": "TEXT",
+              "value": "A"
+            },
+            {
+              "rawKey": "notas#1325:59",
+              "name": "notas",
+              "syncId": "1325:59",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "nome acessivel#742:0",
+              "name": "nome acessivel",
+              "syncId": "742:0",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "tipo",
+              "name": "tipo",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "default"
+            }
+          ],
+          "toggles": [
+            {
+              "name": "observacoes",
+              "value": true
+            },
+            {
+              "name": "notas",
+              "value": true
+            },
+            {
+              "name": "nome acessivel",
+              "value": true
+            }
+          ],
+          "screenReaderVariants": {
+            "setName": "[NÃO UTILIZAR][a11y base] inputs",
+            "setId": "31:702",
+            "subModeProperty": "tipo",
+            "variants": [
+              {
+                "variantName": "tipo=default",
+                "variantId": "31:703",
+                "activeToggles": []
+              },
+              {
+                "variantName": "tipo=tipo numero",
+                "variantId": "31:709",
+                "activeToggles": []
+              },
+              {
+                "variantName": "tipo=tipo data",
+                "variantId": "31:716",
+                "activeToggles": []
+              },
+              {
+                "variantName": "tipo=tipo selecao",
+                "variantId": "31:723",
+                "activeToggles": []
+              },
+              {
+                "variantName": "tipo=tipo senha",
+                "variantId": "31:730",
+                "activeToggles": []
+              },
+              {
+                "variantName": "tipo=somente leitura",
+                "variantId": "31:737",
+                "activeToggles": []
+              },
+              {
+                "variantName": "tipo=botao (i) e tooltip",
+                "variantId": "31:744",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=botao visualizar senha",
+                "variantId": "31:751",
+                "activeToggles": []
+              },
+              {
+                "variantName": "tipo=customizável",
+                "variantId": "31:758",
+                "activeToggles": [
+                  "nome acessivel",
+                  "observacoes",
+                  "notas"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "variantName": "variante=componente, componente=link",
+          "variantId": "31:915",
+          "nestedInstanceName": "Link",
+          "nestedInstanceId": "31:916",
+          "nestedComponentId": "31:558",
+          "properties": [
+            {
+              "rawKey": "notas#1325:0",
+              "name": "notas",
+              "syncId": "1325:0",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "letter#1303:0",
+              "name": "letter",
+              "syncId": "1303:0",
+              "type": "TEXT",
+              "value": "A"
+            },
+            {
+              "rawKey": "nome acessivel#742:60",
+              "name": "nome acessivel",
+              "syncId": "742:60",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "observacoes#1325:6",
+              "name": "observacoes",
+              "syncId": "1325:6",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "tipo",
+              "name": "tipo",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "default"
+            }
+          ],
+          "toggles": [
+            {
+              "name": "notas",
+              "value": true
+            },
+            {
+              "name": "nome acessivel",
+              "value": true
+            },
+            {
+              "name": "observacoes",
+              "value": true
+            }
+          ],
+          "screenReaderVariants": {
+            "setName": "[NÃO UTILIZAR][a11y base] link",
+            "setId": "31:557",
+            "subModeProperty": "tipo",
+            "variants": [
+              {
+                "variantName": "tipo=default",
+                "variantId": "31:558",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=nova janela",
+                "variantId": "31:564",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=com nome acessivel",
+                "variantId": "31:571",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=agrupado",
+                "variantId": "31:578",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=enviar email",
+                "variantId": "31:584",
+                "activeToggles": [
+                  "notas",
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=customizável",
+                "variantId": "31:591",
+                "activeToggles": [
+                  "nome acessivel",
+                  "notas",
+                  "observacoes"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "variantName": "variante=componente, componente=listas",
+          "variantId": "31:536",
+          "nestedInstanceName": "Content",
+          "nestedInstanceId": "31:537",
+          "nestedComponentId": "31:332",
+          "properties": [
+            {
+              "rawKey": "letter#7500:37",
+              "name": "letter",
+              "syncId": "7500:37",
+              "type": "TEXT",
+              "value": "A"
+            },
+            {
+              "rawKey": "observacoes#7489:0",
+              "name": "observacoes",
+              "syncId": "7489:0",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "tipo",
+              "name": "tipo",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "ordenada"
+            }
+          ],
+          "toggles": [
+            {
+              "name": "observacoes",
+              "value": true
+            }
+          ],
+          "screenReaderVariants": {
+            "setName": "[NÃO UTILIZAR][a11y base] listas",
+            "setId": "31:331",
+            "subModeProperty": "tipo",
+            "variants": [
+              {
+                "variantName": "tipo=ordenada",
+                "variantId": "31:332",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=nao ordenada",
+                "variantId": "31:340",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=de definicao",
+                "variantId": "31:348",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=customizável",
+                "variantId": "31:356",
+                "activeToggles": []
+              }
+            ]
+          }
+        },
+        {
+          "variantName": "variante=componente, componente=paginator",
+          "variantId": "31:917",
+          "nestedInstanceName": "Paginator",
+          "nestedInstanceId": "31:918",
+          "nestedComponentId": "31:881",
+          "properties": [
+            {
+              "rawKey": "notas#1327:73",
+              "name": "notas",
+              "syncId": "1327:73",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "letter#1303:0",
+              "name": "letter",
+              "syncId": "1303:0",
+              "type": "TEXT",
+              "value": "A"
+            },
+            {
+              "rawKey": "nome acessivel#742:31",
+              "name": "nome acessivel",
+              "syncId": "742:31",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "observacoes#1327:69",
+              "name": "observacoes",
+              "syncId": "1327:69",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "tipo",
+              "name": "tipo",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "caixa de selecao"
+            }
+          ],
+          "toggles": [
+            {
+              "name": "notas",
+              "value": true
+            },
+            {
+              "name": "nome acessivel",
+              "value": true
+            },
+            {
+              "name": "observacoes",
+              "value": true
+            }
+          ],
+          "screenReaderVariants": {
+            "setName": "[NÃO UTILIZAR][a11y base] paginator",
+            "setId": "31:880",
+            "subModeProperty": "tipo",
+            "variants": [
+              {
+                "variantName": "tipo=caixa de selecao",
+                "variantId": "31:881",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=listagem",
+                "variantId": "31:888",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=customizável",
+                "variantId": "31:895",
+                "activeToggles": [
+                  "nome acessivel",
+                  "observacoes",
+                  "notas"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "variantName": "variante=componente, componente=radio button",
+          "variantId": "31:919",
+          "nestedInstanceName": "Radio Button",
+          "nestedInstanceId": "31:920",
+          "nestedComponentId": "31:794",
+          "properties": [
+            {
+              "rawKey": "notas#1327:82",
+              "name": "notas",
+              "syncId": "1327:82",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "letter#1303:0",
+              "name": "letter",
+              "syncId": "1303:0",
+              "type": "TEXT",
+              "value": "A"
+            },
+            {
+              "rawKey": "nome acessivel#742:42",
+              "name": "nome acessivel",
+              "syncId": "742:42",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "observacoes#1327:77",
+              "name": "observacoes",
+              "syncId": "1327:77",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "tipo",
+              "name": "tipo",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "Somente rádio"
+            }
+          ],
+          "toggles": [
+            {
+              "name": "notas",
+              "value": true
+            },
+            {
+              "name": "nome acessivel",
+              "value": true
+            },
+            {
+              "name": "observacoes",
+              "value": true
+            }
+          ],
+          "screenReaderVariants": {
+            "setName": "[NÃO UTILIZAR][a11y base] radio button",
+            "setId": "31:793",
+            "subModeProperty": "tipo",
+            "variants": [
+              {
+                "variantName": "tipo=Somente rádio",
+                "variantId": "31:794",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=radio e rotulo",
+                "variantId": "31:801",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=customizável",
+                "variantId": "31:807",
+                "activeToggles": [
+                  "nome acessivel",
+                  "observacoes",
+                  "notas"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "variantName": "variante=componente, componente=snackbar",
+          "variantId": "31:921",
+          "nestedInstanceName": "Snackbar",
+          "nestedInstanceId": "31:922",
+          "nestedComponentId": "31:851",
+          "properties": [
+            {
+              "rawKey": "notas de codigo#1327:90",
+              "name": "notas de codigo",
+              "syncId": "1327:90",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "observacoes#1327:87",
+              "name": "observacoes",
+              "syncId": "1327:87",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "letter#1303:0",
+              "name": "letter",
+              "syncId": "1303:0",
+              "type": "TEXT",
+              "value": "A"
+            },
+            {
+              "rawKey": "nome acessivel#742:28",
+              "name": "nome acessivel",
+              "syncId": "742:28",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "tipo",
+              "name": "tipo",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "notificacao imediata"
+            }
+          ],
+          "toggles": [
+            {
+              "name": "notas de codigo",
+              "value": true
+            },
+            {
+              "name": "observacoes",
+              "value": true
+            },
+            {
+              "name": "nome acessivel",
+              "value": true
+            }
+          ],
+          "screenReaderVariants": {
+            "setName": "[NÃO UTILIZAR][a11y base] snackbar",
+            "setId": "31:850",
+            "subModeProperty": "tipo",
+            "variants": [
+              {
+                "variantName": "tipo=notificacao imediata",
+                "variantId": "31:851",
+                "activeToggles": []
+              },
+              {
+                "variantName": "tipo=customizável",
+                "variantId": "31:858",
+                "activeToggles": [
+                  "nome acessivel",
+                  "observacoes",
+                  "notas de codigo"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "variantName": "variante=componente, componente=stepper",
+          "variantId": "31:923",
+          "nestedInstanceName": "Stepper",
+          "nestedInstanceId": "31:924",
+          "nestedComponentId": "31:633",
+          "properties": [
+            {
+              "rawKey": "letter#1303:0",
+              "name": "letter",
+              "syncId": "1303:0",
+              "type": "TEXT",
+              "value": "A"
+            },
+            {
+              "rawKey": "notas#1327:99",
+              "name": "notas",
+              "syncId": "1327:99",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "nome acessivel#742:22",
+              "name": "nome acessivel",
+              "syncId": "742:22",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "observacoes#1327:93",
+              "name": "observacoes",
+              "syncId": "1327:93",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "tipo",
+              "name": "tipo",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "atual"
+            }
+          ],
+          "toggles": [
+            {
+              "name": "notas",
+              "value": true
+            },
+            {
+              "name": "nome acessivel",
+              "value": true
+            },
+            {
+              "name": "observacoes",
+              "value": true
+            }
+          ],
+          "screenReaderVariants": {
+            "setName": "[NÃO UTILIZAR][a11y base] stepper",
+            "setId": "31:632",
+            "subModeProperty": "tipo",
+            "variants": [
+              {
+                "variantName": "tipo=atual",
+                "variantId": "31:633",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=editavel",
+                "variantId": "31:640",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=preenchido",
+                "variantId": "31:647",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=inativo",
+                "variantId": "31:654",
+                "activeToggles": []
+              },
+              {
+                "variantName": "tipo=customizável",
+                "variantId": "31:661",
+                "activeToggles": [
+                  "nome acessivel",
+                  "observacoes",
+                  "notas"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "variantName": "variante=componente, componente=switch",
+          "variantId": "31:925",
+          "nestedInstanceName": "Switch",
+          "nestedInstanceId": "31:926",
+          "nestedComponentId": "31:815",
+          "properties": [
+            {
+              "rawKey": "notas#1327:110",
+              "name": "notas",
+              "syncId": "1327:110",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "letter#1303:0",
+              "name": "letter",
+              "syncId": "1303:0",
+              "type": "TEXT",
+              "value": "A"
+            },
+            {
+              "rawKey": "nome acesivel#742:38",
+              "name": "nome acesivel",
+              "syncId": "742:38",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "observacoes#1327:105",
+              "name": "observacoes",
+              "syncId": "1327:105",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "tipo",
+              "name": "tipo",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "Somente switch"
+            }
+          ],
+          "toggles": [
+            {
+              "name": "notas",
+              "value": true
+            },
+            {
+              "name": "nome acesivel",
+              "value": true
+            },
+            {
+              "name": "observacoes",
+              "value": true
+            }
+          ],
+          "screenReaderVariants": {
+            "setName": "[NÃO UTILIZAR][a11y base] switch",
+            "setId": "31:814",
+            "subModeProperty": "tipo",
+            "variants": [
+              {
+                "variantName": "tipo=Somente switch",
+                "variantId": "31:815",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=switch e rotulo",
+                "variantId": "31:822",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=customizável",
+                "variantId": "31:828",
+                "activeToggles": [
+                  "nome acesivel",
+                  "observacoes",
+                  "notas"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "variantName": "variante=componente, componente=table",
+          "variantId": "31:927",
+          "nestedInstanceName": "Table",
+          "nestedInstanceId": "31:928",
+          "nestedComponentId": "31:669",
+          "properties": [
+            {
+              "rawKey": "observacoes#1327:121",
+              "name": "observacoes",
+              "syncId": "1327:121",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "letter#1303:0",
+              "name": "letter",
+              "syncId": "1303:0",
+              "type": "TEXT",
+              "value": "A"
+            },
+            {
+              "rawKey": "notas#1327:127",
+              "name": "notas",
+              "syncId": "1327:127",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "nome acessivel#742:16",
+              "name": "nome acessivel",
+              "syncId": "742:16",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "tipo",
+              "name": "tipo",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "estruturada"
+            }
+          ],
+          "toggles": [
+            {
+              "name": "observacoes",
+              "value": true
+            },
+            {
+              "name": "notas",
+              "value": true
+            },
+            {
+              "name": "nome acessivel",
+              "value": true
+            }
+          ],
+          "screenReaderVariants": {
+            "setName": "[NÃO UTILIZAR][a11y base] table",
+            "setId": "31:668",
+            "subModeProperty": "tipo",
+            "variants": [
+              {
+                "variantName": "tipo=estruturada",
+                "variantId": "31:669",
+                "activeToggles": []
+              },
+              {
+                "variantName": "tipo=cabecalho",
+                "variantId": "31:676",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=celula",
+                "variantId": "31:682",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=botao de ordenacao",
+                "variantId": "31:688",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=customizável",
+                "variantId": "31:695",
+                "activeToggles": [
+                  "nome acessivel",
+                  "observacoes",
+                  "notas"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "variantName": "variante=componente, componente=tab group",
+          "variantId": "31:929",
+          "nestedInstanceName": "Tab Group",
+          "nestedInstanceId": "31:930",
+          "nestedComponentId": "31:866",
+          "properties": [
+            {
+              "rawKey": "letter#1303:0",
+              "name": "letter",
+              "syncId": "1303:0",
+              "type": "TEXT",
+              "value": "A"
+            },
+            {
+              "rawKey": "notas#1327:118",
+              "name": "notas",
+              "syncId": "1327:118",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "nome acessivel#742:10",
+              "name": "nome acessivel",
+              "syncId": "742:10",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "observacoes#1327:115",
+              "name": "observacoes",
+              "syncId": "1327:115",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "tipo",
+              "name": "tipo",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "tabs"
+            }
+          ],
+          "toggles": [
+            {
+              "name": "notas",
+              "value": true
+            },
+            {
+              "name": "nome acessivel",
+              "value": true
+            },
+            {
+              "name": "observacoes",
+              "value": true
+            }
+          ],
+          "screenReaderVariants": {
+            "setName": "[NÃO UTILIZAR][a11y base] tab group",
+            "setId": "31:865",
+            "subModeProperty": "tipo",
+            "variants": [
+              {
+                "variantName": "tipo=tabs",
+                "variantId": "31:866",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=customizável",
+                "variantId": "31:873",
+                "activeToggles": [
+                  "nome acessivel",
+                  "observacoes",
+                  "notas"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "variantName": "variante=texto alternativo para imagens, componente=imagem",
+          "variantId": "733:2647",
+          "nestedInstanceName": "Texto alternativo para imagens",
+          "nestedInstanceId": "733:2633",
+          "nestedComponentId": "31:509",
+          "properties": [
+            {
+              "rawKey": "letter#7500:36",
+              "name": "letter",
+              "syncId": "7500:36",
+              "type": "TEXT",
+              "value": "A"
+            },
+            {
+              "rawKey": "nome acesivel#742:13",
+              "name": "nome acesivel",
+              "syncId": "742:13",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "notas#7500:35",
+              "name": "notas",
+              "syncId": "7500:35",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "observacoes#7500:34",
+              "name": "observacoes",
+              "syncId": "7500:34",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "tipo",
+              "name": "tipo",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "texto alternativo"
+            }
+          ],
+          "toggles": [
+            {
+              "name": "nome acesivel",
+              "value": true
+            },
+            {
+              "name": "notas",
+              "value": true
+            },
+            {
+              "name": "observacoes",
+              "value": true
+            }
+          ],
+          "screenReaderVariants": {
+            "setName": "[NÃO UTILIZAR][a11y base]texto alternativo para imagens",
+            "setId": "31:508",
+            "subModeProperty": "tipo",
+            "variants": [
+              {
+                "variantName": "tipo=texto alternativo",
+                "variantId": "31:509",
+                "activeToggles": [
+                  "observacoes",
+                  "notas"
+                ]
+              },
+              {
+                "variantName": "tipo=customizável",
+                "variantId": "31:517",
+                "activeToggles": [
+                  "nome acesivel",
+                  "observacoes",
+                  "notas"
+                ]
+              }
+            ]
+          }
+        }
+      ]
     },
     {
       "nodeId": "31:530",
@@ -1435,7 +3105,134 @@
           "variacao"
         ],
         "instanceSwaps": []
-      }
+      },
+      "perVariantProperties": [
+        {
+          "variantName": "variacao=gerais",
+          "variantId": "31:531",
+          "nestedInstanceName": "Content",
+          "nestedInstanceId": "31:532",
+          "nestedComponentId": "31:483",
+          "properties": [
+            {
+              "rawKey": "notas#7489:18",
+              "name": "notas",
+              "syncId": "7489:18",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "observacoes#7489:0",
+              "name": "observacoes",
+              "syncId": "7489:0",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "tipo",
+              "name": "tipo",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "ignorar pelo LT"
+            }
+          ],
+          "toggles": [
+            {
+              "name": "notas",
+              "value": true
+            },
+            {
+              "name": "observacoes",
+              "value": true
+            }
+          ],
+          "screenReaderVariants": {
+            "setName": "[NÃO UTILIZAR][a11y base] ED gerais",
+            "setId": "31:482",
+            "subModeProperty": "tipo",
+            "variants": [
+              {
+                "variantName": "tipo=ignorar pelo LT",
+                "variantId": "31:483",
+                "activeToggles": [
+                  "observacoes",
+                  "notas"
+                ]
+              },
+              {
+                "variantName": "tipo=customizável",
+                "variantId": "31:489",
+                "activeToggles": [
+                  "observacoes",
+                  "notas"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "variantName": "variacao=imagem",
+          "variantId": "31:533",
+          "nestedInstanceName": "Content",
+          "nestedInstanceId": "31:534",
+          "nestedComponentId": "31:496",
+          "properties": [
+            {
+              "rawKey": "notas#7500:32",
+              "name": "notas",
+              "syncId": "7500:32",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "observacoes#7500:31",
+              "name": "observacoes",
+              "syncId": "7500:31",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "tipo",
+              "name": "tipo",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "texto alternativo"
+            }
+          ],
+          "toggles": [
+            {
+              "name": "notas",
+              "value": true
+            },
+            {
+              "name": "observacoes",
+              "value": true
+            }
+          ],
+          "screenReaderVariants": {
+            "setName": "[NÃO UTILIZAR][a11y base] ED imagem",
+            "setId": "31:495",
+            "subModeProperty": "tipo",
+            "variants": [
+              {
+                "variantName": "tipo=texto alternativo",
+                "variantId": "31:496",
+                "activeToggles": [
+                  "observacoes"
+                ]
+              },
+              {
+                "variantName": "tipo=customizável",
+                "variantId": "31:502",
+                "activeToggles": [
+                  "observacoes",
+                  "notas"
+                ]
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

@@ -1,18 +1,20 @@
 // ============================================================
 // GERADO AUTOMATICAMENTE por build-a11y-constants.cjs — não editar à mão.
-// Fonte: refs/design-acessivel-properties.json (2026-09-15T13:32:23.288Z)
-//      + refs/design-acessivel-mobile-properties.json (2026-09-15T13:32:35.828Z)
+// Fonte: refs/design-acessivel-properties.json (2026-09-17T23:59:14.479Z)
+//      + refs/design-acessivel-mobile-properties.json (2026-09-17T23:58:35.812Z)
 //      + refs/super-app.json (2026-09-14T17:22:10.632Z)
 //      + refs/_manifest.json (fileKey da lib 'super-app')
 // Regenerar via: node src/plugin/refs/build-a11y-constants.cjs
 //            ou: npm run refs:a11y-constants
 //
-// Gerado em: 2026-09-16T20:16:57.559Z
+// Gerado em: 2026-09-18T12:02:21.459Z
 //
 // Consumido via alias em src/plugin/modules/accessibility.js:
 //   const A11Y_COMPONENT_PROPERTIES = A11Y_COMPONENT_PROPERTIES_GENERATED;
 //   const A11Y_MOBILE_LINK_COMPONENT_OPTIONS = A11Y_MOBILE_LINK_COMPONENT_OPTIONS_GENERATED;
 //   const A11Y_MOBILE_COMPONENT_LINK_NODE_IDS = A11Y_MOBILE_COMPONENT_LINK_NODE_IDS_GENERATED;
+//   const A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL = A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL_GENERATED;
+//   const A11Y_MOBILE_SCREEN_READER_VARIANTS = A11Y_MOBILE_SCREEN_READER_VARIANTS_GENERATED;
 //   const A11Y_SUPER_APP_FILE_KEY = A11Y_SUPER_APP_FILE_KEY_GENERATED;
 //   const A11Y_SUPER_APP_FILE_NAME = A11Y_SUPER_APP_FILE_NAME_GENERATED;
 // Concatenado por build.cjs no bundle final (ui.html) ANTES de
@@ -30,20 +32,15 @@ const A11Y_MOBILE_LINK_COMPONENT_OPTIONS_GENERATED = [
   "Badge",
   "Badge Notification",
   "Badge Text",
-  "Badge Text Alt",
   "Button",
   "Card",
   "Card Account",
   "Card Alert",
-  "Card Carousel Horizontal",
   "Card Carousel Vertical",
   "Card Feed",
   "Card Notification",
-  "Card Notification Alt",
   "Card Product Offer",
-  "Card Stats",
   "Card Wallet",
-  "Card Wallet Alt",
   "Card Widget",
   "Checkbox",
   "Chips",
@@ -52,7 +49,6 @@ const A11Y_MOBILE_LINK_COMPONENT_OPTIONS_GENERATED = [
   "Date Picker",
   "Digital Wallet Button",
   "Icon Button",
-  "Icon Button Alt",
   "Icon Button Text",
   "Input Chat",
   "Input Money",
@@ -65,21 +61,15 @@ const A11Y_MOBILE_LINK_COMPONENT_OPTIONS_GENERATED = [
   "List Footer",
   "List Item",
   "List Item Funds",
-  "List Item Shortcut",
   "List Item Transaction",
   "Loading Animation",
-  "Micro Chart",
-  "Media Button Text",
   "Menu",
-  "Navigation Bar",
-  "Page Controler",
   "Popover",
   "Product Card",
   "Progress",
   "Radio",
   "Search Bar",
   "Segmented Button",
-  "Segmented Button Alt",
   "Selectable Media",
   "Sheet",
   "Shimmer",
@@ -97,9 +87,9 @@ const A11Y_MOBILE_LINK_COMPONENT_OPTIONS_GENERATED = [
   "Tooltip",
   "Top App Bar",
   "Value Section",
-  "Value Section Alt",
   "Wheel Picker",
-  "Imagem"
+  "Imagem",
+  "Page Controler"
 ];
 
 const A11Y_MOBILE_COMPONENT_LINK_NODE_IDS_GENERATED = {
@@ -113,7 +103,6 @@ const A11Y_MOBILE_COMPONENT_LINK_NODE_IDS_GENERATED = {
   "Button": "6068:198",
   "Card": "6791:5569",
   "Card Alert": "6791:6531",
-  "Card Carousel Horizontal": "7970:1686",
   "Card Carousel Vertical": "7073:8075",
   "Card Feed": "59069:4810",
   "Card Notification": "7732:2499",
@@ -134,7 +123,6 @@ const A11Y_MOBILE_COMPONENT_LINK_NODE_IDS_GENERATED = {
   "List Accordion": "9934:1290",
   "List Footer": "23278:73726",
   "List Item": "6791:16928",
-  "Navigation Bar": "14250:6664",
   "Popover": "6092:1875",
   "Radio": "6104:24152",
   "Search Bar": "11934:5702",
@@ -151,6 +139,522 @@ const A11Y_MOBILE_COMPONENT_LINK_NODE_IDS_GENERATED = {
   "Top App Bar": "14199:10124",
   "Value Section": "9169:8460",
   "Wheel Picker": "34624:20638"
+};
+
+const A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL_GENERATED = [
+  "Product Card",
+  "Spinner",
+  "Shimmer",
+  "List Item Funds",
+  "Icon Button",
+  "Digital Wallet Button",
+  "Comparison Table",
+  "Card Product Offer",
+  "Badge",
+  "Badge Notification",
+  "Checkbox",
+  "Credit Card Button",
+  "Input Stepper",
+  "List Accordion",
+  "List Footer",
+  "List Item",
+  "Progress",
+  "Selectable Media",
+  "Slider",
+  "Top App Bar",
+  "Wheel Picker",
+  "Button",
+  "Avatar Hero",
+  "Avatar"
+];
+
+const A11Y_MOBILE_SCREEN_READER_VARIANTS_GENERATED = {
+  "Snackbar": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline Action",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Baseline Text",
+        "hasNomeAcessivel": false
+      }
+    ]
+  },
+  "Tabs": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Default",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Badge Notification",
+        "hasNomeAcessivel": false
+      }
+    ]
+  },
+  "Switch": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Disabled",
+        "hasNomeAcessivel": false
+      }
+    ]
+  },
+  "Radio": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Radio Group",
+        "hasNomeAcessivel": false
+      }
+    ]
+  },
+  "Icon Button": {
+    "subModeProperty": "Propriedade 1",
+    "variants": [
+      {
+        "name": "Padrão",
+        "hasNomeAcessivel": true
+      },
+      {
+        "name": "Variante 2",
+        "hasNomeAcessivel": true
+      },
+      {
+        "name": "Variante 3",
+        "hasNomeAcessivel": false
+      }
+    ]
+  },
+  "Card Product Offer": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Default",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Sequencial",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Loading",
+        "hasNomeAcessivel": true
+      }
+    ]
+  },
+  "Checkbox": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Default",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Highlight Checked",
+        "hasNomeAcessivel": true
+      },
+      {
+        "name": "Highlight Indeterminate",
+        "hasNomeAcessivel": false
+      }
+    ]
+  },
+  "Chips": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Default",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Default Clear",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Default Badge Notification",
+        "hasNomeAcessivel": false
+      }
+    ]
+  },
+  "Credit Card Button": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Default",
+        "hasNomeAcessivel": true
+      },
+      {
+        "name": "Disabled",
+        "hasNomeAcessivel": true
+      }
+    ]
+  },
+  "Input Chat": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Default",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Filled",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Audio",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Document Attachment",
+        "hasNomeAcessivel": false
+      }
+    ]
+  },
+  "Input / Text Field Single": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Multiple Lines",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "On Error",
+        "hasNomeAcessivel": false
+      }
+    ]
+  },
+  "Input Money": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Default",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Disabled",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Read Only",
+        "hasNomeAcessivel": false
+      }
+    ]
+  },
+  "Input Pin": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Default",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "On Error",
+        "hasNomeAcessivel": false
+      }
+    ]
+  },
+  "List Accordion": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Default",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Loading",
+        "hasNomeAcessivel": true
+      },
+      {
+        "name": "Disabled",
+        "hasNomeAcessivel": false
+      }
+    ]
+  },
+  "List Item": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "List Box",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Icon / Chevron / Avatar / Image",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Selectors",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Input Stepper",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Swipe Left / Right",
+        "hasNomeAcessivel": true
+      },
+      {
+        "name": "Disabled",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Selectable / Selected",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Swipe Left / Right End",
+        "hasNomeAcessivel": true
+      },
+      {
+        "name": "Left Slot - Chart Legend",
+        "hasNomeAcessivel": true
+      },
+      {
+        "name": "Switch",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Draggable",
+        "hasNomeAcessivel": true
+      },
+      {
+        "name": "Action",
+        "hasNomeAcessivel": false
+      }
+    ]
+  },
+  "Search Bar": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Typing",
+        "hasNomeAcessivel": false
+      }
+    ]
+  },
+  "Selectable Media": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Group",
+        "hasNomeAcessivel": true
+      },
+      {
+        "name": "Only",
+        "hasNomeAcessivel": true
+      },
+      {
+        "name": "Disabled",
+        "hasNomeAcessivel": true
+      },
+      {
+        "name": "Loading",
+        "hasNomeAcessivel": true
+      }
+    ]
+  },
+  "Slider": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Free",
+        "hasNomeAcessivel": true
+      },
+      {
+        "name": "Steps",
+        "hasNomeAcessivel": true
+      }
+    ]
+  },
+  "Top App Bar": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Select",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Show Media",
+        "hasNomeAcessivel": true
+      },
+      {
+        "name": "Show Filters",
+        "hasNomeAcessivel": true
+      }
+    ]
+  },
+  "Value Section": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Default",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Display",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Navigation",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Error",
+        "hasNomeAcessivel": false
+      }
+    ]
+  },
+  "Wheel Picker": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Single Columm",
+        "hasNomeAcessivel": true
+      },
+      {
+        "name": "Double Columm",
+        "hasNomeAcessivel": true
+      }
+    ]
+  },
+  "Input / Text Field Form": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "On Error",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Read Only",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Dropdown",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Icon",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Selector",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Search",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Show e Hide Password",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Date Picker",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Disabled",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Info",
+        "hasNomeAcessivel": false
+      }
+    ]
+  },
+  "Button": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Disabled",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Loading",
+        "hasNomeAcessivel": true
+      }
+    ]
+  },
+  "Avatar Hero": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Show Badge On",
+        "hasNomeAcessivel": true
+      },
+      {
+        "name": "Variations",
+        "hasNomeAcessivel": true
+      }
+    ]
+  },
+  "Avatar": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": true
+      },
+      {
+        "name": "Image",
+        "hasNomeAcessivel": true
+      }
+    ]
+  },
+  "Account Select": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Disabled",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Read Only",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Card",
+        "hasNomeAcessivel": false
+      }
+    ]
+  }
 };
 
 const A11Y_SUPER_APP_FILE_KEY_GENERATED = "epCGtlKQxedDxQVlK3lNcN";

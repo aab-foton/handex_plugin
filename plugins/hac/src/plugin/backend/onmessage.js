@@ -84,6 +84,7 @@ import {
   _getOrCreateFichaAreaGroup,
   _getOrCreateFichaItensFrame,
   _getOrCreateNamedSection,
+  _getVerticalAnchorForNewArea,
   _insertFichaSectionInOrder,
   _isHacOwnedNode,
   _moveActiveCloneIntoFichaSection,
@@ -160,6 +161,47 @@ let _swipePathClickSequence = [];
 let _a11yManualMatchModeActive = false;
 let _a11yManualMatchDebounceTimer = null;
 
+// Bug real corrigido (2026-09-17, print confirmado: usuário clicou "Top App
+// Bar" no canvas, "+ Nova spec" abriu o formulário com "Camada no canvas":
+// "Actions" — um node diferente do que foi clicado). Causa raiz: o fluxo
+// manual dispara, em paralelo, resolve-manual-spec-match (liga o modo acima
+// e lê a seleção ATUAL) e start-spec-copy (cria/reaproveita a réplica de
+// trabalho da Área e, ao terminar — spec-copy-started, messages.js —, FOCA
+// essa réplica via focusA11yCloneNode → resolve-a11y-focus-node →
+// focusNode → highlight-node, que faz figma.currentPage.selection =
+// [cloneRaiz]). Esse foco automático é programático, mas dispara
+// 'selectionchange' igual a um clique real do designer — e como a criação
+// do clone é assíncrona (vários `await`, ver comentário em
+// _resolveActiveSpecClone), ele frequentemente termina DEPOIS que o
+// designer já clicou no elemento real dentro do frame. Sem distinguir
+// "seleção mudou porque o PLUGIN focou a réplica" de "seleção mudou porque
+// o DESIGNER clicou em algo", o listener abaixo (que already existe pra
+// re-resolver o match ao vivo) reagia à sobrescrita programática como se
+// fosse a escolha do designer, e o resultado (nodeName/match) virava o node
+// RAIZ do clone (ex.: "Actions", nome do container clonado), nunca o
+// elemento clicado. Set antes de QUALQUER `figma.currentPage.selection = `
+// disparado pelo próprio hac para focar a réplica (resolve-a11y-focus-node
+// abaixo) — o listener consome a flag e ignora esse ciclo de
+// 'selectionchange', preservando a última seleção REAL do designer como
+// candidata a match/nome de camada.
+let _a11ySuppressNextSelectionChange = false;
+
+// Última seleção REAL do designer conhecida enquanto o gate de "+ Nova
+// spec" está ativo (_a11yManualMatchModeActive) — id do node, não o objeto
+// (pode ter sido removido/mudado de página entre a leitura e o uso).
+// Capturada no instante em que resolve-manual-spec-match liga o modo (é a
+// seleção que o designer já tinha ANTES de clicar "+") e atualizada a cada
+// 'selectionchange' real (não suprimido) enquanto o modo segue ativo. Existe
+// porque, nesta janela, figma.currentPage.selection pode estar apontando
+// pra réplica de trabalho recém-focada (foco programático, sempre suprimido
+// no listener acima, mas que AINDA MUDA a seleção de fato) — get-selection-
+// name (chamado de forma síncrona por openA11yModal, sem qualquer relação
+// com o token do gate) não tem como saber disso sozinho, então prefere este
+// registro sempre que o modo estiver ativo. null quando o modo nunca ligou
+// ou a seleção capturada era vazia — nesses casos os handlers caem de volta
+// no comportamento antigo (ler figma.currentPage.selection direto).
+let _a11yManualMatchLastRealSelectionId = null;
+
 // Listener único de seleção do canvas para os modos de captura de Ordem de
 // Tabulação e Trilha de Swipe — LEITURA LITERAL (2026-09-04-af).
 //
@@ -231,6 +273,15 @@ function _reconcileClickSequence(prevSequence, currentSelection) {
 }
 
 figma.on('selectionchange', () => {
+  // Consome a supressão de UM ciclo de 'selectionchange' causado pelo
+  // próprio hac (foco automático na réplica de trabalho — ver comentário em
+  // _a11ySuppressNextSelectionChange acima). Sem isso, o foco programático
+  // seria indistinguível de um clique real do designer nos 3 modos abaixo.
+  if (_a11ySuppressNextSelectionChange) {
+    _a11ySuppressNextSelectionChange = false;
+    return;
+  }
+
   if (_tabOrderModeActive) {
     // Rastreado SEM debounce — a ordem de clique precisa ser capturada no
     // instante exato de cada selectionchange, senão cliques rápidos em
@@ -253,6 +304,12 @@ figma.on('selectionchange', () => {
   }
 
   if (_a11yManualMatchModeActive) {
+    // Registra a seleção REAL corrente (ver comentário em
+    // _a11yManualMatchLastRealSelectionId) — chegou até aqui porque não foi
+    // suprimida acima, então é garantidamente um clique do designer, nunca
+    // o foco automático na réplica.
+    const _sel = figma.currentPage.selection;
+    _a11yManualMatchLastRealSelectionId = _sel.length > 0 ? _sel[0].id : null;
     clearTimeout(_a11yManualMatchDebounceTimer);
     // Mesmo debounce (500ms) do padrão acima — evita disparar
     // getMainComponentAsync a cada passo de drill-in até o elemento real.
@@ -404,6 +461,10 @@ figma.ui.onmessage = async (msg) => {
     const node = await _getSceneNodeById(msg.id);
     if (node && node.visible && _nodeOnCurrentPage(node)) {
       if (msg.selectNode !== false) {
+        // Foco programático (ver _a11ySuppressNextSelectionChange acima) —
+        // nunca deve ser confundido com um clique real do designer pelos
+        // modos de captura/matching que escutam 'selectionchange'.
+        _a11ySuppressNextSelectionChange = true;
         figma.currentPage.selection = [node];
       }
       if (msg.shouldScroll !== false) {
@@ -471,8 +532,22 @@ figma.ui.onmessage = async (msg) => {
   }
 
   if (msg.type === "get-selection-name") {
-    const sel = figma.currentPage.selection;
-    const node = sel.length > 0 ? sel[0] : null;
+    // Bug real corrigido (2026-09-17, print confirmado — ver comentário
+    // completo em _a11yManualMatchLastRealSelectionId): enquanto o gate do
+    // "+ Nova spec" está ativo, figma.currentPage.selection pode estar
+    // apontando pra réplica de trabalho recém-focada (foco automático
+    // concorrente, start-spec-copy/spec-copy-started), não pro elemento que
+    // o designer efetivamente clicou. Nesse caso, prefere o registro da
+    // última seleção REAL conhecida; fora do modo (ou sem nada capturado
+    // ainda), cai no comportamento de sempre.
+    let node = null;
+    if (_a11yManualMatchModeActive && _a11yManualMatchLastRealSelectionId) {
+      node = await _getSceneNodeById(_a11yManualMatchLastRealSelectionId);
+    }
+    if (!node) {
+      const sel = figma.currentPage.selection;
+      node = sel.length > 0 ? sel[0] : null;
+    }
     // Resolve o componente DSC real da seleção manual — mesmo padrão do scan
     // (_a11yScanArea): só INSTANCE com mainComponent remoto é candidato,
     // nunca lança se getMainComponentAsync falhar. dscComponentName é o nome
@@ -2310,7 +2385,13 @@ figma.ui.onmessage = async (msg) => {
     // ajusta ao redor dele. Não é o mesmo bug se repetindo.
     const cloneWidth = root.absoluteBoundingBox.width;
     const cloneHeight = root.absoluteBoundingBox.height;
-    const { x, y } = await _findFreeTabOrderCopyPosition(cloneWidth, cloneHeight, root.absoluteBoundingBox);
+    // `verticalAnchorBounds` (2026-09-17, ver comentário completo em
+    // _findFreeTabOrderCopyPosition) — só não-null quando esta é a PRIMEIRA
+    // réplica desta área E já existem outras áreas documentadas na sessão:
+    // força a nova réplica a nascer ABAIXO delas, nunca ao lado (bug real
+    // corrigido: spec nova nascendo alinhada com a altura de outra Área).
+    const _verticalAnchor = _getVerticalAnchorForNewArea(areaId, currentUserId);
+    const { x, y } = await _findFreeTabOrderCopyPosition(cloneWidth, cloneHeight, root.absoluteBoundingBox, _verticalAnchor);
     figma.currentPage.appendChild(clone);
     clone.x = x;
     clone.y = y;
@@ -2354,7 +2435,10 @@ figma.ui.onmessage = async (msg) => {
     // _createTabOrderCloneForArea (revertido em 2026-09-11).
     const cloneWidth = root.absoluteBoundingBox.width;
     const cloneHeight = root.absoluteBoundingBox.height;
-    const { x, y } = await _findFreeTabOrderCopyPosition(cloneWidth, cloneHeight, root.absoluteBoundingBox);
+    // `verticalAnchorBounds` (2026-09-17) — ver comentário completo em
+    // _createTabOrderCloneForArea/_findFreeTabOrderCopyPosition.
+    const _verticalAnchor = _getVerticalAnchorForNewArea(areaId, currentUserId);
+    const { x, y } = await _findFreeTabOrderCopyPosition(cloneWidth, cloneHeight, root.absoluteBoundingBox, _verticalAnchor);
     figma.currentPage.appendChild(clone);
     clone.x = x;
     clone.y = y;
@@ -2430,7 +2514,12 @@ figma.ui.onmessage = async (msg) => {
     // _createTabOrderCloneForArea (revertido em 2026-09-11).
     const cloneWidth = root.absoluteBoundingBox.width;
     const cloneHeight = root.absoluteBoundingBox.height;
-    const { x, y } = await _findFreeTabOrderCopyPosition(cloneWidth, cloneHeight, root.absoluteBoundingBox);
+    // `verticalAnchorBounds` (2026-09-17, correção de bug real reportado com
+    // print pelo usuário: spec nova da Área 2 nascendo alinhada com a altura
+    // da Área 1) — ver comentário completo em
+    // _createTabOrderCloneForArea/_findFreeTabOrderCopyPosition.
+    const _verticalAnchor = _getVerticalAnchorForNewArea(areaId, currentUserId);
+    const { x, y } = await _findFreeTabOrderCopyPosition(cloneWidth, cloneHeight, root.absoluteBoundingBox, _verticalAnchor);
     figma.currentPage.appendChild(clone);
     clone.x = x;
     clone.y = y;
@@ -3357,12 +3446,21 @@ figma.ui.onmessage = async (msg) => {
   // caminho) desliga de novo.
   if (msg.type === "resolve-manual-spec-match") {
     _a11yManualMatchModeActive = true;
+    // Captura a seleção REAL de abertura (o que o designer já tinha
+    // selecionado antes de clicar "+ Nova spec") — ver comentário completo
+    // em _a11yManualMatchLastRealSelectionId. Precisa ser lida aqui, de
+    // forma síncrona, ANTES de qualquer foco automático concorrente
+    // (start-spec-copy/spec-copy-started, disparado em paralelo pelo mesmo
+    // clique) ter chance de mudar figma.currentPage.selection.
+    const _sel = figma.currentPage.selection;
+    _a11yManualMatchLastRealSelectionId = _sel.length > 0 ? _sel[0].id : null;
     (async () => { await _resolveManualSpecMatchAndNotify(msg.token || null); })();
     return;
   }
 
   if (msg.type === "stop-manual-spec-match-mode") {
     _a11yManualMatchModeActive = false;
+    _a11yManualMatchLastRealSelectionId = null;
     clearTimeout(_a11yManualMatchDebounceTimer);
     return;
   }
@@ -3449,7 +3547,7 @@ figma.ui.onmessage = async (msg) => {
   // marcada, via _ensureFichaBlocksForArea) e depois só tem seu CONTEÚDO
   // alternado entre clone real (em edição) e imagem+instruções
   // (finalizado) — nunca é recriado nem movido de lugar.
-  async function _getOrCreateFichaBlockSection(itensFrame, sectionKey, areaId) {
+  async function _getOrCreateFichaBlockSection(itensFrame, sectionKey, areaId, a11yOrigin) {
     const cfg = _FICHA_BLOCK_CONFIG[sectionKey];
     if (!cfg) return null;
 
@@ -3495,14 +3593,14 @@ figma.ui.onmessage = async (msg) => {
     // Wrapper "[HAC] Instruções de {Func}" agrupando título + legenda
     // (2026-09-11, estrutura definida pelo usuário) — idempotente, criado
     // junto com o bloco.
-    await _getOrCreateFichaInstrucoesFrame(section, sectionKey, areaId);
+    await _getOrCreateFichaInstrucoesFrame(section, sectionKey, areaId, a11yOrigin);
     return section;
   }
 
   // "[HAC] Instruções de {Func}" — agrupa o título do bloco e a legenda de
   // instruções, que antes ficavam soltos como filhos diretos do bloco.
   // Idempotente por pluginData `hacFichaInstrucoes` = sectionKey.
-  async function _getOrCreateFichaInstrucoesFrame(section, sectionKey, areaId) {
+  async function _getOrCreateFichaInstrucoesFrame(section, sectionKey, areaId, a11yOrigin) {
     const cfg = _FICHA_BLOCK_CONFIG[sectionKey];
     if (!cfg || !section) return null;
 
@@ -3570,10 +3668,16 @@ figma.ui.onmessage = async (msg) => {
       // chamada por nenhum caminho — reintroduzir exigiria pedido explícito
       // novo do usuário.
       const legendBuilder = _buildFichaLegendColumn;
+      // 5º parâmetro `feature` (2026-09-17, correção de bug real: badges
+      // vazando pra Tabulação/Swipe) — `cfg.instructionKey` já é exatamente
+      // 'leitorTela'|'tabulacao'|'swipe' (ver _FICHA_BLOCK_CONFIG em
+      // code.js), reaproveitado tal como está, sem valor novo a inventar.
       const legend = await legendBuilder(
         FICHA_INSTRUCTION_CONTENT[cfg.instructionKey],
         cfg.legendTitle,
-        cfg.legendFallback
+        cfg.legendFallback,
+        a11yOrigin,
+        cfg.instructionKey
       );
       legend.setPluginData('hacCategory', 'a11y');
       if (areaId) legend.setPluginData('hacLegendForArea', `${areaId}::${sectionKey}`);
@@ -3902,7 +4006,7 @@ figma.ui.onmessage = async (msg) => {
         try { figma.notify('Grupo da área não organizado: ' + (areaReparentError && (areaReparentError.message || String(areaReparentError))), { error: true, timeout: 6000 }); } catch (e4) { }
       }
 
-      const section = await _getOrCreateFichaBlockSection(itensFrame, sectionKey, areaId);
+      const section = await _getOrCreateFichaBlockSection(itensFrame, sectionKey, areaId, area && area.a11yOrigin);
       console.log('[hac][legenda] bloco', section && section.id, section && section.name);
       if (!section) return null;
 
@@ -4048,7 +4152,7 @@ figma.ui.onmessage = async (msg) => {
     // diretamente — _findFichaSectionInFrame/_insertFichaSectionInOrder não
     // mudam, só o frame contra o qual operam.
     const itensFrame = await _getOrCreateFichaItensFrame(fichaFrame, area);
-    const section = await _getOrCreateFichaBlockSection(itensFrame, 'tabulacao', area.id);
+    const section = await _getOrCreateFichaBlockSection(itensFrame, 'tabulacao', area.id, area.a11yOrigin);
 
     let itemCount = 0;
     const resolved = area.targetNodeId
@@ -4201,7 +4305,7 @@ figma.ui.onmessage = async (msg) => {
     // Reestruturação de árvore (2026-09-10) — ver comentário equivalente em
     // _buildFichaTabulacaoSection.
     const itensFrame = await _getOrCreateFichaItensFrame(fichaFrame, area);
-    const section = await _getOrCreateFichaBlockSection(itensFrame, 'swipe', area.id);
+    const section = await _getOrCreateFichaBlockSection(itensFrame, 'swipe', area.id, area.a11yOrigin);
 
     const hasPoints = Array.isArray(points) && points.length >= 2;
     if (!hasPoints) {
@@ -4384,7 +4488,7 @@ figma.ui.onmessage = async (msg) => {
     // Reestruturação de árvore (2026-09-10) — ver comentário equivalente em
     // _buildFichaTabulacaoSection.
     const itensFrame = await _getOrCreateFichaItensFrame(fichaFrame, area);
-    const section = await _getOrCreateFichaBlockSection(itensFrame, 'leitor', area.id);
+    const section = await _getOrCreateFichaBlockSection(itensFrame, 'leitor', area.id, area.a11yOrigin);
 
     const resolved = area.targetNodeId
       ? await _resolveActiveSpecClone(area.id, area.targetNodeId, area.sectionName, designerName, currentUserId)
