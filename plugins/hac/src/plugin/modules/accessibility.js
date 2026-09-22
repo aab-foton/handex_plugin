@@ -96,19 +96,51 @@ const A11Y_AUTO_MAPPING_HIDDEN_SWIPE = true;
 // 'titulo', badge='H' é só o valor MOBILE (sem distinção de nível) — o valor
 // web ("H1", número do nível real) é resolvido em runtime dentro de
 // renderA11yCategoryBadgeSvg via isA11yMobileProject(), não hardcoded aqui.
+// "textColor" (2026-09-22) — variante ESCURECIDA de "color", mesma família
+// de matiz, só pra texto/ícone pintado DIRETO sobre "fill" (chip/pill de
+// categoria já documentada — _a11ySpecItemHtml, _a11yAreaAccordionEl). Não
+// existe na lib real (não é uma cor "oficial" do componente) — é uma
+// correção puramente de legibilidade: "color" bruto sobre "fill" claro
+// falha WCAG AA (limiar 4.5:1 — texto 12px bold NÃO qualifica como "texto
+// grande", que exigiria só 3:1). Auditoria 2026-09-22 (recalculada com o
+// limiar certo): elemento 1.56, estrutura 2.44, titulo 1.72, decorativo
+// 3.82, informacoes 2.11 — as 5 falhavam. Valores abaixo confirmados via
+// REST API contra os componentes reais [hac] Agrupamento (fileKey
+// HhriLSpKnCB2dHhyiU16iB) e recalculados para passar >=4.5:1 em todas.
+// "color" continua sendo a cor de IDENTIDADE (círculo/estrela/quadrado
+// cheio nos badges SVG, stroke do chip) — nunca trocar "color" por
+// "textColor" nesses usos, só nos pontos onde o texto senta em cima do
+// "fill" claro. Ver também A11Y_BADGE_TEXT_COLOR abaixo — cor do texto
+// DENTRO do badge de letra (círculo/estrela/quadrado cheio), que é um caso
+// diferente: ali o fundo é "color" (sólido), não "fill" (claro).
 const A11Y_CATEGORIES = {
-  elemento:    { label: 'Elementos e Imagens',     icon: 'image',   color: '#FCBE05', fill: '#FFF6DC', badge: null, shape: 'circle' },
-  estrutura:   { label: 'Estrutura da Página',     icon: 'star',    color: '#EF765E', fill: '#FDEAE6', badge: null, shape: 'star' },
+  elemento:    { label: 'Elementos e Imagens',     icon: 'image',   color: '#FCBE05', textColor: '#8D6A03', fill: '#FFF6DC', badge: null, shape: 'circle' },
+  estrutura:   { label: 'Estrutura da Página',     icon: 'star',    color: '#EF765E', textColor: '#A75342', fill: '#FDEAE6', badge: null, shape: 'star' },
   // label abaixo é o valor WEB (default/fallback quando a origem não está
   // disponível no ponto de consumo) — RN não tem hierarquia H1-H6, então o
   // rótulo correto em contexto mobile é "Títulos" (sem "Nível"), confirmado
   // no print real da modal "[HAC] Handoff Super DSC Mobile e Web",
   // 2026-09-16. Nunca ler A11Y_CATEGORIES[key].label diretamente para a
   // categoria 'titulo' fora daqui — use getA11yCategoryLabel(key, origin).
-  titulo:      { label: 'Nível de Título',         icon: 'heading', color: '#AFCA0B', fill: '#F5F9DA', badge: 'H', shape: 'circle' },
-  decorativo:  { label: 'Elemento Decorativo',     icon: 'ban',     color: '#D93636', fill: '#FBE4E4', badge: 'Ø', shape: 'circle' },
-  informacoes: { label: 'Informações Adicionais',  icon: 'info',    color: '#F39200', fill: '#FEF1DE', badge: null, shape: 'square' },
+  titulo:      { label: 'Nível de Título',         icon: 'heading', color: '#AFCA0B', textColor: '#677706', fill: '#F5F9DA', badge: 'H', shape: 'circle' },
+  decorativo:  { label: 'Elemento Decorativo',     icon: 'ban',     color: '#D93636', textColor: '#C33131', fill: '#FBE4E4', badge: 'Ø', shape: 'circle' },
+  informacoes: { label: 'Informações Adicionais',  icon: 'info',    color: '#F39200', textColor: '#A06000', fill: '#FEF1DE', badge: null, shape: 'square' },
 };
+
+// Cor do texto/letra DENTRO do badge cheio (círculo/estrela/quadrado com
+// "color" sólido de fundo) — NÃO confundir com "textColor" acima (que é
+// texto sobre "fill" claro). Confirmado via REST API contra os componentes
+// REAIS [hac] Agrupamento na lib publicada (elemento/titulo/decorativo/
+// estrutura): o texto "Number" dentro do componente usa #22292E (escuro),
+// não branco — o hac divergia da própria lib nesse ponto. 'decorativo' é a
+// única exceção: fundo #D93636 é escuro o bastante pra passar AA (4.63:1)
+// com branco, e a lib usa um badge mais escuro ali. Nunca hardcodar
+// 'text-white'/'#FFFFFF' de novo pros badges de letra — ler daqui.
+const A11Y_BADGE_TEXT_COLOR_DARK = '#22292E';
+const A11Y_BADGE_TEXT_COLOR_LIGHT = '#FFFFFF';
+function getA11yBadgeTextColor(categoryKey) {
+  return categoryKey === 'decorativo' ? A11Y_BADGE_TEXT_COLOR_LIGHT : A11Y_BADGE_TEXT_COLOR_DARK;
+}
 
 // Rótulo mobile de 'titulo' — só essa categoria varia por origem (RN não tem
 // hierarquia de nível; as outras 4 categorias têm o mesmo nome nas duas
@@ -149,14 +181,20 @@ window.getA11yCategoryLabel = getA11yCategoryLabel;
 //
 // Conteúdo interno por categoria, confirmado nos prints reais da modal
 // "Especificações para Leitores de Tela" (2026-09-16):
-//   - elemento: letra ilustrativa fixa "A" (exemplo, não é dado real)
+//   - elemento: NÚMERO ilustrativo fixo "1" (2026-09-22, corrigido de letra
+//     "A" — "Elementos e Imagens" sugere tag NUMÉRICA desde 2026-09-18
+//     (pedido do usuário, ver _suggestNextA11yTagForArea: "pra não
+//     conflitar com o nível de título"), mas o SVG ilustrativo do picker
+//     nunca foi atualizado junto, continuava mostrando "A" — divergindo
+//     do dado real gravado em spec.letter)
 //   - estrutura: estrela SEM nenhuma letra/conteúdo (vazia) — só existe na
 //     versão web, nunca chamada em contexto mobile
 //   - titulo: badge muda por origem — "H1" (web, número do nível real; aqui
 //     é sempre "1" fixo, ilustrativo) ou "H" genérico (mobile, sem
 //     distinção de nível) — decidido em runtime via isA11yMobileProject()
 //   - decorativo: sem letra, ícone vetorial de "proibido"
-//   - informacoes: letra ilustrativa fixa "A" (sem referência nova, mantido)
+//   - informacoes: letra ilustrativa fixa "A" (categoria usa letras reais,
+//     ver _suggestNextA11yTagForArea — só 'elemento' é numérica)
 //
 // size: lado do viewBox em px (o SVG é sempre quadrado, a estrela/quadrado
 // ficam inscritos nesse quadrado). letterOverride: usado pra sobrescrever a
@@ -194,14 +232,22 @@ function renderA11yCategoryBadgeSvg(categoryKey, size, letterOverride) {
     let letter;
     if (categoryKey === 'titulo') {
       letter = (typeof isA11yMobileProject === 'function' && isA11yMobileProject()) ? 'H' : 'H1';
+    } else if (categoryKey === 'elemento') {
+      // Numérica, não alfabética — ver _suggestNextA11yTagForArea. letterOverride
+      // continua tendo prioridade (chamador pode querer ilustrar outro número).
+      letter = cat.badge || letterOverride || '1';
     } else {
       letter = cat.badge || letterOverride || 'A';
     }
     // Fonte reduzida pra badges de 2+ caracteres (ex.: "H1"), senão vaza do
     // círculo — 1 caractere (A, H, Ø...) continua no tamanho original.
     const fontSize = Math.round(size * (letter.length > 1 ? 0.34 : 0.46));
+    // Cor do texto do badge: #22292E (escuro) pra alinhar com o componente
+    // REAL da lib publicada, exceto 'decorativo' (branco) — ver
+    // getA11yBadgeTextColor / A11Y_BADGE_TEXT_COLOR_DARK acima.
+    const badgeTextColor = getA11yBadgeTextColor(categoryKey);
     contentSvg = '<text x="' + cx + '" y="' + cy + '" text-anchor="middle" dominant-baseline="central" ' +
-      'font-family="inherit" font-weight="800" font-size="' + fontSize + '" fill="#FFFFFF">' + escapeHtml(letter) + '</text>';
+      'font-family="inherit" font-weight="800" font-size="' + fontSize + '" fill="' + badgeTextColor + '">' + escapeHtml(letter) + '</text>';
   }
 
   return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '" ' +
@@ -3820,6 +3866,16 @@ function _a11ySpecItemHtml(spec) {
   const categoryLabel = spec.a11yType ? (getA11yCategoryLabel(spec.a11yType, spec.a11yOrigin) || meta.label) : meta.label;
   const color = spec.color || meta.color || '#005ca9';
   const fill = spec.fillColor || meta.fill || '#E0F5FA';
+  // textColor: variante escura de "color" pro texto/borda do chip de
+  // categoria abaixo (sentado direto sobre "fill" claro) — "color" bruto
+  // falha WCAG AA nesse contexto (ver comentário em A11Y_CATEGORIES). Specs
+  // antigas não persistem esse campo (não precisam — é resolvido aqui via
+  // meta, que é sempre a categoria atual, não um snapshot por spec).
+  const textColor = meta.textColor || color;
+  // Cor do texto/letra do badge redondo (fundo sólido "color") — alinhada
+  // com o componente REAL da lib (#22292E), branco só em 'decorativo'. Ver
+  // getA11yBadgeTextColor / A11Y_BADGE_TEXT_COLOR_DARK.
+  const badgeTextColor = getA11yBadgeTextColor(spec.a11yType);
   const props = spec.properties || [];
   const isHidden = spec.visible === false;
   const isUnlocked = spec.locked === false;
@@ -3837,11 +3893,11 @@ function _a11ySpecItemHtml(spec) {
     <div class="relative bg-gray-50/60 dark:bg-dark-bg/40 rounded-dsc-medium border ${isUnlocked ? 'border-amber-200 dark:border-amber-800/40' : isHidden ? 'border-gray-100 opacity-50' : 'border-gray-100 dark:border-dark-line'} overflow-hidden"
       data-a11y-spec-item data-a11y-category="${escapeHtml(spec.a11yType || '')}" data-a11y-search="${escapeHtml(searchText)}">
       <div class="flex items-start px-2.5 py-dsc-nano gap-dsc-nano">
-        <div class="w-6 h-6 rounded-dsc-circ flex items-center justify-center text-dsc-label-tiny normal-case tracking-normal font-extrabold text-white shrink-0 mt-0.5" style="background-color:${color}">${escapeHtml(spec.letter || 'A')}</div>
+        <div class="w-6 h-6 rounded-dsc-circ flex items-center justify-center text-dsc-label-tiny normal-case tracking-normal font-extrabold shrink-0 mt-0.5" style="background-color:${color};color:${badgeTextColor}">${escapeHtml(spec.letter || 'A')}</div>
         <div class="flex-1 min-w-0">
           <p class="text-dsc-label-tiny normal-case tracking-normal font-semibold text-slate-700 dark:text-white truncate">${escapeHtml(spec.targetNodeName || spec.name || 'Elemento')}</p>
           <div class="flex items-center flex-wrap gap-dsc-quark mt-0.5">
-            <span class="inline-flex items-center gap-dsc-quark px-1.5 py-0.5 rounded-dsc-circ border text-dsc-label-tiny normal-case tracking-normal font-bold" style="background-color:${fill};border-color:${color};color:${color};">
+            <span class="inline-flex items-center gap-dsc-quark px-1.5 py-0.5 rounded-dsc-circ border text-dsc-label-tiny normal-case tracking-normal font-bold" style="background-color:${fill};border-color:${textColor};color:${textColor};">
               <i data-lucide="${meta.icon}" class="w-2.5 h-2.5"></i> ${escapeHtml(categoryLabel)}
             </span>
             ${spec.a11ySourceLib ? `
@@ -3999,7 +4055,7 @@ function _a11yCategoryAccordionEl(uid, catKey, catSpecs) {
       <div class="flex items-center gap-dsc-nano px-2.5 py-dsc-nano cursor-pointer select-none hover:bg-gray-50 dark:hover:bg-dark-line/20 transition-colors"
         onclick="toggleA11yCategoryAccordion('${uid}')">
         <div class="w-4.5 h-4.5 rounded-dsc-circ flex items-center justify-center shrink-0" style="background-color:${meta.fill}">
-          <i data-lucide="${meta.icon}" class="w-2.5 h-2.5" style="color:${meta.color}"></i>
+          <i data-lucide="${meta.icon}" class="w-2.5 h-2.5" style="color:${meta.textColor || meta.color}"></i>
         </div>
         <p class="flex-1 min-w-0 text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-600 dark:text-dark-muted truncate">${escapeHtml(categoryLabel)} (${catSpecs.length})</p>
         <i data-lucide="chevron-down" id="chevron-${uid}" class="w-3.5 h-3.5 text-gray-400 transition-transform shrink-0" style="transform:${expand ? 'rotate(180deg)' : 'rotate(0deg)'}"></i>
@@ -4797,7 +4853,7 @@ function _a11yAreaAccordionEl(area, areaSpecs) {
   const categoryBreakdownData = _a11yComputeCategoryBreakdown(areaSpecs);
   const categoryBreakdown = categoryBreakdownData
     .map(({ meta, categoryLabel, count }) => `
-      <span class="inline-flex items-center gap-dsc-quark h-5 px-2 rounded-dsc-circ text-dsc-label-tiny normal-case tracking-normal font-bold" style="background-color:${meta.fill};color:${meta.color}">
+      <span class="inline-flex items-center gap-dsc-quark h-5 px-2 rounded-dsc-circ text-dsc-label-tiny normal-case tracking-normal font-bold" style="background-color:${meta.fill};color:${meta.textColor || meta.color}">
         ${count} ${escapeHtml(categoryLabel || meta.label)}
       </span>
     `).join('');
