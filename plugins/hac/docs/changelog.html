@@ -177,7 +177,6 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
     <a href="design-system.html">Design System</a>
     <a href="changelog.html" class="active">Changelog</a>
     <a href="auditoria-2026-09.html">Auditoria Geral</a>
-    <a href="proposta-arquitetura-handoff-completo.html">Proposta: Handoff sem Auto Layout</a>
   </nav>
   <button type="button" id="theme-toggle" aria-label="Alternar tema claro/escuro" title="Alternar tema claro/escuro"></button>
 </header>
@@ -1624,17 +1623,18 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
     marcadores de posição "congelada" (<code>layoutPositioning: 'ABSOLUTE'</code>)
     dentro dele.</p>
     <ul>
-      <li>Novo documento <a href="proposta-arquitetura-handoff-completo.html">Proposta:
-      Handoff sem Auto Layout</a> — diagnóstico visual do histórico de bugs,
-      proposta de substituir o Auto Layout consolidado por posicionamento
-      calculado explicitamente pelo plugin (cada bloco vira frame solto, mas
-      permanece visualmente lado a lado, na mesma ordem de hoje), e o trade-off
-      explícito (ganho: elimina a causa raiz das rodadas mais recentes; custo:
-      o plugin passa a ser responsável por recalcular posições que o Auto
-      Layout fazia de graça).</li>
-      <li><strong>Decisão pendente</strong> — este é um documento de proposta para
-      alinhamento com a vertical, não uma mudança já aprovada ou implementada.
-      Nenhum código foi alterado por esta entrega.</li>
+      <li>Documento de proposta "Handoff sem Auto Layout" — diagnóstico visual
+      do histórico de bugs, propondo substituir o Auto Layout consolidado por
+      posicionamento calculado explicitamente pelo plugin (cada bloco vira
+      frame solto, mas permanece visualmente lado a lado, na mesma ordem de
+      hoje), com o trade-off explícito (ganho: elimina a causa raiz das
+      rodadas mais recentes; custo: o plugin passa a ser responsável por
+      recalcular posições que o Auto Layout fazia de graça).</li>
+      <li><strong>Superada (2026-09-22)</strong> — a arquitetura do Handoff
+      Completo evoluiu por outro caminho nas entregas seguintes (posicionamento
+      manual de spec, correções de matching/persistência, ver entradas
+      posteriores); a página de proposta em si foi removida da documentação
+      por não refletir mais nenhum caminho em avaliação.</li>
     </ul>
 
     <h2>2026-09-10 — Verificação da lib de referência nova após publicação</h2>
