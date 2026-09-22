@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grafo de Conhecimento — hac</title>
+<style>
+:root {
+  --hac-cyan: #0891B2;
+  --hac-blue: #005ca9;
+  --hac-blue-dark: #004782;
+  --hac-orange: #f39200;
+  --bg: #eef2f7;
+  --surface: #ffffff;
+  --line: #dde3ec;
+  --muted: #64748b;
+  --text: #1e293b;
+}
+:root[data-theme="dark"] {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --line: #334155;
+  --muted: #b4c6d8;
+  --text: #f1f5f9;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+header.site-header {
+  background: var(--hac-blue);
+  color: #fff;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+:root[data-theme="dark"] header.site-header { background: #00335c; }
+header.site-header .brand-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-right: auto;
+}
+header.site-header .brand-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+header.site-header .brand-icon svg { width: 20px; height: 20px; color: #fff; }
+header.site-header .brand { font-weight: 700; font-size: 15px; letter-spacing: 0.01em; }
+header.site-header nav { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+header.site-header nav a { color: #e0effe; text-decoration: none; font-size: 13px; padding: 6px 10px; border-radius: 6px; }
+header.site-header nav a:hover { background: rgba(255,255,255,0.12); color: #fff; }
+header.site-header nav a.active { background: rgba(255,255,255,0.18); color: #fff; font-weight: 700; }
+#theme-toggle {
+  width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+  border-radius: 999px; border: none; background: rgba(255,255,255,0.12); color: #fff;
+  cursor: pointer; flex-shrink: 0;
+}
+#theme-toggle:hover { background: rgba(255,255,255,0.22); }
+#theme-toggle svg { width: 18px; height: 18px; }
+main { max-width: 1080px; margin: 0 auto; padding: 28px 24px 64px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 28px 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+h1 { font-size: 24px; margin-top: 0; color: var(--hac-blue); letter-spacing: -0.01em; }
+h2 { font-size: 18px; margin-top: 36px; padding-top: 12px; border-top: 1px solid var(--line); color: var(--hac-blue); letter-spacing: -0.01em; }
+h2:first-of-type { border-top: none; padding-top: 0; }
+h3 { font-size: 15px; margin-top: 24px; margin-bottom: 8px; color: var(--text); }
+p { margin: 12px 0; }
+a { color: var(--hac-cyan); }
+a:hover { text-decoration: none; }
+code {
+  font-family: "Consolas", "SFMono-Regular", monospace;
+  background: #f1f5f9; padding: 1px 5px; border-radius: 4px; font-size: 0.9em; color: #0f172a;
+  word-break: break-word;
+}
+:root[data-theme="dark"] code { background: #334155; color: #f1f5f9; }
+ul, ol { padding-left: 22px; }
+li { margin: 4px 0; }
+hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
+blockquote {
+  border-left: 3px solid var(--hac-cyan); margin: 16px 0; padding: 4px 16px;
+  background: #f0f9fb; color: #334155; font-size: 14px;
+}
+:root[data-theme="dark"] blockquote { background: rgba(8,145,178,0.12); color: #d7e6ee; }
+blockquote p { margin: 8px 0; }
+.footer-note { margin-top: 48px; font-size: 12px; color: var(--muted); text-align: center; }
+
+/* ── Componentes específicos desta página ────────────────────────── */
+.meta-strip {
+  display: flex; flex-wrap: wrap; gap: 10px; margin: 4px 0 20px;
+  font-size: 12.5px; color: var(--muted);
+}
+.meta-strip span { background: #f8fafc; border: 1px solid var(--line); border-radius: 999px; padding: 3px 12px; }
+:root[data-theme="dark"] .meta-strip span { background: #263449; }
+
+.tabs { display: flex; gap: 4px; flex-wrap: wrap; margin: 20px 0 4px; border-bottom: 1px solid var(--line); padding-bottom: 0; }
+.tab-btn {
+  background: none; border: none; cursor: pointer; font-size: 13px; font-weight: 600;
+  color: var(--muted); padding: 8px 14px; border-radius: 6px 6px 0 0; position: relative; top: 1px;
+}
+.tab-btn:hover { color: var(--text); background: #f8fafc; }
+:root[data-theme="dark"] .tab-btn:hover { background: #263449; }
+.tab-btn.active { color: var(--hac-blue); border-bottom: 2px solid var(--hac-blue); background: none; }
+:root[data-theme="dark"] .tab-btn.active { color: #7dd3fc; border-bottom-color: #7dd3fc; }
+.tab-panel { display: none; padding-top: 20px; }
+.tab-panel.active { display: block; }
+
+.search-box {
+  width: 100%; padding: 9px 14px; border: 1px solid var(--line); border-radius: 8px;
+  font-size: 13.5px; background: var(--surface); color: var(--text); margin-bottom: 14px;
+}
+.search-box:focus { outline: 2px solid var(--hac-cyan); outline-offset: 1px; }
+
+.pill {
+  display: inline-block; font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.03em; padding: 2px 8px; border-radius: 999px; margin-right: 6px;
+}
+.pill-f2b { background: #e0f2fe; color: #075985; }
+.pill-b2f { background: #fef3c7; color: #92400e; }
+:root[data-theme="dark"] .pill-f2b { background: rgba(56,189,248,0.18); color: #7dd3fc; }
+:root[data-theme="dark"] .pill-b2f { background: rgba(251,191,36,0.18); color: #fcd34d; }
+.pill-warn { background: #fee2e2; color: #991b1b; }
+:root[data-theme="dark"] .pill-warn { background: rgba(248,113,113,0.18); color: #fca5a5; }
+
+.msg-card {
+  border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px; margin-bottom: 12px;
+  background: var(--surface);
+}
+.msg-card summary {
+  cursor: pointer; font-weight: 700; font-size: 13.5px; list-style: none;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.msg-card summary::-webkit-details-marker { display: none; }
+.msg-card summary::before { content: '▸'; color: var(--muted); font-size: 11px; transition: transform 0.15s; }
+.msg-card[open] summary::before { transform: rotate(90deg); }
+.msg-card .msg-id { font-family: "Consolas", "SFMono-Regular", monospace; color: var(--hac-blue); }
+:root[data-theme="dark"] .msg-card .msg-id { color: #7dd3fc; }
+.msg-body { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 13px; }
+.msg-body dl { display: grid; grid-template-columns: 110px 1fr; gap: 6px 12px; margin: 0; }
+.msg-body dt { font-weight: 700; color: var(--muted); font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.03em; padding-top: 2px; }
+.msg-body dd { margin: 0; }
+.msg-body dd ul { margin: 0; padding-left: 18px; }
+.msg-note {
+  margin-top: 10px; padding: 8px 12px; border-radius: 6px; font-size: 12.5px;
+  background: #fff7ed; border-left: 3px solid var(--hac-orange); color: #7c2d12;
+}
+:root[data-theme="dark"] .msg-note { background: rgba(243,146,0,0.1); color: #fdba74; }
+.empty-state { text-align: center; color: var(--muted); font-size: 13px; padding: 24px; }
+
+.node-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin: 16px 0; }
+.node-tile { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; font-size: 12.5px; }
+.node-tile .node-name { font-family: "Consolas", "SFMono-Regular", monospace; font-weight: 700; color: var(--hac-blue); display: block; margin-bottom: 4px; }
+:root[data-theme="dark"] .node-tile .node-name { color: #7dd3fc; }
+
+.edge-row { display: flex; align-items: baseline; gap: 8px; font-size: 12.5px; padding: 6px 0; border-bottom: 1px dashed var(--line); flex-wrap: wrap; }
+.edge-row:last-child { border-bottom: none; }
+.edge-type { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--hac-cyan); font-weight: 700; flex-shrink: 0; }
+
+.field-block { border: 1px solid var(--line); border-radius: 10px; padding: 16px 20px; margin-bottom: 16px; }
+.field-block h3 { margin-top: 0; font-family: "Consolas", "SFMono-Regular", monospace; }
+.field-block .edges-list { margin: 10px 0 0; padding-left: 20px; font-size: 12.5px; }
+.field-block .gaps { margin-top: 10px; padding: 10px 14px; border-radius: 6px; background: #fef2f2; border-left: 3px solid #dc2626; font-size: 12.5px; }
+:root[data-theme="dark"] .field-block .gaps { background: rgba(220,38,38,0.1); color: #fca5a5; }
+
+.count-badge { font-size: 11px; font-weight: 700; background: var(--hac-cyan); color: #fff; border-radius: 999px; padding: 1px 8px; margin-left: 6px; }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="brand-group">
+    <span class="brand-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1" /><path d="m9 20 3-6 3 6" /><path d="m6 8 6 2 6-2" /><path d="M12 10v4" /></svg></span>
+    <span class="brand">hac — Handoff de Acessibilidade CAIXA</span>
+  </div>
+  <nav>
+    <a href="index.html">Início</a>
+    <a href="tecnico.html">Documentação Técnica</a>
+    <a href="dados.html">Semântica dos Dados</a>
+    <a href="institucional.html">Regras de Negócio</a>
+    <a href="design-system.html">Design System</a>
+    <a href="changelog.html">Changelog</a>
+    <a href="auditoria-2026-09.html">Auditoria Geral</a>
+    <a href="knowledge-graph-view.html" class="active">Grafo de Conhecimento</a>
+  </nav>
+  <button type="button" id="theme-toggle" aria-label="Alternar tema claro/escuro" title="Alternar tema claro/escuro"></button>
+</header>
+<main>
+  <div class="card">
+
+    <h1>Grafo de Conhecimento — contrato de mensagens</h1>
+
+    <p>Página gerada a partir de <code>docs/knowledge-graph.json</code> — foco
+    no contrato <code>postMessage</code> entre backend (sandbox principal do
+    Figma) e frontend (iframe). Ver <a href="knowledge-graph-guide.md">guia de
+    consulta</a> (Markdown) para receitas de uso. <strong>Não editar esta
+    página à mão</strong> — rodar <code>node docs/build-knowledge-graph-page.cjs</code>
+    depois de qualquer mudança em <code>knowledge-graph.json</code>.</p>
+
+    <div class="meta-strip" id="meta-strip"></div>
+
+    <blockquote>
+      <p>Não há motor de query — o grafo em si é um JSON estático. Esta
+      página só facilita a NAVEGAÇÃO visual dele (busca, agrupamento,
+      destaque de assimetrias/pontas soltas); para consultas que a página
+      não cobrir, grep direto em <code>knowledge-graph.json</code> continua
+      valendo.</p>
+    </blockquote>
+
+    <div class="tabs" role="tablist">
+      <button type="button" class="tab-btn active" data-tab="messages" role="tab">Mensagens <span class="count-badge" id="count-messages"></span></button>
+      <button type="button" class="tab-btn" data-tab="propagates" role="tab">Campos propagados <span class="count-badge" id="count-propagates"></span></button>
+      <button type="button" class="tab-btn" data-tab="patterns" role="tab">Padrões estruturais <span class="count-badge" id="count-patterns"></span></button>
+      <button type="button" class="tab-btn" data-tab="files" role="tab">Arquivos &amp; dependências <span class="count-badge" id="count-files"></span></button>
+    </div>
+
+    <!-- ── Mensagens ─────────────────────────────────────────────── -->
+    <div class="tab-panel active" id="panel-messages">
+      <input type="text" class="search-box" id="msg-search" placeholder="Buscar por id, campo de payload, arquivo, função…">
+      <div style="margin-bottom: 12px; display: flex; gap: 6px; flex-wrap: wrap;">
+        <button type="button" class="tab-btn" data-filter="all" style="border:1px solid var(--line);">Todas</button>
+        <button type="button" class="tab-btn" data-filter="frontend-to-backend" style="border:1px solid var(--line);">Frontend → Backend</button>
+        <button type="button" class="tab-btn" data-filter="backend-to-frontend" style="border:1px solid var(--line);">Backend → Frontend</button>
+        <button type="button" class="tab-btn" data-filter="flagged" style="border:1px solid var(--line);">Só com nota/alerta</button>
+      </div>
+      <div id="messages-list"></div>
+      <p class="empty-state" id="messages-empty" style="display:none;">Nenhuma mensagem encontrada para esse filtro.</p>
+    </div>
+
+    <!-- ── Campos propagados ─────────────────────────────────────── -->
+    <div class="tab-panel" id="panel-propagates">
+      <p>Campos de payload que aparecem em mais de um ponto do código — a
+      aresta mais importante do grafo: liga TODOS os lugares que precisam
+      mudar juntos se o campo mudar.</p>
+      <div id="propagates-list"></div>
+    </div>
+
+    <!-- ── Padrões estruturais ───────────────────────────────────── -->
+    <div class="tab-panel" id="panel-patterns">
+      <div id="patterns-list"></div>
+    </div>
+
+    <!-- ── Arquivos & dependências ───────────────────────────────── -->
+    <div class="tab-panel" id="panel-files">
+      <h3>Arquivos-fonte</h3>
+      <div class="node-grid" id="nodes-grid"></div>
+      <h3>Dependências estruturais (imports / ordem de carregamento)</h3>
+      <div id="edges-list"></div>
+    </div>
+
+    <p class="footer-note">hac — Grafo de Conhecimento · gerado de knowledge-graph.json · repositório privado, uso interno</p>
+  </div>
+</main>
+
+<script type="application/json" id="graph-data">{"_schema":{"description":"Grafo de conhecimento próprio do hac — foco no contrato de mensagens postMessage entre backend (sandbox principal do Figma, code.js/backend/*.js) e frontend (iframe, modules/*.js/views/*.html), complementado por dependências estruturais relevantes. Construído lendo o código real da branch beta/a11y-mobile-handoff em 2026-09-22 (NÃO reaproveita conteúdo do .ua/knowledge-graph.json, que reflete o commit antigo 0b0b443 e não captura nenhuma aresta de postMessage). Ver docs/knowledge-graph-guide.md para como consultar.","generatedAt":"2026-09-22","generatedFrom":{"branch":"beta/a11y-mobile-handoff","filesRead":["src/plugin/backend/onmessage.js","src/plugin/backend/dsc-matching.js","src/plugin/code.js","src/plugin/modules/messages.js","src/plugin/modules/accessibility.js","src/plugin/modules/tab-order.js","src/plugin/modules/swipe-path.js","src/plugin/modules/core.js","src/plugin/modules/handoff-ficha.js","src/plugin/modules/onboarding.js","src/plugin/build.cjs"]},"nodeTypes":{"message":"Um tipo de mensagem postMessage (msg.type). direction distingue frontend-to-backend de backend-to-frontend — são sempre nós DIFERENTES mesmo quando relacionados (ex: start-spec-copy dispara, spec-copy-started responde).","file":"Um arquivo-fonte do plugin (backend ou frontend).","function":"Uma função nomeada relevante (handler de mensagem, helper compartilhado entre os 3 fluxos paralelos de clone, etc.) — só as que participam de arestas propagates_field ou do padrão de 3 fluxos paralelos, não exaustivo.","pattern":"Um padrão estrutural documentado explicitamente (ex: '3 fluxos paralelos de clone') — existe para ser referenciado por múltiplos nós/arestas em vez de repetir a explicação em cada um."},"edgeTypes":{"sends":"file/function (frontend) --sends--> message (frontend-to-backend). source é sempre arquivo:linha.","handles":"message --handles--> file/function. Quem trata a mensagem do lado receptor (backend trata frontend-to-backend; messages.js trata backend-to-frontend).","responds_with":"message (frontend-to-backend) --responds_with--> message (backend-to-frontend). Liga pergunta/comando à resposta, quando existe uma relação direta 1:1 ou 1:N.","propagates_field":"Liga TODOS os pontos (mensagens, handlers, funções helper, campos lidos no frontend) que leem/escrevem um mesmo campo de payload que aparece em mais de 1 lugar. É a aresta mais importante do grafo — existe para responder 'se eu mudar o campo X, o que mais preciso tocar?'.","mirrors":"function --mirrors--> function. Liga funções estruturalmente paralelas entre os 3 fluxos de clone (Tabulação/Swipe/Leitor de Tela) que deveriam evoluir juntas mas hoje podem divergir (ver pattern:3-parallel-clone-flows).","imports":"file --imports--> file (ES import estático) ou concatenação de build (bundle:ui, ver build.cjs) quando não há import real (módulos globais concatenados).","loads_before":"file --loads_before--> file. Ordem de concatenação em build.cjs (bundle:ui) — módulos frontend compartilham escopo global em runtime, então ordem importa quando um módulo referencia símbolo global de outro sem import."},"howToQuery":"Não há motor de query — isto é um arquivo JSON estático, consultado via grep/leitura direta. Ver docs/knowledge-graph-guide.md para receitas de busca (ex: grep por \"field\": \"workAnchor\" para achar todas as arestas propagates_field de um campo)."},"patterns":[{"id":"pattern:3-parallel-clone-flows","name":"3 fluxos paralelos de criação de clone (Tabulação / Swipe / Leitor de Tela)","description":"hac clona a Área Marcada original em 3 fluxos estruturalmente espelhados, um por funcionalidade — Ordem de Tabulação (_createTabOrderCloneForArea/_resolveActiveTabOrderClone), Trilha de Swipe (_createSwipePathCloneForArea/_resolveActiveSwipePathClone) e Leitor de Tela/Specs (_createSpecCloneForArea/_resolveActiveSpecClone), todos em src/plugin/backend/onmessage.js. Os comentários do próprio código dizem explicitamente 'Espelha _createTabOrderCloneForArea' nos outros dois — ou seja, o padrão paralelo é INTENCIONAL e documentado pelos autores, não uma coincidência descoberta agora. Mudança estrutural num fluxo (ex: novo parâmetro, novo campo de retorno) é candidata forte a precisar da MESMA mudança nos outros 2 — mas hoje já existe divergência real entre eles (ver knownAsymmetries).","functions":["_createTabOrderCloneForArea (onmessage.js:2705)","_createSwipePathCloneForArea (onmessage.js:2779)","_createSpecCloneForArea (onmessage.js:2862)","_resolveActiveTabOrderClone (onmessage.js:3184)","_resolveActiveSwipePathClone (onmessage.js:3274)","_resolveActiveSpecClone/_resolveActiveSpecCloneInner (onmessage.js:2940/2967)"],"triggerMessages":["message:start-tab-order-copy","message:start-swipe-path-mode (via insert-swipe-path/get-swipe-path-accumulated-selection)","message:start-spec-copy"],"responseMessages":["message:tab-order-copy-started","message:swipe-path-copy-started","message:spec-copy-started"],"knownAsymmetries":[{"field":"savedAnchor / workAnchor","description":"Só o fluxo de Leitor de Tela (Specs) tem posição fixa de réplica persistida: start-spec-copy envia savedAnchor, _createSpecCloneForArea/_resolveActiveSpecClone aceitam e propagam savedAnchor, spec-copy-started e spec-created devolvem workAnchor. _createTabOrderCloneForArea e _createSwipePathCloneForArea NÃO recebem savedAnchor como parâmetro e tab-order-copy-started/swipe-path-copy-started NÃO devolvem workAnchor — a posição da réplica de Tabulação/Swipe não é fixada entre chamadas da mesma forma. Introduzido em 2026-09-21 (ver comentários datados em onmessage.js) só para o fluxo de Specs. Confirmar com accessibility-specialist se isso é decisão deliberada (specs precisam de posição estável pro layout de cards, Tabulação/Swipe não) antes de tratar como bug.","status":"assimetria real confirmada por leitura de código em 2026-09-22, não replicada intencionalmente documentada — avaliar antes de mexer em qualquer um dos 3 fluxos"},{"field":"nodeMap","description":"tab-order-copy-started, tab-order-generated-from-layers, swipe-path-copy-started (via clone) e swipe-path-generated-from-layers devolvem nodeMap (mapa originalId → nó-no-clone). spec-copy-started e spec-created NÃO devolvem nodeMap — o fluxo de Specs resolve a tradução original→clone inteiramente no backend (dentro do próprio handler de create-unified-spec, via 'nodeMap' interno de _createSpecCloneForArea, nunca exposto ao frontend).","status":"assimetria real, provavelmente proposital (frontend de Specs não precisa saber o mapeamento, só o id final do card) — mas registrar para não ser 'descoberta de novo' numa investigação futura"}]}],"nodes":[{"id":"file:code.js","type":"file","name":"src/plugin/code.js","summary":"Entrypoint do backend (sandbox principal do Figma). Não despacha postMessage diretamente — só faz `import './backend/onmessage.js'` por efeito colateral (registra o listener real) e concentra as funções de desenho/clone/Ficha (~5460 linhas)."},{"id":"file:backend/onmessage.js","type":"file","name":"src/plugin/backend/onmessage.js","summary":"Dispatcher ÚNICO de figma.ui.onmessage no backend (5266 linhas) — TODO postMessage do lado backend (frontend→backend recebido e backend→frontend enviado) passa por aqui. Extraído de code.js em 2026-09-14 (Camada 2 parte 1 de uma modularização maior, ver comentário no topo do arquivo)."},{"id":"file:backend/dsc-matching.js","type":"file","name":"src/plugin/backend/dsc-matching.js","summary":"Matching de componentes DSC (web/mobile, com fallback mobile→desktop). Único outro arquivo do backend, além de onmessage.js, que chama figma.ui.postMessage diretamente (manual-spec-match-resolved)."},{"id":"file:modules/messages.js","type":"file","name":"src/plugin/modules/messages.js","summary":"Dispatcher ÚNICO de window.onmessage no frontend (662 linhas) — todo postMessage backend→frontend é recebido aqui e roteado para funções de core.js/accessibility.js/tab-order.js/swipe-path.js/handoff-ficha.js. Adaptação do messages.js do Handex, cortado para o schema enxuto do hac."},{"id":"file:modules/core.js","type":"file","name":"src/plugin/modules/core.js","summary":"Bootstrap do frontend (init-plugin/ui-ready), navegação de views, storage, highlight/foco de node, resize de UI. Primeiro módulo concatenado em bundle:ui (build.cjs) — outros módulos podem depender de símbolos globais dele sem import."},{"id":"file:modules/accessibility.js","type":"file","name":"src/plugin/modules/accessibility.js","summary":"Maior módulo do frontend (7610 linhas) — Marcar Área, formulário/modal de Specs (Leitor de Tela), Detecção Automática, lista agrupada de specs, exclusão em cascata. Concentra praticamente todo o frontend do produto (ver seção de modularidade no CLAUDE.md/arquitetura)."},{"id":"file:modules/tab-order.js","type":"file","name":"src/plugin/modules/tab-order.js","summary":"Ordem de Tabulação — extraído de accessibility.js em 2026-09-09. Precisa carregar ANTES de handoff-ficha.js (Ficha consome _currentTabOrderItems) e ANTES de swipe-path.js (referencia cancelTabOrderReview()/window._tabOrderCaptureMode globalmente)."},{"id":"file:modules/swipe-path.js","type":"file","name":"src/plugin/modules/swipe-path.js","summary":"Trilha de Swipe — extraído de accessibility.js em 2026-09-09. Espelha estruturalmente tab-order.js (mesmo padrão de captura/clone/revisão), mas precisa carregar DEPOIS dele por causa da referência global citada acima."},{"id":"file:modules/handoff-ficha.js","type":"file","name":"src/plugin/modules/handoff-ficha.js","summary":"Consolidação da Ficha (Documento Final) — insere/edita seções por área. Depende de símbolos globais de accessibility.js e tab-order.js (carrega depois dos dois em build.cjs)."},{"id":"file:modules/onboarding.js","type":"file","name":"src/plugin/modules/onboarding.js","summary":"Onboarding contextual — passos enriquecidos com FICHA_INSTRUCTION_CONTENT (mesma constante que onmessage.js usa no backend para montar a legenda da Ficha)."},{"id":"pattern:3-parallel-clone-flows","type":"pattern","name":"3 fluxos paralelos de clone","summary":"Ver objeto completo em patterns[]."}],"structuralEdges":[{"source":"file:code.js","target":"file:backend/onmessage.js","type":"imports","note":"import './backend/onmessage.js' — efeito colateral, registra figma.ui.onmessage e figma.on('selectionchange', ...)."},{"source":"file:backend/onmessage.js","target":"file:code.js","type":"imports","note":"onmessage.js importa ~60 helpers exportados de code.js (funções de desenho/clone/Ficha, ver bloco de import no topo de onmessage.js)."},{"source":"file:backend/onmessage.js","target":"file:backend/dsc-matching.js","type":"imports","note":"onmessage.js importa _resolveManualSpecMatchAndNotify de dsc-matching.js para o handler resolve-manual-spec-match e para o listener de selectionchange (foco automático)."},{"source":"file:modules/core.js","target":"file:modules/messages.js","type":"loads_before","note":"build.cjs concatena core.js primeiro; messages.js (dispatcher) é concatenado por último entre os módulos funcionais, mas ANTES dele existem accessibility.js/tab-order.js/swipe-path.js/handoff-ficha.js/onboarding.js — ordem real: core → messages → accessibility → tab-order → swipe-path → handoff-ficha → onboarding (ver build.cjs, comentários 'MODULE:')."},{"source":"file:modules/tab-order.js","target":"file:modules/handoff-ficha.js","type":"loads_before","note":"Ficha consome _currentTabOrderItems (global) — comentário explícito em build.cjs."},{"source":"file:modules/tab-order.js","target":"file:modules/swipe-path.js","type":"loads_before","note":"swipe-path.js referencia cancelTabOrderReview()/window._tabOrderCaptureMode globalmente — comentário explícito em build.cjs."},{"source":"file:modules/accessibility.js","target":"file:modules/handoff-ficha.js","type":"loads_before","note":"Ficha referencia símbolos globais de accessibility.js (comentário 'MODULE: handoff-ficha.js' em build.cjs: 'Precisa vir DEPOIS de accessibility.js/tab-order.js')."}],"messages":[{"id":"message:ui-ready","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:359","payloadFields":[],"senders":["src/plugin/modules/core.js:1128 (bootstrap inicial)"],"consumers":["backend: dispara init-plugin (ambos os branches, sucesso e catch)"],"respondsWith":["message:init-plugin"]},{"id":"message:init-plugin","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:31","payloadFields":["version","currentUser","theme","savedState","onboardingSeen"],"senders":["src/plugin/backend/onmessage.js:410 (branch de sucesso, dentro do try)","src/plugin/backend/onmessage.js:420 (branch de erro/catch — savedState e onboardingSeen forçados a null)"],"consumers":["src/plugin/modules/messages.js:31 (window.onmessage) e core.js (aplica tema, hidrata hacData, decide onboarding)"],"note":"2 pontos de disparo no MESMO handler (try/catch) — não é ponta solta real (mutuamente exclusivos), mas qualquer campo novo adicionado no branch de sucesso precisa de equivalente explícito (mesmo que null) no branch de erro, ou o frontend recebe undefined silenciosamente no caminho de falha."},{"id":"message:check-other-designers-sections","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:437","payloadFields":["currentUserId"],"senders":["src/plugin/modules/accessibility.js:5504"],"consumers":["backend: _findOtherDesignersSessionSections"],"respondsWith":["message:other-designers-sections-checked"]},{"id":"message:other-designers-sections-checked","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:131","payloadFields":["otherDesignersSections"],"senders":["src/plugin/backend/onmessage.js:439"],"consumers":["src/plugin/modules/messages.js:131"]},{"id":"message:check-my-prior-session","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:447","payloadFields":[],"senders":["src/plugin/modules/accessibility.js:5505"],"consumers":["backend: _findOwnPriorSessionSection"],"respondsWith":["message:my-prior-session-checked"]},{"id":"message:my-prior-session-checked","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:142","payloadFields":["priorSession"],"senders":["src/plugin/backend/onmessage.js:449"],"consumers":["src/plugin/modules/messages.js:142"]},{"id":"message:resize","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:453","payloadFields":["width","height"],"senders":["src/plugin/modules/core.js:1144"],"consumers":["backend: figma.ui.resize"]},{"id":"message:resize-ui","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:458","payloadFields":["width","height"],"senders":["src/plugin/modules/core.js:437","src/plugin/modules/core.js:607","src/plugin/modules/core.js:642"],"consumers":["backend: figma.ui.resize"],"note":"3 pontos de disparo, mas todos no mesmo arquivo/módulo (core.js, variações de fluxo de resize) — não é cross-módulo, risco baixo."},{"id":"message:save-storage","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:463","payloadFields":["data (hacData completo serializado)"],"senders":["src/plugin/modules/core.js:151 (saveToStorage, debounced)"],"consumers":["backend: _writeHacDataToDocument, figma.clientStorage"]},{"id":"message:save-onboarding-state","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:487","payloadFields":["seen (booleano/estado do onboarding)"],"senders":["src/plugin/modules/onboarding.js:107"],"consumers":["backend: figma.clientStorage.setAsync('hac-onboarding-seen', ...)"]},{"id":"message:clear-cache","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:501","payloadFields":[],"senders":["src/plugin/modules/core.js:141"],"consumers":["backend: limpa clientStorage e hacData persistido (preserva hac-onboarding-seen, ver comentário em onmessage.js)"],"respondsWith":["message:cache-cleared"]},{"id":"message:cache-cleared","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:148","payloadFields":[],"senders":["src/plugin/backend/onmessage.js:512"],"consumers":["src/plugin/modules/messages.js:148"]},{"id":"message:highlight-node","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:520","payloadFields":["id","selectNode","shouldScroll"],"senders":["src/plugin/modules/core.js:992 (focusNode)","src/plugin/modules/core.js:1104 (via resolve-a11y-focus-node → focusNode, ver message:a11y-focus-node-resolved)"],"consumers":["backend: figma.currentPage.selection / figma.viewport.scrollAndZoomIntoView"],"note":"BUG REAL CORRIGIDO 2026-09-22 documentado no próprio código (onmessage.js:534-566): este handler é também o destino final do foco automático da réplica de trabalho (spec-copy-started → focusA11yCloneNode → resolve-a11y-focus-node → focusNode → highlight-node aqui), que podia roubar a seleção de um clique real do designer. Fix: checa _a11yManualMatchModeActive + _a11yManualMatchRealClickAfterOpen antes de sobrescrever seleção/viewport."},{"id":"message:clear-highlight","direction":"frontend-to-backend","handlerLocation":"NENHUM — mensagem morta, sem handler em onmessage.js","payloadFields":[],"senders":["src/plugin/modules/core.js:994","src/plugin/modules/swipe-path.js:671","src/plugin/modules/swipe-path.js:759","src/plugin/modules/tab-order.js:998","src/plugin/modules/tab-order.js:1081"],"consumers":[],"note":"PONTA SOLTA REAL — 5 pontos de disparo em 3 módulos, mas onmessage.js não tem `if (msg.type === 'clear-highlight')`. Causa provável: o retângulo [HighlightStroke] foi removido por completo em 2026-09-11 (pedido do usuário, ver comentário em onmessage.js:520-532 no handler highlight-node) e o handler correspondente de clear-highlight foi removido junto — mas os 5 call sites no frontend nunca foram limpos. Mensagem hoje é um no-op silencioso (backend ignora, sem erro). Não bloqueia nada, mas é exatamente o tipo de dessincronia que este grafo existe para capturar — considerar remover os 5 sends ou reintroduzir o handler, não deixar como está sem decisão."},{"id":"message:resolve-a11y-focus-node","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:592","payloadFields":["areaId","kind","targetNodeId","requestId"],"senders":["src/plugin/modules/core.js:1120"],"consumers":["backend: resolve qual node focar (réplica de trabalho da etapa vs. Frame Principal como fallback)"],"respondsWith":["message:a11y-focus-node-resolved"],"note":"kind distingue qual dos 3 fluxos paralelos (Tabulação/Swipe/Leitor de Tela) está pedindo foco — usa os mesmos _activeTabOrderCloneMaps/_activeSwipePathCloneMaps/_activeSpecCloneMaps que os handlers de start-*-copy populam."},{"id":"message:a11y-focus-node-resolved","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:427","payloadFields":["areaId","kind","nodeId","requestId"],"senders":["src/plugin/backend/onmessage.js:606"],"consumers":["src/plugin/modules/messages.js:427 (chama focusNode → dispara message:highlight-node)"]},{"id":"message:hide-node","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:615","payloadFields":["id"],"senders":["src/plugin/modules/accessibility.js:7174 (toggleA11ySpecVisibility, type resolvido por ternário hide-node/show-node)"],"consumers":["backend: node.visible = false"]},{"id":"message:show-node","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:623","payloadFields":["id"],"senders":["src/plugin/modules/accessibility.js:7174 (mesmo ternário de hide-node)"],"consumers":["backend: node.visible = true"]},{"id":"message:delete-node","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:629","payloadFields":["id"],"senders":["src/plugin/modules/accessibility.js:3972","src/plugin/modules/accessibility.js:7160","src/plugin/modules/accessibility.js:7541","src/plugin/modules/accessibility.js:7553","src/plugin/modules/accessibility.js:7565","src/plugin/modules/tab-order.js:903","src/plugin/modules/tab-order.js:934","src/plugin/modules/tab-order.js:1572","src/plugin/modules/swipe-path.js:789"],"consumers":["backend: remove node do canvas por id"],"note":"9 pontos de disparo em 3 módulos — mas é um utilitário genérico de exclusão (id + delete), não carrega estado específico de nenhum fluxo. Baixo risco de dessincronia (payload trivial), listado aqui por completude de contagem, não como alerta."},{"id":"message:get-selection-name","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:638","payloadFields":[],"senders":["src/plugin/modules/accessibility.js:1400"],"consumers":["backend: resolve nome/id do node selecionado + _findMainTextContent + dscComponentName (matching DSC síncrono)"],"respondsWith":["message:selection-name"],"note":"Depende de _a11yManualMatchLastRealSelectionId quando o modo de matching manual está ativo (mesma lógica de resolve-manual-spec-match) — ver comentário extenso em onmessage.js:153-228."},{"id":"message:selection-name","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:265","payloadFields":["id","name","mainText","dscComponentName"],"senders":["src/plugin/backend/onmessage.js:673"],"consumers":["src/plugin/modules/messages.js:265 (usado por prefillA11yComponentName para avisar de duplicidade)"]},{"id":"message:get-a11y-selection-info","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:690","payloadFields":[],"senders":["src/plugin/modules/accessibility.js:3405"],"consumers":["backend: resolve node selecionado (id/name)"],"respondsWith":["message:a11y-selection-info"]},{"id":"message:a11y-selection-info","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:279","payloadFields":["id","name"],"senders":["src/plugin/backend/onmessage.js:698"],"consumers":["src/plugin/modules/messages.js:279"]},{"id":"message:create-a11y-area","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:726","payloadFields":["targetNodeId","label","number","conector","origin","sectionName","designerName","designerId","autoDetect"],"senders":["src/plugin/modules/accessibility.js:7509"],"consumers":["backend: cria grupo/selo da Área Marcada real da lib (_tryImportA11yAgrupamento)"],"respondsWith":["message:a11y-area-created"]},{"id":"message:a11y-area-created","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:291","payloadFields":["area.id","area.number","area.label","area.conector","area.targetNodeId","area.targetNodeName","area.autoDetect"],"senders":["src/plugin/backend/onmessage.js:854"],"consumers":["src/plugin/modules/messages.js:291 (grava em hacData.a11yAreas[])"]},{"id":"message:update-a11y-area-conector","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:885","payloadFields":["areaId","conector (nova direção)"],"senders":["accessibility.js (troca de conector/direção do selo da área — sender exato não capturado na varredura de parent.postMessage por regex; confirmar com grep 'update-a11y-area-conector' antes de mexer)"],"consumers":["backend: reimporta o selo real da lib na nova direção via _tryImportA11yAgrupamento"],"respondsWith":["message:a11y-area-conector-updated","message:a11y-area-conector-update-failed"]},{"id":"message:a11y-area-conector-updated","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:322","payloadFields":["areaId","conector"],"senders":["src/plugin/backend/onmessage.js:1033"],"consumers":["src/plugin/modules/messages.js:322"]},{"id":"message:a11y-area-conector-update-failed","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:331","payloadFields":["areaId","reason"],"senders":["src/plugin/backend/onmessage.js:900 (selo não encontrado no canvas)","src/plugin/backend/onmessage.js:904 (elemento da área não existe mais)","src/plugin/backend/onmessage.js:972 (falha ao importar selo real da lib na nova direção)"],"consumers":["src/plugin/modules/messages.js:331"],"note":"3 pontos de disparo, mesmo handler — cada um com reason textual distinta, não é dessincronia (é o mesmo tipo por design, 3 causas de falha diferentes)."},{"id":"message:scan-frame","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:1046","payloadFields":["origin","targetNodeId ou seleção implícita"],"senders":["src/plugin/modules/accessibility.js:6254"],"consumers":["backend: Detecção Automática — varre a árvore do frame contra o mapa dsc-component-a11y-mapping*.json (dsc-matching.js)"],"respondsWith":["message:scan-result"]},{"id":"message:scan-result","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:186","payloadFields":["origin","data (merged) OU error"],"senders":["src/plugin/backend/onmessage.js:1065 (branch de erro — nada selecionado)","src/plugin/backend/onmessage.js:1080 (branch de sucesso — data: merged)"],"consumers":["src/plugin/modules/messages.js:186"],"note":"2 pontos, mesmo handler, branches mutuamente exclusivos (erro vs. sucesso) — mesmo padrão de init-plugin, não é ponta solta."},{"id":"message:create-unified-spec","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:1102","payloadFields":["opts.category","opts.categoryLabel","opts.letter","opts.color","opts.fillColor","opts.properties","opts.guideSide","opts.sectionName","opts.designerName","opts.designerId","opts.drawMode","opts.drawConnection","opts.a11yType","opts.a11ySubtype","opts.a11yOrigin","opts.a11ySourceLib","opts.a11yDscComponentName","opts.manualAnchorNodeId","opts.a11yAreaId","opts.a11yAreaTargetNodeId","opts.savedAnchor","opts.existingAreaSpecIds","opts.targetNodeId","opts.note","opts.excecaoInicial","opts.needsReview","opts.silent"],"senders":["src/plugin/modules/accessibility.js:4049 (fluxo principal — confirmA11ySpec)","src/plugin/modules/accessibility.js:6659 (segundo ponto de disparo — confirmar propósito exato antes de mexer: pode ser edição vs. criação, ou Detecção Automática em lote; ambos usam a mesma variável `opts` local construída em accessibility.js:3850)"],"consumers":["backend: resolve/cria clone da área, desenha card real ou procedural (fallback), grava opts em spec.*"],"respondsWith":["message:spec-created"],"note":"PAYLOAD RICO — 26 campos dentro de opts (objeto aninhado, não flat). Único sender que envia o objeto inteiro como `opts` (não campos soltos na raiz da mensagem) — diferente de todos os outros handlers deste arquivo. 2 pontos de disparo no frontend: confirmar com accessibility-specialist se ambos constroem `opts` de forma equivalente antes de considerar consolidar."},{"id":"message:spec-created","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:213","payloadFields":["workAnchor","spec.id","spec.targetNodeId","spec.name","spec.letter","spec.color","spec.fillColor","spec.category","spec.type","spec.note","spec.properties","spec.excecoes","spec.guideSide","spec.cardX","spec.cardY","spec.cardW","spec.cardH","spec.a11yType","spec.a11ySubtype","spec.a11yOrigin","spec.a11ySourceLib","spec.a11yDscComponentName","spec.a11yAreaId","spec.drawMode","spec.needsReview"],"senders":["src/plugin/backend/onmessage.js:1883"],"consumers":["src/plugin/modules/messages.js:213 (grava em hacData.a11ySpecs[], chama _saveA11yAreaWorkAnchor se workAnchor presente)"],"note":"workAnchor só vem preenchido quando esta chamada criou o clone de trabalho PELA 1ª VEZ (comentário explícito no código) — undefined/null em chamadas subsequentes para a mesma área. Ver pattern:3-parallel-clone-flows para a assimetria com Tabulação/Swipe."},{"id":"message:unlock-spec-group","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:1945","payloadFields":["specIds","locked"],"senders":["src/plugin/modules/accessibility.js:7226"],"consumers":["backend: seta specGroup.locked em lote"]},{"id":"message:start-tab-order-mode","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:1974","payloadFields":[],"senders":["src/plugin/modules/tab-order.js:540"],"consumers":["backend: liga _tabOrderModeActive, listener de selectionchange passa a acumular seleção"]},{"id":"message:stop-tab-order-mode","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:1983","payloadFields":[],"senders":["src/plugin/modules/tab-order.js:542"],"consumers":["backend: desliga _tabOrderModeActive"]},{"id":"message:start-swipe-path-mode","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:1995","payloadFields":["areaId","sectionName","designerName","designerId"],"senders":["src/plugin/modules/swipe-path.js:423"],"consumers":["backend: liga _swipePathModeActive + _createSwipePathCloneForArea"],"respondsWith":["message:swipe-path-copy-started"]},{"id":"message:stop-swipe-path-mode","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:2026","payloadFields":[],"senders":["src/plugin/modules/swipe-path.js:371","src/plugin/modules/swipe-path.js:425"],"consumers":["backend: desliga _swipePathModeActive"]},{"id":"message:swipe-path-copy-started","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:368","payloadFields":["cloneId"],"senders":["src/plugin/backend/onmessage.js:2000 (falha — cloneId: null)","src/plugin/backend/onmessage.js:2005 (falha — cloneId: null)","src/plugin/backend/onmessage.js:2021 (sucesso — cloneId: clone.id)"],"consumers":["src/plugin/modules/messages.js:368"],"note":"NÃO devolve nodeMap nem workAnchor — comparar com tab-order-copy-started (devolve nodeMap) e spec-copy-started (devolve workAnchor). Ver pattern:3-parallel-clone-flows."},{"id":"message:delete-swipe-path-draft-copy","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:2035","payloadFields":["areaId ou cloneId (confirmar no handler antes de propagar campo novo)"],"senders":["src/plugin/modules/swipe-path.js:659"],"consumers":["backend: remove clone de rascunho da Trilha de Swipe"]},{"id":"message:get-tab-order-accumulated-selection","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:2047","payloadFields":[],"senders":["src/plugin/modules/tab-order.js:517","src/plugin/modules/tab-order.js:669"],"consumers":["backend: devolve a sequência acumulada de cliques durante o modo de captura"],"respondsWith":["message:tab-order-accumulated-selection-result"]},{"id":"message:tab-order-accumulated-selection-result","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:350","payloadFields":["points[].nodeId","points[].nodeName"],"senders":["src/plugin/backend/onmessage.js:2070"],"consumers":["src/plugin/modules/messages.js:350"]},{"id":"message:get-swipe-path-accumulated-selection","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:2078","payloadFields":[],"senders":["src/plugin/modules/swipe-path.js:289","src/plugin/modules/swipe-path.js:372"],"consumers":["backend: devolve a sequência acumulada de pontos de swipe"],"respondsWith":["message:swipe-path-accumulated-selection-result"]},{"id":"message:swipe-path-accumulated-selection-result","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:521","payloadFields":["points[].nodeId","points[].nodeName"],"senders":["src/plugin/backend/onmessage.js:2095"],"consumers":["src/plugin/modules/messages.js:521"]},{"id":"message:tab-order-accumulated-count-changed","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:345","payloadFields":["count"],"senders":["src/plugin/backend/onmessage.js:318 (listener de selectionchange, não um handler de msg.type)"],"consumers":["src/plugin/modules/messages.js:345"]},{"id":"message:swipe-path-accumulated-count-changed","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:516","payloadFields":["count"],"senders":["src/plugin/backend/onmessage.js:327 (listener de selectionchange, não um handler de msg.type)"],"consumers":["src/plugin/modules/messages.js:516"]},{"id":"message:generate-tab-order-from-layers","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:2343","payloadFields":["areaId","generation"],"senders":["src/plugin/modules/tab-order.js:1167"],"consumers":["backend: varre a árvore de camadas em DFS a partir de areaTargetNodeId, gera itens automaticamente"],"respondsWith":["message:tab-order-generated-from-layers"]},{"id":"message:tab-order-generated-from-layers","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:459","payloadFields":["areaId","generation","items","cloneId","nodeMap"],"senders":["src/plugin/backend/onmessage.js:2359 (early return — items vazio)","src/plugin/backend/onmessage.js:2364 (early return — items vazio)","src/plugin/backend/onmessage.js:2420 (clone criado mas sem itens)","src/plugin/backend/onmessage.js:2432 (sucesso completo — items + cloneId + nodeMap)","src/plugin/backend/onmessage.js:2437 (fallback vazio)"],"consumers":["src/plugin/modules/messages.js:459"],"note":"5 pontos de disparo no mesmo handler — 'generation' existe especificamente para o frontend descartar respostas de gerações antigas (proteção contra corrida entre cliques rápidos); qualquer novo early-return precisa incluir generation também, senão o frontend não consegue descartar a resposta obsoleta corretamente."},{"id":"message:generate-swipe-path-from-layers","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:2471","payloadFields":["areaId","generation"],"senders":["src/plugin/modules/swipe-path.js:239"],"consumers":["backend: mesmo algoritmo de generate-tab-order-from-layers, sem filtro de interatividade"],"respondsWith":["message:swipe-path-generated-from-layers"]},{"id":"message:swipe-path-generated-from-layers","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:471","payloadFields":["areaId","generation","items","cloneId","nodeMap"],"senders":["src/plugin/backend/onmessage.js:2480","src/plugin/backend/onmessage.js:2485","src/plugin/backend/onmessage.js:2547","src/plugin/backend/onmessage.js:2561","src/plugin/backend/onmessage.js:2566"],"consumers":["src/plugin/modules/messages.js:471"],"note":"Espelha tab-order-generated-from-layers campo a campo (mesmo padrão de generation) — mantidos em paridade até 2026-09-22."},{"id":"message:resolve-tab-order-narration","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:2584","payloadFields":["areaId","items"],"senders":["src/plugin/modules/tab-order.js:1552"],"consumers":["backend: resolve texto de narração por item"],"respondsWith":["message:tab-order-narration-resolved"]},{"id":"message:tab-order-narration-resolved","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:502","payloadFields":["areaId","items"],"senders":["src/plugin/backend/onmessage.js:2628"],"consumers":["src/plugin/modules/messages.js:502"]},{"id":"message:renumber-tab-order-items","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:2633","payloadFields":["areaId ou lista de items (confirmar no handler antes de propagar campo novo)"],"senders":["src/plugin/modules/tab-order.js:889","src/plugin/modules/tab-order.js:1380","src/plugin/modules/tab-order.js:1588"],"consumers":["backend: renumera badges no canvas"],"respondsWith":["message:tab-order-renumbered"],"note":"3 pontos de disparo no mesmo módulo (tab-order.js) — fluxos distintos (reorder manual, exclusão, geração automática) convergindo pro mesmo handler; baixo risco cross-módulo mas vale conferir se os 3 sempre mandam o mesmo shape de payload."},{"id":"message:tab-order-renumbered","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:494","payloadFields":["updated"],"senders":["src/plugin/backend/onmessage.js:2664"],"consumers":["src/plugin/modules/messages.js:494"]},{"id":"message:start-tab-order-copy","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:3021","payloadFields":["areaId","targetNodeId","sectionName","designerName","designerId"],"senders":["src/plugin/modules/tab-order.js:470"],"consumers":["backend: _resolveActiveTabOrderClone / _createTabOrderCloneForArea"],"respondsWith":["message:tab-order-copy-started"],"note":"NÃO envia savedAnchor (diferente de start-spec-copy). Ver pattern:3-parallel-clone-flows."},{"id":"message:tab-order-copy-started","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:360","payloadFields":["cloneId","nodeMap"],"senders":["src/plugin/backend/onmessage.js:3026 (falha — cloneId: null, nodeMap: {})","src/plugin/backend/onmessage.js:3031 (falha — cloneId: null, nodeMap: {})","src/plugin/backend/onmessage.js:3044 (sucesso — cloneId: clone.id, nodeMap: plainNodeMap)"],"consumers":["src/plugin/modules/messages.js:360"],"note":"NÃO devolve workAnchor (diferente de spec-copy-started). Ver pattern:3-parallel-clone-flows."},{"id":"message:start-spec-copy","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:3101","payloadFields":["areaId","targetNodeId","sectionName","designerName","designerId","savedAnchor"],"senders":["src/plugin/modules/accessibility.js:997","src/plugin/modules/accessibility.js:6830"],"consumers":["backend: _resolveActiveSpecClone / _createSpecCloneForArea"],"respondsWith":["message:spec-copy-started"],"note":"2 pontos de disparo no frontend, mesma assinatura de payload nos dois (linhas idênticas) — confirmar se ambos os call sites deveriam ser consolidados numa função só antes de considerar isso resolvido."},{"id":"message:highlight-spec-copy-node","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:3132","payloadFields":["areaId ou nodeId (confirmar no handler)"],"senders":["src/plugin/modules/accessibility.js:7053","src/plugin/modules/accessibility.js:7064"],"consumers":["backend: foca/destaca node dentro do clone de trabalho de Specs"]},{"id":"message:highlight-swipe-path-copy-node","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:3160","payloadFields":["areaId ou nodeId (confirmar no handler)"],"senders":["src/plugin/modules/swipe-path.js:496"],"consumers":["backend: foca/destaca node dentro do clone de trabalho de Swipe"]},{"id":"message:delete-tab-order-draft-copy","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:3327","payloadFields":["areaId ou cloneId (confirmar no handler)"],"senders":["src/plugin/modules/tab-order.js:989"],"consumers":["backend: remove clone de rascunho da Ordem de Tabulação"]},{"id":"message:resolve-tab-order-clone","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:3346","payloadFields":["areaId"],"senders":["src/plugin/modules/tab-order.js:606"],"consumers":["backend: _resolveActiveTabOrderClone (checa se clone ainda existe)"],"respondsWith":["message:tab-order-clone-resolved"]},{"id":"message:tab-order-clone-resolved","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:436","payloadFields":["areaId","ok"],"senders":["src/plugin/backend/onmessage.js:3349"],"consumers":["src/plugin/modules/messages.js:436"]},{"id":"message:resolve-swipe-path-clone","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:3368","payloadFields":["areaId"],"senders":["src/plugin/modules/swipe-path.js:313"],"consumers":["backend: _resolveActiveSwipePathClone (checa se clone ainda existe)"],"respondsWith":["message:swipe-path-clone-resolved"]},{"id":"message:swipe-path-clone-resolved","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:446","payloadFields":["areaId","ok"],"senders":["src/plugin/backend/onmessage.js:3375"],"consumers":["src/plugin/modules/messages.js:446"]},{"id":"message:start-swipe-path-listen-only","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:3384","payloadFields":[],"senders":["src/plugin/modules/swipe-path.js:353"],"consumers":["backend: liga o listener de seleção sem recriar clone (revisão de trilha já existente)"]},{"id":"message:draw-tab-order-badge","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:3396","payloadFields":["tempId","areaId/item (confirmar no handler)"],"senders":["src/plugin/modules/tab-order.js:759"],"consumers":["backend: desenha badge numerado no canvas dentro do clone"],"respondsWith":["message:tab-order-badge-drawn","message:tab-order-badge-draw-failed"]},{"id":"message:tab-order-badge-drawn","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:480","payloadFields":["tempId","canvasId","item"],"senders":["src/plugin/backend/onmessage.js:3414"],"consumers":["src/plugin/modules/messages.js:480"]},{"id":"message:tab-order-badge-draw-failed","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:485","payloadFields":["tempId"],"senders":["src/plugin/backend/onmessage.js:3400","src/plugin/backend/onmessage.js:3406","src/plugin/backend/onmessage.js:3417"],"consumers":["src/plugin/modules/messages.js:485"]},{"id":"message:delete-tab-order-copy-for-area","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:3426","payloadFields":["areaId"],"senders":["src/plugin/modules/accessibility.js:7557 (exclusão em cascata da área)","src/plugin/modules/tab-order.js:1615"],"consumers":["backend: remove todas as cópias de Ordem de Tabulação da área"]},{"id":"message:delete-specs-for-area","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:3440","payloadFields":["areaId"],"senders":["src/plugin/modules/accessibility.js:7549"],"consumers":["backend: remove specs da área do canvas"]},{"id":"message:toggle-tab-order-copy-visibility","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:3479","payloadFields":["areaId","visible (confirmar no handler)"],"senders":["src/plugin/modules/accessibility.js:7200","src/plugin/modules/accessibility.js:7205"],"consumers":["backend: mostra/esconde clone de Ordem de Tabulação"]},{"id":"message:insert-swipe-path","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:3656","payloadFields":["areaId","targetNodeId (fallback pra recriar clone)","points"],"senders":["src/plugin/modules/swipe-path.js:704"],"consumers":["backend: desenha a trilha de swipe real no canvas a partir dos pontos capturados"],"respondsWith":["message:swipe-path-created","message:swipe-path-create-failed"]},{"id":"message:swipe-path-created","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:528","payloadFields":["areaId","pathNodeId","points"],"senders":["src/plugin/backend/onmessage.js:3751"],"consumers":["src/plugin/modules/messages.js:528"]},{"id":"message:swipe-path-create-failed","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:533","payloadFields":["areaId","reason"],"senders":["src/plugin/backend/onmessage.js:3661 (menos de 2 pontos)","src/plugin/backend/onmessage.js:3759 (exceção genérica)"],"consumers":["src/plugin/modules/messages.js:533"]},{"id":"message:cleanup-swipe-path-for-area","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:3777","payloadFields":["areaId"],"senders":["src/plugin/modules/accessibility.js:7561"],"consumers":["backend: remove trilha de swipe da área"],"respondsWith":["message:swipe-path-cleaned-up"]},{"id":"message:swipe-path-cleaned-up","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:541","payloadFields":["areaId"],"senders":["src/plugin/backend/onmessage.js:3782"],"consumers":["src/plugin/modules/messages.js:541"]},{"id":"message:check-a11y-library","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:3792","payloadFields":["token"],"senders":["src/plugin/modules/accessibility.js:1017","src/plugin/modules/accessibility.js:1188","src/plugin/modules/accessibility.js:6234"],"consumers":["backend: checa se a lib 'Design Acessível' está vinculada ao arquivo"],"respondsWith":["message:a11y-library-status"],"note":"3 pontos de disparo em fluxos distintos (abertura de modal, retry, Detecção Automática) — mesmo payload trivial (token), baixo risco."},{"id":"message:a11y-library-status","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:584","payloadFields":["linked","token"],"senders":["src/plugin/backend/onmessage.js:3802"],"consumers":["src/plugin/modules/messages.js:584"]},{"id":"message:resolve-manual-spec-match","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:3818","payloadFields":["token"],"senders":["src/plugin/modules/accessibility.js:1010"],"consumers":["backend: liga _a11yManualMatchModeActive, chama _resolveManualSpecMatchAndNotify (dsc-matching.js) com a seleção atual"],"respondsWith":["message:manual-spec-match-resolved"],"note":"Handler despacha para dsc-matching.js, não resolve tudo em onmessage.js — único ponto do grafo onde um handler frontend-to-backend delega a resposta pra outro arquivo do backend."},{"id":"message:manual-spec-match-resolved","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:623","payloadFields":["token","nodeId","nodeName","match"],"senders":["src/plugin/backend/dsc-matching.js:225"],"consumers":["src/plugin/modules/messages.js:623"],"note":"ÚNICO backend-to-frontend deste catálogo que NÃO é enviado de onmessage.js — sai de dsc-matching.js. Também disparado indiretamente pelo listener de selectionchange em onmessage.js:354 (chama _resolveManualSpecMatchAndNotify(null, _node) diretamente, sem passar por um msg.type de entrada)."},{"id":"message:stop-manual-spec-match-mode","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:3836","payloadFields":[],"senders":["src/plugin/modules/accessibility.js:1178"],"consumers":["backend: desliga _a11yManualMatchModeActive e limpa estado do gate"]},{"id":"message:resolve-layer-order","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:3850","payloadFields":["areaId","areaTargetNodeId"],"senders":["src/plugin/modules/accessibility.js:5217"],"consumers":["backend: DFS na árvore de camadas a partir de areaTargetNodeId, escopado à área"],"respondsWith":["message:layer-order-resolved"]},{"id":"message:layer-order-resolved","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:644","payloadFields":["areaId","areaTargetNodeId","order"],"senders":["src/plugin/backend/onmessage.js:3898"],"consumers":["src/plugin/modules/messages.js:644"]},{"id":"message:insert-ficha-section","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:4965","payloadFields":["areaId (via payload.areaId)","sectionKey (via payload.sectionKey)","... (payload é Object.assign({type}, payload) em handoff-ficha.js:242 — campos exatos dependem de _fichaBuildSectionPayload, não totalmente enumerados nesta varredura)"],"senders":["src/plugin/modules/handoff-ficha.js:242 (_fichaInsertSection)"],"consumers":["backend: monta a seção (legenda + itens) e insere/atualiza no '[HAC] Documento Final'"],"respondsWith":["message:ficha-section-inserted","message:ficha-section-insert-failed"],"note":"Payload construído por Object.assign — campos reais variam por sectionKey (Tabulação/Swipe/Leitor de Tela têm shapes de item diferentes). Antes de adicionar campo novo a qualquer um dos 3, confirmar em handoff-ficha.js qual função monta o payload para aquela sectionKey específica."},{"id":"message:ficha-section-inserted","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:550","payloadFields":["areaId","sectionKey","itemCount","frameId"],"senders":["src/plugin/backend/onmessage.js:5132"],"consumers":["src/plugin/modules/messages.js:550"]},{"id":"message:ficha-section-insert-failed","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:555","payloadFields":["areaId","sectionKey","reason"],"senders":["src/plugin/backend/onmessage.js:4970 (dados inválidos)","src/plugin/backend/onmessage.js:4981 (frame original não existe mais)","src/plugin/backend/onmessage.js:4996 (falha ao criar frame do Handoff)","src/plugin/backend/onmessage.js:5014 (falha genérica ao montar a seção)"],"consumers":["src/plugin/modules/messages.js:555"]},{"id":"message:prepare-ficha-section-edit","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:5154","payloadFields":["areaId","sectionKey"],"senders":["src/plugin/modules/handoff-ficha.js:274"],"consumers":["backend: recria o clone de trabalho a partir do frame original para edição"],"respondsWith":["message:ficha-section-edit-ready","message:ficha-section-edit-failed"]},{"id":"message:ficha-section-edit-ready","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:562","payloadFields":["areaId","sectionKey","cloneId"],"senders":["src/plugin/backend/onmessage.js:5213"],"consumers":["src/plugin/modules/messages.js:562"]},{"id":"message:ficha-section-edit-failed","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:567","payloadFields":["areaId","sectionKey","reason"],"senders":["src/plugin/backend/onmessage.js:5159 (dados inválidos)","src/plugin/backend/onmessage.js:5165 (frame original não existe mais)","src/plugin/backend/onmessage.js:5188 (falha ao preparar réplica de trabalho)"],"consumers":["src/plugin/modules/messages.js:567"]},{"id":"message:delete-ficha-for-area","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:5226","payloadFields":["areaId"],"senders":["src/plugin/modules/accessibility.js:7562"],"consumers":["backend: remove seções da Ficha desta área do Documento Final"]},{"id":"message:toggle-ficha-visibility","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:5240","payloadFields":["areaId","visible (confirmar no handler)"],"senders":["src/plugin/modules/accessibility.js:7211"],"consumers":["backend: mostra/esconde seção da Ficha"]},{"id":"message:highlight-ficha-node","direction":"frontend-to-backend","handlerLocation":"src/plugin/backend/onmessage.js:5254","payloadFields":["areaId"],"senders":["src/plugin/modules/handoff-ficha.js:360"],"consumers":["backend: foca o frame da Ficha desta área"],"respondsWith":["message:ficha-node-not-found"]},{"id":"message:ficha-node-not-found","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:575","payloadFields":["areaId"],"senders":["src/plugin/backend/onmessage.js:5258"],"consumers":["src/plugin/modules/messages.js:575"]},{"id":"message:toast","direction":"backend-to-frontend","handlerLocation":"src/plugin/modules/messages.js:122","payloadFields":["texto/tipo (confirmar no handler — sender não encontrado)"],"senders":[],"consumers":["src/plugin/modules/messages.js:122"],"note":"HANDLER SEM SENDER CONHECIDO — grep completo em backend/onmessage.js, backend/dsc-matching.js e code.js não encontrou nenhum figma.ui.postMessage({ type: 'toast', ... }). Provavelmente legado do dispatcher herdado do Handex (messages.js é explicitamente uma adaptação, ver comentário no topo do arquivo) nunca removido. Backend usa figma.notify() diretamente para avisos (dezenas de ocorrências), não este canal. Não remover sem confirmar — pode haver um caminho de disparo dinâmico (type construído em variável) não capturado por este grep estático."}],"propagatesField":[{"field":"workAnchor","description":"Posição fixa da réplica de trabalho de uma Área — só existe hoje no fluxo de Leitor de Tela (Specs). Introduzido 2026-09-21.","edges":["message:start-spec-copy (envia savedAnchor, campo irmão de escrita)","function:_createSpecCloneForArea (onmessage.js:2862 — calcula e retorna workAnchor: {x,y})","function:_resolveActiveSpecClone (onmessage.js:2940 — propaga savedAnchor→workAnchor)","message:spec-copy-started (devolve workAnchor, só preenchido na 1ª criação)","message:spec-created (devolve workAnchor, mesmo raciocínio)","src/plugin/modules/messages.js:227-228 (spec-created: chama _saveA11yAreaWorkAnchor se msg.workAnchor presente)","src/plugin/modules/messages.js:391-392 (spec-copy-started: mesmo padrão)","src/plugin/modules/accessibility.js:836-866 (_getA11yAreaWorkAnchor/_saveA11yAreaWorkAnchor — leitura/escrita em hacData.a11yAreas[].workAnchor)","src/plugin/backend/onmessage.js:4880 (create-unified-spec/insert-ficha-section-adjacent — lê area.workAnchor como savedAnchor ao resolver clone)","src/plugin/backend/onmessage.js:5181 (prepare-ficha-section-edit — mesma leitura)"],"gapsIdentified":["_createTabOrderCloneForArea (onmessage.js:2705) e _createSwipePathCloneForArea (onmessage.js:2779) NÃO recebem nem retornam workAnchor — se a paridade entre os 3 fluxos for decidida como desejável no futuro, este é o ponto exato de extensão."]},{"field":"savedAnchor","description":"Campo de ENTRADA (frontend→backend) espelhando workAnchor de SAÍDA — mesmo conceito, nomes diferentes por lado da mensagem (padrão deliberado: 'savedAnchor' quando o frontend está reenviando algo já persistido, 'workAnchor' quando o backend está devolvendo algo recém-calculado).","edges":["message:start-spec-copy (msg.savedAnchor)","message:create-unified-spec (opts.savedAnchor)","src/plugin/backend/onmessage.js:3109 (lê msg.savedAnchor)","src/plugin/backend/onmessage.js:3911 (accessibility.js — _getA11yAreaWorkAnchor(areaId) alimenta opts.savedAnchor)","function:_createSpecCloneForArea (parâmetro savedAnchor)","function:_resolveActiveSpecClone/_resolveActiveSpecCloneInner (parâmetro savedAnchor, propagado)","function:_findFreeTabOrderCopyPosition (code.js:3563 — se savedAnchor.x/y são números, retorna direto; senão roda o algoritmo automático de posicionamento)"],"gapsIdentified":["Nome da função helper (_findFreeTabOrderCopyPosition, em code.js) sugere escopo de Tabulação por herança histórica, mas hoje é compartilhada pelos 3 fluxos de clone — só o de Specs passa savedAnchor não-null na prática. Nome desatualizado, não um bug funcional — mas pode confundir quem grepar por 'TabOrder' achando que é exclusivo daquele fluxo."]},{"field":"nodeMap","description":"Mapa originalId → nó-no-clone, devolvido pelos fluxos de Tabulação e Swipe (não pelo de Specs, que resolve a tradução internamente sem expor ao frontend).","edges":["function:_createTabOrderCloneForArea (retorna { clone, nodeMap })","function:_createSwipePathCloneForArea (retorna { clone, nodeMap })","message:tab-order-copy-started (devolve nodeMap)","message:tab-order-generated-from-layers (devolve nodeMap)","message:swipe-path-generated-from-layers (devolve nodeMap)","src/plugin/modules/tab-order.js (consome nodeMap para traduzir seleção do clone de volta pro id original)","src/plugin/modules/swipe-path.js (mesmo uso)"],"gapsIdentified":["message:spec-copy-started e message:spec-created NÃO carregam nodeMap — resolvido internamente em onmessage.js antes do postMessage. Assimetria proposital aparente (ver pattern:3-parallel-clone-flows), mas nunca documentada explicitamente até este grafo."]},{"field":"a11yDscComponentName","description":"Nome real do component set DSC (ex: '[dsc] Button') resolvido pela Detecção Automática/matching manual e persistido na spec — usado tanto para exibir o badge de origem quanto para re-matching.","edges":["message:selection-name (devolve dscComponentName, resolvido em onmessage.js:673 via matching síncrono)","message:manual-spec-match-resolved (devolve match, que inclui o nome do componente — ver dsc-matching.js:225-231)","src/plugin/modules/accessibility.js:3891 (opts.a11yDscComponentName lido de modal.dataset.dscComponentName)","message:create-unified-spec (opts.a11yDscComponentName)","message:spec-created (spec.a11yDscComponentName, eco do valor recebido)"],"gapsIdentified":["Nenhum gap estrutural identificado nesta varredura — campo bem propagado ponta a ponta. Mantido no grafo porque é o campo citado explicitamente no histórico de retrabalho (ver CLAUDE.md, 'a property Componente do wrapper mobile') como fonte de confusão passada; MONITORAR em mudanças futuras de schema da lib (ver princípio 'a lib é a referência' no CLAUDE.md)."]},{"field":"areaId","description":"Identificador da Área Marcada — o campo mais universalmente propagado do sistema; presente em praticamente toda mensagem relacionada a um fluxo específico de área (Tabulação/Swipe/Specs/Ficha).","edges":["Presente em 30+ mensagens deste catálogo (ver payloadFields de cada uma) — não listado exaustivamente aqui para não duplicar o catálogo `messages` acima.","Origem: hacData.a11yAreas[].id, criado em message:a11y-area-created e nunca mais alterado."],"gapsIdentified":["Nenhum — citado aqui só para deixar explícito que 'areaId' é a chave de correlação principal entre os 3 fluxos paralelos e a Ficha; qualquer feature nova que precise cruzar dados entre fluxos deveria usar areaId como chave primária, não reinventar outra."]},{"field":"generation","description":"Contador anti-corrida usado só nos fluxos de geração automática a partir de camadas (Tabulação e Swipe) — protege contra respostas de cliques rápidos em sequência chegando fora de ordem.","edges":["message:generate-tab-order-from-layers (envia generation)","message:tab-order-generated-from-layers (ecoa generation em TODOS os 5 pontos de disparo)","message:generate-swipe-path-from-layers (envia generation)","message:swipe-path-generated-from-layers (ecoa generation em TODOS os 5 pontos de disparo)"],"gapsIdentified":["Nenhum gap — os dois fluxos mantêm paridade completa neste campo até 2026-09-22. O fluxo de Specs (create-unified-spec) não tem conceito equivalente de 'generation' porque não é um processo de geração em lote a partir de camadas."]}]}</script>
+<script>
+(function () {
+  var GRAPH = JSON.parse(document.getElementById('graph-data').textContent);
+
+  // ── Tema (mesmo padrão das outras páginas de docs/) ────────────────
+  var ICON_SUN = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" /></svg>';
+  var ICON_MOON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" /></svg>';
+  var STORAGE_KEY = 'hac-docs-theme';
+  var root = document.documentElement;
+  var toggle = document.getElementById('theme-toggle');
+  function applyTheme(theme) {
+    if (theme === 'dark') { root.setAttribute('data-theme', 'dark'); if (toggle) toggle.innerHTML = ICON_SUN; }
+    else { root.removeAttribute('data-theme'); if (toggle) toggle.innerHTML = ICON_MOON; }
+  }
+  var saved = null;
+  try { saved = localStorage.getItem(STORAGE_KEY); } catch (e) {}
+  applyTheme(saved === 'dark' ? 'dark' : 'light');
+  if (toggle) {
+    toggle.addEventListener('click', function () {
+      var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
+      try { localStorage.setItem(STORAGE_KEY, next); } catch (e) {}
+    });
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function list(items) {
+    if (!items || !items.length) return '<em>—</em>';
+    return '<ul>' + items.map(function (i) { return '<li>' + esc(i) + '</li>'; }).join('') + '</ul>';
+  }
+
+  // ── Meta strip ──────────────────────────────────────────────────
+  var schema = GRAPH._schema || {};
+  var metaStrip = document.getElementById('meta-strip');
+  var metaBits = [];
+  if (schema.generatedAt) metaBits.push('Gerado em ' + schema.generatedAt);
+  if (schema.generatedFrom && schema.generatedFrom.branch) metaBits.push('branch ' + schema.generatedFrom.branch);
+  metaBits.push((GRAPH.messages || []).length + ' mensagens mapeadas');
+  metaBits.push((GRAPH.propagatesField || []).length + ' campos propagados documentados');
+  metaStrip.innerHTML = metaBits.map(function (b) { return '<span>' + esc(b) + '</span>'; }).join('');
+
+  // ── Tabs ────────────────────────────────────────────────────────
+  var tabBtns = document.querySelectorAll('.tabs > .tab-btn');
+  tabBtns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      tabBtns.forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      document.querySelectorAll('.tab-panel').forEach(function (p) { p.classList.remove('active'); });
+      document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ── Mensagens ───────────────────────────────────────────────────
+  var messages = (GRAPH.messages || []).slice().sort(function (a, b) { return a.id.localeCompare(b.id); });
+  document.getElementById('count-messages').textContent = messages.length;
+
+  function messageMatchesQuery(m, q) {
+    if (!q) return true;
+    q = q.toLowerCase();
+    var haystack = [
+      m.id, m.direction, m.handlerLocation, m.note,
+      (m.payloadFields || []).join(' '),
+      (m.senders || []).join(' '),
+      (m.consumers || []).join(' '),
+      (m.respondsWith || []).join(' ')
+    ].join(' ').toLowerCase();
+    return haystack.indexOf(q) !== -1;
+  }
+
+  function renderMessageCard(m) {
+    var pillClass = m.direction === 'frontend-to-backend' ? 'pill-f2b' : 'pill-b2f';
+    var pillLabel = m.direction === 'frontend-to-backend' ? 'Frontend → Backend' : 'Backend → Frontend';
+    var deadHandler = /NENHUM/i.test(m.handlerLocation || '');
+    var html = '<details class="msg-card">';
+    html += '<summary><span class="pill ' + pillClass + '">' + pillLabel + '</span>';
+    html += '<span class="msg-id">' + esc(m.id.replace(/^message:/, '')) + '</span>';
+    if (deadHandler) html += '<span class="pill pill-warn">Sem handler</span>';
+    if (m.note) html += '<span class="pill pill-warn">Nota</span>';
+    html += '</summary>';
+    html += '<div class="msg-body"><dl>';
+    html += '<dt>Handler</dt><dd><code>' + esc(m.handlerLocation) + '</code></dd>';
+    html += '<dt>Payload</dt><dd>' + (m.payloadFields && m.payloadFields.length ? list(m.payloadFields) : '<em>sem campos</em>') + '</dd>';
+    html += '<dt>Disparado por</dt><dd>' + list(m.senders) + '</dd>';
+    html += '<dt>Consumido por</dt><dd>' + list(m.consumers) + '</dd>';
+    if (m.respondsWith && m.respondsWith.length) html += '<dt>Responde com</dt><dd>' + list(m.respondsWith) + '</dd>';
+    html += '</dl>';
+    if (m.note) html += '<div class="msg-note">' + esc(m.note) + '</div>';
+    html += '</div></details>';
+    return html;
+  }
+
+  var currentFilter = 'all';
+  function renderMessages() {
+    var q = document.getElementById('msg-search').value.trim();
+    var filtered = messages.filter(function (m) {
+      if (currentFilter === 'frontend-to-backend' && m.direction !== 'frontend-to-backend') return false;
+      if (currentFilter === 'backend-to-frontend' && m.direction !== 'backend-to-frontend') return false;
+      if (currentFilter === 'flagged' && !m.note) return false;
+      return messageMatchesQuery(m, q);
+    });
+    var container = document.getElementById('messages-list');
+    var empty = document.getElementById('messages-empty');
+    if (!filtered.length) {
+      container.innerHTML = '';
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+    container.innerHTML = filtered.map(renderMessageCard).join('');
+  }
+  document.getElementById('msg-search').addEventListener('input', renderMessages);
+  document.querySelectorAll('[data-filter]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('[data-filter]').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      currentFilter = btn.dataset.filter;
+      renderMessages();
+    });
+  });
+  renderMessages();
+
+  // ── Campos propagados ───────────────────────────────────────────
+  var propagates = GRAPH.propagatesField || [];
+  document.getElementById('count-propagates').textContent = propagates.length;
+  document.getElementById('propagates-list').innerHTML = propagates.map(function (p) {
+    var html = '<div class="field-block">';
+    html += '<h3>' + esc(p.field) + '</h3>';
+    html += '<p>' + esc(p.description) + '</p>';
+    html += '<div class="edges-list">' + list(p.edges) + '</div>';
+    if (p.gapsIdentified && p.gapsIdentified.length) {
+      html += '<div class="gaps"><strong>Lacunas identificadas:</strong>' + list(p.gapsIdentified) + '</div>';
+    }
+    html += '</div>';
+    return html;
+  }).join('');
+
+  // ── Padrões estruturais ─────────────────────────────────────────
+  var patterns = GRAPH.patterns || [];
+  document.getElementById('count-patterns').textContent = patterns.length;
+  document.getElementById('patterns-list').innerHTML = patterns.map(function (pt) {
+    var html = '<div class="field-block">';
+    html += '<h3>' + esc(pt.name) + '</h3>';
+    html += '<p>' + esc(pt.description) + '</p>';
+    if (pt.functions && pt.functions.length) { html += '<h3 style="font-family:inherit;">Funções envolvidas</h3>' + list(pt.functions); }
+    if (pt.triggerMessages && pt.triggerMessages.length) { html += '<h3 style="font-family:inherit;">Mensagens de disparo</h3>' + list(pt.triggerMessages); }
+    if (pt.responseMessages && pt.responseMessages.length) { html += '<h3 style="font-family:inherit;">Mensagens de resposta</h3>' + list(pt.responseMessages); }
+    if (pt.knownAsymmetries && pt.knownAsymmetries.length) {
+      html += '<h3 style="font-family:inherit;">Assimetrias conhecidas</h3>';
+      html += pt.knownAsymmetries.map(function (a) {
+        return '<div class="gaps"><strong>' + esc(a.field) + '</strong><p style="margin:6px 0;">' + esc(a.description) + '</p><em>' + esc(a.status) + '</em></div>';
+      }).join('');
+    }
+    html += '</div>';
+    return html;
+  }).join('');
+
+  // ── Arquivos & dependências ─────────────────────────────────────
+  var nodes = (GRAPH.nodes || []).filter(function (n) { return n.type === 'file'; });
+  document.getElementById('count-files').textContent = nodes.length;
+  document.getElementById('nodes-grid').innerHTML = nodes.map(function (n) {
+    return '<div class="node-tile"><span class="node-name">' + esc(n.name) + '</span>' + esc(n.summary) + '</div>';
+  }).join('');
+  document.getElementById('edges-list').innerHTML = (GRAPH.structuralEdges || []).map(function (e) {
+    return '<div class="edge-row"><span class="edge-type">' + esc(e.type) + '</span>' +
+      '<code>' + esc(e.source.replace(/^file:/, '')) + '</code> → <code>' + esc(e.target.replace(/^file:/, '')) + '</code>' +
+      '<span style="color:var(--muted);">' + esc(e.note) + '</span></div>';
+  }).join('');
+})();
+</script>
+</body>
+</html>
