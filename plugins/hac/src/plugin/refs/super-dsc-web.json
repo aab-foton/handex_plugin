@@ -2,7 +2,7 @@
   "meta": {
     "libraryName": "Super DSC | Web",
     "figmaFileKey": "erkqbRKIbaFWbkHe51BeiZ",
-    "exportedAt": "2026-09-14T17:23:09.387Z",
+    "exportedAt": "2026-09-22T13:14:43.478Z",
     "generator": "fetch-design-refs.cjs (hac)",
     "warnings": [
       "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
@@ -781,15 +781,15 @@
         "value": "#ffffff"
       },
       {
-        "key": "e6b75fec7f7bd7659b054937dc29c9923f44c2f5",
-        "name": "dsc/icon/color/highlight 1 [color 9]",
+        "key": "7a79b9c773da353bc342e9e3d26f1390d18ef748",
+        "name": "dsc/color/state/highlight/hover2",
         "resolvedType": "COLOR",
         "collection": "dsc",
         "value": "#005194"
       },
       {
-        "key": "7a79b9c773da353bc342e9e3d26f1390d18ef748",
-        "name": "dsc/color/state/highlight/hover2",
+        "key": "e6b75fec7f7bd7659b054937dc29c9923f44c2f5",
+        "name": "dsc/icon/color/highlight 1 [color 9]",
         "resolvedType": "COLOR",
         "collection": "dsc",
         "value": "#005194"
@@ -1852,230 +1852,6 @@
         "value": "Usar em outro banco"
       },
       {
-        "key": "e683b329fedb23d423b5daf08762ceb825932b17",
-        "name": "breakpoint 🔒",
-        "resolvedType": "STRING",
-        "collection": "responsive",
-        "value": "extra large"
-      },
-      {
-        "key": "5a252b9f4d10a79cb6a71f922d7c0d359e08b671",
-        "name": "device 🔒",
-        "resolvedType": "STRING",
-        "collection": "responsive",
-        "value": "desktop"
-      },
-      {
-        "key": "342dc2e8338a4bf48cf67858012acaac8f51b0dd",
-        "name": "device/width",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1440
-      },
-      {
-        "key": "0c58f7f1c8bdee1fae04b483016807839d8bbeef",
-        "name": "device/min-width",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1440
-      },
-      {
-        "key": "15b13fffa9bd485c000a60cf7352aeec864ac5cd",
-        "name": "device/max-width",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1920
-      },
-      {
-        "key": "8c1c494e3d2189c0cda1a8b246a222679d4e7188",
-        "name": "device/min-height",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 900
-      },
-      {
-        "key": "b6fa6d7ea224162fc26bcd4feb3593a071c72aef",
-        "name": "grid/grid-column",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 12
-      },
-      {
-        "key": "b357d9876a6487bc6585ff05d6d34049168a686b",
-        "name": "show/device/desktop",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "f1fa37adfa4cfe8c8e83b226e2c309d2756590a8",
-        "name": "show/device/mobile",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "c656eb4c5adbf1f4d10d36ecc529a62d6ba847cb",
-        "name": "show/breakpoint/extra large",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "eb8218a3b520b76e4c9c5394b34a28e90b9381be",
-        "name": "show/breakpoint/large +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "de2f0274cba20369986d7eba540f66fed2f66cda",
-        "name": "show/breakpoint/large",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "f62abf263d76b9cb8859e065b36df4f4a092440d",
-        "name": "show/breakpoint/medium +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "55341000b43c6871ba95e3e9612136dbbd2a06ed",
-        "name": "show/breakpoint/medium",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "2a1182e3ade1087d17e5a4ed3202d0c3a77b2588",
-        "name": "show/breakpoint/small +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "0f238f4ba74855b4056b568dfee5c2f3a114445c",
-        "name": "show/breakpoint/small",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "3cf82aef55e2701ed26738822a1848886287a5ae",
-        "name": "show/breakpoint/extra small",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "d349b296f58c9f5cc80e92c1043cc59a4a3b79f2",
-        "name": "grid/grid-margin",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 48
-      },
-      {
-        "key": "e2c5440e36fc09559af6d652fa8bd67db3e11dbd",
-        "name": "grid/grid-gap",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 24
-      },
-      {
-        "key": "d5f0eddd47d5e547747cbd2f6b83c1170cfe6c7f",
-        "name": "hide/device/desktop",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "bbb5487ef1c40e5ddf426a45dc9a79c1c61a08f4",
-        "name": "components/container/width-compact",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 720
-      },
-      {
-        "key": "ba362c47468f7ffc3f4bacadc489386abdd3eaff",
-        "name": "components/container/width",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1080
-      },
-      {
-        "key": "d5f604b4641b0f25ed4f4e86454f9c1597343fbc",
-        "name": "components/container/width-wide",
-        "resolvedType": "FLOAT",
-        "collection": "responsive",
-        "value": 1440
-      },
-      {
-        "key": "353f9e9a3a815706dcc7bf54d116db9f23285fe2",
-        "name": "hide/device/mobile",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "5cdf1997b0429ef16bd6c1be5bab9a2b12eda469",
-        "name": "hide/breakpoint/extra large",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "4f95e11f7498f15bd862c964ea6d213f77eacb04",
-        "name": "hide/breakpoint/large +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "2568ea599dbb0f5c54ba2e241554507f75f26411",
-        "name": "hide/breakpoint/large",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "759e7e9fc237cc7cf071ed04b65b5d280e884f26",
-        "name": "hide/breakpoint/medium +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "d3676bfcd938342e798fe2301907f26fe42fc5a0",
-        "name": "hide/breakpoint/medium",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "d18bfc2be43c65657374a7518a55295ea586102c",
-        "name": "hide/breakpoint/small +",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": null
-      },
-      {
-        "key": "080f2ce8fe0de800c7174126adaeaac75e322b54",
-        "name": "hide/breakpoint/small",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
-        "key": "1b813038bcb7e2224d055ba5952e55add8faec73",
-        "name": "hide/breakpoint/extra small",
-        "resolvedType": "BOOLEAN",
-        "collection": "responsive",
-        "value": true
-      },
-      {
         "key": "9c7fc4880bebc37c156e9bdf87c2ef6354bc2a6e",
         "name": "Texts/ComponentDescription",
         "resolvedType": "STRING",
@@ -2809,6 +2585,230 @@
         "resolvedType": "FLOAT",
         "collection": "GOSTPlugin",
         "value": 256
+      },
+      {
+        "key": "e683b329fedb23d423b5daf08762ceb825932b17",
+        "name": "breakpoint 🔒",
+        "resolvedType": "STRING",
+        "collection": "responsive",
+        "value": "extra large"
+      },
+      {
+        "key": "5a252b9f4d10a79cb6a71f922d7c0d359e08b671",
+        "name": "device 🔒",
+        "resolvedType": "STRING",
+        "collection": "responsive",
+        "value": "desktop"
+      },
+      {
+        "key": "342dc2e8338a4bf48cf67858012acaac8f51b0dd",
+        "name": "device/width",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 1440
+      },
+      {
+        "key": "0c58f7f1c8bdee1fae04b483016807839d8bbeef",
+        "name": "device/min-width",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 1440
+      },
+      {
+        "key": "15b13fffa9bd485c000a60cf7352aeec864ac5cd",
+        "name": "device/max-width",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 1920
+      },
+      {
+        "key": "8c1c494e3d2189c0cda1a8b246a222679d4e7188",
+        "name": "device/min-height",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 900
+      },
+      {
+        "key": "b6fa6d7ea224162fc26bcd4feb3593a071c72aef",
+        "name": "grid/grid-column",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 12
+      },
+      {
+        "key": "b357d9876a6487bc6585ff05d6d34049168a686b",
+        "name": "show/device/desktop",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "f1fa37adfa4cfe8c8e83b226e2c309d2756590a8",
+        "name": "show/device/mobile",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "c656eb4c5adbf1f4d10d36ecc529a62d6ba847cb",
+        "name": "show/breakpoint/extra large",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "eb8218a3b520b76e4c9c5394b34a28e90b9381be",
+        "name": "show/breakpoint/large +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "de2f0274cba20369986d7eba540f66fed2f66cda",
+        "name": "show/breakpoint/large",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "f62abf263d76b9cb8859e065b36df4f4a092440d",
+        "name": "show/breakpoint/medium +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "55341000b43c6871ba95e3e9612136dbbd2a06ed",
+        "name": "show/breakpoint/medium",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "2a1182e3ade1087d17e5a4ed3202d0c3a77b2588",
+        "name": "show/breakpoint/small +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "0f238f4ba74855b4056b568dfee5c2f3a114445c",
+        "name": "show/breakpoint/small",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "3cf82aef55e2701ed26738822a1848886287a5ae",
+        "name": "show/breakpoint/extra small",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "d349b296f58c9f5cc80e92c1043cc59a4a3b79f2",
+        "name": "grid/grid-margin",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 48
+      },
+      {
+        "key": "e2c5440e36fc09559af6d652fa8bd67db3e11dbd",
+        "name": "grid/grid-gap",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 24
+      },
+      {
+        "key": "d5f0eddd47d5e547747cbd2f6b83c1170cfe6c7f",
+        "name": "hide/device/desktop",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "bbb5487ef1c40e5ddf426a45dc9a79c1c61a08f4",
+        "name": "components/container/width-compact",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 720
+      },
+      {
+        "key": "ba362c47468f7ffc3f4bacadc489386abdd3eaff",
+        "name": "components/container/width",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 1080
+      },
+      {
+        "key": "d5f604b4641b0f25ed4f4e86454f9c1597343fbc",
+        "name": "components/container/width-wide",
+        "resolvedType": "FLOAT",
+        "collection": "responsive",
+        "value": 1440
+      },
+      {
+        "key": "353f9e9a3a815706dcc7bf54d116db9f23285fe2",
+        "name": "hide/device/mobile",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "5cdf1997b0429ef16bd6c1be5bab9a2b12eda469",
+        "name": "hide/breakpoint/extra large",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "4f95e11f7498f15bd862c964ea6d213f77eacb04",
+        "name": "hide/breakpoint/large +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "2568ea599dbb0f5c54ba2e241554507f75f26411",
+        "name": "hide/breakpoint/large",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "759e7e9fc237cc7cf071ed04b65b5d280e884f26",
+        "name": "hide/breakpoint/medium +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "d3676bfcd938342e798fe2301907f26fe42fc5a0",
+        "name": "hide/breakpoint/medium",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "d18bfc2be43c65657374a7518a55295ea586102c",
+        "name": "hide/breakpoint/small +",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": null
+      },
+      {
+        "key": "080f2ce8fe0de800c7174126adaeaac75e322b54",
+        "name": "hide/breakpoint/small",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
+      },
+      {
+        "key": "1b813038bcb7e2224d055ba5952e55add8faec73",
+        "name": "hide/breakpoint/extra small",
+        "resolvedType": "BOOLEAN",
+        "collection": "responsive",
+        "value": true
       }
     ]
   },
@@ -26328,13 +26328,6 @@
       "containingFrameNodeId": "6791:6531"
     },
     {
-      "key": "40c25ca915478d31a80b8fe30984a585af84ae49",
-      "name": "size=default",
-      "description": "",
-      "containingFrame": "[dsc] Credit Card Illustration",
-      "containingFrameNodeId": "12135:477"
-    },
-    {
       "key": "56513682c800863db7aee0bff2add54fcd2f1ee6",
       "name": "state=focus, variant=danger, status=unchecked",
       "description": "",
@@ -26459,13 +26452,6 @@
       "description": "",
       "containingFrame": "[dsc] Card Alert",
       "containingFrameNodeId": "6791:6531"
-    },
-    {
-      "key": "c149b9f48b3f31e4a9bcaba370988ffd73a5433d",
-      "name": "size=small",
-      "description": "",
-      "containingFrame": "[dsc] Credit Card Illustration",
-      "containingFrameNodeId": "12135:477"
     },
     {
       "key": "f6e6f5f9ac5bfe3491429fb21d70e59fe9598bee",
@@ -35678,6 +35664,601 @@
       "description": "",
       "containingFrame": "[dsc] Chip",
       "containingFrameNodeId": "36586:4314"
+    },
+    {
+      "key": "8c385f8b2fe7da454c9f853f1a0ce0f3c4641c44",
+      "name": "variant=Visa Empresarial, type=credit, size=smaller",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "16964af529bbbafbac136a79219db2d37c370a80",
+      "name": "variant=Gold, type=credit, size=large",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "034c0df19384d3a1f74c1285897e16c822a22c0f",
+      "name": "variant=Conta Corrente Singular, type=debit, size=smaller",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "e298c1bf0ab7727594ef530ac75bc4348f1793ac",
+      "name": "variant=Conta Corrente Private, type=debit, size=large",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "828c7130e163ecbdcbbbda0862ce4c77b489cfd1",
+      "name": "variant=Infinite, type=credit, size=large",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "ccb9f0620490951a4948bd7329ef323059163338",
+      "name": "variant=Infinite, type=credit, size=medium",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "b015b97a6215f9afb2c0db82d223014cc04da245",
+      "name": "variant=Mulher, type=credit, size=small",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "3d225c1e792c61a08bb4fdeeaf46843c7b6a7d6d",
+      "name": "variant=Visa Empresarial, type=credit, size=medium",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "e0e47f3afd1cbe7519641d8608ab8c4128002651",
+      "name": "variant=Leve, type=credit, size=large",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "6f4f1c79094d1c56ce548c4343db9a7e1af6e728",
+      "name": "variant=Infinite, type=credit, size=small",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "1067123fa7d34777f75d84541ff535837a63e5f2",
+      "name": "variant=Mulher, type=credit, size=larger",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "d30d16bd80487491b38a11e9bd0913555263f422",
+      "name": "variant=Conta Salário, type=debit, size=larger",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "ef84da47d05147445fff4f9878dc3598fdab4ece",
+      "name": "variant=Leve, type=credit, size=larger",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "03d3175a6068f3124511c8c7173f6cbe8241ef13",
+      "name": "variant=Elo Mais, type=credit, size=medium",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "794812f181e9c37154ece61bedc7ac441f51ec4f",
+      "name": "variant=Conta Poupança, type=debit, size=small",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "3a866f1a64724dd7c7d3907f4d9e3b1e489094dd",
+      "name": "variant=Internacional, type=credit, size=medium",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "c25c240b8b01900cb236bb1c34e9aed0244304b6",
+      "name": "variant=Gold, type=credit, size=larger",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "2e77749b10bd3082220fc5a58464978c61ff9fd6",
+      "name": "variant=Caixa Tem, type=debit, size=medium",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "22afd937fb7369699efe7c26149f8c916b5d7499",
+      "name": "variant=Platinum, type=credit, size=small",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "bbc834d1712a2e9c74a63b2f459347c323d9613b",
+      "name": "variant=Platinum, type=credit, size=larger",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "3afa928e7af76c14fd541b26830755d3e69c3539",
+      "name": "variant=Sim, type=credit, size=large",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "9e32b68b6fed3948e5b68a141a33ca30515a7c7d",
+      "name": "variant=Elo Empresarial, type=credit, size=small",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "7149968e3f19198efb411565a67e2f6d84d77f7e",
+      "name": "variant=Visa Empresarial, type=credit, size=large",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "08f1a975d4df2baaa6fe5bf07735731f27cff90b",
+      "name": "variant=Leve, type=credit, size=medium",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "3f82304386d9a783c216e68ef87b97296a020362",
+      "name": "variant=Conta Caixa Fácil, type=debit, size=smaller",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "b3acc5a6683d90c867a732df4725f32f76c4f6df",
+      "name": "variant=Internacional, type=credit, size=small",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "7d0d58aca557852aa0d3469d6ad1b9e432b3355c",
+      "name": "variant=Gold, type=credit, size=medium",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "d1d0007e8faa6eb96697caf7b73a8df16a1dc0b7",
+      "name": "variant=Internacional, type=credit, size=large",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "e392425a59222ca6c28c071abc7105a175849314",
+      "name": "variant=Internacional, type=credit, size=smaller",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "ad14b2bd4c15d7f10c73d958d0bc207820622a8f",
+      "name": "variant=Leve, type=credit, size=small",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "6bce0f370f01062ea1cdc670b45d7b3180d58093",
+      "name": "variant=Elo Empresarial, type=credit, size=medium",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "6b227118dafa8d525eb99a32ab499d34120b15cf",
+      "name": "variant=Leve, type=credit, size=smaller",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "6836cdfffa24916aaa378abfaa3165722088458f",
+      "name": "variant=Elo Grafite, type=credit, size=large",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "4d743e5b3991b5f104e5308b39f519d96a319685",
+      "name": "variant=Elo Grafite, type=credit, size=larger",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "07b51910aabe31e42376c4411342c94cdbdca950",
+      "name": "variant=Mulher, type=credit, size=large",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "2b74dedcdda5efbfccf1f36da16e2e14be495134",
+      "name": "variant=Platinum, type=credit, size=medium",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "29ac4a2e82d2af3e00d92274f6106665858c2cc9",
+      "name": "variant=Infinite, type=credit, size=larger",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "023f08af7b1b3ba5b679a990b105f116cf61c078",
+      "name": "variant=Mulher, type=credit, size=smaller",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "355970e789c781c6106d938adc9f3cd76d444bbe",
+      "name": "variant=Platinum, type=credit, size=smaller",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "95576b9b89dc02e10bd8b45033deb43ed5ac23f5",
+      "name": "variant=Sim, type=credit, size=small",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "5a1ac395b498a703a5cdb374f3372e45e4c18aa0",
+      "name": "variant=Sim, type=credit, size=smaller",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "5d252baa6de98a30cad77f60c8ab92508749b5f6",
+      "name": "variant=Sim, type=credit, size=medium",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "d29f2e5b540e5585f10c798f3514be6f5b23bbbf",
+      "name": "variant=Sim, type=credit, size=larger",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "a3665b3fa01d2bd5dc316c84ebdb86dc7936ca8f",
+      "name": "variant=Elo Grafite, type=credit, size=medium",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "63979ade17f3e4dd78929463ed060413639dd0a1",
+      "name": "variant=Visa Empresarial, type=credit, size=small",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "b44a38fb445522a9fa153a04643111a3345f36f9",
+      "name": "variant=Infinite, type=credit, size=smaller",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "22e97e990d9fff139224a17975388d83ed1f1034",
+      "name": "variant=Visa Empresarial, type=credit, size=larger",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "3d7da87bc5ef2630df3f2b1381202177505159fa",
+      "name": "variant=Mulher, type=credit, size=medium",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "d939161342928b9b3e0335ede1b66f28897b7240",
+      "name": "variant=Elo Empresarial, type=credit, size=large",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "bad07ea9f96b443be9f876527eae9c464d380835",
+      "name": "variant=Platinum, type=credit, size=large",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "26e5163da921a2bd77764c47f94866547cac9cc5",
+      "name": "variant=Elo Mais, type=credit, size=large",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "4efad7084eb57af568a4e3f6823a90f727fff867",
+      "name": "variant=Elo Empresarial, type=credit, size=smaller",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "2aeed58f7581fb6403ce986e4e6833a0f6bc7d3c",
+      "name": "variant=Elo Empresarial, type=credit, size=larger",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "84e1e70734167a50105f1d6080f922197885136c",
+      "name": "variant=Internacional, type=credit, size=larger",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "c37f560e4b79bc22f64d6e3a39b65bcaa72ddb28",
+      "name": "variant=Elo Mais, type=credit, size=small",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "e50b691d74bcbeee15b65b3877743cfbdc073cfd",
+      "name": "variant=Conta Corrente Singular, type=debit, size=medium",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "762efe55acab0f86e114d6e21047021d48a7627f",
+      "name": "variant=Elo Mais, type=credit, size=smaller",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "c4d269ccfab362123e53affce8333fd4de92fbb6",
+      "name": "variant=Elo Mais, type=credit, size=larger",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "a10eef4d65f879d2503f930cc6349d279e574475",
+      "name": "variant=Elo Grafite, type=credit, size=small",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "2f01e54d139cfedeac66f63403d244c9a0ad896f",
+      "name": "variant=Elo Grafite, type=credit, size=smaller",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "d5eaa680ee0caebfc359fb190edb263001a938eb",
+      "name": "variant=Conta Poupança, type=debit, size=large",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "792aa772903434aad6fe6c393aebc186abb79e48",
+      "name": "variant=Conta Caixa Fácil, type=debit, size=large",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "7483a6c7021785f2e0a07c9db424afa04d7f9cbd",
+      "name": "variant=Conta Caixa Fácil, type=debit, size=medium",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "3e6ea39ecc02045ae134f145d1be4a065672270b",
+      "name": "variant=Conta Caixa Fácil, type=debit, size=small",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "d538e59cb54102dfd35e949ba5af8fd57b50d0e0",
+      "name": "variant=Conta Caixa Fácil, type=debit, size=larger",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "8a62ae2870d023c7df5e42ad85578ccbd648b123",
+      "name": "variant=Conta Corrente Private, type=debit, size=medium",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "020db3fca78efc5550c79549e0e02bb7dc2cb5ee",
+      "name": "variant=Conta Corrente Private, type=debit, size=small",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "1165f666741f675cdce6a4201b430db82d9bb855",
+      "name": "variant=Caixa Tem, type=debit, size=larger",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "a23c3526f39f9aa325125b75a68bae78f9b0ed16",
+      "name": "variant=Conta Corrente Private, type=debit, size=smaller",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "5c127c13fa22c97cb39f594677383ee78406dcc1",
+      "name": "variant=Conta Corrente Private, type=debit, size=larger",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "87f9feb3c9093b399761c5833b46eff7a56232b1",
+      "name": "variant=Conta Corrente Singular, type=debit, size=large",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "5a5db328977ade5f69b54eb68b698173b842b7c2",
+      "name": "variant=Conta Corrente Singular, type=debit, size=small",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "e7ff7e1572e166e5beec8276090041c87d21ff24",
+      "name": "variant=Conta Corrente Singular, type=debit, size=larger",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "a8755744f0028e0f93a271cb7448d04810970921",
+      "name": "variant=Conta Poupança, type=debit, size=medium",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "df511c3968cd7564efdc841b425a9658fdb6e0b2",
+      "name": "variant=Conta Poupança, type=debit, size=smaller",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "43cf08792b598eee5ee6518a933211ce6bb23dac",
+      "name": "variant=Conta Salário, type=debit, size=large",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "c9b082933eb600cdb5763595408dee4da61069bf",
+      "name": "variant=Conta Poupança, type=debit, size=larger",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "30921d94f7f23c6932aee3efbd26cef63151ce67",
+      "name": "variant=Conta Salário, type=debit, size=medium",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "95ebacb732b13a6980d2bbb71609fa1beead98d3",
+      "name": "variant=Conta Salário, type=debit, size=small",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "e53628b12ef553ad4d6cdcf79aaceca9ebed120a",
+      "name": "variant=Conta Salário, type=debit, size=smaller",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "c1c17b2a2615df9407d61eaa720f837c6561e1b2",
+      "name": "variant=Caixa Tem, type=debit, size=large",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "2a530ad14d7e34e6ad028ada52528f0e13db2dc4",
+      "name": "variant=Caixa Tem, type=debit, size=small",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "ff4ba45b24eb8819c1e93105b10672e2f3594f31",
+      "name": "variant=Caixa Tem, type=debit, size=smaller",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "40c25ca915478d31a80b8fe30984a585af84ae49",
+      "name": "variant=Gold, type=credit, size=small",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
+    },
+    {
+      "key": "c149b9f48b3f31e4a9bcaba370988ffd73a5433d",
+      "name": "variant=Gold, type=credit, size=smaller",
+      "description": "",
+      "containingFrame": "[dsc] Credit Card",
+      "containingFrameNodeId": null
     }
   ],
   "spacing": [],

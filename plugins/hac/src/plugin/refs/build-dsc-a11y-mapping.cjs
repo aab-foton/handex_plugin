@@ -189,10 +189,15 @@ const A11Y_LIB_COMPONENT_MAP = [
     // super-app: nomenclatura mobile usa "Sheet"/"Tipkit Popover" em vez de
     // "Dialog" — equivalente semântico de plataforma (modal/overlay bloqueante),
     // decisão de curadoria explícita, não substring incidental.
-    'super-app': ['Sheet'],
+    // Ampliação (2026-09-22): "Popover"/"Tipkit Popover"/"Tooltip" são
+    // overlays de conteúdo sobreposto — mesma família semântica de Sheet
+    // (conteúdo que aparece sobre a tela e precisa ser anunciado/alcançável
+    // pelo leitor de tela, com foco gerenciado). Confiança BAIXA como todo o
+    // resto desta tabela indireta: o designer confirma no formulário.
+    'super-app': ['Sheet', 'Popover', 'Tipkit Popover', 'Tooltip'],
     // super-dsc-web: usa "Modal" em vez de "Dialog" — mesmo padrão de
     // equivalência semântica (Dialog do Angular Material ~ Modal do DSC web).
-    'super-dsc-web': ['Modal'],
+    'super-dsc-web': ['Modal', 'Popover', 'Tooltip', 'Drawer Panel'],
     // dsc-android: "Dialog" já bate por wordMatch direto (ALTA confiança).
   } },
   { shortName: 'inputs', libs: {
@@ -206,6 +211,14 @@ const A11Y_LIB_COMPONENT_MAP = [
       'Input Chat', 'Input Money', 'Input Pin', 'Input Slider', 'Input Stepper',
       'Text Field Form', 'Text Field Single', 'Date Picker', 'Date Picker Container',
       'Account Select', 'Search Bar',
+      // Ampliação (2026-09-22): "Slider" (sem o prefixo "Input") e "Wheel
+      // Picker" são controles de entrada por arrasto/rolagem — mesmo critério
+      // que já curou 'Range Slider'/'Slider' em web-angular-react e os 4
+      // sliders de dsc-android acima. "Chip" entra aqui por ser, nesta lib,
+      // controle de filtro/seleção acionável (o comentário histórico no topo
+      // desta tabela registrava dúvida entre button/input; a decisão de
+      // 2026-09-22 é 'inputs' por ser seleção de valor, não ação/submit).
+      'Slider', 'Wheel Picker', 'Chip',
     ],
     'super-dsc-web': [
       'Input Chat', 'Input Money', 'Input Pin', 'Input Slider', 'Input Stepper', 'Input with Chips',
@@ -240,14 +253,37 @@ const A11Y_LIB_COMPONENT_MAP = [
     // os candidatos mais próximos de navegação em lista, mas sem prefixo
     // [dsc] (vêm sem prefixo nos dados reais) — não incluídos aqui por não
     // atender ao filtro de prefixo de qualquer forma.
-    'super-app': ['List Item', 'List Heading', 'List Footer', 'List Accordion', 'Transaction List Item'],
+    'super-app': [
+      'List Item', 'List Heading', 'List Footer', 'List Accordion', 'Transaction List Item',
+      // Ampliação de curadoria (2026-09-22, pedido do usuário: "as sugestões
+      // não aparecem"). Diagnóstico que motivou: só 42 de 139 famílias DSC
+      // REAIS desta lib (excluindo o ruído de ~1417 ícones soltos sem
+      // prefixo) tinham categoria — 30% de cobertura, então a sugestão do
+      // picker quase nunca aparecia na prática. Todas as famílias abaixo são
+      // agregadores de itens navegáveis em sequência (o critério de
+      // 'listas': "quando existe como instância real no canvas, é um
+      // conjunto de itens que o leitor de tela percorre um a um"), nomeadas
+      // com "List"/"Carousel" nos dados reais desta lib — mesmo raciocínio
+      // já aplicado a 'List Item'/'List Heading' acima.
+      'Actions List', 'Options List', 'Funds List', 'Transactions List',
+      'Sortable List', 'Select Group List', 'Multi-select - List',
+      'Card Feed List', 'Card Product Offer List', 'Feedback - List',
+      'Carousel - Horizontal', 'Carousel - Vertical', 'Carousel - Card Content',
+      'Carousel Product Offer', 'Card Carousel Horizontal', 'Card Carousel Vertical',
+      'Card Notification Stack',
+    ],
     // 'Progress List'/'Progress List Item' REMOVIDOS daqui (2026-09-14,
     // correção real encontrada por revisão do Gemini via MCP, inspeção
     // visual dos componentes): não são listas genéricas — têm properties
     // 'steps'/'current step' e estados de progresso (not started/in
     // progress/complete/partial failure), são navegação sequencial entre
     // etapas. Movidos pra 'stepper' abaixo.
-    'super-dsc-web': ['List Item', 'List Heading'],
+    'super-dsc-web': [
+      'List Item', 'List Heading',
+      // Ampliação de curadoria (2026-09-22) — mesmo critério aplicado a
+      // super-app acima (agregadores de itens percorridos em sequência).
+      'Search Results', 'Sidebar Menu', 'Sidebar Menu Item', 'card carousel',
+    ],
     // dsc-android: SEM correspondência clara — não existe family "[dsc] List
     // *" nos dados reais desta lib (confirmado 2026-09-02); "[base] Item"/
     // "[base] Menu item" são componentes internos sem prefixo [dsc], fora do
@@ -255,10 +291,14 @@ const A11Y_LIB_COMPONENT_MAP = [
   } },
   { shortName: 'paginator', libs: {
     'web-angular-react': ['Paginator'],
-    // super-app: SEM correspondência — não existe "Paginator" na lib mobile
-    // (padrão de paginação mobile é scroll infinito / outro padrão, não
-    // paginador de página como no desktop).
-    'super-dsc-web': ['Paginator'],
+    // super-app: não existe "Paginator" na lib mobile, MAS "Page Controller"
+    // (2026-09-22) é o indicador de página de carrossel/onboarding (as
+    // "bolinhas") — é navegação entre páginas de conteúdo, exatamente o que
+    // 'paginator' documenta em a11y (posição atual + total, anunciados).
+    // Equivalência semântica de plataforma, mesmo critério do par
+    // Dialog/Sheet e Snackbar/Toast já estabelecido nesta tabela.
+    'super-app': ['Page Controller'],
+    'super-dsc-web': ['Paginator', 'Page Controller', 'Overflow Controller'],
     // dsc-android: SEM correspondência — mesmo raciocínio de super-app
     // (mobile nativo não usa paginador de página).
   } },
@@ -320,8 +360,22 @@ const A11Y_LIB_COMPONENT_MAP = [
   } },
   { shortName: 'imagem', libs: {
     'web-angular-react': ['Logotipo'],
-    'super-app': ['Image Media', 'Avatar', 'Avatar Hero', 'Logo CAIXA', 'Banking Logos', 'National Flags', 'Social Programs Logos'],
-    'super-dsc-web': ['Image Media', 'Avatar', 'Logotipo', 'Banking Logos', 'National Flags', 'Social Programs Logos'],
+    'super-app': [
+      'Image Media', 'Avatar', 'Avatar Hero', 'Logo CAIXA', 'Banking Logos', 'National Flags', 'Social Programs Logos',
+      // Ampliação (2026-09-22): conteúdo gráfico que ou carrega significado
+      // (precisa de texto alternativo) ou é puramente ilustrativo (precisa
+      // ser marcado como decorativo) — nos dois casos a categoria de partida
+      // no formulário é a mesma, e é o designer quem decide qual dos dois no
+      // campo de "Tipo de elemento". Deixar sem sugestão nenhuma (estado
+      // anterior) era pior: nada era destacado no picker.
+      'Icon', 'Icon Container', 'Selectable Media', 'Selectable Media Grid',
+      'Credit Card Illustration', 'Feedback Illustration',
+    ],
+    'super-dsc-web': [
+      'Image Media', 'Avatar', 'Logotipo', 'Banking Logos', 'National Flags', 'Social Programs Logos',
+      // Ampliação (2026-09-22) — mesmo critério de super-app acima.
+      'Icon', 'Icon Container', 'Credit Card',
+    ],
     // dsc-android: "Logotipo" já bate por A11Y_STRUCTURAL_EXACT_OVERRIDES
     // (nome exato "[dsc] Logotipo") — não precisa de entrada aqui.
   } },
@@ -348,6 +402,17 @@ const A11Y_STRUCTURAL_EXACT_OVERRIDES = {
   '[dsc] Header': { shortName: 'estrutura', reason: 'estrutura de página — marco de navegação "header"' },
   '[dsc] Footer': { shortName: 'estrutura', reason: 'estrutura de página — marco de navegação "footer"' },
   '[dsc] Logotipo': { shortName: 'imagem', reason: 'conteúdo de imagem/marca — precisa de texto alternativo' },
+  // Ampliação de curadoria (2026-09-22, pedido do usuário: "as sugestões não
+  // aparecem"). Todos abaixo são marcos de navegação REAIS das libs mobile/
+  // super-dsc-web — equivalentes diretos de Header/Footer já curados acima,
+  // só com a nomenclatura própria de cada plataforma. Match por NOME EXATO
+  // (não substring) pelo mesmo motivo registrado no comentário deste bloco:
+  // nomes curtos como "Card"/"Text" gerariam falso-positivo por substring.
+  '[dsc] Top App Bar': { shortName: 'estrutura', reason: 'marco de navegação "header" (nomenclatura mobile)' },
+  '[dsc] Navigation Bar': { shortName: 'estrutura', reason: 'marco de navegação principal (barra de navegação mobile)' },
+  '[dsc] Toolbar': { shortName: 'estrutura', reason: 'marco de navegação "header" (nomenclatura super-dsc-web)' },
+  '[dsc] Title Bar': { shortName: 'estrutura', reason: 'marco de navegação "header" (barra de título)' },
+  '[dsc-tc] Screen Footer': { shortName: 'estrutura', reason: 'marco de navegação "footer" (rodapé de tela mobile)' },
 };
 
 // Padrão de exclusão (2026-09-14, achado real da revisão do Gemini via MCP,

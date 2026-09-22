@@ -183,20 +183,36 @@ export function _resolveDscComponentA11yMatch(componentKey) {
   };
 }
 
-// Resolve o match da SELEÇÃO ATUAL do canvas e posta 'manual-spec-match-resolved'
-// pro frontend — extraído do handler resolve-manual-spec-match pra ser
-// reaproveitado também pelo listener de selectionchange (_a11yManualMatchModeActive,
-// code.js), que re-resolve ao vivo enquanto o gate de seleção do "+ Nova spec"
-// estiver ativo. Mesmo padrão de resolução de get-selection-name (só INSTANCE
-// com mainComponent remoto é candidato, nunca lança se getMainComponentAsync
-// falhar) — reaproveita _resolveDscComponentA11yMatch, não duplica a lógica
-// de matching. token null é o caso do listener (não veio de um pedido pontual
+// Resolve o match de UM NÓ específico (nunca lê figma.currentPage.selection
+// diretamente — ver BUG REAL CORRIGIDO abaixo) e posta
+// 'manual-spec-match-resolved' pro frontend — extraído do handler
+// resolve-manual-spec-match pra ser reaproveitado também pelo listener de
+// selectionchange (_a11yManualMatchModeActive, onmessage.js), que re-resolve
+// ao vivo enquanto o gate de seleção do "+ Nova spec" estiver ativo. Mesmo
+// padrão de resolução de get-selection-name (só INSTANCE com mainComponent
+// remoto é candidato, nunca lança se getMainComponentAsync falhar) —
+// reaproveita _resolveDscComponentA11yMatch, não duplica a lógica de
+// matching. token null é o caso do listener (não veio de um pedido pontual
 // do frontend); o frontend ignora respostas cujo token não bate com o mais
 // recente, mas token null nunca é comparado contra nada (ver
 // manual-spec-match-resolved, messages.js), então passa sempre.
-export async function _resolveManualSpecMatchAndNotify(token) {
-  const sel = figma.currentPage.selection;
-  const node = sel.length > 0 ? sel[0] : null;
+//
+// BUG REAL CORRIGIDO (2026-09-22, print do usuário: selecionou "Value
+// Section" no canvas, o card final documentou "Button"): esta função lia
+// figma.currentPage.selection[0] diretamente, ignorando por completo a
+// proteção contra foco concorrente/drill-in já implementada em
+// get-selection-name (_a11yManualMatchLastRealSelectionId, ver comentário
+// completo em onmessage.js) — um double-click de foco automático (ou o
+// designer "afundando" na árvore de uma instância aninhada ao clicar) podia
+// deixar a seleção momentaneamente presa num componente FILHO (ex: um Button
+// aninhado dentro do Value Section) no instante exato em que o debounce de
+// 500ms disparava esta função, resolvendo o match errado silenciosamente —
+// sem nunca corrigir depois, porque a resposta do backend já tinha
+// preenchido o formulário. Agora recebe o node já resolvido pelo chamador
+// (que decide entre a seleção atual e o registro de "última seleção real",
+// exatamente como get-selection-name já faz), nunca lê seleção por conta
+// própria.
+export async function _resolveManualSpecMatchAndNotify(token, node) {
   let match = null;
   if (node && node.type === 'INSTANCE') {
     try {

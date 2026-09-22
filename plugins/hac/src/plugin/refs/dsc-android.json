@@ -2,7 +2,7 @@
   "meta": {
     "libraryName": "DSC | Android",
     "figmaFileKey": "W8GUeHypdco1I3dneN6P3H",
-    "exportedAt": "2026-09-14T17:23:56.559Z",
+    "exportedAt": "2026-09-22T13:15:55.331Z",
     "generator": "fetch-design-refs.cjs (hac)",
     "warnings": [
       "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
@@ -32,18 +32,18 @@
         "value": "#22292e"
       },
       {
-        "key": "4660bd7f5f773564e7c33ae8f1d5b04e0f1bf3e3",
-        "name": "Neutral/Background/Background Primary ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ[🤖surface][🍎bgPrimary]",
-        "resolvedType": "COLOR",
-        "collection": "CAIXA + Original",
-        "value": "#ffffff"
-      },
-      {
         "key": "070a0f5db6ecb8cfd9b3cb68f5593e8f70a76da3",
         "name": "Neutral/Others/Shadow ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ[🤖shadow][🍎shadow]",
         "resolvedType": "COLOR",
         "collection": "CAIXA + Original",
         "value": "#000000"
+      },
+      {
+        "key": "4660bd7f5f773564e7c33ae8f1d5b04e0f1bf3e3",
+        "name": "Neutral/Background/Background Primary ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ[🤖surface][🍎bgPrimary]",
+        "resolvedType": "COLOR",
+        "collection": "CAIXA + Original",
+        "value": "#ffffff"
       },
       {
         "key": "5a2bd895f26130f6e803e286cc5c2aaff906e4da",

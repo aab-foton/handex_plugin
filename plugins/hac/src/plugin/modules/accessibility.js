@@ -313,6 +313,19 @@ const A11Y_CONTENT = {
   decorativo: {
     gerais: { descricao: 'Não deve ser anunciado pelo Leitor de Tela.', notasCodigo: 'Insira seu texto com as anotações necessárias para o pessoal de desenvolvimento.' },
     imagem: { descricao: 'Não deve ser anunciado pelo Leitor de Tela.', notasCodigo: 'Em HTML utilize o atributo alt="" com o valor vazio.' },
+    // Mobile (confirmado via REST API, fileKey HhriLSpKnCB2dHhyiU16iB, node
+    // 5413:1260, 2026-09-22): o wrapper "[hac mob] Box specs leitor de tela"
+    // não tem a distinção "Gerais"/"Imagem" — a instância aninhada
+    // "Elementos decorativos" (componentId 5370:1835) só tem UMA property
+    // real ("Observações", BOOLEAN) e nenhuma property "variacao"/"tipo"
+    // equivalente à `[NÃO UTILIZAR][a11y base] elementos decorativos`
+    // (node 31:530, property "variacao": "gerais"/"imagem") que só existe no
+    // wrapper desktop ("[a11y] Box specs LT", node 31:544). A Descrição fixa
+    // da instância mobile é idêntica à de "gerais"/"imagem" web, mas não há
+    // Nota de Código nenhuma na lib mobile (nem HTML nem RN) — por isso
+    // `notasCodigo` fica ausente aqui, e o card fixo de Nota de Código some
+    // no formulário mobile (ver _applyA11yDecorativoOriginLock).
+    mobile: { descricao: 'Não deve ser anunciado pelo Leitor de Tela.' },
   },
   informacoes: {
     handoffs:      { descricao: 'Especificado no handoff: [insira aqui o link ou nome do handoff].' },
@@ -761,6 +774,42 @@ function _findA11yAreaById(areaId) {
   return (a11yAreas || []).find(a => a && a.id === areaId) || null;
 }
 
+// Posição fixa (X, Y) da RÉPLICA DE TRABALHO desta área — persistida em
+// hacData.a11yAreas[].workAnchor na primeira vez que qualquer clone
+// (spec/Tabulação/Swipe/Leitor de Tela) é criado pra ela, ver
+// _saveA11yAreaWorkAnchor logo abaixo (2026-09-21, pedido do usuário: bug
+// real reportado com print — lote de Detecção Automática misturando
+// itens de áreas diferentes fazia specs de uma área nascerem na faixa Y
+// de outra, mesmo com verticalAnchorBounds já existindo no backend).
+// Enviado em TODA mensagem que possa criar/resolver um clone de trabalho
+// — se `null` (1ª vez), o backend calcula normalmente e devolve o valor
+// calculado na resposta; se presente, o backend usa direto, sem
+// recalcular nem checar colisão (decisão de produto: a posição de uma
+// área nunca muda depois de fixada).
+function _getA11yAreaWorkAnchor(areaId) {
+  const area = _findA11yAreaById(areaId);
+  return (area && area.workAnchor && typeof area.workAnchor.x === 'number' && typeof area.workAnchor.y === 'number')
+    ? area.workAnchor
+    : null;
+}
+window._getA11yAreaWorkAnchor = _getA11yAreaWorkAnchor;
+
+// Grava o workAnchor devolvido pelo backend na 1ª criação do clone de
+// trabalho de uma área — chamada por TODOS os handlers de resposta que
+// podem carregar esse campo (tab-order-copy-started, swipe-path-copy-started,
+// spec-copy-started, handleSpecCreated). Idempotente e defensivo: nunca
+// sobrescreve um workAnchor já salvo (a posição, uma vez fixada, nunca
+// muda — mesmo que o backend eco-e o mesmo valor de volta, não há razão
+// pra reescrever/salvar de novo).
+function _saveA11yAreaWorkAnchor(areaId, workAnchor) {
+  if (!areaId || !workAnchor || typeof workAnchor.x !== 'number' || typeof workAnchor.y !== 'number') return;
+  const area = _findA11yAreaById(areaId);
+  if (!area || area.workAnchor) return;
+  area.workAnchor = { x: workAnchor.x, y: workAnchor.y };
+  saveToStorage();
+}
+window._saveA11yAreaWorkAnchor = _saveA11yAreaWorkAnchor;
+
 // ── Criação ──────────────────────────────────────────────────────────────
 
 // Botão "+" no cabeçalho de cada accordion de Área Marcada primeiro checa se
@@ -884,7 +933,10 @@ function _openA11yCategoryPickerModalAfterInstruction(areaId) {
     // em telas grandes a clonagem demora o bastante pra parecer que nada
     // aconteceu ao clicar. Fechado em 'spec-copy-started' (messages.js).
     if (typeof showA11yCanvasLoading === 'function') showA11yCanvasLoading('Preparando a réplica de trabalho…');
-    parent.postMessage({ pluginMessage: { type: 'start-spec-copy', areaId, targetNodeId: area.targetNodeId, sectionName: getA11yActiveSectionName(), designerName: getA11yDesignerName(), designerId: getA11yDesignerId() } }, '*');
+    // savedAnchor (2026-09-21) — posição fixa da réplica de trabalho desta
+    // área, se já existir (ver _getA11yAreaWorkAnchor/_saveA11yAreaWorkAnchor
+    // acima); `null` na 1ª vez, o backend calcula e devolve o valor usado.
+    parent.postMessage({ pluginMessage: { type: 'start-spec-copy', areaId, targetNodeId: area.targetNodeId, sectionName: getA11yActiveSectionName(), designerName: getA11yDesignerName(), designerId: getA11yDesignerId(), savedAnchor: _getA11yAreaWorkAnchor(areaId) } }, '*');
   } else if (area && typeof focusA11yCloneNode === 'function') {
     focusA11yCloneNode(areaId, 'leitor', area.targetNodeId || null);
   }
@@ -995,6 +1047,45 @@ function _applyA11yManualMatchToPicker() {
   });
 
   const result = window._a11yManualMatchResult;
+
+  // Retorno visual do elemento selecionado no canvas AGORA (2026-09-22,
+  // pedido do usuário) — independente de ter dado match de categoria ou
+  // não: o designer precisa ver que o clique dele "chegou" no plugin, nem
+  // que seja num elemento sem componente DSC catalogado. Nome puro
+  // (result.nodeName) quando não há match; "Nome — [dsc] Componente" quando
+  // há um componente real identificado, mais claro que só o nome da camada.
+  const statusWrap = document.getElementById('a11y-category-picker-selection-status');
+  const statusName = document.getElementById('a11y-category-picker-selection-name');
+  const statusHint = document.getElementById('a11y-category-picker-selection-hint');
+  if (statusWrap && statusName) {
+    if (result && result.nodeId && result.nodeName) {
+      // O componente DSC identificado é mostrado SEMPRE que existir — também
+      // quando ele não tem categoria de a11y catalogada (isUnmapped). Era o
+      // contrário até 2026-09-22 (só aparecia quando havia match), justo no
+      // caso em que essa informação é MAIS útil: o designer via só o nome da
+      // camada ("Slot Hero") e nenhuma sugestão destacada, sem nenhuma pista
+      // de que o plugin tinha reconhecido o componente e apenas não sabia a
+      // categoria dele.
+      const frameLabel = result.match && result.match.containingFrame
+        ? ` — ${result.match.containingFrame}`
+        : '';
+      statusName.textContent = result.nodeName + frameLabel;
+      statusWrap.classList.remove('hidden');
+      // Explica a ausência de sugestão em vez de deixar o picker mudo: sem
+      // isso, "nenhuma categoria destacada" é indistinguível de "o plugin
+      // não viu minha seleção" (confusão real relatada pelo usuário).
+      if (statusHint) {
+        const semCategoria = !result.match || result.match.isUnmapped || !result.match.a11yCategory;
+        statusHint.textContent = semCategoria ? 'Sem categoria sugerida — escolha abaixo.' : '';
+        statusHint.classList.toggle('hidden', !semCategoria);
+      }
+    } else {
+      statusWrap.classList.add('hidden');
+      statusName.textContent = '';
+      if (statusHint) { statusHint.textContent = ''; statusHint.classList.add('hidden'); }
+    }
+  }
+
   window._a11yManualMatchPreset = null;
   if (!result || !result.match || result.match.isUnmapped || !result.match.a11yCategory) return;
 
@@ -1156,6 +1247,13 @@ function openA11yModal(category, options) {
   // depois desta chamada quando de fato é o wizard quem está abrindo.
   delete modal.dataset.wizardActive;
   _resetA11yBatchWizardUi();
+  // Posição manual do card (ver confirmA11ySpec mais abaixo) — nunca deve
+  // herdar a referência de uma spec anterior; cada abertura de formulário
+  // limpa o estado pendente, mesmo em edição (que nem chega a ler seleção,
+  // ver confirmA11ySpec — edição usa seu próprio mecanismo de posição fixa
+  // via pinnedPosition/cardX/cardY).
+  window._a11yPendingManualAnchorNodeId = null;
+  window._a11ySpecPositionGateOnReady = null;
 
   const areaLabelEl = document.getElementById('a11y-modal-area-label');
   if (areaLabelEl) {
@@ -2946,14 +3044,30 @@ window.updateA11yTituloFields = updateA11yTituloFields;
 // comentário em updateA11yDecorativoFields) — o dicionário de shortName
 // ficou sem uso e foi removido; specs antigas continuam restauradas por
 // _restoreA11yFixedToggles, que lê direto de `props`, sem depender dele.
+//
+// 2026-09-22 (bug real confirmado via REST API, pedido do usuário): o select
+// "Gerais"/"Imagem" só tem lastro na lib DESKTOP (`[a11y] Box specs LT`,
+// node 31:544 → instância aninhada com property "variacao":
+// "gerais"/"imagem", node 31:530). O wrapper mobile ("[hac mob] Box specs
+// leitor de tela", node 5413:1260) não tem essa distinção — só um toggle
+// "Observações". Antes desta correção o select aparecia (e era lido por
+// confirmA11ySpec) incondicionalmente pras duas origens, gravando
+// `a11ySubtype.tipo: 'gerais'|'imagem'` em specs mobile sem nenhuma property
+// real por trás. Ver _applyA11yDecorativoOriginLock.
 function updateA11yDecorativoFields() {
   const select = document.getElementById('a11y-decorativo-subtipo-select');
   if (!select) return;
-  const entry = A11Y_CONTENT.decorativo[select.value];
+  const modal = document.getElementById('a11y-spec-modal');
+  const originIsMobile = modal && modal.dataset.a11yOrigin === 'mobile';
+  _applyA11yDecorativoOriginLock(select, originIsMobile);
+  const entry = A11Y_CONTENT.decorativo[originIsMobile ? 'mobile' : select.value];
   const descEl = document.getElementById('a11y-fixed-descricao-dec');
+  const notaWrap = document.getElementById('a11y-fixed-nota-dec-wrap');
   const notaEl = document.getElementById('a11y-fixed-nota-dec');
   if (descEl) descEl.textContent = (entry && entry.descricao) || '';
-  if (notaEl) notaEl.textContent = (entry && entry.notasCodigo) || '';
+  const notaTexto = (entry && entry.notasCodigo) || '';
+  if (notaWrap) notaWrap.classList.toggle('hidden', !notaTexto);
+  if (notaEl) notaEl.textContent = notaTexto;
 
   // 2026-09-17 (pedido explícito do usuário, complementar à simplificação de
   // Título): o formulário de Elemento Decorativo mostra só Subtipo + card
@@ -2968,6 +3082,21 @@ function updateA11yDecorativoFields() {
   // persistidas normalmente; só não ficam mais visíveis/editáveis neste
   // formulário simplificado — nenhum dado é apagado ao reabrir/reeditar.
   _renderA11yFixedToggles('a11y-decorativo-toggles-wrap', 'a11y-decorativo-toggles-list', null);
+}
+
+// Trava o select "Subtipo" (Gerais/Imagem) por origem — mesmo padrão de
+// _applyA11yTituloOriginLock. Mobile não tem essa distinção estruturalmente
+// (ver comentário acima updateA11yDecorativoFields): esconde o <select> e
+// mostra um texto fixo equivalente; o <select> continua no DOM (só oculto),
+// travado em 'gerais' (mesma Descrição que a lib mobile realmente usa),
+// pra confirmA11ySpec/_prefillA11ySpecForEdit lerem select.value sem
+// precisar de um caminho de código à parte.
+function _applyA11yDecorativoOriginLock(select, isMobile) {
+  if (!select) return;
+  if (isMobile && select.value !== 'gerais') select.value = 'gerais';
+  select.classList.toggle('hidden', isMobile);
+  const fixedDisplay = document.getElementById('a11y-decorativo-subtipo-fixed');
+  if (fixedDisplay) fixedDisplay.classList.toggle('hidden', !isMobile);
 }
 window.updateA11yDecorativoFields = updateA11yDecorativoFields;
 
@@ -3061,6 +3190,18 @@ function _getA11ySelectionInfo() {
 }
 window._getA11ySelectionInfo = _getA11ySelectionInfo;
 
+// Posição manual do card (2026-09-21) — histórico: começou como um toggle
+// escondido dentro do formulário (rejeitado: "em momento algum eu pedi um
+// toggle"), depois virou uma modal obrigatória perguntando "ao lado de quê"
+// a cada spec nova (rejeitada também: "Podemos acabar com a posição
+// automática. Ele não funciona. Podemos até acabar com a modal e deixar
+// para que ele crie sempre usando o elemento selecionado como referência").
+// Versão final, sem pergunta nenhuma: confirmA11ySpec (mais abaixo) sempre
+// lê a seleção ATUAL do canvas via _getA11ySelectionInfo e usa como
+// referência de posição — o algoritmo de empilhamento automático
+// (_letterMap/_areaMap em onmessage.js) só entra como fallback quando não
+// há nada selecionado no momento de aplicar.
+
 // _getA11yDocumentationStatus (consultava se a Section ativa já tinha
 // documentação, pra alimentar o aviso "Continuar/Iniciar nova Section" do
 // modal de Marcar Área) foi REMOVIDA em 2026-09-04-k, junto com o aviso —
@@ -3142,7 +3283,51 @@ function _inferA11yEstruturaTipoFromContainingFrame(containingFrame) {
   return 'header';
 }
 
+// Botão "Aplicar" do formulário de spec (modals.html) — ponto único de
+// entrada tanto do fluxo manual ("+ Nova spec") quanto de cada item do
+// wizard de Detecção Automática (_openA11yWizardItemAt reusa o mesmo
+// formulário/confirmA11ySpec item a item, ver accessibility.js). Por isso a
+// leitura de seleção do canvas (logo abaixo) intercepta bem aqui: um único
+// ponto cobre os dois fluxos reais de criação de spec.
+// Gate de posição do card removido (2026-09-21, pedido do usuário: "Podemos
+// acabar com a posição automática. Ele não funciona. Podemos até acabar com
+// a modal e deixar para que ele crie sempre usando o elemento selecionado
+// como referência para criar a spec.") — antes disso existiu uma modal
+// perguntando "ao lado de quê" a cada spec nova (histórico: um toggle
+// escondido dentro do formulário foi tentado primeiro e rejeitado — "em
+// momento algum eu pedi um toggle" — depois a modal também foi rejeitada em
+// favor desta versão sem pergunta nenhuma). Agora toda spec nova sempre usa
+// a seleção ATUAL do canvas como referência de posição — sem gate, sem
+// escolha, sem cair no empilhamento automático por letra/área (que o
+// usuário classificou como não funcional).
 function confirmA11ySpec() {
+  const modal = document.getElementById('a11y-spec-modal');
+  const editingSpecId = modal ? modal.dataset.editingSpecId : '';
+  // Edição nunca reposiciona — a spec já tem lugar (opts.pinnedPosition,
+  // montado em _finishA11ySpecConfirm) — editar preserva onde já estava.
+  if (editingSpecId) {
+    window._a11yPendingManualAnchorNodeId = null;
+    _finishA11ySpecConfirm();
+    return;
+  }
+  // Lê a seleção ATUAL do canvas (mesma ponte _getA11ySelectionInfo já usada
+  // por "Marcar Área"/pré-preenchimento de nome) e usa como referência de
+  // onde o card nasce. Sem seleção válida no momento do clique (designer
+  // clicou em algum lugar do canvas fora de um elemento, ou nada
+  // selecionado), segue mesmo assim — opts.manualAnchorNodeId fica null e o
+  // backend cai no algoritmo automático de sempre como fallback, nunca
+  // bloqueia a criação da spec por falta de seleção.
+  _getA11ySelectionInfo().then(sel => {
+    window._a11yPendingManualAnchorNodeId = (sel && sel.id) || null;
+    _finishA11ySpecConfirm();
+  });
+}
+window.confirmA11ySpec = confirmA11ySpec;
+
+// Corpo real de confirmA11ySpec (2026-09-21: extraído pra trás da leitura de
+// seleção acima). Monta opts a partir do formulário e dispara
+// create-unified-spec.
+function _finishA11ySpecConfirm() {
   const modal = document.getElementById('a11y-spec-modal');
   const category = modal ? modal.dataset.category : '';
   const areaId = modal ? modal.dataset.areaId : '';
@@ -3368,7 +3553,15 @@ function confirmA11ySpec() {
     // (ED gerais / ED imagem).
     properties.push(..._collectA11yFixedToggleProperties('a11y-decorativo-toggles-list'));
     const decSelect = document.getElementById('a11y-decorativo-subtipo-select');
-    a11ySubtype = { tipo: decSelect ? decSelect.value : 'gerais' };
+    // 2026-09-22 (bug real confirmado via REST API): "Gerais"/"Imagem" só
+    // existe na lib DESKTOP (ver comentário grande em
+    // updateA11yDecorativoFields). _applyA11yDecorativoOriginLock já força
+    // decSelect.value='gerais' e esconde o select quando a origem é mobile,
+    // mas o guard explícito abaixo evita depender silenciosamente do DOM já
+    // estar sincronizado — nunca grava 'imagem' (nem qualquer outro valor
+    // fora do default) numa spec mobile.
+    const decOriginIsMobile = (modal && modal.dataset.a11yOrigin) === 'mobile';
+    a11ySubtype = { tipo: decOriginIsMobile ? 'gerais' : (decSelect ? decSelect.value : 'gerais') };
   } else if (category === 'informacoes') {
     const tag = g('a11y-informacoes-tag-input').toUpperCase();
     if (!validateA11yTagInput()) {
@@ -3453,6 +3646,14 @@ function confirmA11ySpec() {
     // null explícito no fluxo manual, sobrescrito abaixo na edição pra não
     // apagar o badge de componente que a Detecção Automática já tinha resolvido.
     a11yDscComponentName: (modal && modal.dataset.dscComponentName) || null,
+    // Posição manual do card (2026-09-21) — id do elemento selecionado no
+    // canvas no momento de "Aplicar", capturado em confirmA11ySpec (roda
+    // ANTES desta função). null quando não havia nada selecionado — o
+    // backend cai no algoritmo automático de sempre nesse caso. Ignorado
+    // quando opts.pinnedPosition também está presente (edição preservando a
+    // posição já existente tem prioridade, ver bloco abaixo — edição nem lê
+    // a seleção, ver confirmA11ySpec).
+    manualAnchorNodeId: window._a11yPendingManualAnchorNodeId || null,
     // Área Marcada onde a spec nasceu — associação explícita, escolhida no
     // momento da criação. O backend ecoa esse campo de volta em spec-created
     // pra spec.a11yAreaId continuar presente no objeto salvo localmente.
@@ -3462,6 +3663,9 @@ function confirmA11ySpec() {
     // documentado) — o backend usa isto pra resolver/criar o clone da
     // área e desenhar a spec sobre a cópia, nunca mais sobre o original.
     a11yAreaTargetNodeId: (_findA11yAreaById(areaId) || {}).targetNodeId || null,
+    // Posição fixa da réplica de trabalho desta área, se já existir
+    // (2026-09-21) — ver _getA11yAreaWorkAnchor/_saveA11yAreaWorkAnchor.
+    savedAnchor: _getA11yAreaWorkAnchor(areaId),
     // IDs das specs irmãs (mesma área + mesma categoria) já no canvas —
     // permite ao backend alinhar o card novo na mesma sub-coluna X das
     // demais specs da área+categoria, mesmo quando usam letras ou lados de
@@ -3485,6 +3689,11 @@ function confirmA11ySpec() {
     // item normalmente (showToast acima já cobre o "Criando…").
     silent: isWizardActive,
   };
+  // Consome a referência manual assim que ela entra em opts — cada chamada
+  // de confirmA11ySpec lê a seleção do canvas de novo, então um valor
+  // residual aqui nunca deve vazar pra uma criação seguinte (ex: edição,
+  // que nem chega a ler seleção).
+  window._a11yPendingManualAnchorNodeId = null;
 
   if (areaId) {
     window._a11yExpandedAreaIds = window._a11yExpandedAreaIds || new Set();
@@ -3597,7 +3806,7 @@ function confirmA11ySpec() {
     parent.postMessage({ pluginMessage: { type: 'create-unified-spec', opts } }, '*');
   }
 }
-window.confirmA11ySpec = confirmA11ySpec;
+window._finishA11ySpecConfirm = _finishA11ySpecConfirm;
 
 // ── Listagem ─────────────────────────────────────────────────────────────
 // Áreas Marcadas são o agrupamento principal (accordion). Toda spec de A11y
@@ -3956,7 +4165,7 @@ function _a11yWorkspaceTabTabulacao(area) {
   const tabulacaoHintIconBtn = `
     <button type="button" onclick="openA11yInstructionManually('tabulacao')"
       data-tooltip="Instruções sobre esta documentação" aria-label="Instruções sobre esta documentação"
-      class="tooltip-bottom shrink-0 w-9 h-9 flex items-center justify-center rounded-dsc-large border border-gray-200 dark:border-dark-line text-slate-500 dark:text-dark-muted hover:bg-slate-50 dark:hover:bg-dark-line/40 active:scale-[0.99] transition-all">
+      class="tooltip-bottom tooltip-right shrink-0 w-9 h-9 flex items-center justify-center rounded-dsc-large border border-gray-200 dark:border-dark-line text-slate-500 dark:text-dark-muted hover:bg-slate-50 dark:hover:bg-dark-line/40 active:scale-[0.99] transition-all">
       <i data-lucide="circle-help" class="w-3.5 h-3.5" aria-hidden="true"></i>
     </button>`;
   return `
@@ -3995,7 +4204,7 @@ function _a11yWorkspaceTabTabulacao(area) {
         </button>
         <button type="button" onclick="deleteAllTabOrderForArea('${escapeHtml(areaIdAttr)}')"
           data-tooltip="Apagar todos os selos desta tela e recomeçar a ordem do zero" aria-label="Apagar toda a ordem de tabulação desta tela"
-          class="tooltip-bottom shrink-0 w-9 h-9 flex items-center justify-center rounded-dsc-large border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 active:scale-[0.99] transition-all">
+          class="tooltip-bottom tooltip-left shrink-0 w-9 h-9 flex items-center justify-center rounded-dsc-large border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 active:scale-[0.99] transition-all">
           <i data-lucide="trash-2" class="w-3.5 h-3.5" aria-hidden="true"></i>
         </button>
       </div>` : `
@@ -4022,13 +4231,13 @@ function _a11yWorkspaceTabTabulacao(area) {
           Mapeamento Automático
         </button>`}
       </div>`}
-      <ul id="${ulId}" class="flex flex-col gap-1.5 min-h-[10px]"></ul>
+      <ul id="${ulId}" class="flex flex-col gap-1.5 min-h-[10px] min-w-0"></ul>
       ${hasManualItems ? `
       <div class="flex items-center gap-1.5 mt-1">
         <button type="button" id="tab-order-narration-btn-${uid}" onclick="toggleTabOrderNarration('${escapeHtml(areaIdAttr)}', '${escapeHtml(uid)}')"
-          class="flex-1 flex items-center justify-center gap-dsc-nano h-8 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm hover:shadow transition-all">
-          <i data-lucide="play" class="w-3.5 h-3.5" aria-hidden="true"></i>
-          Simular leitura
+          class="flex-1 min-w-0 flex items-center justify-center gap-dsc-nano h-8 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm hover:shadow transition-all">
+          <i data-lucide="play" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i>
+          <span class="truncate">Simular leitura</span>
         </button>
         <!-- Idioma da voz da simulação (pedido do usuário, 2026-09-09) — só
              muda a pronúncia/idioma da síntese e o rótulo do tipo narrado
@@ -4109,7 +4318,6 @@ function _a11yWorkspaceTabSwipe(area) {
 
   const existingPath = (hacData.a11ySwipePaths || []).find(p => p && p.areaId === area.id) || null;
   const pointCount = existingPath && Array.isArray(existingPath.points) ? existingPath.points.length : 0;
-  const startLabel = existingPath ? 'Refazer trilha de ordem de leitura' : 'Iniciar trilha de ordem de leitura';
   const areaIdAttr = area.id;
   const targetNodeIdAttr = area.targetNodeId || '';
 
@@ -4127,12 +4335,31 @@ function _a11yWorkspaceTabSwipe(area) {
   const swipeHintIconBtn = `
     <button type="button" onclick="openA11yInstructionManually('swipe')"
       data-tooltip="Instruções sobre esta documentação" aria-label="Instruções sobre esta documentação"
-      class="tooltip-bottom shrink-0 w-9 h-9 flex items-center justify-center rounded-dsc-large border border-gray-200 dark:border-dark-line text-slate-500 dark:text-dark-muted hover:bg-slate-50 dark:hover:bg-dark-line/40 active:scale-[0.99] transition-all">
+      class="tooltip-bottom tooltip-right shrink-0 w-9 h-9 flex items-center justify-center rounded-dsc-large border border-gray-200 dark:border-dark-line text-slate-500 dark:text-dark-muted hover:bg-slate-50 dark:hover:bg-dark-line/40 active:scale-[0.99] transition-all">
       <i data-lucide="circle-help" class="w-3.5 h-3.5" aria-hidden="true"></i>
     </button>`;
   return `
     <div class="space-y-2 flex flex-col flex-1">
       ${existingPath ? `
+      <!-- Linha do topo reestruturada (2026-09-21, pedido do usuário,
+           mesma estrutura de tabulacaoHintIconBtn): Hint → Adicionar ponto
+           → Remover trilha (só ícone). Substitui os antigos "Refazer
+           trilha de ordem de leitura" (botão largo, removido por
+           completo) e "Remover trilha" (antes um botão largo com texto
+           embaixo da lista, agora só o ícone aqui). -->
+      <div class="flex items-center gap-dsc-nano">
+        ${swipeHintIconBtn}
+        <button type="button" onclick="openSwipePathEditMode('${escapeHtml(areaIdAttr)}', '${escapeHtml(targetNodeIdAttr)}')"
+          class="flex-1 min-w-0 flex items-center justify-center gap-dsc-nano h-9 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#005ca9] text-white hover:bg-blue-700 active:scale-[0.99] shadow-sm shadow-blue-500/20">
+          <i data-lucide="plus" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i>
+          <span class="truncate">Adicionar ponto</span>
+        </button>
+        <button type="button" onclick="deleteSwipePathForArea('${escapeHtml(areaIdAttr)}')"
+          data-tooltip="Remover trilha de swipe desta tela" aria-label="Remover trilha de swipe desta tela"
+          class="tooltip-bottom tooltip-left shrink-0 w-9 h-9 flex items-center justify-center rounded-dsc-large border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 active:scale-[0.99] transition-all">
+          <i data-lucide="trash-2" class="w-3.5 h-3.5" aria-hidden="true"></i>
+        </button>
+      </div>
       <div class="flex items-center gap-dsc-nano px-dsc-micro py-dsc-nano rounded-dsc-medium bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30">
         <i data-lucide="route" class="w-3.5 h-3.5 text-blue-700 dark:text-blue-400 shrink-0" aria-hidden="true"></i>
         <span class="text-dsc-label-tiny normal-case tracking-normal font-semibold text-blue-700 dark:text-blue-400">Trilha de Ordem de Leitura (${pointCount} ${pointCount === 1 ? 'ponto' : 'pontos'})</span>
@@ -4151,12 +4378,7 @@ function _a11yWorkspaceTabSwipe(area) {
            canvas (só a trilha inteira tem um grupo), toda edição já
            implica redesenhar a trilha do zero mesmo, então não faz
            sentido represar mudanças pendentes sem persistir. -->
-      <ul id="a11y-swipe-path-tab-list" class="flex flex-col gap-1.5 min-h-[10px]"></ul>
-      <button type="button" onclick="openSwipePathEditMode('${escapeHtml(areaIdAttr)}', '${escapeHtml(targetNodeIdAttr)}')"
-        class="w-full flex items-center justify-center gap-dsc-nano h-8 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm hover:shadow transition-all">
-        <i data-lucide="plus" class="w-3.5 h-3.5" aria-hidden="true"></i>
-        Adicionar ponto
-      </button>` : `
+      <ul id="a11y-swipe-path-tab-list" class="flex flex-col gap-1.5 min-h-[10px] min-w-0"></ul>` : `
       <!-- Alert com botão embutido (2026-09-18) — mesmo padrão de
            tabulacaoHintIconBtn/o bloco correspondente em
            _a11yWorkspaceTabTabulacao; SÓ no estado VAZIO (sem trilha ainda).
@@ -4170,15 +4392,7 @@ function _a11yWorkspaceTabSwipe(area) {
           Ver instruções
         </button>
       </div>`}
-      ${existingPath ? `
-      <div class="flex items-center gap-dsc-nano">
-        ${swipeHintIconBtn}
-        <button type="button" onclick="openA11yInstructionThenStart('swipe', '${escapeHtml(areaIdAttr)}', '${escapeHtml(targetNodeIdAttr)}')"
-          class="flex-1 min-w-0 flex items-center justify-center gap-dsc-nano h-9 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#005ca9] text-white hover:bg-blue-700 active:scale-[0.99] shadow-sm shadow-blue-500/20">
-          <i data-lucide="route" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i>
-          <span class="truncate">${startLabel}</span>
-        </button>
-      </div>` : `
+      ${existingPath ? '' : `
       <!-- Estado VAZIO (2026-09-18, reestruturado) — coluna centralizada no
            CENTRO VERTICAL do espaço restante da aba (hint fica fixo no
            topo, ver acima): texto explicativo ACIMA do botão (mesmo
@@ -4208,12 +4422,6 @@ function _a11yWorkspaceTabSwipe(area) {
           Mapeamento Automático
         </button>`}
       </div>`}
-      ${existingPath ? `
-      <button type="button" onclick="deleteSwipePathForArea('${escapeHtml(areaIdAttr)}')"
-        class="w-full flex items-center justify-center gap-dsc-nano h-8 mt-1 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-all">
-        <i data-lucide="trash-2" class="w-3.5 h-3.5" aria-hidden="true"></i>
-        Remover trilha
-      </button>` : ''}
       ${typeof _fichaInsertButtonHtml === 'function' ? _fichaInsertButtonHtml(area, 'swipe', !!existingPath) : ''}
     </div>
   `;
@@ -4330,7 +4538,7 @@ function _a11yWorkspaceTabLeitorDeTela(area, areaSpecs) {
       <div class="flex items-center gap-dsc-nano">
         <button type="button" onclick="openA11yInstructionManually('leitorTela')"
           data-tooltip="Instruções sobre esta documentação" aria-label="Instruções sobre esta documentação"
-          class="tooltip-bottom shrink-0 w-9 h-9 flex items-center justify-center rounded-dsc-large border border-gray-200 dark:border-dark-line text-slate-500 dark:text-dark-muted hover:bg-slate-50 dark:hover:bg-dark-line/40 active:scale-[0.99] transition-all">
+          class="tooltip-bottom tooltip-right shrink-0 w-9 h-9 flex items-center justify-center rounded-dsc-large border border-gray-200 dark:border-dark-line text-slate-500 dark:text-dark-muted hover:bg-slate-50 dark:hover:bg-dark-line/40 active:scale-[0.99] transition-all">
           <i data-lucide="circle-help" class="w-3.5 h-3.5" aria-hidden="true"></i>
         </button>
         <button type="button" onclick="openA11yCategoryPickerModal('${area.id}')"
@@ -4610,7 +4818,7 @@ function _a11yAreaAccordionEl(area, areaSpecs) {
     <div class="flex flex-col gap-2.5 px-3.5 py-3 cursor-pointer select-none hover:bg-gray-50 dark:hover:bg-dark-line/20 transition-colors"
       onclick="openA11yAreaWorkspace('${area.id}')" id="${uid}">
       <div class="flex items-center gap-2.5">
-        <div class="w-7 h-7 rounded-dsc-circ flex items-center justify-center text-dsc-label-tiny normal-case tracking-normal font-extrabold text-white shrink-0" style="background-color:#0070AF">${escapeHtml(String(area.number))}</div>
+        <div class="w-7 h-7 rounded-dsc-circ flex items-center justify-center text-dsc-label-tiny normal-case tracking-normal font-extrabold text-white shrink-0" style="background-color:#005ca9">${escapeHtml(String(area.number))}</div>
         <div class="flex-1 min-w-0">
           <p class="text-[12px] font-semibold text-slate-700 dark:text-white break-words leading-snug">${escapeHtml(area.label || '')}</p>
           <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted">${areaSpecs.length} especificaç${areaSpecs.length === 1 ? 'ão' : 'ões'}</p>
@@ -6363,10 +6571,10 @@ function startA11yBatchWizard() {
   // preservado: área sem targetNodeId resolvível segue direto, sem loading.
   const area = _findA11yAreaById(areaId);
   if (area && area.targetNodeId) {
+    closeA11yBatchSummaryModal();
     window._a11yBatchWizardCopyPendingAreaId = areaId;
     if (typeof showA11yCanvasLoading === 'function') showA11yCanvasLoading('Preparando a réplica de trabalho…');
-    parent.postMessage({ pluginMessage: { type: 'start-spec-copy', areaId, targetNodeId: area.targetNodeId, sectionName: getA11yActiveSectionName(), designerName: getA11yDesignerName(), designerId: getA11yDesignerId() } }, '*');
-    closeA11yBatchSummaryModal();
+    parent.postMessage({ pluginMessage: { type: 'start-spec-copy', areaId, targetNodeId: area.targetNodeId, sectionName: getA11yActiveSectionName(), designerName: getA11yDesignerName(), designerId: getA11yDesignerId(), savedAnchor: _getA11yAreaWorkAnchor(areaId) } }, '*');
     return;
   }
 

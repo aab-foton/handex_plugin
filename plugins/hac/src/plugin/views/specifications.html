@@ -214,8 +214,8 @@
        o `mt-auto` do botão "Preencher ..." (_fichaInsertButtonHtml,
        handoff-ficha.js) o empurre pra extremidade baixa do plugin. Com
        conteúdo longo nada muda: o container cresce e rola normalmente. -->
-  <div id="a11y-workspace-scroll-container" class="flex-1 min-h-0 overflow-y-auto p-dsc-tiny pb-10 flex flex-col" onscroll="handleScroll(this)">
-    <div id="a11y-workspace-tab-content" class="space-y-3 w-full mx-auto flex-1 flex flex-col">
+  <div id="a11y-workspace-scroll-container" class="flex-1 min-h-0 min-w-0 overflow-y-auto p-dsc-tiny pb-10 flex flex-col" onscroll="handleScroll(this)">
+    <div id="a11y-workspace-tab-content" class="space-y-3 w-full min-w-0 mx-auto flex-1 flex flex-col">
       <!-- Preenchido por _renderA11yWorkspaceTab() (accessibility.js) —
            uma função de render por tab, chamada sob demanda (só a tab
            ativa é montada no DOM). -->

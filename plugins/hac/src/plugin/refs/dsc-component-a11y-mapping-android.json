@@ -1,7 +1,7 @@
 {
   "_meta": {
     "description": "Mapa containingFrame -> categoria de a11y, ESSENCIAL EM RUNTIME no hac (consumido por _getDscFrameToA11yMap em code.js para a Detecção Automática de a11y). Gerado por build-dsc-a11y-mapping.cjs a partir de refs/web-angular-react.json (dados reais da REST API do Figma, sem valores inventados). Adaptação do Handex Beta (onde este mesmo formato de arquivo é descrito como \"fundação de dados, não usado em runtime\" — desatualizado lá, mas aqui no hac o consumo em runtime é o desenho intencional desde o início).",
-    "generatedAt": "2026-09-14T19:11:29.474Z",
+    "generatedAt": "2026-09-22T13:53:05.329Z",
     "generator": "build-dsc-a11y-mapping.cjs (hac)",
     "sourceFile": "dsc-android.json",
     "sourceFileKey": "W8GUeHypdco1I3dneN6P3H",
@@ -41,12 +41,12 @@
         "variantCount": 382
       },
       "baixaConfianca": {
-        "families": 9,
-        "variantCount": 157
+        "families": 11,
+        "variantCount": 169
       },
       "semMatch": {
-        "families": 20,
-        "variantCount": 524
+        "families": 18,
+        "variantCount": 512
       },
       "pctFamiliesAlta": 17.1,
       "pctVariantsAlta": 35.9
@@ -117,8 +117,8 @@
         "variantCount": 4
       },
       "estrutura": {
-        "families": 0,
-        "variantCount": 0
+        "families": 2,
+        "variantCount": 12
       }
     }
   },
@@ -293,6 +293,20 @@
       }
     },
     {
+      "containingFrame": "[dsc] Top App Bar",
+      "variantCount": 8,
+      "sampleKeys": [
+        "ee9c8aa9a9bd3753dc7bd98aac2061725f8aba5f",
+        "0cc5146e13ebfae96783038086d7f398c48588eb",
+        "242acd99e8cd7823ba635accda160c382aea07f0"
+      ],
+      "match": {
+        "shortName": "estrutura",
+        "confidence": "baixa",
+        "reason": "marco de navegação \"header\" (nomenclatura mobile)"
+      }
+    },
+    {
       "containingFrame": "[dsc] Logotipo",
       "variantCount": 4,
       "sampleKeys": [
@@ -304,6 +318,20 @@
         "shortName": "imagem",
         "confidence": "baixa",
         "reason": "conteúdo de imagem/marca — precisa de texto alternativo"
+      }
+    },
+    {
+      "containingFrame": "[dsc] Navigation Bar",
+      "variantCount": 4,
+      "sampleKeys": [
+        "774a4e1fd145dbeb0bc9ca31e20ef3ed9f1e2210",
+        "2515dc13d70282467c9dd00e07b222e40efa5110",
+        "58736f8107908ee0502e7ff8bb0dab6c62b99d30"
+      ],
+      "match": {
+        "shortName": "estrutura",
+        "confidence": "baixa",
+        "reason": "marco de navegação principal (barra de navegação mobile)"
       }
     },
     {
@@ -416,16 +444,6 @@
       "match": null
     },
     {
-      "containingFrame": "[dsc] Top App Bar",
-      "variantCount": 8,
-      "sampleKeys": [
-        "ee9c8aa9a9bd3753dc7bd98aac2061725f8aba5f",
-        "0cc5146e13ebfae96783038086d7f398c48588eb",
-        "242acd99e8cd7823ba635accda160c382aea07f0"
-      ],
-      "match": null
-    },
-    {
       "containingFrame": "[dsc] Linear Progress Determinate",
       "variantCount": 7,
       "sampleKeys": [
@@ -452,16 +470,6 @@
         "0470d9d24eb5acf96e2c7f18ffdadef17a71aabb",
         "08271e3dd7c322e6507a727fffffecae23d04341",
         "4f002d855be2d84252efeea84a7a1edf668b221c"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc] Navigation Bar",
-      "variantCount": 4,
-      "sampleKeys": [
-        "774a4e1fd145dbeb0bc9ca31e20ef3ed9f1e2210",
-        "2515dc13d70282467c9dd00e07b222e40efa5110",
-        "58736f8107908ee0502e7ff8bb0dab6c62b99d30"
       ],
       "match": null
     },

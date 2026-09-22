@@ -77,6 +77,10 @@ import {
   _forEachSwipePathCopyCandidate,
   _forEachTabOrderCopyCandidate,
   _getHacDataStorageKey,
+  _writeHacDataToDocument,
+  _readHacDataFromDocument,
+  _clearHacDataFromDocument,
+  _hacDataWeight,
   _getSceneNodeById,
   _getOrCreateA11ySection,
   _getOrCreateA11ySessionSection,
@@ -313,8 +317,15 @@ figma.on('selectionchange', () => {
     clearTimeout(_a11yManualMatchDebounceTimer);
     // Mesmo debounce (500ms) do padrão acima — evita disparar
     // getMainComponentAsync a cada passo de drill-in até o elemento real.
-    _a11yManualMatchDebounceTimer = setTimeout(() => {
-      _resolveManualSpecMatchAndNotify(null);
+    // BUG REAL CORRIGIDO (2026-09-22): resolve pelo id GRAVADO no instante
+    // do evento (_a11yManualMatchLastRealSelectionId), não por
+    // figma.currentPage.selection lida de novo quando o timer dispara — um
+    // drill-in em andamento pode ter avançado a seleção pra um componente
+    // FILHO nesses 500ms (ver comentário completo em
+    // _resolveManualSpecMatchAndNotify, dsc-matching.js).
+    _a11yManualMatchDebounceTimer = setTimeout(async () => {
+      const _node = _a11yManualMatchLastRealSelectionId ? await _getSceneNodeById(_a11yManualMatchLastRealSelectionId) : null;
+      _resolveManualSpecMatchAndNotify(null, _node);
     }, 500);
   }
 });
@@ -342,6 +353,27 @@ figma.ui.onmessage = async (msg) => {
           await figma.clientStorage.setAsync(scopedKey, legacyState);
           await figma.clientStorage.setAsync(HAC_DATA_LEGACY_KEY, null);
           savedState = legacyState;
+        }
+      }
+
+      // Backup no documento (2026-09-22) — a ÚNICA fonte que sobrevive a:
+      // arquivo não salvo, troca de máquina, outra pessoa abrindo o arquivo,
+      // cache limpo e reinstalação do plugin. Ver _writeHacDataToDocument.
+      //
+      // Quando as duas fontes existem, vence a que tem MAIS conteúdo, nunca
+      // "a mais recente": não há timestamp confiável por item para um merge
+      // real, e o cenário que importa é sempre o de recuperação (clientStorage
+      // vazio/zerado por um dos motivos acima, documento íntegro). Preferir a
+      // maior garante que reabrir o plugin jamais apague trabalho — no pior
+      // caso o designer reencontra algo que tinha apagado, o que é
+      // recuperável; o contrário não é.
+      const docState = _readHacDataFromDocument();
+      if (docState && _hacDataWeight(docState) > _hacDataWeight(savedState)) {
+        savedState = docState;
+        // Reidrata o cache local com o que veio do documento, pra que os
+        // próximos saves/leituras já partam do estado recuperado.
+        if (scopedKey) {
+          try { await figma.clientStorage.setAsync(scopedKey, docState); } catch (e) { /* best-effort */ }
         }
       }
 
@@ -403,10 +435,19 @@ figma.ui.onmessage = async (msg) => {
   }
 
   if (msg.type === 'save-storage') {
+    // Backup NO DOCUMENTO (2026-09-22) — roda SEMPRE, inclusive quando não há
+    // scopedKey (arquivo ainda não salvo), que era justamente o caso de perda
+    // total silenciosa relatado pelo usuário. Ver comentário completo em
+    // _writeHacDataToDocument (code.js). Primeiro porque é o caminho que
+    // funciona em mais cenários; clientStorage segue logo abaixo como cache
+    // rápido de leitura.
+    _writeHacDataToDocument(msg.data);
+
     const scopedKey = _getHacDataStorageKey();
     if (!scopedKey) {
-      // Arquivo ainda não salvo: sem identidade estável, não persiste —
-      // ver comentário em _getHacDataStorageKey.
+      // Arquivo ainda não salvo: sem identidade estável, não há chave própria
+      // possível em clientStorage (ver _getHacDataStorageKey) — mas o backup
+      // no documento acima já garantiu a persistência.
       return;
     }
     try {
@@ -437,6 +478,11 @@ figma.ui.onmessage = async (msg) => {
       if (scopedKey) {
         await figma.clientStorage.setAsync(scopedKey, null);
       }
+      // Limpa TAMBÉM o backup no documento (2026-09-22) — sem isto, "Limpar
+      // Cache" apagaria só o clientStorage e a reabertura seguinte
+      // restauraria tudo a partir do documento, fazendo o botão parecer
+      // quebrado (o dado "voltaria sozinho").
+      _clearHacDataFromDocument();
       figma.ui.postMessage({ type: 'cache-cleared' });
     } catch (e) {
       console.error("clear-cache failed:", e);
@@ -663,7 +709,7 @@ figma.ui.onmessage = async (msg) => {
         badge = figma.createEllipse();
         badge.name = 'Selo de Área';
         badge.resize(32, 32);
-        badge.fills = [{ type: "SOLID", color: hexToRgb('#0070AF') }];
+        badge.fills = [{ type: "SOLID", color: hexToRgb('#005ca9') }];
       }
 
       const bb = node.absoluteBoundingBox;
@@ -699,7 +745,7 @@ figma.ui.onmessage = async (msg) => {
         labelText.name = 'Label';
         labelText.fontName = { family: "Inter", style: "Bold" };
         labelText.fontSize = 12;
-        labelText.fills = [{ type: "SOLID", color: hexToRgb('#0070AF') }];
+        labelText.fills = [{ type: "SOLID", color: hexToRgb('#005ca9') }];
         labelText.characters = msg.label;
         figma.currentPage.appendChild(labelText);
         labelText.x = Math.round(badge.x + badge.width + 8);
@@ -892,7 +938,7 @@ figma.ui.onmessage = async (msg) => {
           badge = figma.createEllipse();
           badge.name = 'Selo de Área';
           badge.resize(32, 32);
-          badge.fills = [{ type: "SOLID", color: hexToRgb('#0070AF') }];
+          badge.fills = [{ type: "SOLID", color: hexToRgb('#005ca9') }];
         }
 
         figma.currentPage.appendChild(badge);
@@ -906,7 +952,7 @@ figma.ui.onmessage = async (msg) => {
           labelText.name = 'Label';
           labelText.fontName = { family: "Inter", style: "Bold" };
           labelText.fontSize = 12;
-          labelText.fills = [{ type: "SOLID", color: hexToRgb('#0070AF') }];
+          labelText.fills = [{ type: "SOLID", color: hexToRgb('#005ca9') }];
           labelText.characters = msg.label;
           figma.currentPage.appendChild(labelText);
           labelText.x = Math.round(badge.x + badge.width + 8);
@@ -1031,16 +1077,39 @@ figma.ui.onmessage = async (msg) => {
       // do formulário/seleção) é traduzido pro node EQUIVALENTE dentro do
       // clone via nodeMap — mesma tradução que Tabulação já faz.
       let specClone = null;
+      // workAnchor devolvido pra que o frontend grave, se esta chamada
+      // acabou de CRIAR o clone da área pela 1ª vez (2026-09-21) — ver
+      // comentário completo em start-spec-copy/_findFreeTabOrderCopyPosition.
+      let _specCloneWorkAnchor = null;
+      // Nó de referência pra posição manual do card (2026-09-21, ver
+      // confirmA11ySpec no frontend, accessibility.js — sempre lê a
+      // seleção ATUAL do canvas ao aplicar, sem perguntar nada ao
+      // designer) — resolvido AQUI, antes do clone, porque precisa passar
+      // pela mesma tradução original→clone que `node` recebe logo abaixo
+      // (opts.manualAnchorNodeId sempre chega como id do canvas ORIGINAL,
+      // igual opts.targetNodeId).
+      let _manualAnchorNode = opts.manualAnchorNodeId ? await _getSceneNodeById(opts.manualAnchorNodeId) : null;
       if (opts.a11yAreaId && opts.a11yAreaTargetNodeId) {
         try {
-          const resolved = await _resolveActiveSpecClone(opts.a11yAreaId, opts.a11yAreaTargetNodeId, opts.sectionName, opts.designerName, opts.designerId);
+          const resolved = await _resolveActiveSpecClone(opts.a11yAreaId, opts.a11yAreaTargetNodeId, opts.sectionName, opts.designerName, opts.designerId, opts.savedAnchor);
           if (resolved) {
+            _specCloneWorkAnchor = resolved.workAnchor || null;
             const mappedNode = resolved.nodeMap.get(node.id);
             if (mappedNode && mappedNode.absoluteBoundingBox) {
               node = mappedNode;
               specClone = resolved.clone;
             } else {
               console.error('[hac] create-unified-spec: node não encontrado no clone da área — desenhando sobre o original.', JSON.stringify({ targetNodeId: node.id }));
+            }
+            if (_manualAnchorNode) {
+              const mappedAnchor = resolved.nodeMap.get(_manualAnchorNode.id);
+              // Só troca pro nó do clone se o mapeamento existir de fato —
+              // se o elemento de referência escolhido não pertence a esta
+              // área/clone (caso raro, seleção trocada entre marcar
+              // referência e aplicar), cai no fallback abaixo (bounds do
+              // nó original), nunca quebra a criação da spec por causa
+              // disso.
+              if (mappedAnchor && mappedAnchor.absoluteBoundingBox) _manualAnchorNode = mappedAnchor;
             }
           }
         } catch (e) {
@@ -1488,11 +1557,78 @@ figma.ui.onmessage = async (msg) => {
         const _AREA_MAX_COLS = 3;
         let targetX, targetY;
 
+        // Bounds do elemento de referência pra posição manual (2026-09-21) —
+        // resolvido aqui, não antes, porque cardW/cardH (usados pro lado
+        // "left"/"top") só existem a partir deste ponto.
+        const _manualAnchorBounds = _manualAnchorNode
+          ? ('absoluteRenderBounds' in _manualAnchorNode
+              ? (_manualAnchorNode.absoluteBoundingBox || _manualAnchorNode.absoluteRenderBounds)
+              : _manualAnchorNode.absoluteBoundingBox)
+          : null;
+
         if (opts.pinnedPosition) {
           // Edição de spec (delete+recreate): mantém a spec exatamente onde
-          // estava, sem reempilhar.
+          // estava, sem reempilhar. Tem prioridade sobre a posição manual
+          // (abaixo) — reconfirmar uma spec já existente nunca deve pulá-la
+          // de lugar, mesmo que o designer tenha deixado o modo de posição
+          // manual ligado por engano.
           targetX = opts.pinnedPosition.x;
           targetY = opts.pinnedPosition.y;
+        } else if (_manualAnchorBounds) {
+          // Elemento selecionado no canvas no momento de "Aplicar" (sempre
+          // lido, ver confirmA11ySpec no frontend, accessibility.js) —
+          // ignora todo o empilhamento automático (letra/área, que o
+          // usuário reportou não funcionar bem) e ancora só ao lado do
+          // elemento de referência, no lado escolhido em "Lado da Guia".
+          // Mesmo cálculo usado no fallback "nenhuma spec anterior" abaixo,
+          // só que a partir de _manualAnchorBounds em vez de _anchorBounds
+          // (frame de origem inteiro) — mais a checagem de colisão logo
+          // abaixo, que empurra pra baixo se o card cair sobre outro já
+          // existente.
+          if (side === 'right') {
+            targetX = _manualAnchorBounds.x + _manualAnchorBounds.width + 100;
+            targetY = _manualAnchorBounds.y;
+          } else if (side === 'left') {
+            targetX = _manualAnchorBounds.x - cardW - 100;
+            targetY = _manualAnchorBounds.y;
+          } else if (side === 'bottom') {
+            targetX = _manualAnchorBounds.x;
+            targetY = _manualAnchorBounds.y + _manualAnchorBounds.height + 100;
+          } else { // top
+            targetX = _manualAnchorBounds.x;
+            targetY = _manualAnchorBounds.y - cardH - 100;
+          }
+          // Bug real corrigido (2026-09-21, pedido do usuário: "garantir que
+          // ao selecionar um elemento do canvas, um card nunca fique um
+          // sobre o outro, ele deve posicionar mais abaixo") — a posição
+          // manual, ao contrário de todos os outros branches acima, nunca
+          // checava colisão com cards JÁ existentes: dois designers (ou o
+          // mesmo, duas vezes) escolhendo o mesmo elemento de referência
+          // sempre calculavam o MESMO X/Y, sobrepondo os cards. Reusa
+          // _rectsOverlap (já usado por _findFreeTabOrderCopyPosition) contra
+          // TODAS as specs já desenhadas na Section de sessão (mesmo
+          // conjunto que _stackScanNodes varre logo acima) — em colisão,
+          // empurra o card pra baixo, mesmo X, até achar uma faixa Y livre.
+          // Nunca mexe em X (o designer escolheu explicitamente "ao lado
+          // deste elemento" — só a altura é renegociada).
+          // specGroup (o GROUP desta spec) só é criado mais abaixo via
+          // figma.group — neste ponto _stackScanNodes só pode conter specs
+          // JÁ existentes, nunca a que está sendo criada agora.
+          const _manualOccupied = [];
+          _stackScanNodes.forEach(n => {
+            if (n.type !== 'GROUP') return;
+            const _notes = n.children && n.children.find(c => (c.type === 'FRAME' || c.type === 'INSTANCE') && c.name === 'Spec Notes');
+            const _bb = _notes && ('absoluteRenderBounds' in _notes ? (_notes.absoluteBoundingBox || _notes.absoluteRenderBounds) : _notes.absoluteBoundingBox);
+            if (_bb) _manualOccupied.push(_bb);
+          });
+          let _manualGuard = 0;
+          while (_manualGuard < 200) {
+            const _rect = { left: targetX, right: targetX + cardW, top: targetY, bottom: targetY + cardH };
+            const _hit = _manualOccupied.find(bb => _rectsOverlap(_rect, { left: bb.x, right: bb.x + bb.width, top: bb.y, bottom: bb.y + bb.height }));
+            if (!_hit) break;
+            targetY = _hit.y + _hit.height + _SPEC_GAP;
+            _manualGuard++;
+          }
         } else if (opts.a11yAreaId && _areaMap[_areaColKey]) {
           targetX = _areaMap[_areaColKey].x;
           targetY = _areaMap[_areaColKey].bottom + _SPEC_GAP;
@@ -1653,8 +1789,46 @@ figma.ui.onmessage = async (msg) => {
         _reparentIntoSection(specGroup, () => _getOrCreateA11ySessionSection(opts.designerName, opts.designerId));
       }
 
+      // BUG REAL CORRIGIDO (2026-09-21, item 3 — "empilhamento entre telas
+      // diferentes"): cada spec nova cresce `specOverlayGroup` (irmão do
+      // clone, dentro de "[HAC] Handoff - {Func}") em ABSOLUTE — mas
+      // `handoffFrame` NÃO tem Auto Layout (ver _fitFichaHandoffFrameToChildren)
+      // e só é redimensionado quando algo chama essa função explicitamente.
+      // Antes desta correção, isso só acontecia dentro de
+      // _ensureLegendBesideClone, rodada UMA vez (na criação do clone) —
+      // specs seguintes cresciam o overlay sem nunca re-"fit"ar o
+      // handoffFrame, então "[HAC] Documentação" (Hug, pai de tudo) media
+      // uma altura desatualizada (menor que a real, sem contar os cards).
+      // _getVerticalAnchorForNewArea lê exatamente esse bounding box pra
+      // decidir onde a PRÓXIMA área nasce — subdimensionado, a próxima área
+      // podia nascer ainda dentro da faixa ocupada pelos cards da anterior.
+      // Refaz a cadeia de fit (handoffFrame → itensFrame/telaFrame →
+      // Section de sessão) toda vez que um specGroup novo entra, mesmo
+      // princípio já usado pelos 3 builders da Ficha ao final de cada um.
+      if (_reparentedIntoOverlay && specClone && !specClone.removed) {
+        try {
+          const handoffFrame = specClone.parent;
+          if (handoffFrame && !handoffFrame.removed) {
+            _fitFichaHandoffFrameToChildren(handoffFrame);
+            const section = handoffFrame.parent;
+            const itensFrame = section && section.parent;
+            if (itensFrame && !itensFrame.removed) {
+              _fitTelaFrameWidthFromItensFrame(itensFrame);
+              _fitSessionSectionFromItensFrame(itensFrame);
+            }
+          }
+        } catch (e) {
+          console.error('[hac] create-unified-spec: falha ao reajustar o tamanho do bloco/Documentação após novo card.', e && e.message);
+        }
+      }
+
       figma.ui.postMessage({
         type: "spec-created",
+        // workAnchor (2026-09-21) — só preenchido quando esta chamada criou
+        // o clone de trabalho da área PELA 1ª VEZ; o frontend grava em
+        // hacData.a11yAreas[].workAnchor e reenvia em toda chamada seguinte
+        // pra MESMA área — a posição, uma vez fixada, nunca muda.
+        workAnchor: _specCloneWorkAnchor,
         spec: {
           id: specGroup.id,
           targetNodeId: _originalTargetNodeId,
@@ -1916,7 +2090,7 @@ figma.ui.onmessage = async (msg) => {
       badge = figma.createEllipse();
       badge.name = 'Selo de Ordem de Tabulação';
       badge.resize(28, 28);
-      badge.fills = [{ type: "SOLID", color: hexToRgb('#0070AF') }];
+      badge.fills = [{ type: "SOLID", color: hexToRgb('#005ca9') }];
     }
 
     const bb = node.absoluteBoundingBox;
@@ -2627,7 +2801,7 @@ figma.ui.onmessage = async (msg) => {
     return found;
   }
 
-  async function _createSpecCloneForArea(root, areaId, sectionName, designerName, currentUserId) {
+  async function _createSpecCloneForArea(root, areaId, sectionName, designerName, currentUserId, savedAnchor) {
     let clone = root.clone();
     // Mesmo bug/correção de _createTabOrderCloneForArea (2026-09-08).
     if (clone.type === 'INSTANCE') {
@@ -2648,7 +2822,13 @@ figma.ui.onmessage = async (msg) => {
     // da Área 1) — ver comentário completo em
     // _createTabOrderCloneForArea/_findFreeTabOrderCopyPosition.
     const _verticalAnchor = _getVerticalAnchorForNewArea(areaId, currentUserId);
-    const { x, y } = await _findFreeTabOrderCopyPosition(cloneWidth, cloneHeight, root.absoluteBoundingBox, _verticalAnchor);
+    // `savedAnchor` (2026-09-21, bug real reportado com print: spec nova
+    // ainda nascendo na altura de outra área mesmo com verticalAnchorBounds
+    // — o cálculo era sempre REFEITO do zero a cada artefato novo da MESMA
+    // área, dependente de estado transitório do canvas). Escopo restrito
+    // de propósito à Spec/Leitor de Tela (única vertical onde o bug foi
+    // reportado) — Tabulação/Swipe não são tocados aqui.
+    const { x, y } = await _findFreeTabOrderCopyPosition(cloneWidth, cloneHeight, root.absoluteBoundingBox, _verticalAnchor, savedAnchor);
     figma.currentPage.appendChild(clone);
     clone.x = x;
     clone.y = y;
@@ -2659,7 +2839,7 @@ figma.ui.onmessage = async (msg) => {
     // _createTabOrderCloneForArea (2026-09-14, causa raiz do vão).
     try { _fitSectionToChildren(_sessionSection); } catch (e) { }
 
-    return { clone, nodeMap };
+    return { clone, nodeMap, workAnchor: { x, y } };
   }
 
   // Race condition real corrigida (2026-09-16, pista do usuário: "quando eu
@@ -2699,12 +2879,12 @@ figma.ui.onmessage = async (msg) => {
   // tem hoje qualquer serialização), mas só Leitor de Tela foi reportado com
   // sintoma real — escopo da correção restrito a ele.
   const _specCloneResolutionInFlight = new Map();
-  function _resolveActiveSpecClone(areaId, targetNodeId, sectionName, designerName, currentUserId) {
-    if (!areaId) return _resolveActiveSpecCloneInner(areaId, targetNodeId, sectionName, designerName, currentUserId);
+  function _resolveActiveSpecClone(areaId, targetNodeId, sectionName, designerName, currentUserId, savedAnchor) {
+    if (!areaId) return _resolveActiveSpecCloneInner(areaId, targetNodeId, sectionName, designerName, currentUserId, savedAnchor);
     const pending = _specCloneResolutionInFlight.get(areaId);
     const chained = (pending || Promise.resolve()).then(
-      () => _resolveActiveSpecCloneInner(areaId, targetNodeId, sectionName, designerName, currentUserId),
-      () => _resolveActiveSpecCloneInner(areaId, targetNodeId, sectionName, designerName, currentUserId)
+      () => _resolveActiveSpecCloneInner(areaId, targetNodeId, sectionName, designerName, currentUserId, savedAnchor),
+      () => _resolveActiveSpecCloneInner(areaId, targetNodeId, sectionName, designerName, currentUserId, savedAnchor)
     );
     // Guarda a promise encadeada pra próxima chamada esperar por ESTA,
     // não pela original — corrente serializada, uma de cada vez. Limpa a
@@ -2726,7 +2906,7 @@ figma.ui.onmessage = async (msg) => {
   // _resolveActiveSpecClone (2026-09-16) — o nome original agora é o
   // wrapper de serialização acima; esta é a lógica real, sempre chamada em
   // sequência, nunca mais concorrente pra mesma área.
-  async function _resolveActiveSpecCloneInner(areaId, targetNodeId, sectionName, designerName, currentUserId) {
+  async function _resolveActiveSpecCloneInner(areaId, targetNodeId, sectionName, designerName, currentUserId, savedAnchor) {
     const root = await _getSceneNodeById(targetNodeId);
     if (!root || !root.absoluteBoundingBox) return null;
     if (typeof root.clone !== 'function') return null;
@@ -2767,7 +2947,7 @@ figma.ui.onmessage = async (msg) => {
       return { clone, nodeMap };
     }
 
-    const created = await _createSpecCloneForArea(root, areaId, sectionName, designerName, currentUserId);
+    const created = await _createSpecCloneForArea(root, areaId, sectionName, designerName, currentUserId, savedAnchor);
     if (areaId) _activeSpecCloneMaps.set(areaId, created.nodeMap);
     return created;
   }
@@ -2868,8 +3048,12 @@ figma.ui.onmessage = async (msg) => {
         return;
       }
       try {
-        const resolved = await _resolveActiveSpecClone(msg.areaId, msg.targetNodeId, msg.sectionName, msg.designerName, msg.designerId);
-        figma.ui.postMessage({ type: "spec-copy-started", cloneId: resolved ? resolved.clone.id : null, areaId: msg.areaId });
+        const resolved = await _resolveActiveSpecClone(msg.areaId, msg.targetNodeId, msg.sectionName, msg.designerName, msg.designerId, msg.savedAnchor);
+        // workAnchor (2026-09-21) — só vem preenchido quando esta chamada
+        // de fato CRIOU o clone (1ª vez); se já existia em cache/canvas,
+        // resolved.workAnchor é undefined e não há nada novo a gravar no
+        // frontend (a área já tinha posição fixada antes).
+        figma.ui.postMessage({ type: "spec-copy-started", cloneId: resolved ? resolved.clone.id : null, areaId: msg.areaId, workAnchor: resolved ? resolved.workAnchor : null });
       } catch (e) {
         figma.ui.postMessage({ type: "spec-copy-started", cloneId: null, areaId: msg.areaId });
       }
@@ -3582,8 +3766,9 @@ figma.ui.onmessage = async (msg) => {
     // (start-spec-copy/spec-copy-started, disparado em paralelo pelo mesmo
     // clique) ter chance de mudar figma.currentPage.selection.
     const _sel = figma.currentPage.selection;
-    _a11yManualMatchLastRealSelectionId = _sel.length > 0 ? _sel[0].id : null;
-    (async () => { await _resolveManualSpecMatchAndNotify(msg.token || null); })();
+    const _openNode = _sel.length > 0 ? _sel[0] : null;
+    _a11yManualMatchLastRealSelectionId = _openNode ? _openNode.id : null;
+    (async () => { await _resolveManualSpecMatchAndNotify(msg.token || null, _openNode); })();
     return;
   }
 
@@ -4450,9 +4635,19 @@ figma.ui.onmessage = async (msg) => {
       card.fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }];
       card.strokes = [{ type: 'SOLID', color: { r: 0.537, g: 0.537, b: 0.537 } }];
       card.strokeWeight = 1;
+      // BUG REAL CORRIGIDO (2026-09-21, reportado com print: texto cortado
+      // "Nenhuma trilha de swipe definida..." ao clicar em "Preencher
+      // Swipe"/"Gerar Handoff" sem trilha criada) — resize(w, h) explícito
+      // nos dois eixos, chamado DEPOIS de primaryAxisSizingMode='AUTO',
+      // faz a API do Figma reverter silenciosamente o eixo primário
+      // (altura, já que layoutMode='VERTICAL') de volta pra FIXED com o
+      // valor 1 passado — mesmo bug já documentado e corrigido em
+      // _buildFichaLegendColumn (ver comentário completo lá). Ordem
+      // corrigida: resizeWithoutConstraints ANTES de setar os sizing
+      // modes.
+      card.resizeWithoutConstraints(260, 1);
       card.primaryAxisSizingMode = 'AUTO';
       card.counterAxisSizingMode = 'FIXED';
-      card.resize(260, 1);
 
       const text = figma.createText();
       text.name = 'Texto';
@@ -4620,7 +4815,7 @@ figma.ui.onmessage = async (msg) => {
     const section = await _getOrCreateFichaBlockSection(itensFrame, 'leitor', area.id, area.a11yOrigin);
 
     const resolved = area.targetNodeId
-      ? await _resolveActiveSpecClone(area.id, area.targetNodeId, area.sectionName, designerName, currentUserId)
+      ? await _resolveActiveSpecClone(area.id, area.targetNodeId, area.sectionName, designerName, currentUserId, area.workAnchor)
       : null;
     if (resolved) {
       // FRAME "[HAC] Handoff - {Func}" (2026-09-11, revisão 2) — ver
@@ -4921,7 +5116,7 @@ figma.ui.onmessage = async (msg) => {
           const resolved = await _resolveActiveSwipePathClone(area.id, area.targetNodeId, area.sectionName, msg.designerName, msg.designerId);
           clone = resolved && resolved.clone;
         } else if (sectionKey === 'leitor') {
-          const resolved = await _resolveActiveSpecClone(area.id, area.targetNodeId, area.sectionName, msg.designerName, msg.designerId);
+          const resolved = await _resolveActiveSpecClone(area.id, area.targetNodeId, area.sectionName, msg.designerName, msg.designerId, area.workAnchor);
           clone = resolved && resolved.clone;
         }
       } catch (e) {

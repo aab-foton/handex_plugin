@@ -151,6 +151,223 @@ function saveToStorage() {
   parent.postMessage({ pluginMessage: { type: 'save-storage', data: hacData } }, '*');
 }
 
+// ── Backup / exportação (2026-09-22) ───────────────────────────────────
+// Pedido do usuário ("temos como salvar/baixar isso?"), logo depois de a
+// persistência no documento ser implementada. Duas saídas, propósitos
+// diferentes: .json (completo, restaurável — o backup de verdade) e .md
+// (legível, para entregar ao time de dev, sem volta pro plugin).
+//
+// O download roda no IFRAME (aqui), não no backend: o sandbox do Figma não
+// tem DOM nem Blob/URL.createObjectURL. Daí o padrão âncora temporária.
+function _downloadFile(filename, content, mime) {
+  try {
+    const blob = new Blob([content], { type: `${mime};charset=utf-8` });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    // revoke adiado: revogar no mesmo tick cancela o download em alguns
+    // navegadores antes de ele começar de fato.
+    setTimeout(() => { try { URL.revokeObjectURL(url); } catch (e) { } }, 4000);
+    return true;
+  } catch (e) {
+    console.error('[hac] download falhou:', e);
+    showToast('Não foi possível gerar o arquivo.', 'error');
+    return false;
+  }
+}
+
+// Nome de arquivo seguro e datado — dois backups do mesmo projeto nunca se
+// sobrescrevem na pasta de Downloads.
+function _hacBackupFilename(ext) {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const stamp = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`;
+  // activeSectionName é o rótulo real do projeto/versão nesta base (não
+  // existe campo "projectName" no schema) — cai em "documentacao" quando o
+  // designer ainda não nomeou nenhuma Section.
+  const projeto = String((hacData && hacData.activeSectionName) || 'documentacao')
+    .replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-').slice(0, 40) || 'documentacao';
+  return `hac_${projeto}_${stamp}.${ext}`;
+}
+
+function toggleHacBackupMenu() {
+  const menu = document.getElementById('hac-backup-menu');
+  const btn = document.getElementById('btn-hac-backup-menu');
+  if (!menu) return;
+  const willOpen = menu.classList.contains('hidden');
+  menu.classList.toggle('hidden', !willOpen);
+  if (btn) btn.setAttribute('aria-expanded', String(willOpen));
+}
+window.toggleHacBackupMenu = toggleHacBackupMenu;
+
+function closeHacBackupMenu() {
+  const menu = document.getElementById('hac-backup-menu');
+  const btn = document.getElementById('btn-hac-backup-menu');
+  if (menu) menu.classList.add('hidden');
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+}
+window.closeHacBackupMenu = closeHacBackupMenu;
+
+// Fecha ao clicar fora — mesmo padrão dos outros menus suspensos do plugin.
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('hac-backup-menu');
+  if (!menu || menu.classList.contains('hidden')) return;
+  const btn = document.getElementById('btn-hac-backup-menu');
+  if (menu.contains(e.target) || (btn && btn.contains(e.target))) return;
+  closeHacBackupMenu();
+});
+
+// ── Exportar .json (backup completo, restaurável) ──────────────────────
+// Envelopa hacData com metadados de proveniência: sem eles, um .json solto
+// na pasta de Downloads não diz de qual projeto/versão veio, e a restauração
+// não teria como avisar que o arquivo é de outro projeto.
+function exportHacBackupJson() {
+  try {
+    const payload = {
+      _hacBackup: true,
+      _backupVersion: 1,
+      exportedAt: new Date().toISOString(),
+      pluginVersion: (window.PLUGIN_VERSION || hacData._pluginVersion || null),
+      data: hacData,
+    };
+    const ok = _downloadFile(_hacBackupFilename('json'), JSON.stringify(payload, null, 2), 'application/json');
+    if (ok) showToast('Backup baixado.', 'success');
+  } catch (e) {
+    console.error('[hac] exportHacBackupJson falhou:', e);
+    showToast('Não foi possível gerar o backup.', 'error');
+  }
+}
+window.exportHacBackupJson = exportHacBackupJson;
+
+// ── Exportar .md (documento legível para o time de dev) ────────────────
+// Markdown (não PDF/HTML): abre no GitHub/Notion/VS Code, entra em PR, e é
+// diffável entre versões — o formato que o dev já consome.
+function exportHacHandoffDoc() {
+  try {
+    const areas = (hacData.a11yAreas || []);
+    const specs = (hacData.a11ySpecs || []);
+    const tabItems = (hacData.tabOrderItems || []);
+    const swipes = (hacData.a11ySwipePaths || []);
+    const L = [];
+    L.push(`# Handoff de Acessibilidade`);
+    L.push('');
+    L.push(`Gerado em ${new Date().toLocaleString('pt-BR')} pelo hac.`);
+    L.push('');
+    if (!areas.length) L.push('_Nenhuma tela documentada._');
+
+    areas.forEach((area) => {
+      L.push(`## ${area.number} · ${area.label || 'Tela'}`);
+      L.push('');
+
+      const areaSpecs = specs.filter(s => s && s.a11yAreaId === area.id);
+      if (areaSpecs.length) {
+        L.push(`### Leitor de tela`);
+        L.push('');
+        areaSpecs.forEach((s) => {
+          const cat = (typeof getA11yCategoryLabel === 'function')
+            ? getA11yCategoryLabel(s.a11yType) : (s.a11yType || '');
+          L.push(`#### ${s.letter ? `\`${s.letter}\` · ` : ''}${s.name || 'Elemento'}`);
+          L.push('');
+          if (cat) L.push(`- **Categoria:** ${cat}`);
+          if (s.a11yDscComponentName) L.push(`- **Componente DSC:** ${s.a11yDscComponentName}`);
+          (s.properties || []).forEach((p) => {
+            if (p && p.value) L.push(`- **${p.label || p.key}:** ${p.value}`);
+          });
+          L.push('');
+        });
+      }
+
+      const areaTab = tabItems.filter(t => t && t.a11yAreaId === area.id);
+      if (areaTab.length) {
+        L.push(`### Ordem de tabulação`);
+        L.push('');
+        areaTab.forEach((t, i) => L.push(`${i + 1}. ${t.nodeName || t.name || 'Elemento'}`));
+        L.push('');
+      }
+
+      const areaSwipe = swipes.filter(p => p && p.areaId === area.id);
+      areaSwipe.forEach((path) => {
+        L.push(`### Trilha de leitura (swipe)`);
+        L.push('');
+        (path.points || []).forEach((pt, i) => L.push(`${i + 1}. ${pt.nodeName || 'Ponto'}`));
+        L.push('');
+      });
+
+      if (!areaSpecs.length && !areaTab.length && !areaSwipe.length) {
+        L.push('_Sem documentação registrada nesta tela._');
+        L.push('');
+      }
+    });
+
+    const ok = _downloadFile(_hacBackupFilename('md'), L.join('\n'), 'text/markdown');
+    if (ok) showToast('Documento exportado.', 'success');
+  } catch (e) {
+    console.error('[hac] exportHacHandoffDoc falhou:', e);
+    showToast('Não foi possível gerar o documento.', 'error');
+  }
+}
+window.exportHacHandoffDoc = exportHacHandoffDoc;
+
+// ── Restaurar .json ────────────────────────────────────────────────────
+function importHacBackupJson() {
+  const input = document.getElementById('hac-backup-file-input');
+  if (!input) return;
+  input.value = ''; // permite reescolher o MESMO arquivo depois de um erro
+  input.click();
+}
+window.importHacBackupJson = importHacBackupJson;
+
+function _handleHacBackupFileChosen(event) {
+  const file = event && event.target && event.target.files && event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    let payload = null;
+    try {
+      payload = JSON.parse(String(reader.result || ''));
+    } catch (e) {
+      showToast('Arquivo inválido — não é um JSON válido.', 'error');
+      return;
+    }
+    // Aceita tanto o envelope novo quanto um hacData cru (ex: backup colado
+    // à mão, ou exportado por uma versão futura//anterior sem envelope).
+    const incoming = (payload && payload._hacBackup && payload.data) ? payload.data : payload;
+    if (!incoming || typeof incoming !== 'object' || !Array.isArray(incoming.a11yAreas)) {
+      showToast('Arquivo inválido — não parece um backup do hac.', 'error');
+      return;
+    }
+    const nAreas = incoming.a11yAreas.length;
+    const nSpecs = Array.isArray(incoming.a11ySpecs) ? incoming.a11ySpecs.length : 0;
+    // Confirmação explícita: restaurar SUBSTITUI o estado atual, e o usuário
+    // pode ter documentado algo depois do backup.
+    const confirmed = window.confirm(
+      `Restaurar este backup?\n\nConteúdo: ${nAreas} tela(s), ${nSpecs} especificação(ões).\n\n` +
+      `A documentação atual do plugin será SUBSTITUÍDA. Os elementos já desenhados no canvas não são apagados.`
+    );
+    if (!confirmed) return;
+
+    try {
+      hacData = Object.assign({}, hacData, incoming);
+      a11yAreas = hacData.a11yAreas || [];
+      a11ySpecs = hacData.a11ySpecs || [];
+      tabOrderItems = hacData.tabOrderItems || [];
+      saveToStorage();
+      if (typeof renderA11yGroupedList === 'function') renderA11yGroupedList();
+      showToast(`Backup restaurado — ${nAreas} tela(s).`, 'success');
+    } catch (e) {
+      console.error('[hac] restauração falhou:', e);
+      showToast('Não foi possível restaurar o backup.', 'error');
+    }
+  };
+  reader.onerror = () => showToast('Não foi possível ler o arquivo.', 'error');
+  reader.readAsText(file);
+}
+window._handleHacBackupFileChosen = _handleHacBackupFileChosen;
+
 // Mostra toast de salvo ao adicionar qualquer item relevante
 function _toastSaved() {
   showToast('Salvo automaticamente', 'success');

@@ -1,7 +1,7 @@
 {
   "_meta": {
     "description": "Mapa containingFrame -> categoria de a11y, ESSENCIAL EM RUNTIME no hac (consumido por _getDscFrameToA11yMap em code.js para a Detecção Automática de a11y). Gerado por build-dsc-a11y-mapping.cjs a partir de refs/web-angular-react.json (dados reais da REST API do Figma, sem valores inventados). Adaptação do Handex Beta (onde este mesmo formato de arquivo é descrito como \"fundação de dados, não usado em runtime\" — desatualizado lá, mas aqui no hac o consumo em runtime é o desenho intencional desde o início).",
-    "generatedAt": "2026-09-14T19:11:29.391Z",
+    "generatedAt": "2026-09-22T13:53:05.233Z",
     "generator": "build-dsc-a11y-mapping.cjs (hac)",
     "sourceFile": "super-dsc-web.json",
     "sourceFileKey": "erkqbRKIbaFWbkHe51BeiZ",
@@ -34,22 +34,22 @@
       "imagem"
     ],
     "counts": {
-      "totalComponentsVariants": 4667,
+      "totalComponentsVariants": 4750,
       "totalFamilies": 1506,
       "altaConfianca": {
         "families": 19,
         "variantCount": 715
       },
       "baixaConfianca": {
-        "families": 30,
-        "variantCount": 408
+        "families": 46,
+        "variantCount": 748
       },
       "semMatch": {
-        "families": 1457,
-        "variantCount": 3544
+        "families": 1441,
+        "variantCount": 3287
       },
       "pctFamiliesAlta": 1.3,
-      "pctVariantsAlta": 15.3
+      "pctVariantsAlta": 15.1
     },
     "byShortName": {
       "accordion": {
@@ -69,8 +69,8 @@
         "variantCount": 30
       },
       "dialog": {
-        "families": 2,
-        "variantCount": 12
+        "families": 6,
+        "variantCount": 51
       },
       "inputs": {
         "families": 13,
@@ -81,12 +81,12 @@
         "variantCount": 0
       },
       "listas": {
-        "families": 3,
-        "variantCount": 78
+        "families": 8,
+        "variantCount": 147
       },
       "paginator": {
-        "families": 1,
-        "variantCount": 2
+        "families": 3,
+        "variantCount": 102
       },
       "radio button": {
         "families": 1,
@@ -113,12 +113,12 @@
         "variantCount": 0
       },
       "imagem": {
-        "families": 6,
-        "variantCount": 38
+        "families": 9,
+        "variantCount": 154
       },
       "estrutura": {
-        "families": 2,
-        "variantCount": 21
+        "families": 4,
+        "variantCount": 37
       }
     }
   },
@@ -389,6 +389,34 @@
   ],
   "baixaConfianca": [
     {
+      "containingFrame": "[dsc] Page Controller",
+      "variantCount": 90,
+      "sampleKeys": [
+        "05a82ee5ed9be0f3f5dba228732a41e12f29e7d4",
+        "0682d68eb6478bb94b2b0851728aaf5e586b9448",
+        "0776614bc917c6f0f2f76706d08cdbddc50f4167"
+      ],
+      "match": {
+        "shortName": "paginator",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-dsc-web) \"Page Controller\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Credit Card",
+      "variantCount": 85,
+      "sampleKeys": [
+        "8c385f8b2fe7da454c9f853f1a0ce0f3c4641c44",
+        "16964af529bbbafbac136a79219db2d37c370a80",
+        "034c0df19384d3a1f74c1285897e16c822a22c0f"
+      ],
+      "match": {
+        "shortName": "imagem",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-dsc-web) \"Credit Card\""
+      }
+    },
+    {
       "containingFrame": "[dsc] List Item",
       "variantCount": 52,
       "sampleKeys": [
@@ -417,6 +445,34 @@
       }
     },
     {
+      "containingFrame": "[dsc] Sidebar Menu Item",
+      "variantCount": 32,
+      "sampleKeys": [
+        "8d333f57dee3048c92d606212cdc8ca8f3af042c",
+        "0f45d84db00e10114e7a0eac7396d35c72f840e0",
+        "370cc26767c91c1c7ebe1aa486ab347b2114c52b"
+      ],
+      "match": {
+        "shortName": "listas",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-dsc-web) \"Sidebar Menu Item\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Icon Container",
+      "variantCount": 24,
+      "sampleKeys": [
+        "7b5e37b047e38fad9e76ef8ede1890c2dca3d7cd",
+        "098065644ece00ce797e549483c120c9443bbafa",
+        "226b2a286f3289af6c24fb2bed796ee48989a5de"
+      ],
+      "match": {
+        "shortName": "imagem",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-dsc-web) \"Icon Container\""
+      }
+    },
+    {
       "containingFrame": "[dsc] Date Field Form",
       "variantCount": 24,
       "sampleKeys": [
@@ -428,6 +484,20 @@
         "shortName": "inputs",
         "confidence": "baixa",
         "reason": "tabela curada (super-dsc-web) \"Date Field Form\""
+      }
+    },
+    {
+      "containingFrame": "[dsc-tc] card carousel",
+      "variantCount": 24,
+      "sampleKeys": [
+        "63268df9f0deab8e6235065a98598b0c3a691e39",
+        "0b6a01710cfc43e34b45d6bab4fc0ab5dcba0a1b",
+        "0cd825beaf664618e5432ca0aec56c2e898bb25d"
+      ],
+      "match": {
+        "shortName": "listas",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-dsc-web) \"card carousel\""
       }
     },
     {
@@ -543,6 +613,20 @@
       }
     },
     {
+      "containingFrame": "[dsc-tc] Drawer Panel",
+      "variantCount": 19,
+      "sampleKeys": [
+        "27f9422d281582335d1a596d014a163824acff33",
+        "bba7178bdb76e88366d8b8d849240f7c782f30a9",
+        "c2d3503040e3b535e25bbd358f02a52d5c7c0115"
+      ],
+      "match": {
+        "shortName": "dialog",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-dsc-web) \"Drawer Panel\""
+      }
+    },
+    {
       "containingFrame": "[dsc-tc] List Item",
       "variantCount": 18,
       "sampleKeys": [
@@ -599,6 +683,48 @@
       }
     },
     {
+      "containingFrame": "[dsc] Overflow Controller",
+      "variantCount": 10,
+      "sampleKeys": [
+        "2af3866a500a48e85d2ccacf694f5bd6c7885217",
+        "5d1c089e309d34acfb2251b04aa6cc4629494fee",
+        "745259a6e76d1505130ab9c4510d5e56dcd7e19c"
+      ],
+      "match": {
+        "shortName": "paginator",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-dsc-web) \"Overflow Controller\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Toolbar",
+      "variantCount": 8,
+      "sampleKeys": [
+        "3329d2137161ecdf7c3b9321ea975a5440219e4f",
+        "e47ef0d9c0c88c3a7968a101d47e58ffab8958f7",
+        "fc157eb2257505cda2e0be31fe40ae67388ab6f0"
+      ],
+      "match": {
+        "shortName": "estrutura",
+        "confidence": "baixa",
+        "reason": "marco de navegação \"header\" (nomenclatura super-dsc-web)"
+      }
+    },
+    {
+      "containingFrame": "[dsc] Popover",
+      "variantCount": 8,
+      "sampleKeys": [
+        "412b8298504c8df405eed3141822a791af427d4d",
+        "482c51d535085f15f964087ce77bcc697e078f78",
+        "7153885e60b4cb08a579f8b56d1f12e9e554d015"
+      ],
+      "match": {
+        "shortName": "dialog",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-dsc-web) \"Popover\""
+      }
+    },
+    {
       "containingFrame": "[dsc] Input Chat",
       "variantCount": 8,
       "sampleKeys": [
@@ -641,6 +767,34 @@
       }
     },
     {
+      "containingFrame": "[dsc] Tooltip",
+      "variantCount": 8,
+      "sampleKeys": [
+        "223b0f9435d309b9430811a61fb0a34e48ecb0fe",
+        "368544e8b41a028dd8dc2f0adfb44ef08f6cedd2",
+        "41a77f5080c85fba73df4e598e3ed461e4a63ca9"
+      ],
+      "match": {
+        "shortName": "dialog",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-dsc-web) \"Tooltip\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Title Bar",
+      "variantCount": 8,
+      "sampleKeys": [
+        "8ea5bd9869b8f8992185b29a5e446f0328a34ef1",
+        "f3188c46db81e42ea8b83c9574b22b8da9e033ab",
+        "22d39e6698cc57fe6872ce42295a98a6766f875f"
+      ],
+      "match": {
+        "shortName": "estrutura",
+        "confidence": "baixa",
+        "reason": "marco de navegação \"header\" (barra de título)"
+      }
+    },
+    {
       "containingFrame": "[dsc-tc] Modal",
       "variantCount": 8,
       "sampleKeys": [
@@ -655,6 +809,20 @@
       }
     },
     {
+      "containingFrame": "[dsc] Icon",
+      "variantCount": 7,
+      "sampleKeys": [
+        "941800f47cd30c36c5ee7b6f9879f1ab71dd4588",
+        "d2f92d9d981e2b7e6e86e17da2b3658cb45b88a9",
+        "d54d6dd08cb4bee3799dfdf24a0cba43514eadb9"
+      ],
+      "match": {
+        "shortName": "imagem",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-dsc-web) \"Icon\""
+      }
+    },
+    {
       "containingFrame": "[dsc] Social Programs Logos",
       "variantCount": 7,
       "sampleKeys": [
@@ -666,6 +834,20 @@
         "shortName": "imagem",
         "confidence": "baixa",
         "reason": "tabela curada (super-dsc-web) \"Social Programs Logos\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Sidebar Menu",
+      "variantCount": 6,
+      "sampleKeys": [
+        "31d8f0f1d671c067e14ba059cc165217fc833166",
+        "706d258b3e7d39bf339b0b93381aa68870bc2423",
+        "e08b0d5661c59456a30686bb25dd7b12d860fe72"
+      ],
+      "match": {
+        "shortName": "listas",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-dsc-web) \"Sidebar Menu\""
       }
     },
     {
@@ -711,6 +893,34 @@
       }
     },
     {
+      "containingFrame": "[dsc-tc] Sidebar Menu",
+      "variantCount": 4,
+      "sampleKeys": [
+        "3517251b239b51d28353d2cb3ee4f22885ffd0c6",
+        "60cd8619795cfa3f9fa543b22249a63d68fd6b65",
+        "9f1fb35a7a21f67ab19c33e5e95e8b1ac4551d1a"
+      ],
+      "match": {
+        "shortName": "listas",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-dsc-web) \"Sidebar Menu\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Drawer Panel",
+      "variantCount": 4,
+      "sampleKeys": [
+        "a5e87e8985b2e18d5a9295f62e3d0bb455aa5d92",
+        "28f8675f261ef38f05823037473148ec7ae9618c",
+        "5ac735979873b9266c5f38e8d41746e722d2f857"
+      ],
+      "match": {
+        "shortName": "dialog",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-dsc-web) \"Drawer Panel\""
+      }
+    },
+    {
       "containingFrame": "[dsc] Modal",
       "variantCount": 4,
       "sampleKeys": [
@@ -750,6 +960,20 @@
         "shortName": "inputs",
         "confidence": "baixa",
         "reason": "tabela curada (super-dsc-web) \"Dropdown\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Search Results",
+      "variantCount": 3,
+      "sampleKeys": [
+        "a289b5b357783cc13dd47aafb1540b3dea35f109",
+        "bfe42a4eb2a7a7019671c257b620bce738b3ab57",
+        "e1aeca57ec1c0419c3b35880f50f042f43d50bcf"
+      ],
+      "match": {
+        "shortName": "listas",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-dsc-web) \"Search Results\""
       }
     },
     {
@@ -809,16 +1033,6 @@
   ],
   "semMatch": [
     {
-      "containingFrame": "[dsc] Page Controller",
-      "variantCount": 90,
-      "sampleKeys": [
-        "05a82ee5ed9be0f3f5dba228732a41e12f29e7d4",
-        "0682d68eb6478bb94b2b0851728aaf5e586b9448",
-        "0776614bc917c6f0f2f76706d08cdbddc50f4167"
-      ],
-      "match": null
-    },
-    {
       "containingFrame": "(sem containingFrame)",
       "variantCount": 59,
       "sampleKeys": [
@@ -859,16 +1073,6 @@
       "match": null
     },
     {
-      "containingFrame": "[dsc] Sidebar Menu Item",
-      "variantCount": 32,
-      "sampleKeys": [
-        "8d333f57dee3048c92d606212cdc8ca8f3af042c",
-        "0f45d84db00e10114e7a0eac7396d35c72f840e0",
-        "370cc26767c91c1c7ebe1aa486ab347b2114c52b"
-      ],
-      "match": null
-    },
-    {
       "containingFrame": "[dsc] Label Value Pair",
       "variantCount": 32,
       "sampleKeys": [
@@ -889,16 +1093,6 @@
       "match": null
     },
     {
-      "containingFrame": "[dsc] Icon Container",
-      "variantCount": 24,
-      "sampleKeys": [
-        "7b5e37b047e38fad9e76ef8ede1890c2dca3d7cd",
-        "098065644ece00ce797e549483c120c9443bbafa",
-        "226b2a286f3289af6c24fb2bed796ee48989a5de"
-      ],
-      "match": null
-    },
-    {
       "containingFrame": "[dsc] Spinner",
       "variantCount": 24,
       "sampleKeys": [
@@ -909,32 +1103,12 @@
       "match": null
     },
     {
-      "containingFrame": "[dsc-tc] card carousel",
-      "variantCount": 24,
-      "sampleKeys": [
-        "63268df9f0deab8e6235065a98598b0c3a691e39",
-        "0b6a01710cfc43e34b45d6bab4fc0ab5dcba0a1b",
-        "0cd825beaf664618e5432ca0aec56c2e898bb25d"
-      ],
-      "match": null
-    },
-    {
       "containingFrame": "[dsc-ts] Screen Feedback",
       "variantCount": 20,
       "sampleKeys": [
         "af4d246097a86cf9b4a1fe6c5b56c746df5f516c",
         "f167bd863c1c2978efacfa72abc57a0c2b39a2ac",
         "0b080eca64166896ce2158fa863d9e094099209c"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc-tc] Drawer Panel",
-      "variantCount": 19,
-      "sampleKeys": [
-        "27f9422d281582335d1a596d014a163824acff33",
-        "bba7178bdb76e88366d8b8d849240f7c782f30a9",
-        "c2d3503040e3b535e25bbd358f02a52d5c7c0115"
       ],
       "match": null
     },
@@ -979,16 +1153,6 @@
       "match": null
     },
     {
-      "containingFrame": "[dsc] Overflow Controller",
-      "variantCount": 10,
-      "sampleKeys": [
-        "2af3866a500a48e85d2ccacf694f5bd6c7885217",
-        "5d1c089e309d34acfb2251b04aa6cc4629494fee",
-        "745259a6e76d1505130ab9c4510d5e56dcd7e19c"
-      ],
-      "match": null
-    },
-    {
       "containingFrame": "[dsc-ts] Basic Layout",
       "variantCount": 10,
       "sampleKeys": [
@@ -1005,26 +1169,6 @@
         "1bcee0391b5fd12ea99b9fe8c90c46197695916c",
         "32f8046a979cb71b77a49347ec4286b2d3a05aea",
         "63483af851f3f507d65c982eb3c1588e0f179fa9"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc] Toolbar",
-      "variantCount": 8,
-      "sampleKeys": [
-        "3329d2137161ecdf7c3b9321ea975a5440219e4f",
-        "e47ef0d9c0c88c3a7968a101d47e58ffab8958f7",
-        "fc157eb2257505cda2e0be31fe40ae67388ab6f0"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc] Popover",
-      "variantCount": 8,
-      "sampleKeys": [
-        "412b8298504c8df405eed3141822a791af427d4d",
-        "482c51d535085f15f964087ce77bcc697e078f78",
-        "7153885e60b4cb08a579f8b56d1f12e9e554d015"
       ],
       "match": null
     },
@@ -1069,52 +1213,12 @@
       "match": null
     },
     {
-      "containingFrame": "[dsc] Tooltip",
-      "variantCount": 8,
-      "sampleKeys": [
-        "223b0f9435d309b9430811a61fb0a34e48ecb0fe",
-        "368544e8b41a028dd8dc2f0adfb44ef08f6cedd2",
-        "41a77f5080c85fba73df4e598e3ed461e4a63ca9"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc] Title Bar",
-      "variantCount": 8,
-      "sampleKeys": [
-        "8ea5bd9869b8f8992185b29a5e446f0328a34ef1",
-        "f3188c46db81e42ea8b83c9574b22b8da9e033ab",
-        "22d39e6698cc57fe6872ce42295a98a6766f875f"
-      ],
-      "match": null
-    },
-    {
       "containingFrame": "[dsc] Skeleton Loading",
       "variantCount": 7,
       "sampleKeys": [
         "39cdf7f2b22d2b1785d60703ce7844a8dd32ca8a",
         "3d36b32213e00f2afac77fec6300ac73f690abcb",
         "8369e101faf0bc22c5beadc92c74183f307b1878"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc] Icon",
-      "variantCount": 7,
-      "sampleKeys": [
-        "941800f47cd30c36c5ee7b6f9879f1ab71dd4588",
-        "d2f92d9d981e2b7e6e86e17da2b3658cb45b88a9",
-        "d54d6dd08cb4bee3799dfdf24a0cba43514eadb9"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc] Sidebar Menu",
-      "variantCount": 6,
-      "sampleKeys": [
-        "31d8f0f1d671c067e14ba059cc165217fc833166",
-        "706d258b3e7d39bf339b0b93381aa68870bc2423",
-        "e08b0d5661c59456a30686bb25dd7b12d860fe72"
       ],
       "match": null
     },
@@ -1215,36 +1319,6 @@
         "09d35579a6b10f0a4c5fe6176a43a5ce0e6fcbab",
         "4cc49e5aa37f0de32f524f595345b8d0a645684e",
         "a358b1728f34ced0048f23a11235e1451ccf8e0b"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc-tc] Sidebar Menu",
-      "variantCount": 4,
-      "sampleKeys": [
-        "3517251b239b51d28353d2cb3ee4f22885ffd0c6",
-        "60cd8619795cfa3f9fa543b22249a63d68fd6b65",
-        "9f1fb35a7a21f67ab19c33e5e95e8b1ac4551d1a"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc] Drawer Panel",
-      "variantCount": 4,
-      "sampleKeys": [
-        "a5e87e8985b2e18d5a9295f62e3d0bb455aa5d92",
-        "28f8675f261ef38f05823037473148ec7ae9618c",
-        "5ac735979873b9266c5f38e8d41746e722d2f857"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc] Search Results",
-      "variantCount": 3,
-      "sampleKeys": [
-        "a289b5b357783cc13dd47aafb1540b3dea35f109",
-        "bfe42a4eb2a7a7019671c257b620bce738b3ab57",
-        "e1aeca57ec1c0419c3b35880f50f042f43d50bcf"
       ],
       "match": null
     },
@@ -13710,15 +13784,6 @@
       "sampleKeys": [
         "75a2274ecbe3ddf3bb385e1564553f740cb6c732",
         "86967615ff2635b2a97ddf443dc3f617f05bd5b6"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc] Credit Card Illustration",
-      "variantCount": 2,
-      "sampleKeys": [
-        "40c25ca915478d31a80b8fe30984a585af84ae49",
-        "c149b9f48b3f31e4a9bcaba370988ffd73a5433d"
       ],
       "match": null
     },

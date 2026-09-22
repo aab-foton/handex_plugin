@@ -34,6 +34,10 @@
         // no header) — badge fixa no header foi removida em favor da modal.
         const aboutVersion = document.getElementById('about-hac-version');
         if (aboutVersion) aboutVersion.textContent = 'v' + msg.version;
+        // Guardado globalmente (2026-09-22) para o backup .json registrar em
+        // qual versão do plugin foi gerado — útil ao restaurar um arquivo
+        // antigo e entender divergências de schema.
+        window.PLUGIN_VERSION = msg.version || null;
 
         // Armazena o usuário Figma identificado automaticamente (sem login)
         if (msg.currentUser) {
@@ -216,6 +220,13 @@
         if (window._a11yManualSpecLoadingTimeout) { clearTimeout(window._a11yManualSpecLoadingTimeout); window._a11yManualSpecLoadingTimeout = null; }
         if (typeof hideA11yCanvasLoading === 'function') hideA11yCanvasLoading();
         const newSpec = Object.assign({ pendingConfirmation: false, locked: true }, msg.spec || msg.data);
+        // workAnchor (2026-09-21) — só vem preenchido quando esta chamada
+        // criou o clone de trabalho da área PELA 1ª VEZ, ver comentário
+        // completo em create-unified-spec/onmessage.js. _saveA11yAreaWorkAnchor
+        // é idempotente e nunca sobrescreve um valor já salvo.
+        if (msg.workAnchor && typeof _saveA11yAreaWorkAnchor === 'function' && newSpec.a11yAreaId) {
+          _saveA11yAreaWorkAnchor(newSpec.a11yAreaId, msg.workAnchor);
+        }
 
         // Edição de spec (delete+recreate, ver confirmA11ySpec em
         // accessibility.js): reinsere no índice original em vez de só
@@ -375,6 +386,11 @@
       //      window._a11ySpecCopyPendingFocusAreaId — precisa FOCAR a
       //      réplica assim que ela fica pronta.
       if (msg.type === "spec-copy-started") {
+        // workAnchor (2026-09-21) — ver comentário completo em spec-created
+        // acima.
+        if (msg.workAnchor && typeof _saveA11yAreaWorkAnchor === 'function' && msg.areaId) {
+          _saveA11yAreaWorkAnchor(msg.areaId, msg.workAnchor);
+        }
         const _wizardPendingAreaId = window._a11yBatchWizardCopyPendingAreaId;
         if (_wizardPendingAreaId && msg.areaId === _wizardPendingAreaId) {
           window._a11yBatchWizardCopyPendingAreaId = null;

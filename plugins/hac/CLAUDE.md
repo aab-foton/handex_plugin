@@ -221,3 +221,105 @@ se precisar revisitar antes de implementar.
   real do arquivo (`Grep`/`Read`) antes de repassar o resultado ao usuário
   como concluído — principalmente quando mais de um agente mexeu no mesmo
   arquivo em paralelo.
+
+---
+
+## Regra de ouro 2 — nunca retroceder o que já funciona
+
+**Qualquer correção, feature ou refactor tem que preservar o comportamento
+já comprovado que funciona — mesmo quando esse comportamento não é o foco
+direto da tarefa.** "Já funciona" inclui: dado já coletado (scans/refs com
+`deepScan: true` ou paginação completa), fluxo já corrigido em sessão
+anterior, e escopo que o usuário já delimitou explicitamente.
+
+**Por quê (2026-09-21/22, três incidentes na mesma sessão, mesma causa
+raiz — pressa em "resolver rápido" sem checar o estado anterior antes de
+escrever por cima dele):**
+
+1. Uma implementação de posicionamento manual de card mexeu em Tabulação e
+   Swipe (`tab-order.js`/`swipe-path.js`) quando o pedido era exclusivamente
+   sobre o card de Especificações — usuário: **"Você mexeu num ponto que não
+   tem necessidade! Eu queria conseguir mexer, exclusivamente, na criação do
+   card da spec. NADA ALÉM!"**. Correção exigiu reverter os dois arquivos ao
+   HEAD e reaplicar cirurgicamente só o que fora pedido.
+2. Um novo scan de propriedades da lib "Design Acessível" (desktop) rodou
+   sem `--deep-scan` e sobrescreveu `design-acessivel-properties.json` —
+   `deepScan` foi de `true` para `false` e 19 dos 22 blocos de
+   `screenReaderVariants` (dado já obtido, custoso de reobter) desapareceram
+   silenciosamente. Só foi achado numa revisão posterior comparando o
+   arquivo contra `git diff HEAD`, não durante a própria tarefa.
+3. Uma feature de posicionamento manual foi implementada 2 vezes na direção
+   ERRADA antes de acertar (toggle escondido no formulário → rejeitado:
+   *"em momento algum eu pedi um toggle"*; depois modal obrigatória
+   perguntando a cada spec → também rejeitada: *"Podemos acabar com a
+   modal... deixar para que ele crie sempre usando o elemento selecionado
+   como referência"*) — cada rodada implementou algo plausível, mas nenhuma
+   confirmou com o usuário ANTES de construir uma peça de UX nova e visível.
+
+**Como aplicar:**
+- Antes de editar um arquivo que uma sessão anterior já corrigiu/ajustou
+  por um motivo específico, ler o comentário/commit que explica por quê —
+  nunca presumir que "está assim porque ninguém mexeu ainda".
+- Ao rodar qualquer script de `refs/` que já tenha rodado antes com uma
+  flag (`--deep-scan`, `--reset`, etc.), usar a MESMA flag — checar o
+  `_meta` do JSON existente (`deepScan`, `discoverySignature`) antes de
+  regerar, não só a existência do arquivo.
+- Depois de qualquer scan/regeneração de dado em `refs/`, rodar
+  `git diff --stat` sobre os arquivos tocados e olhar se algum encolheu
+  (menos bytes, menos ocorrências de uma chave conhecida) antes de seguir —
+  crescimento é esperado (a lib publica mais componentes com o tempo),
+  encolhimento inesperado é bandeira vermelha de regressão.
+- Uma feature nova de UX (modal, toggle, gate, mudança de fluxo) que o
+  usuário não descreveu literalmente é uma HIPÓTESE, não um pedido — nomear
+  a hipótese e confirmar antes de construir vale mais barato que construir,
+  levar rejeição, reverter e reconstruir (aconteceu 2x seguidas no mesmo
+  dia por pular esse passo).
+
+---
+
+## Regra de ouro 3 — uma causa raiz plausível não é a causa raiz confirmada
+
+**Corrigir a primeira explicação que "faz sentido" e parar de investigar é
+a forma mais comum de reabrir o mesmo bug depois, com um print novo.** Um
+bug reportado com sintoma visível pode ter mais de uma causa raiz
+simultânea — corrigir uma sem procurar a outra deixa o sintoma
+parcialmente resolvido, o que costuma ser confundido com "resolvido".
+
+**Por quê (2026-09-22)**: o bug "documentei Value Section, o plugin
+registrou Button" teve DUAS causas raiz independentes, descobertas em duas
+rodadas separadas porque a primeira investigação parou assim que achou uma
+explicação plausível e corrigível:
+- **1ª causa (real, mas parcial)**: o matching de seleção podia resolver
+  contra um elemento FILHO durante drill-in/foco concorrente, em vez do
+  elemento selecionado — corrigido, e o teste seguinte (feedback visual "X
+  selecionado" aparecendo certo) pareceu confirmar que o bug tinha
+  acabado.
+- **2ª causa (a que efetivamente causava o sintoma do print)**: o wrapper
+  mobile do card final tinha uma property `"Componente"` (VARIANT) com
+  default publicado pela lib = `"Button"`, e o código nunca a preenchia com
+  o valor real — então TODA spec mobile "Elementos e Imagens" nascia
+  "Button" independente de qualquer matching de seleção estar certo ou
+  errado. Só apareceu porque o usuário testou de novo com um print novo.
+
+Um fix seguinte (fonte do nome do componente pro card) também corrigiu só
+metade do caminho de dados na primeira tentativa: usava `linkNome` (o
+dropdown manual "Link do Componente") como única fonte — mas no cenário
+exato do bug relatado esse dropdown estava vazio/"Personalizado", então o
+fix não disparava. Só na revisão seguinte entrou `a11yDscComponentName` (o
+componente REALMENTE detectado no canvas) como fonte primária, com o
+dropdown como fallback.
+
+**Como aplicar:**
+- Depois de confirmar UMA causa raiz via evidência real (API, print, dado),
+  perguntar explicitamente "isso explica 100% do sintoma reportado, ou só
+  parte dele?" antes de declarar o bug corrigido — não confundir "achei algo
+  errado e consertei" com "achei O que causava exatamente este sintoma".
+- Quando um fix depende de um campo/dado que pode legitimamente estar
+  vazio no caminho normal de uso (ex: um dropdown que o designer pode não
+  preencher), preferir a fonte mais automática/confiável como primária e o
+  campo manual como fallback — nunca o contrário, especialmente quando o
+  print que originou o bug já mostra esse campo vazio.
+- Reproduzir mentalmente o cenário EXATO do print/relato (não uma versão
+  genérica dele) contra o fix proposto antes de declará-lo pronto — no caso
+  acima, isso teria pego o dropdown vazio antes do usuário precisar
+  reportar de novo.

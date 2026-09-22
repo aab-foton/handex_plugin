@@ -523,17 +523,52 @@ export function _findMainTextContent(root) {
   return null;
 }
 
-// Best-effort: tenta achar o selo/tag de letra manual (A, B, A1...) dentro
-// do componente importado para sincronizar com o texto digitado no
-// formulário. Nunca lança erro: se não achar, a spec real ainda é criada, só
-// sem o selo sincronizado.
+// Best-effort: tenta achar o selo/tag de letra manual (A, B, A1..., ou H1..H6
+// em Título) dentro do componente importado (card "Spec Notes" real, lib
+// "Design Acessível" antiga Wy0IhXRVZMSOOr8E609UqI) e sincronizar com o
+// número/letra atribuído no plugin. Nunca lança erro: se não achar, a spec
+// real ainda é criada, só sem o selo sincronizado.
+//
+// BUG REAL CORRIGIDO (2026-09-21): o marcador standalone ([hac] Agrupamento/
+// Conectores) tinha o mesmo bug e já foi corrigido usando a property REAL do
+// componente (setProperties), nunca escrita direta em .characters — este
+// card usava só heurísticas (nome do node batendo /tag|selo|letra/i, ou
+// regex no VALOR ATUAL do texto) e nunca tentava setProperties, então o selo
+// nunca refletia o valor real. Confirmado via REST API (nodes 31:545/551/
+// 553/555/547 da lib Wy0IhXRVZMSOOr8E609UqI): cada wrapper tem uma instância
+// aninhada de PRIMEIRO NÍVEL chamada "Conector" (mesmo component set
+// "[a11y] Conectores" da lib antiga, ids 1248:2328/2329/2330/2331) com uma
+// property TEXT própria — "letter#1248:0" (elemento), "heading#1248:1"
+// (titulo, valores tipo "H1".."H6"), "letter#1248:2" (estrutura, já tratado
+// à parte no chamador), "letter#1248:3" (informacoes). "decorativo" não tem
+// property nenhuma nessa instância Conector (confirmado — selo fixo "Ø",
+// sem letra, consistente com A11Y_CATEGORIES). O TEXT node visível dentro do
+// Conector sempre se chama "Number" (nunca bate a regex antiga por nome),
+// com defaultValue "A"/"A"/"A"/"H1" — por isso a 1ª spec sempre "parecia
+// certa" e as seguintes ficavam presas nesse default.
 function _bestEffortSyncA11yBadgeLetter(root, letter) {
   try {
+    // 1) Caminho real: instância "Conector" com property TEXT própria
+    // (letter/heading) — mesmo padrão de _tryImportA11yAgrupamento.
+    const found = _findNestedInstanceWithAnyProp(root, ['letter', 'heading']);
+    if (found) {
+      try {
+        found.instance.setProperties({ [found.key]: letter });
+        return;
+      } catch (e) { /* cai no fallback de escrita direta abaixo */ }
+    }
+
+    // 2) Fallback: escreve `.characters` direto no TEXT node "Number" da
+    // instância "Conector" (mesmo nome em todas as categorias, ver acima) —
+    // cobre tanto letras (A, B...) quanto NÚMEROS PUROS (1, 2...), que a
+    // regex antiga nunca casava por exigir letra maiúscula no início.
     const byName = root.findOne
-      ? root.findOne(n => n.type === 'TEXT' && /tag|selo|letra/i.test(n.name))
+      ? root.findOne(n => n.type === 'TEXT' && n.name === 'Number')
       : null;
-    const target = byName || root.findOne(n => n.type === 'TEXT' && /^[A-Z]\d*(\.\d+)*$/.test(n.characters));
-    if (target) {
+    const target = byName
+      || (root.findOne ? root.findOne(n => n.type === 'TEXT' && /tag|selo|letra/i.test(n.name)) : null)
+      || (root.findOne ? root.findOne(n => n.type === 'TEXT' && /^[A-Z]?\d*(\.\d+)*$/.test(n.characters)) : null);
+    if (target && target.fontName !== figma.mixed) {
       figma.loadFontAsync(target.fontName).then(() => { target.characters = letter; }).catch(() => {});
     }
   } catch (e) { /* best-effort — nunca bloqueia a criação da spec */ }
@@ -618,6 +653,23 @@ async function _tryImportA11yMobileWrapperComponent(opts, wrapperData) {
       await _fillA11yMobileDecorativoFields(instance, opts);
     }
   } catch (e) { /* best-effort — a instância com a variante certa já foi criada */ }
+
+  // BUG REAL CORRIGIDO (2026-09-21, print do usuário: marcador standalone
+  // mostrava "2" corretamente, mas o card do Leitor de Tela mobile
+  // continuava travado em "1") — este wrapper mobile nunca chamava
+  // _bestEffortSyncA11yBadgeLetter, ao contrário do wrapper desktop (ver
+  // chamada abaixo em _tryImportA11yComponent). O fix anterior desta sessão
+  // corrigiu só o caminho desktop; a origem mobile usa um component set
+  // totalmente diferente ("[a11y mob] Box specs leitor de tela"), nunca
+  // testado. _bestEffortSyncA11yBadgeLetter já busca a instância aninhada
+  // por NOME de property ('letter'/'heading'), não por estrutura fixa —
+  // funciona aqui sem precisar reconfirmar a árvore interna específica do
+  // wrapper mobile, com o mesmo fallback de escrita direta em ".Number" se
+  // a property não for encontrada. "decorativo" fica de fora (sem letra,
+  // mesmo critério do caminho desktop).
+  if ((type === 'elemento' || type === 'titulo') && opts.letter) {
+    _bestEffortSyncA11yBadgeLetter(instance, opts.letter);
+  }
 
   return instance;
 }
@@ -735,6 +787,62 @@ async function _fillA11yMobileElementosEImagensFields(wrapperInstance, opts) {
       }
     }
   }
+
+  // BUG REAL CORRIGIDO (2026-09-22, print do usuário: componente real
+  // detectado/confirmado "[dsc] Value Section" documentado no card final
+  // como "Componente: Button"). Causa raiz confirmada via REST API
+  // (GET /v1/files/HhriLSpKnCB2dHhyiU16iB/nodes?ids=10211:6229&depth=6): a
+  // instância aninhada "Elementos e imagens" (a mesma que expõe "Descrição"/
+  // "Nome acessível"/"Dica Leitor de Tela"/"Observação", resolvida acima em
+  // `nested`) TAMBÉM expõe uma property VARIANT própria chamada "Componente"
+  // (valores = o mesmo catálogo de 66 nomes reais de A11Y_MOBILE_LINK_
+  // COMPONENT_OPTIONS/build-a11y-constants.cjs — "Button", "Value Section",
+  // "Checkbox" etc.) — CUJO DEFAULT PUBLICADO NA LIB HOJE é "Button". Esta
+  // função nunca setava essa property (só a "Link do componente" acima,
+  // que é uma instância IRMÃ/diferente, sem relação estrutural com esta) —
+  // toda spec mobile "Elementos e Imagens" nascia com "Componente: Button"
+  // herdado do valor padrão da lib, não do componente realmente detectado.
+  // Fonte de verdade, em ordem de confiabilidade:
+  //   1) opts.a11yDscComponentName — o componente DSC REALMENTE detectado no
+  //      canvas pelo matching (containingFrame cru, ex: "[dsc] Value
+  //      Section"); é o dado mais fiel ao que o designer selecionou, e existe
+  //      mesmo quando o dropdown "Link do Componente" ficou em
+  //      "Personalizado"/vazio — exatamente o caso do print que originou este
+  //      bug (Value Section detectado, dropdown não preenchido, card nascendo
+  //      "Button" pelo default da lib).
+  //   2) linkNome — o nome escolhido à mão no dropdown, quando a detecção não
+  //      resolveu nada (componente fora do catálogo, lib não mapeada).
+  // "Personalizado" (equivalente mobile de "Outro (fora do catálogo)", ver
+  // _renderA11yElementoMobileFields em accessibility.js) nunca é um nome real
+  // de componente e por isso não entra em nenhum dos dois caminhos.
+  const _componenteReal = _cleanDscFrameNameForVariant(opts.a11yDscComponentName)
+    || (linkNome && linkNome !== 'Personalizado' ? linkNome : null);
+  if (_componenteReal) {
+    // `nested` (resolvido no topo desta função) É a instância "Elementos e
+    // imagens" que expõe esta property — reusa em vez de varrer a árvore de
+    // novo, que poderia casar com outra instância antes. Só cai na busca
+    // ampla se, por alguma variação futura da lib, a property não estiver
+    // nessa instância.
+    const _componenteKey = findRawKey('Componente');
+    const componenteFound = _componenteKey
+      ? { instance: nested.instance, key: _componenteKey }
+      : _findNestedInstanceWithAnyProp(wrapperInstance, ['Componente']);
+    if (componenteFound) {
+      try { componenteFound.instance.setProperties({ [componenteFound.key]: _componenteReal }); } catch (e) { /* best-effort — nome pode não bater 1:1 com uma opção VARIANT válida */ }
+    }
+  }
+}
+
+// "[dsc] Value Section" → "Value Section". A property VARIANT "Componente"
+// do wrapper mobile usa os nomes SEM o prefixo de lib (ver
+// A11Y_MOBILE_LINK_COMPONENT_OPTIONS_GENERATED), enquanto o matching DSC
+// devolve o containingFrame cru. Espelha _cleanDscContainingFrameName
+// (accessibility.js), que faz o mesmo para exibição no frontend — aqui sem o
+// fallback de rótulo genérico: sem nome real, devolve null e quem chama
+// decide (nunca forçar um valor inventado numa property de variante).
+function _cleanDscFrameNameForVariant(containingFrame) {
+  const cleaned = String(containingFrame || '').replace(/^\[dsc\]\s*/i, '').trim();
+  return cleaned || null;
 }
 
 // Preenche o campo interno REAL da instância "Título" (componentId base
@@ -1417,6 +1525,14 @@ const A11Y_ITEM_NUMBER_KEYS_DESKTOP = {
 
 const _A11Y_SIDE_TO_ORIENTACAO = { left: 'esquerda', right: 'direita', top: 'superior', bottom: 'inferior' };
 
+// Tamanho real do marcador/conector da lib "Design Acessível" (24×24px) —
+// token único, não hardcoded em cada call-site (2026-09-21, pedido do
+// usuário: antes o badge da legenda da Ficha estava redimensionado pra
+// 20×20, um valor menor "só porque divide a linha com o número do passo",
+// enquanto o marcador dos Assets já usava 24×24 — os dois devem ser o
+// mesmo tamanho real do componente publicado, sem exceção arbitrária).
+const A11Y_MARKER_SIZE = 24;
+
 // Tenta importar o marcador real (ver A11Y_AGRUPAMENTO_KEYS[_MOBILE]) em vez
 // de desenhar o contorno tracejado + chip procedural. Lança em qualquer ponto
 // de incerteza — quem chama trata a exceção como "cai no marcador desenhado".
@@ -1425,6 +1541,33 @@ const _A11Y_SIDE_TO_ORIENTACAO = { left: 'esquerda', right: 'direita', top: 'sup
 // a orientação específica não existir nele (lacuna real da lib mobile — ver
 // comentário acima de A11Y_AGRUPAMENTO_KEYS_MOBILE), cai pro dicionário
 // desktop equivalente ANTES de lançar erro.
+// Property TEXT correta (raw key completa "nome#syncId") do selo numérico/
+// alfabético por categoria, dentro da instância aninhada "ordem" de cada
+// variante do component set "[hac] Agrupamento" (fileKey
+// HhriLSpKnCB2dHhyiU16iB) — confirmado via REST API (GET /v1/files/.../
+// nodes) em 2026-09-21: CADA categoria expõe sua PRÓPRIA property TEXT no
+// nível do wrapper "[hac] Agrupamento" (não uma única "letra" global como o
+// código assumia antes). "decorativo" fica de fora de propósito — a
+// categoria usa selo fixo "Ø" (A11Y_CATEGORIES), sem letra/número.
+//
+// BUG REAL CORRIGIDO (2026-09-21): a key usada até aqui ("letra#3925:32")
+// não existe em NENHUMA das duas libs "Design Acessível" (nem a antiga
+// Wy0IhXRVZMSOOr8E609UqI, nem a nova HhriLSpKnCB2dHhyiU16iB) — é resíduo de
+// uma versão anterior/nunca publicada da lib. `setProperties` com essa key
+// sempre lançava (silenciado pelo catch "best-effort"), então o selo NUNCA
+// era escrito via property — o valor exibido era sempre o default gravado
+// na própria variante ("1" para elemento/informacoes, "A" para estrutura,
+// "H" para titulo), fazendo a 1ª spec de cada área/categoria "parecer
+// certa" por coincidência (a sugestão de tag também começa em "1"/"A"/"H")
+// e todas as specs seguintes mostrarem o mesmo valor default, nunca o
+// número/letra real atribuído no plugin.
+const A11Y_AGRUPAMENTO_LETTER_PROP_KEY = {
+  elemento: 'Número#10766:0',
+  informacoes: 'Número#10766:0',
+  estrutura: 'Letra#10766:2',
+  titulo: 'Nível#10766:1',
+};
+
 export async function _tryImportA11yAgrupamento(opts) {
   const orientacao = _A11Y_SIDE_TO_ORIENTACAO[opts.guideSide || 'right'];
   const mobileTypeKeys = opts.a11yOrigin === 'mobile' ? A11Y_AGRUPAMENTO_KEYS_MOBILE[opts.a11yType] : null;
@@ -1438,26 +1581,32 @@ export async function _tryImportA11yAgrupamento(opts) {
   instance.name = 'Agrupamento';
 
   if (opts.letter) {
-    try {
-      instance.setProperties({ 'letra#3925:32': opts.letter });
-    } catch (e) { /* best-effort — cai no workaround abaixo se for título */ }
-  }
+    const propKey = A11Y_AGRUPAMENTO_LETTER_PROP_KEY[opts.a11yType];
+    let propSynced = false;
+    if (propKey) {
+      try {
+        instance.setProperties({ [propKey]: opts.letter });
+        propSynced = true;
+      } catch (e) { /* best-effort — cai no fallback de escrita direta abaixo */ }
+    }
 
-  // WORKAROUND — falha real confirmada na própria lib publicada: a variante
-  // "tipo=nível de título" do component set "[a11y] Agrupamento" tem o TEXT
-  // node "Number" com o texto "H" HARDCODED, sem vínculo com a property
-  // "letra#3925:32" (as outras 4 categorias têm o vínculo correto). Bypassa
-  // escrevendo `.characters` direto no node, com fallback por regex caso a
-  // lib mude a estrutura interna no futuro.
-  if (opts.letter && opts.a11yType === 'titulo') {
-    try {
-      const numberNode = instance.findOne(n => n.type === 'TEXT' && n.name === 'Number')
-        || instance.findOne(n => n.type === 'TEXT' && /^H\d*$/.test(/** @type {TextNode} */(n).characters));
-      if (numberNode && numberNode.type === 'TEXT' && numberNode.fontName !== figma.mixed) {
-        await figma.loadFontAsync(numberNode.fontName);
-        numberNode.characters = opts.letter;
-      }
-    } catch (e) { /* best-effort — selo fica com o texto padrão "H" da lib */ }
+    // FALLBACK universal (não só "titulo") — escreve `.characters` direto no
+    // TEXT node "Number" da instância aninhada "ordem", que é o mesmo em
+    // TODAS as categorias (confirmado via API: cada variante só muda QUAL
+    // property referencia esse node, nunca o nome do node). Roda sempre que
+    // o setProperties acima não confirmou sucesso — inclui o caso de a
+    // property mudar de novo no futuro, sem depender só do texto default
+    // atual ("H"/"1"/"A") pra decidir se precisa reescrever.
+    if (!propSynced) {
+      try {
+        const numberNode = instance.findOne(n => n.type === 'TEXT' && n.name === 'Number')
+          || instance.findOne(n => n.type === 'TEXT' && /^[A-Z]?\d*$/.test(/** @type {TextNode} */(n).characters));
+        if (numberNode && numberNode.type === 'TEXT' && numberNode.fontName !== figma.mixed) {
+          await figma.loadFontAsync(numberNode.fontName);
+          numberNode.characters = opts.letter;
+        }
+      } catch (e) { /* best-effort — selo fica com o texto padrão da lib */ }
+    }
   }
 
   return instance;
@@ -1552,14 +1701,35 @@ export async function _tryImportA11yConectorLinha(opts) {
   const instance = component.createInstance();
   instance.name = 'Conector';
 
-  // "[a11y] Conectores" tem DUAS properties de texto separadas: "letra"
-  // (tags A/B/A1...) e "nível de título" (H1/H2/H3...) — Título usa a
-  // segunda, as demais categorias usam a primeira.
+  // BUG REAL CORRIGIDO (2026-09-21): mesmo bug de _tryImportA11yAgrupamento
+  // acima — "letra#3925:6"/"nível de título#6411:2" não existem em nenhuma
+  // das duas libs "Design Acessível" (residuais de versão anterior/nunca
+  // publicada). Confirmado via REST API que "[hac] Conectores" usa a MESMA
+  // raw key por categoria que "[hac] Agrupamento" (A11Y_AGRUPAMENTO_LETTER_
+  // PROP_KEY, mesmo TEXT node "Number" dentro da instância aninhada) — as
+  // duas famílias de componente compartilham o mesmo desenho de property.
   if (opts.letter) {
-    const propKey = opts.a11yType === 'titulo' ? 'nível de título#6411:2' : 'letra#3925:6';
-    try {
-      instance.setProperties({ [propKey]: opts.letter });
-    } catch (e) { /* best-effort — nunca bloqueia a criação da spec */ }
+    const propKey = A11Y_AGRUPAMENTO_LETTER_PROP_KEY[opts.a11yType];
+    let propSynced = false;
+    if (propKey) {
+      try {
+        instance.setProperties({ [propKey]: opts.letter });
+        propSynced = true;
+      } catch (e) { /* best-effort — cai no fallback de escrita direta abaixo */ }
+    }
+
+    // Mesmo fallback universal de _tryImportA11yAgrupamento — nunca deixa o
+    // selo ficar preso no valor default da lib quando a property falhar.
+    if (!propSynced) {
+      try {
+        const numberNode = instance.findOne(n => n.type === 'TEXT' && n.name === 'Number')
+          || instance.findOne(n => n.type === 'TEXT' && /^[A-Z]?\d*$/.test(/** @type {TextNode} */(n).characters));
+        if (numberNode && numberNode.type === 'TEXT' && numberNode.fontName !== figma.mixed) {
+          await figma.loadFontAsync(numberNode.fontName);
+          numberNode.characters = opts.letter;
+        }
+      } catch (e) { /* best-effort — selo fica com o texto padrão da lib */ }
+    }
   }
 
   return instance;
@@ -3376,7 +3546,24 @@ export function _rectsOverlap(a, b) {
 // then a busca por colisão continua igual (varre X, mesma faixa Y). Sem o
 // parâmetro (comportamento antigo, preservado): réplicas subsequentes da
 // MESMA área continuam nascendo exatamente ao lado uma da outra.
-export async function _findFreeTabOrderCopyPosition(cloneWidth, cloneHeight, originBounds, verticalAnchorBounds) {
+// `savedAnchor` (2026-09-21, pedido do usuário — bug real reportado com
+// print: lote de Detecção Automática misturando itens de áreas
+// diferentes fazia specs da Área 2 nascerem na faixa Y da Área 1, apesar
+// de verticalAnchorBounds já existir). Antes deste parâmetro, a posição
+// de CADA clone novo era sempre recalculada do zero (mesmo pra artefatos
+// seguintes da MESMA área) — na prática, "sempre a mesma faixa" dependia
+// de nada mais ter mudado no canvas entre uma chamada e outra, premissa
+// frágil quando várias áreas são processadas intercaladas na mesma
+// sessão. Agora a posição da PRIMEIRA réplica de trabalho de uma área é
+// persistida (ver hacData.a11yAreas[].workAnchor, accessibility.js) e
+// reenviada em toda chamada seguinte — se presente, é usada tal como
+// está, SEM checar colisão: decisão de produto (2026-09-21) é
+// previsibilidade total (a posição de uma área nunca muda depois de
+// fixada), não recálculo defensivo.
+export async function _findFreeTabOrderCopyPosition(cloneWidth, cloneHeight, originBounds, verticalAnchorBounds, savedAnchor) {
+  if (savedAnchor && typeof savedAnchor.x === 'number' && typeof savedAnchor.y === 'number') {
+    return { x: savedAnchor.x, y: savedAnchor.y };
+  }
   let occupied;
   try {
     occupied = await _collectA11yOccupiedBounds();
@@ -3574,6 +3761,9 @@ export async function _createOrGetFichaFrame(area, designerName, currentUserId) 
       adopted.layoutMode = 'VERTICAL';
       adopted.itemSpacing = 48;
       adopted.clipsContent = false;
+      // Mesmo fix do frame criado do zero abaixo (2026-09-21): remove o
+      // stroke que cortava por cima/entre os cards de spec.
+      try { adopted.strokes = []; } catch (e) { }
       adopted.setPluginData('hacFichaDocumentacaoFrame', 'true');
       adopted.setPluginData('hacFichaDocForSession', sessionSection.id);
       adopted.setPluginData('hacFichaDocMigratedAt', new Date().toISOString());
@@ -3612,16 +3802,17 @@ export async function _createOrGetFichaFrame(area, designerName, currentUserId) 
   fichaFrame.cornerRadius = 16;
   // Container raiz "cartão" (2026-09-10, pedido do usuário, valores
   // confirmados via REST API contra o node de referência real
-  // HhriLSpKnCB2dHhyiU16iB/10459:24855): fundo branco puro + stroke fino
-  // usando o valor RESOLVIDO da variável real "color/border/neutral/6
-  // (grayscale 110)" — #404b52, remote:true nesse arquivo (importada de
-  // outra library, hiddenFromPublishing), por isso hex fixo em vez de
-  // setBoundVariable/importVariableByKeyAsync, mesmo padrão já usado no
-  // resto do hac.
+  // HhriLSpKnCB2dHhyiU16iB/10459:24855): fundo branco puro, sem stroke.
+  //
+  // BUG REAL CORRIGIDO (2026-09-21, pedido do usuário): o stroke fino
+  // (#404b52, "color/border/neutral/6") ficava visível "em meio às specs
+  // criadas" — o Auto Layout deste frame é `clipsContent=false` de
+  // propósito (comentário abaixo), então cards de spec/marcadores em
+  // ABSOLUTE estouram pra fora dos limites do frame e a borda cortava por
+  // cima/entre eles. Removido — fundo branco sozinho já distingue o cartão
+  // do restante do canvas o suficiente.
   fichaFrame.fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }];
-  fichaFrame.strokes = [{ type: 'SOLID', color: hexToRgb('#404b52') }];
-  fichaFrame.strokeWeight = 1;
-  fichaFrame.strokeAlign = 'INSIDE';
+  fichaFrame.strokes = [];
   fichaFrame.counterAxisAlignItems = 'MIN';
   // clipsContent=false (2026-09-11): frames nascem com clip LIGADO na API
   // do Figma, e qualquer filho posicionado em ABSOLUTE (overlays de
@@ -4347,8 +4538,12 @@ async function _buildFichaFramePrincipalSection(itensFrame, area) {
     } catch (e) {
       badge = figma.createEllipse();
       badge.name = 'Selo de Número da Tela';
-      badge.resize(24, 24);
-      badge.fills = [{ type: 'SOLID', color: hexToRgb('#0070AF') }];
+      badge.resize(A11Y_MARKER_SIZE, A11Y_MARKER_SIZE);
+      // #005ca9 (2026-09-21, corrigido de #0070AF — hex antigo que
+      // escapou da migração de Design System ao Handex, ver sessão
+      // anterior): mesma cor de azul institucional usada em todo o resto
+      // do plugin.
+      badge.fills = [{ type: 'SOLID', color: hexToRgb('#005ca9') }];
     }
     badge.setPluginData('hacFichaPrincipalBadgeForArea', area.id || '');
     section.appendChild(badge);
@@ -4825,9 +5020,11 @@ export async function _buildFichaLegendColumn(richContent, fallbackTitle, fallba
           // 'right' (herdado por engano do padrão dos Assets, que SÃO
           // conectores reais e precisam de direção).
           badge = await _tryImportA11yConectorLinha({ a11yType: stepCategory, a11yOrigin, orientacao: 'desativado', letter: stepCategory === 'titulo' ? 'H' : null });
-          // 20x20 — um pouco menor que o marcador dos Assets (24px): aqui
-          // divide a linha com o número do passo, não fica sozinho.
-          badge.resize(20, 20);
+          // A11Y_MARKER_SIZE (24×24, tamanho real do componente publicado —
+          // 2026-09-21, corrigido de 20×20: não há razão de design pra esse
+          // badge ser menor que os outros marcadores da mesma lib, mesmo
+          // dividindo a linha com o número do passo).
+          badge.resize(A11Y_MARKER_SIZE, A11Y_MARKER_SIZE);
         } catch (e) {
           badge = null;
         }
@@ -4925,11 +5122,11 @@ export async function _buildFichaLegendColumn(richContent, fallbackTitle, fallba
       if (category) {
         try {
           marker = await _tryImportA11yAgrupamento({ a11yType: category, a11yOrigin, guideSide: 'right', letter: category === 'titulo' ? 'H' : null });
-          // 24x24 (não 16x16 como o círculo sólido de fallback) — o
-          // componente real tem moldura tracejada + badge central;
-          // redimensionar pra 16px distorceria a moldura fina demais pra
-          // ficar legível numa legenda pequena.
-          marker.resize(24, 24);
+          // A11Y_MARKER_SIZE (24×24, não 16×16 como o círculo sólido de
+          // fallback) — o componente real tem moldura tracejada + badge
+          // central; redimensionar pra 16px distorceria a moldura fina
+          // demais pra ficar legível numa legenda pequena.
+          marker.resize(A11Y_MARKER_SIZE, A11Y_MARKER_SIZE);
         } catch (e) {
           marker = null;
         }
@@ -5134,6 +5331,125 @@ export const HAC_DATA_LEGACY_KEY = 'hacData';
 
 export function _getHacDataStorageKey() {
   return figma.fileKey ? `hacData:${figma.fileKey}` : null;
+}
+
+// ── Persistência NO DOCUMENTO (2026-09-22) ──────────────────────────────
+//
+// Problema real relatado pelo usuário ("se eu fecho o plugin por engano, eu
+// perco tudo que documentei"): clientStorage acima vive na INSTALAÇÃO do
+// plugin, nesta máquina — não dentro do arquivo Figma. Isso deixava quatro
+// buracos, sendo o primeiro uma perda TOTAL e silenciosa:
+//   1. Arquivo ainda não salvo (sem figma.fileKey): não grava nada.
+//   2. Outra pessoa abre o mesmo arquivo: não vê nenhuma documentação.
+//   3. Designer troca de máquina / reinstala o Figma: perde tudo.
+//   4. "Limpar cache" do plugin: perde tudo.
+//
+// setSharedPluginData grava no PRÓPRIO documento: viaja junto com o arquivo
+// (outras pessoas, outras máquinas), sobrevive a cache limpo/reinstalação, e
+// funciona mesmo sem fileKey (arquivo não salvo) porque não depende de
+// nenhuma identidade externa. É a mesma API que o Handex usa (namespace
+// 'handex') — lá só para expor um resumo ao MCP/REST, aqui para o estado
+// COMPLETO, como backup real.
+//
+// Namespace/chaves próprias do hac. SHARED (não setPluginData) de propósito:
+// além de sobreviver, fica legível por agentes externos (MCP/REST), mesmo
+// critério documentado no Handex.
+export const HAC_DOC_NS = 'hac';
+export const HAC_DOC_KEY_PREFIX = 'hacData';
+
+// setSharedPluginData tem teto de ~100KB POR ENTRADA. Uma documentação
+// grande (muitas Áreas × specs × pontos de swipe) passa disso com folga, e
+// estourar o limite lança — o que, num backup, significaria falhar
+// exatamente quando mais importa. Por isso o JSON é fatiado em blocos de
+// 80KB (margem de segurança sobre os 100KB) gravados em chaves numeradas,
+// mais uma chave de índice com a contagem. Ler = concatenar na ordem.
+const HAC_DOC_CHUNK_SIZE = 80 * 1024;
+
+// Grava hacData inteiro no documento, fatiado. Best-effort: nunca lança —
+// este é o caminho de BACKUP, jamais pode derrubar o save principal
+// (clientStorage) nem travar a UI. Retorna true só se gravou tudo.
+export function _writeHacDataToDocument(data) {
+  try {
+    const page = figma.currentPage;
+    if (!page) return false;
+    const json = JSON.stringify(data);
+    const total = Math.ceil(json.length / HAC_DOC_CHUNK_SIZE) || 1;
+    // Índice gravado ANTES dos blocos seria lido por uma leitura concorrente
+    // apontando para blocos ainda inexistentes; grava os blocos primeiro e o
+    // índice por último, que passa a ser o commit atômico desta escrita.
+    for (let i = 0; i < total; i++) {
+      page.setSharedPluginData(HAC_DOC_NS, `${HAC_DOC_KEY_PREFIX}:${i}`, json.slice(i * HAC_DOC_CHUNK_SIZE, (i + 1) * HAC_DOC_CHUNK_SIZE));
+    }
+    // Limpa sobras de uma gravação anterior MAIOR (string vazia = chave
+    // apagada no Figma) — sem isso, encolher a documentação deixaria blocos
+    // órfãos que corromperiam a leitura seguinte.
+    const previous = parseInt(page.getSharedPluginData(HAC_DOC_NS, `${HAC_DOC_KEY_PREFIX}:count`) || '0', 10) || 0;
+    for (let i = total; i < previous; i++) {
+      page.setSharedPluginData(HAC_DOC_NS, `${HAC_DOC_KEY_PREFIX}:${i}`, '');
+    }
+    page.setSharedPluginData(HAC_DOC_NS, `${HAC_DOC_KEY_PREFIX}:count`, String(total));
+    page.setSharedPluginData(HAC_DOC_NS, `${HAC_DOC_KEY_PREFIX}:savedAt`, new Date().toISOString());
+    return true;
+  } catch (e) {
+    console.warn('[hac] backup no documento falhou (clientStorage segue como fonte principal):', e && e.message);
+    return false;
+  }
+}
+
+// Lê o backup do documento. Retorna null quando não há nada gravado ou o
+// conteúdo está corrompido/incompleto — quem chama trata como "sem backup"
+// e segue com o que tiver, nunca quebra a abertura do plugin.
+export function _readHacDataFromDocument() {
+  try {
+    const page = figma.currentPage;
+    if (!page) return null;
+    const total = parseInt(page.getSharedPluginData(HAC_DOC_NS, `${HAC_DOC_KEY_PREFIX}:count`) || '0', 10) || 0;
+    if (!total) return null;
+    let json = '';
+    for (let i = 0; i < total; i++) {
+      const chunk = page.getSharedPluginData(HAC_DOC_NS, `${HAC_DOC_KEY_PREFIX}:${i}`);
+      // Bloco faltando = escrita interrompida no meio (plugin fechado
+      // durante o save). Backup parcial é pior que nenhum: descarta.
+      if (!chunk) return null;
+      json += chunk;
+    }
+    const parsed = JSON.parse(json);
+    return (parsed && typeof parsed === 'object') ? parsed : null;
+  } catch (e) {
+    console.warn('[hac] backup no documento ilegível (ignorado):', e && e.message);
+    return null;
+  }
+}
+
+// Apaga o backup do documento. Usado por "Limpar Cache" — que, sem isto,
+// apagaria só o clientStorage e veria tudo voltar na reabertura seguinte
+// (restaurado deste backup), parecendo um botão quebrado.
+export function _clearHacDataFromDocument() {
+  try {
+    const page = figma.currentPage;
+    if (!page) return;
+    const total = parseInt(page.getSharedPluginData(HAC_DOC_NS, `${HAC_DOC_KEY_PREFIX}:count`) || '0', 10) || 0;
+    for (let i = 0; i < total; i++) {
+      page.setSharedPluginData(HAC_DOC_NS, `${HAC_DOC_KEY_PREFIX}:${i}`, '');
+    }
+    page.setSharedPluginData(HAC_DOC_NS, `${HAC_DOC_KEY_PREFIX}:count`, '');
+    page.setSharedPluginData(HAC_DOC_NS, `${HAC_DOC_KEY_PREFIX}:savedAt`, '');
+  } catch (e) {
+    console.warn('[hac] falha ao limpar o backup do documento:', e && e.message);
+  }
+}
+
+// Quantas Áreas/specs um hacData carrega — usado só para decidir qual das
+// duas fontes (clientStorage vs. documento) tem mais conteúdo quando as duas
+// existem e divergem. Deliberadamente grosseiro: não tenta fazer merge
+// campo a campo (sem timestamp confiável por item, um merge automático
+// arriscaria ressuscitar coisas que o designer apagou de propósito).
+export function _hacDataWeight(data) {
+  if (!data || typeof data !== 'object') return -1;
+  return (Array.isArray(data.a11yAreas) ? data.a11yAreas.length : 0)
+    + (Array.isArray(data.a11ySpecs) ? data.a11ySpecs.length : 0)
+    + (Array.isArray(data.tabOrderItems) ? data.tabOrderItems.length : 0)
+    + (Array.isArray(data.a11ySwipePaths) ? data.a11ySwipePaths.length : 0);
 }
 
 // ============================================================

@@ -1,7 +1,7 @@
 {
   "_meta": {
     "description": "Mapa containingFrame -> categoria de a11y, ESSENCIAL EM RUNTIME no hac (consumido por _getDscFrameToA11yMap em code.js para a Detecção Automática de a11y). Gerado por build-dsc-a11y-mapping.cjs a partir de refs/web-angular-react.json (dados reais da REST API do Figma, sem valores inventados). Adaptação do Handex Beta (onde este mesmo formato de arquivo é descrito como \"fundação de dados, não usado em runtime\" — desatualizado lá, mas aqui no hac o consumo em runtime é o desenho intencional desde o início).",
-    "generatedAt": "2026-09-14T19:11:29.272Z",
+    "generatedAt": "2026-09-22T13:53:05.100Z",
     "generator": "build-dsc-a11y-mapping.cjs (hac)",
     "sourceFile": "super-app.json",
     "sourceFileKey": "epCGtlKQxedDxQVlK3lNcN",
@@ -34,22 +34,22 @@
       "imagem"
     ],
     "counts": {
-      "totalComponentsVariants": 4489,
-      "totalFamilies": 1551,
+      "totalComponentsVariants": 4531,
+      "totalFamilies": 1557,
       "altaConfianca": {
         "families": 14,
         "variantCount": 494
       },
       "baixaConfianca": {
-        "families": 27,
-        "variantCount": 326
+        "families": 61,
+        "variantCount": 651
       },
       "semMatch": {
-        "families": 1510,
-        "variantCount": 3669
+        "families": 1482,
+        "variantCount": 3386
       },
       "pctFamiliesAlta": 0.9,
-      "pctVariantsAlta": 11
+      "pctVariantsAlta": 10.9
     },
     "byShortName": {
       "accordion": {
@@ -69,24 +69,24 @@
         "variantCount": 30
       },
       "dialog": {
-        "families": 2,
-        "variantCount": 16
+        "families": 5,
+        "variantCount": 44
       },
       "inputs": {
-        "families": 10,
-        "variantCount": 119
+        "families": 13,
+        "variantCount": 133
       },
       "link": {
         "families": 0,
         "variantCount": 0
       },
       "listas": {
-        "families": 4,
-        "variantCount": 73
+        "families": 22,
+        "variantCount": 190
       },
       "paginator": {
-        "families": 0,
-        "variantCount": 0
+        "families": 1,
+        "variantCount": 90
       },
       "radio button": {
         "families": 1,
@@ -113,12 +113,12 @@
         "variantCount": 2
       },
       "imagem": {
-        "families": 8,
-        "variantCount": 93
+        "families": 14,
+        "variantCount": 148
       },
       "estrutura": {
-        "families": 0,
-        "variantCount": 0
+        "families": 3,
+        "variantCount": 21
       }
     }
   },
@@ -127,9 +127,9 @@
       "containingFrame": "[dsc] Icon Button",
       "variantCount": 168,
       "sampleKeys": [
-        "afc66160031a2547643d7a090b56164a719ab374",
-        "b16b278fca9d6089da1e1148877d1101af06af91",
-        "8c40b3c94ca1712dab7e49cf4d64ce860d8db13e"
+        "13d136862e86119a9c67eb145bb16a7081bd8a6b",
+        "13e31a4216596c600f8b60bb4539aa9627ca4905",
+        "1405d7ab6f2d594ebb92dfc75cb2233a03434e49"
       ],
       "match": {
         "shortName": "button",
@@ -155,9 +155,9 @@
       "containingFrame": "[dsc] Icon Button Text",
       "variantCount": 42,
       "sampleKeys": [
-        "1eb66a07e4984f94cdc0b938bc79e31b80d28d94",
-        "0f66c01e2f83783b7adc3a55ef6083300e84b59f",
-        "16b74b559326acd8393a2531041e1102433c5268"
+        "19270128dcd9c49d774be64665eeef8555c60888",
+        "228295e1997b5b43378f09b4c16dcd9b303792b9",
+        "239b1d93050037b1598479800b30d446edc1ba88"
       ],
       "match": {
         "shortName": "button",
@@ -197,9 +197,9 @@
       "containingFrame": "[dsc] Credit Card Button",
       "variantCount": 16,
       "sampleKeys": [
-        "032267e4f86bd59277055f9660f374ba859b9a30",
-        "111cb6dae96d09e53b457658fd68507c4fed6bb6",
-        "17f78ab085ec59e77ee27f374bea3790f6f41a8a"
+        "dd7435dd5e3a398dcdde7e66460c4382bd50b481",
+        "4d34aeb662bc25abd9835ed76384392695488ff2",
+        "560827afd6eacf682680a7db50c14f4af2a19f12"
       ],
       "match": {
         "shortName": "button",
@@ -212,8 +212,8 @@
       "variantCount": 12,
       "sampleKeys": [
         "26f5e93806871052b9d807e8863a437ecf9c9969",
-        "1070aa4d42a9b432834b1afc8c79611aff44b2cf",
-        "2d529dac87332f971d3c684471f6ccb44eea6f55"
+        "2d529dac87332f971d3c684471f6ccb44eea6f55",
+        "7cb6827c1334c2775f1a04b8729e938c9d493cbf"
       ],
       "match": {
         "shortName": "accordion",
@@ -225,9 +225,9 @@
       "containingFrame": "[dsc] Switch",
       "variantCount": 10,
       "sampleKeys": [
-        "6086de62ea95e961a4c9ab507cd7f80d30c9e5a5",
-        "31e4f7aef20391a697fe09c9f495f8dc2e68c566",
-        "60f29749236130db6ee215e145054fa86d1004e2"
+        "d45d2cf62df475aa23d57136340875bc3934a098",
+        "e012350ba5b58817eaf2f288ed40568f2349c1f2",
+        "6086de62ea95e961a4c9ab507cd7f80d30c9e5a5"
       ],
       "match": {
         "shortName": "switch",
@@ -250,12 +250,26 @@
       }
     },
     {
+      "containingFrame": "[dsc-tc] Actions - Button Row",
+      "variantCount": 6,
+      "sampleKeys": [
+        "01e9260d997f9ee87ae23a4b28f50c306dc7cf5f",
+        "9536f712565393baea97a27021e772d0e33b3916",
+        "b86389115869ca8eb6760f7a3f48deb3aaf7ff60"
+      ],
+      "match": {
+        "shortName": "button",
+        "confidence": "alta",
+        "reason": "palavra \"button\""
+      }
+    },
+    {
       "containingFrame": "[dsc] Input Stepper",
       "variantCount": 6,
       "sampleKeys": [
-        "94cd6b02cbfb7b74ff6068fd0908209c9a1f3f54",
         "af223c8ad40b7709f9f1f30f8b656724845bc2d3",
-        "b900c06830ec4deec780c34675e870099d5ef19b"
+        "b900c06830ec4deec780c34675e870099d5ef19b",
+        "d1416924f9bf3283bcb885fc53506d01c6211ec0"
       ],
       "match": {
         "shortName": "stepper",
@@ -267,9 +281,9 @@
       "containingFrame": "[dsc-tc] Statement List Accordion",
       "variantCount": 6,
       "sampleKeys": [
+        "d4af4d9c7b5080249e7af5aae32c740bacd2deee",
         "52693525e75ba45b13ee7aa74e2fe2ffb3097e25",
-        "56936608c4e7ea62a8a9533257e60b9caac8e04b",
-        "7f539b566d024c7b61fb83640d3298f374d55a51"
+        "56936608c4e7ea62a8a9533257e60b9caac8e04b"
       ],
       "match": {
         "shortName": "accordion",
@@ -278,12 +292,12 @@
       }
     },
     {
-      "containingFrame": "[dsc-tc] Actions - Button Row",
-      "variantCount": 6,
+      "containingFrame": "[dsc] Tile Button",
+      "variantCount": 4,
       "sampleKeys": [
-        "01e9260d997f9ee87ae23a4b28f50c306dc7cf5f",
-        "9536f712565393baea97a27021e772d0e33b3916",
-        "9d7ab36bdb05f31a76b6bd354206f1fbb8b0ddf9"
+        "1363526ae9f3a554d10c23f3f87762dd40ac63a4",
+        "f91e05c1b3f01a93a231b86d7f1d4983f9448c91",
+        "fa5d04561d3d9d5003de12068ece7f8193bfa302"
       ],
       "match": {
         "shortName": "button",
@@ -295,23 +309,9 @@
       "containingFrame": "[dsc] Segmented Button",
       "variantCount": 4,
       "sampleKeys": [
-        "435db796e5b32cabd4edf0260374ef29a47d00bc",
-        "6802d592d5cbd7139753d94862f28de085b12781",
-        "22778f3583c6ce0b179e841452214fed92705828"
-      ],
-      "match": {
-        "shortName": "button",
-        "confidence": "alta",
-        "reason": "palavra \"button\""
-      }
-    },
-    {
-      "containingFrame": "[dsc] Tile Button",
-      "variantCount": 4,
-      "sampleKeys": [
-        "1363526ae9f3a554d10c23f3f87762dd40ac63a4",
-        "5e03ac8a111232deb478351ed4c7be2a29c25cf0",
-        "f91e05c1b3f01a93a231b86d7f1d4983f9448c91"
+        "22778f3583c6ce0b179e841452214fed92705828",
+        "96de900898b2c8525f0a60078baca23a43eec4b6",
+        "435db796e5b32cabd4edf0260374ef29a47d00bc"
       ],
       "match": {
         "shortName": "button",
@@ -322,12 +322,26 @@
   ],
   "baixaConfianca": [
     {
+      "containingFrame": "[dsc] Page Controller",
+      "variantCount": 90,
+      "sampleKeys": [
+        "f312242947b4f9747f843352d877122dbec6e4c8",
+        "388ea8a7780c0730238a5aec4d0f80a040dd011f",
+        "028370aad9541c4c7078969483f99b4f11ec1bd2"
+      ],
+      "match": {
+        "shortName": "paginator",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Page Controller\""
+      }
+    },
+    {
       "containingFrame": "[dsc] List Item",
       "variantCount": 45,
       "sampleKeys": [
-        "cd5e1591d5643d33cc36e83ab414747162b6958f",
         "063964300cca1fd8ecd554e8205ec8a6dfb1f697",
-        "0b3b445e778727c584c0f9e78e77cabf0b4d1cce"
+        "0b3b445e778727c584c0f9e78e77cabf0b4d1cce",
+        "0e2bbacbcf8d168cd73c776d3c79b1a9e140d20d"
       ],
       "match": {
         "shortName": "listas",
@@ -364,6 +378,48 @@
       }
     },
     {
+      "containingFrame": "[dsc] Card Carousel Horizontal",
+      "variantCount": 30,
+      "sampleKeys": [
+        "8d165cbbf8819744516b3f566d9909ed04c4c8f6",
+        "0d3f6f0d23e113b77220cc2354c8ffc6c88b0d68",
+        "12a0335f740e8000f0ce3907a60f3ffad191c0b8"
+      ],
+      "match": {
+        "shortName": "listas",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Card Carousel Horizontal\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Icon Container",
+      "variantCount": 28,
+      "sampleKeys": [
+        "0eff0582d425401f3a7c699de035815156731858",
+        "6f04cdb56d2984bae1d4c55bd8b0828f04f17742",
+        "8e6c2a6651852b2f45d3a3fd1238fece7ac8181f"
+      ],
+      "match": {
+        "shortName": "imagem",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Icon Container\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Text Field Single",
+      "variantCount": 20,
+      "sampleKeys": [
+        "180b56d082501b758bfbed72ab254744b77ef7d5",
+        "012bf194e6d4023d515eaa1442d6a3aafc93584d",
+        "01a7ae04c00db87da176b4e220620daf43abf2a5"
+      ],
+      "match": {
+        "shortName": "inputs",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Text Field Single\""
+      }
+    },
+    {
       "containingFrame": "[dsc] Radio",
       "variantCount": 20,
       "sampleKeys": [
@@ -378,26 +434,12 @@
       }
     },
     {
-      "containingFrame": "[dsc] Text Field Single",
-      "variantCount": 20,
-      "sampleKeys": [
-        "91a0732042c1593817a225ca9963341079d1ebb6",
-        "93e916580349cf490cf383e6dea5cb7dcaf404a7",
-        "9459751bb81dc821a60fb2c7ba10e3da8dec6aca"
-      ],
-      "match": {
-        "shortName": "inputs",
-        "confidence": "baixa",
-        "reason": "tabela curada (super-app) \"Text Field Single\""
-      }
-    },
-    {
       "containingFrame": "[dsc] Transaction List Item",
       "variantCount": 16,
       "sampleKeys": [
+        "37c3d52aaa15c1945fb5ccc63d64a25325db3cc8",
         "04c1d6f14e79114b6595b13a946e6b1e4d7d1adb",
-        "0f371bf65cd43aaa7fc328eecd22f7cace4366bb",
-        "1ba8bc003cbc2184228ccb0a31e2a59a39b4ac35"
+        "38f02d13c61fe34e06794e3c59b87930c550bbfb"
       ],
       "match": {
         "shortName": "listas",
@@ -420,31 +462,17 @@
       }
     },
     {
-      "containingFrame": "[dsc] Input Money",
-      "variantCount": 12,
+      "containingFrame": "[dsc] List Item Funds",
+      "variantCount": 15,
       "sampleKeys": [
-        "45d55b1bfca24a0b57174e334751af6a11fe61ce",
-        "7a76d3168189092c468fb8b54f11d76f325618a0",
-        "1e2b09a267610470b068007d3bd46d71b9aa7d06"
+        "fccde502105e6f81f719cda33b2861989d2e6bc0",
+        "28226bd80ed2ef5fc2ef323e5b88ac57020a5531",
+        "2d7ffee8d2dba25ae7d484d1cd9618c61fdf3c61"
       ],
       "match": {
-        "shortName": "inputs",
+        "shortName": "listas",
         "confidence": "baixa",
-        "reason": "tabela curada (super-app) \"Input Money\""
-      }
-    },
-    {
-      "containingFrame": "[dsc-tc] Avatar Hero",
-      "variantCount": 12,
-      "sampleKeys": [
-        "3ae3ca86e83972ae169a35ca9069726046d1ed0d",
-        "878bc2ef24790cad402de30fe310649182b8d993",
-        "01111b238f0a097bec9f73f4d02ec5640019c307"
-      ],
-      "match": {
-        "shortName": "imagem",
-        "confidence": "baixa",
-        "reason": "tabela curada (super-app) \"Avatar Hero\""
+        "reason": "tabela curada (super-app) \"List Item\""
       }
     },
     {
@@ -459,6 +487,76 @@
         "shortName": "inputs",
         "confidence": "baixa",
         "reason": "tabela curada (super-app) \"Account Select\""
+      }
+    },
+    {
+      "containingFrame": "[dsc-tc] Transactions List",
+      "variantCount": 12,
+      "sampleKeys": [
+        "01d35d10abf5d82fbce79e8a4f0a94cc4b5e2d59",
+        "36d244ea8c441d7586faffcf658e772333bc0b13",
+        "38ca27894bd3bf876eefbb22531ef76c62faa120"
+      ],
+      "match": {
+        "shortName": "listas",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Transactions List\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Input Money",
+      "variantCount": 12,
+      "sampleKeys": [
+        "1e2b09a267610470b068007d3bd46d71b9aa7d06",
+        "42d03899cb07eafff2e15b9da234cc353f2e4be1",
+        "7a4e26fdb8e3a73c478995588673d8ab9df03c17"
+      ],
+      "match": {
+        "shortName": "inputs",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Input Money\""
+      }
+    },
+    {
+      "containingFrame": "[dsc-tc] Avatar Hero",
+      "variantCount": 12,
+      "sampleKeys": [
+        "01111b238f0a097bec9f73f4d02ec5640019c307",
+        "397bca9188e47dae8817abb9e93d2c258847ad89",
+        "58be3f06613d98290c89d7a9ae75a940edb58441"
+      ],
+      "match": {
+        "shortName": "imagem",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Avatar Hero\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Tipkit Popover",
+      "variantCount": 12,
+      "sampleKeys": [
+        "a14305028258a9d94513392b4e39830e81f92850",
+        "3f415277f663087e3b8bf0600c1494fb065c3a74",
+        "5632590f21249b9f3a754768f34f09ecbc69e270"
+      ],
+      "match": {
+        "shortName": "dialog",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Tipkit Popover\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Selectable Media",
+      "variantCount": 12,
+      "sampleKeys": [
+        "05f2747333d756677e6cec9740a04e4e2fd65cde",
+        "1f83f9f8456d9555a9a63a4f61c95a2a16675f31",
+        "44e69bbc4d14d77648a36f6b46d0313ccb8789c3"
+      ],
+      "match": {
+        "shortName": "imagem",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Selectable Media\""
       }
     },
     {
@@ -479,9 +577,9 @@
       "containingFrame": "[dsc] Avatar Hero",
       "variantCount": 10,
       "sampleKeys": [
-        "cd4180270fba82f46252a69cb679d9822e42bcca",
+        "1d4fc72f2f57c0e5f85b7e89321898002a1f4593",
         "10a4ed13654f3fb07de22549e980415f76bb0f04",
-        "1d4fc72f2f57c0e5f85b7e89321898002a1f4593"
+        "4b0d863c5e06dbf610fd43707bbd95abba30010e"
       ],
       "match": {
         "shortName": "imagem",
@@ -490,12 +588,40 @@
       }
     },
     {
+      "containingFrame": "[dsc] Top App Bar",
+      "variantCount": 10,
+      "sampleKeys": [
+        "605463a25465f41ef568639faeb384b0931cfe67",
+        "c338f3aba0d98d34e7eaf586f7a69a813afe1c5d",
+        "e45605136270f4e3a482ccaa3f2424038665317c"
+      ],
+      "match": {
+        "shortName": "estrutura",
+        "confidence": "baixa",
+        "reason": "marco de navegação \"header\" (nomenclatura mobile)"
+      }
+    },
+    {
+      "containingFrame": "[dsc] Chip",
+      "variantCount": 10,
+      "sampleKeys": [
+        "12b4036740a8d3e230eb5d8fc59447031ad4539f",
+        "4c193630c90383b118f65348e3b432f28e687411",
+        "af195324491757095c19487a193a2b83dca28054"
+      ],
+      "match": {
+        "shortName": "inputs",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Chip\""
+      }
+    },
+    {
       "containingFrame": "[dsc] Input Chat",
       "variantCount": 9,
       "sampleKeys": [
-        "1281a73719abd877b5e5fb2766def43c7a8c861d",
-        "24785a5cb00408e5dbb1049240fa746a0cfd4146",
-        "bed58df404e0d4d93aa811711dfa52bcf4a37bec"
+        "8350b9adcfb997c08c0df0332fbeabee8d9665fd",
+        "84b492b8d1aacacc66c5a0975e87e344730e92de",
+        "c8ae102ac5e8e740a3e27c7e9bc16ab4dfb823df"
       ],
       "match": {
         "shortName": "inputs",
@@ -518,17 +644,45 @@
       }
     },
     {
+      "containingFrame": "[dsc] Popover",
+      "variantCount": 8,
+      "sampleKeys": [
+        "e255cb52c592de50fcc805ca7fe7245b62454fb3",
+        "045a011cef3c3eb204c0781638373df683e89ae3",
+        "518d4b0b430dab11c3b27e1f7b630431359896dd"
+      ],
+      "match": {
+        "shortName": "dialog",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Popover\""
+      }
+    },
+    {
       "containingFrame": "[dsc] List Heading",
       "variantCount": 8,
       "sampleKeys": [
-        "a2a0497e29619cb6c0b8c572b87f11ae2a546310",
-        "0a2797bcc9ab0747c7a0a9a4cde3e44f2e82e760",
-        "1cfc93e1c6caa514f22f79374bc386f781b9defb"
+        "e529ca066aa4ee43fbe6e7181fbb577c4c58e07e",
+        "20e057c2b9ebce0584df7879ea7ea83b40bea988",
+        "abf88079bcdd335faaa4737d9fb1e0fbb812a7df"
       ],
       "match": {
         "shortName": "listas",
         "confidence": "baixa",
         "reason": "tabela curada (super-app) \"List Heading\""
+      }
+    },
+    {
+      "containingFrame": "[dsc-ts] Sheet - Single Filter",
+      "variantCount": 8,
+      "sampleKeys": [
+        "f10c6f3207a4ae1e6149a473413d78e2aaa31ab3",
+        "18577626f3ef8b98e4cdb293f86e1dc48ddbad4a",
+        "577bccc24c4d38d1f9dc6bd0f7eb8e40dfb2cafe"
+      ],
+      "match": {
+        "shortName": "dialog",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Sheet\""
       }
     },
     {
@@ -546,17 +700,31 @@
       }
     },
     {
-      "containingFrame": "[dsc-ts] Sheet - Single Filter",
+      "containingFrame": "[dsc] Card Carousel Vertical",
       "variantCount": 8,
       "sampleKeys": [
-        "18577626f3ef8b98e4cdb293f86e1dc48ddbad4a",
-        "577bccc24c4d38d1f9dc6bd0f7eb8e40dfb2cafe",
-        "6c265dee70e4ae69c0007ef6ac4260fc912a0461"
+        "25976ab9451a5898112bd891349b9226ab660bf4",
+        "29eb675101a25e2beca19b16e0a569245310cdcd",
+        "29f721afe776dfda4da5d306e1f12bfc9632862a"
+      ],
+      "match": {
+        "shortName": "listas",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Card Carousel Vertical\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Tooltip",
+      "variantCount": 8,
+      "sampleKeys": [
+        "24a5fdcf49d0434f5444ad2510138e75ff3ce4f5",
+        "4083dca11d1ecb6efd3a150639b5cbf202c45395",
+        "51537f38d7e265077089f327639e9e3ef8dc8526"
       ],
       "match": {
         "shortName": "dialog",
         "confidence": "baixa",
-        "reason": "tabela curada (super-app) \"Sheet\""
+        "reason": "tabela curada (super-app) \"Tooltip\""
       }
     },
     {
@@ -574,6 +742,34 @@
       }
     },
     {
+      "containingFrame": "[dsc-tc] Sortable List",
+      "variantCount": 7,
+      "sampleKeys": [
+        "21423e07207ccb30b1d80aa51e2ded66fadbbe88",
+        "16883ae348b44cdfb3c258811952f8e3e880e451",
+        "188b1286e655b542d703356d74012536c4457e41"
+      ],
+      "match": {
+        "shortName": "listas",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Sortable List\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Icon",
+      "variantCount": 7,
+      "sampleKeys": [
+        "047fe8d76a923e10caa87a2fef038e66588a2a9d",
+        "14b9a5c3503a4c3f404b859e7fa937c0ce8aea3b",
+        "353a0d3b7084661efe9c132e5cdf9ae6a6d6d0a2"
+      ],
+      "match": {
+        "shortName": "imagem",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Icon\""
+      }
+    },
+    {
       "containingFrame": "[dsc] Logo CAIXA",
       "variantCount": 6,
       "sampleKeys": [
@@ -585,6 +781,34 @@
         "shortName": "imagem",
         "confidence": "baixa",
         "reason": "tabela curada (super-app) \"Logo CAIXA\""
+      }
+    },
+    {
+      "containingFrame": "[dsc-tc] Screen Footer",
+      "variantCount": 6,
+      "sampleKeys": [
+        "182c0bef5a25c6ef8400dd9facae39a9b8f08ca6",
+        "2d2b759756b26a6389022025ae9f4a9934a6c209",
+        "80161c8a51a8a9cf35f64783940a1ca9561efbc9"
+      ],
+      "match": {
+        "shortName": "estrutura",
+        "confidence": "baixa",
+        "reason": "marco de navegação \"footer\" (rodapé de tela mobile)"
+      }
+    },
+    {
+      "containingFrame": "[dsc-tc] Select Group List",
+      "variantCount": 6,
+      "sampleKeys": [
+        "cac822946d03ee53244c517a80f68faccab6ae8a",
+        "03f9f4834483d689506855cce1decc0f86d900a3",
+        "32b96e6413f4ceffd65127b6ac0f9945d59304dd"
+      ],
+      "match": {
+        "shortName": "listas",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Select Group List\""
       }
     },
     {
@@ -602,12 +826,54 @@
       }
     },
     {
+      "containingFrame": "[dsc] Navigation Bar",
+      "variantCount": 5,
+      "sampleKeys": [
+        "eea7c5c511632421f165558662a0cbae8f2cb940",
+        "61e6b45add6273212f46292ba15cfb7906749003",
+        "b6c572cdb8f37b6ad2e15a248a704037597021a1"
+      ],
+      "match": {
+        "shortName": "estrutura",
+        "confidence": "baixa",
+        "reason": "marco de navegação principal (barra de navegação mobile)"
+      }
+    },
+    {
+      "containingFrame": "[dsc] Date Picker",
+      "variantCount": 5,
+      "sampleKeys": [
+        "014f9916c629046e9b66b6572bb4db3b7e3602e7",
+        "1b616de302f6deb2ff90da0dc8ce41ecfaaa073e",
+        "22c9cbdade13d01345d006941eab04d017446338"
+      ],
+      "match": {
+        "shortName": "inputs",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Date Picker\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Card Notification Stack",
+      "variantCount": 5,
+      "sampleKeys": [
+        "675025a12aef7395bdbdfc3ccacd387c7db8a164",
+        "97e6185389836f9336a9edfe76662be04ca2905f",
+        "f121886ec1b2a60243ee137ea60dc172755d22e1"
+      ],
+      "match": {
+        "shortName": "listas",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Card Notification Stack\""
+      }
+    },
+    {
       "containingFrame": "[dsc] Date Picker Container",
       "variantCount": 5,
       "sampleKeys": [
+        "4f205655ac68b298346f1d8d8f3f8e56952cb67e",
         "a972f212e699b6188d5b0698ce92bb35bbd30298",
-        "bda46f483cf6d57da2724266c87ef8edd76ca319",
-        "3e7a2e9110d3897a4b9c4f7e72267f0352cdf8aa"
+        "bda46f483cf6d57da2724266c87ef8edd76ca319"
       ],
       "match": {
         "shortName": "inputs",
@@ -616,17 +882,31 @@
       }
     },
     {
-      "containingFrame": "[dsc] Date Picker",
-      "variantCount": 5,
+      "containingFrame": "[dsc-tc] Feedback Illustration",
+      "variantCount": 4,
       "sampleKeys": [
-        "22c9cbdade13d01345d006941eab04d017446338",
-        "4bb2bbae39eea62d01a1a091463b64d1df3f719a",
-        "7c4f1941166d08d91fade1d8f7094d5c95446f79"
+        "f63cfdb8a9417a6141a75f75d21904575b8f2a3e",
+        "2a6d797ce2ccc2092e04a0f40299ee8bdec00bb4",
+        "3f4b9861f693e65528ce3a27f6fad9448f947e3b"
       ],
       "match": {
-        "shortName": "inputs",
+        "shortName": "imagem",
         "confidence": "baixa",
-        "reason": "tabela curada (super-app) \"Date Picker\""
+        "reason": "tabela curada (super-app) \"Feedback Illustration\""
+      }
+    },
+    {
+      "containingFrame": "[dsc-tc] Carousel - Horizontal",
+      "variantCount": 4,
+      "sampleKeys": [
+        "a41e67638bbca94643c96d2996db613bb125ed63",
+        "144812b1f81910f2af9308452d828b97a0305def",
+        "a761cce4cec9c7b9cc7e6f5443744117cff45be2"
+      ],
+      "match": {
+        "shortName": "listas",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Carousel - Horizontal\""
       }
     },
     {
@@ -644,6 +924,76 @@
       }
     },
     {
+      "containingFrame": "[dsc-tc] Card Feed List",
+      "variantCount": 3,
+      "sampleKeys": [
+        "2e35db520992e354ddfcb8ce7c0857b3df87fa36",
+        "dcf4d7eb441df2dcfe1ea3b49988346ef83ecfbd",
+        "e5738b871bc605aafc268734951784ef0b83b6e0"
+      ],
+      "match": {
+        "shortName": "listas",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Card Feed List\""
+      }
+    },
+    {
+      "containingFrame": "[dsc-tc] Funds List",
+      "variantCount": 3,
+      "sampleKeys": [
+        "332d2632219b371974427bcaa4ea2d7a8815e5cd",
+        "9b582ec7f66a45f9d9c370902f59253ce7f909a1",
+        "3c206577e520e051d2772d7e0b82e7d77b55cc2f"
+      ],
+      "match": {
+        "shortName": "listas",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Funds List\""
+      }
+    },
+    {
+      "containingFrame": "[dsc-tc] Carousel - Card Content",
+      "variantCount": 3,
+      "sampleKeys": [
+        "165cc2315d0e06a3d3002e5f51f1c194eaad44d6",
+        "42552f76b5045117c6050f898abe034f8ea0b033",
+        "4c1056ce55cdbce89fdc04948cf1fb7c6f14a5ce"
+      ],
+      "match": {
+        "shortName": "listas",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Carousel - Card Content\""
+      }
+    },
+    {
+      "containingFrame": "[dsc-tc] Carousel Product Offer",
+      "variantCount": 3,
+      "sampleKeys": [
+        "f5b9c5f2cdb504dfc99aed52c0de4149fe499306",
+        "815c27ea45cafb48debad3f20d2a9dd719b07f85",
+        "4b278ed1375f3414415d527584536e5d88d80d8d"
+      ],
+      "match": {
+        "shortName": "listas",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Carousel Product Offer\""
+      }
+    },
+    {
+      "containingFrame": "[dsc-tc] Actions List",
+      "variantCount": 3,
+      "sampleKeys": [
+        "3ee3d8eed8a3ee003bf3775f7117e73b587af07a",
+        "419befb3e02d92ae95600a1cf3a7179f0d468f91",
+        "14bfdf64a18d4ecc7b699eb3dac7b64ba1f3d381"
+      ],
+      "match": {
+        "shortName": "listas",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Actions List\""
+      }
+    },
+    {
       "containingFrame": "[dsc] Input Pin",
       "variantCount": 3,
       "sampleKeys": [
@@ -655,20 +1005,6 @@
         "shortName": "inputs",
         "confidence": "baixa",
         "reason": "tabela curada (super-app) \"Input Pin\""
-      }
-    },
-    {
-      "containingFrame": "[dsc] Avatar",
-      "variantCount": 3,
-      "sampleKeys": [
-        "04232af1991edd4dc7536b3040cf68b175bfaee8",
-        "1f9cbef19819b9573d3f762b6b9780261d2f7d49",
-        "b6164e34fd2436df973cabd09af9705e08218e8c"
-      ],
-      "match": {
-        "shortName": "imagem",
-        "confidence": "baixa",
-        "reason": "tabela curada (super-app) \"Avatar\""
       }
     },
     {
@@ -686,6 +1022,103 @@
       }
     },
     {
+      "containingFrame": "[dsc-tc] Card Product Offer List",
+      "variantCount": 3,
+      "sampleKeys": [
+        "342d4d24f062c1dced3c51951403fe6c468caedc",
+        "1813282659132506205f2e672a419d867ba57280",
+        "f7848656a94dee76ab09dafb2b27e9db3b64986f"
+      ],
+      "match": {
+        "shortName": "listas",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Card Product Offer List\""
+      }
+    },
+    {
+      "containingFrame": "[dsc-tc] Carousel - Vertical",
+      "variantCount": 3,
+      "sampleKeys": [
+        "3e88bf4a26bbb83f685f776e8e58ccf04ab5d327",
+        "2d2320d667950edf658626c6ed9159048aaa16a8",
+        "db1f74650aa5c89b5574255f93dde72597c58118"
+      ],
+      "match": {
+        "shortName": "listas",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Carousel - Vertical\""
+      }
+    },
+    {
+      "containingFrame": "[dsc-tc] Feedback - List",
+      "variantCount": 3,
+      "sampleKeys": [
+        "c2f0b562622765c58cb315d5daed888500392bea",
+        "ef54d32a88ea4287313a002ef42b8643b9c07db1",
+        "657809bb1adbe99b6b2b5b0db74576ee68fed6f9"
+      ],
+      "match": {
+        "shortName": "listas",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Feedback - List\""
+      }
+    },
+    {
+      "containingFrame": "[dsc-tc] Options List",
+      "variantCount": 3,
+      "sampleKeys": [
+        "658fe79f58b520d7b3fa6eb9c7009365023638fb",
+        "ee7fd7efb856328e3eda95e09f315c482ccc1d2e",
+        "6ac32c7199259c219c140222899ae490d9449fdb"
+      ],
+      "match": {
+        "shortName": "listas",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Options List\""
+      }
+    },
+    {
+      "containingFrame": "[dsc-tc] Multi-select - List",
+      "variantCount": 3,
+      "sampleKeys": [
+        "1450dcac3e14001c0637116278d28db57b1d9128",
+        "90dc423d5e63061efe06701874dc677b8c3eed83",
+        "9294e4f534749644dfc87dd6d92145bbfe246cde"
+      ],
+      "match": {
+        "shortName": "listas",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Multi-select - List\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Avatar",
+      "variantCount": 3,
+      "sampleKeys": [
+        "04232af1991edd4dc7536b3040cf68b175bfaee8",
+        "1f9cbef19819b9573d3f762b6b9780261d2f7d49",
+        "b6164e34fd2436df973cabd09af9705e08218e8c"
+      ],
+      "match": {
+        "shortName": "imagem",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Avatar\""
+      }
+    },
+    {
+      "containingFrame": "[dsc-tc] Selectable Media Grid",
+      "variantCount": 2,
+      "sampleKeys": [
+        "89cf6d509c44a04a28793a8c6848cc39800e654d",
+        "e153acba558790a4b40eea60c4f2805267278274"
+      ],
+      "match": {
+        "shortName": "imagem",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Selectable Media Grid\""
+      }
+    },
+    {
       "containingFrame": "[dsc] Tabs",
       "variantCount": 2,
       "sampleKeys": [
@@ -697,22 +1130,51 @@
         "confidence": "baixa",
         "reason": "tabela curada (super-app) \"Tabs\""
       }
+    },
+    {
+      "containingFrame": "[dsc] Wheel Picker",
+      "variantCount": 2,
+      "sampleKeys": [
+        "1668d5088fcf02ca814a3da9af779f9ac84bbfe0",
+        "91ec3d502f2736d99040375018a51bf6705282ee"
+      ],
+      "match": {
+        "shortName": "inputs",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Wheel Picker\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Slider",
+      "variantCount": 2,
+      "sampleKeys": [
+        "0706593148fc93daf35f8bfd9f92c2580c44018e",
+        "556d6f8cdf02e744db626757b9d6fa7150d6e9e4"
+      ],
+      "match": {
+        "shortName": "inputs",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Slider\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Credit Card Illustration",
+      "variantCount": 2,
+      "sampleKeys": [
+        "0b4a262bed90d5ac4826bec10bb25f9ef0a8bdc8",
+        "0ecd70c4b3cc0cf3f78b68f34486c27639f7fb50"
+      ],
+      "match": {
+        "shortName": "imagem",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Credit Card Illustration\""
+      }
     }
   ],
   "semMatch": [
     {
-      "containingFrame": "[dsc] Page Controller",
-      "variantCount": 90,
-      "sampleKeys": [
-        "f312242947b4f9747f843352d877122dbec6e4c8",
-        "4efe00871710c637e79aaeea82ed47aad7c1ff92",
-        "63dff37e24d6fb7c369705e4e935f121e00ef7b9"
-      ],
-      "match": null
-    },
-    {
       "containingFrame": "(sem containingFrame)",
-      "variantCount": 80,
+      "variantCount": 82,
       "sampleKeys": [
         "0cdff8e35fe1ba343272aa39b23c034c92180ce0",
         "b7172a579f855d43653985627eb444a1ab7fd8b6",
@@ -731,32 +1193,12 @@
       "match": null
     },
     {
-      "containingFrame": "[dsc] Card Carousel Horizontal",
-      "variantCount": 30,
-      "sampleKeys": [
-        "8d165cbbf8819744516b3f566d9909ed04c4c8f6",
-        "0d3f6f0d23e113b77220cc2354c8ffc6c88b0d68",
-        "12a0335f740e8000f0ce3907a60f3ffad191c0b8"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc] Icon Container",
-      "variantCount": 28,
-      "sampleKeys": [
-        "0eff0582d425401f3a7c699de035815156731858",
-        "6f04cdb56d2984bae1d4c55bd8b0828f04f17742",
-        "8e6c2a6651852b2f45d3a3fd1238fece7ac8181f"
-      ],
-      "match": null
-    },
-    {
       "containingFrame": "[dsc] Badge",
       "variantCount": 27,
       "sampleKeys": [
-        "d5561b41644603e68af2f251c64441ca5b53389a",
-        "033ac2e2e4b77b4d1c5d7584eae93c78aaa09191",
-        "15d74b6241c40b26b1acadb1678649a9bd3eb5fc"
+        "160620fdcfdfce7d6f40476b290c7f5be246f7e5",
+        "1c66d6239fcbf1381055560262c962b52a71d645",
+        "311358c6f2ba37f24bba8bbc03245f68fd28f424"
       ],
       "match": null
     },
@@ -764,9 +1206,9 @@
       "containingFrame": "[dsc] Value Section",
       "variantCount": 25,
       "sampleKeys": [
-        "046c9cbe720987095cf7dcfd3ab1d9d631c355ca",
-        "0acf83dbb6e4d70685e681823486a95fb47ef150",
-        "0f995d841a222a3b16e5f620b88837a805afa003"
+        "120f00983c24cea8e1ac3eec93861d8aa0de85dc",
+        "351ea48773c0cc1987652a5c3f9f25d02ba724fe",
+        "d05eaf439f46539252dbffb975047e438a1b949b"
       ],
       "match": null
     },
@@ -784,9 +1226,9 @@
       "containingFrame": "[dsc] Timeline Collapse",
       "variantCount": 24,
       "sampleKeys": [
-        "190290e9587009b019e8c8646681a57eed69272c",
         "118f7118c28534a1f08a3f6faf76d948ef942b7d",
-        "39c80af6de5a543c13557737f8fea84c62ab087b"
+        "39c80af6de5a543c13557737f8fea84c62ab087b",
+        "3b657d1c20411c57f12ca7b577bb6a9c524fc078"
       ],
       "match": null
     },
@@ -794,19 +1236,19 @@
       "containingFrame": "[dsc-ts] Screen Receipt",
       "variantCount": 21,
       "sampleKeys": [
-        "004540ba69f5167ac2461cb9f49c1c3a38b62e32",
-        "3fa23da400150eafdf88b481139d71f5acbe93b5",
-        "6be106040338d72209d46d644b672c604b5ba858"
+        "098191e3a0963feb46ee4c4324556feb4b6d254f",
+        "14ee65cd42ae124d7cd440e84d3664729df62192",
+        "1f13962856184971720167e41286ba5935c7d092"
       ],
       "match": null
     },
     {
       "containingFrame": "[dsc-ts] Screen Input",
-      "variantCount": 12,
+      "variantCount": 16,
       "sampleKeys": [
-        "e9590df263d25cf2816020490be8ba2a0b78bf06",
-        "03cdefd81b9d9db4f8e031819590003ad5b326e3",
-        "3d4342cc3847ab2b55b4a0fc3c683d105e81499e"
+        "6929bd8bc7ffa15aad6682a095624c3498d8d559",
+        "7a4710f3a5d01867dc6986357b91aff94d05c175",
+        "3366bfbb28a752fa0f63310cd0002a0390b62f8a"
       ],
       "match": null
     },
@@ -851,42 +1293,12 @@
       "match": null
     },
     {
-      "containingFrame": "[dsc-tc] Transactions List",
-      "variantCount": 12,
-      "sampleKeys": [
-        "6864066f03e732fcdb252fc9e1cfdd24df488e37",
-        "aeb97e8ee8bf0bcaa5c82787df74d0517317faf2",
-        "01d35d10abf5d82fbce79e8a4f0a94cc4b5e2d59"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc] Selectable Media",
-      "variantCount": 12,
-      "sampleKeys": [
-        "05f2747333d756677e6cec9740a04e4e2fd65cde",
-        "1f83f9f8456d9555a9a63a4f61c95a2a16675f31",
-        "44e69bbc4d14d77648a36f6b46d0313ccb8789c3"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc] Tipkit Popover",
-      "variantCount": 12,
-      "sampleKeys": [
-        "3f415277f663087e3b8bf0600c1494fb065c3a74",
-        "5632590f21249b9f3a754768f34f09ecbc69e270",
-        "6290ec47faafad85b6c8ae35e0085c8adb7a1b14"
-      ],
-      "match": null
-    },
-    {
       "containingFrame": "[dsc] Skeleton Loading",
       "variantCount": 11,
       "sampleKeys": [
-        "4b8675a4a618d963ef91f6cf22e1376e96e1035d",
-        "aba22e4b458bffb03bfe7da617e5f112da9874d6",
-        "1e39a185fc54994669528e41d5465ff24ae90fd3"
+        "1e39a185fc54994669528e41d5465ff24ae90fd3",
+        "501c2e5347ba89a8e40e4add06b093967e29b29a",
+        "64a602129f5d29a3e0a5cbeef46334659ba260b3"
       ],
       "match": null
     },
@@ -895,8 +1307,8 @@
       "variantCount": 10,
       "sampleKeys": [
         "15a870d8a6bbf172fd8bd34cc0173b0ec8033876",
-        "35e7f7174bced6256b0241f8b63a0c92a7da3d3e",
-        "3a44172fb32670c14634cb1ed26d7680eb014228"
+        "3a44172fb32670c14634cb1ed26d7680eb014228",
+        "75c75288a9e946a3f404cef5d353eb4b1554c792"
       ],
       "match": null
     },
@@ -904,9 +1316,19 @@
       "containingFrame": "[dsc-ts] Screen Customer Satisfaction Survey - CSAT",
       "variantCount": 10,
       "sampleKeys": [
-        "0ac588aec149e0681b86f09bd3af5d30d1836b23",
-        "165f8685da1c05f67e8377eed7d555f65b20855d",
-        "3cfc76214c7b627b0b8195afa9ac5192278e4bfb"
+        "ea844e82f9f4afdb97b747c3fd7ad45499cc9ce1",
+        "6b198280e8a9b8cd27234ed9e5e7fa4ce61a2657",
+        "6eb76168978745d5fb4e710a5aa4a3732a53e03d"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Product Card",
+      "variantCount": 10,
+      "sampleKeys": [
+        "ccfdf53c12d2bc96cf2bb49b60efbf57bb180ad5",
+        "419e5ee4c646455da97ed4b0b077513c0b5e5ad0",
+        "dee1e57a5f8c374da3b314c63a46d704dfcd94d5"
       ],
       "match": null
     },
@@ -914,29 +1336,9 @@
       "containingFrame": "[dsc] Card Alert",
       "variantCount": 10,
       "sampleKeys": [
-        "3c84ccdb10b66d015f8d9b9d9518cf4b79a6fea1",
-        "0cd599effc4d0128e505d39fab55fabffb9079c7",
-        "19c5daa9a6d6dad5b3c4b630094ce9001629060f"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc] Top App Bar",
-      "variantCount": 10,
-      "sampleKeys": [
-        "521802401c9efba8d9abdbfdb40e714177c3ce76",
-        "a7e060d40a2f2e8b7e2c3265040b0fccb470cc50",
-        "605463a25465f41ef568639faeb384b0931cfe67"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc] Chip",
-      "variantCount": 10,
-      "sampleKeys": [
-        "05ca3a887fe1147419253771ffcbedeea5840d29",
-        "12b4036740a8d3e230eb5d8fc59447031ad4539f",
-        "458a7c3bfddda534518cc6585a19ef669f471412"
+        "a0f4fb299465f38ee57a40deda2730ba6464fbc8",
+        "ca105b02cc71c8109fdd14723e86575dab00050f",
+        "3c84ccdb10b66d015f8d9b9d9518cf4b79a6fea1"
       ],
       "match": null
     },
@@ -944,49 +1346,9 @@
       "containingFrame": "[dsc-ts] Screen Document Upload",
       "variantCount": 9,
       "sampleKeys": [
-        "093bd5b2e65002de847d1784c09ec97aeb87c573",
-        "181f4198fc5bd7039c0488b5eea6c7c88474ad81",
-        "7939c5b72a7c7f02e4495497f744fb470fb95ee4"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc] Card Notification",
-      "variantCount": 8,
-      "sampleKeys": [
-        "90768f96ea3dd4f2319af5d454f167d453463ed7",
-        "b5055326b9574849008f5cb7d2cd87e3918a99fb",
-        "15aa29d4c13fa8cf7d0f6458b05ee543566921a3"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc-ts] Screen NPS Survey",
-      "variantCount": 8,
-      "sampleKeys": [
-        "1c0412edfce4106ee080b5344f9e68e6631279cd",
-        "7db2956746bc6babaea4d74ce692a1138b1e4fa7",
-        "c33576f0efc4d815b58c89f26497c67d063ca7cc"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc] Card",
-      "variantCount": 8,
-      "sampleKeys": [
-        "6ac1843fcc3ef7358b85afd4dae76e8084956cbf",
-        "6e1baa3ab5103d806b6a56e2d275897d0126d91f",
-        "d977eff5c29318fc530628932d2efa80db5b731e"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc] Popover",
-      "variantCount": 8,
-      "sampleKeys": [
-        "3ffe0d520ae302fb5215555ea918665eb78e0c85",
-        "6cd3f5dee80c61ff6a7164f9038c18cd0a974489",
-        "045a011cef3c3eb204c0781638373df683e89ae3"
+        "5c0fdeadffd1fb6a1b818720d2e2a896044daa7d",
+        "9ada2c8636bdb9da1251d57a41f581134ead6b8f",
+        "b966aa7613d22d14719fa393ae708268a8ec01fa"
       ],
       "match": null
     },
@@ -1001,42 +1363,32 @@
       "match": null
     },
     {
-      "containingFrame": "[dsc] Card Carousel Vertical",
+      "containingFrame": "[dsc] Card Notification",
       "variantCount": 8,
       "sampleKeys": [
-        "25976ab9451a5898112bd891349b9226ab660bf4",
-        "29eb675101a25e2beca19b16e0a569245310cdcd",
-        "29f721afe776dfda4da5d306e1f12bfc9632862a"
+        "15aa29d4c13fa8cf7d0f6458b05ee543566921a3",
+        "447c45154202cc6e5a003550d294d3f9a1214622",
+        "4547617bfcde81a6d07d88060a8fe4d2b0825d68"
       ],
       "match": null
     },
     {
-      "containingFrame": "[dsc] Tooltip",
+      "containingFrame": "[dsc] Card",
       "variantCount": 8,
       "sampleKeys": [
-        "24a5fdcf49d0434f5444ad2510138e75ff3ce4f5",
-        "4083dca11d1ecb6efd3a150639b5cbf202c45395",
-        "51537f38d7e265077089f327639e9e3ef8dc8526"
+        "21dde2075767e969767047c68a6bd63ea4f09efa",
+        "8b567b5ff595009219b74fa544ff09b59f7cbf73",
+        "b8e70f62a704949c2862d3bdf39331fc723505a9"
       ],
       "match": null
     },
     {
-      "containingFrame": "[dsc] Icon",
-      "variantCount": 7,
+      "containingFrame": "[dsc-ts] Screen NPS Survey",
+      "variantCount": 8,
       "sampleKeys": [
-        "047fe8d76a923e10caa87a2fef038e66588a2a9d",
-        "14b9a5c3503a4c3f404b859e7fa937c0ce8aea3b",
-        "353a0d3b7084661efe9c132e5cdf9ae6a6d6d0a2"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc-tc] Sortable List",
-      "variantCount": 7,
-      "sampleKeys": [
-        "16883ae348b44cdfb3c258811952f8e3e880e451",
-        "188b1286e655b542d703356d74012536c4457e41",
-        "21423e07207ccb30b1d80aa51e2ded66fadbbe88"
+        "1c0412edfce4106ee080b5344f9e68e6631279cd",
+        "7db2956746bc6babaea4d74ce692a1138b1e4fa7",
+        "c33576f0efc4d815b58c89f26497c67d063ca7cc"
       ],
       "match": null
     },
@@ -1044,9 +1396,9 @@
       "containingFrame": "[dsc] Card Widget",
       "variantCount": 7,
       "sampleKeys": [
-        "0832f438adfe868f29b6032865c72cf97d794ccd",
-        "395a0a3f52c70bf6f0c24472aab6a5affbd30903",
-        "82197f53e1ec085561dd3f5f93a0b499d1704253"
+        "d891b17a05a2598621c86b4aace50c4871340d52",
+        "a865eb5017651269f86b8625279b5502d044f835",
+        "0832f438adfe868f29b6032865c72cf97d794ccd"
       ],
       "match": null
     },
@@ -1061,12 +1413,12 @@
       "match": null
     },
     {
-      "containingFrame": "[dsc-tc] Select Group List",
+      "containingFrame": "[dsc-ts] Screen Location Search",
       "variantCount": 6,
       "sampleKeys": [
-        "03f9f4834483d689506855cce1decc0f86d900a3",
-        "32b96e6413f4ceffd65127b6ac0f9945d59304dd",
-        "47f86f2c35370f782f573294adb6cfe9f0ebcf76"
+        "9c6f83b66030d485fc5ed89aecf4940b3007b969",
+        "698ccd258622743b297ad45ccdf42d2d74bd508f",
+        "b9a3d0c4d49f991b629d7b2df0318678eed75c57"
       ],
       "match": null
     },
@@ -1075,8 +1427,8 @@
       "variantCount": 6,
       "sampleKeys": [
         "7b557ff24888df942f5df8cdbf3f844b3e7bb869",
-        "03b11cd8ec82c3d134293c1749329d2e5578176f",
-        "3bf78074fe5406d9a63701bf992933b66760cf76"
+        "8cd50ab4c183ff87e02cf067d065511bb7abc6f4",
+        "03b11cd8ec82c3d134293c1749329d2e5578176f"
       ],
       "match": null
     },
@@ -1087,46 +1439,6 @@
         "101cd82a2eb0d8ac53564b20c216fff0e8880dc2",
         "1066fe2eb6f095fbdf044d8d39347a94bf597d12",
         "531128568fce2ed60ec8f8b3ebec05087a78a919"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc-ts] Screen Location Search",
-      "variantCount": 6,
-      "sampleKeys": [
-        "698ccd258622743b297ad45ccdf42d2d74bd508f",
-        "b9a3d0c4d49f991b629d7b2df0318678eed75c57",
-        "c82a64c1b8422e98b32cacefcf00060408e313b4"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc-tc] Screen Footer",
-      "variantCount": 6,
-      "sampleKeys": [
-        "08411991aac6c67d7b89508a88a66b0db7b7d0ba",
-        "182c0bef5a25c6ef8400dd9facae39a9b8f08ca6",
-        "2d2b759756b26a6389022025ae9f4a9934a6c209"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc] Navigation Bar",
-      "variantCount": 5,
-      "sampleKeys": [
-        "eea7c5c511632421f165558662a0cbae8f2cb940",
-        "61e6b45add6273212f46292ba15cfb7906749003",
-        "b6c572cdb8f37b6ad2e15a248a704037597021a1"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc] Card Notification Stack",
-      "variantCount": 5,
-      "sampleKeys": [
-        "4a6295ac96054a30b5277aaeae7b1609bd415c13",
-        "5ed91e656f10d038de617b6ced28f3e6367587c5",
-        "675025a12aef7395bdbdfc3ccacd387c7db8a164"
       ],
       "match": null
     },
@@ -1161,12 +1473,82 @@
       "match": null
     },
     {
-      "containingFrame": "[dsc-tc] Feedback Illustration",
+      "containingFrame": "[dsc-ts] Screen Digital Wallet List",
       "variantCount": 4,
       "sampleKeys": [
-        "f63cfdb8a9417a6141a75f75d21904575b8f2a3e",
-        "2a6d797ce2ccc2092e04a0f40299ee8bdec00bb4",
-        "3f4b9861f693e65528ce3a27f6fad9448f947e3b"
+        "0896895902cdaa9c134993e8577c597c4df896cd",
+        "1c36f6eb2c1e001b2ec7c03aa42f257b6bf271cf",
+        "5ef0cef3ca495a231253015f99170c50610602c2"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc-ts] Screen Password",
+      "variantCount": 4,
+      "sampleKeys": [
+        "20230506a91efd14e2c27b21f966cf521baa9015",
+        "6d18203d1b93d7f9cae8ce65f0fd00bf02796314",
+        "a922eaefc43bc6ff6df153918c3e4a8a71a1e337"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc-ts] Screen Transaction Detail",
+      "variantCount": 4,
+      "sampleKeys": [
+        "38be11536a17821449d5d9ae6b865901d017d4fa",
+        "a83d127c7e94ef43071975548c848ea918fd01cf",
+        "c689367bc7db1120d3c74b9cd8d6a5fa4283e787"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc-ts] Screen Input Money",
+      "variantCount": 4,
+      "sampleKeys": [
+        "cafe0695ccca0d08d85ecc9ac3c3d8afd75995cf",
+        "d908b7393800afa8f9fdd02d7447960e9290f018",
+        "fd3f6729da97076f28a70af6d5cdd59509cc9abe"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc-ts] Screen Social Post Form",
+      "variantCount": 4,
+      "sampleKeys": [
+        "5045c66f5d2389e765b26e010d0bc598abe48cfe",
+        "573fc655420c482634b14bc46d1f52eb9d77653b",
+        "75b37a3fa6e7e1f7deca76ef1551ac4a8d8c0903"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc-ts] Screen Change Password",
+      "variantCount": 4,
+      "sampleKeys": [
+        "12c64062e67b89cd4d582c2e0363b321975fcd84",
+        "a9035673c19656137446146bbe5ba3d1c8641aca",
+        "7fdd2a5ccffb32d4cd11f610b09511ac4c465902"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc-ts] Screen Carousel Onboarding",
+      "variantCount": 4,
+      "sampleKeys": [
+        "a161d72ee66d7cdf43790ed056c5adf3b8d4e99d",
+        "747745c6a871335d5cf9b9dfe363af58a201efdd",
+        "7b7c66bb29671668566ff0aa7cb6dfe6f2109171"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc-ts] Screen Feedback",
+      "variantCount": 4,
+      "sampleKeys": [
+        "5c00f0a27c516fc5d90e4e0ab3e5a429d306bcac",
+        "44399567a7cbe2f0fd964c9c9a3e36d7c12b1d26",
+        "92bc67104642d928ef1801f7d4e923d642b613ba"
       ],
       "match": null
     },
@@ -1201,26 +1583,6 @@
       "match": null
     },
     {
-      "containingFrame": "[dsc-ts] Screen Feedback",
-      "variantCount": 4,
-      "sampleKeys": [
-        "44399567a7cbe2f0fd964c9c9a3e36d7c12b1d26",
-        "92bc67104642d928ef1801f7d4e923d642b613ba",
-        "59002b4a3d0b4a0c40bd12d1fdfb3d3c8584f4b3"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc-tc] Carousel - Horizontal",
-      "variantCount": 4,
-      "sampleKeys": [
-        "144812b1f81910f2af9308452d828b97a0305def",
-        "a41e67638bbca94643c96d2996db613bb125ed63",
-        "a761cce4cec9c7b9cc7e6f5443744117cff45be2"
-      ],
-      "match": null
-    },
-    {
       "containingFrame": "[dsc-ult] Device / Status Bar",
       "variantCount": 4,
       "sampleKeys": [
@@ -1241,222 +1603,12 @@
       "match": null
     },
     {
-      "containingFrame": "[dsc-ts] Screen Input Money",
-      "variantCount": 4,
-      "sampleKeys": [
-        "d908b7393800afa8f9fdd02d7447960e9290f018",
-        "fd3f6729da97076f28a70af6d5cdd59509cc9abe",
-        "241ff22c0357557abdb832dbe3a4c94cfaf587ac"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc-ts] Screen Password",
-      "variantCount": 4,
-      "sampleKeys": [
-        "20230506a91efd14e2c27b21f966cf521baa9015",
-        "6d18203d1b93d7f9cae8ce65f0fd00bf02796314",
-        "a922eaefc43bc6ff6df153918c3e4a8a71a1e337"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc-ts] Screen Carousel Onboarding",
-      "variantCount": 4,
-      "sampleKeys": [
-        "747745c6a871335d5cf9b9dfe363af58a201efdd",
-        "7b7c66bb29671668566ff0aa7cb6dfe6f2109171",
-        "a161d72ee66d7cdf43790ed056c5adf3b8d4e99d"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc-ts] Screen Digital Wallet List",
-      "variantCount": 4,
-      "sampleKeys": [
-        "0896895902cdaa9c134993e8577c597c4df896cd",
-        "1c36f6eb2c1e001b2ec7c03aa42f257b6bf271cf",
-        "5ef0cef3ca495a231253015f99170c50610602c2"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc-ts] Screen Transaction Detail",
-      "variantCount": 4,
-      "sampleKeys": [
-        "38be11536a17821449d5d9ae6b865901d017d4fa",
-        "a83d127c7e94ef43071975548c848ea918fd01cf",
-        "c34cca9c3318321f3c3f8d1886b9996f4a5062ac"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc-ts] Screen Change Password",
-      "variantCount": 4,
-      "sampleKeys": [
-        "12c64062e67b89cd4d582c2e0363b321975fcd84",
-        "7fdd2a5ccffb32d4cd11f610b09511ac4c465902",
-        "8826da669097280eef03777e3db90a28460d872a"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc-ts] Screen Item Select List",
-      "variantCount": 3,
-      "sampleKeys": [
-        "a69cb94fd9396c00c6d4934e7acf4a5ca3ba314b",
-        "fa4ace8b8449628b4bcf5f493b0e33d2565bbfbf",
-        "91c833d439d1bef39846bf995e53570fb217fcb9"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc-tc] Actions List",
-      "variantCount": 3,
-      "sampleKeys": [
-        "14bfdf64a18d4ecc7b699eb3dac7b64ba1f3d381",
-        "3ee3d8eed8a3ee003bf3775f7117e73b587af07a",
-        "419befb3e02d92ae95600a1cf3a7179f0d468f91"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc-tc] Options List",
-      "variantCount": 3,
-      "sampleKeys": [
-        "658fe79f58b520d7b3fa6eb9c7009365023638fb",
-        "ee7fd7efb856328e3eda95e09f315c482ccc1d2e",
-        "6ac32c7199259c219c140222899ae490d9449fdb"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc-tc] Feedback - List",
-      "variantCount": 3,
-      "sampleKeys": [
-        "ef54d32a88ea4287313a002ef42b8643b9c07db1",
-        "657809bb1adbe99b6b2b5b0db74576ee68fed6f9",
-        "c2f0b562622765c58cb315d5daed888500392bea"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc-tc] Card Product Offer List",
-      "variantCount": 3,
-      "sampleKeys": [
-        "1813282659132506205f2e672a419d867ba57280",
-        "342d4d24f062c1dced3c51951403fe6c468caedc",
-        "f7848656a94dee76ab09dafb2b27e9db3b64986f"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc-tc] Carousel - Vertical",
-      "variantCount": 3,
-      "sampleKeys": [
-        "2d2320d667950edf658626c6ed9159048aaa16a8",
-        "3e88bf4a26bbb83f685f776e8e58ccf04ab5d327",
-        "db1f74650aa5c89b5574255f93dde72597c58118"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc-ts] Screen Select",
-      "variantCount": 3,
-      "sampleKeys": [
-        "091964f7b312d82ed275241a6827de26b6e7332f",
-        "43d7a24ec9aa5da9d3a14ff646b558b3a2623c11",
-        "a8e612ed085d37b09fd2441b2afe7de217f97fd3"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc-tc] Multi-select - List",
-      "variantCount": 3,
-      "sampleKeys": [
-        "1450dcac3e14001c0637116278d28db57b1d9128",
-        "90dc423d5e63061efe06701874dc677b8c3eed83",
-        "9294e4f534749644dfc87dd6d92145bbfe246cde"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc-tc] Carousel - Card Content",
-      "variantCount": 3,
-      "sampleKeys": [
-        "42552f76b5045117c6050f898abe034f8ea0b033",
-        "4c1056ce55cdbce89fdc04948cf1fb7c6f14a5ce",
-        "165cc2315d0e06a3d3002e5f51f1c194eaad44d6"
-      ],
-      "match": null
-    },
-    {
       "containingFrame": "[dsc-tc] Content - Card",
       "variantCount": 3,
       "sampleKeys": [
-        "a4f870e0da75d2c0b2ce4b72b6def6ffefb5bad0",
         "0792e7e2b080e149f0e7ff221b6465b5c335ae3a",
-        "905aa6328f011ebf478ce9463d9726714980c922"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc-tc] Carousel Product Offer",
-      "variantCount": 3,
-      "sampleKeys": [
-        "815c27ea45cafb48debad3f20d2a9dd719b07f85",
-        "4b278ed1375f3414415d527584536e5d88d80d8d",
-        "f5b9c5f2cdb504dfc99aed52c0de4149fe499306"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc-ts] Screen Timer Tracker",
-      "variantCount": 3,
-      "sampleKeys": [
-        "94d29fe8cef9204d373024ac63047ef504fe0038",
-        "c47b426a04002bc4022f6e3f49947c2a9cd6e88e",
-        "378dadeefe0402eca2fcbf1a48a896d22d35078b"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc-tc] State Message",
-      "variantCount": 3,
-      "sampleKeys": [
-        "4bcc94ba11f04d5b5f991412b5ddec4bc6054541",
-        "4ec661e9315248601b7e099debf503de8e60eb7a",
-        "c036b6d03f418da5d48bf1233cc0f84461cbd320"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc-tc] Content - Widgets",
-      "variantCount": 3,
-      "sampleKeys": [
-        "31e575bdb1be46eae7fa837c35a38c268a24792b",
-        "3ae4f0e0e5243039ac86295026dbb87b62cd5dd8",
-        "9dc79b578a4922eb4d767b43713be97dbe9a3a44"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc-ts] Screen Service Channels",
-      "variantCount": 3,
-      "sampleKeys": [
-        "17d953eae4b857a7b49dc24557b406ec522bdd91",
-        "861f07244f8eab9341f6d585fcbe2c54c1ae1aa7",
-        "a15e21478cccf57e363e31b1e6f249bb92effcc0"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc-chart] Legend Sample",
-      "variantCount": 3,
-      "sampleKeys": [
-        "c28567f196be31467e6ab3a62bd70c981b6f2b6b",
-        "3e3d138af4f0ec3df5ffe96d1813c8a04e7098ee",
-        "57fa14d7bea4b65d597a8fc7692279337edc9097"
+        "905aa6328f011ebf478ce9463d9726714980c922",
+        "a4f870e0da75d2c0b2ce4b72b6def6ffefb5bad0"
       ],
       "match": null
     },
@@ -1471,12 +1623,82 @@
       "match": null
     },
     {
+      "containingFrame": "[dsc-ts] Screen Service Channels",
+      "variantCount": 3,
+      "sampleKeys": [
+        "17d953eae4b857a7b49dc24557b406ec522bdd91",
+        "861f07244f8eab9341f6d585fcbe2c54c1ae1aa7",
+        "a15e21478cccf57e363e31b1e6f249bb92effcc0"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc-tc] Content - Widgets",
+      "variantCount": 3,
+      "sampleKeys": [
+        "31e575bdb1be46eae7fa837c35a38c268a24792b",
+        "9dc79b578a4922eb4d767b43713be97dbe9a3a44",
+        "3ae4f0e0e5243039ac86295026dbb87b62cd5dd8"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc-ts] Screen Timer Tracker",
+      "variantCount": 3,
+      "sampleKeys": [
+        "378dadeefe0402eca2fcbf1a48a896d22d35078b",
+        "94d29fe8cef9204d373024ac63047ef504fe0038",
+        "c47b426a04002bc4022f6e3f49947c2a9cd6e88e"
+      ],
+      "match": null
+    },
+    {
       "containingFrame": "[dsc] Card Feed",
       "variantCount": 3,
       "sampleKeys": [
         "6aa54e491402c0c85f414383fca1a74e9af154ae",
-        "12f5f8efe37e137b4e826fa0c4a6a452dd51d88b",
-        "a4ff271cf46726d8952a646476201d290a5643fe"
+        "a4ff271cf46726d8952a646476201d290a5643fe",
+        "12f5f8efe37e137b4e826fa0c4a6a452dd51d88b"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc-ts] Screen Item Select List",
+      "variantCount": 3,
+      "sampleKeys": [
+        "a69cb94fd9396c00c6d4934e7acf4a5ca3ba314b",
+        "fa4ace8b8449628b4bcf5f493b0e33d2565bbfbf",
+        "91c833d439d1bef39846bf995e53570fb217fcb9"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc-ts] Screen Select",
+      "variantCount": 3,
+      "sampleKeys": [
+        "091964f7b312d82ed275241a6827de26b6e7332f",
+        "43d7a24ec9aa5da9d3a14ff646b558b3a2623c11",
+        "a8e612ed085d37b09fd2441b2afe7de217f97fd3"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc-tc] State Message",
+      "variantCount": 3,
+      "sampleKeys": [
+        "4bcc94ba11f04d5b5f991412b5ddec4bc6054541",
+        "4ec661e9315248601b7e099debf503de8e60eb7a",
+        "c036b6d03f418da5d48bf1233cc0f84461cbd320"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc-chart] Legend Sample",
+      "variantCount": 3,
+      "sampleKeys": [
+        "c28567f196be31467e6ab3a62bd70c981b6f2b6b",
+        "3e3d138af4f0ec3df5ffe96d1813c8a04e7098ee",
+        "57fa14d7bea4b65d597a8fc7692279337edc9097"
       ],
       "match": null
     },
@@ -4523,6 +4745,51 @@
       "match": null
     },
     {
+      "containingFrame": "[dsc-tc] Content - Swap Preview",
+      "variantCount": 2,
+      "sampleKeys": [
+        "1506cc9a69780ae11adbeaf2a1b2ce5275012a92",
+        "c90b025c567bf26900306995da23da84f7ffe16c"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "send-dollars",
+      "variantCount": 2,
+      "sampleKeys": [
+        "177c0497af73149a5ae991c4a8af3ae8f623a819",
+        "6aa98714b2579c788285d015df075c469932f8b2"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc-ts] Screen Crop Image",
+      "variantCount": 2,
+      "sampleKeys": [
+        "3766ce767dc0795b909b759b1dcf1500f4aeefcf",
+        "91818f3f8912a6512b96beeabec11042f2cbe49e"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "custom-edit-pencil",
+      "variantCount": 2,
+      "sampleKeys": [
+        "abaac178a8e014bb77a592ff31b7fc036f790e4b",
+        "fe3856fa8e7c246c90288cba9f0be5a3e6935fd9"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc-ts] Screen Parameters",
+      "variantCount": 2,
+      "sampleKeys": [
+        "b6839e163668a946b287982fe9f5951d6eaf4c58",
+        "d64307c8c6c5e643148ac89070425dfc1af221f9"
+      ],
+      "match": null
+    },
+    {
       "containingFrame": "custom-calendar-clock",
       "variantCount": 2,
       "sampleKeys": [
@@ -4780,15 +5047,6 @@
       "sampleKeys": [
         "9dfebbc9105230da1829d898a24be56d91687b05",
         "a9500a9ce001b680e1ba6377c720e836f27c9ab8"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "custom-edit-pencil",
-      "variantCount": 2,
-      "sampleKeys": [
-        "abaac178a8e014bb77a592ff31b7fc036f790e4b",
-        "fe3856fa8e7c246c90288cba9f0be5a3e6935fd9"
       ],
       "match": null
     },
@@ -10013,15 +10271,6 @@
       "match": null
     },
     {
-      "containingFrame": "[dsc] Wheel Picker",
-      "variantCount": 2,
-      "sampleKeys": [
-        "1668d5088fcf02ca814a3da9af779f9ac84bbfe0",
-        "91ec3d502f2736d99040375018a51bf6705282ee"
-      ],
-      "match": null
-    },
-    {
       "containingFrame": "share-ios",
       "variantCount": 2,
       "sampleKeys": [
@@ -10058,15 +10307,6 @@
       "match": null
     },
     {
-      "containingFrame": "[dsc] Slider",
-      "variantCount": 2,
-      "sampleKeys": [
-        "0706593148fc93daf35f8bfd9f92c2580c44018e",
-        "556d6f8cdf02e744db626757b9d6fa7150d6e9e4"
-      ],
-      "match": null
-    },
-    {
       "containingFrame": "[dsc-ult] Swap Slot",
       "variantCount": 2,
       "sampleKeys": [
@@ -10099,15 +10339,6 @@
       "sampleKeys": [
         "398ce8c3543cf6c2cefccc9775c480012c53c40c",
         "72a77b3e570ef31ca454555bdfd105216a4dc83e"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc-ts] Screen Parameters",
-      "variantCount": 2,
-      "sampleKeys": [
-        "d64307c8c6c5e643148ac89070425dfc1af221f9",
-        "b6839e163668a946b287982fe9f5951d6eaf4c58"
       ],
       "match": null
     },
@@ -13883,15 +14114,6 @@
       "match": null
     },
     {
-      "containingFrame": "[dsc] Credit Card Illustration",
-      "variantCount": 2,
-      "sampleKeys": [
-        "0b4a262bed90d5ac4826bec10bb25f9ef0a8bdc8",
-        "0ecd70c4b3cc0cf3f78b68f34486c27639f7fb50"
-      ],
-      "match": null
-    },
-    {
       "containingFrame": "xbox-a",
       "variantCount": 2,
       "sampleKeys": [
@@ -14288,47 +14510,11 @@
       "match": null
     },
     {
-      "containingFrame": "[dsc-tc] Selectable Media Grid",
-      "variantCount": 2,
-      "sampleKeys": [
-        "89cf6d509c44a04a28793a8c6848cc39800e654d",
-        "e153acba558790a4b40eea60c4f2805267278274"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "send-dollars",
-      "variantCount": 2,
-      "sampleKeys": [
-        "177c0497af73149a5ae991c4a8af3ae8f623a819",
-        "6aa98714b2579c788285d015df075c469932f8b2"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc-ts] Screen Crop Image",
-      "variantCount": 2,
-      "sampleKeys": [
-        "3766ce767dc0795b909b759b1dcf1500f4aeefcf",
-        "91818f3f8912a6512b96beeabec11042f2cbe49e"
-      ],
-      "match": null
-    },
-    {
       "containingFrame": "share-android",
       "variantCount": 2,
       "sampleKeys": [
         "0fda461a79337617bc10e87b3515f9c832cb865e",
         "41511a5adaed4e1d8a30d46d48af1b6b3f981bfd"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc-tc] Content - Swap Preview",
-      "variantCount": 2,
-      "sampleKeys": [
-        "1506cc9a69780ae11adbeaf2a1b2ce5275012a92",
-        "c90b025c567bf26900306995da23da84f7ffe16c"
       ],
       "match": null
     },
@@ -14342,6 +14528,14 @@
       "match": null
     },
     {
+      "containingFrame": "[dsc-ts] Screen Stories",
+      "variantCount": 1,
+      "sampleKeys": [
+        "0b7885c8562cf3a434837d8de5bbd8531f505a25"
+      ],
+      "match": null
+    },
+    {
       "containingFrame": "[dsc-ts] Screen Multipurpose",
       "variantCount": 1,
       "sampleKeys": [
@@ -14350,10 +14544,10 @@
       "match": null
     },
     {
-      "containingFrame": "[dsc-ts] Screen Stories",
+      "containingFrame": "[dsc-ts] Screen Category List",
       "variantCount": 1,
       "sampleKeys": [
-        "0b7885c8562cf3a434837d8de5bbd8531f505a25"
+        "544dd1210a44d3f2fd129bb1332a85e80d8d367b"
       ],
       "match": null
     },

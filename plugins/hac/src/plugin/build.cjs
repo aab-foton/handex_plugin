@@ -158,6 +158,49 @@ ${css}
           class="p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
           <i data-lucide="minimize-2" class="w-4 h-4" aria-hidden="true"></i>
         </button>
+        <!-- Menu de backup/exportação (2026-09-22, pedido do usuário:
+             "temos como salvar/baixar isso?"). Fica no header GLOBAL, não no
+             menu por-tela (#a11y-workspace-more-actions-menu): exporta o
+             projeto inteiro, não uma tela. -->
+        <div class="relative">
+          <button type="button" id="btn-hac-backup-menu" onclick="toggleHacBackupMenu()"
+            title="Salvar / exportar documentação" aria-label="Salvar, exportar ou importar documentação"
+            aria-haspopup="true" aria-expanded="false"
+            class="p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
+            <i data-lucide="hard-drive-download" class="w-4 h-4" aria-hidden="true"></i>
+          </button>
+          <div id="hac-backup-menu" class="hidden absolute right-0 top-full mt-1 w-60 py-1.5 bg-white dark:bg-dark-surface rounded-dsc-large shadow-2xl border border-gray-100 dark:border-dark-line z-[1100]">
+            <button type="button" onclick="closeHacBackupMenu(); exportHacBackupJson()"
+              class="w-full flex items-start gap-2.5 px-3.5 py-2.5 text-[12px] font-semibold text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-dark-line transition-colors text-left">
+              <i data-lucide="download" class="w-4 h-4 mt-0.5 text-slate-500 dark:text-dark-muted shrink-0" aria-hidden="true"></i>
+              <span class="min-w-0">
+                <span class="block">Baixar backup (.json)</span>
+                <span class="block text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted leading-snug">Restaurável neste ou em outro arquivo.</span>
+              </span>
+            </button>
+            <button type="button" onclick="closeHacBackupMenu(); exportHacHandoffDoc()"
+              class="w-full flex items-start gap-2.5 px-3.5 py-2.5 text-[12px] font-semibold text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-dark-line transition-colors text-left">
+              <i data-lucide="file-text" class="w-4 h-4 mt-0.5 text-slate-500 dark:text-dark-muted shrink-0" aria-hidden="true"></i>
+              <span class="min-w-0">
+                <span class="block">Exportar para o time (.md)</span>
+                <span class="block text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted leading-snug">Documento legível com as specs.</span>
+              </span>
+            </button>
+            <div class="my-1 border-t border-gray-100 dark:border-dark-line"></div>
+            <button type="button" onclick="closeHacBackupMenu(); importHacBackupJson()"
+              class="w-full flex items-start gap-2.5 px-3.5 py-2.5 text-[12px] font-semibold text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-dark-line transition-colors text-left">
+              <i data-lucide="upload" class="w-4 h-4 mt-0.5 text-slate-500 dark:text-dark-muted shrink-0" aria-hidden="true"></i>
+              <span class="min-w-0">
+                <span class="block">Restaurar backup (.json)</span>
+                <span class="block text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted leading-snug">Substitui a documentação atual.</span>
+              </span>
+            </button>
+          </div>
+        </div>
+        <!-- input file escondido — o único jeito de ler um arquivo do disco
+             dentro do iframe do plugin (não há API de "abrir arquivo" no
+             Figma). Disparado por importHacBackupJson(). -->
+        <input type="file" id="hac-backup-file-input" accept="application/json,.json" class="hidden" onchange="_handleHacBackupFileChosen(event)" />
       </div>
     </div>
 
@@ -204,7 +247,7 @@ ${css}
              (itens de Tabulação vs. pontos de Swipe) — os valores abaixo
              são só o estado inicial. -->
         <button type="button" id="a11y-capture-mini-bar-help" onclick="_a11yCaptureBarToggleInstructions()"
-          data-tooltip="Recolher as instruções e liberar espaço no canvas" class="tooltip-bottom w-7 h-7 flex items-center justify-center text-slate-400 dark:text-dark-muted hover:text-blue-600 dark:hover:text-blue-400 hover:bg-light-line dark:hover:bg-dark-surface rounded-2xl transition-colors shrink-0"
+          data-tooltip="Recolher as instruções e liberar espaço no canvas" class="tooltip-bottom tooltip-right w-7 h-7 flex items-center justify-center text-slate-400 dark:text-dark-muted hover:text-blue-600 dark:hover:text-blue-400 hover:bg-light-line dark:hover:bg-dark-surface rounded-2xl transition-colors shrink-0"
           aria-label="Recolher instruções">
           <i data-lucide="chevron-up" id="a11y-capture-mini-bar-help-icon" class="w-4 h-4"></i>
         </button>

@@ -1,13 +1,13 @@
 // ============================================================
 // GERADO AUTOMATICAMENTE por build-a11y-constants.cjs — não editar à mão.
 // Fonte: refs/design-acessivel-properties.json (2026-09-17T23:59:14.479Z)
-//      + refs/design-acessivel-mobile-properties.json (2026-09-17T23:58:35.812Z)
-//      + refs/super-app.json (2026-09-14T17:22:10.632Z)
+//      + refs/design-acessivel-mobile-properties.json (2026-09-21T20:12:42.067Z)
+//      + refs/super-app.json (2026-09-22T13:13:28.511Z)
 //      + refs/_manifest.json (fileKey da lib 'super-app')
 // Regenerar via: node src/plugin/refs/build-a11y-constants.cjs
 //            ou: npm run refs:a11y-constants
 //
-// Gerado em: 2026-09-18T20:54:14.380Z
+// Gerado em: 2026-09-22T17:11:07.458Z
 //
 // Consumido via alias em src/plugin/modules/accessibility.js:
 //   const A11Y_COMPONENT_PROPERTIES = A11Y_COMPONENT_PROPERTIES_GENERATED;
@@ -123,7 +123,9 @@ const A11Y_MOBILE_COMPONENT_LINK_NODE_IDS_GENERATED = {
   "List Accordion": "9934:1290",
   "List Footer": "23278:73726",
   "List Item": "6791:16928",
+  "List Item Funds": "60967:5915",
   "Popover": "6092:1875",
+  "Product Card": "46753:21125",
   "Radio": "6104:24152",
   "Search Bar": "11934:5702",
   "Segmented Button": "7970:1776",
@@ -142,60 +144,36 @@ const A11Y_MOBILE_COMPONENT_LINK_NODE_IDS_GENERATED = {
 };
 
 const A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL_GENERATED = [
-  "Product Card",
-  "Spinner",
-  "Shimmer",
-  "List Item Funds",
-  "Icon Button",
-  "Digital Wallet Button",
-  "Comparison Table",
-  "Card Product Offer",
+  "Avatar",
+  "Avatar Hero",
   "Badge",
   "Badge Notification",
+  "Button",
+  "Card Product Offer",
+  "Card Wallet",
   "Checkbox",
+  "Chips",
+  "Comparison Table",
   "Credit Card Button",
+  "Digital Wallet Button",
+  "Icon Button",
   "Input Stepper",
   "List Accordion",
   "List Footer",
   "List Item",
+  "List Item Funds",
   "Progress",
   "Selectable Media",
+  "Shimmer",
   "Slider",
+  "Spinner",
   "Top App Bar",
   "Wheel Picker",
-  "Button",
-  "Avatar Hero",
-  "Avatar"
+  "Product Card"
 ];
 
 const A11Y_MOBILE_SCREEN_READER_VARIANTS_GENERATED = {
-  "Snackbar": {
-    "subModeProperty": "Leitor de Tela",
-    "variants": [
-      {
-        "name": "Baseline Action",
-        "hasNomeAcessivel": false
-      },
-      {
-        "name": "Baseline Text",
-        "hasNomeAcessivel": false
-      }
-    ]
-  },
-  "Tabs": {
-    "subModeProperty": "Leitor de Tela",
-    "variants": [
-      {
-        "name": "Default",
-        "hasNomeAcessivel": false
-      },
-      {
-        "name": "Badge Notification",
-        "hasNomeAcessivel": false
-      }
-    ]
-  },
-  "Switch": {
+  "Accordion": {
     "subModeProperty": "Leitor de Tela",
     "variants": [
       {
@@ -208,7 +186,7 @@ const A11Y_MOBILE_SCREEN_READER_VARIANTS_GENERATED = {
       }
     ]
   },
-  "Radio": {
+  "Account Select": {
     "subModeProperty": "Leitor de Tela",
     "variants": [
       {
@@ -216,8 +194,205 @@ const A11Y_MOBILE_SCREEN_READER_VARIANTS_GENERATED = {
         "hasNomeAcessivel": false
       },
       {
-        "name": "Radio Group",
+        "name": "Disabled",
         "hasNomeAcessivel": false
+      },
+      {
+        "name": "Without Expansion",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Left Slots",
+        "hasNomeAcessivel": false
+      }
+    ]
+  },
+  "Avatar": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Interactive",
+        "hasNomeAcessivel": true
+      },
+      {
+        "name": "With Badge Notification",
+        "hasNomeAcessivel": true
+      },
+      {
+        "name": "Leitor de Tela3",
+        "hasNomeAcessivel": true
+      }
+    ]
+  },
+  "Avatar Hero": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Show Badge On",
+        "hasNomeAcessivel": true
+      },
+      {
+        "name": "Success",
+        "hasNomeAcessivel": true
+      },
+      {
+        "name": "Error",
+        "hasNomeAcessivel": true
+      },
+      {
+        "name": "Leitor de Tela4",
+        "hasNomeAcessivel": true
+      },
+      {
+        "name": "Leitor de Tela5",
+        "hasNomeAcessivel": true
+      },
+      {
+        "name": "Leitor de Tela6",
+        "hasNomeAcessivel": true
+      }
+    ]
+  },
+  "Button": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Disabled",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Loading",
+        "hasNomeAcessivel": true
+      },
+      {
+        "name": "Label in Name",
+        "hasNomeAcessivel": true
+      }
+    ]
+  },
+  "Card Product Offer": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Sequencial",
+        "hasNomeAcessivel": true
+      },
+      {
+        "name": "Loading",
+        "hasNomeAcessivel": true
+      },
+      {
+        "name": "State Message",
+        "hasNomeAcessivel": false
+      }
+    ]
+  },
+  "Card Wallet": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": true
+      },
+      {
+        "name": "With Button",
+        "hasNomeAcessivel": false
+      }
+    ]
+  },
+  "Card Widget": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Dragging",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Loading",
+        "hasNomeAcessivel": false
+      }
+    ]
+  },
+  "Checkbox": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "With Label",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Only Checkbox",
+        "hasNomeAcessivel": true
+      },
+      {
+        "name": "Indeterminate",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Disabled",
+        "hasNomeAcessivel": false
+      }
+    ]
+  },
+  "Chips": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Select Only",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Multiselect",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "With Expansion",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Removable",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "With Badge Notification",
+        "hasNomeAcessivel": true
+      },
+      {
+        "name": "Leitor de Tela7",
+        "hasNomeAcessivel": false
+      }
+    ]
+  },
+  "Credit Card Button": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "With Draggable",
+        "hasNomeAcessivel": true
+      },
+      {
+        "name": "Disabled",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Without Draggable",
+        "hasNomeAcessivel": true
       }
     ]
   },
@@ -235,70 +410,6 @@ const A11Y_MOBILE_SCREEN_READER_VARIANTS_GENERATED = {
       {
         "name": "Variante 3",
         "hasNomeAcessivel": false
-      }
-    ]
-  },
-  "Card Product Offer": {
-    "subModeProperty": "Leitor de Tela",
-    "variants": [
-      {
-        "name": "Default",
-        "hasNomeAcessivel": false
-      },
-      {
-        "name": "Sequencial",
-        "hasNomeAcessivel": false
-      },
-      {
-        "name": "Loading",
-        "hasNomeAcessivel": true
-      }
-    ]
-  },
-  "Checkbox": {
-    "subModeProperty": "Leitor de Tela",
-    "variants": [
-      {
-        "name": "Default",
-        "hasNomeAcessivel": false
-      },
-      {
-        "name": "Highlight Checked",
-        "hasNomeAcessivel": true
-      },
-      {
-        "name": "Highlight Indeterminate",
-        "hasNomeAcessivel": false
-      }
-    ]
-  },
-  "Chips": {
-    "subModeProperty": "Leitor de Tela",
-    "variants": [
-      {
-        "name": "Default",
-        "hasNomeAcessivel": false
-      },
-      {
-        "name": "Default Clear",
-        "hasNomeAcessivel": false
-      },
-      {
-        "name": "Default Badge Notification",
-        "hasNomeAcessivel": false
-      }
-    ]
-  },
-  "Credit Card Button": {
-    "subModeProperty": "Leitor de Tela",
-    "variants": [
-      {
-        "name": "Default",
-        "hasNomeAcessivel": true
-      },
-      {
-        "name": "Disabled",
-        "hasNomeAcessivel": true
       }
     ]
   },
@@ -336,6 +447,55 @@ const A11Y_MOBILE_SCREEN_READER_VARIANTS_GENERATED = {
       },
       {
         "name": "On Error",
+        "hasNomeAcessivel": false
+      }
+    ]
+  },
+  "Input / Text Field Form": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "On Error",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Read Only",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Dropdown",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Icon",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Selector",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Search",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Show e Hide Password",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Date Picker",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Disabled",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Info",
         "hasNomeAcessivel": false
       }
     ]
@@ -440,6 +600,19 @@ const A11Y_MOBILE_SCREEN_READER_VARIANTS_GENERATED = {
       }
     ]
   },
+  "Radio": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Radio Group",
+        "hasNomeAcessivel": false
+      }
+    ]
+  },
   "Search Bar": {
     "subModeProperty": "Leitor de Tela",
     "variants": [
@@ -484,6 +657,45 @@ const A11Y_MOBILE_SCREEN_READER_VARIANTS_GENERATED = {
       {
         "name": "Steps",
         "hasNomeAcessivel": true
+      }
+    ]
+  },
+  "Switch": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Disabled",
+        "hasNomeAcessivel": false
+      }
+    ]
+  },
+  "Tabs": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Default",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Badge Notification",
+        "hasNomeAcessivel": false
+      }
+    ]
+  },
+  "Snackbar": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline Action",
+        "hasNomeAcessivel": false
+      },
+      {
+        "name": "Baseline Text",
+        "hasNomeAcessivel": false
       }
     ]
   },
@@ -539,119 +751,6 @@ const A11Y_MOBILE_SCREEN_READER_VARIANTS_GENERATED = {
       {
         "name": "Double Columm",
         "hasNomeAcessivel": true
-      }
-    ]
-  },
-  "Input / Text Field Form": {
-    "subModeProperty": "Leitor de Tela",
-    "variants": [
-      {
-        "name": "Baseline",
-        "hasNomeAcessivel": false
-      },
-      {
-        "name": "On Error",
-        "hasNomeAcessivel": false
-      },
-      {
-        "name": "Read Only",
-        "hasNomeAcessivel": false
-      },
-      {
-        "name": "Dropdown",
-        "hasNomeAcessivel": false
-      },
-      {
-        "name": "Icon",
-        "hasNomeAcessivel": false
-      },
-      {
-        "name": "Selector",
-        "hasNomeAcessivel": false
-      },
-      {
-        "name": "Search",
-        "hasNomeAcessivel": false
-      },
-      {
-        "name": "Show e Hide Password",
-        "hasNomeAcessivel": false
-      },
-      {
-        "name": "Date Picker",
-        "hasNomeAcessivel": false
-      },
-      {
-        "name": "Disabled",
-        "hasNomeAcessivel": false
-      },
-      {
-        "name": "Info",
-        "hasNomeAcessivel": false
-      }
-    ]
-  },
-  "Button": {
-    "subModeProperty": "Leitor de Tela",
-    "variants": [
-      {
-        "name": "Baseline",
-        "hasNomeAcessivel": false
-      },
-      {
-        "name": "Disabled",
-        "hasNomeAcessivel": false
-      },
-      {
-        "name": "Loading",
-        "hasNomeAcessivel": true
-      }
-    ]
-  },
-  "Avatar Hero": {
-    "subModeProperty": "Leitor de Tela",
-    "variants": [
-      {
-        "name": "Show Badge On",
-        "hasNomeAcessivel": true
-      },
-      {
-        "name": "Variations",
-        "hasNomeAcessivel": true
-      }
-    ]
-  },
-  "Avatar": {
-    "subModeProperty": "Leitor de Tela",
-    "variants": [
-      {
-        "name": "Baseline",
-        "hasNomeAcessivel": true
-      },
-      {
-        "name": "Image",
-        "hasNomeAcessivel": true
-      }
-    ]
-  },
-  "Account Select": {
-    "subModeProperty": "Leitor de Tela",
-    "variants": [
-      {
-        "name": "Baseline",
-        "hasNomeAcessivel": false
-      },
-      {
-        "name": "Disabled",
-        "hasNomeAcessivel": false
-      },
-      {
-        "name": "Read Only",
-        "hasNomeAcessivel": false
-      },
-      {
-        "name": "Card",
-        "hasNomeAcessivel": false
       }
     ]
   }
