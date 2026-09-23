@@ -66,31 +66,19 @@
       </div>
     </div>
 
-    <div id="hint-flows" class="min-h-[76px] p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30 flex items-center gap-2.5">
-      <i data-lucide="info" class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0"></i>
-      <p class="text-[11px] text-blue-800 dark:text-blue-300 leading-tight">
-        Selecione dois ou mais elementos no Figma e use o botão <strong>+ Conectar Frames</strong> para mapear fluxos de navegação. Com 3 ou mais, o plugin conecta em sequência automaticamente (da esquerda para a direita).
-      </p>
-    </div>
-
     <ul id="flows-results" class="flex flex-col gap-2 min-h-[50px]">
       <!-- renderFlowsList() insere aqui -->
     </ul>
 
-    <!-- Inserir na Ficha — ação mais forte (preenchida), sincroniza esta
-         seção no canvas imediatamente. Finalizar Registros continua
-         discreta (outline) logo abaixo. Ambas só aparecem com fluxos
-         criados (ver renderFlowsList). -->
-    <div id="btn-finalize-flows-wrap" class="hidden pt-4 pb-2 space-y-2">
+    <!-- Inserir/Atualizar na Ficha — botão único, sincroniza esta seção no
+         canvas imediatamente. Texto e ícone trocam pra "Atualizar" assim que
+         a seção já foi inserida uma vez (ver _updateInsertFichaButtonLabel em
+         handoff.js). Só aparece com fluxos criados (ver renderFlowsList). -->
+    <div id="btn-finalize-flows-wrap" class="hidden pt-4 pb-2">
       <button id="btn-insert-ficha-flows" onclick="insertSectionInFicha('flows')"
         class="w-full flex items-center justify-center gap-2 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl text-[12px] font-bold transition-all shadow-sm">
         <i data-lucide="file-plus-2" class="w-4 h-4" aria-hidden="true"></i>
         Inserir Fluxos na Ficha
-      </button>
-      <button onclick="finalizeSection('flows')"
-        class="w-full flex items-center justify-center gap-2 py-3 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 hover:border-slate-300 transition-all shadow-sm">
-        <i data-lucide="clipboard-check" class="w-4 h-4" aria-hidden="true"></i>
-        Finalizar Registros
       </button>
     </div>
 

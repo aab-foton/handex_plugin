@@ -18,9 +18,8 @@
       if (!container) return;
       container.innerHTML = "";
 
-      // Hint e botões globais (apenas na tela de medidas standalone)
+      // Botões globais (apenas na tela de medidas standalone)
       if (!frameId) {
-        _updateContentHint('hint-measures', !!(data && data.length > 0));
         const exportBtn = document.getElementById('btn-export-measures');
         const hideAllBtn = document.getElementById('btn-hide-all-measures');
         const collapseBtn = document.querySelector('#view-measurement [data-collapse-toggle]');
@@ -35,6 +34,7 @@
           if (hideAllBtn) hideAllBtn.classList.remove('hidden');
           if (collapseBtn) collapseBtn.classList.remove('hidden');
           if (finalizeWrap) finalizeWrap.classList.remove('hidden');
+          if (typeof _updateInsertFichaButtonLabel === 'function') _updateInsertFichaButtonLabel('measurements');
           if (headerBtn) headerBtn.classList.remove('hidden');
           if (typeof _moveHeaderHelpIcons === 'function') _moveHeaderHelpIcons('measures-header-help-icons', '#view-measurement .subheader-brand > div:last-child', true);
           if (sectionTitle) {
@@ -124,7 +124,7 @@
           <i data-lucide="chevron-down" class="w-4 h-4 ${chevronColorClass} transition-transform ${chevronClass} shrink-0"></i>
         `;
 
-        // Visibility Toggle
+        // Visibility Toggle — mesma linha do expandir (à direita do chevron)
         const visBtn = document.createElement("button");
         visBtn.type = "button";
         visBtn.title = "Exibir/Ocultar no canvas";
@@ -159,12 +159,29 @@
           updateHideAllMeasuresButtonState();
         };
 
+        header.appendChild(btn);
+        header.appendChild(visBtn);
+
+        const content = document.createElement("div");
+        content.setAttribute('data-accordion-content', '');
+        content.className = `px-3 py-3 bg-white dark:bg-dark-surface space-y-2 border-t border-gray-100 dark:border-dark-line ${isExpanded ? '' : 'hidden'}`;
+
+        item.details.forEach(det => {
+          const detEl = document.createElement("div");
+          detEl.className = "text-[11px] text-slate-600 dark:text-dark-text bg-gray-50 dark:bg-dark-bg p-2 rounded-lg border border-gray-100 dark:border-dark-line font-mono";
+          detEl.innerText = det;
+          content.appendChild(detEl);
+        });
+
+        // Excluir — botão grande dentro do accordion (não mais ícone numa
+        // barra de ações separada): ação frequente o suficiente pra merecer
+        // destaque, mas só aparece com o card já expandido.
         const delBtn = document.createElement("button");
         delBtn.type = "button";
         delBtn.title = "Remover medida";
         delBtn.setAttribute('aria-label', 'Remover medida');
-        delBtn.className = "px-3 py-3 text-gray-500 dark:text-dark-muted hover:text-red-500 transition-colors shrink-0 border-l border-gray-100 dark:border-dark-line";
-        delBtn.innerHTML = `<i data-lucide="trash-2" class="w-4 h-4"></i>`;
+        delBtn.className = "w-full flex items-center justify-center gap-1.5 py-2 mt-1 text-[11px] font-bold text-red-600 dark:text-red-400 bg-white dark:bg-dark-surface border border-red-200 dark:border-red-800/30 rounded-2xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors";
+        delBtn.innerHTML = `<i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Remover Medida`;
         delBtn.onclick = (e) => {
           e.stopPropagation();
           if (item.nodeId) {
@@ -180,42 +197,9 @@
           saveToStorage();
           section.remove();
         };
-
-        header.appendChild(btn);
-
-        const measActionsRow = document.createElement("div");
-        measActionsRow.className = "flex items-center justify-end gap-2 px-3 py-1.5 border-t border-gray-100 dark:border-dark-line bg-gray-50/50 dark:bg-slate-900/30";
-        const measActionsLabel = document.createElement("span");
-        measActionsLabel.className = "text-[9px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wider shrink-0";
-        measActionsLabel.textContent = "Ações";
-        measActionsRow.appendChild(measActionsLabel);
-        const measActions = document.createElement("div");
-        measActions.className = "flex items-center gap-0.5";
-        measActions.appendChild(visBtn);
-        measActions.appendChild(delBtn);
-        measActionsRow.appendChild(measActions);
-
-        const content = document.createElement("div");
-        content.setAttribute('data-accordion-content', '');
-        content.className = `px-3 py-3 bg-white dark:bg-dark-surface space-y-2 border-t border-gray-100 dark:border-dark-line ${isExpanded ? '' : 'hidden'}`;
-
-        item.details.forEach(det => {
-          const detEl = document.createElement("div");
-          detEl.className = "text-[11px] text-slate-600 dark:text-dark-text bg-gray-50 dark:bg-dark-bg p-2 rounded-lg border border-gray-100 dark:border-dark-line font-mono";
-          detEl.innerText = det;
-          content.appendChild(detEl);
-        });
-
-        // Preview transitório no canvas — só enquanto o mouse está sobre o
-        // item da lista, some ao tirar o mouse (não fica preso ao estado de
-        // expandido/recolhido do accordion).
-        if (item.nodeId) {
-          header.addEventListener('mouseenter', () => sendHighlight(item.nodeId));
-          header.addEventListener('mouseleave', () => clearHighlight());
-        }
+        content.appendChild(delBtn);
 
         section.appendChild(header);
-        section.appendChild(measActionsRow);
         section.appendChild(content);
         container.appendChild(section);
       });

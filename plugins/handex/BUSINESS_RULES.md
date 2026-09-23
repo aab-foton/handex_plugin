@@ -146,7 +146,7 @@ Toda a seção é opcional. Nenhum campo bloqueia avanço ou geração de ficha.
 
 **Fluxo de registro de frame:**
 1. Usuário seleciona frame no canvas do Figma
-2. Clica em "+ Registrar Frame" no plugin
+2. Clica em "+ Escanear Frame" no plugin
 3. Plugin envia `get-selection-info` ao backend
 4. Backend retorna `{ nodeId, name }` do nó selecionado
 5. `addFrame(figmaId, nome)` cria entrada em `handoffData.frames[]`
@@ -517,12 +517,14 @@ Mensagens exibidas como notificação nativa do Figma:
 
 ### 5.3 Hints visíveis na interface
 
+> **Nota (2026-09-17):** os cards de hint fixo que existiam em Anotar Specs/Anotar Medidas/Fluxos de Tela/Escanear Tokens foram **removidos** (v6.15.2/v6.16.1) por duplicarem a mesma explicação já coberta pelo empty-state e pelo onboarding contextual — ver CLAUDE.md ("Cards de hint fixo duplicavam o onboarding/empty-state"). A tabela abaixo documenta só o texto do **empty-state** de cada tela (que continua existindo), não um card separado.
+
 | Local | Texto |
 |---|---|
-| Escanear Tokens (estado vazio) | "Selecione um Frame no canvas do Figma e clique em **Registrar Frame** para documentá-lo com tokens, medidas e specs." |
-| Anotar Specs (estado vazio) | "Selecione um elemento no canvas e toque no botão **+** abaixo." |
-| Anotar Medidas (estado vazio) | "Selecione os elementos no canvas e toque no botão **+** abaixo." |
-| Fluxos de Tela (estado vazio) | "Selecione dois elementos no Figma e use o botão **+ Conectar Frames** para mapear fluxos de navegação." |
+| Escanear Tokens (estado vazio) | "Nenhum frame escaneado" / "Selecione um frame no canvas do Figma para começar." + botão **+ Escanear Frame** |
+| Anotar Specs (estado vazio) | "Nenhuma especificação criada ainda" / "Selecione um elemento no canvas para começar." + botão **+ Nova spec** |
+| Anotar Medidas (estado vazio) | "Nenhuma medida criada ainda" / "Selecione elementos no canvas para começar." + botão **+ Inserir medida** |
+| Fluxos de Tela (estado vazio) | "Nenhum fluxo criado ainda" / "Selecione 2 ou mais elementos no canvas para começar." + botão **+ Conectar Frames** |
 | Tipo Decisão no modal de fluxo | "Dica: Use frases curtas para melhor legibilidade dentro do losango." |
 | Como Usar — hint de layers | "Specs, medidas, fluxos e a Ficha de Projeto são criados com bloqueio de edição para preservar a integridade do handoff. Para remover ou recriar um item, utilize os botões de exclusão dentro do próprio plugin." |
 | Jornada / Feature | "Ao marcar, preenche com o nome do frame selecionado no Figma" |
@@ -554,7 +556,7 @@ HOME
  │     Opcional: jornada, feature, briefing, regras, docs
  │
  ├─► Escanear Tokens
- │     Seleciona frame no canvas → Registrar Frame
+ │     Seleciona frame no canvas → Escanear Frame
  │     Para cada frame:
  │       Escaneia tokens por categoria
  │       Marca conformidade DSC

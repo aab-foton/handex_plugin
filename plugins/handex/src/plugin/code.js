@@ -2,6 +2,19 @@
 
 figma.showUI(__html__, { width: 480, height: 750 });
 
+// Rede de segurança contra [HighlightStroke] órfão: activeHighlightNode (ver
+// abaixo) só existe em memória do processo do plugin -- se ele recarregar ou
+// fechar de forma atípica (crash, dev reload) enquanto um highlight estava
+// ativo, a referência se perde e o retângulo fica esquecido no canvas pra
+// sempre, sem nada que o remova depois. Varre a página atual uma única vez
+// no boot e remove qualquer sobra de sessões anteriores. Não é mais a
+// principal defesa (focusNode parou de criar stroke, ver core.js) -- é só
+// o backstop pro que já pode ter sobrado antes dessa mudança, ou de qualquer
+// caso de borda futuro.
+try {
+  figma.currentPage.findAll(n => n.name === '[HighlightStroke]').forEach(n => { try { n.remove(); } catch (e) {} });
+} catch (e) {}
+
 let activeHighlightNode = null;
 // Incrementado a cada chamada de highlight-node -- o handler é async
 // (await getNodeByIdAsync) e o Figma não serializa mensagens, então focos
@@ -318,7 +331,7 @@ function _hdCreateSection(parent, titleText) {
   section.cornerRadius = 8;
   section.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
   section.strokeWeight = 1;
-  const title = _hdCreateText(titleText, 16, "Bold", { r: 0.24, g: 0.24, b: 1 });
+  const title = _hdCreateText(titleText, 16, "Bold", hexToRgb("#005ca9"));
   section.appendChild(title);
   _hdSetFillAndHug(title);
   return section;
@@ -337,8 +350,11 @@ function _hdCreateRow(parent, label, value) {
   return row;
 }
 
-// Card de "Frame Documentado" (nome, badge "Novo componente", auditoria DSC,
-// snapshots visuais de specs/medidas).
+// Card de "Frame Documentado" (nome, badge "Novo componente", auditoria DSC).
+// Os snapshots visuais de specs/medidas migraram para a seção
+// "Documentação Visual" (ver _hdBuildFrameShowcaseBlock/
+// _hdRebuildDocumentacaoVisualSection) -- este card volta a ser só
+// identificação básica do frame.
 // handexFrameId identifica o card entre gerações para permitir substituir em
 // vez de duplicar quando a ficha já existe.
 async function _hdBuildFrameCard(f, fi) {
@@ -366,31 +382,35 @@ async function _hdBuildFrameCard(f, fi) {
     _hdCreateRow(fRow, "Auditoria DSC", f.audit.status + (f.audit.justificativa ? ' — ' + f.audit.justificativa : ''));
   }
 
-  const _frameNode = f.figmaId ? await figma.getNodeByIdAsync(f.figmaId) : null;
-  if (_frameNode) {
-    const _specIds = await _hdCollectSpecSnapshotNodeIds(f);
-    const _measureIds = (f.measurements || []).map(m => m.nodeId).filter(Boolean);
-
-    const _addPreview = async (label, nodeIds) => {
-      if (nodeIds.length === 0) return; // nunca gera preview vazio
-      const bytes = await _hdSnapshotFrameWithNodes(_frameNode, nodeIds);
-      if (!bytes) return;
-      try {
-        const imageHash = figma.createImage(bytes).hash;
-        const wrap = _hdCreateFrame("VERTICAL", 0, 4);
-        wrap.appendChild(_hdCreateText(label, 10, "Bold", { r: 0.39, g: 0.45, b: 0.55 }));
-        const rect = figma.createRectangle();
-        rect.resize(432, 243);
-        rect.fills = [{ type: "IMAGE", imageHash, scaleMode: "FIT" }];
-        rect.cornerRadius = 8;
-        wrap.appendChild(rect);
-        fRow.appendChild(wrap);
-        _hdSetFillAndHug(wrap);
-      } catch (e) { /* tolera falha de imagem isolada, não derruba o card inteiro */ }
-    };
-
-    await _addPreview("Snapshot com Specs", _specIds);
-    await _addPreview("Snapshot com Medidas", _measureIds);
+  // Frame de Novo Componente: a Ficha precisa carregar o que o dev vai
+  // efetivamente construir -- descrição do padrão de uso (texto livre do
+  // designer) e a lista de elementos que compõem o componente (todo o scan
+  // do frame, sem filtro de isMarkedCustom -- aqui o objetivo é documentar
+  // o componente novo por inteiro, não só as peças individualmente
+  // "personalizadas"). Sem isso, o card de Novo Componente virava só um
+  // nome e um badge, sem nenhuma informação de construção.
+  if (f.isNewComponent) {
+    if (f.newComponentObservations) {
+      _hdCreateRow(fRow, "Padrão de uso, nomenclatura e diretrizes", f.newComponentObservations);
+    }
+    const _categoryLabels = { components: 'Componentes', icons: 'Ícones', typography: 'Tipografia', frames: 'Frames e Layouts', vectors: 'Vetores' };
+    const _allItems = f.specs
+      ? Object.keys(_categoryLabels).flatMap(cat => (f.specs[cat] || []).map(item => ({ ...item, _cat: _categoryLabels[cat] })))
+      : [];
+    if (_allItems.length > 0) {
+      const elementsWrap = _hdCreateFrame("VERTICAL", 0, 4);
+      elementsWrap.name = "[Campo] Elementos do Componente";
+      fRow.appendChild(elementsWrap);
+      _hdSetFillAndHug(elementsWrap);
+      const elementsLabel = _hdCreateText(`Elementos (${_allItems.length})`, 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 });
+      elementsWrap.appendChild(elementsLabel);
+      _hdSetFillAndHug(elementsLabel);
+      _allItems.forEach(item => {
+        const itemText = _hdCreateText(`${item.name || 'Elemento'} — ${item._cat}`, 12, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
+        elementsWrap.appendChild(itemText);
+        _hdSetFillAndHug(itemText);
+      });
+    }
   }
 
   return fRow;
@@ -471,6 +491,23 @@ async function _hdCollectSpecSnapshotNodeIds(f) {
       const markerId = specGroup && specGroup.getPluginData('handexSpecMarkerId');
       if (markerId) ids.push(markerId);
     } catch (e) { /* specGroup ausente: ids já tem só o id direto, tolerado no snapshot */ }
+  }
+  return ids;
+}
+
+// Variante de _hdCollectSpecSnapshotNodeIds que retorna SÓ os contours
+// (nunca o specGroup) -- usada pelo snapshot grande da Documentação Visual,
+// que quer só selo (chip, filho do contour) + moldura, sem o Conector/
+// specCard que vivem dentro do specGroup.
+async function _hdCollectSpecContourIds(f) {
+  const ids = [];
+  for (const s of (f.createdSpecs || [])) {
+    if (!s || !s.id) continue;
+    try {
+      const specGroup = await figma.getNodeByIdAsync(s.id);
+      const markerId = specGroup && specGroup.getPluginData('handexSpecMarkerId');
+      if (markerId) ids.push(markerId);
+    } catch (e) { /* specGroup ausente: sem contour a coletar, tolerado no snapshot */ }
   }
   return ids;
 }
@@ -624,7 +661,7 @@ async function _hdBuildSpecsSubgroup(f) {
           pKey.layoutGrow = 1;
           pRow.appendChild(pKey);
           if (prop.token) {
-            const tBadge = _hdCreateText(prop.token, 8, "Medium", { r: 0.24, g: 0.24, b: 1 });
+            const tBadge = _hdCreateText(prop.token, 8, "Medium", hexToRgb("#005ca9"));
             _hdSetFillAndHug(tBadge);
             pRow.appendChild(tBadge);
           }
@@ -737,7 +774,7 @@ function _hdBuildSectionShell(titleText) {
   section.cornerRadius = 8;
   section.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
   section.strokeWeight = 1;
-  const title = _hdCreateText(titleText, 16, "Bold", { r: 0.24, g: 0.24, b: 1 });
+  const title = _hdCreateText(titleText, 16, "Bold", hexToRgb("#005ca9"));
   section.appendChild(title);
   _hdSetFillAndHug(title);
   return section;
@@ -762,13 +799,37 @@ function _hdReplaceSection(content, titleText, newSection) {
   _hdSetFillAndHug(newSection);
 }
 
-// 1.7 FRAMES DOCUMENTADOS -- reconstrói a subseção inteira a partir de
-// data.frames. Retorna a seção solta (nunca vazia sem chamador saber:
-// retorna null se não houver frames, para o chamador decidir remover).
-async function _hdRebuildFramesSection(frames) {
-  const _frames = frames || [];
+// Um frame só é relevante pra Ficha se tiver ao menos 1 item do scan marcado
+// manualmente como "Componente Personalizado" (item.isMarkedCustom) -- mesmo
+// critério do Card 3 "User Interface" (createSpecList, ver decisão de produto
+// no CLAUDE.md). Frames 100% conformes ao DSC não precisam aparecer: o dev já
+// usa o componente pronto da lib, não há nada novo a construir ali.
+function _hdFrameHasCustomItem(f) {
+  if (!f || !f.specs) return false;
+  const _categories = ['components', 'icons', 'typography', 'frames', 'vectors'];
+  return _categories.some(cat => (f.specs[cat] || []).some(item => item.isMarkedCustom === true));
+}
+
+// Frame marcado como "Novo Componente" (toggle isNewComponent, ver
+// Escanear Tokens) entra na Ficha SEMPRE, mesmo sem nenhum item isMarkedCustom
+// -- o próprio frame já é a declaração de "isso é novo pro DSC", obrigatória,
+// não depende de o designer também ter marcado itens individuais dentro dele.
+function _hdFrameIsRelevantForFicha(f) {
+  return !!(f && f.isNewComponent) || _hdFrameHasCustomItem(f);
+}
+
+// 1.7 FRAMES ESCANEADOS -- reconstrói a subseção inteira a partir de
+// data.frames, só com os frames relevantes (_hdFrameIsRelevantForFicha:
+// isNewComponent ou item isMarkedCustom) -- a menos que includeAllFrames seja
+// true, aí entra a lista completa sem filtro (usado quando o designer
+// confirma explicitamente incluir tudo no modal de "nada fora do DSC", ver
+// handler insert-ficha-section/create-handoff). Retorna a seção solta (nunca
+// vazia sem chamador saber: retorna null se não sobrar nenhum frame, para o
+// chamador decidir remover).
+async function _hdRebuildFramesSection(frames, includeAllFrames = false) {
+  const _frames = includeAllFrames ? (frames || []) : (frames || []).filter(_hdFrameIsRelevantForFicha);
   if (_frames.length === 0) return null;
-  const framesSection = _hdBuildSectionShell("Frames Documentados");
+  const framesSection = _hdBuildSectionShell("Frames Escaneados");
   for (const [fi, f] of _frames.entries()) {
     const fRow = await _hdBuildFrameCard(f, fi);
     framesSection.appendChild(fRow);
@@ -777,52 +838,120 @@ async function _hdRebuildFramesSection(frames) {
   return framesSection;
 }
 
-// 1.8 MEDIDAS -- mesmo critério de avulsas ("__loose__") já usado em
-// create-handoff: frames com measurements + data.measurements (avulsas).
-function _hdRebuildMeasuresSection(frames, looseMeasures) {
-  const _framesWithMeasures = (frames || []).filter(f => (f.measurements || []).length > 0);
-  const _loose = looseMeasures || [];
-  if (_framesWithMeasures.length === 0 && _loose.length === 0) return null;
-  const measSection = _hdBuildSectionShell("Medidas");
-  _framesWithMeasures.forEach(f => {
-    const fGroup = _hdBuildMeasuresSubgroup(f);
-    measSection.appendChild(fGroup);
-    _hdSetFillAndHug(fGroup);
-  });
-  if (_loose.length > 0) {
-    const looseFrame = { nome: 'Sem frame vinculado', measurements: _loose };
-    const looseGroup = _hdBuildMeasuresSubgroup(looseFrame);
-    looseGroup.setPluginData('handexFrameId', '__loose__');
-    measSection.appendChild(looseGroup);
-    _hdSetFillAndHug(looseGroup);
+// Bloco de "Documentação Visual" de 1 frame: até 2 pares (specs, medidas),
+// cada par = snapshot grande (frame + só selos/contornos ou marcações de
+// medida, nunca Conector/specCard) + card de detalhe em texto ao lado
+// (_hdBuildSpecsSubgroup/_hdBuildMeasuresSubgroup, reaproveitadas sem
+// alteração -- já eram exatamente "specs/medidas organizadas por frame",
+// só viviam em seções separadas mais abaixo na Ficha). Retorna null se o
+// frame não tiver nem specs nem medidas vinculadas (nunca gera bloco
+// vazio). Substitui os dois snapshots pequenos que existiam antes dentro
+// de _hdBuildFrameCard.
+async function _hdBuildFrameShowcaseBlock(f, fi) {
+  const _frameNode = f.figmaId ? await figma.getNodeByIdAsync(f.figmaId) : null;
+  if (!_frameNode) return null;
+
+  const _hasSpecs = (f.createdSpecs || []).length > 0;
+  const _hasMeasures = (f.measurements || []).length > 0;
+  if (!_hasSpecs && !_hasMeasures) return null;
+
+  // Fill cinza claro (mesmo tom já usado em outros cards da Ficha, ex:
+  // linhas de medida/regra/exceção) -- antes era branco puro sobre o fundo
+  // branco da Ficha, sem contraste real (só a borda de 1px separava),
+  // dificultando a leitura de onde um card de frame termina e o próximo
+  // começa.
+  const block = _hdCreateFrame("VERTICAL", 16, 16, { r: 0.98, g: 0.98, b: 0.99 });
+  block.name = `[Documentação] ${f.nome || 'Frame ' + (fi + 1)}`;
+  block.cornerRadius = 12;
+  block.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
+  block.setPluginData('handexFrameId', f.figmaId || f.id || '');
+
+  const blockTitle = _hdCreateText(f.nome || 'Frame', 14, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+  block.appendChild(blockTitle);
+  _hdSetFillAndHug(blockTitle);
+
+  // Layout fixo (decisão de produto 2026-09-17): a Ficha tem largura fixa
+  // em cascata (mainContainer 1080 → fichaTecnica 952 → content 904, padding
+  // 24 → block 872, padding 16). O snapshot NUNCA corta: sua largura é
+  // sempre a proporção real do frame documentado, limitada a 872px (o
+  // espaço disponível dentro de block) -- se o frame for mais largo que
+  // isso, a imagem inteira reduz proporcionalmente (nunca crop). O card de
+  // detalhe (specs/medidas) tem no máximo 450px, alinhado à esquerda (antes
+  // esticava pra ocupar a largura toda do bloco via FILL).
+  const _SNAPSHOT_MAX_W = 872;
+  const _DETAIL_CARD_MAX_W = 450;
+  const _addShowcasePair = async (label, nodeIds, detailNode) => {
+    if (!detailNode) return;
+    const pair = _hdCreateFrame("VERTICAL", 0, 8);
+    pair.appendChild(_hdCreateText(label, 11, "Bold", { r: 0.39, g: 0.45, b: 0.55 }));
+
+    if (nodeIds.length > 0) {
+      const bytes = await _hdSnapshotFrameWithNodes(_frameNode, nodeIds);
+      if (bytes) {
+        try {
+          const imageHash = figma.createImage(bytes).hash;
+          const _bb = _frameNode.absoluteBoundingBox;
+          const _w = _bb && _bb.width > 0 ? Math.min(_SNAPSHOT_MAX_W, _bb.width) : _SNAPSHOT_MAX_W;
+          const _h = _bb && _bb.width > 0 ? _w * (_bb.height / _bb.width) : _SNAPSHOT_MAX_W * 0.6;
+          const rect = figma.createRectangle();
+          rect.resize(_w, _h);
+          rect.fills = [{ type: "IMAGE", imageHash, scaleMode: "FIT" }];
+          rect.cornerRadius = 8;
+          rect.layoutAlign = "MIN"; // alinhado à esquerda, nunca estica (FILL)
+          pair.appendChild(rect);
+        } catch (e) { /* tolera falha de imagem isolada, mantém o card de detalhe */ }
+      }
+    }
+
+    pair.appendChild(detailNode);
+    // Card de detalhe: largura FIXA em 450px, alinhado à esquerda -- antes
+    // usava _hdSetFillAndHug (FILL), esticando pra ocupar os 872px inteiros
+    // do bloco. Uma primeira tentativa de HUG+maxWidth deixou o card
+    // "espremido" (35px) porque HUG sem conteúdo largo o suficiente encolhe
+    // livremente -- maxWidth é só um teto, nunca um piso. resize() +
+    // counterAxisSizingMode FIXED (dentro de um pai VERTICAL como "pair",
+    // largura é o eixo cruzado) força os 450px de verdade, com o conteúdo
+    // interno (que já usa _hdSetFillAndHug) preenchendo essa largura.
+    detailNode.resize(_DETAIL_CARD_MAX_W, detailNode.height);
+    if ('counterAxisSizingMode' in detailNode) detailNode.counterAxisSizingMode = "FIXED";
+    if ('primaryAxisSizingMode' in detailNode) detailNode.primaryAxisSizingMode = "AUTO";
+    detailNode.layoutAlign = "MIN";
+    block.appendChild(pair);
+    _hdSetFillAndHug(pair);
+  };
+
+  if (_hasSpecs) {
+    await _addShowcasePair("Specs marcadas", await _hdCollectSpecContourIds(f), await _hdBuildSpecsSubgroup(f));
   }
-  return measSection;
+  if (_hasMeasures) {
+    const _measureIds = f.measurements.map(m => m.nodeId).filter(Boolean);
+    await _addShowcasePair("Medidas aplicadas", _measureIds, _hdBuildMeasuresSubgroup(f));
+  }
+
+  return block;
 }
 
-// 1.9 ESPECIFICAÇÕES ANOTADAS -- mesmo filtro de duplicidade
-// avulsa-vs-por-frame já usado em create-handoff (ver comentário histórico
-// no call site original sobre a spec "ressuscitada", CHANGELOG v6.1.1/v6.2.0):
-// `looseSpecs` já deve chegar filtrado (sem specs que também estão em algum
-// frame.createdSpecs) -- responsabilidade do chamador, replicada em ambos
-// create-handoff e insert-ficha-section.
-async function _hdRebuildSpecsSection(frames, looseSpecs) {
-  const _framesWithSpecs = (frames || []).filter(f => (f.createdSpecs || []).length > 0);
-  const _loose = looseSpecs || [];
-  if (_framesWithSpecs.length === 0 && _loose.length === 0) return null;
-  const annotSection = _hdBuildSectionShell("Especificações");
-  for (const f of _framesWithSpecs) {
-    const fGroup = await _hdBuildSpecsSubgroup(f);
-    annotSection.appendChild(fGroup);
-    _hdSetFillAndHug(fGroup);
+// "Documentação Visual" -- 1 bloco por frame documentado (via
+// _hdBuildFrameShowcaseBlock), empilhados verticalmente. Substitui as
+// antigas seções "Medidas" e "Especificações" (agregadas, listavam TODOS
+// os frames juntos, sem nenhuma referência visual) -- decisão de produto
+// 2026-09-17: dev não precisa de uma lista de texto separada da tela real,
+// precisa ver a marcação sobre a tela e o detalhe ao lado, por frame.
+async function _hdRebuildDocumentacaoVisualSection(frames) {
+  const _frames = frames || [];
+  if (_frames.length === 0) return null;
+  const blocks = [];
+  for (const [fi, f] of _frames.entries()) {
+    const block = await _hdBuildFrameShowcaseBlock(f, fi);
+    if (block) blocks.push(block);
   }
-  if (_loose.length > 0) {
-    const looseFrame = { nome: 'Sem frame vinculado', createdSpecs: _loose, specGroupNames: {}, specGroupVisible: {} };
-    const looseGroup = await _hdBuildSpecsSubgroup(looseFrame);
-    looseGroup.setPluginData('handexFrameId', '__loose__');
-    annotSection.appendChild(looseGroup);
-    _hdSetFillAndHug(looseGroup);
-  }
-  return annotSection;
+  if (blocks.length === 0) return null;
+  const section = _hdBuildSectionShell("Documentação Visual");
+  blocks.forEach(block => {
+    section.appendChild(block);
+    _hdSetFillAndHug(block);
+  });
+  return section;
 }
 
 // 1.10 FLUXOS DE TELA
@@ -1782,6 +1911,17 @@ figma.ui.onmessage = async (msg) => {
     return;
   }
 
+  // check-frames-relevance: pergunta leve (nenhuma escrita no canvas) usada
+  // ANTES de inserir/gerar a seção "Frames Escaneados" -- o frontend chama
+  // isso pra decidir se mostra o modal "nada fora do DSC, incluir mesmo
+  // assim?" (só faz sentido perguntar quando NENHUM frame é relevante hoje).
+  if (msg.type === 'check-frames-relevance') {
+    const _frames = (msg.data && msg.data.frames) || [];
+    const hasRelevantFrame = _frames.some(_hdFrameIsRelevantForFicha);
+    figma.ui.postMessage({ type: 'frames-relevance-checked', hasRelevantFrame, hasAnyFrame: _frames.length > 0 });
+    return;
+  }
+
   // insert-ficha-section: atualiza SÓ uma subseção da Ficha existente
   // (tokens/specs/medidas/fluxos), preservando as demais como estavam.
   // Se a Ficha ainda não existe para este projeto, não duplica a lógica de
@@ -1818,16 +1958,15 @@ figma.ui.onmessage = async (msg) => {
       const _frames = data.frames || [];
 
       if (msg.section === 'tokens') {
-        const framesSection = await _hdRebuildFramesSection(_frames);
-        _hdReplaceSection(content, "Frames Documentados", framesSection);
-      } else if (msg.section === 'medidas') {
-        const measSection = _hdRebuildMeasuresSection(_frames, data.measurements || []);
-        _hdReplaceSection(content, "Medidas", measSection);
-      } else if (msg.section === 'specs') {
-        const _framedSpecIds = new Set(_frames.flatMap(f => (f.createdSpecs || []).map(s => s.id)));
-        const _looseSpecs = (data.specs || []).filter(s => !_framedSpecIds.has(s.id));
-        const annotSection = await _hdRebuildSpecsSection(_frames, _looseSpecs);
-        _hdReplaceSection(content, "Especificações", annotSection);
+        const framesSection = await _hdRebuildFramesSection(_frames, !!msg.includeAllFrames);
+        _hdReplaceSection(content, "Frames Escaneados", framesSection);
+      } else if (msg.section === 'medidas' || msg.section === 'specs') {
+        // Specs e Medidas compartilham a mesma seção "Documentação Visual"
+        // (1 bloco por frame, com os dois pares lado a lado) -- qualquer um
+        // dos dois botões reconstrói a seção inteira a partir do estado
+        // atual de handoffData, nunca seções separadas como antes.
+        const docVisualSection = await _hdRebuildDocumentacaoVisualSection(_frames);
+        _hdReplaceSection(content, "Documentação Visual", docVisualSection);
       } else if (msg.section === 'fluxos') {
         const flowsSection = _hdRebuildFlowsSection(data.createdFlows || []);
         _hdReplaceSection(content, "Fluxos de Tela", flowsSection);
@@ -1998,7 +2137,7 @@ figma.ui.onmessage = async (msg) => {
         section.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
         section.strokeWeight = 1;
 
-        const title = createText(titleText, 16, "Bold", { r: 0.24, g: 0.24, b: 1 });
+        const title = createText(titleText, 16, "Bold", hexToRgb("#005ca9"));
         section.appendChild(title);
         setFillAndHug(title);
         return section;
@@ -2021,7 +2160,7 @@ figma.ui.onmessage = async (msg) => {
         row.appendChild(lbl);
         setFillAndHug(lbl);
 
-        const val = createText(value || "-", 14, "Regular", isLink ? { r: 0.24, g: 0.24, b: 1 } : { r: 0.12, g: 0.16, b: 0.23 });
+        const val = createText(value || "-", 14, "Regular", isLink ? hexToRgb("#005ca9") : { r: 0.12, g: 0.16, b: 0.23 });
         row.appendChild(val);
         setFillAndHug(val);
 
@@ -2044,19 +2183,40 @@ figma.ui.onmessage = async (msg) => {
 
       // Detecta ficha já existente do projeto ANTES de construir a nova --
       // decisão de produto: "Gerar Ficha" atualiza em vez de duplicar.
-      // Guarda só a posição (x/y) para a nova ficha herdar -- o designer
-      // pode ter movido/organizado a ficha no canvas, atualizar não deve
-      // reposicioná-la. Remove a antiga assim que a posição é capturada,
-      // antes de construir a nova, para ela não interferir no cálculo de
-      // colisão/posicionamento (que só roda quando não há ficha anterior).
+      // versionType vem do modal "Versionar Ficha de Projeto" (só existe
+      // quando já havia uma ficha gerada, ver confirmHandoffVersion em
+      // handoff.js): "major" (Nova Versão, redesenho/mudança estrutural)
+      // preserva a ficha anterior como histórico e nasce AO LADO dela --
+      // nunca remove. "minor" (Atualização) ou ausente (ficha não
+      // versionada, ou primeira geração) continua substituindo no mesmo
+      // lugar -- remove a antiga antes de construir a nova.
+      const _isNewVersion = msg.versionType === 'major';
       const _existingFicha = _hdFindExistingFicha(_titulo);
-      let _inheritedX = null, _inheritedY = null;
-      const _isUpdate = !!_existingFicha;
-      if (_existingFicha) {
-        _inheritedX = _existingFicha.x;
-        _inheritedY = _existingFicha.y;
+      const _isUpdate = !!_existingFicha && !_isNewVersion;
+      if (_existingFicha && !_isNewVersion) {
         try { _existingFicha.remove(); } catch (e) {}
       }
+
+      // Posição da Ficha: NUNCA mais adivinhada por heurística de âncora/
+      // colisão (essa lógica existiu e foi removida em 2026-09-17 -- gerava
+      // fichas a "milhões de pixels de distância" em cenários reais, mesmo
+      // depois de 2 rodadas de tentativa de correção). A posição agora é
+      // sempre decisão do designer: `data._fichaBasePosition` (persistido em
+      // handoffData, setado uma única vez via confirm-ficha-position, ver
+      // handler abaixo) é a fonte de verdade. Sem ela ainda (primeiro
+      // handoff do projeto), a Ficha nasce numa posição sugerida simples e
+      // o backend avisa o frontend que a posição precisa de confirmação —
+      // nenhuma tentativa de "adivinhar melhor" substitui a decisão manual.
+      //
+      // Só confia na posição salva se a Ficha REAL ainda existir no canvas
+      // (_existingFicha, checado acima) -- sem isso, apagar a Ficha
+      // manualmente (testes, limpeza do projeto) deixava
+      // _fichaBasePosition "órfão" e válido pra sempre, pulando o modal de
+      // confirmação mesmo sem nenhuma Ficha de verdade ter existido ainda
+      // neste canvas. Mesma classe de bug já corrigida em _fichaGenerated
+      // (ver CLAUDE.md) -- aqui vinculado à mesma fonte de verdade em vez
+      // de duplicar uma checagem própria.
+      const _fichaBasePos = (_existingFicha && data._fichaBasePosition) ? data._fichaBasePosition : null;
       const _now = new Date();
       const _ts = `${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}-${String(_now.getDate()).padStart(2,'0')} ${String(_now.getHours()).padStart(2,'0')}:${String(_now.getMinutes()).padStart(2,'0')}`;
       // Timestamp antes da versão no nome: garante que a ordenação alfabética
@@ -2066,18 +2226,23 @@ figma.ui.onmessage = async (msg) => {
       const _containerName = `${_handoffBase} | ${_ts}${_versaoLabel ? ' | ' + _versaoLabel : ''}`;
 
       // MAIN CONTAINER
-      const mainContainer = createFrame("HORIZONTAL", 64, 48, hexToRgb("#00325b"));
+      // Layout fixo em largura (decisão de produto 2026-09-17): 1080px
+      // externo, 952px de conteúdo (1080 - padding 64*2) -- pensado pra
+      // exportar em PDF e se adequar a uma visão de protótipo navegável.
+      // Altura sempre Hug em todos os níveis (nunca fixa).
+      const mainContainer = createFrame("HORIZONTAL", 64, 48, hexToRgb("#004d8d"));
       mainContainer.name = _containerName;
       mainContainer.counterAxisAlignItems = "MIN"; // Top align
-      mainContainer.primaryAxisSizingMode = "AUTO"; // Hug children width
-      mainContainer.counterAxisSizingMode = "AUTO"; // Hug children height
+      mainContainer.resize(1080, 100);
+      mainContainer.primaryAxisSizingMode = "FIXED"; // Base width 1080
+      mainContainer.counterAxisSizingMode = "AUTO";  // Hug height
 
       // 1. FICHA TÉCNICA
       const fichaTecnica = createFrame("VERTICAL", 0, 0, { r: 1, g: 1, b: 1 });
       fichaTecnica.name = `${_handoffBase} | ${_ts} / Ficha de Projeto`;
       fichaTecnica.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
-      fichaTecnica.resize(480, 100);
-      fichaTecnica.counterAxisSizingMode = "FIXED"; // Base width 480
+      fichaTecnica.resize(952, 100);
+      fichaTecnica.counterAxisSizingMode = "FIXED"; // Base width 952
       fichaTecnica.primaryAxisSizingMode = "AUTO";  // Hug height
 
       // HEADER (CAIXA)
@@ -2175,7 +2340,7 @@ figma.ui.onmessage = async (msg) => {
           roleTag.cornerRadius = 999;
           roleTag.strokes = [{ type: "SOLID", color: { r: 0.70, g: 0.82, b: 0.96 } }];
           roleTag.strokeWeight = 1;
-          roleTag.appendChild(createText(m.papel || 'Membro', 9, "Medium", { r: 0.24, g: 0.24, b: 1 }));
+          roleTag.appendChild(createText(m.papel || 'Membro', 9, "Medium", hexToRgb("#005ca9")));
           mRow.appendChild(roleTag);
 
           const nameText = createText(m.nome || '', 12, "Medium");
@@ -2183,7 +2348,7 @@ figma.ui.onmessage = async (msg) => {
           mRow.appendChild(nameText);
 
           if (m.email) {
-            const contactLink = createText("Contato", 11, "Bold", { r: 0.24, g: 0.24, b: 1 });
+            const contactLink = createText("Contato", 11, "Bold", hexToRgb("#005ca9"));
             contactLink.textDecoration = "UNDERLINE";
             contactLink.hyperlink = { type: "URL", value: "mailto:" + m.email };
             mRow.appendChild(contactLink);
@@ -2212,7 +2377,7 @@ figma.ui.onmessage = async (msg) => {
           setFillAndHug(rTitle);
 
           if (r.link && r.link !== "#") {
-            const lText = createText("Acesse o link da HU", 11, "Bold", { r: 0.24, g: 0.24, b: 1 });
+            const lText = createText("Acesse o link da HU", 11, "Bold", hexToRgb("#005ca9"));
             lText.textDecoration = "UNDERLINE";
             lText.hyperlink = { type: "URL", value: r.link };
             rRow.appendChild(lText);
@@ -2245,6 +2410,16 @@ figma.ui.onmessage = async (msg) => {
       ];
       if (_allExcecoes.length > 0) {
         const excSection = createSection(content, "Cenários de Exceção");
+        // Mesma semântica de cor já usada na UI do plugin (ver
+        // EXCEPTION_TYPE_COLORS/NEW_EXC_TYPE_BORDER, specifications.js) --
+        // antes todo tipo (Erro/Alerta/Sucesso/Confirmação) nascia vermelho
+        // na Ficha, sem distinção visual nenhuma entre os 4 tipos.
+        const _excTypeColors = {
+          'Erro':        { r: 0.90, g: 0.20, b: 0.20 },
+          'Alerta':      { r: 0.93, g: 0.62, b: 0.09 },
+          'Sucesso':     { r: 0.13, g: 0.63, b: 0.31 },
+          'Confirmação': hexToRgb('#005ca9')
+        };
         _allExcecoes.forEach(e => {
           const eRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
           excSection.appendChild(eRow);
@@ -2253,7 +2428,7 @@ figma.ui.onmessage = async (msg) => {
           eRow.cornerRadius = 8;
           eRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
 
-          const typeTag = createFrame("HORIZONTAL", 8, 4, { r: 0.9, g: 0.2, b: 0.2 });
+          const typeTag = createFrame("HORIZONTAL", 8, 4, _excTypeColors[e.tipo] || _excTypeColors['Erro']);
           typeTag.cornerRadius = 4;
           typeTag.appendChild(createText(e.tipo || '', 10, "Bold", { r: 1, g: 1, b: 1 }));
           eRow.appendChild(typeTag);
@@ -2295,7 +2470,7 @@ figma.ui.onmessage = async (msg) => {
             dLabel.layoutGrow = 1;
             dRow.appendChild(dLabel);
 
-            const dLink = createText("Acesse o link", 11, "Bold", { r: 0.24, g: 0.24, b: 1 });
+            const dLink = createText("Acesse o link", 11, "Bold", hexToRgb("#005ca9"));
             dLink.textDecoration = "UNDERLINE";
             dLink.hyperlink = { type: "URL", value: docData.link };
             dRow.appendChild(dLink);
@@ -2306,26 +2481,22 @@ figma.ui.onmessage = async (msg) => {
         }
       }
 
-      // 1.7-1.10 -- delega para as funções _hdRebuild*Section (mesma lógica
+      // 1.7-1.9 -- delega para as funções _hdRebuild*Section (mesma lógica
       // de montagem, extraída para ser reaproveitada também pelo handler
       // insert-ficha-section). Aqui é sempre uma ficha nova/recriada, então
       // sempre appendChild ao final, nunca insertChild em índice existente.
       const _frames = data.frames || [];
 
-      const framesSection = await _hdRebuildFramesSection(_frames);
+      const framesSection = await _hdRebuildFramesSection(_frames, !!msg.includeAllFrames);
       if (framesSection) { content.appendChild(framesSection); _hdSetFillAndHug(framesSection); }
 
-      const measSection = _hdRebuildMeasuresSection(_frames, data.measurements || []);
-      if (measSection) { content.appendChild(measSection); _hdSetFillAndHug(measSection); }
-
-      // Mesmo filtro de duplicidade avulsa-vs-por-frame de sempre (ver
-      // comentário histórico em _hdRebuildSpecsSection sobre a spec
-      // "ressuscitada", CHANGELOG v6.1.1/v6.2.0) -- replicado também em
-      // insert-ficha-section para as duas pontas nunca divergirem.
-      const _framedSpecIds = new Set((_frames || []).flatMap(f => (f.createdSpecs || []).map(s => s.id)));
-      const _looseSpecs = (data.specs || []).filter(s => !_framedSpecIds.has(s.id));
-      const annotSection = await _hdRebuildSpecsSection(_frames, _looseSpecs);
-      if (annotSection) { content.appendChild(annotSection); _hdSetFillAndHug(annotSection); }
+      // "Documentação Visual" substitui as antigas seções "Medidas" e
+      // "Especificações" (agregadas, texto puro, sem nenhuma referência à
+      // tela real) -- 1 bloco por frame, com snapshot amplo (specs/medidas
+      // marcadas sobre o frame real) + card de detalhe em texto ao lado.
+      // Decisão de produto 2026-09-17, ver CLAUDE.md.
+      const docVisualSection = await _hdRebuildDocumentacaoVisualSection(_frames);
+      if (docVisualSection) { content.appendChild(docVisualSection); _hdSetFillAndHug(docVisualSection); }
 
       const flowsSection = _hdRebuildFlowsSection(data.createdFlows || []);
       if (flowsSection) { content.appendChild(flowsSection); _hdSetFillAndHug(flowsSection); }
@@ -2389,13 +2560,20 @@ figma.ui.onmessage = async (msg) => {
         uiHeaderRow.appendChild(uiTitle);
 
 
-        // Helper para specs list (Colunas Verticais)
+        // Helper para specs list (Colunas Verticais). Mostra só itens
+        // declarados manualmente pelo designer como "Componente Personalizado"
+        // (item.isMarkedCustom, toggle no card do item na tela Escanear
+        // Tokens) -- não mais qualquer item com vínculo DSC. Componentes
+        // conformes ou pendentes de revisão não entram: o dev usa o
+        // componente pronto da lib nesses casos, a lib já é a documentação;
+        // "Necessita revisão" é trabalho do designer, não informação de
+        // construção pro dev. Card é mínimo (nome + aviso) -- quem precisar
+        // de mais detalhe cria uma Spec (já tem snapshot visual próprio).
         function createSpecList(title, items, type) {
           if (!items || items.length === 0) return null;
-          // Só mostra items com token aplicado (isDS !== false) e que tenham ao menos uma prop com token
-          const tokenItems = items.filter(item => item.isDS !== false);
-          if (tokenItems.length === 0) return null;
-          items = tokenItems;
+          const customItems = items.filter(item => item.isMarkedCustom === true);
+          if (customItems.length === 0) return null;
+          items = customItems;
 
           const sec = createFrame("VERTICAL", 24, 16, { r: 1, g: 1, b: 1 });
           sec.name = `[Scan] ${title}`;
@@ -2404,7 +2582,7 @@ figma.ui.onmessage = async (msg) => {
           sec.primaryAxisSizingMode = "AUTO";  // Hug height
           sec.counterAxisSizingMode = "FIXED"; // Base width 280
 
-          const titleNode = createText(title, 18, "Bold", { r: 0.24, g: 0.24, b: 1 });
+          const titleNode = createText(title, 18, "Bold", hexToRgb("#005ca9"));
           sec.appendChild(titleNode);
           setFillAndHug(titleNode);
 
@@ -2413,20 +2591,15 @@ figma.ui.onmessage = async (msg) => {
           setFillAndHug(listContainer);
 
           items.forEach(item => {
-            const elCard = createFrame("VERTICAL", 16, 12, { r: 0.98, g: 0.99, b: 1 });
+            const elCard = createFrame("HORIZONTAL", 12, 12, { r: 1, g: 0.97, b: 0.91 });
             elCard.name = `[Token] ${item.name}`;
             elCard.cornerRadius = 12;
-            elCard.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.96 } }];
+            elCard.strokes = [{ type: "SOLID", color: { r: 0.96, g: 0.85, b: 0.6 } }];
             elCard.strokeWeight = 1;
-            
+            elCard.counterAxisAlignItems = "CENTER";
+
             listContainer.appendChild(elCard);
             setFillAndHug(elCard);
-
-            // Element Header
-            const headerRow = createFrame("HORIZONTAL", 0, 12);
-            headerRow.counterAxisAlignItems = "CENTER";
-            elCard.appendChild(headerRow);
-            setFillAndHug(headerRow);
 
             // Preview if exists — createRectangle só é chamado após obter o hash
             // para evitar que um rect órfão fique solto na raiz da página caso
@@ -2438,12 +2611,16 @@ figma.ui.onmessage = async (msg) => {
                 rect.resize(32, 32);
                 rect.fills = [{ type: "IMAGE", imageHash, scaleMode: "FIT" }];
                 rect.cornerRadius = 4;
-                headerRow.appendChild(rect);
+                elCard.appendChild(rect);
               } catch(e) {}
             }
 
+            const textCol = createFrame("VERTICAL", 0, 2);
+            textCol.layoutGrow = 1;
+            elCard.appendChild(textCol);
+            setFillAndHug(textCol);
+
             const iName = createText(item.name, 13, "Bold", { r: 0.1, g: 0.15, b: 0.25 });
-            iName.layoutGrow = 1;
             if (item.nodeId && figma.fileKey) {
               try {
                 iName.hyperlink = {
@@ -2451,93 +2628,17 @@ figma.ui.onmessage = async (msg) => {
                   value: `https://www.figma.com/design/${figma.fileKey}?node-id=${encodeURIComponent(item.nodeId)}`
                 };
                 iName.textDecoration = "UNDERLINE";
-                iName.fills = [{ type: "SOLID", color: { r: 0.24, g: 0.24, b: 1 } }];
+                iName.fills = [{ type: "SOLID", color: hexToRgb("#005ca9") }];
               } catch(e) {}
             }
-            headerRow.appendChild(iName);
+            textCol.appendChild(iName);
+            setFillAndHug(iName);
 
-            // Status Badge
-            const status = item.componentStatus || (item.isDS === true ? "ok" : (item.isDS === "warning" ? "warning" : "error"));
-            if (data.isAudit) {
-              const statusColors = {
-                ok: { bg: { r: 0.9, g: 0.98, b: 0.94 }, text: { r: 0.05, g: 0.5, b: 0.3 }, label: "DSC" },
-                warning: { bg: { r: 1, g: 0.97, b: 0.9 }, text: { r: 0.7, g: 0.4, b: 0 }, label: "AJUSTE" },
-                error: { bg: { r: 1, g: 0.93, b: 0.93 }, text: { r: 0.8, g: 0.2, b: 0.2 }, label: "FORA" }
-              };
-              const config = statusColors[status] || statusColors.error;
-              const badge = createFrame("HORIZONTAL", 8, 4, config.bg);
-              badge.cornerRadius = 6;
-              badge.appendChild(createText(config.label, 9, "Bold", config.text));
-              headerRow.appendChild(badge);
-            }
-
-            // Properties — só exibe props com token aplicado
-            const _tokenProps = (item.properties || []).filter(p => p.isDS === true || p.isDS === "warning" || p.token);
-            if (_tokenProps.length > 0) {
-              const propsContainer = createFrame("VERTICAL", 0, 6);
-              elCard.appendChild(propsContainer);
-              setFillAndHug(propsContainer);
-
-              _tokenProps.forEach(prop => {
-                const pRow = createFrame("HORIZONTAL", 0, 8);
-                pRow.counterAxisAlignItems = "CENTER";
-                propsContainer.appendChild(pRow);
-                setFillAndHug(pRow);
-
-                // Property icon — semantic type indicator (neutral gray) or color swatch for fill/stroke
-                if (prop.type === 'color' || prop.type === 'stroke') {
-                  // Show actual color as a swatch — faster than SVG and more informative
-                  const swatch = figma.createRectangle();
-                  swatch.resize(10, 10);
-                  swatch.cornerRadius = 2;
-                  const swatchRgb = hexToRgb(prop.rawValue || prop.value);
-                  swatch.fills = [{ type: 'SOLID', color: swatchRgb || { r: 0.8, g: 0.8, b: 0.8 } }];
-                  swatch.strokes = [{ type: 'SOLID', color: { r: 0.7, g: 0.72, b: 0.75 } }];
-                  swatch.strokeWeight = 0.5;
-                  pRow.appendChild(swatch);
-                } else {
-                  try {
-                    const iconSvg = getIconSvg(prop.type, prop.label);
-                    const iconNode = figma.createNodeFromSvg(iconSvg);
-                    iconNode.resize(12, 12);
-                    const neutral = { r: 0.55, g: 0.58, b: 0.62 };
-                    function setSvgColor(node, color) {
-                      const isContainer = node.type === 'FRAME' || node.type === 'GROUP' || node.type === 'COMPONENT';
-                      if (isContainer) {
-                        // Clear background of container — never fill it
-                        if ('fills' in node) node.fills = [];
-                        if ('strokes' in node) node.strokes = [];
-                      } else {
-                        // Color only leaf shapes (vectors, paths)
-                        if ('fills' in node && node.fills.length) node.fills = [{ type: 'SOLID', color }];
-                        if ('strokes' in node && node.strokes.length) node.strokes = [{ type: 'SOLID', color }];
-                      }
-                      if ('children' in node) node.children.forEach(c => setSvgColor(c, color));
-                    }
-                    setSvgColor(iconNode, neutral);
-                    pRow.appendChild(iconNode);
-                  } catch(e) {
-                    const dot = figma.createEllipse();
-                    dot.resize(6, 6);
-                    dot.fills = [{ type: 'SOLID', color: { r: 0.55, g: 0.58, b: 0.62 } }];
-                    pRow.appendChild(dot);
-                  }
-                }
-                const pLabel = createText(`${prop.label || prop.type}:`, 10, "Medium", { r: 0.4, g: 0.45, b: 0.5 });
-                pRow.appendChild(pLabel);
-
-                const pVal = createText(prop.value, 10, "Bold", { r: 0.2, g: 0.25, b: 0.3 });
-                pVal.layoutGrow = 1;
-                pRow.appendChild(pVal);
-
-                if (prop.token) {
-                  const tBadge = createText(prop.token, 8, "Regular", { r: 0.24, g: 0.24, b: 1 });
-                  pRow.appendChild(tBadge);
-                }
-              });
-            }
+            const warn = createText("Componente personalizado — precisa ser construído", 10, "Bold", { r: 0.7, g: 0.4, b: 0 });
+            textCol.appendChild(warn);
+            setFillAndHug(warn);
           });
-          
+
           return sec;
         }
 
@@ -2639,7 +2740,7 @@ figma.ui.onmessage = async (msg) => {
               const sf = node.fills.find(f => f.type === "SOLID");
               if (sf) {
                 const hex = rgbToHex(sf.color.r, sf.color.g, sf.color.b).toUpperCase();
-                const token = await getVariableInfo(node, 'fills');
+                const token = await getPaintVariableInfo(sf);
                 createRow(grid, "Fills", token ? token : hex);
               }
             }
@@ -2647,7 +2748,7 @@ figma.ui.onmessage = async (msg) => {
               const ss = node.strokes.find(s => s.type === "SOLID");
               if (ss) {
                 const hex = rgbToHex(ss.color.r, ss.color.g, ss.color.b).toUpperCase();
-                const token = await getVariableInfo(node, 'strokes');
+                const token = await getPaintVariableInfo(ss);
                 createRow(grid, "Strokes", `${token ? token : hex} (${node.strokeWeight}px)`);
               }
             }
@@ -2675,7 +2776,7 @@ figma.ui.onmessage = async (msg) => {
         auditBoard.counterAxisSizingMode = "FIXED";
         auditBoard.primaryAxisSizingMode = "AUTO";
         
-        const auditTitle = createText("Relatório de Auditoria", 24, "Bold", { r: 0.24, g: 0.24, b: 1 });
+        const auditTitle = createText("Relatório de Auditoria", 24, "Bold", hexToRgb("#005ca9"));
         auditBoard.appendChild(auditTitle);
         setFillAndHug(auditTitle);
 
@@ -2717,161 +2818,64 @@ figma.ui.onmessage = async (msg) => {
       mainContainer.locked = false;
       mainContainer.setPluginData('handexCategory', 'ficha');
       figma.currentPage.appendChild(mainContainer);
-      // Move pra Section "Handex | Ficha" ANTES de qualquer cálculo de
-      // posição abaixo -- Section preserva x/y absolutos (ver
-      // _hdMoveToCategorySection), então não interfere no posicionamento;
-      // cobre os dois caminhos (ficha nova e atualização) com um só ponto.
+      // Move pra Section "Handex | Ficha" ANTES de qualquer posicionamento
+      // abaixo -- Section preserva x/y absolutos (ver _hdMoveToCategorySection).
       _hdMoveToCategorySection(mainContainer, 'ficha');
 
-      if (_isUpdate && _inheritedX !== null) {
-        // Ficha existente: herda a posição exata de onde estava -- pula todo
-        // o cálculo de posicionamento/colisão abaixo (só relevante para uma
-        // ficha nova, que precisa achar um lugar livre no canvas).
-        mainContainer.x = _inheritedX;
-        mainContainer.y = _inheritedY;
+      const _fichaGap = 200;
+
+      if (_fichaBasePos) {
+        // Posição já confirmada pelo designer em algum momento anterior
+        // (persistida em handoffData._fichaBasePosition) -- nunca recalculada
+        // por heurística. "Nova Versão" nasce ao lado dela (preserva a
+        // anterior); "Atualização"/primeira geração pós-confirmação usa
+        // exatamente a posição salva.
+        if (_isNewVersion) {
+          mainContainer.x = Math.round(_fichaBasePos.x + (_existingFicha ? _existingFicha.width : mainContainer.width) + _fichaGap);
+          mainContainer.y = Math.round(_fichaBasePos.y);
+        } else {
+          mainContainer.x = Math.round(_fichaBasePos.x);
+          mainContainer.y = Math.round(_fichaBasePos.y);
+        }
         figma.currentPage.selection = [mainContainer];
         figma.viewport.scrollAndZoomIntoView([mainContainer]);
         figma.ui.postMessage({ type: "handoff-complete", isUpdate: _isUpdate, timestamp: _ts });
         return;
       }
 
-      // Inicializar fora da tela para evitar flash de sobreposição enquanto calcula posição
-      mainContainer.x = -99999;
-      mainContainer.y = -99999;
-
-      // Calcula gap considerando a largura real da ficha já renderizada
-      const _fichaGap = 200;
-      // Raio de proximidade para considerar uma ficha existente "do mesmo contexto"
-      // do frame mapeado, evitando pegar uma ficha antiga e distante de outro projeto.
-      const _nearbyRadius = 4000;
-
-      let _positioned = false;
-      let _existingFichas = [];
-
-      // Todo o cálculo de posição é protegido: qualquer erro (ex: figmaId inválido
-      // apontando para um node que não existe mais nesta cópia do arquivo) não pode
-      // deixar a ficha presa na coordenada off-screen temporária (-99999,-99999).
-      try {
-        // 1ª prioridade: ao lado do frame mapeado por figmaId (referência real de onde
-        // a ficha deve nascer no canvas — sempre a mais confiável quando disponível)
-        let _anchorBb = null;
-        const _mainFrames = data.frames || [];
-        for (const _f of _mainFrames) {
-          if (!_f.figmaId) continue;
-          let _fNode = null;
-          try {
-            _fNode = await figma.getNodeByIdAsync(_f.figmaId);
-          } catch (e) {
-            _fNode = null;
-          }
-          if (!_fNode) continue;
-          const _fBb = _fNode.absoluteBoundingBox;
-          if (_fBb) {
-            _anchorBb = _fBb;
-            break;
-          }
-        }
-
-        if (_anchorBb) {
-          mainContainer.x = Math.round(_anchorBb.x + _anchorBb.width + _fichaGap);
-          mainContainer.y = Math.round(_anchorBb.y);
-          _positioned = true;
-        }
-
-        // 2ª prioridade: ao lado de ficha já existente no canvas, mas só se ela estiver
-        // perto do frame mapeado (evita sobrepor outra ficha do mesmo projeto). Sem
-        // âncora, mantém o comportamento antigo de olhar qualquer ficha no canvas.
-        // Busca em figma.currentPage.children (fichas legadas soltas) + dentro da
-        // Section "Handex | Ficha" (padrão atual, ver _hdFindExistingFicha acima).
-        const _fichaSectionForPos = figma.currentPage.children.find(n => n.type === 'SECTION' && n.getPluginData('handexCategorySection') === 'ficha');
-        const _fichaCandidates = figma.currentPage.children.concat(_fichaSectionForPos ? _fichaSectionForPos.children : []);
-        _existingFichas = _fichaCandidates.filter(n => {
-          if (n.type !== 'FRAME' || !n.name.startsWith('Handex | Ficha') || n === mainContainer) return false;
-          if (!_anchorBb) return true;
-          const bb = n.absoluteBoundingBox;
-          if (!bb) return false;
-          return Math.abs(bb.x - _anchorBb.x) < _nearbyRadius && Math.abs(bb.y - _anchorBb.y) < _nearbyRadius;
-        });
-        if (_existingFichas.length > 0) {
-          const _rightmostFicha = _existingFichas.reduce((max, f) => {
-            const bb = f.absoluteBoundingBox;
-            if (!bb) return max;
-            return (bb.x + bb.width) > max.right ? { right: bb.x + bb.width, y: bb.y } : max;
-          }, { right: -Infinity, y: 0 });
-          if (_rightmostFicha.right > -Infinity) {
-            mainContainer.x = Math.round(_rightmostFicha.right + _fichaGap);
-            mainContainer.y = Math.round(_rightmostFicha.y);
-            _positioned = true;
-          }
-        }
-
-        // 3ª prioridade: ao lado da seleção atual no canvas
-        if (!_positioned) {
-          const _sel = figma.currentPage.selection.filter(n => n !== mainContainer);
-          if (_sel.length > 0) {
-            const _rightmost = _sel.reduce((max, n) => {
-              const bb = n.absoluteBoundingBox;
-              return bb && (bb.x + bb.width) > max.edge ? { edge: bb.x + bb.width, x: bb.x + bb.width, y: bb.y } : max;
-            }, { edge: -Infinity, x: 0, y: 0 });
-            if (_rightmost.edge > -Infinity) {
-              mainContainer.x = Math.round(_rightmost.x + _fichaGap);
-              mainContainer.y = Math.round(_rightmost.y);
-              _positioned = true;
-            }
-          }
-        }
-      } catch (posErr) {
-        console.error("Handoff positioning error:", posErr);
-        _positioned = false;
+      // Primeira geração deste projeto, sem posição confirmada ainda: nasce
+      // numa posição sugerida simples (abaixo do primeiro frame documentado
+      // com âncora conhecida, senão abaixo da seleção atual, senão abaixo do
+      // viewport) e já fica VISÍVEL e selecionada -- o designer arrasta ela
+      // mesma no canvas se quiser um lugar diferente, sem fantasma separado.
+      // O frontend mostra um aviso pedindo confirmação (handoff-needs-
+      // position-confirmation); só ao confirmar (confirm-ficha-position,
+      // handler abaixo) a posição vira _fichaBasePosition definitiva.
+      let _suggestedAnchor = null;
+      for (const _f of (data.frames || [])) {
+        if (!_f.figmaId) continue;
+        let _fNode = null;
+        try { _fNode = await figma.getNodeByIdAsync(_f.figmaId); } catch (e) { _fNode = null; }
+        if (_fNode && _fNode.absoluteBoundingBox) { _suggestedAnchor = _fNode.absoluteBoundingBox; break; }
       }
-
-      // 4ª prioridade (fallback): à direita da borda visível do viewport
-      if (!_positioned) {
+      if (!_suggestedAnchor) {
+        const _sel = figma.currentPage.selection.filter(n => n !== mainContainer);
+        const _bb = _sel.length > 0 ? _sel[0].absoluteBoundingBox : null;
+        if (_bb) _suggestedAnchor = _bb;
+      }
+      if (_suggestedAnchor) {
+        mainContainer.x = Math.round(_suggestedAnchor.x);
+        mainContainer.y = Math.round(_suggestedAnchor.y + _suggestedAnchor.height + _fichaGap);
+      } else {
         const _vb = figma.viewport.bounds;
-        mainContainer.x = Math.round(_vb.x + _vb.width + _fichaGap);
-        mainContainer.y = Math.round(_vb.y + (_vb.height / 2) - (mainContainer.height / 2));
-      }
-
-      // Rede de segurança contra colisão: a posição escolhida acima já segue a lógica
-      // de prioridade (âncora → ficha existente → seleção → viewport), mas nada nela
-      // olha para o resto do conteúdo da página. Aqui empurramos a ficha para a direita
-      // até não sobrepor nenhum outro nó de topo (frames de design, specs do Handex etc.).
-      try {
-        // Sections são só agrupadores visuais, sem conteúdo "por baixo" que
-        // a ficha possa cobrir -- tratá-las como obstáculo faz a ficha ser
-        // empurrada pela área da Section inteira, mesmo que o frame
-        // mapeado (ou qualquer outro) ocupe só uma fração dela. "Achata"
-        // cada Section nos seus filhos diretos antes de checar colisão,
-        // preservando a proteção real (nunca sobrepor um frame, mesmo
-        // dentro de uma Section) sem o falso positivo da área da Section.
-        const _pageNodes = figma.currentPage.children
-          .filter(n => n !== mainContainer && !_existingFichas.includes(n))
-          .flatMap(n => n.type === 'SECTION' ? n.children : [n]);
-        let _collisionIterations = 0;
-        let _hasCollision = true;
-        while (_hasCollision && _collisionIterations < 50) {
-          _hasCollision = false;
-          for (const _node of _pageNodes) {
-            const _nBb = _node.absoluteBoundingBox;
-            if (!_nBb) continue;
-            const _overlaps = mainContainer.x < _nBb.x + _nBb.width && mainContainer.x + mainContainer.width > _nBb.x &&
-              mainContainer.y < _nBb.y + _nBb.height && mainContainer.y + mainContainer.height > _nBb.y;
-            if (_overlaps) {
-              mainContainer.x = Math.round(_nBb.x + _nBb.width + _fichaGap);
-              _hasCollision = true;
-              _collisionIterations++;
-              break;
-            }
-          }
-        }
-      } catch (collisionErr) {
-        console.error("Handoff collision check error:", collisionErr);
+        mainContainer.x = Math.round(_vb.x + (_vb.width / 2) - (mainContainer.width / 2));
+        mainContainer.y = Math.round(_vb.y + _vb.height + _fichaGap);
       }
 
       figma.currentPage.selection = [mainContainer];
       figma.viewport.scrollAndZoomIntoView([mainContainer]);
 
-      figma.ui.postMessage({ type: "handoff-complete", isUpdate: _isUpdate, timestamp: _ts });
+      figma.ui.postMessage({ type: "handoff-needs-position-confirmation", fichaId: mainContainer.id, isUpdate: _isUpdate, timestamp: _ts });
     } catch (err) {
       console.error("Handoff Error:", err);
       figma.ui.postMessage({ type: "handoff-error", message: err.message });
@@ -2896,6 +2900,16 @@ figma.ui.onmessage = async (msg) => {
       const varId = Array.isArray(boundVar) ? (boundVar[0] && boundVar[0].id) : boundVar.id;
       if (!varId) return null;
       const v = await figma.variables.getVariableByIdAsync(varId);
+      return v ? v.name : null;
+    }
+    // fills/strokes não seguem o padrão de node.boundVariables[prop] usado
+    // acima (width/height/padding/itemSpacing) -- o binding de cor de um
+    // paint vive dentro do próprio paint, em paint.boundVariables.color.id.
+    // getVariableInfo(node, 'fills'/'strokes') sempre retornava null aqui.
+    async function getPaintVariableInfo(paint) {
+      const id = paint && paint.boundVariables && paint.boundVariables.color && paint.boundVariables.color.id;
+      if (!id) return null;
+      const v = await figma.variables.getVariableByIdAsync(id);
       return v ? v.name : null;
     }
 
@@ -3272,6 +3286,27 @@ figma.ui.onmessage = async (msg) => {
       const variable = await figma.variables.getVariableByIdAsync(id);
       return variable ? { name: variable.name, key: variable.key, remote: variable.remote === true } : null;
     }
+    async function _resolveVarById(id) {
+      if (!id) return null;
+      const variable = await figma.variables.getVariableByIdAsync(id);
+      return variable ? { name: variable.name, key: variable.key, remote: variable.remote === true } : null;
+    }
+    // fill/stroke (paint) e effect NÃO seguem o padrão de node.boundVariables[prop]
+    // usado acima (itemSpacing/padding/strokeWeight/topLeftRadius/fontSize,
+    // todos campos escalares do próprio nó) -- o binding de cor de um paint
+    // vive dentro do próprio paint (paint.boundVariables.color.id), e o
+    // binding de um effect (radius/spread/offset/color) vive dentro do
+    // próprio effect (effect.boundVariables.{campo}.id). getVar(n, "fills")/
+    // getVar(n, "strokes") sempre retornavam null, fazendo o scan reportar
+    // hex bruto mesmo quando havia um token de cor real vinculado -- impacto
+    // real: conformidade DSC calculada a partir de "sem token" quando na
+    // verdade havia um.
+    async function getPaintVar(paint) {
+      return _resolveVarById(paint && paint.boundVariables && paint.boundVariables.color && paint.boundVariables.color.id);
+    }
+    async function getEffectVar(effect, field) {
+      return _resolveVarById(effect && effect.boundVariables && effect.boundVariables[field] && effect.boundVariables[field].id);
+    }
 
     async function extractNodeProperties(n) {
       const props = [];
@@ -3291,7 +3326,7 @@ figma.ui.onmessage = async (msg) => {
 
           if (fill.type === "SOLID" && fill.color) {
             const hex = rgbToHex(fill.color.r, fill.color.g, fill.color.b).toUpperCase();
-            const vInfo = await getVar(n, "fills");
+            const vInfo = await getPaintVar(fill);
             const name = (vInfo && vInfo.name) || styleName || hex;
             const key = (vInfo && vInfo.key) || styleKey;
             const _isRemote = (vInfo && vInfo.remote) || fillStyleRemote;
@@ -3309,12 +3344,22 @@ figma.ui.onmessage = async (msg) => {
           const style = await figma.getStyleByIdAsync(n.textStyleId);
           if (style) { styleName = style.name; styleKey = style.key; textStyleRemote = style.remote === true; }
         }
+        // Variáveis de tipografia (fontSize/fontFamily/lineHeight/etc) são um
+        // mecanismo separado de Text Style -- um TEXT pode ter fontSize
+        // vinculado a uma variável sem nenhum Text Style aplicado. Sem essa
+        // checagem, esses casos sempre caíam no fallback de "Family Style
+        // (NNpx)" cru, mesmo tendo um token real. Só fontSize é usado como
+        // representante (mesmo padrão de cornerRadius acima) -- é o campo
+        // mais comumente tokenizado e evita duplicar leitura de vários
+        // campos pra um resultado que é só o "name" de exibição.
+        const sizeVar = await getVar(n, "fontSize");
         const family = (n.fontName && n.fontName !== figma.mixed) ? n.fontName.family : "Mixed";
         const fontStyle = (n.fontName && n.fontName !== figma.mixed) ? n.fontName.style : "Mixed";
         const size = (n.fontSize && n.fontSize !== figma.mixed) ? n.fontSize : "Mixed";
-        const name = styleName || `${family} ${fontStyle} (${size}px)`;
+        const name = styleName || (sizeVar && sizeVar.name) || `${family} ${fontStyle} (${size}px)`;
         const rawSize = typeof size === "number" ? size : null;
-        props.push({ type: "typography", name, value: name, rawValue: rawSize, key: styleKey, styleKey, label: "Tipografia", ...audit("typography", name, styleKey, name, textStyleRemote) });
+        const typoKey = styleKey || (sizeVar ? sizeVar.key : null);
+        props.push({ type: "typography", name, value: name, rawValue: rawSize, key: typoKey, variableKey: sizeVar ? sizeVar.key : null, styleKey, label: "Tipografia", ...audit("typography", name, typoKey, name, textStyleRemote || (sizeVar && sizeVar.remote)) });
       }
 
       // Spacing, Alignment
@@ -3367,7 +3412,7 @@ figma.ui.onmessage = async (msg) => {
               const st = await figma.getStyleByIdAsync(n.strokeStyleId);
               if (st) { styleName = st.name; styleKey = st.key; strokeStyleRemote = st.remote === true; }
             }
-            const sVar = await getVar(n, "strokes");
+            const sVar = await getPaintVar(visibleStroke);
             const strokeKey = (sVar && sVar.key) || styleKey;
             const strokeName = (sVar && sVar.name) || styleName || hex;
             props.push({ type: "stroke", name: strokeName, value: hex, rawValue: hex, key: strokeKey, variableKey: sVar ? sVar.key : null, styleKey, label: "Border Color", ...audit("colors", hex, strokeKey, strokeName, (sVar && sVar.remote) || strokeStyleRemote) });
@@ -3376,7 +3421,13 @@ figma.ui.onmessage = async (msg) => {
       }
 
       if ('cornerRadius' in n && n.cornerRadius !== figma.mixed && n.cornerRadius > 0) {
-        const vInfo = await getVar(n, "cornerRadius");
+        // "cornerRadius" não é um campo vinculável de verdade -- a Plugin API
+        // só expõe binding nos 4 cantos individuais (topLeftRadius etc, ver
+        // VariableBindableNodeField). getVar(n, "cornerRadius") sempre
+        // retornava null. Como o código só chega aqui quando cornerRadius
+        // !== figma.mixed (os 4 cantos já são iguais), basta ler um
+        // representante -- topLeftRadius.
+        const vInfo = await getVar(n, "topLeftRadius");
         const val = `${n.cornerRadius}px`;
         const name = (vInfo && vInfo.name) || val;
         const propKey = vInfo ? vInfo.key : null;
@@ -3392,8 +3443,16 @@ figma.ui.onmessage = async (msg) => {
         }
         for (const effect of n.effects) {
           if (effect.visible) {
-             const name = styleName || `${effect.type} (${effect.type.includes('SHADOW') ? 'Sombra' : 'Blur'})`;
-             props.push({ type: "effect", name, value: effect.type, key: styleKey, styleKey, label: "Effect", ...audit("effects", effect.type, styleKey, name, effectStyleRemote) });
+             // Variável de effect (radius/spread/offset/color) vive dentro
+             // do próprio objeto effect, em effect.boundVariables.{campo}.id
+             // -- mesmo padrão estrutural de paint (fill/stroke), nunca em
+             // node.boundVariables. Sem Effect Style aplicado, isso nunca
+             // tinha sido checado -- radius é usado como representante por
+             // existir tanto em shadow quanto em blur.
+             const effVar = await getEffectVar(effect, 'radius');
+             const name = styleName || (effVar && effVar.name) || `${effect.type} (${effect.type.includes('SHADOW') ? 'Sombra' : 'Blur'})`;
+             const effKey = styleKey || (effVar ? effVar.key : null);
+             props.push({ type: "effect", name, value: effect.type, key: effKey, variableKey: effVar ? effVar.key : null, styleKey, label: "Effect", ...audit("effects", effect.type, effKey, name, effectStyleRemote || (effVar && effVar.remote)) });
           }
         }
       }
@@ -3521,8 +3580,17 @@ figma.ui.onmessage = async (msg) => {
         elementMatchedBy = a.matchedBy;
         elementMatchedIn = a.matchedIn;
         elementMatchedTokenName = a.matchedTokenName;
-        // Convenção [dsc] no nome confirma conformidade (fallback quando chave não está no skeleton)
-        if (dsElement !== true && /^\[dsc\]/i.test(name)) dsElement = true;
+        // Convenção [dsc] no nome confirma conformidade (fallback quando chave
+        // não está no skeleton) -- sem isso, elementMatchedIn ficava null
+        // mesmo com dsElement true, e qualquer consumidor que dependa de
+        // matchedIn pra saber "de qual lib veio" (ex: _aiContext.componentesDSC,
+        // design-data.js) descartava esse item silenciosamente mesmo sendo
+        // genuinamente conforme ao DSC segundo esta mesma auditoria.
+        if (dsElement !== true && /^\[dsc\]/i.test(name)) {
+          dsElement = true;
+          if (!elementMatchedBy) elementMatchedBy = 'name-convention';
+          if (!elementMatchedIn) elementMatchedIn = 'DSC (convenção de nome)';
+        }
         // NUNCA usar mainComponent.remote como prova de vínculo com o DSC:
         // "remoto" só significa "vem de algum arquivo publicado como lib no
         // Figma" -- pode ser a lib pessoal do designer, um protótipo em outro
@@ -3588,6 +3656,16 @@ figma.ui.onmessage = async (msg) => {
 
       const map = specs[category];
       if (!map.has(name)) {
+        // isMarkedCustom é declaração manual do designer ("Componente
+        // Personalizado" no card do item, tela Escanear Tokens) -- itens
+        // são recriados do zero a cada scan (este bloco só roda na
+        // primeira ocorrência de `name` NESTE scan), então sem herdar do
+        // scan anterior a marcação se perderia a cada re-scan. Casamento
+        // por nodeId (não por name, que pode colidir entre elementos
+        // diferentes) contra msg.previousSpecs, enviado pelo frontend
+        // junto com o pedido de scan.
+        const _prevItem = (msg.previousSpecs && msg.previousSpecs[category] || [])
+          .find(p => p.nodeId === node.id);
         const itemObj = {
           name: name,
           type: category,
@@ -3600,6 +3678,7 @@ figma.ui.onmessage = async (msg) => {
           matchedIn: elementMatchedIn,
           matchedTokenName: elementMatchedTokenName,
           isCustomComponent: isCustomComponent,
+          isMarkedCustom: _prevItem ? !!_prevItem.isMarkedCustom : false,
           variants: variants,
           nodeId: node.id,
           layers: new Set([name]),
@@ -3869,6 +3948,19 @@ figma.ui.onmessage = async (msg) => {
       const variable = await figma.variables.getVariableByIdAsync(id);
       return variable ? variable.name : null;
     };
+    // fills/strokes NÃO seguem o padrão simples de node.boundVariables[prop]
+    // (usado por height/width/itemSpacing/padding acima) -- o binding de cor
+    // de um paint vive dentro do próprio objeto paint, em
+    // paint.boundVariables.color.id (cada paint no array pode ter sua
+    // própria variável). Usar getVar("fills")/getVar("strokes") sempre
+    // retornava null aqui, fazendo o card da spec mostrar o hex resolvido
+    // mesmo quando o nó tinha um token de cor real vinculado.
+    const getPaintVar = async (paint) => {
+      const id = paint && paint.boundVariables && paint.boundVariables.color && paint.boundVariables.color.id;
+      if (!id) return null;
+      const variable = await figma.variables.getVariableByIdAsync(id);
+      return variable ? variable.name : null;
+    };
 
     // 1. Dimensions
     if ("height" in node) {
@@ -3882,7 +3974,10 @@ figma.ui.onmessage = async (msg) => {
 
     // 2. Corner Radius
     if ("cornerRadius" in node && node.cornerRadius !== figma.mixed && node.cornerRadius > 0) {
-      const token = await getVar("cornerRadius");
+      // "cornerRadius" não é campo vinculável de verdade -- só os 4 cantos
+      // individuais são (topLeftRadius etc). Representante único porque o
+      // código só chega aqui com os 4 cantos já iguais.
+      const token = await getVar("topLeftRadius");
       properties.push({ key: "radius", label: "Raio de borda", value: node.cornerRadius + "px", token });
     }
 
@@ -3920,7 +4015,7 @@ figma.ui.onmessage = async (msg) => {
     if ("fills" in node && Array.isArray(node.fills) && node.fills.length > 0) {
       const sf = node.fills.find(f => f.type === "SOLID");
       if (sf) {
-        const token = await getVar("fills");
+        const token = await getPaintVar(sf);
         const hexFill = rgbToHex(sf.color.r, sf.color.g, sf.color.b).toUpperCase();
         properties.push({ key: "fill", label: "Preenchimento", value: token || hexFill, token });
       }
@@ -3928,7 +4023,7 @@ figma.ui.onmessage = async (msg) => {
     if ("strokes" in node && Array.isArray(node.strokes) && node.strokes.length > 0) {
       const ss = node.strokes.find(s => s.type === "SOLID");
       if (ss) {
-        const token = await getVar("strokes");
+        const token = await getPaintVar(ss);
         const hexStroke = rgbToHex(ss.color.r, ss.color.g, ss.color.b).toUpperCase();
         properties.push({ key: "stroke", label: "Contorno", value: token || hexStroke, token });
       }
@@ -3987,8 +4082,17 @@ figma.ui.onmessage = async (msg) => {
   // já selecionada e arrastável livremente; a posição final é lida via
   // seleção (read-position-ghost) e o fantasma é removido em seguida.
   if (msg.type === "create-position-ghost") {
-    const node = msg.targetNodeId ? await figma.getNodeByIdAsync(msg.targetNodeId) : null;
-    const bounds = node && (node.absoluteBoundingBox || node.absoluteRenderBounds);
+    // Prioridade de âncora pra sugestão de posição: 1) a ÚLTIMA spec já
+    // criada no canvas (specs nascem em sequência, organizadas, em vez de
+    // espalhadas perto de cada elemento anotado) -- 2) o elemento sendo
+    // anotado agora, se ainda não existe nenhuma spec no projeto -- 3)
+    // centro do viewport. É só sugestão inicial: o fantasma nasce
+    // arrastável e o designer decide a posição final antes de confirmar.
+    let anchorNode = msg.lastSpecId ? await figma.getNodeByIdAsync(msg.lastSpecId) : null;
+    if (!anchorNode) {
+      anchorNode = msg.targetNodeId ? await figma.getNodeByIdAsync(msg.targetNodeId) : null;
+    }
+    const bounds = anchorNode && (anchorNode.absoluteBoundingBox || anchorNode.absoluteRenderBounds);
 
     const themeColor = hexToRgb(msg.color || '#004d8d');
     // Sem texto real -- só a moldura, no tamanho ESTIMADO do card final
@@ -4007,8 +4111,8 @@ figma.ui.onmessage = async (msg) => {
     ghost.setPluginData('handexPositionGhost', 'true');
 
     figma.currentPage.appendChild(ghost);
-    // Nasce ao lado do elemento (mesmo ponto de partida de hoje), já como
-    // prévia arrastável -- não é mais um círculo genérico.
+    // Nasce ao lado da âncora (última spec criada, ou do elemento sendo
+    // anotado se ainda não há nenhuma spec), já como prévia arrastável.
     if (bounds) {
       ghost.x = bounds.x + bounds.width + 60;
       ghost.y = bounds.y;
@@ -4026,6 +4130,95 @@ figma.ui.onmessage = async (msg) => {
     // mesma chamada).
     figma.viewport.scrollAndZoomIntoView([ghost]);
     figma.ui.postMessage({ type: "position-ghost-created", ghostId: ghost.id });
+  }
+
+  // Confirma a posição da Ficha na 1ª geração do projeto (ver comentário em
+  // create-handoff sobre _fichaBasePosition) -- lê onde o designer deixou a
+  // Ficha de verdade (ela já nasceu visível/arrastável, sem fantasma
+  // separado) e devolve pro frontend persistir como base definitiva.
+  if (msg.type === "confirm-ficha-position") {
+    const ficha = msg.fichaId ? await figma.getNodeByIdAsync(msg.fichaId) : null;
+    if (!ficha) {
+      figma.ui.postMessage({ type: "ficha-position-confirmed", position: null });
+      return;
+    }
+    const bb = ficha.absoluteBoundingBox;
+    figma.ui.postMessage({ type: "ficha-position-confirmed", position: bb ? { x: bb.x, y: bb.y } : null });
+    return;
+  }
+
+  // Lista frames de nível superior da página atual, pro modal "Incluir mais
+  // frames no contexto" (aberto por downloadAiContextPackage, ver
+  // handoff.js) -- o designer normalmente documenta só PARTES de uma tela
+  // (um header, um menu), nunca a tela inteira; pra dar ao Figma Make
+  // contexto amplo de onde essas partes vivem, ele pode escolher incluir a
+  // imagem de telas completas do canvas, mesmo sem spec/medida nenhuma
+  // vinculada. Exclui as Sections do próprio Handex (Specs/Medidas/Fluxos/
+  // Ficha, identificadas por handexCategorySection) -- não são telas de
+  // produto, são organização interna do plugin.
+  if (msg.type === "list-canvas-frames-for-ai") {
+    const validTypes = ['FRAME', 'COMPONENT', 'COMPONENT_SET'];
+    const candidates = figma.currentPage.children
+      .filter(n => validTypes.includes(n.type) && !n.getPluginData('handexCategory'))
+      .map(n => ({ id: n.id, nome: n.name }));
+    figma.ui.postMessage({ type: 'canvas-frames-for-ai-listed', frames: candidates });
+    return;
+  }
+
+  // Gera um PNG por frame documentado (mesma marcação da Documentação
+  // Visual da Ficha: frame real + só selos/contornos de spec ou marcações
+  // de medida, nunca Conector/specCard) pra download manual -- usado pelo
+  // botão "Baixar imagens dos frames" (junto de "Copiar contexto pro Figma
+  // Make"). Não tenta combinar imagem+texto num clipboard só: investigação
+  // (2026-09-18) mostrou que ClipboardItem com múltiplos tipos representa
+  // a MESMA informação em formatos alternativos, não duas coisas
+  // distintas -- o app que recebe o paste escolheria só um dos dois,
+  // resultado incerto. Download separado é garantido de funcionar.
+  // extraFrameIds (opcional): frames adicionais escolhidos no modal acima,
+  // sem spec/medida nenhuma -- snapshot é do frame INTEIRO, sem nenhuma
+  // marcação de selo/contorno (não há spec pra marcar), só a tela completa
+  // como referência visual de contexto.
+  if (msg.type === "export-frame-snapshots-for-ai") {
+    (async () => {
+      const frames = (msg.data && msg.data.frames) || [];
+      const results = [];
+      for (const f of frames) {
+        if (!f.figmaId) continue;
+        let frameNode = null;
+        try { frameNode = await figma.getNodeByIdAsync(f.figmaId); } catch (e) { frameNode = null; }
+        if (!frameNode) continue;
+
+        const hasSpecs = (f.createdSpecs || []).length > 0;
+        const hasMeasures = (f.measurements || []).length > 0;
+        if (!hasSpecs && !hasMeasures) continue;
+
+        const nodeIds = hasSpecs
+          ? await _hdCollectSpecContourIds(f)
+          : (f.measurements || []).map(m => m.nodeId).filter(Boolean);
+
+        try {
+          const bytes = await _hdSnapshotFrameWithNodes(frameNode, nodeIds);
+          if (bytes) {
+            results.push({ nome: f.nome || 'Frame', base64: figma.base64Encode(bytes) });
+          }
+        } catch (e) { /* tolera falha isolada, segue pros próximos frames */ }
+      }
+
+      for (const id of (msg.extraFrameIds || [])) {
+        let extraNode = null;
+        try { extraNode = await figma.getNodeByIdAsync(id); } catch (e) { extraNode = null; }
+        if (!extraNode || !('exportAsync' in extraNode)) continue;
+        try {
+          const bytes = await extraNode.exportAsync({ format: 'PNG', constraint: { type: 'SCALE', value: 2 } });
+          if (bytes) {
+            results.push({ nome: extraNode.name || 'Frame', base64: figma.base64Encode(bytes) });
+          }
+        } catch (e) { /* tolera falha isolada, segue pros próximos */ }
+      }
+
+      figma.ui.postMessage({ type: "frame-snapshots-for-ai-ready", images: results });
+    })();
+    return;
   }
 
   // Lê a posição atual do fantasma (arrastado livremente pelo usuário) e o
@@ -4281,7 +4474,7 @@ figma.ui.onmessage = async (msg) => {
         const linkTxt = figma.createText();
         linkTxt.fontName = { family: "Inter", style: "Regular" };
         linkTxt.fontSize = 11;
-        linkTxt.fills = [{ type: "SOLID", color: { r: 0.24, g: 0.24, b: 1 } }];
+        linkTxt.fills = [{ type: "SOLID", color: hexToRgb("#005ca9") }];
         linkTxt.characters = opts.link;
         linkTxt.textDecoration = "UNDERLINE";
         linkTxt.hyperlink = { type: "URL", value: opts.link };
@@ -5469,6 +5662,31 @@ figma.ui.onmessage = async (msg) => {
   // Usado ao abrir o modal "Gerar Ficha" para o resumo/versionamento
   // partirem do que de fato esta no canvas, nao so do que ficou salvo
   // no estado do plugin (que pode estar desatualizado).
+  // Exporta a Ficha do canvas (a que já existe, não uma reconstrução) como
+  // PDF nativo -- Plugin API tem format: 'PDF' em exportAsync, fidelidade
+  // visual total (cores, cards, snapshots) sem precisar reconstruir nada
+  // via lib externa (diferente do PDF de texto puro já existente em
+  // exportHandoff, handoff.js, que só converte o Markdown pra texto
+  // corrido). Reaproveita _hdFindExistingFicha (mesmo critério de busca já
+  // usado em pull-ficha-version-from-canvas/insert-ficha-section).
+  if (msg.type === 'export-ficha-pdf') {
+    (async () => {
+      try {
+        const _titulo = (msg.titulo || '').replace(/\//g, '-');
+        const ficha = _hdFindExistingFicha(_titulo);
+        if (!ficha) {
+          figma.ui.postMessage({ type: 'ficha-pdf-exported', bytes: null, error: 'no-ficha' });
+          return;
+        }
+        const bytes = await ficha.exportAsync({ format: 'PDF' });
+        figma.ui.postMessage({ type: 'ficha-pdf-exported', base64: figma.base64Encode(bytes) });
+      } catch (e) {
+        figma.ui.postMessage({ type: 'ficha-pdf-exported', bytes: null, error: e.message });
+      }
+    })();
+    return;
+  }
+
   if (msg.type === 'pull-ficha-version-from-canvas') {
     // Try/catch cobre toda a leitura: o frontend depende de sempre receber
     // uma resposta para não travar o botão "Gerar Ficha" (ver timeout de

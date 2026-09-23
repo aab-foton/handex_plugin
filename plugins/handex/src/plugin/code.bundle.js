@@ -294,6 +294,15 @@
 
   // src/plugin/code.js
   figma.showUI(__html__, { width: 480, height: 750 });
+  try {
+    figma.currentPage.findAll((n) => n.name === "[HighlightStroke]").forEach((n) => {
+      try {
+        n.remove();
+      } catch (e) {
+      }
+    });
+  } catch (e) {
+  }
   var activeHighlightNode = null;
   var _highlightToken = 0;
   figma.on("close", () => {
@@ -537,30 +546,26 @@
     if (f.audit && f.audit.status) {
       _hdCreateRow(fRow, "Auditoria DSC", f.audit.status + (f.audit.justificativa ? " \u2014 " + f.audit.justificativa : ""));
     }
-    const _frameNode = f.figmaId ? await figma.getNodeByIdAsync(f.figmaId) : null;
-    if (_frameNode) {
-      const _specIds = await _hdCollectSpecSnapshotNodeIds(f);
-      const _measureIds = (f.measurements || []).map((m) => m.nodeId).filter(Boolean);
-      const _addPreview = async (label, nodeIds) => {
-        if (nodeIds.length === 0) return;
-        const bytes = await _hdSnapshotFrameWithNodes(_frameNode, nodeIds);
-        if (!bytes) return;
-        try {
-          const imageHash = figma.createImage(bytes).hash;
-          const wrap = _hdCreateFrame("VERTICAL", 0, 4);
-          wrap.appendChild(_hdCreateText(label, 10, "Bold", { r: 0.39, g: 0.45, b: 0.55 }));
-          const rect = figma.createRectangle();
-          rect.resize(432, 243);
-          rect.fills = [{ type: "IMAGE", imageHash, scaleMode: "FIT" }];
-          rect.cornerRadius = 8;
-          wrap.appendChild(rect);
-          fRow.appendChild(wrap);
-          _hdSetFillAndHug(wrap);
-        } catch (e) {
-        }
-      };
-      await _addPreview("Snapshot com Specs", _specIds);
-      await _addPreview("Snapshot com Medidas", _measureIds);
+    if (f.isNewComponent) {
+      if (f.newComponentObservations) {
+        _hdCreateRow(fRow, "Padr\xE3o de uso, nomenclatura e diretrizes", f.newComponentObservations);
+      }
+      const _categoryLabels = { components: "Componentes", icons: "\xCDcones", typography: "Tipografia", frames: "Frames e Layouts", vectors: "Vetores" };
+      const _allItems = f.specs ? Object.keys(_categoryLabels).flatMap((cat) => (f.specs[cat] || []).map((item) => __spreadProps(__spreadValues({}, item), { _cat: _categoryLabels[cat] }))) : [];
+      if (_allItems.length > 0) {
+        const elementsWrap = _hdCreateFrame("VERTICAL", 0, 4);
+        elementsWrap.name = "[Campo] Elementos do Componente";
+        fRow.appendChild(elementsWrap);
+        _hdSetFillAndHug(elementsWrap);
+        const elementsLabel = _hdCreateText(`Elementos (${_allItems.length})`, 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 });
+        elementsWrap.appendChild(elementsLabel);
+        _hdSetFillAndHug(elementsLabel);
+        _allItems.forEach((item) => {
+          const itemText = _hdCreateText(`${item.name || "Elemento"} \u2014 ${item._cat}`, 12, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
+          elementsWrap.appendChild(itemText);
+          _hdSetFillAndHug(itemText);
+        });
+      }
     }
     return fRow;
   }
@@ -614,11 +619,10 @@
     }
     return bytes;
   }
-  async function _hdCollectSpecSnapshotNodeIds(f) {
+  async function _hdCollectSpecContourIds(f) {
     const ids = [];
     for (const s of f.createdSpecs || []) {
       if (!s || !s.id) continue;
-      ids.push(s.id);
       try {
         const specGroup = await figma.getNodeByIdAsync(s.id);
         const markerId = specGroup && specGroup.getPluginData("handexSpecMarkerId");
@@ -763,7 +767,7 @@
             pKey.layoutGrow = 1;
             pRow.appendChild(pKey);
             if (prop.token) {
-              const tBadge = _hdCreateText(prop.token, 8, "Medium", { r: 0.24, g: 0.24, b: 1 });
+              const tBadge = _hdCreateText(prop.token, 8, "Medium", hexToRgb2("#005ca9"));
               _hdSetFillAndHug(tBadge);
               pRow.appendChild(tBadge);
             }
@@ -851,7 +855,7 @@
     section.cornerRadius = 8;
     section.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
     section.strokeWeight = 1;
-    const title = _hdCreateText(titleText, 16, "Bold", { r: 0.24, g: 0.24, b: 1 });
+    const title = _hdCreateText(titleText, 16, "Bold", hexToRgb2("#005ca9"));
     section.appendChild(title);
     _hdSetFillAndHug(title);
     return section;
@@ -871,10 +875,18 @@
     content.insertChild(Math.min(idx, content.children.length), newSection);
     _hdSetFillAndHug(newSection);
   }
-  async function _hdRebuildFramesSection(frames) {
-    const _frames = frames || [];
+  function _hdFrameHasCustomItem(f) {
+    if (!f || !f.specs) return false;
+    const _categories = ["components", "icons", "typography", "frames", "vectors"];
+    return _categories.some((cat) => (f.specs[cat] || []).some((item) => item.isMarkedCustom === true));
+  }
+  function _hdFrameIsRelevantForFicha(f) {
+    return !!(f && f.isNewComponent) || _hdFrameHasCustomItem(f);
+  }
+  async function _hdRebuildFramesSection(frames, includeAllFrames = false) {
+    const _frames = includeAllFrames ? frames || [] : (frames || []).filter(_hdFrameIsRelevantForFicha);
     if (_frames.length === 0) return null;
-    const framesSection = _hdBuildSectionShell("Frames Documentados");
+    const framesSection = _hdBuildSectionShell("Frames Escaneados");
     for (const [fi, f] of _frames.entries()) {
       const fRow = await _hdBuildFrameCard(f, fi);
       framesSection.appendChild(fRow);
@@ -882,43 +894,76 @@
     }
     return framesSection;
   }
-  function _hdRebuildMeasuresSection(frames, looseMeasures) {
-    const _framesWithMeasures = (frames || []).filter((f) => (f.measurements || []).length > 0);
-    const _loose = looseMeasures || [];
-    if (_framesWithMeasures.length === 0 && _loose.length === 0) return null;
-    const measSection = _hdBuildSectionShell("Medidas");
-    _framesWithMeasures.forEach((f) => {
-      const fGroup = _hdBuildMeasuresSubgroup(f);
-      measSection.appendChild(fGroup);
-      _hdSetFillAndHug(fGroup);
-    });
-    if (_loose.length > 0) {
-      const looseFrame = { nome: "Sem frame vinculado", measurements: _loose };
-      const looseGroup = _hdBuildMeasuresSubgroup(looseFrame);
-      looseGroup.setPluginData("handexFrameId", "__loose__");
-      measSection.appendChild(looseGroup);
-      _hdSetFillAndHug(looseGroup);
+  async function _hdBuildFrameShowcaseBlock(f, fi) {
+    const _frameNode = f.figmaId ? await figma.getNodeByIdAsync(f.figmaId) : null;
+    if (!_frameNode) return null;
+    const _hasSpecs = (f.createdSpecs || []).length > 0;
+    const _hasMeasures = (f.measurements || []).length > 0;
+    if (!_hasSpecs && !_hasMeasures) return null;
+    const block = _hdCreateFrame("VERTICAL", 16, 16, { r: 0.98, g: 0.98, b: 0.99 });
+    block.name = `[Documenta\xE7\xE3o] ${f.nome || "Frame " + (fi + 1)}`;
+    block.cornerRadius = 12;
+    block.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
+    block.setPluginData("handexFrameId", f.figmaId || f.id || "");
+    const blockTitle = _hdCreateText(f.nome || "Frame", 14, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+    block.appendChild(blockTitle);
+    _hdSetFillAndHug(blockTitle);
+    const _SNAPSHOT_MAX_W = 872;
+    const _DETAIL_CARD_MAX_W = 450;
+    const _addShowcasePair = async (label, nodeIds, detailNode) => {
+      if (!detailNode) return;
+      const pair = _hdCreateFrame("VERTICAL", 0, 8);
+      pair.appendChild(_hdCreateText(label, 11, "Bold", { r: 0.39, g: 0.45, b: 0.55 }));
+      if (nodeIds.length > 0) {
+        const bytes = await _hdSnapshotFrameWithNodes(_frameNode, nodeIds);
+        if (bytes) {
+          try {
+            const imageHash = figma.createImage(bytes).hash;
+            const _bb = _frameNode.absoluteBoundingBox;
+            const _w = _bb && _bb.width > 0 ? Math.min(_SNAPSHOT_MAX_W, _bb.width) : _SNAPSHOT_MAX_W;
+            const _h = _bb && _bb.width > 0 ? _w * (_bb.height / _bb.width) : _SNAPSHOT_MAX_W * 0.6;
+            const rect = figma.createRectangle();
+            rect.resize(_w, _h);
+            rect.fills = [{ type: "IMAGE", imageHash, scaleMode: "FIT" }];
+            rect.cornerRadius = 8;
+            rect.layoutAlign = "MIN";
+            pair.appendChild(rect);
+          } catch (e) {
+          }
+        }
+      }
+      pair.appendChild(detailNode);
+      detailNode.resize(_DETAIL_CARD_MAX_W, detailNode.height);
+      if ("counterAxisSizingMode" in detailNode) detailNode.counterAxisSizingMode = "FIXED";
+      if ("primaryAxisSizingMode" in detailNode) detailNode.primaryAxisSizingMode = "AUTO";
+      detailNode.layoutAlign = "MIN";
+      block.appendChild(pair);
+      _hdSetFillAndHug(pair);
+    };
+    if (_hasSpecs) {
+      await _addShowcasePair("Specs marcadas", await _hdCollectSpecContourIds(f), await _hdBuildSpecsSubgroup(f));
     }
-    return measSection;
+    if (_hasMeasures) {
+      const _measureIds = f.measurements.map((m) => m.nodeId).filter(Boolean);
+      await _addShowcasePair("Medidas aplicadas", _measureIds, _hdBuildMeasuresSubgroup(f));
+    }
+    return block;
   }
-  async function _hdRebuildSpecsSection(frames, looseSpecs) {
-    const _framesWithSpecs = (frames || []).filter((f) => (f.createdSpecs || []).length > 0);
-    const _loose = looseSpecs || [];
-    if (_framesWithSpecs.length === 0 && _loose.length === 0) return null;
-    const annotSection = _hdBuildSectionShell("Especifica\xE7\xF5es");
-    for (const f of _framesWithSpecs) {
-      const fGroup = await _hdBuildSpecsSubgroup(f);
-      annotSection.appendChild(fGroup);
-      _hdSetFillAndHug(fGroup);
+  async function _hdRebuildDocumentacaoVisualSection(frames) {
+    const _frames = frames || [];
+    if (_frames.length === 0) return null;
+    const blocks = [];
+    for (const [fi, f] of _frames.entries()) {
+      const block = await _hdBuildFrameShowcaseBlock(f, fi);
+      if (block) blocks.push(block);
     }
-    if (_loose.length > 0) {
-      const looseFrame = { nome: "Sem frame vinculado", createdSpecs: _loose, specGroupNames: {}, specGroupVisible: {} };
-      const looseGroup = await _hdBuildSpecsSubgroup(looseFrame);
-      looseGroup.setPluginData("handexFrameId", "__loose__");
-      annotSection.appendChild(looseGroup);
-      _hdSetFillAndHug(looseGroup);
-    }
-    return annotSection;
+    if (blocks.length === 0) return null;
+    const section = _hdBuildSectionShell("Documenta\xE7\xE3o Visual");
+    blocks.forEach((block) => {
+      section.appendChild(block);
+      _hdSetFillAndHug(block);
+    });
+    return section;
   }
   function _hdRebuildFlowsSection(flows) {
     const _flows = flows || [];
@@ -938,7 +983,7 @@
     };
     return "#" + toHex(r) + toHex(g) + toHex(b);
   }
-  var PLUGIN_VERSION = true ? "6.13.0" : "dev";
+  var PLUGIN_VERSION = true ? "6.29.4" : "dev";
   var DSC_HANDOFF_SUMMARY_ENABLED = false;
   async function _writeSharedPluginData(data) {
     var _a, _b, _c, _d, _e, _f, _g;
@@ -1732,6 +1777,12 @@
       }
       return;
     }
+    if (msg.type === "check-frames-relevance") {
+      const _frames = msg.data && msg.data.frames || [];
+      const hasRelevantFrame = _frames.some(_hdFrameIsRelevantForFicha);
+      figma.ui.postMessage({ type: "frames-relevance-checked", hasRelevantFrame, hasAnyFrame: _frames.length > 0 });
+      return;
+    }
     if (msg.type === "insert-ficha-section") {
       try {
         const data = msg.data;
@@ -1761,16 +1812,11 @@
         }
         const _frames = data.frames || [];
         if (msg.section === "tokens") {
-          const framesSection = await _hdRebuildFramesSection(_frames);
-          _hdReplaceSection(content, "Frames Documentados", framesSection);
-        } else if (msg.section === "medidas") {
-          const measSection = _hdRebuildMeasuresSection(_frames, data.measurements || []);
-          _hdReplaceSection(content, "Medidas", measSection);
-        } else if (msg.section === "specs") {
-          const _framedSpecIds = new Set(_frames.flatMap((f) => (f.createdSpecs || []).map((s) => s.id)));
-          const _looseSpecs = (data.specs || []).filter((s) => !_framedSpecIds.has(s.id));
-          const annotSection = await _hdRebuildSpecsSection(_frames, _looseSpecs);
-          _hdReplaceSection(content, "Especifica\xE7\xF5es", annotSection);
+          const framesSection = await _hdRebuildFramesSection(_frames, !!msg.includeAllFrames);
+          _hdReplaceSection(content, "Frames Escaneados", framesSection);
+        } else if (msg.section === "medidas" || msg.section === "specs") {
+          const docVisualSection = await _hdRebuildDocumentacaoVisualSection(_frames);
+          _hdReplaceSection(content, "Documenta\xE7\xE3o Visual", docVisualSection);
         } else if (msg.section === "fluxos") {
           const flowsSection = _hdRebuildFlowsSection(data.createdFlows || []);
           _hdReplaceSection(content, "Fluxos de Tela", flowsSection);
@@ -1883,7 +1929,7 @@
           section.cornerRadius = 8;
           section.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
           section.strokeWeight = 1;
-          const title = createText(titleText, 16, "Bold", { r: 0.24, g: 0.24, b: 1 });
+          const title = createText(titleText, 16, "Bold", hexToRgb2("#005ca9"));
           section.appendChild(title);
           setFillAndHug(title);
           return section;
@@ -1897,7 +1943,7 @@
           const lbl = createText(label, 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 });
           row.appendChild(lbl);
           setFillAndHug(lbl);
-          const val = createText(value || "-", 14, "Regular", isLink ? { r: 0.24, g: 0.24, b: 1 } : { r: 0.12, g: 0.16, b: 0.23 });
+          const val = createText(value || "-", 14, "Regular", isLink ? hexToRgb2("#005ca9") : { r: 0.12, g: 0.16, b: 0.23 });
           row.appendChild(val);
           setFillAndHug(val);
           if (isLink && value) {
@@ -1943,30 +1989,30 @@
         }
         const _titulo = (((_b = data.step1) == null ? void 0 : _b.titulo) || "Projeto").replace(/\//g, "-");
         const _handoffBase = `Handex | Ficha de Projeto | ${_titulo}`;
+        const _isNewVersion = msg.versionType === "major";
         const _existingFicha = _hdFindExistingFicha(_titulo);
-        let _inheritedX = null, _inheritedY = null;
-        const _isUpdate = !!_existingFicha;
-        if (_existingFicha) {
-          _inheritedX = _existingFicha.x;
-          _inheritedY = _existingFicha.y;
+        const _isUpdate = !!_existingFicha && !_isNewVersion;
+        if (_existingFicha && !_isNewVersion) {
           try {
             _existingFicha.remove();
           } catch (e) {
           }
         }
+        const _fichaBasePos = _existingFicha && data._fichaBasePosition ? data._fichaBasePosition : null;
         const _now = /* @__PURE__ */ new Date();
         const _ts = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, "0")}-${String(_now.getDate()).padStart(2, "0")} ${String(_now.getHours()).padStart(2, "0")}:${String(_now.getMinutes()).padStart(2, "0")}`;
         const _versaoLabel = (((_c = data.step1) == null ? void 0 : _c.versao) || "").trim();
         const _containerName = `${_handoffBase} | ${_ts}${_versaoLabel ? " | " + _versaoLabel : ""}`;
-        const mainContainer = createFrame("HORIZONTAL", 64, 48, hexToRgb2("#00325b"));
+        const mainContainer = createFrame("HORIZONTAL", 64, 48, hexToRgb2("#004d8d"));
         mainContainer.name = _containerName;
         mainContainer.counterAxisAlignItems = "MIN";
-        mainContainer.primaryAxisSizingMode = "AUTO";
+        mainContainer.resize(1080, 100);
+        mainContainer.primaryAxisSizingMode = "FIXED";
         mainContainer.counterAxisSizingMode = "AUTO";
         const fichaTecnica = createFrame("VERTICAL", 0, 0, { r: 1, g: 1, b: 1 });
         fichaTecnica.name = `${_handoffBase} | ${_ts} / Ficha de Projeto`;
         fichaTecnica.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
-        fichaTecnica.resize(480, 100);
+        fichaTecnica.resize(952, 100);
         fichaTecnica.counterAxisSizingMode = "FIXED";
         fichaTecnica.primaryAxisSizingMode = "AUTO";
         const header = createFrame("HORIZONTAL", 24, 16, { r: 1, g: 1, b: 1 });
@@ -2047,13 +2093,13 @@
             roleTag.cornerRadius = 999;
             roleTag.strokes = [{ type: "SOLID", color: { r: 0.7, g: 0.82, b: 0.96 } }];
             roleTag.strokeWeight = 1;
-            roleTag.appendChild(createText(m.papel || "Membro", 9, "Medium", { r: 0.24, g: 0.24, b: 1 }));
+            roleTag.appendChild(createText(m.papel || "Membro", 9, "Medium", hexToRgb2("#005ca9")));
             mRow.appendChild(roleTag);
             const nameText = createText(m.nome || "", 12, "Medium");
             nameText.layoutGrow = 1;
             mRow.appendChild(nameText);
             if (m.email) {
-              const contactLink = createText("Contato", 11, "Bold", { r: 0.24, g: 0.24, b: 1 });
+              const contactLink = createText("Contato", 11, "Bold", hexToRgb2("#005ca9"));
               contactLink.textDecoration = "UNDERLINE";
               contactLink.hyperlink = { type: "URL", value: "mailto:" + m.email };
               mRow.appendChild(contactLink);
@@ -2074,7 +2120,7 @@
             rRow.appendChild(rTitle);
             setFillAndHug(rTitle);
             if (r.link && r.link !== "#") {
-              const lText = createText("Acesse o link da HU", 11, "Bold", { r: 0.24, g: 0.24, b: 1 });
+              const lText = createText("Acesse o link da HU", 11, "Bold", hexToRgb2("#005ca9"));
               lText.textDecoration = "UNDERLINE";
               lText.hyperlink = { type: "URL", value: r.link };
               rRow.appendChild(lText);
@@ -2099,6 +2145,12 @@
         ];
         if (_allExcecoes.length > 0) {
           const excSection = createSection(content, "Cen\xE1rios de Exce\xE7\xE3o");
+          const _excTypeColors = {
+            "Erro": { r: 0.9, g: 0.2, b: 0.2 },
+            "Alerta": { r: 0.93, g: 0.62, b: 0.09 },
+            "Sucesso": { r: 0.13, g: 0.63, b: 0.31 },
+            "Confirma\xE7\xE3o": hexToRgb2("#005ca9")
+          };
           _allExcecoes.forEach((e) => {
             const eRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
             excSection.appendChild(eRow);
@@ -2106,7 +2158,7 @@
             eRow.counterAxisAlignItems = "CENTER";
             eRow.cornerRadius = 8;
             eRow.strokes = [{ type: "SOLID", color: { r: 0.92, g: 0.94, b: 0.96 } }];
-            const typeTag = createFrame("HORIZONTAL", 8, 4, { r: 0.9, g: 0.2, b: 0.2 });
+            const typeTag = createFrame("HORIZONTAL", 8, 4, _excTypeColors[e.tipo] || _excTypeColors["Erro"]);
             typeTag.cornerRadius = 4;
             typeTag.appendChild(createText(e.tipo || "", 10, "Bold", { r: 1, g: 1, b: 1 }));
             eRow.appendChild(typeTag);
@@ -2141,7 +2193,7 @@
               const dLabel = createText(item.label, 12, "Bold");
               dLabel.layoutGrow = 1;
               dRow.appendChild(dLabel);
-              const dLink = createText("Acesse o link", 11, "Bold", { r: 0.24, g: 0.24, b: 1 });
+              const dLink = createText("Acesse o link", 11, "Bold", hexToRgb2("#005ca9"));
               dLink.textDecoration = "UNDERLINE";
               dLink.hyperlink = { type: "URL", value: docData.link };
               dRow.appendChild(dLink);
@@ -2151,22 +2203,15 @@
           }
         }
         const _frames = data.frames || [];
-        const framesSection = await _hdRebuildFramesSection(_frames);
+        const framesSection = await _hdRebuildFramesSection(_frames, !!msg.includeAllFrames);
         if (framesSection) {
           content.appendChild(framesSection);
           _hdSetFillAndHug(framesSection);
         }
-        const measSection = _hdRebuildMeasuresSection(_frames, data.measurements || []);
-        if (measSection) {
-          content.appendChild(measSection);
-          _hdSetFillAndHug(measSection);
-        }
-        const _framedSpecIds = new Set((_frames || []).flatMap((f) => (f.createdSpecs || []).map((s) => s.id)));
-        const _looseSpecs = (data.specs || []).filter((s) => !_framedSpecIds.has(s.id));
-        const annotSection = await _hdRebuildSpecsSection(_frames, _looseSpecs);
-        if (annotSection) {
-          content.appendChild(annotSection);
-          _hdSetFillAndHug(annotSection);
+        const docVisualSection = await _hdRebuildDocumentacaoVisualSection(_frames);
+        if (docVisualSection) {
+          content.appendChild(docVisualSection);
+          _hdSetFillAndHug(docVisualSection);
         }
         const flowsSection = _hdRebuildFlowsSection(data.createdFlows || []);
         if (flowsSection) {
@@ -2207,33 +2252,30 @@
         if (!data.setup || data.setup.componentes !== false) {
           let createSpecList = function(title, items, type) {
             if (!items || items.length === 0) return null;
-            const tokenItems = items.filter((item) => item.isDS !== false);
-            if (tokenItems.length === 0) return null;
-            items = tokenItems;
+            const customItems = items.filter((item) => item.isMarkedCustom === true);
+            if (customItems.length === 0) return null;
+            items = customItems;
             const sec = createFrame("VERTICAL", 24, 16, { r: 1, g: 1, b: 1 });
             sec.name = `[Scan] ${title}`;
             sec.cornerRadius = 16;
             sec.resize(280, 100);
             sec.primaryAxisSizingMode = "AUTO";
             sec.counterAxisSizingMode = "FIXED";
-            const titleNode = createText(title, 18, "Bold", { r: 0.24, g: 0.24, b: 1 });
+            const titleNode = createText(title, 18, "Bold", hexToRgb2("#005ca9"));
             sec.appendChild(titleNode);
             setFillAndHug(titleNode);
             const listContainer = createFrame("VERTICAL", 0, 12);
             sec.appendChild(listContainer);
             setFillAndHug(listContainer);
             items.forEach((item) => {
-              const elCard = createFrame("VERTICAL", 16, 12, { r: 0.98, g: 0.99, b: 1 });
+              const elCard = createFrame("HORIZONTAL", 12, 12, { r: 1, g: 0.97, b: 0.91 });
               elCard.name = `[Token] ${item.name}`;
               elCard.cornerRadius = 12;
-              elCard.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.96 } }];
+              elCard.strokes = [{ type: "SOLID", color: { r: 0.96, g: 0.85, b: 0.6 } }];
               elCard.strokeWeight = 1;
+              elCard.counterAxisAlignItems = "CENTER";
               listContainer.appendChild(elCard);
               setFillAndHug(elCard);
-              const headerRow = createFrame("HORIZONTAL", 0, 12);
-              headerRow.counterAxisAlignItems = "CENTER";
-              elCard.appendChild(headerRow);
-              setFillAndHug(headerRow);
               if (item.preview) {
                 try {
                   const imageHash = figma.createImage(item.preview).hash;
@@ -2241,12 +2283,15 @@
                   rect.resize(32, 32);
                   rect.fills = [{ type: "IMAGE", imageHash, scaleMode: "FIT" }];
                   rect.cornerRadius = 4;
-                  headerRow.appendChild(rect);
+                  elCard.appendChild(rect);
                 } catch (e) {
                 }
               }
+              const textCol = createFrame("VERTICAL", 0, 2);
+              textCol.layoutGrow = 1;
+              elCard.appendChild(textCol);
+              setFillAndHug(textCol);
               const iName = createText(item.name, 13, "Bold", { r: 0.1, g: 0.15, b: 0.25 });
-              iName.layoutGrow = 1;
               if (item.nodeId && figma.fileKey) {
                 try {
                   iName.hyperlink = {
@@ -2254,80 +2299,15 @@
                     value: `https://www.figma.com/design/${figma.fileKey}?node-id=${encodeURIComponent(item.nodeId)}`
                   };
                   iName.textDecoration = "UNDERLINE";
-                  iName.fills = [{ type: "SOLID", color: { r: 0.24, g: 0.24, b: 1 } }];
+                  iName.fills = [{ type: "SOLID", color: hexToRgb2("#005ca9") }];
                 } catch (e) {
                 }
               }
-              headerRow.appendChild(iName);
-              const status = item.componentStatus || (item.isDS === true ? "ok" : item.isDS === "warning" ? "warning" : "error");
-              if (data.isAudit) {
-                const statusColors = {
-                  ok: { bg: { r: 0.9, g: 0.98, b: 0.94 }, text: { r: 0.05, g: 0.5, b: 0.3 }, label: "DSC" },
-                  warning: { bg: { r: 1, g: 0.97, b: 0.9 }, text: { r: 0.7, g: 0.4, b: 0 }, label: "AJUSTE" },
-                  error: { bg: { r: 1, g: 0.93, b: 0.93 }, text: { r: 0.8, g: 0.2, b: 0.2 }, label: "FORA" }
-                };
-                const config = statusColors[status] || statusColors.error;
-                const badge = createFrame("HORIZONTAL", 8, 4, config.bg);
-                badge.cornerRadius = 6;
-                badge.appendChild(createText(config.label, 9, "Bold", config.text));
-                headerRow.appendChild(badge);
-              }
-              const _tokenProps = (item.properties || []).filter((p) => p.isDS === true || p.isDS === "warning" || p.token);
-              if (_tokenProps.length > 0) {
-                const propsContainer = createFrame("VERTICAL", 0, 6);
-                elCard.appendChild(propsContainer);
-                setFillAndHug(propsContainer);
-                _tokenProps.forEach((prop) => {
-                  const pRow = createFrame("HORIZONTAL", 0, 8);
-                  pRow.counterAxisAlignItems = "CENTER";
-                  propsContainer.appendChild(pRow);
-                  setFillAndHug(pRow);
-                  if (prop.type === "color" || prop.type === "stroke") {
-                    const swatch = figma.createRectangle();
-                    swatch.resize(10, 10);
-                    swatch.cornerRadius = 2;
-                    const swatchRgb = hexToRgb2(prop.rawValue || prop.value);
-                    swatch.fills = [{ type: "SOLID", color: swatchRgb || { r: 0.8, g: 0.8, b: 0.8 } }];
-                    swatch.strokes = [{ type: "SOLID", color: { r: 0.7, g: 0.72, b: 0.75 } }];
-                    swatch.strokeWeight = 0.5;
-                    pRow.appendChild(swatch);
-                  } else {
-                    try {
-                      let setSvgColor = function(node, color) {
-                        const isContainer = node.type === "FRAME" || node.type === "GROUP" || node.type === "COMPONENT";
-                        if (isContainer) {
-                          if ("fills" in node) node.fills = [];
-                          if ("strokes" in node) node.strokes = [];
-                        } else {
-                          if ("fills" in node && node.fills.length) node.fills = [{ type: "SOLID", color }];
-                          if ("strokes" in node && node.strokes.length) node.strokes = [{ type: "SOLID", color }];
-                        }
-                        if ("children" in node) node.children.forEach((c) => setSvgColor(c, color));
-                      };
-                      const iconSvg = getIconSvg(prop.type, prop.label);
-                      const iconNode = figma.createNodeFromSvg(iconSvg);
-                      iconNode.resize(12, 12);
-                      const neutral = { r: 0.55, g: 0.58, b: 0.62 };
-                      setSvgColor(iconNode, neutral);
-                      pRow.appendChild(iconNode);
-                    } catch (e) {
-                      const dot = figma.createEllipse();
-                      dot.resize(6, 6);
-                      dot.fills = [{ type: "SOLID", color: { r: 0.55, g: 0.58, b: 0.62 } }];
-                      pRow.appendChild(dot);
-                    }
-                  }
-                  const pLabel = createText(`${prop.label || prop.type}:`, 10, "Medium", { r: 0.4, g: 0.45, b: 0.5 });
-                  pRow.appendChild(pLabel);
-                  const pVal = createText(prop.value, 10, "Bold", { r: 0.2, g: 0.25, b: 0.3 });
-                  pVal.layoutGrow = 1;
-                  pRow.appendChild(pVal);
-                  if (prop.token) {
-                    const tBadge = createText(prop.token, 8, "Regular", { r: 0.24, g: 0.24, b: 1 });
-                    pRow.appendChild(tBadge);
-                  }
-                });
-              }
+              textCol.appendChild(iName);
+              setFillAndHug(iName);
+              const warn = createText("Componente personalizado \u2014 precisa ser constru\xEDdo", 10, "Bold", { r: 0.7, g: 0.4, b: 0 });
+              textCol.appendChild(warn);
+              setFillAndHug(warn);
             });
             return sec;
           };
@@ -2428,7 +2408,7 @@
                 const sf = node.fills.find((f) => f.type === "SOLID");
                 if (sf) {
                   const hex = rgbToHex(sf.color.r, sf.color.g, sf.color.b).toUpperCase();
-                  const token = await getVariableInfo(node, "fills");
+                  const token = await getPaintVariableInfo(sf);
                   createRow(grid, "Fills", token ? token : hex);
                 }
               }
@@ -2436,7 +2416,7 @@
                 const ss = node.strokes.find((s) => s.type === "SOLID");
                 if (ss) {
                   const hex = rgbToHex(ss.color.r, ss.color.g, ss.color.b).toUpperCase();
-                  const token = await getVariableInfo(node, "strokes");
+                  const token = await getPaintVariableInfo(ss);
                   createRow(grid, "Strokes", `${token ? token : hex} (${node.strokeWeight}px)`);
                 }
               }
@@ -2459,7 +2439,7 @@
           auditBoard.resize(800, 100);
           auditBoard.counterAxisSizingMode = "FIXED";
           auditBoard.primaryAxisSizingMode = "AUTO";
-          const auditTitle = createText("Relat\xF3rio de Auditoria", 24, "Bold", { r: 0.24, g: 0.24, b: 1 });
+          const auditTitle = createText("Relat\xF3rio de Auditoria", 24, "Bold", hexToRgb2("#005ca9"));
           auditBoard.appendChild(auditTitle);
           setFillAndHug(auditTitle);
           const summaryText = createText(`Ader\xEAncia ao Design System: ${data.auditSummary.adoption}%`, 18, "Bold", data.auditSummary.adoption > 90 ? { r: 0, g: 0.5, b: 0 } : { r: 0.8, g: 0, b: 0 });
@@ -2495,111 +2475,50 @@
         mainContainer.setPluginData("handexCategory", "ficha");
         figma.currentPage.appendChild(mainContainer);
         _hdMoveToCategorySection(mainContainer, "ficha");
-        if (_isUpdate && _inheritedX !== null) {
-          mainContainer.x = _inheritedX;
-          mainContainer.y = _inheritedY;
+        const _fichaGap = 200;
+        if (_fichaBasePos) {
+          if (_isNewVersion) {
+            mainContainer.x = Math.round(_fichaBasePos.x + (_existingFicha ? _existingFicha.width : mainContainer.width) + _fichaGap);
+            mainContainer.y = Math.round(_fichaBasePos.y);
+          } else {
+            mainContainer.x = Math.round(_fichaBasePos.x);
+            mainContainer.y = Math.round(_fichaBasePos.y);
+          }
           figma.currentPage.selection = [mainContainer];
           figma.viewport.scrollAndZoomIntoView([mainContainer]);
           figma.ui.postMessage({ type: "handoff-complete", isUpdate: _isUpdate, timestamp: _ts });
           return;
         }
-        mainContainer.x = -99999;
-        mainContainer.y = -99999;
-        const _fichaGap = 200;
-        const _nearbyRadius = 4e3;
-        let _positioned = false;
-        let _existingFichas = [];
-        try {
-          let _anchorBb = null;
-          const _mainFrames = data.frames || [];
-          for (const _f of _mainFrames) {
-            if (!_f.figmaId) continue;
-            let _fNode = null;
-            try {
-              _fNode = await figma.getNodeByIdAsync(_f.figmaId);
-            } catch (e) {
-              _fNode = null;
-            }
-            if (!_fNode) continue;
-            const _fBb = _fNode.absoluteBoundingBox;
-            if (_fBb) {
-              _anchorBb = _fBb;
-              break;
-            }
+        let _suggestedAnchor = null;
+        for (const _f of data.frames || []) {
+          if (!_f.figmaId) continue;
+          let _fNode = null;
+          try {
+            _fNode = await figma.getNodeByIdAsync(_f.figmaId);
+          } catch (e) {
+            _fNode = null;
           }
-          if (_anchorBb) {
-            mainContainer.x = Math.round(_anchorBb.x + _anchorBb.width + _fichaGap);
-            mainContainer.y = Math.round(_anchorBb.y);
-            _positioned = true;
+          if (_fNode && _fNode.absoluteBoundingBox) {
+            _suggestedAnchor = _fNode.absoluteBoundingBox;
+            break;
           }
-          const _fichaSectionForPos = figma.currentPage.children.find((n) => n.type === "SECTION" && n.getPluginData("handexCategorySection") === "ficha");
-          const _fichaCandidates = figma.currentPage.children.concat(_fichaSectionForPos ? _fichaSectionForPos.children : []);
-          _existingFichas = _fichaCandidates.filter((n) => {
-            if (n.type !== "FRAME" || !n.name.startsWith("Handex | Ficha") || n === mainContainer) return false;
-            if (!_anchorBb) return true;
-            const bb = n.absoluteBoundingBox;
-            if (!bb) return false;
-            return Math.abs(bb.x - _anchorBb.x) < _nearbyRadius && Math.abs(bb.y - _anchorBb.y) < _nearbyRadius;
-          });
-          if (_existingFichas.length > 0) {
-            const _rightmostFicha = _existingFichas.reduce((max, f) => {
-              const bb = f.absoluteBoundingBox;
-              if (!bb) return max;
-              return bb.x + bb.width > max.right ? { right: bb.x + bb.width, y: bb.y } : max;
-            }, { right: -Infinity, y: 0 });
-            if (_rightmostFicha.right > -Infinity) {
-              mainContainer.x = Math.round(_rightmostFicha.right + _fichaGap);
-              mainContainer.y = Math.round(_rightmostFicha.y);
-              _positioned = true;
-            }
-          }
-          if (!_positioned) {
-            const _sel = figma.currentPage.selection.filter((n) => n !== mainContainer);
-            if (_sel.length > 0) {
-              const _rightmost = _sel.reduce((max, n) => {
-                const bb = n.absoluteBoundingBox;
-                return bb && bb.x + bb.width > max.edge ? { edge: bb.x + bb.width, x: bb.x + bb.width, y: bb.y } : max;
-              }, { edge: -Infinity, x: 0, y: 0 });
-              if (_rightmost.edge > -Infinity) {
-                mainContainer.x = Math.round(_rightmost.x + _fichaGap);
-                mainContainer.y = Math.round(_rightmost.y);
-                _positioned = true;
-              }
-            }
-          }
-        } catch (posErr) {
-          console.error("Handoff positioning error:", posErr);
-          _positioned = false;
         }
-        if (!_positioned) {
+        if (!_suggestedAnchor) {
+          const _sel = figma.currentPage.selection.filter((n) => n !== mainContainer);
+          const _bb = _sel.length > 0 ? _sel[0].absoluteBoundingBox : null;
+          if (_bb) _suggestedAnchor = _bb;
+        }
+        if (_suggestedAnchor) {
+          mainContainer.x = Math.round(_suggestedAnchor.x);
+          mainContainer.y = Math.round(_suggestedAnchor.y + _suggestedAnchor.height + _fichaGap);
+        } else {
           const _vb = figma.viewport.bounds;
-          mainContainer.x = Math.round(_vb.x + _vb.width + _fichaGap);
-          mainContainer.y = Math.round(_vb.y + _vb.height / 2 - mainContainer.height / 2);
-        }
-        try {
-          const _pageNodes = figma.currentPage.children.filter((n) => n !== mainContainer && !_existingFichas.includes(n)).flatMap((n) => n.type === "SECTION" ? n.children : [n]);
-          let _collisionIterations = 0;
-          let _hasCollision = true;
-          while (_hasCollision && _collisionIterations < 50) {
-            _hasCollision = false;
-            for (const _node of _pageNodes) {
-              const _nBb = _node.absoluteBoundingBox;
-              if (!_nBb) continue;
-              const _overlaps = mainContainer.x < _nBb.x + _nBb.width && mainContainer.x + mainContainer.width > _nBb.x && mainContainer.y < _nBb.y + _nBb.height && mainContainer.y + mainContainer.height > _nBb.y;
-              if (_overlaps) {
-                mainContainer.x = Math.round(_nBb.x + _nBb.width + _fichaGap);
-                _hasCollision = true;
-                _collisionIterations++;
-                break;
-              }
-            }
-          }
-        } catch (collisionErr) {
-          console.error("Handoff collision check error:", collisionErr);
+          mainContainer.x = Math.round(_vb.x + _vb.width / 2 - mainContainer.width / 2);
+          mainContainer.y = Math.round(_vb.y + _vb.height + _fichaGap);
         }
         figma.currentPage.selection = [mainContainer];
         figma.viewport.scrollAndZoomIntoView([mainContainer]);
-        figma.ui.postMessage({ type: "handoff-complete", isUpdate: _isUpdate, timestamp: _ts });
+        figma.ui.postMessage({ type: "handoff-needs-position-confirmation", fichaId: mainContainer.id, isUpdate: _isUpdate, timestamp: _ts });
       } catch (err) {
         console.error("Handoff Error:", err);
         figma.ui.postMessage({ type: "handoff-error", message: err.message });
@@ -2612,13 +2531,19 @@
         return;
       }
       const { measureTypes } = msg;
-      async function getVariableInfo2(node, prop) {
+      async function getVariableInfo(node, prop) {
         if (!node.boundVariables) return null;
         const boundVar = node.boundVariables[prop];
         if (!boundVar) return null;
         const varId = Array.isArray(boundVar) ? boundVar[0] && boundVar[0].id : boundVar.id;
         if (!varId) return null;
         const v = await figma.variables.getVariableByIdAsync(varId);
+        return v ? v.name : null;
+      }
+      async function getPaintVariableInfo2(paint) {
+        const id = paint && paint.boundVariables && paint.boundVariables.color && paint.boundVariables.color.id;
+        if (!id) return null;
+        const v = await figma.variables.getVariableByIdAsync(id);
         return v ? v.name : null;
       }
       (async () => {
@@ -2709,8 +2634,8 @@
           let items = [];
           let appliedDetails = [];
           if (measureTypes && measureTypes.includes("wh")) {
-            const wToken = await getVariableInfo2(node, "width");
-            const hToken = await getVariableInfo2(node, "height");
+            const wToken = await getVariableInfo(node, "width");
+            const hToken = await getVariableInfo(node, "height");
             items.push(...createMeasurementLine(bounds.x, bounds.y - 20, bounds.x + bounds.width, bounds.y - 20, bounds.width, "horizontal", { r: 1, g: 0.2, b: 0.2 }, wToken));
             items.push(...createMeasurementLine(bounds.x - 20, bounds.y, bounds.x - 20, bounds.y + bounds.height, bounds.height, "vertical", { r: 1, g: 0.2, b: 0.2 }, hToken));
             let whLabel = `Dimens\xF5es: ${Math.round(bounds.width)}x${Math.round(bounds.height)}`;
@@ -2721,10 +2646,10 @@
             const shiftX = bounds.x + bounds.width / 2 - 12;
             const shiftY = bounds.y + bounds.height / 2 - 12;
             let pads = [];
-            const tT = await getVariableInfo2(node, "paddingTop");
-            const tB = await getVariableInfo2(node, "paddingBottom");
-            const tL = await getVariableInfo2(node, "paddingLeft");
-            const tR = await getVariableInfo2(node, "paddingRight");
+            const tT = await getVariableInfo(node, "paddingTop");
+            const tB = await getVariableInfo(node, "paddingBottom");
+            const tL = await getVariableInfo(node, "paddingLeft");
+            const tR = await getVariableInfo(node, "paddingRight");
             if (node.paddingTop > 0) {
               items.push(...createMeasurementLine(shiftX, bounds.y, shiftX, bounds.y + node.paddingTop, node.paddingTop, "vertical", { r: 0, g: 0.5, b: 1 }, tT));
               pads.push(`Top: ${node.paddingTop}${tT ? " [" + tT + "]" : ""}`);
@@ -2745,7 +2670,7 @@
           }
           if (measureTypes && measureTypes.includes("spacing") && "layoutMode" in node && node.layoutMode !== "NONE" && node.children.length > 1) {
             let spaceCount = 0;
-            const gapToken = await getVariableInfo2(node, "itemSpacing");
+            const gapToken = await getVariableInfo(node, "itemSpacing");
             for (let i = 0; i < node.children.length - 1; i++) {
               const child1 = node.children[i];
               const child2 = node.children[i + 1];
@@ -2883,6 +2808,17 @@
         const variable = await figma.variables.getVariableByIdAsync(id);
         return variable ? { name: variable.name, key: variable.key, remote: variable.remote === true } : null;
       }
+      async function _resolveVarById(id) {
+        if (!id) return null;
+        const variable = await figma.variables.getVariableByIdAsync(id);
+        return variable ? { name: variable.name, key: variable.key, remote: variable.remote === true } : null;
+      }
+      async function getPaintVar(paint) {
+        return _resolveVarById(paint && paint.boundVariables && paint.boundVariables.color && paint.boundVariables.color.id);
+      }
+      async function getEffectVar(effect, field) {
+        return _resolveVarById(effect && effect.boundVariables && effect.boundVariables[field] && effect.boundVariables[field].id);
+      }
       async function extractNodeProperties(n) {
         const props = [];
         if ("fills" in n && Array.isArray(n.fills)) {
@@ -2901,7 +2837,7 @@
             if (fill.visible === false) continue;
             if (fill.type === "SOLID" && fill.color) {
               const hex = rgbToHex2(fill.color.r, fill.color.g, fill.color.b).toUpperCase();
-              const vInfo = await getVar(n, "fills");
+              const vInfo = await getPaintVar(fill);
               const name = vInfo && vInfo.name || styleName || hex;
               const key = vInfo && vInfo.key || styleKey;
               const _isRemote = vInfo && vInfo.remote || fillStyleRemote;
@@ -2921,12 +2857,14 @@
               textStyleRemote = style.remote === true;
             }
           }
+          const sizeVar = await getVar(n, "fontSize");
           const family = n.fontName && n.fontName !== figma.mixed ? n.fontName.family : "Mixed";
           const fontStyle = n.fontName && n.fontName !== figma.mixed ? n.fontName.style : "Mixed";
           const size = n.fontSize && n.fontSize !== figma.mixed ? n.fontSize : "Mixed";
-          const name = styleName || `${family} ${fontStyle} (${size}px)`;
+          const name = styleName || sizeVar && sizeVar.name || `${family} ${fontStyle} (${size}px)`;
           const rawSize = typeof size === "number" ? size : null;
-          props.push(__spreadValues({ type: "typography", name, value: name, rawValue: rawSize, key: styleKey, styleKey, label: "Tipografia" }, audit("typography", name, styleKey, name, textStyleRemote)));
+          const typoKey = styleKey || (sizeVar ? sizeVar.key : null);
+          props.push(__spreadValues({ type: "typography", name, value: name, rawValue: rawSize, key: typoKey, variableKey: sizeVar ? sizeVar.key : null, styleKey, label: "Tipografia" }, audit("typography", name, typoKey, name, textStyleRemote || sizeVar && sizeVar.remote)));
         }
         if ("layoutMode" in n && n.layoutMode !== "NONE") {
           if (n.itemSpacing !== figma.mixed && n.itemSpacing > 0) {
@@ -2975,7 +2913,7 @@
                   strokeStyleRemote = st.remote === true;
                 }
               }
-              const sVar = await getVar(n, "strokes");
+              const sVar = await getPaintVar(visibleStroke);
               const strokeKey = sVar && sVar.key || styleKey;
               const strokeName = sVar && sVar.name || styleName || hex;
               props.push(__spreadValues({ type: "stroke", name: strokeName, value: hex, rawValue: hex, key: strokeKey, variableKey: sVar ? sVar.key : null, styleKey, label: "Border Color" }, audit("colors", hex, strokeKey, strokeName, sVar && sVar.remote || strokeStyleRemote)));
@@ -2983,7 +2921,7 @@
           }
         }
         if ("cornerRadius" in n && n.cornerRadius !== figma.mixed && n.cornerRadius > 0) {
-          const vInfo = await getVar(n, "cornerRadius");
+          const vInfo = await getVar(n, "topLeftRadius");
           const val = `${n.cornerRadius}px`;
           const name = vInfo && vInfo.name || val;
           const propKey = vInfo ? vInfo.key : null;
@@ -3003,8 +2941,10 @@
           }
           for (const effect of n.effects) {
             if (effect.visible) {
-              const name = styleName || `${effect.type} (${effect.type.includes("SHADOW") ? "Sombra" : "Blur"})`;
-              props.push(__spreadValues({ type: "effect", name, value: effect.type, key: styleKey, styleKey, label: "Effect" }, audit("effects", effect.type, styleKey, name, effectStyleRemote)));
+              const effVar = await getEffectVar(effect, "radius");
+              const name = styleName || effVar && effVar.name || `${effect.type} (${effect.type.includes("SHADOW") ? "Sombra" : "Blur"})`;
+              const effKey = styleKey || (effVar ? effVar.key : null);
+              props.push(__spreadValues({ type: "effect", name, value: effect.type, key: effKey, variableKey: effVar ? effVar.key : null, styleKey, label: "Effect" }, audit("effects", effect.type, effKey, name, effectStyleRemote || effVar && effVar.remote)));
             }
           }
         }
@@ -3088,7 +3028,11 @@
           elementMatchedBy = a.matchedBy;
           elementMatchedIn = a.matchedIn;
           elementMatchedTokenName = a.matchedTokenName;
-          if (dsElement !== true && /^\[dsc\]/i.test(name)) dsElement = true;
+          if (dsElement !== true && /^\[dsc\]/i.test(name)) {
+            dsElement = true;
+            if (!elementMatchedBy) elementMatchedBy = "name-convention";
+            if (!elementMatchedIn) elementMatchedIn = "DSC (conven\xE7\xE3o de nome)";
+          }
           if (!_ownLibLink) {
             if (dsElement === true) {
               dsElement = "warning";
@@ -3130,6 +3074,7 @@
         const variants = props.filter((p) => p.type === "variant").map((p) => ({ name: p.name, value: p.value }));
         const map = specs[category];
         if (!map.has(name)) {
+          const _prevItem = (msg.previousSpecs && msg.previousSpecs[category] || []).find((p) => p.nodeId === node.id);
           const itemObj = {
             name,
             type: category,
@@ -3142,6 +3087,7 @@
             matchedIn: elementMatchedIn,
             matchedTokenName: elementMatchedTokenName,
             isCustomComponent,
+            isMarkedCustom: _prevItem ? !!_prevItem.isMarkedCustom : false,
             variants,
             nodeId: node.id,
             layers: /* @__PURE__ */ new Set([name]),
@@ -3407,6 +3353,12 @@
         const variable = await figma.variables.getVariableByIdAsync(id);
         return variable ? variable.name : null;
       };
+      const getPaintVar = async (paint) => {
+        const id = paint && paint.boundVariables && paint.boundVariables.color && paint.boundVariables.color.id;
+        if (!id) return null;
+        const variable = await figma.variables.getVariableByIdAsync(id);
+        return variable ? variable.name : null;
+      };
       if ("height" in node) {
         const token = await getVar("height");
         properties.push({ key: "height", label: "Altura", value: Math.round(node.height) + "px", token });
@@ -3416,7 +3368,7 @@
         properties.push({ key: "width", label: "Largura", value: Math.round(node.width) + "px", token });
       }
       if ("cornerRadius" in node && node.cornerRadius !== figma.mixed && node.cornerRadius > 0) {
-        const token = await getVar("cornerRadius");
+        const token = await getVar("topLeftRadius");
         properties.push({ key: "radius", label: "Raio de borda", value: node.cornerRadius + "px", token });
       }
       if ("layoutMode" in node && node.layoutMode !== "NONE") {
@@ -3446,7 +3398,7 @@
       if ("fills" in node && Array.isArray(node.fills) && node.fills.length > 0) {
         const sf = node.fills.find((f) => f.type === "SOLID");
         if (sf) {
-          const token = await getVar("fills");
+          const token = await getPaintVar(sf);
           const hexFill = rgbToHex(sf.color.r, sf.color.g, sf.color.b).toUpperCase();
           properties.push({ key: "fill", label: "Preenchimento", value: token || hexFill, token });
         }
@@ -3454,7 +3406,7 @@
       if ("strokes" in node && Array.isArray(node.strokes) && node.strokes.length > 0) {
         const ss = node.strokes.find((s) => s.type === "SOLID");
         if (ss) {
-          const token = await getVar("strokes");
+          const token = await getPaintVar(ss);
           const hexStroke = rgbToHex(ss.color.r, ss.color.g, ss.color.b).toUpperCase();
           properties.push({ key: "stroke", label: "Contorno", value: token || hexStroke, token });
         }
@@ -3491,8 +3443,11 @@
       figma.ui.postMessage({ type: "selection-id-for-spec", targetNodeId: selection.length > 0 ? selection[0].id : null });
     }
     if (msg.type === "create-position-ghost") {
-      const node = msg.targetNodeId ? await figma.getNodeByIdAsync(msg.targetNodeId) : null;
-      const bounds = node && (node.absoluteBoundingBox || node.absoluteRenderBounds);
+      let anchorNode = msg.lastSpecId ? await figma.getNodeByIdAsync(msg.lastSpecId) : null;
+      if (!anchorNode) {
+        anchorNode = msg.targetNodeId ? await figma.getNodeByIdAsync(msg.targetNodeId) : null;
+      }
+      const bounds = anchorNode && (anchorNode.absoluteBoundingBox || anchorNode.absoluteRenderBounds);
       const themeColor = hexToRgb2(msg.color || "#004d8d");
       const estimatedHeight = 64 + (msg.hasCategory ? 20 : 0) + (msg.hasNote ? 32 : 0);
       const ghost = figma.createFrame();
@@ -3516,6 +3471,67 @@
       figma.currentPage.selection = [ghost];
       figma.viewport.scrollAndZoomIntoView([ghost]);
       figma.ui.postMessage({ type: "position-ghost-created", ghostId: ghost.id });
+    }
+    if (msg.type === "confirm-ficha-position") {
+      const ficha = msg.fichaId ? await figma.getNodeByIdAsync(msg.fichaId) : null;
+      if (!ficha) {
+        figma.ui.postMessage({ type: "ficha-position-confirmed", position: null });
+        return;
+      }
+      const bb = ficha.absoluteBoundingBox;
+      figma.ui.postMessage({ type: "ficha-position-confirmed", position: bb ? { x: bb.x, y: bb.y } : null });
+      return;
+    }
+    if (msg.type === "list-canvas-frames-for-ai") {
+      const validTypes = ["FRAME", "COMPONENT", "COMPONENT_SET"];
+      const candidates = figma.currentPage.children.filter((n) => validTypes.includes(n.type) && !n.getPluginData("handexCategory")).map((n) => ({ id: n.id, nome: n.name }));
+      figma.ui.postMessage({ type: "canvas-frames-for-ai-listed", frames: candidates });
+      return;
+    }
+    if (msg.type === "export-frame-snapshots-for-ai") {
+      (async () => {
+        const frames = msg.data && msg.data.frames || [];
+        const results = [];
+        for (const f of frames) {
+          if (!f.figmaId) continue;
+          let frameNode = null;
+          try {
+            frameNode = await figma.getNodeByIdAsync(f.figmaId);
+          } catch (e) {
+            frameNode = null;
+          }
+          if (!frameNode) continue;
+          const hasSpecs = (f.createdSpecs || []).length > 0;
+          const hasMeasures = (f.measurements || []).length > 0;
+          if (!hasSpecs && !hasMeasures) continue;
+          const nodeIds = hasSpecs ? await _hdCollectSpecContourIds(f) : (f.measurements || []).map((m) => m.nodeId).filter(Boolean);
+          try {
+            const bytes = await _hdSnapshotFrameWithNodes(frameNode, nodeIds);
+            if (bytes) {
+              results.push({ nome: f.nome || "Frame", base64: figma.base64Encode(bytes) });
+            }
+          } catch (e) {
+          }
+        }
+        for (const id of msg.extraFrameIds || []) {
+          let extraNode = null;
+          try {
+            extraNode = await figma.getNodeByIdAsync(id);
+          } catch (e) {
+            extraNode = null;
+          }
+          if (!extraNode || !("exportAsync" in extraNode)) continue;
+          try {
+            const bytes = await extraNode.exportAsync({ format: "PNG", constraint: { type: "SCALE", value: 2 } });
+            if (bytes) {
+              results.push({ nome: extraNode.name || "Frame", base64: figma.base64Encode(bytes) });
+            }
+          } catch (e) {
+          }
+        }
+        figma.ui.postMessage({ type: "frame-snapshots-for-ai-ready", images: results });
+      })();
+      return;
     }
     if (msg.type === "read-position-ghost") {
       const ghost = await figma.getNodeByIdAsync(msg.ghostId);
@@ -3755,7 +3771,7 @@
           const linkTxt = figma.createText();
           linkTxt.fontName = { family: "Inter", style: "Regular" };
           linkTxt.fontSize = 11;
-          linkTxt.fills = [{ type: "SOLID", color: { r: 0.24, g: 0.24, b: 1 } }];
+          linkTxt.fills = [{ type: "SOLID", color: hexToRgb2("#005ca9") }];
           linkTxt.characters = opts.link;
           linkTxt.textDecoration = "UNDERLINE";
           linkTxt.hyperlink = { type: "URL", value: opts.link };
@@ -4626,6 +4642,23 @@
         }
       }
       figma.ui.postMessage({ type: "briefing-data-pulled", data });
+      return;
+    }
+    if (msg.type === "export-ficha-pdf") {
+      (async () => {
+        try {
+          const _titulo = (msg.titulo || "").replace(/\//g, "-");
+          const ficha = _hdFindExistingFicha(_titulo);
+          if (!ficha) {
+            figma.ui.postMessage({ type: "ficha-pdf-exported", bytes: null, error: "no-ficha" });
+            return;
+          }
+          const bytes = await ficha.exportAsync({ format: "PDF" });
+          figma.ui.postMessage({ type: "ficha-pdf-exported", base64: figma.base64Encode(bytes) });
+        } catch (e) {
+          figma.ui.postMessage({ type: "ficha-pdf-exported", bytes: null, error: e.message });
+        }
+      })();
       return;
     }
     if (msg.type === "pull-ficha-version-from-canvas") {

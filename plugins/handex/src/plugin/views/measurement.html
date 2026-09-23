@@ -68,22 +68,34 @@
             </div>
           </div>
 
-          <!-- Frame Selector -->
-          <div data-frame-selector-card class="bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl shadow-sm p-3.5">
-            <div class="flex items-center gap-2 mb-2.5">
+          <!-- Frame Selector -- accordion recolhido por padrão (menos espaço
+               ocupado no dia a dia); cabeçalho sempre visível com hint fixo em
+               tooltip nativo (title), corpo (select + hint em texto) só
+               aparece expandido. -->
+          <div data-frame-selector-card class="bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl shadow-sm">
+            <button type="button" id="measure-frame-selector-toggle" onclick="toggleFrameSelectorCard('measure')"
+              aria-expanded="false" aria-controls="measure-frame-selector-body"
+              class="w-full flex items-center gap-2 p-3.5 text-left">
               <i data-lucide="scan-line" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted shrink-0"></i>
-              <h4 id="measure-frame-selector-label" class="text-[11px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Frames Mapeados</h4>
+              <h4 id="measure-frame-selector-label" class="flex-1 text-[11px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Frames Mapeados</h4>
+              <span id="measure-frame-selector-alert" class="hidden w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" title="Nenhum frame selecionado — a medida ficará avulsa"></span>
+              <span class="shrink-0" title="Escolha a qual frame mapeado uma nova medida fica vinculada. Sem seleção, a medida fica avulsa (sem frame).">
+                <i data-lucide="help-circle" class="w-3.5 h-3.5 text-slate-300 dark:text-dark-muted block pointer-events-none"></i>
+              </span>
+              <i data-lucide="chevron-down" id="measure-frame-selector-chevron" class="w-3.5 h-3.5 text-gray-400 dark:text-dark-muted shrink-0 transition-transform"></i>
+            </button>
+            <div id="measure-frame-selector-body" class="hidden px-3.5 pb-3.5">
+              <div class="relative">
+                <select id="measure-frame-selector" onchange="setMeasureActiveFrame(this.value)"
+                  class="w-full appearance-none text-[12px] bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-dark-line rounded-xl pl-3 pr-9 py-2.5 text-slate-700 dark:text-white outline-none focus:border-[#005ca9]/50 transition-colors">
+                  <option value="">Sem vínculo (medida avulsa)</option>
+                </select>
+                <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-gray-500 dark:text-dark-muted absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+              </div>
+              <p id="measure-frame-selector-hint" class="text-[10px] text-slate-500 dark:text-dark-muted mt-2 leading-tight">
+                Selecione um frame para focá-lo no canvas e associar esta medida a ele.
+              </p>
             </div>
-            <div class="relative">
-              <select id="measure-frame-selector" onchange="setMeasureActiveFrame(this.value)"
-                class="w-full appearance-none text-[12px] bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-dark-line rounded-xl pl-3 pr-9 py-2.5 text-slate-700 dark:text-white outline-none focus:border-[#005ca9]/50 transition-colors">
-                <option value="">Sem vínculo (medida avulsa)</option>
-              </select>
-              <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-gray-500 dark:text-dark-muted absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-            </div>
-            <p id="measure-frame-selector-hint" class="text-[10px] text-slate-500 dark:text-dark-muted mt-2 leading-tight">
-              Selecione um frame para focá-lo no canvas e associar esta medida a ele.
-            </p>
           </div>
 
           <!-- Results -->
@@ -94,13 +106,6 @@
                 <i data-lucide="download" class="w-3.5 h-3.5"></i> Exportar (.md)
               </button>
             </div>
-            <!-- Instrução discreta -->
-            <div id="hint-measures" class="mb-5 min-h-[76px] p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30 flex gap-2">
-              <i data-lucide="info" class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5"></i>
-              <p class="text-[11px] text-blue-800 dark:text-blue-300 leading-tight">
-                Selecione os elementos no canvas e toque no botão <strong>+</strong> no topo para inserir uma medida.
-              </p>
-            </div>
 
             <ul id="measurements-results" class="flex flex-col gap-2 min-h-[50px]">
                <!-- List of created items will appear here -->
@@ -108,20 +113,16 @@
 
           </div>
 
-          <!-- Inserir na Ficha — ação mais forte (preenchida), sincroniza esta
-               seção no canvas imediatamente. Finalizar Registros continua
-               discreta (outline) logo abaixo. Ambas só aparecem com medidas
-               criadas (ver renderMeasurementsResults). -->
-          <div id="btn-finalize-measurements-wrap" class="hidden pt-4 pb-2 space-y-2">
+          <!-- Inserir/Atualizar na Ficha — botão único, sincroniza esta seção
+               no canvas imediatamente. Texto e ícone trocam pra "Atualizar"
+               assim que a seção já foi inserida uma vez (ver
+               _updateInsertFichaButtonLabel em handoff.js). Só aparece com
+               medidas criadas (ver renderMeasurementsResults). -->
+          <div id="btn-finalize-measurements-wrap" class="hidden pt-4 pb-2">
             <button id="btn-insert-ficha-measurements" onclick="insertSectionInFicha('measurements')"
               class="w-full flex items-center justify-center gap-2 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl text-[12px] font-bold transition-all shadow-sm">
               <i data-lucide="file-plus-2" class="w-4 h-4" aria-hidden="true"></i>
               Inserir Medidas na Ficha
-            </button>
-            <button onclick="finalizeSection('measurements')"
-              class="w-full flex items-center justify-center gap-2 py-3 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 hover:border-slate-300 transition-all shadow-sm">
-              <i data-lucide="clipboard-check" class="w-4 h-4" aria-hidden="true"></i>
-              Finalizar Registros
             </button>
           </div>
 

@@ -349,7 +349,7 @@
 <p><strong>Fluxo de registro de frame:</strong></p>
 <ol>
 <li>Usuário seleciona frame no canvas do Figma</li>
-<li>Clica em "+ Registrar Frame" no plugin</li>
+<li>Clica em "+ Escanear Frame" no plugin</li>
 <li>Plugin envia <code>get-selection-info</code> ao backend</li>
 <li>Backend retorna <code>{ nodeId, name }</code> do nó selecionado</li>
 <li><code>addFrame(figmaId, nome)</code> cria entrada em <code>handoffData.frames[]</code></li>
@@ -588,7 +588,7 @@
 <p><strong>Atualização:</strong> <code>updateHomeCardsCheckState()</code> (<code>core.js</code>) aplica o estado nos badges e textos do DOM — chamada nos mesmos dois gatilhos de <code>updateHomeFooterButtonsState()</code> (entrar em <code>view-home</code> via <code>navigate()</code>, e na carga inicial via <code>init-plugin</code>), nunca recalculada isoladamente em cada ponto de criação de dado.</p>
 <hr>
 <h3 id="212-botao-de-acao-header-vs-empty-state">2.12 Botão de ação — header vs. empty-state</h3>
-<p><strong>v6.10.0.</strong> As 4 telas com um botão de ação principal no header — Escanear Tokens ("Registrar Frame"), Anotar Specs ("Nova spec"), Anotar Medidas ("Inserir medida"), Fluxos de Tela ("Conectar Frames") — escondem esse botão do header enquanto a lista está vazia. Nesse estado, o mesmo botão (mesmo <code>onclick</code>, mesmo visual <code>fab-inline</code>) aparece como CTA centralizado dentro do próprio empty-state. Assim que o primeiro item é criado, o botão volta pro header e o empty-state desaparece. O link de texto sublinhado que antes duplicava a mesma ação dentro da frase instrutiva do empty-state foi removido nas 4 telas.</p>
+<p><strong>v6.10.0.</strong> As 4 telas com um botão de ação principal no header — Escanear Tokens ("Escanear Frame" — renomeado de "Registrar Frame" em v6.20.5), Anotar Specs ("Nova spec"), Anotar Medidas ("Inserir medida"), Fluxos de Tela ("Conectar Frames") — escondem esse botão do header enquanto a lista está vazia. Nesse estado, o mesmo botão (mesmo <code>onclick</code>, mesmo visual <code>fab-inline</code>) aparece como CTA centralizado dentro do próprio empty-state. Assim que o primeiro item é criado, o botão volta pro header e o empty-state desaparece. O link de texto sublinhado que antes duplicava a mesma ação dentro da frase instrutiva do empty-state foi removido nas 4 telas.</p>
 <p><strong>Por que dois botões reais, não um só reposicionado via JS:</strong> em 3 das 4 telas (Specs, Medidas, Fluxos) o empty-state é gerado via <code>innerHTML = template</code> a cada render, não é HTML fixo no DOM — então um botão "movido" pra dentro dele nasceria e morreria junto do template a cada chamada. Manter dois botões com toggle de <code>hidden</code> (um no header, com <code>id</code> estável; um dentro do template do empty-state) segue o mesmo padrão que essas funções já usam pra outros elementos da tela (seção-título, botões de exportar/ocultar todos etc.) — sem introduzir uma técnica nova.</p>
 <div class="table-wrap"><table><thead><tr><th>Tela</th><th>Botão do header (<code>id</code>)</th><th>Função de controle</th></tr></thead><tbody><tr><td>Escanear Tokens</td><td><code>#btn-frame-register-header</code></td><td><code>updateEmptyFramesState()</code> (<code>core.js</code>)</td></tr><tr><td>Anotar Specs</td><td><code>#specs-header-action-form</code></td><td><code>renderSpecsList()</code> (<code>specifications.js</code>)</td></tr><tr><td>Anotar Medidas</td><td><code>#btn-measure-header</code></td><td><code>renderMeasurementsResults()</code> (<code>measurement.js</code>, só no branch <code>!frameId</code> — a mesma função também renderiza medidas por frame dentro do hub de Tokens, onde não há header próprio)</td></tr><tr><td>Fluxos de Tela</td><td><code>#btn-flow-connect-header</code></td><td><code>renderFlowsList()</code> (<code>specifications.js</code>)</td></tr></tbody></table></div>
 <p><strong>Exceção:</strong> o segundo botão do header de Fluxos (<code>#btn-resync-flows</code>, "Redesenhar todas as linhas") não faz parte desta troca — é ação secundária que já segue sua própria regra (só aparece com fluxos já existentes).</p>
@@ -653,7 +653,7 @@
  │     Opcional: jornada, feature, briefing, regras, docs
  │
  ├─► Escanear Tokens
- │     Seleciona frame no canvas → Registrar Frame
+ │     Seleciona frame no canvas → Escanear Frame
  │     Para cada frame:
  │       Escaneia tokens por categoria
  │       Marca conformidade DSC

@@ -243,49 +243,68 @@ por um tipo separado.
 ```
 [Frame | {figmaId}] {nomeFrame}
   ├── Badge                    (FRAME, opcional) ← "Novo componente"
-  ├── Auditoria                (FRAME, opcional) ← resultado DSC
-  ├── Snapshot com Specs       (FRAME, opcional) ← ver abaixo
-  └── Snapshot com Medidas     (FRAME, opcional) ← ver abaixo
+  └── Auditoria                (FRAME, opcional) ← resultado DSC
 ```
 
-**Snapshots visuais (2026-09-15):** cada card de frame pode ganhar até 2
-prévias PNG geradas na hora da geração/atualização da Ficha
-(`_hdSnapshotFrameWithNodes`, `code.js`): uma composição do frame original +
-os `specGroup`/`contour` de `frame.createdSpecs[]` (nas posições reais do
-canvas), outra do frame + os grupos de `frame.measurements[]`. Nunca inclui
-specs/medidas avulsas (`__loose__`) — só as explicitamente vinculadas àquele
-frame. Cada preview é um `FRAME` (label + `RECTANGLE` 432×243 com fill
-`IMAGE`); ausente quando o frame não tem specs/medidas vinculadas, ou quando
-o nó original/vinculado foi apagado do canvas manualmente (tolerado
-silenciosamente, sem quebrar a geração da Ficha). **É conteúdo derivado do
-canvas no momento da geração — não é persistido em `handoffData`.**
+**Nota histórica (2026-09-15 → 2026-09-17):** entre v6.13.0 e v6.14.0,
+este card chegou a incluir dois snapshots PNG pequenos (432×243px,
+"Snapshot com Specs"/"Snapshot com Medidas"). Migrados em 2026-09-17 para
+a seção própria "Documentação Visual" (ver 4.6), em tamanho amplo e com
+o card de detalhe ao lado — este card voltou a ser só identificação
+básica do frame (nome + badge + auditoria).
 
 ---
 
-### 4.6 Medidas (dentro da ficha)
+### 4.6 e 4.7 — REMOVIDAS em 2026-09-17, substituídas por "Documentação Visual"
 
-```
-[Medidas | {figmaId}] {nomeFrame}          ← agrupador por frame
-  └── [Medida | {tipo} | {valor}] {nome}   ← item individual
-        ├── Label    (TEXT, Bold)
-        └── Detalhe  (TEXT, Regular)
-```
+As antigas seções "Medidas" (`[Medidas | {figmaId}]`) e "Especificações"
+(`[Specs | {figmaId}]`) — texto puro, agregando todos os frames juntos,
+sem nenhuma referência visual à tela real — foram removidas da Ficha.
+Ver 4.6 nova, abaixo.
 
 ---
 
-### 4.7 Especificações (dentro da ficha)
+### 4.6 Documentação Visual (dentro da ficha)
+
+Substitui as antigas seções "Medidas" e "Especificações" (2026-09-17).
+1 bloco por frame documentado (`_hdBuildFrameShowcaseBlock`, `code.js`),
+cada um com até 2 pares — specs e medidas — cada par só aparece se
+houver dado correspondente:
 
 ```
-[Specs | {figmaId}] {nomeFrame}             ← agrupador por frame
-  └── [Grupo | {letra}] {nomeGrupo}         ← grupo por letra
-        └── [Spec | {letra}] {nomeSpec}     ← spec individual
-              ├── Tag          (FRAME)
-              ├── Categoria    (FRAME)
-              ├── Nota         (TEXT)
-              ├── Propriedades (FRAME)
-              │   └── Prop/{label}
-              └── Excecoes     (FRAME, opcional)
+[Seção] Documentação Visual
+  └── [Documentação] {nomeFrame}                ← 1 bloco por frame documentado
+        ├── Nome do frame (TEXT, Bold)
+        ├── "Specs marcadas"        (se f.createdSpecs.length > 0)
+        │     ├── Snapshot (RECTANGLE, fill IMAGE) — frame real em tamanho
+        │     │     amplo (máx. ~680px de largura, proporção real do frame),
+        │     │     com SÓ o selo (letra da tag) e o contorno/destaque de
+        │     │     cada spec marcados por cima — NUNCA o Conector (linha)
+        │     │     nem o specCard (texto), que ficam de fora do snapshot
+        │     │     de propósito
+        │     └── [Specs] {nomeFrame}  ← _hdBuildSpecsSubgroup, mesma
+        │           estrutura já documentada antes em 4.7 (grupo por
+        │           letra → spec individual com categoria/nota/props)
+        └── "Medidas aplicadas"     (se f.measurements.length > 0)
+              ├── Snapshot (RECTANGLE, fill IMAGE) — frame real + as
+              │     medidas aplicadas marcadas por cima
+              └── [Medidas | {figmaId}] {nomeFrame}  ← _hdBuildMeasuresSubgroup,
+                    mesma estrutura já documentada antes em 4.6 (lista de
+                    [Medida] {nome} com label + detalhe)
 ```
+
+**Por que "specs marcadas" não inclui o Conector/specCard**: o `contour`
+("Destaque") já vive HOJE fora do `specGroup` (ver 4.1/nota de arquitetura
+GROUP + nó solto) e já tem como filho o `chip` (o selo com a letra) — o
+par "selo + contorno" já existia isolado, pronto pra ser capturado sozinho
+via `exportAsync`, sem precisar desmontar nada do `specGroup` real
+(que seguem existindo intactos no canvas de trabalho do designer, fora
+da Ficha — esta mudança não altera em nada a criação de specs).
+
+Frame sem nenhuma spec E sem nenhuma medida vinculada não gera bloco.
+É conteúdo **derivado do canvas no momento da geração/atualização da
+Ficha** — nunca persistido em `handoffData`, mesma regra já vigente para
+os snapshots (ver 4.5).
 
 ---
 
@@ -314,14 +333,20 @@ canvas no momento da geração — não é persistido em `handoffData`.**
 
 ### 4.10 Tokens DSC (card Interface)
 
+**Reformulado em 2026-09-16** — mostra só itens declarados manualmente
+pelo designer como "Componente Personalizado" (`item.isMarkedCustom`,
+ver 5.4.1), não mais qualquer item com vínculo DSC. Componentes
+conformes ou pendentes de revisão não entram: o dev usa o componente
+pronto da lib DSC nesses casos (a lib já é a documentação); "Necessita
+revisão" é trabalho do designer, não informação de construção pro dev.
+Card mínimo (nome + aviso, sem lista de propriedades) — quem precisar
+de mais detalhe cria uma Spec (já tem snapshot visual próprio, ver 4.5).
+
 ```
-[Scan | {categoria}] {titulo}       ← agrupador por categoria
-  └── [Token | {tipo}] {nomeToken}  ← item individual
-        ├── Preview     (FRAME)
-        ├── Nome        (TEXT)
-        ├── Status      (FRAME, chip: DSC/AJUSTE/FORA)
-        └── Props       (FRAME)
-            └── Prop/{label}
+[Scan | {categoria}] {titulo}       ← agrupador por categoria (só aparece se houver item marcado)
+  └── [Token | {tipo}] {nomeToken}  ← item marcado como Componente Personalizado
+        ├── Preview     (FRAME, opcional)
+        └── Nome + aviso "precisa ser construído" (TEXT)
 ```
 
 ---
@@ -436,7 +461,7 @@ Versão atual: `_schemaVersion: 3`
   nome:           string,
   isNewComponent: boolean,
 
-  specs:   null | ScanResult,   // resultado do scan de tokens DSC
+  specs:   null | ScanResult,   // resultado do scan de tokens DSC — ver 5.4.1
   audit: {
     checkDone:   boolean,
     semDesvios:  boolean,
@@ -450,6 +475,66 @@ Versão atual: `_schemaVersion: 3`
   specGroupVisible: Record<string, boolean>
 }
 ```
+
+---
+
+### 5.4.1 `ScanResult` e item de scan
+
+```js
+// ScanResult
+{
+  components: ScanItem[],
+  icons:      ScanItem[],
+  typography: ScanItem[],
+  frames:     ScanItem[],
+  vectors:    ScanItem[],
+  frameJson:  object,       // snapshot estrutural bruto do frame (debug)
+  fileKey:    string,
+  framePreview: bytes | null
+}
+
+// ScanItem — um componente/ícone/estilo de tipografia/frame/vetor
+// identificado pelo scan automático (handler scan-frame, code.js)
+{
+  name:               string,
+  type:               'components' | 'icons' | 'typography' | 'frames' | 'vectors',
+  nodeType:            string,   // node.type do Figma (INSTANCE, TEXT, etc.)
+  componentKey:        string | null,
+  nodeId:              string,   // id do nó no canvas — chave de casamento entre scans
+  isDS:                true | 'warning' | false,   // conformidade calculada
+  score:               number | null,
+  matchedBy:           'key' | 'value' | 'name' | 'remote' | 'intrinsic' | null,
+  matchedIn:           string | null,   // nome da lib onde bateu o match
+  matchedTokenName:    string | null,
+  isCustomComponent:   boolean,  // CALCULADO pelo scan: sem vínculo comprovado com a lib
+  isMarkedCustom:      boolean,  // DECLARADO pelo designer (toggle "Componente Personalizado"
+                                 // no card do item, tela Escanear Tokens) — ver nota abaixo
+  variants:            { name: string, value: string }[],
+  properties:          Property[]
+}
+```
+
+**`isCustomComponent` vs. `isMarkedCustom` — não confundir:**
+- `isCustomComponent` é **calculado automaticamente** pelo scan — proxy
+  de "não achei vínculo comprovado com a lib DSC" (nem `componentKey` no
+  skeleton, nem convenção `[dsc]` no nome). Mede vínculo TÉCNICO, não
+  equivalência estrutural — um item pode ter `isCustomComponent: true`
+  por simples limitação de detecção, sem ser genuinamente um componente
+  novo.
+- `isMarkedCustom` é **declarado manualmente pelo designer** (2026-09-16),
+  via toggle no card do item na tela Escanear Tokens. É a única fonte de
+  verdade sobre "isto precisa ser construído pelo dev" — controla o que
+  entra no Card 3 "User Interface" da Ficha de Handoff (ver 4.10). Itens
+  em conformidade ou "necessita revisão" nunca entram na Ficha
+  automaticamente, mesmo que `isCustomComponent` seja `true` — a decisão
+  é sempre humana.
+
+**Preservação entre re-scans:** itens de `ScanResult` são recriados do
+zero a cada scan (não há estado herdado). `isMarkedCustom` sobrevive a um
+re-scan do mesmo frame porque o frontend envia o `ScanResult` anterior
+junto no pedido de scan (`previousSpecs`, `scan-frame` handler, `code.js`)
+e o backend casa itens do scan novo com o anterior por `nodeId` — nunca
+por `name` (que pode colidir entre elementos diferentes).
 
 ---
 

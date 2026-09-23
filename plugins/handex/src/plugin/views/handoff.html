@@ -31,9 +31,9 @@
            CTA centralizado no empty-state (ver #frames-empty-state-action),
            "sobe" pro header assim que o primeiro frame é registrado (ver
            updateEmptyFramesState em core.js). -->
-      <button id="btn-frame-register-header" onclick="requestFrameRegistration()" class="fab-inline hidden" title="Registrar Frame" aria-label="Registrar Frame">
+      <button id="btn-frame-register-header" onclick="requestFrameRegistration()" class="fab-inline hidden" title="Escanear Frame" aria-label="Escanear Frame">
         <i data-lucide="plus" class="w-4 h-4 shrink-0"></i>
-        <span>Registrar Frame</span>
+        <span>Escanear Frame</span>
       </button>
     </div>
   </div>
@@ -56,7 +56,7 @@
       <i data-lucide="sparkles" class="w-4 h-4 text-[#005ca9] dark:text-blue-300 shrink-0 mt-0.5"></i>
       <div class="flex-1 min-w-0">
         <p class="text-[11px] font-bold text-[#004d8d] dark:text-blue-300">Primeira vez aqui?</p>
-        <p class="text-[10px] text-[#004d8d]/80 dark:text-blue-300/80 leading-relaxed mt-0.5">Veja como registrar frames e escanear tokens.</p>
+        <p class="text-[10px] text-[#004d8d]/80 dark:text-blue-300/80 leading-relaxed mt-0.5">Veja como escanear frames e auditar tokens.</p>
       </div>
       <div class="flex items-center gap-1 shrink-0">
         <button type="button" onclick="openOnboarding('handoff', { markSeenOnOpen: true })" class="px-2.5 py-1 bg-[#005ca9] hover:bg-[#004d8d] text-white text-[10px] font-bold rounded-lg transition-colors">Ver agora</button>
@@ -66,22 +66,15 @@
       </div>
     </div>
 
-    <div id="frames-register-hint" class="min-h-[76px] p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30 flex items-center gap-2.5">
-      <i data-lucide="info" class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0"></i>
-      <p class="text-[11px] text-blue-800 dark:text-blue-300 leading-tight">
-        Selecione um <strong>Frame</strong> no canvas do Figma e clique em <strong>Registrar Frame</strong> para adicioná-lo ao hub. Depois de registrado, ele fica disponível para as outras ferramentas de documentação.
-      </p>
-    </div>
-
     <div id="frames-empty-state" class="empty-state-placeholder flex flex-col items-center">
       <div class="relative mb-4">
         <i data-lucide="layout" class="w-16 h-16 text-slate-200 dark:text-slate-700" style="opacity:0.25"></i>
       </div>
-      <p class="text-[12px] font-bold text-slate-600 dark:text-dark-muted text-center px-4 mb-1">Nenhum frame documentado</p>
+      <p class="text-[12px] font-bold text-slate-600 dark:text-dark-muted text-center px-4 mb-1">Nenhum frame escaneado</p>
       <p class="text-[10px] text-slate-600 dark:text-dark-muted text-center px-6 mb-3">Selecione um frame no canvas do Figma para começar.</p>
-      <button onclick="requestFrameRegistration()" class="fab-inline" title="Registrar Frame" aria-label="Registrar Frame">
+      <button onclick="requestFrameRegistration()" class="fab-inline" title="Escanear Frame" aria-label="Escanear Frame">
         <i data-lucide="plus" class="w-4 h-4 shrink-0"></i>
-        <span>Registrar Frame</span>
+        <span>Escanear Frame</span>
       </button>
     </div>
 
@@ -89,21 +82,16 @@
       <!-- renderFrameCard() insere aqui -->
     </ul>
 
-    <!-- Inserir na Ficha — ação mais forte (preenchida), sincroniza esta
-         seção no canvas imediatamente. Finalizar Registros continua
-         discreta (outline) logo abaixo, para quem só quer marcar "pronto"
-         sem escrever no canvas ainda. Ambas só aparecem com frames
-         registrados (ver updateEmptyFramesState). -->
-    <div id="btn-finalize-tokens-wrap" class="hidden pt-2 pb-2 space-y-2">
+    <!-- Inserir/Atualizar na Ficha — botão único, sincroniza esta seção no
+         canvas imediatamente. Texto e ícone trocam pra "Atualizar" assim que
+         a seção já foi inserida uma vez (ver _updateInsertFichaButtonLabel em
+         handoff.js). Só aparece com frames registrados (ver
+         updateEmptyFramesState). -->
+    <div id="btn-finalize-tokens-wrap" class="hidden pt-2 pb-2">
       <button id="btn-insert-ficha-tokens" onclick="insertSectionInFicha('tokens')"
         class="w-full flex items-center justify-center gap-2 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl text-[12px] font-bold transition-all shadow-sm">
         <i data-lucide="file-plus-2" class="w-4 h-4" aria-hidden="true"></i>
         Inserir Tokens na Ficha
-      </button>
-      <button onclick="finalizeSection('tokens')"
-        class="w-full flex items-center justify-center gap-2 py-3 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 hover:border-slate-300 transition-all shadow-sm">
-        <i data-lucide="clipboard-check" class="w-4 h-4" aria-hidden="true"></i>
-        Finalizar Registros
       </button>
     </div>
 

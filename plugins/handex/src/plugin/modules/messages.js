@@ -155,19 +155,30 @@
         // Sincroniza handoffData com a versão real da ficha já gerada no
         // canvas (se houver), antes de abrir o modal "Gerar Ficha" — evita
         // que o resumo/versionamento partam de um estado desatualizado.
+        // _fichaGenerated precisa refletir msg.temFicha nos dois sentidos:
+        // sem isso, apagar a Ficha manualmente do canvas (ex: durante
+        // testes, ou limpeza do projeto) deixava o flag "preso" em true
+        // pra sempre — createHandoffOnCanvas continuava abrindo o modal de
+        // versionamento como se já existisse uma Ficha, mesmo sem nenhuma
+        // no canvas.
         if (msg.versao) {
           handoffData.step1.versao = msg.versao;
-          handoffData._fichaGenerated = true;
           const s1Versao = document.getElementById('s1-versao');
           if (s1Versao) s1Versao.value = msg.versao;
-          saveToStorage();
         }
+        handoffData._fichaGenerated = !!msg.temFicha;
+        saveToStorage();
         clearTimeout(window._pullVersionTimeout);
         if (window._pendingOpenInjectModal && typeof _continueOpenHandoffInjectModal === 'function') {
           _continueOpenHandoffInjectModal();
         }
         window._pendingOpenInjectModal = false;
         if (typeof _onFinalizarFichaCheck === 'function') _onFinalizarFichaCheck(!!msg.temFicha);
+
+        if (window._pendingCreateHandoffVersionCheck && typeof _continueCreateHandoffAfterVersionCheck === 'function') {
+          _continueCreateHandoffAfterVersionCheck();
+        }
+        window._pendingCreateHandoffVersionCheck = false;
       }
 
       if (msg.type === "selection-link") {
@@ -579,9 +590,80 @@
         return;
       }
 
+      // Primeira geração do projeto: a Ficha já nasceu visível/arrastável no
+      // canvas (posição sugerida, nunca definitiva) -- pede confirmação
+      // explícita antes de salvar essa posição como base do projeto (nunca
+      // mais recalculada por heurística depois, ver code.js). Só acontece
+      // uma vez por projeto.
+      if (msg.type === 'handoff-needs-position-confirmation') {
+        if (typeof hideHandoffLoading === 'function') hideHandoffLoading();
+        window._pendingFichaPositionId = msg.fichaId;
+        window._pendingFichaPositionIsUpdate = msg.isUpdate;
+        window._pendingFichaPositionTimestamp = msg.timestamp;
+        if (typeof openFichaPositionConfirmBanner === 'function') openFichaPositionConfirmBanner();
+        return;
+      }
+
+      if (msg.type === 'ficha-position-confirmed') {
+        if (msg.position) {
+          handoffData._fichaBasePosition = msg.position;
+          if (typeof _markFichaGenerated === 'function') _markFichaGenerated();
+          if (typeof saveToStorage === 'function') saveToStorage();
+          showToast(window._pendingFichaPositionIsUpdate ? `Ficha atualizada — ${window._pendingFichaPositionTimestamp}` : 'Ficha gerada no canvas!');
+        } else {
+          showToast('Não foi possível confirmar a posição da Ficha — ela pode ter sido removida do canvas.', 'error');
+        }
+        window._pendingFichaPositionId = null;
+        if (typeof closeFichaPositionConfirmBanner === 'function') closeFichaPositionConfirmBanner();
+        return;
+      }
+
+      if (msg.type === 'ficha-pdf-exported') {
+        if (typeof _handleFichaPdfExported === 'function') _handleFichaPdfExported(msg);
+        return;
+      }
+
+      if (msg.type === 'canvas-frames-for-ai-listed') {
+        if (typeof _renderAiContextExtraFramesModal === 'function') _renderAiContextExtraFramesModal(msg.frames);
+        return;
+      }
+
+      if (msg.type === 'frame-snapshots-for-ai-ready') {
+        if (typeof _buildAiContextPackage === 'function') _buildAiContextPackage(msg.images);
+        return;
+      }
+
       if (msg.type === 'handoff-error') {
         if (typeof hideHandoffLoading === 'function') hideHandoffLoading();
         showToast('Erro ao gerar ficha: ' + (msg.message || 'Verifique o console do plugin.'), 'error');
+        return;
+      }
+
+      // Resposta de check-frames-relevance (disparado por insertSectionInFicha
+      // ou createHandoffOnCanvas antes de tocar o canvas, ver handoff.js).
+      // hasRelevantFrame: algum frame tem Novo Componente ou item marcado
+      // Personalizado -- segue direto, sem perguntar nada. hasAnyFrame=false:
+      // não há frame nenhum escaneado, nada a perguntar também. Só pergunta
+      // (abre o modal) quando existem frames mas nenhum é relevante -- o
+      // scan não achou nada fora do escopo do DSC.
+      if (msg.type === 'frames-relevance-checked') {
+        const _pendingTokens = window._pendingTokensFichaInsert;
+        const _pendingCreate = window._pendingCreateHandoff;
+        window._pendingTokensFichaInsert = false;
+        window._pendingCreateHandoff = false;
+
+        const _proceed = (includeAllFrames) => {
+          if (_pendingTokens && typeof _sendInsertFichaSection === 'function') _sendInsertFichaSection('tokens', includeAllFrames);
+          else if (_pendingCreate && typeof _sendCreateHandoff === 'function') _sendCreateHandoff(includeAllFrames);
+        };
+
+        if (!msg.hasAnyFrame || msg.hasRelevantFrame) {
+          _proceed(false);
+        } else if (typeof openFramesRelevanceModal === 'function') {
+          openFramesRelevanceModal(_proceed);
+        } else {
+          _proceed(false);
+        }
         return;
       }
 
@@ -596,11 +678,11 @@
         const btnKey = _btnKeyMap[msg.section] || msg.section;
         const btn = document.getElementById('btn-insert-ficha-' + btnKey);
         const _restoreButton = () => {
-          if (btn) {
-            btn.disabled = false;
-            if (btn.dataset._label) btn.innerHTML = btn.dataset._label;
-            _refreshIcons();
-          }
+          if (btn) btn.disabled = false;
+          // Label sempre recalculado a partir de _fichaSections (nunca do
+          // dataset._label antigo) -- é o que permite virar "Atualizar X na
+          // Ficha" assim que a seção é inserida pela primeira vez.
+          if (typeof _updateInsertFichaButtonLabel === 'function') _updateInsertFichaButtonLabel(btnKey);
         };
 
         if (msg.type === 'ficha-section-needs-full-create') {
@@ -614,14 +696,14 @@
           return;
         }
 
-        _restoreButton();
-
         if (msg.type === 'ficha-section-inserted') {
           handoffData._fichaSections = handoffData._fichaSections || {};
           handoffData._fichaSections[msg.section] = { insertedAt: new Date().toISOString(), itemCount: null };
           if (typeof saveToStorage === 'function') saveToStorage();
+          _restoreButton();
           showToast((_labelMap[msg.section] || 'Seção') + ' inserido na Ficha!');
         } else {
+          _restoreButton();
           showToast('Erro ao inserir na Ficha: ' + (msg.message || 'Verifique o console do plugin.'), 'error');
         }
         return;

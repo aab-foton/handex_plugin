@@ -48,7 +48,8 @@
           isAudit: false,
           referenceTokens: null,
           selectedLibSlugs: null,
-          categories: categories
+          categories: categories,
+          previousSpecs: frame ? frame.specs : (handoffData.step2 && handoffData.step2.specs) || null
         }
       }, "*");
     }
@@ -193,7 +194,7 @@
     }
 
     // ── Accordion card por frame (Step 3 — Documentação & Specs) ────────
-    function renderFrameCard(frame, autoExpand = false) {
+    function renderFrameCard(frame, autoExpand = true, forceFocus = false) {
       const list = document.getElementById('list-frames');
       if (!list) return;
 
@@ -234,7 +235,7 @@
 
       card.innerHTML = `
         <!-- Cabeçalho -->
-        <div id="frame-header-${fid}" role="button" tabindex="0" aria-expanded="false" aria-label="Expandir detalhes de ${escapeHtml(frame.nome)}" title="Expandir detalhes"
+        <div id="frame-header-${fid}" role="button" tabindex="0" aria-expanded="${autoExpand ? 'true' : 'false'}" aria-label="${autoExpand ? 'Recolher' : 'Expandir'} detalhes de ${escapeHtml(frame.nome)}" title="${autoExpand ? 'Recolher' : 'Expandir'} detalhes"
           class="flex items-center gap-2 px-3 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-line/20 transition-colors select-none"
           onclick="toggleFrameAccordion('${fid}')"
           onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleFrameAccordion('${fid}');}">
@@ -243,32 +244,11 @@
             <p id="frame-subtitle-${fid}" class="${_subCls}">${_subLabel}</p>
           </div>
           <span class="text-[9px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wider shrink-0">Detalhes</span>
-          <i data-lucide="chevron-down" id="frame-chevron-${fid}" class="w-4 h-4 text-gray-400 transition-transform shrink-0" aria-hidden="true"></i>
-        </div>
-
-        <!-- Ações -->
-        <div class="flex items-center justify-end gap-2 px-3 py-1.5 border-t border-gray-50 dark:border-dark-line bg-gray-50/50 dark:bg-slate-900/30">
-          <span class="text-[9px] font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wider shrink-0">Ações</span>
-          <div class="flex items-center gap-0.5">
-            <button type="button"
-              onclick="focusNode('${frame.figmaId}')"
-              title="Focar no elemento no canvas"
-              aria-label="Focar no elemento no canvas"
-              class="w-7 h-7 flex items-center justify-center rounded-xl text-[#005ca9] hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors shrink-0">
-              <i data-lucide="locate" class="w-3.5 h-3.5"></i>
-            </button>
-            <button type="button"
-              onclick="removeFrame('${fid}')"
-              title="Remover frame"
-              aria-label="Remover frame"
-              class="w-7 h-7 flex items-center justify-center rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors shrink-0">
-              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-            </button>
-          </div>
+          <i data-lucide="chevron-down" id="frame-chevron-${fid}" class="w-4 h-4 ${autoExpand ? 'text-[#005ca9] dark:text-blue-300' : 'text-gray-400'} transition-transform shrink-0" style="${autoExpand ? 'transform:rotate(180deg)' : ''}" aria-hidden="true"></i>
         </div>
 
         <!-- Corpo -->
-        <div id="frame-body-${fid}" class="accordion-content hidden border-t border-gray-50 dark:border-dark-line">
+        <div id="frame-body-${fid}" class="accordion-content ${autoExpand ? '' : 'hidden'} border-t border-gray-50 dark:border-dark-line">
 
           <!-- ── Toggle Novo Componente ── -->
           <div class="px-4 py-2.5 flex items-center justify-between border-b border-gray-50 dark:border-dark-line">
@@ -380,6 +360,18 @@
             </div>
           </div>
 
+          <!-- Excluir — botão grande dentro do accordion expandido, mesmo
+               padrão adotado em Medidas/Specs. -->
+          <div class="px-4 py-3">
+            <button type="button"
+              onclick="event.stopPropagation(); removeFrame('${fid}')"
+              title="Remover frame"
+              aria-label="Remover frame"
+              class="w-full flex items-center justify-center gap-1.5 py-2 text-[11px] font-bold text-red-600 dark:text-red-400 bg-white dark:bg-dark-surface border border-red-200 dark:border-red-800/30 rounded-2xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Remover Frame
+            </button>
+          </div>
+
         </div>
       `;
 
@@ -392,13 +384,18 @@
 
       if (frame.specs) { renderSpecs(frame.specs, fid); showFrameSection(fid, 'tokens'); }
 
-      // Expandir + focar automaticamente só faz sentido para um frame
-      // RECÉM-REGISTRADO (mostra o resultado do scan na hora) -- ao
-      // reconstruir a lista inteira (restoreUIFromState, abrir a tela com
-      // frames já existentes), isso não deve rodar para cada card, senão o
-      // viewport pula pra cada frame do array (bug reportado: abrir a tela
-      // "joga" pro primeiro item sem nenhum clique do usuário).
-      if (autoExpand) toggleFrameAccordion(fid);
+      // O corpo do card já nasce expandido via HTML acima quando autoExpand
+      // (classe hidden condicional) -- todos os cards vêm abertos por
+      // padrão, tanto no registro de um frame novo quanto ao recarregar a
+      // lista inteira (decisão do usuário: nenhum card deveria nascer
+      // fechado por padrão). O que NUNCA deve rodar em massa é o FOCO no
+      // canvas: focusNode (chamado dentro de toggleFrameAccordion) faz o
+      // viewport pular pra cada frame do array se chamado card a card ao
+      // reconstruir a lista inteira (bug já reportado antes: abrir a tela
+      // "jogava" o viewport sem nenhum clique do usuário). Por isso o foco
+      // continua reservado só ao registrar um frame novo (chamado
+      // explicitamente por quem invoca renderFrameCard com forceFocus).
+      if (autoExpand && forceFocus) focusNode(frame.figmaId);
     }
 
     // ── Spec helpers (inline edit, obs, visibility) ──────────────────
@@ -649,7 +646,7 @@
           item.innerHTML = `
             <div class="absolute -left-[18px] top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-dark-surface" style="background-color:${color}"></div>
             ${pendingBarHtml}
-            <div role="button" tabindex="0" class="flex items-center px-2 py-1.5 gap-1.5 cursor-pointer select-none" onclick="toggleSpecDetails('${detailsId}')" onkeydown="if((event.key==='Enter'||event.key===' ')&&event.target===event.currentTarget){event.preventDefault();toggleSpecDetails('${detailsId}');}" aria-label="Expandir/recolher detalhes da especificação ${escapeHtml(spec.name || '')}">
+            <div role="button" tabindex="0" class="flex items-center px-2 py-1.5 gap-1.5 cursor-pointer select-none" onclick="toggleSpecDetails('${detailsId}', '${spec.id}')" onkeydown="if((event.key==='Enter'||event.key===' ')&&event.target===event.currentTarget){event.preventDefault();toggleSpecDetails('${detailsId}', '${spec.id}');}" aria-label="Expandir/recolher detalhes da especificação ${escapeHtml(spec.name || '')}">
               <div class="w-4 h-4 rounded flex items-center justify-center text-[8px] font-extrabold text-white shrink-0" style="background-color:${color}">${letter}</div>
               <div class="flex-1 min-w-0">
                 <input type="text" id="spec-title-${frameId}-${spec._idx}" value="${(spec.name || '').replace(/"/g, '&quot;')}"
@@ -665,11 +662,6 @@
               </div>
               ${hasRawTokenWarning ? `<span title="Valores sem token — use Check Design" class="w-4 h-4 flex items-center justify-center text-amber-400 shrink-0"><i data-lucide="alert-triangle" class="w-3 h-3"></i></span>` : ''}
               <span id="exc-badge-${frameId}-${specIdx}" class="px-1 py-0.5 rounded bg-orange-50 text-[9px] font-bold text-orange-800 shrink-0 ${excCount > 0 ? '' : 'hidden'}">${excCount} exc</span>
-              <button type="button" title="Focar no elemento no canvas" aria-label="Focar no elemento no canvas"
-                onclick="event.stopPropagation(); focusNode('${spec.id}')"
-                class="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-[#005ca9] transition-colors shrink-0">
-                <i data-lucide="locate" class="w-3 h-3"></i>
-              </button>
               <button type="button" title="${isHidden ? 'Mostrar' : 'Ocultar'} no canvas"
                 aria-label="${isHidden ? 'Mostrar' : 'Ocultar'} no canvas"
                 onclick="event.stopPropagation(); toggleSpecVisibility('${frameId}', ${spec._idx})"
@@ -759,7 +751,7 @@
       document.querySelectorAll('.spec-overflow-menu-panel').forEach(p => p.classList.add('hidden'));
     });
 
-    function toggleSpecDetails(id) {
+    function toggleSpecDetails(id, nodeId) {
       const el = document.getElementById(id);
       if (!el) return;
       const isHidden = el.classList.toggle('hidden');
@@ -769,6 +761,10 @@
         chev.classList.toggle('text-[#005ca9]', !isHidden);
         chev.classList.toggle('dark:text-blue-300', !isHidden);
       }
+      // Foco no canvas só ao expandir (clique explícito) — mesmo princípio
+      // já adotado em toggleAccordion/toggleFrameAccordion: expandir já leva
+      // até o elemento, sem precisar de um ícone de foco dedicado ao lado.
+      if (!isHidden && nodeId) focusNode(nodeId);
       _refreshIcons();
     }
     window.toggleSpecDetails = toggleSpecDetails;
@@ -1358,6 +1354,24 @@
             `<span class="flex items-center gap-1 text-amber-500 font-bold"><i data-lucide="help-circle" class="w-2.5 h-2.5"></i>NECESSITA REVISÃO</span>`) :
           `<span class="flex items-center gap-1 text-red-400 font-bold"><i data-lucide="alert-circle" class="w-2.5 h-2.5"></i>FORA DO PADRÃO</span>`)) : "";
 
+      // Declaração manual do designer, distinta de isCustomComponent (calculado
+      // pelo scan por ausência de vínculo comprovado) -- controla se este item
+      // entra ou não na Ficha final (ver createSpecList em code.js). Precisa de
+      // stopPropagation nos dois níveis (label e input) porque o card inteiro
+      // tem onclick="focusNode(...)".
+      const customToggleHtml = `
+        <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-gray-100 dark:border-dark-line" onclick="event.stopPropagation()">
+          <label class="relative inline-flex items-center cursor-pointer shrink-0">
+            <input type="checkbox" class="sr-only peer"
+              ${item.isMarkedCustom ? 'checked' : ''}
+              onclick="event.stopPropagation()"
+              onchange="toggleSpecItemCustom('${activeFrameId || ''}', '${type}', '${item.nodeId}', this.checked)">
+            <div class="w-7 h-4 bg-gray-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[1px] after:left-[1px] after:bg-white after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-violet-500"></div>
+          </label>
+          <span class="text-[9px] text-slate-500 dark:text-dark-muted">Vai para a Ficha (precisa ser construído)</span>
+        </div>
+      `;
+
       // ── Prop split: "applied" (active) vs "inactive" (false/none variants) ──
       // Variant props with boolean-false or "none" values mean the feature is OFF
       // and are not relevant to the dev. Non-variant props are already filtered
@@ -1489,6 +1503,7 @@
           ${appliedHtml}
           ${inactiveHtml}
           ${toggleHtml}
+          ${customToggleHtml}
         </div>
       `;
     }
@@ -1919,8 +1934,6 @@
       const list = document.getElementById('specs-results');
       if (!list) return;
       list.innerHTML = '';
-      
-      _updateContentHint('hint-specs', !!(createdSpecs && createdSpecs.length > 0));
 
       const exportBtn = document.getElementById('btn-export-specs');
       const hideAllBtn = document.getElementById('btn-hide-all-specs');
@@ -1966,6 +1979,7 @@
       if (collapseBtn) collapseBtn.classList.remove('hidden');
       if (moreActionsBtn) moreActionsBtn.classList.remove('hidden');
       if (finalizeWrap) finalizeWrap.classList.remove('hidden');
+      if (typeof _updateInsertFichaButtonLabel === 'function') _updateInsertFichaButtonLabel('specs');
       if (headerBtn) headerBtn.classList.remove('hidden');
       if (typeof _moveHeaderHelpIcons === 'function') _moveHeaderHelpIcons('specs-header-help-icons', '#view-specifications .subheader-brand > div:last-child', true);
       if (sectionTitle) {
@@ -2383,12 +2397,16 @@
           specMenuWrap.appendChild(specMenuBtn);
           specMenuWrap.appendChild(specMenuPanel);
 
+          // Excluir — botão grande dentro do accordion expandido (não mais
+          // ícone solto no header), mesmo padrão adotado em Medidas: ação
+          // frequente o suficiente pra merecer destaque, mas escondida
+          // enquanto o card está recolhido.
           const delBtn = document.createElement("button");
           delBtn.type = "button";
           delBtn.title = "Excluir Especificação";
           delBtn.setAttribute("aria-label", "Excluir especificação");
-          delBtn.className = "p-2 rounded-lg text-gray-500 dark:text-dark-muted hover:text-red-500 transition-colors";
-          delBtn.innerHTML = '<i data-lucide="trash-2" class="w-3.5 h-3.5"></i>';
+          delBtn.className = "w-full flex items-center justify-center gap-1.5 py-2 text-[11px] font-bold text-red-600 dark:text-red-400 bg-white dark:bg-dark-surface border border-red-200 dark:border-red-800/30 rounded-2xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors";
+          delBtn.innerHTML = '<i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Excluir Especificação';
           delBtn.onclick = (e) => {
             e.stopPropagation();
             const confirmed = window.confirm('Excluir esta especificação? Essa ação não pode ser desfeita.');
@@ -2403,7 +2421,6 @@
           };
 
           actions.appendChild(visBtn);
-          actions.appendChild(delBtn);
           actions.appendChild(specMenuWrap);
 
           // Último ícone da fileira de ações (depois de olho/lixeira/menu),
@@ -2481,6 +2498,8 @@
             excList.innerHTML = specExcs.map((exc, ei) => _renderExcItem(exc, `deleteGlobalSpecException(${spec.originalIndex}, ${ei})`)).join('');
             content.appendChild(excList);
           }
+
+          content.appendChild(delBtn);
 
           section.appendChild(content);
           groupContent.appendChild(section);
@@ -3414,7 +3433,7 @@
               <i data-lucide="git-branch" class="w-16 h-16 text-slate-200 dark:text-slate-700" style="opacity:0.25"></i>
             </div>
             <p class="text-[12px] font-bold text-slate-600 dark:text-dark-muted text-center px-4 mb-1">Nenhum fluxo criado ainda</p>
-            <p class="text-[10px] text-slate-600 dark:text-dark-muted text-center px-6 mb-3">Selecione 2 elementos no canvas para começar.</p>
+            <p class="text-[10px] text-slate-600 dark:text-dark-muted text-center px-6 mb-3">Selecione 2 ou mais elementos no canvas para começar.</p>
             <button onclick="openFlowFormModal()" class="fab-inline" title="Conectar Frames" aria-label="Conectar Frames">
               <i data-lucide="git-branch" class="w-4 h-4 shrink-0"></i>
               <span>Conectar Frames</span>
@@ -3428,15 +3447,14 @@
         if (sectionTitle) sectionTitle.classList.add('hidden');
         if (headerBtn) headerBtn.classList.add('hidden');
         if (typeof _moveHeaderHelpIcons === 'function') _moveHeaderHelpIcons('flows-header-help-icons', '#view-flows .subheader-brand > div:last-child', false);
-        _updateContentHint('hint-flows', false);
         _refreshIcons();
         return;
       }
       if (finalizeWrap) finalizeWrap.classList.remove('hidden');
+      if (typeof _updateInsertFichaButtonLabel === 'function') _updateInsertFichaButtonLabel('flows');
       if (resyncBtn) resyncBtn.classList.remove('hidden');
       if (headerBtn) headerBtn.classList.remove('hidden');
       if (typeof _moveHeaderHelpIcons === 'function') _moveHeaderHelpIcons('flows-header-help-icons', '#view-flows .subheader-brand > div:last-child', true);
-      _updateContentHint('hint-flows', true);
 
       const FLOW_TYPE_LABELS = {
         'line_solid': 'Linha Sólida',
@@ -3979,10 +3997,17 @@ function toggleLinkInput(show) {
       const g = id => document.getElementById(id);
       const selCat = g('ann-category');
       const noteVal = g('ann-note') ? g('ann-note').value : '';
+      // Posição sugerida do fantasma: ao lado da ÚLTIMA spec já criada (não
+      // do elemento sendo anotado agora) -- especs nascem organizadas em
+      // sequência no canvas, não espalhadas perto de onde cada elemento
+      // está. É só sugestão inicial: o designer continua livre pra arrastar
+      // o fantasma pra onde quiser antes de confirmar a posição.
+      const lastSpec = createdSpecs.length > 0 ? createdSpecs[createdSpecs.length - 1] : null;
       parent.postMessage({
         pluginMessage: {
           type: 'create-position-ghost',
           targetNodeId: window._pendingSpecTargetNodeId,
+          lastSpecId: lastSpec ? lastSpec.id : null,
           color: g('spec-color-input') ? g('spec-color-input').value : '#004d8d',
           // Só sinalizadores de presença (pra estimar a altura do
           // fantasma no backend) -- sem enviar o conteúdo em si.

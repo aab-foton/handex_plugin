@@ -2,6 +2,151 @@
 
 ---
 
+## v6.20.5 — 2026-09-17
+
+### Corrigido — "Registrar Frame" renomeado para "Escanear Frame"
+O rótulo do botão de ação em "Escanear Tokens" (header + empty-state) dizia "Registrar Frame", que soa como cadastro genérico sem comunicar o propósito real da tela: escanear os tokens do frame contra o DSC. Renomeado para "Escanear Frame", consistente com o nome da própria tela. Empty-state "Nenhum frame documentado" também virou "Nenhum frame escaneado" pela mesma razão, e os textos correspondentes no onboarding/guia foram sincronizados.
+
+---
+
+## v6.20.4 — 2026-09-17
+
+### Corrigido — `_fichaBasePosition` sobrevivia à remoção da Ficha
+A coordenada de posição confirmada pelo designer (`handoffData._fichaBasePosition`) era usada sem checar se a Ficha física ainda existia no canvas — apagar a Ficha manualmente deixava a posição salva "órfã" e válida pra sempre, pulando o modal de confirmação numa próxima geração mesmo sem nenhuma Ficha real ter existido ainda naquele canvas. Corrigido: a posição salva só é usada se a Ficha ainda existir de fato no canvas, senão volta ao fluxo de primeira geração (posição sugerida + modal de confirmação).
+
+---
+
+## v6.20.3 — 2026-09-17
+
+### Corrigido — Modal de versionamento aparecia sem nenhuma Ficha no canvas
+`handoffData._fichaGenerated` era decidido só por um flag local, nunca verificado contra o canvas real — uma vez `true`, continuava `true` para sempre, mesmo que a Ficha fosse apagada manualmente depois (ex: durante testes). Resultado: "Gerar Ficha" perguntava sobre versionamento (Nova Versão/Atualização) sem nenhuma Ficha existir de verdade. Corrigido para sempre reverificar o canvas real antes de decidir.
+
+---
+
+## v6.20.2 — 2026-09-17
+
+### Corrigido — `[HighlightStroke]` órfão sobrando nas layers
+O clique de focar/expandir um item (Frames, Specs, Medidas, Fluxos) desenhava um retângulo de destaque no canvas que dependia de uma variável em memória do plugin para ser removido depois — se o plugin recarregasse de forma atípica com um highlight ativo, o retângulo ficava esquecido pra sempre. Corrigido: focar um item agora só seleciona e rola até ele (a seleção nativa do Figma já destaca visualmente, sem precisar de um retângulo extra). Adicionada também uma varredura de limpeza no boot do plugin para remover qualquer sobra de sessões anteriores.
+
+---
+
+## v6.20.1 — 2026-09-17
+
+### Ajustado — Confirmação de posição da Ficha virou modal
+O aviso "Posicione a Ficha no canvas" era um banner fixo no rodapé da UI, competindo visualmente com o restante da tela. Passou a ser um modal centralizado (sem botão de fechar — fica aberto até confirmar), dando mais destaque e fluidez a essa etapa da jornada. O canvas do Figma continua livre por trás do modal, permitindo arrastar a Ficha normalmente.
+
+---
+
+## v6.20.0 — 2026-09-17
+
+### Alterado — Posicionamento da Ficha deixou de ser automático
+Depois de sucessivas tentativas de calcular automaticamente onde a Ficha deveria nascer no canvas (ancorada no frame documentado, com verificação de colisão contra outros elementos), o resultado continuou inconsistente em cenários reais. A lógica de heurística foi removida por completo: agora a Ficha nasce visível numa posição sugerida simples e o designer confirma (ou ajusta) a posição manualmente na primeira geração do projeto — essa posição vira a base para todas as próximas atualizações e novas versões, sem nunca mais recalcular sozinha.
+
+### Alterado — "Nova Versão" preserva a Ficha anterior no canvas
+Ao gerar uma "Nova Versão" pelo modal de versionamento, a Ficha anterior deixa de ser removida — passa a nascer ao lado da anterior, preservando o histórico visual no canvas. "Atualização" continua substituindo no mesmo lugar.
+
+---
+
+## v6.19.1 — 2026-09-17
+
+### Corrigido — Card redundante no modal "Gerar Ficha de Handoff"
+Removido um card de aviso que repetia, com outras palavras, a mesma pergunta já feita pelo texto principal do modal.
+
+---
+
+## v6.19.0 — 2026-09-17
+
+### Adicionado — Ícones de foco removidos onde já eram redundantes
+Em vários cards (Frames, Specs vinculadas a um frame), expandir o item já foca/rola até o elemento no canvas — o ícone de foco dedicado ao lado do chevron era redundante nesses casos e foi removido, reduzindo a quantidade de ícones por linha.
+
+---
+
+## v6.18.1 — 2026-09-17
+
+### Corrigido — Frame de "Novo Componente" não trazia informação de construção na Ficha
+O card de um frame marcado como "Novo Componente" mostrava só nome, badge e auditoria — sem a descrição do padrão de uso/nomenclatura/diretrizes (já preenchida pelo designer na tela de origem) nem a lista de elementos que compõem o componente. Ambos passaram a integrar o card na Ficha.
+
+---
+
+## v6.18.0 — 2026-09-17
+
+### Adicionado — Botão único "Inserir/Atualizar na Ficha"
+O botão "Finalizar Registros", que só salvava dados sem sincronizar nada no canvas, foi removido das 4 telas (Tokens, Specs, Medidas, Fluxos). Passa a existir só o botão "Inserir [X] na Ficha", que vira "Atualizar [X] na Ficha" assim que aquela seção já foi inserida uma vez.
+
+### Adicionado — Confirmação antes de incluir "Frames Escaneados" vazios na Ficha
+Quando o scan não encontra nenhum item fora do padrão do DSC (nem frame marcado como "Novo Componente"), o plugin pergunta antes de decidir se a lista completa de frames deve ou não entrar na Ficha, em vez de omitir silenciosamente a seção.
+
+---
+
+## v6.17.0 — 2026-09-17
+
+### Alterado — "Frames Documentados" virou "Frames Escaneados" na Ficha
+A seção passou a listar só frames relevantes para o dev construir: com item marcado como "Componente Personalizado" no scan, ou com o toggle "Novo Componente" marcado. Frames 100% conformes ao DSC não aparecem mais.
+
+---
+
+## v6.16.1 — 2026-09-17
+
+### Corrigido — Card de hint fixo remanescente em "Escanear Tokens"
+Completa a remoção iniciada na v6.15.2: o card de instrução fixa da tela de Escanear Tokens também duplicava o empty-state e foi removido.
+
+---
+
+## v6.16.0 — 2026-09-17
+
+### Corrigido — Cor de fundo da Ficha usava tom da marca antiga
+O frame externo que envolve toda a Ficha gerada no canvas usava uma cor isolada que não correspondia à paleta pós-reversão de marca usada no resto do plugin. Corrigida para o azul escuro padrão já usado em outros lugares.
+
+---
+
+## v6.15.7 — 2026-09-17
+
+### Corrigido — Ícone de foco redundante em specs vinculadas a um frame
+Dentro do sub-accordion "Tokens Escaneados", cada spec vinculada tinha um botão de foco que não era mais necessário depois de expandir o item passar a focar automaticamente no elemento.
+
+---
+
+## v6.15.6 — 2026-09-17
+
+### Corrigido — Ícone de foco redundante no card de frame
+O card de frame em "Escanear Tokens" tinha um botão de foco dedicado que fazia exatamente o mesmo que já acontece ao expandir o card. Removido.
+
+---
+
+## v6.15.5 — 2026-09-17
+
+### Ajustado — Removido preview de destaque no hover do card de medida
+O foco no canvas de uma medida passou a acontecer só ao expandir o card, nunca mais ao simplesmente passar o mouse sobre ele.
+
+---
+
+## v6.15.3 / v6.15.4 — 2026-09-17
+
+### Ajustado — Padronização visual dos accordions de item
+Os cards de Medidas, Specs e Frames tinham uma barra "Ações" separada do cabeçalho de expandir (foco/visibilidade + lixeira). Passaram a seguir um único padrão: ações rápidas na mesma linha do cabeçalho, e excluir como botão grande dentro do conteúdo expandido — nunca mais como ícone solto.
+
+---
+
+## v6.15.2 — 2026-09-17
+
+### Removido — Cards de instrução fixa duplicando o empty-state
+As telas de Anotar Specs, Anotar Medidas e Fluxos de Tela tinham cada uma um card azul de instrução sempre visível, repetindo a mesma explicação do empty-state e do onboarding. Removidos. Corrigido também o texto do empty-state de Fluxos de Tela, que dizia "Selecione 2 elementos" quando o plugin já aceita 2 ou mais.
+
+---
+
+## v6.15.1 — 2026-09-17
+
+### Corrigido — Rótulo errado no contador de "Escanear Tokens"
+O contador do topo da tela de Resumo dizia "Tokens Escaneados (N)", mas `N` sempre foi a contagem de frames, não de tokens individuais. Corrigido para "Frames Escaneados".
+
+### Corrigido — Botão "Continuar documentando" não navegava de volta
+No modal "Gerar Ficha de Handoff" (estado de item único), o botão fechava a modal sem levar de volta à tela inicial.
+
+### Ajustado — Card "Frame Selector" virou accordion recolhido
+Em Anotar Specs e Anotar Medidas, o card de seleção de frame passou a vir recolhido por padrão, com um ícone de ajuda explicando sua função mesmo fechado.
+
+---
+
 ## v6.8.1 — 2026-08-28
 
 ### Corrigido — Guia "Importar/Exportar dados" desatualizado

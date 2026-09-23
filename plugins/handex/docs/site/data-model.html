@@ -321,15 +321,24 @@
 <hr>
 <h3 id="41-container-principal">4.1 Container principal</h3>
 <pre><code>Handex | Ficha de Projeto | {titulo} | {YYYY-MM-DD HH:mm}</code></pre>
+<p><strong>Largura fixa em cascata (v6.23.0, 2026-09-17) — altura sempre Hug em todos os níveis:</strong></p>
+<pre><code>mainContainer (Section externa)   1080px  (padding 64px cada lado)
+  └── fichaTecnica (conteúdo)      952px  (1080 − 64×2)
+        └── content                904px  (952 − padding 24×2)
+              └── block (por frame, "Documentação Visual")  872px de área útil (904 − padding 16×2)
+                    ├── snapshot: largura = proporção real do frame, teto 872px (nunca corta, reduz proporcionalmente se maior)
+                    └── card de detalhe (specs/medidas): até 450px, alinhado à esquerda</code></pre>
+<p>Decisão de produto: layout vertical (empilhado, largura única) preferido a uma proposta anterior de colunas lado a lado — melhor pra exportar em PDF e se adequar a uma visão de protótipo navegável. Largura fixa garante consistência visual entre fichas de projetos diferentes.</p>
 <p><strong>Filhos diretos (cards):</strong></p>
 <pre><code>Handex | Ficha de Projeto | {titulo} | {ts}        (FRAME horizontal)
   ├── {base} / Ficha de Projeto                    ← card 1: dados + specs + fluxos
   ├── {base} / Briefing                            ← card 2: perguntas estratégicas
   └── {base} / Interface                           ← card 3: tokens e componentes DSC</code></pre>
+<p><strong>Exportação em PDF (v6.28.0, 2026-09-18):</strong> botão "Baixar Ficha em PDF" (tela de Resumo) exporta este container principal via <code>node.exportAsync({ format: 'PDF' })</code> — PDF nativo da Plugin API, fidelidade visual total (cores, cards, snapshots), diferente do PDF de texto puro já embutido no <code>.zip</code> completo (<code>exportHandoff</code>, que converte o Markdown via jsPDF). Handler <code>export-ficha-pdf</code> (<code>code.js</code>) localiza a Ficha do projeto atual com <code>_hdFindExistingFicha</code> — exige que ela já exista no canvas.</p>
 <hr>
 <h3 id="42-secoes-internas">4.2 Seções internas</h3>
 <p>Nome real gravado pelo código (<code>_hdCreateSection</code>/<code>_hdBuildSectionShell</code>, <code>code.js</code>): <strong><code>[Seção] {titulo}</code></strong> — sem meta-tipo no nome (documentação anterior indicava <code>[Seção | {tipo}] {titulo}</code>, desatualizada em relação ao código; corrigido em 2026-09-15). A busca por subseção (usada pelo handler <code>insert-ficha-section</code>, ver 6.1) é feita pelo título literal, não por um tipo separado.</p>
-<div class="table-wrap"><table><thead><tr><th><code>{titulo}</code> usado hoje</th><th>Conteúdo</th></tr></thead><tbody><tr><td><code>Informações Básicas</code></td><td>Informações básicas do projeto</td></tr><tr><td><code>Equipe e Responsáveis</code></td><td>Membros da equipe</td></tr><tr><td><code>Regras de Negócio e HUs</code></td><td>Regras de negócio e HUs</td></tr><tr><td><code>Cenários de Exceção</code></td><td>Cenários de exceção</td></tr><tr><td><code>Documentação</code></td><td>Links de documentação</td></tr><tr><td><code>Frames Documentados</code></td><td>Frames documentados</td></tr><tr><td><code>Medidas</code></td><td>Medidas por frame</td></tr><tr><td><code>Especificações</code></td><td>Especificações por frame</td></tr><tr><td><code>Fluxos de Tela</code></td><td>Fluxos de tela</td></tr><tr><td><code>Briefing Estratégico</code></td><td>Briefing estratégico (card 2, fora de <code>content</code>)</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th><code>{titulo}</code> usado hoje</th><th>Conteúdo</th></tr></thead><tbody><tr><td><code>Informações Básicas</code></td><td>Informações básicas do projeto</td></tr><tr><td><code>Equipe e Responsáveis</code></td><td>Membros da equipe</td></tr><tr><td><code>Regras de Negócio e HUs</code></td><td>Regras de negócio e HUs</td></tr><tr><td><code>Cenários de Exceção</code></td><td>Cenários de exceção</td></tr><tr><td><code>Documentação</code></td><td>Links de documentação</td></tr><tr><td><code>Frames Escaneados</code></td><td>Só frames com pelo menos 1 item marcado <code>isMarkedCustom</code> (<code>_hdFrameHasCustomItem</code>, ver 6.1) — renomeada de "Frames Documentados" e filtrada em 2026-09-17, antes listava todos os frames sem filtro</td></tr><tr><td><code>Documentação Visual</code></td><td>1 bloco por frame documentado com specs/medidas — snapshot amplo + card de detalhe (substituiu as antigas "Medidas"/"Especificações" agregadas em 2026-09-17, ver seção 4.6)</td></tr><tr><td><code>Fluxos de Tela</code></td><td>Fluxos de tela</td></tr><tr><td><code>Briefing Estratégico</code></td><td>Briefing estratégico (card 2, fora de <code>content</code>)</td></tr></tbody></table></div>
 <hr>
 <h3 id="43-campos-de-dados">4.3 Campos de dados</h3>
 <pre><code>[Campo | {chave}] {rotulo}</code></pre>
@@ -348,27 +357,32 @@
 <h3 id="45-frames-documentados-dentro-da-ficha">4.5 Frames documentados (dentro da ficha)</h3>
 <pre><code>[Frame | {figmaId}] {nomeFrame}
   ├── Badge                    (FRAME, opcional) ← "Novo componente"
-  ├── Auditoria                (FRAME, opcional) ← resultado DSC
-  ├── Snapshot com Specs       (FRAME, opcional) ← ver abaixo
-  └── Snapshot com Medidas     (FRAME, opcional) ← ver abaixo</code></pre>
-<p><strong>Snapshots visuais (2026-09-15):</strong> cada card de frame pode ganhar até 2 prévias PNG geradas na hora da geração/atualização da Ficha (<code>_hdSnapshotFrameWithNodes</code>, <code>code.js</code>): uma composição do frame original + os <code>specGroup</code>/<code>contour</code> de <code>frame.createdSpecs[]</code> (nas posições reais do canvas), outra do frame + os grupos de <code>frame.measurements[]</code>. Nunca inclui specs/medidas avulsas (<code>__loose__</code>) — só as explicitamente vinculadas àquele frame. Cada preview é um <code>FRAME</code> (label + <code>RECTANGLE</code> 432×243 com fill <code>IMAGE</code>); ausente quando o frame não tem specs/medidas vinculadas, ou quando o nó original/vinculado foi apagado do canvas manualmente (tolerado silenciosamente, sem quebrar a geração da Ficha). <strong>É conteúdo derivado do canvas no momento da geração — não é persistido em <code>handoffData</code>.</strong></p>
+  └── Auditoria                (FRAME, opcional) ← resultado DSC</code></pre>
+<p><strong>Nota histórica (2026-09-15 → 2026-09-17):</strong> entre v6.13.0 e v6.14.0, este card chegou a incluir dois snapshots PNG pequenos (432×243px, "Snapshot com Specs"/"Snapshot com Medidas"). Migrados em 2026-09-17 para a seção própria "Documentação Visual" (ver 4.6), em tamanho amplo e com o card de detalhe ao lado — este card voltou a ser só identificação básica do frame (nome + badge + auditoria).</p>
 <hr>
-<h3 id="46-medidas-dentro-da-ficha">4.6 Medidas (dentro da ficha)</h3>
-<pre><code>[Medidas | {figmaId}] {nomeFrame}          ← agrupador por frame
-  └── [Medida | {tipo} | {valor}] {nome}   ← item individual
-        ├── Label    (TEXT, Bold)
-        └── Detalhe  (TEXT, Regular)</code></pre>
-<hr>
-<h3 id="47-especificacoes-dentro-da-ficha">4.7 Especificações (dentro da ficha)</h3>
-<pre><code>[Specs | {figmaId}] {nomeFrame}             ← agrupador por frame
-  └── [Grupo | {letra}] {nomeGrupo}         ← grupo por letra
-        └── [Spec | {letra}] {nomeSpec}     ← spec individual
-              ├── Tag          (FRAME)
-              ├── Categoria    (FRAME)
-              ├── Nota         (TEXT)
-              ├── Propriedades (FRAME)
-              │   └── Prop/{label}
-              └── Excecoes     (FRAME, opcional)</code></pre>
+<h3 id="46-documentacao-visual-dentro-da-ficha">4.6 Documentação Visual (dentro da ficha)</h3>
+<p>Substitui as antigas seções "Medidas" e "Especificações" (2026-09-17). 1 bloco por frame documentado (<code>_hdBuildFrameShowcaseBlock</code>, <code>code.js</code>), cada um com até 2 pares — specs e medidas — cada par só aparece se houver dado correspondente:</p>
+<pre><code>[Seção] Documentação Visual
+  └── [Documentação] {nomeFrame}                ← 1 bloco por frame documentado
+        ├── Nome do frame (TEXT, Bold)
+        ├── "Specs marcadas"        (se f.createdSpecs.length > 0)
+        │     ├── Snapshot (RECTANGLE, fill IMAGE) — frame real em tamanho
+        │     │     amplo (máx. ~680px de largura, proporção real do frame),
+        │     │     com SÓ o selo (letra da tag) e o contorno/destaque de
+        │     │     cada spec marcados por cima — NUNCA o Conector (linha)
+        │     │     nem o specCard (texto), que ficam de fora do snapshot
+        │     │     de propósito
+        │     └── [Specs] {nomeFrame}  ← _hdBuildSpecsSubgroup, mesma
+        │           estrutura já documentada antes em 4.7 (grupo por
+        │           letra → spec individual com categoria/nota/props)
+        └── "Medidas aplicadas"     (se f.measurements.length > 0)
+              ├── Snapshot (RECTANGLE, fill IMAGE) — frame real + as
+              │     medidas aplicadas marcadas por cima
+              └── [Medidas | {figmaId}] {nomeFrame}  ← _hdBuildMeasuresSubgroup,
+                    mesma estrutura já documentada antes em 4.6 (lista de
+                    [Medida] {nome} com label + detalhe)</code></pre>
+<p><strong>Por que "specs marcadas" não inclui o Conector/specCard</strong>: o <code>contour</code> ("Destaque") já vive HOJE fora do <code>specGroup</code> (ver 4.1/nota de arquitetura GROUP + nó solto) e já tem como filho o <code>chip</code> (o selo com a letra) — o par "selo + contorno" já existia isolado, pronto pra ser capturado sozinho via <code>exportAsync</code>, sem precisar desmontar nada do <code>specGroup</code> real (que segue existindo intacto no canvas de trabalho do designer, fora da Ficha — esta mudança não altera em nada a criação de specs).</p>
+<p>Frame sem nenhuma spec E sem nenhuma medida vinculada não gera bloco. É conteúdo <strong>derivado do canvas no momento da geração/atualização da Ficha</strong> — nunca persistido em <code>handoffData</code>, mesma regra já vigente para os snapshots (ver 4.5).</p>
 <hr>
 <h3 id="48-fluxos-de-tela-dentro-da-ficha">4.8 Fluxos de tela (dentro da ficha)</h3>
 <pre><code>[Fluxo | {numero} | {tipo}] {nomeFluxo}
@@ -384,13 +398,11 @@
   └── Resposta    (TEXT, Regular)</code></pre>
 <hr>
 <h3 id="410-tokens-dsc-card-interface">4.10 Tokens DSC (card Interface)</h3>
-<pre><code>[Scan | {categoria}] {titulo}       ← agrupador por categoria
-  └── [Token | {tipo}] {nomeToken}  ← item individual
-        ├── Preview     (FRAME)
-        ├── Nome        (TEXT)
-        ├── Status      (FRAME, chip: DSC/AJUSTE/FORA)
-        └── Props       (FRAME)
-            └── Prop/{label}</code></pre>
+<p><strong>Reformulado em 2026-09-16</strong> — mostra só itens declarados manualmente pelo designer como "Componente Personalizado" (<code>item.isMarkedCustom</code>, ver 5.4.1), não mais qualquer item com vínculo DSC. Componentes conformes ou pendentes de revisão não entram: o dev usa o componente pronto da lib DSC nesses casos (a lib já é a documentação); "Necessita revisão" é trabalho do designer, não informação de construção pro dev. Card mínimo (nome + aviso, sem lista de propriedades) — quem precisar de mais detalhe cria uma Spec (já tem snapshot visual próprio, ver 4.5).</p>
+<pre><code>[Scan | {categoria}] {titulo}       ← agrupador por categoria (só aparece se houver item marcado)
+  └── [Token | {tipo}] {nomeToken}  ← item marcado como Componente Personalizado
+        ├── Preview     (FRAME, opcional)
+        └── Nome + aviso "precisa ser construído" (TEXT)</code></pre>
 <hr>
 <h2 id="5-schema-de-persistencia-handoffdata">5. Schema de Persistência (<code>handoffData</code>)</h2>
 <p>Armazenado em <code>localStorage</code> via <code>saveToStorage()</code> / <code>saveSpecsToStorage()</code>. Versão atual: <code>_schemaVersion: 3</code></p>
@@ -478,7 +490,7 @@
   nome:           string,
   isNewComponent: boolean,
 
-  specs:   null | ScanResult,   // resultado do scan de tokens DSC
+  specs:   null | ScanResult,   // resultado do scan de tokens DSC — ver 5.4.1
   audit: {
     checkDone:   boolean,
     semDesvios:  boolean,
@@ -491,6 +503,45 @@
   specGroupNames:   Record&lt;string, string&gt;,
   specGroupVisible: Record&lt;string, boolean&gt;
 }</code></pre>
+<hr>
+<h3 id="541-scanresult-e-item-de-scan">5.4.1 <code>ScanResult</code> e item de scan</h3>
+<pre><code class="lang-js">// ScanResult
+{
+  components: ScanItem[],
+  icons:      ScanItem[],
+  typography: ScanItem[],
+  frames:     ScanItem[],
+  vectors:    ScanItem[],
+  frameJson:  object,       // snapshot estrutural bruto do frame (debug)
+  fileKey:    string,
+  framePreview: bytes | null
+}
+
+// ScanItem — um componente/ícone/estilo de tipografia/frame/vetor
+// identificado pelo scan automático (handler scan-frame, code.js)
+{
+  name:               string,
+  type:               'components' | 'icons' | 'typography' | 'frames' | 'vectors',
+  nodeType:            string,   // node.type do Figma (INSTANCE, TEXT, etc.)
+  componentKey:        string | null,
+  nodeId:              string,   // id do nó no canvas — chave de casamento entre scans
+  isDS:                true | 'warning' | false,   // conformidade calculada
+  score:               number | null,
+  matchedBy:           'key' | 'value' | 'name' | 'remote' | 'intrinsic' | null,
+  matchedIn:           string | null,   // nome da lib onde bateu o match
+  matchedTokenName:    string | null,
+  isCustomComponent:   boolean,  // CALCULADO pelo scan: sem vínculo comprovado com a lib
+  isMarkedCustom:      boolean,  // DECLARADO pelo designer (toggle "Componente Personalizado"
+                                 // no card do item, tela Escanear Tokens) — ver nota abaixo
+  variants:            { name: string, value: string }[],
+  properties:          Property[]
+}</code></pre>
+<p><strong><code>isCustomComponent</code> vs. <code>isMarkedCustom</code> — não confundir:</strong></p>
+<ul>
+<li><code>isCustomComponent</code> é <strong>calculado automaticamente</strong> pelo scan — proxy de "não achei vínculo comprovado com a lib DSC" (nem <code>componentKey</code> no skeleton, nem convenção <code>[dsc]</code> no nome). Mede vínculo TÉCNICO, não equivalência estrutural — um item pode ter <code>isCustomComponent: true</code> por simples limitação de detecção, sem ser genuinamente um componente novo.</li>
+<li><code>isMarkedCustom</code> é <strong>declarado manualmente pelo designer</strong> (2026-09-16), via toggle no card do item na tela Escanear Tokens. É a única fonte de verdade sobre "isto precisa ser construído pelo dev" — controla o que entra no Card 3 "User Interface" da Ficha de Handoff (ver 4.10). Itens em conformidade ou "necessita revisão" nunca entram na Ficha automaticamente, mesmo que <code>isCustomComponent</code> seja <code>true</code> — a decisão é sempre humana.</li>
+</ul>
+<p><strong>Preservação entre re-scans:</strong> itens de <code>ScanResult</code> são recriados do zero a cada scan (não há estado herdado). <code>isMarkedCustom</code> sobrevive a um re-scan do mesmo frame porque o frontend envia o <code>ScanResult</code> anterior junto no pedido de scan (<code>previousSpecs</code>, <code>scan-frame</code> handler, <code>code.js</code>) e o backend casa itens do scan novo com o anterior por <code>nodeId</code> — nunca por <code>name</code> (que pode colidir entre elementos diferentes).</p>
 <hr>
 <h3 id="55-spec">5.5 <code>Spec</code></h3>
 <pre><code class="lang-js">{
@@ -550,6 +601,34 @@
   notas:  string
 }</code></pre>
 <hr>
+<h2 id="55-aicontext"><span id="55">5.5</span> <code>_aiContext</code> — contexto para ferramentas externas de geração</h2>
+<p><strong>Feature oculta (2026-08, exposta via UI em 2026-09-17).</strong> Campo <strong>derivado</strong> (nunca persistido em <code>handoffData</code>, calculado sob demanda por <code>_buildAiContext()</code>, <code>modules/design-data.js</code>) injetado em <code>exportHandoffData()</code>/<code>exportProgress()</code>. Objetivo: material de apoio para colar como contexto/prompt em ferramentas externas de geração de design (ex: Figma Make) ao propor uma tela nova dentro do MESMO projeto. <strong>Nunca é integração automática</strong> — não existe canal de API do Figma Plugin nem do Figma Make para "enviar" esse contexto programaticamente; o botão "Copiar contexto pro Figma Make" (tela de Resumo) só formata o texto e copia para a área de transferência via <code>navigator.clipboard.writeText</code>, colar continua manual.</p>
+<pre><code class="lang-js">{
+  _note: string,
+  briefing: { titulo, objetivo, jornada, feature, perguntasRespondidas[], regrasDeNegocio[] },
+  telasDocumentadas: [{
+    nome, novoComponente, conformeDSC, qtdSpecs, qtdMedidas,
+    componentesDSC: [{ nome, biblioteca, componentKey }],  // ver nota abaixo
+    itensEscaneados: [{ nome, categoria, personalizado, propriedades: [{ propriedade, valor }] }]  // v6.25.0, ver nota abaixo
+  }],
+  tokensUsados: [{ token, label, ocorrencias }],
+  cenariosExcecao: [{ spec, tipo, titulo, obs }],
+  medidas: [{ frame, nome, detalhes }],
+  jornadas: [{ nome, conexoes: [{ nome, tipo, de, para, decisao }] }],
+  padroesCategorizacao: [{
+    componentesDoFrame: [{ nome, biblioteca, componentKey }],
+    categoria, categoriaLabel
+  }]
+}</code></pre>
+<p><strong><code>telasDocumentadas[].componentesDSC</code> e <code>padroesCategorizacao</code> (v6.21.0):</strong> nome + biblioteca de origem de cada componente real do DSC vinculado a um frame — a biblioteca vem de <code>matchedIn</code>, já calculado pelo <code>audit.js</code> ao comparar o <code>componentKey</code> contra o skeleton das libs (nunca nome de camada isolado, que é texto livre não confiável — mesma regra já aplicada em toda decisão de conformidade DSC neste projeto). Objetivo de <code>componentesDSC</code>: dar à ferramenta externa a maior chance de reconhecer/reutilizar os componentes reais em vez de recriar do zero — <strong>sem garantia</strong>, depende de o Figma Make ter acesso àquela biblioteca no mesmo arquivo/organização.</p>
+<p><strong><code>padroesCategorizacao</code>:</strong> registra (nunca infere) qual categoria de spec (Informação Extra/Comportamento/Regra de Negócio/Dados da API) o designer escolheu em cada frame com componentes DSC reais. Motivado por uma pergunta do usuário sobre sugerir categoria automaticamente por machine learning — investigação confirmou que nenhuma das 6 libs DSC carrega metadado de <em>função</em> de componente (só identidade via <code>componentKey</code> + tokens de estilo), então não há como inferir "isso é form field vs. feedback" sem heurística de nome de camada, já rejeitada neste projeto. O Handex por isso só registra o histórico observado NESTE projeto — a inferência, se acontecer, é responsabilidade da ferramenta externa que consome o contexto.</p>
+<p><strong>Botão "Baixar imagens dos frames" (v6.24.0, 2026-09-18):</strong> usuário perguntou se o contexto pra IA não deveria levar também a imagem do frame. Investigação sobre combinar imagem+texto num único <code>ClipboardItem</code> mostrou que múltiplos MIME types num mesmo item representam a MESMA informação em formatos alternativos (ex: texto simples + HTML do mesmo conteúdo), não duas coisas distintas — o app de destino escolheria só um dos dois tipos ao colar, resultado incerto. Implementado como ação separada e garantida: handler <code>export-frame-snapshots-for-ai</code> (<code>code.js</code>) gera um PNG por frame documentado (mesma marcação de "Documentação Visual", reaproveitando <code>_hdSnapshotFrameWithNodes</code>/<code>_hdCollectSpecContourIds</code>) em base64 (<code>figma.base64Encode</code>); o frontend baixa cada um como arquivo <code>.png</code> separado. Fluxo completo pra levar contexto ao Figma Make vira 2 passos: "Copiar contexto" (texto) + "Baixar imagens dos frames" (PNGs), anexados manualmente juntos.</p>
+<p><strong>Modal "Incluir mais frames no contexto?" (v6.27.0, 2026-09-18):</strong> o designer normalmente documenta só partes de uma tela (um header, um menu), nunca a tela inteira — sem imagem própria no pacote pra dar contexto amplo de onde essas partes vivem. Antes de gerar o pacote, um modal lista frames de nível superior da página NÃO documentados (excluindo as Sections internas do Handex) para o designer escolher incluir como imagem extra (tela completa, sem marcação de spec/medida). Telas já documentadas continuam sempre entrando, sem precisar selecionar nada.</p>
+<p><strong>Botão único "Baixar contexto + imagens pro Figma Make" (v6.26.0, 2026-09-18):</strong> os 2 botões anteriores (copiar texto + baixar imagens individuais) viraram 1 pacote único a pedido do usuário. Baixa um <code>.zip</code> (via JSZip, mesma lib já usada em <code>exportHandoff</code>) com <code>contexto-ia.md</code> (o texto formatado do <code>_aiContext</code>) + pasta <code>imagens/</code> com um PNG por frame documentado. Não copia mais pra área de transferência — é sempre um arquivo baixado, aberto/copiado manualmente de dentro do zip.</p>
+<p><strong><code>itensEscaneados</code> (v6.25.0, 2026-09-18):</strong> usuário testou o contexto real no Figma Make e reportou que era genérico demais pra reconstruir uma tela com fidelidade. Avaliada e descartada a extração de árvore posicional 1:1 (x/y/w/h/hierarquia de todo nó) — estimativa de 200-800+ nós por tela real gerando 250KB-3MB de JSON por frame nesse padrão, inviável de prompt e arriscado de rodar (risco de travar a thread principal do Figma). Em vez disso, reaproveitado o dado que o <strong>scan de auditoria já produz e já está salvo</strong> em <code>frame.specs[categoria][]</code> — nome, categoria, <code>isMarkedCustom</code> e as propriedades reais já capturadas (cor exata, espaçamento exato, tipografia exata — não só "tem token ou não"). Sem extração nova, sem risco de performance. Combinado com o snapshot, a dupla dá à IA externa referência visual (imagem) + especificação técnica exata (texto) de cada peça — o par necessário pra replicar com fidelidade, sem os riscos da árvore completa. <strong>Bug corrigido na mesma leva:</strong> <code>elementMatchedIn</code> nunca era preenchido quando o vínculo de um componente vinha só da convenção <code>[dsc]</code> no nome (sem <code>componentKey</code> reconhecido no skeleton) — esses itens, genuinamente conformes segundo a própria auditoria, eram descartados silenciosamente de <code>componentesDSC</code>.</p>
+<p><strong>Checklist único de exportação + "Ficha em PDF" (v6.28.0/v6.29.0, 2026-09-18):</strong> os exports da tela de Resumo (Briefing, Markdown, JSON, pacote de contexto pra IA) eram 5 botões empilhados — sem forma de disparar mais de um por vez. Substituídos por uma lista marcável (<code>export-checklist</code>) + 1 botão "Exportar selecionados" que executa as marcadas em sequência (nunca em paralelo, <code>executeSelectedExports()</code>, <code>design-data.js</code>) com loading único. Na mesma leva, entrou "Ficha em PDF" — exportação visual real da Ficha do canvas via <code>node.exportAsync({format:'PDF'})</code> nativo (não geração de PDF a partir de texto), primeiro item da lista e pré-marcado por ser o export mais comum do fluxo.</p>
+<p><strong>Bloco "Exportar" virou modal (v6.29.4, 2026-09-18):</strong> o checklist acima vivia num accordion (<code>export-accordion-*</code>) aberto por padrão logo depois do botão "Gerar Ficha", na tela de Resumo. Usuário achou que ficava "meio perdido", competindo com "Gerar Ficha" (ação primária da tela) sem hierarquia visual clara. Todo o conteúdo (hint dispensável + checklist + botão "Exportar selecionados") moveu pra um modal próprio (<code>export-modal</code>, <code>modals.html</code>), disparado por um botão secundário/outline "Exportar" no lugar do accordion — mesmo padrão visual já usado em botões de ação secundária no plugin (branco + borda, ver "Normalização de botões" no <code>CLAUDE.md</code>).</p>
+<hr>
 <h2 id="6-relacao-canvas-persistencia">6. Relação Canvas ↔ Persistência</h2>
 <pre><code>Canvas (Figma)                                  Persistência (localStorage)
 ──────────────────────────────────────────────  ────────────────────────────────────
@@ -578,12 +657,17 @@
 <hr>
 <h3 id="61-insercao-incremental-por-subsecao-2026-09-15">6.1 Inserção incremental por subseção (2026-09-15)</h3>
 <p>Além do fluxo global "Gerar Ficha" (<code>create-handoff</code>, sempre remove e reconstrói a Ficha inteira), cada uma das 4 telas (Escanear Tokens, Anotar Specs, Anotar Medidas, Fluxos de Tela) tem um botão próprio <strong>"Inserir [X] na Ficha"</strong> (<code>insertSectionInFicha()</code>, <code>modules/handoff.js</code>) que sincroniza <strong>só a subseção correspondente</strong> no canvas, preservando as demais como estavam:</p>
-<pre><code>Botão "Inserir Tokens na Ficha"    → insert-ficha-section { section: 'tokens'  } → [Seção] Frames Documentados
+<pre><code>Botão "Inserir Tokens na Ficha"    → insert-ficha-section { section: 'tokens'  } → [Seção] Frames Escaneados
 Botão "Inserir Specs na Ficha"     → insert-ficha-section { section: 'specs'   } → [Seção] Especificações
 Botão "Inserir Medidas na Ficha"   → insert-ficha-section { section: 'medidas' } → [Seção] Medidas
 Botão "Inserir Fluxos na Ficha"    → insert-ficha-section { section: 'fluxos'  } → [Seção] Fluxos de Tela</code></pre>
 <p>O handler (<code>code.js</code>) localiza a Ficha existente do projeto (<code>_hdFindExistingFicha</code>) e, dentro dela, o container <code>Handex | Content</code> (nome fixo, ver 4.1) — substitui só a subseção pedida no mesmo índice (<code>_hdReplaceSection</code>), reaproveitando as mesmas funções de montagem (<code>_hdRebuildFramesSection</code>/<code>_hdRebuildMeasuresSection</code>/<code>_hdRebuildSpecsSection</code>/<code>_hdRebuildFlowsSection</code>) usadas por <code>create-handoff</code> — nunca duplica a lógica de montagem entre os dois caminhos. Se a Ficha do projeto ainda não existe no canvas, o backend não cria uma versão parcial: devolve <code>ficha-section-needs-full-create</code> e o frontend dispara <code>createHandoffOnCanvas()</code> normalmente, que cria a Ficha completa (mesmo comportamento de sempre para "primeira geração").</p>
-<p>Diferente de <code>finalizeSection()</code> (confirmação leve, 100% local, nunca toca o canvas — continua existindo separada), o botão "Inserir [X] na Ficha" sincroniza de fato. Metadado de sincronização por seção: ver <code>_fichaSections</code> (seção 5).</p>
+<p><strong>Botão único, rótulo dinâmico (2026-09-17):</strong> cada tela tinha um segundo botão "Finalizar Registros" que só salvava e voltava pra home sem tocar o canvas — removido por ser redundante (inserir na Ficha já chama <code>collectHandoffData()</code>+<code>saveToStorage()</code>, cobrindo a mesma persistência). Sobra um único botão "Inserir [X] na Ficha" que vira <strong>"Atualizar [X] na Ficha"</strong> (ícone <code>refresh-cw</code>) assim que aquela seção já foi inserida uma vez, via <code>_updateInsertFichaButtonLabel()</code> (<code>modules/handoff.js</code>), consultando <code>_fichaSections</code> (seção 5).</p>
+<p><strong>Filtro de "Frames Escaneados" + pergunta de confirmação (2026-09-17):</strong> a subseção "Frames Escaneados" (Tokens) não lista mais todo frame registrado — só entram frames com pelo menos 1 item do scan marcado <code>isMarkedCustom</code>, ou frames com o toggle <strong>"Novo Componente"</strong> marcado (esse último entra sempre, incondicionalmente — ver <code>_hdFrameIsRelevantForFicha</code>, <code>code.js</code>). Quando nenhum frame atende a nenhum dos dois critérios, o clique em "Inserir/Atualizar Tokens na Ficha" (ou "Gerar Ficha de Handoff") dispara primeiro <code>check-frames-relevance</code> (backend, só leitura, nenhuma escrita no canvas) e, se não houver frame relevante mas existirem frames escaneados, abre o modal <code>frames-relevance-modal</code> perguntando se o designer quer incluir a lista completa mesmo assim. A resposta vira o flag <code>includeAllFrames</code> no <code>insert-ficha-section</code>/<code>create-handoff</code> real.</p>
+<p><strong>Card de Novo Componente traz o que o dev precisa construir (2026-09-17):</strong> antes, o card de um frame marcado <code>isNewComponent</code> em "Frames Escaneados" mostrava só nome + badge + auditoria — igual a qualquer outro frame. Agora (<code>_hdBuildFrameCard</code>, <code>code.js</code>) inclui também a descrição do padrão de uso/nomenclatura/diretrizes (<code>frame.newComponentObservations</code>, campo de texto livre da tela Escanear Tokens) e a lista de todos os elementos escaneados do frame (componentes/ícones/tipografia/vetores/frames, sem filtro de <code>isMarkedCustom</code> — aqui o objetivo é documentar o componente novo por inteiro).</p>
+<p><strong>Posição da Ficha: confirmação manual, nunca mais heurística (2026-09-17, versão definitiva):</strong> o posicionamento automático da Ficha (âncora no frame documentado via <code>figmaId</code>, com rede de segurança de colisão empurrando pra não sobrepor outros nós) passou por 3 rodadas de correção na mesma sessão e ainda assim continuou gerando a Ficha longe do frame documentado em cenários reais — a causa raiz nunca foi totalmente isolada como um bug único. Abandonado por completo em favor do mesmo princípio já usado com sucesso pro posicionamento de specs: decisão manual explícita do designer.</p>
+<p>Mecânica: na <strong>primeira geração de cada projeto</strong> (sem <code>handoffData._fichaBasePosition</code> salvo ainda), a Ficha nasce de verdade no canvas (não um fantasma/contorno separado) numa posição sugerida simples — abaixo do primeiro frame documentado com <code>figmaId</code> resolvível, senão abaixo da seleção atual, senão abaixo do viewport — já visível e selecionada. O backend responde <code>handoff-needs-position-confirmation</code> em vez de <code>handoff-complete</code>; o frontend abre o modal <code>ficha-position-confirm-modal</code> ("Posicione a Ficha no canvas" + botão "Confirmar posição da Ficha") — o backdrop cobre só a UI do plugin, o canvas do Figma continua livre por trás pro designer arrastar a própria Ficha antes de confirmar. Sem botão de fechar/X de propósito (decisão 2026-09-17: um banner fixo no rodapé foi tentado primeiro, mas competia visualmente com o resto da tela; o modal centraliza o foco e dá mais fluidez à etapa final da jornada). Ao confirmar (<code>confirm-ficha-position</code> → <code>ficha-position-confirmed</code>), a posição atual da Ficha é lida e persistida em <code>handoffData._fichaBasePosition</code> — essa é a última vez que o designer é perguntado.</p>
+<p>Da em diante: <strong>"Atualização"</strong> (minor) substitui exatamente em <code>_fichaBasePosition</code>; <strong>"Nova Versão"</strong> (major) preserva a Ficha anterior no canvas (nunca remove) e a nova nasce colada à direita da posição base (mesmo Y, X = <code>_fichaBasePosition.x</code> + largura da ficha anterior + 200px de gap) — as duas versões ficam visíveis lado a lado como histórico. Nenhum dos dois casos volta a perguntar ou recalcular por heurística.</p>
 <hr>
 <h2 id="7-roadmap-htmlsharepoint">7. Roadmap HTML/SharePoint</h2>
 <p>Cada entidade persistida tem campos suficientes para gerar um card HTML autônomo.</p>

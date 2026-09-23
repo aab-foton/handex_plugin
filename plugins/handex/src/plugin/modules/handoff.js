@@ -242,15 +242,63 @@ ${(handoffData.createdFlows || []).length === 0
         return;
       }
 
-      // Se já foi gerada uma ficha, abre o modal de versionamento
+      // Antes de decidir entre "Versionar" e "gerar do zero", confirma contra
+      // o canvas real (nunca só handoffData._fichaGenerated) -- o flag local
+      // podia ficar "preso" em true mesmo depois da Ficha ser apagada do
+      // canvas manualmente, fazendo o modal de versionamento aparecer sem
+      // nenhuma Ficha existir de verdade. Reaproveita o mesmo handler já
+      // usado por openHandoffInjectModal (pull-ficha-version-from-canvas),
+      // que já resolve isso e sincroniza handoffData._fichaGenerated com a
+      // resposta real (ver handler de ficha-version-pulled em messages.js).
+      const _titulo = (document.getElementById('s1-titulo')?.value || handoffData.step1.titulo || '').trim();
+      window._pendingCreateHandoffVersionCheck = true;
+      parent.postMessage({ pluginMessage: { type: 'pull-ficha-version-from-canvas', titulo: _titulo } }, '*');
+    }
+
+    // Continuação de createHandoffOnCanvas após confirmar contra o canvas
+    // real se já existe uma Ficha (ver handler de ficha-version-pulled em
+    // messages.js, que chama isso com handoffData._fichaGenerated já
+    // sincronizado).
+    function _continueCreateHandoffAfterVersionCheck() {
       if (handoffData._fichaGenerated) {
         _openVersioningModal();
         return;
       }
 
-      parent.postMessage({ pluginMessage: { type: 'create-handoff', data: handoffData } }, '*');
+      // Mesmo check de "Frames Escaneados" usado em insertSectionInFicha:
+      // se nenhum frame é relevante (sem Novo Componente, sem item marcado
+      // Personalizado), pergunta antes de decidir incluir a lista completa
+      // ou omitir a seção.
+      window._pendingCreateHandoff = true;
+      parent.postMessage({ pluginMessage: { type: 'check-frames-relevance', data: handoffData } }, '*');
+    }
+    window._continueCreateHandoffAfterVersionCheck = _continueCreateHandoffAfterVersionCheck;
+
+    function _sendCreateHandoff(includeAllFrames = false) {
+      parent.postMessage({ pluginMessage: { type: 'create-handoff', data: handoffData, includeAllFrames } }, '*');
       showHandoffLoading();
     }
+    window._sendCreateHandoff = _sendCreateHandoff;
+
+    // Modal "nada fora do DSC, incluir mesmo assim?" -- aberto pelo handler
+    // de frames-relevance-checked (messages.js) quando existem frames
+    // escaneados mas nenhum é relevante (sem Novo Componente, sem item
+    // marcado Personalizado). onDecision recebe true/false conforme a
+    // escolha do designer.
+    let _framesRelevanceDecisionCallback = null;
+    function openFramesRelevanceModal(onDecision) {
+      _framesRelevanceDecisionCallback = onDecision;
+      openModal('frames-relevance-modal');
+    }
+    window.openFramesRelevanceModal = openFramesRelevanceModal;
+
+    function _resolveFramesRelevanceModal(includeAllFrames) {
+      closeModal('frames-relevance-modal');
+      const cb = _framesRelevanceDecisionCallback;
+      _framesRelevanceDecisionCallback = null;
+      if (typeof cb === 'function') cb(includeAllFrames);
+    }
+    window._resolveFramesRelevanceModal = _resolveFramesRelevanceModal;
 
     function openHandoffInjectModal() {
       // Antes de decidir o estado do modal, resgata do canvas a versão da
@@ -414,8 +462,16 @@ ${(handoffData.createdFlows || []).length === 0
       if (el) el.value = newVersion;
       saveToStorage();
 
+      // Tipo de versão escolhido decide o posicionamento no canvas (ver
+      // code.js): "major" (Nova Versão, redesenho/mudança estrutural) nasce
+      // AO LADO da ficha anterior -- as duas ficam visíveis, uma é histórico.
+      // "minor" (Atualização, mesmo escopo) SUBSTITUI no mesmo lugar -- é a
+      // mesma ficha, só sincronizada de novo.
+      const selected = document.querySelector('input[name="version-type"]:checked');
+      const versionType = selected ? selected.value : 'minor';
+
       if (typeof closeModal === 'function') closeModal('versioning-modal');
-      parent.postMessage({ pluginMessage: { type: 'create-handoff', data: handoffData } }, '*');
+      parent.postMessage({ pluginMessage: { type: 'create-handoff', data: handoffData, versionType } }, '*');
       showHandoffLoading();
     }
     window.confirmHandoffVersion = confirmHandoffVersion;
@@ -442,6 +498,27 @@ ${(handoffData.createdFlows || []).length === 0
       const hint = document.getElementById('handoff-loading-hint');
       if (hint) hint.classList.add('hidden');
     }
+
+    // Modal de confirmação de posição da Ficha -- só aparece na 1ª geração
+    // do projeto (handoffData._fichaBasePosition ainda não existe), ver
+    // handler de handoff-needs-position-confirmation em messages.js. Sem
+    // botão de fechar/X de propósito -- fica aberto até confirmar.
+    function openFichaPositionConfirmBanner() {
+      if (typeof openModal === 'function') openModal('ficha-position-confirm-modal');
+      _refreshIcons();
+    }
+    window.openFichaPositionConfirmBanner = openFichaPositionConfirmBanner;
+
+    function closeFichaPositionConfirmBanner() {
+      if (typeof closeModal === 'function') closeModal('ficha-position-confirm-modal');
+    }
+    window.closeFichaPositionConfirmBanner = closeFichaPositionConfirmBanner;
+
+    function confirmFichaPosition() {
+      if (!window._pendingFichaPositionId) return;
+      parent.postMessage({ pluginMessage: { type: 'confirm-ficha-position', fichaId: window._pendingFichaPositionId } }, '*');
+    }
+    window.confirmFichaPosition = confirmFichaPosition;
 
     function showScanLoading() {
       const el = document.getElementById('scan-loading-overlay');
@@ -474,24 +551,28 @@ ${(handoffData.createdFlows || []).length === 0
     }
     window._markFichaGenerated = _markFichaGenerated;
 
-    // "Finalizar Registros" — confirmação leve por tela, 100% local (nunca
-    // toca o canvas). Continua existindo separada de "Inserir na Ficha"
-    // (abaixo) para quem só quer marcar "terminei de documentar esta aba"
-    // sem forçar uma escrita no canvas agora.
-    const _FINALIZE_SECTION_LABEL = {
-      tokens: 'Escaneamento de tokens',
-      specs: 'Especificações',
-      measurements: 'Medidas',
-      flows: 'Fluxos de tela'
-    };
-    function finalizeSection(sectionKey) {
-      const label = _FINALIZE_SECTION_LABEL[sectionKey] || 'Registros';
-      saveAndGoHome(true, `${label} documentado — será incluído na próxima geração da ficha.`);
+    // Rótulo do botão único "Inserir/Atualizar [Funcionalidade] na Ficha" —
+    // muda pra "Atualizar" assim que aquela seção já foi inserida uma vez
+    // (handoffData._fichaSections[key], setado em ficha-section-inserted,
+    // messages.js). Existia um segundo botão "Finalizar Registros" que só
+    // salvava e voltava pra home sem tocar o canvas — removido: inserir na
+    // ficha já chama collectHandoffData()+saveToStorage(), então já cobre
+    // a mesma persistência sem precisar de uma segunda ação.
+    const _FICHA_SECTION_BTN_LABEL = { tokens: 'Tokens', specs: 'Specs', measurements: 'Medidas', flows: 'Fluxos' };
+    function _updateInsertFichaButtonLabel(sectionKey) {
+      const btn = document.getElementById('btn-insert-ficha-' + sectionKey);
+      if (!btn) return;
+      const already = !!(handoffData._fichaSections && handoffData._fichaSections[sectionKey]);
+      const label = _FICHA_SECTION_BTN_LABEL[sectionKey] || 'Registros';
+      btn.innerHTML = already
+        ? `<i data-lucide="refresh-cw" class="w-4 h-4" aria-hidden="true"></i> Atualizar ${label} na Ficha`
+        : `<i data-lucide="file-plus-2" class="w-4 h-4" aria-hidden="true"></i> Inserir ${label} na Ficha`;
+      if (typeof _refreshIcons === 'function') _refreshIcons();
     }
-    window.finalizeSection = finalizeSection;
+    window._updateInsertFichaButtonLabel = _updateInsertFichaButtonLabel;
 
-    // "Inserir [Funcionalidade] na Ficha" — ação distinta de finalizeSection:
-    // sincroniza de fato aquela subseção no canvas imediatamente (via handler
+    // "Inserir [Funcionalidade] na Ficha" — sincroniza de fato aquela subseção
+    // no canvas imediatamente (via handler
     // backend insert-ficha-section), sem tocar as demais subseções da mesma
     // Ficha. Reaproveita a mesma validação de campos obrigatórios de
     // createHandoffOnCanvas, mas nunca abre o modal de versionamento (não é
@@ -530,10 +611,26 @@ ${(handoffData.createdFlows || []).length === 0
         return;
       }
 
+      // "Frames Escaneados" (tokens) só entra na Ficha com frames relevantes
+      // (Novo Componente ou item marcado Personalizado, ver code.js). Se o
+      // scan não achou nada fora do DSC, pergunta antes de prosseguir --
+      // nunca insere a lista completa (ou omite silenciosamente) sem o
+      // designer decidir. As outras 3 seções não têm esse filtro, seguem
+      // direto pro insert de sempre.
+      if (sectionKey === 'tokens') {
+        window._pendingTokensFichaInsert = true;
+        parent.postMessage({ pluginMessage: { type: 'check-frames-relevance', data: handoffData } }, '*');
+        return;
+      }
+
+      _sendInsertFichaSection(sectionKey);
+    }
+    window.insertSectionInFicha = insertSectionInFicha;
+
+    function _sendInsertFichaSection(sectionKey, includeAllFrames = false) {
       const btn = document.getElementById('btn-insert-ficha-' + sectionKey);
       if (btn) {
         btn.disabled = true;
-        btn.dataset._label = btn.innerHTML;
         btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> <span>Inserindo...</span>';
         _refreshIcons();
       }
@@ -541,10 +638,11 @@ ${(handoffData.createdFlows || []).length === 0
       parent.postMessage({ pluginMessage: {
         type: 'insert-ficha-section',
         section: _FICHA_SECTION_BACKEND_KEY[sectionKey] || sectionKey,
-        data: handoffData
+        data: handoffData,
+        includeAllFrames
       } }, '*');
     }
-    window.insertSectionInFicha = insertSectionInFicha;
+    window._sendInsertFichaSection = _sendInsertFichaSection;
 
     async function exportHandoff() {
       const btn = document.getElementById("btn-final-export");

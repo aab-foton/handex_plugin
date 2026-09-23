@@ -725,7 +725,7 @@ function addFrame(figmaId, nome) {
     excecoes: []
   };
   handoffData.frames.push(frame);
-  renderFrameCard(frame, true);
+  renderFrameCard(frame, true, true);
   updateEmptyFramesState();
   saveToStorage();
   _toastSaved();
@@ -758,6 +758,23 @@ function toggleNewComponent(frameId, checked) {
   if (conformDiv) conformDiv.classList.toggle('hidden', checked);
   _updateFrameAuditSubtitle(frameId);
 }
+
+// isMarkedCustom é por ITEM escaneado, não por frame inteiro (isNewComponent
+// acima) -- um frame pode ter 10 componentes DSC normais e só 1 que é um
+// arranjo novo (ex: um card que combina vários componentes DSC num layout
+// que ainda não existe pronto na lib). frameId vazio/null = item avulso
+// (handoffData.step2.specs, sem frame vinculado).
+function getSpecItem(frameId, category, nodeId) {
+  const frame = frameId ? getFrame(frameId) : null;
+  const list = frame ? (frame.specs && frame.specs[category]) : (handoffData.step2 && handoffData.step2.specs && handoffData.step2.specs[category]);
+  return (list || []).find(i => i.nodeId === nodeId) || null;
+}
+
+function toggleSpecItemCustom(frameId, category, nodeId, checked) {
+  const item = getSpecItem(frameId, category, nodeId);
+  if (item) { item.isMarkedCustom = checked; saveToStorage(); }
+}
+window.toggleSpecItemCustom = toggleSpecItemCustom;
 
 function updateNewComponentObs(frameId, value) {
   const frame = getFrame(frameId);
@@ -848,13 +865,13 @@ function updateEmptyFramesState() {
   if (collapseBtn) collapseBtn.classList.toggle('hidden', !hasFrames);
   const finalizeWrap = document.getElementById('btn-finalize-tokens-wrap');
   if (finalizeWrap) finalizeWrap.classList.toggle('hidden', !hasFrames);
+  if (hasFrames && typeof _updateInsertFichaButtonLabel === 'function') _updateInsertFichaButtonLabel('tokens');
   const sectionTitle = document.getElementById('frames-section-title');
   if (sectionTitle) {
     sectionTitle.classList.toggle('hidden', !hasFrames);
-    if (hasFrames) sectionTitle.textContent = `Tokens Escaneados (${handoffData.frames.length})`;
+    if (hasFrames) sectionTitle.textContent = `Frames Escaneados (${handoffData.frames.length})`;
   }
-  _updateContentHint('frames-register-hint', hasFrames);
-  // "Registrar Frame" mora no header só quando já há frames -- lista vazia
+  // "Escanear Frame" mora no header só quando já há frames -- lista vazia
   // usa o CTA centralizado dentro de #frames-empty-state (mesmo onclick).
   const headerBtn = document.getElementById('btn-frame-register-header');
   if (headerBtn) headerBtn.classList.toggle('hidden', !hasFrames);
@@ -1986,24 +2003,44 @@ function setMeasureActiveFrame(frameId) {
   _updateFrameSelectorCopy();
 }
 
+// Accordion do card "Frame Selector" (Anotar Specs/Anotar Medidas) --
+// recolhido por padrão pra ocupar menos espaço no dia a dia; o hint fixo
+// (tooltip nativo no ícone de ajuda do cabeçalho) já explica a função sem
+// precisar expandir. kind é 'spec' ou 'measure'.
+function toggleFrameSelectorCard(kind) {
+  const body = document.getElementById(`${kind}-frame-selector-body`);
+  const toggleBtn = document.getElementById(`${kind}-frame-selector-toggle`);
+  const chevron = document.getElementById(`${kind}-frame-selector-chevron`);
+  if (!body) return;
+  const isHidden = body.classList.contains('hidden');
+  body.classList.toggle('hidden', !isHidden);
+  if (toggleBtn) toggleBtn.setAttribute('aria-expanded', String(isHidden));
+  if (chevron) chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+}
+window.toggleFrameSelectorCard = toggleFrameSelectorCard;
+
 // Ajusta rótulo/instrução/destaque do Frame Selector conforme o estado:
 // - 1 frame mapeado: confirma "Documentando: <nome>" (decisão já tomada
 //   automaticamente por populateFrameSelector, não pendente).
 // - N frames, nenhum selecionado: destaca a borda — specs/medidas criadas
 //   agora ficariam avulsas, uma decisão que afeta a estrutura da ficha
-//   final e merece não passar despercebida.
+//   final e merece não passar despercebida. Como o card agora nasce
+//   recolhido (accordion), esse alerta expande o card automaticamente e
+//   também marca o próprio cabeçalho (ponto amarelo), pra não ficar
+//   escondido atrás do accordion fechado.
 // - N frames, um selecionado: texto padrão de seleção múltipla.
 function _updateFrameSelectorCopy() {
   [
-    { selectId: 'spec-frame-selector', labelId: 'spec-frame-selector-label', hintId: 'spec-frame-selector-hint', noun: 'spec' },
-    { selectId: 'measure-frame-selector', labelId: 'measure-frame-selector-label', hintId: 'measure-frame-selector-hint', noun: 'medida' }
-  ].forEach(({ selectId, labelId, hintId, noun }) => {
+    { kind: 'spec', selectId: 'spec-frame-selector', labelId: 'spec-frame-selector-label', hintId: 'spec-frame-selector-hint', noun: 'spec' },
+    { kind: 'measure', selectId: 'measure-frame-selector', labelId: 'measure-frame-selector-label', hintId: 'measure-frame-selector-hint', noun: 'medida' }
+  ].forEach(({ kind, selectId, labelId, hintId, noun }) => {
     const sel = document.getElementById(selectId);
     const label = document.getElementById(labelId);
     const hint = document.getElementById(hintId);
     if (!sel || !label || !hint) return;
     const frames = handoffData.frames || [];
     const selected = frames.find(f => f.id === sel.value);
+    const needsAttention = frames.length > 1 && !selected;
     if (frames.length === 1 && selected) {
       label.textContent = 'Documentando';
       hint.textContent = `Focado em "${selected.nome || selected.id}" — toda nova ${noun} criada agora fica vinculada a este frame.`;
@@ -2011,8 +2048,14 @@ function _updateFrameSelectorCopy() {
     } else {
       label.textContent = 'Frames Mapeados';
       hint.textContent = `Selecione um frame para focá-lo no canvas e associar esta ${noun} a ele.`;
-      sel.classList.toggle('border-amber-400', frames.length > 0 && !selected);
-      sel.classList.toggle('dark:border-amber-500', frames.length > 0 && !selected);
+      sel.classList.toggle('border-amber-400', needsAttention);
+      sel.classList.toggle('dark:border-amber-500', needsAttention);
+    }
+    const alertDot = document.getElementById(`${kind}-frame-selector-alert`);
+    if (alertDot) alertDot.classList.toggle('hidden', !needsAttention);
+    if (needsAttention) {
+      const body = document.getElementById(`${kind}-frame-selector-body`);
+      if (body && body.classList.contains('hidden')) toggleFrameSelectorCard(kind);
     }
   });
 }
@@ -2457,8 +2500,16 @@ function autoScrollToNewItem(containerId, targetElement = null) {
   }, 100);
 }
 
+// Foco de navegação (clique de expandir/focar) -- só seleciona e rola até o
+// elemento, sem desenhar [HighlightStroke]: a própria seleção nativa do
+// Figma (contorno azul) já destaca o elemento, e um retângulo extra corria
+// risco real de ficar órfão no canvas se o plugin recarregasse/fechasse de
+// forma atípica entre criar o stroke e limpá-lo (activeHighlightNode vive só
+// em memória do processo do plugin, não sobrevive a um reload). O stroke
+// fica reservado só para o preview de hover (sendHighlight/clearHighlight
+// abaixo), que é sempre pareado no mesmo ciclo de mouseenter/mouseleave.
 function focusNode(id) {
-  parent.postMessage({ pluginMessage: { type: 'highlight-node', id, highlight: true, shouldScroll: true, color: '#005ca9' } }, '*');
+  parent.postMessage({ pluginMessage: { type: 'highlight-node', id, highlight: false, shouldScroll: true } }, '*');
 }
 
 // Destaque transitório (retângulo HighlightStroke) pra qualquer lista que
@@ -2585,7 +2636,7 @@ function restoreUIFromState() {
   const framesContainer = document.getElementById('list-frames');
   if (framesContainer) {
     framesContainer.innerHTML = '';
-    (handoffData.frames || []).forEach(frame => renderFrameCard(frame));
+    (handoffData.frames || []).forEach(frame => renderFrameCard(frame, true, false));
   }
   updateEmptyFramesState();
 

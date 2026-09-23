@@ -38,6 +38,197 @@
     </div>
   </div>
 
+<!-- MODAL: Confirmar posição da Ficha (só na 1ª geração do projeto) -- a
+     Ficha já nasceu visível e arrastável no canvas por trás deste modal; o
+     backdrop cobre só a UI do plugin, o canvas do Figma continua livre pro
+     designer arrastar a ficha à vontade. Sem botão de fechar/X de propósito
+     -- fica aberto até confirmar, pra não perder o fluxo (decisão de
+     produto 2026-09-17). -->
+  <div id="ficha-position-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="ficha-position-confirm-title" class="hidden fixed inset-0 z-[1500] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+    <div class="bg-white dark:bg-dark-bg w-full max-w-[360px] rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line p-5 flex flex-col gap-4">
+      <div class="flex items-start gap-2.5">
+        <div class="w-9 h-9 bg-[#005ca9]/10 rounded-xl flex items-center justify-center shrink-0">
+          <i data-lucide="move" class="w-4.5 h-4.5 text-[#005ca9]"></i>
+        </div>
+        <div>
+          <p id="ficha-position-confirm-title" class="text-[13px] font-bold text-slate-800 dark:text-white">Posicione a Ficha no canvas</p>
+          <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-snug mt-0.5">Arraste a ficha para o lugar desejado no Figma. Essa posição será usada em todas as próximas atualizações e versões.</p>
+        </div>
+      </div>
+      <button onclick="confirmFichaPosition()"
+        class="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-white text-[12px] font-bold rounded-2xl transition-colors flex items-center justify-center gap-2">
+        <i data-lucide="check" class="w-4 h-4"></i>
+        Confirmar posição da Ficha
+      </button>
+    </div>
+  </div>
+
+<!-- MODAL: Incluir mais frames no contexto pra IA -- aberto por
+     downloadAiContextPackage() (design-data.js) antes de gerar o pacote.
+     O designer normalmente documenta só PARTES de uma tela (um header, um
+     menu), nunca a tela inteira; aqui ele pode escolher incluir a imagem de
+     telas COMPLETAS do canvas (sem spec/medida nenhuma) como contexto
+     visual extra pro Figma Make entender onde as partes documentadas
+     vivem. Telas já documentadas sempre entram no pacote, sem precisar
+     marcar nada aqui -- esta lista é só de frames NÃO documentados. -->
+<!-- MODAL: EXPORTAR (checklist + hint didático) -- conteúdo movido do
+     accordion "Exportar" que vivia em handoff-summary.html, logo após
+     "Gerar Ficha" (v6.29.4, 2026-09-18): accordion aberto por padrão
+     competia com a ação principal da tela sem hierarquia clara (feedback
+     do usuário). Aqui vira ação própria, disparada sob demanda pelo botão
+     outline "Exportar" no Resumo. -->
+  <div id="export-modal" role="dialog" aria-modal="true" aria-labelledby="export-modal-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+    <div class="bg-white dark:bg-dark-bg w-full max-w-[420px] max-h-[85vh] rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line overflow-hidden flex flex-col">
+      <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-line flex items-center justify-between shrink-0">
+        <h3 id="export-modal-title" class="text-[15px] font-extrabold text-slate-800 dark:text-white">Exportar</h3>
+        <button onclick="closeModal('export-modal')" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-500 dark:text-dark-muted shrink-0">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="px-5 py-4 overflow-y-auto flex-1">
+
+      <!-- Hint didático: um bullet por opção do checklist abaixo + dispensável
+           (_dismissContentHint/_contentHintDismissed, core.js -- mesmo
+           padrão já usado nos hints fixos removidos das outras telas,
+           persistido em localStorage, então fica fechado entre sessões). -->
+      <div id="export-hint" class="flex items-start gap-2 mb-3 px-3 py-2.5 bg-blue-50 dark:bg-blue-900/15 rounded-xl border border-blue-100 dark:border-blue-800/30">
+        <i data-lucide="info" class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5"></i>
+        <ul class="flex-1 text-[10px] text-blue-800 dark:text-blue-300 leading-relaxed list-disc pl-3.5 space-y-0.5">
+          <li><strong>Ficha em PDF</strong>: a Ficha do canvas, pronta pra compartilhar.</li>
+          <li><strong>Briefing</strong>: perguntas e respostas estratégicas.</li>
+          <li><strong>MD</strong>: documentação de leitura — envie para quem não tem acesso ao Figma.</li>
+          <li><strong>JSON</strong>: dado bruto completo — o único reimportável no plugin depois.</li>
+          <li><strong>Contexto pro Figma Make</strong>: resumo + imagens das telas, pra colar como prompt de IA.</li>
+        </ul>
+        <button type="button" onclick="_dismissContentHint('export-hint'); document.getElementById('export-hint').classList.add('hidden')"
+          title="Dispensar" aria-label="Dispensar"
+          class="min-w-[24px] min-h-[24px] flex items-center justify-center -mt-0.5 -mr-1 text-blue-600/70 dark:text-blue-300/60 hover:text-blue-600 dark:hover:text-blue-300 transition-colors shrink-0">
+          <i data-lucide="x" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+
+      <!-- Checklist de exportação -- cada exportação é uma linha marcável,
+           um único botão no rodapé ("Exportar selecionados") executa as
+           marcadas em sequência (nunca em paralelo, ver
+           executeSelectedExports em design-data.js). Ficha em PDF é o
+           primeiro item da lista e vem pré-marcado por ser a exportação
+           mais comum do fluxo (Ficha pronta pra compartilhar). -->
+      <ul id="export-checklist" class="space-y-2">
+
+        <li>
+          <label class="flex items-center gap-3 px-4 py-3 bg-gray-50 dark:bg-dark-bg hover:bg-gray-100 dark:hover:bg-slate-800 border border-gray-200 dark:border-dark-line rounded-2xl transition-colors cursor-pointer">
+            <input type="checkbox" data-export-key="ficha-pdf" checked class="w-4 h-4 rounded border-gray-300 text-[#005ca9] focus:ring-[#005ca9] shrink-0" />
+            <div class="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-700 rounded-lg shrink-0">
+              <i data-lucide="file-text" class="w-4 h-4 text-slate-600 dark:text-slate-300"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[12px] font-bold text-slate-800 dark:text-white">Ficha em PDF</p>
+              <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-0.5">Exportação visual da Ficha gerada no canvas</p>
+            </div>
+          </label>
+        </li>
+
+        <li>
+          <label class="flex items-center gap-3 px-4 py-3 bg-gray-50 dark:bg-dark-bg hover:bg-gray-100 dark:hover:bg-slate-800 border border-gray-200 dark:border-dark-line rounded-2xl transition-colors cursor-pointer">
+            <input type="checkbox" data-export-key="briefing-md" class="w-4 h-4 rounded border-gray-300 text-[#005ca9] focus:ring-[#005ca9] shrink-0" />
+            <div class="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-700 rounded-lg shrink-0">
+              <i data-lucide="message-square-plus" class="w-4 h-4 text-slate-600 dark:text-slate-300"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[12px] font-bold text-slate-800 dark:text-white">Briefing</p>
+              <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-0.5">Perguntas e respostas em .MD, por eixo</p>
+            </div>
+          </label>
+        </li>
+
+        <li>
+          <label class="flex items-center gap-3 px-4 py-3 bg-gray-50 dark:bg-dark-bg hover:bg-gray-100 dark:hover:bg-slate-800 border border-gray-200 dark:border-dark-line rounded-2xl transition-colors cursor-pointer">
+            <input type="checkbox" data-export-key="handoff-md" class="w-4 h-4 rounded border-gray-300 text-[#005ca9] focus:ring-[#005ca9] shrink-0" />
+            <div class="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-700 rounded-lg shrink-0">
+              <i data-lucide="file-text" class="w-4 h-4 text-slate-600 dark:text-slate-300"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[12px] font-bold text-slate-800 dark:text-white">Markdown</p>
+              <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-0.5">Documentação de leitura — para compartilhar sem o Figma</p>
+            </div>
+          </label>
+        </li>
+
+        <li>
+          <label class="flex items-center gap-3 px-4 py-3 bg-gray-50 dark:bg-dark-bg hover:bg-gray-100 dark:hover:bg-slate-800 border border-gray-200 dark:border-dark-line rounded-2xl transition-colors cursor-pointer">
+            <input type="checkbox" data-export-key="handoff-json" class="w-4 h-4 rounded border-gray-300 text-[#005ca9] focus:ring-[#005ca9] shrink-0" />
+            <div class="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-700 rounded-lg shrink-0">
+              <i data-lucide="braces" class="w-4 h-4 text-slate-600 dark:text-slate-300"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[12px] font-bold text-slate-800 dark:text-white">JSON</p>
+              <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-0.5">Backup completo e reimportável dos dados do projeto</p>
+            </div>
+          </label>
+        </li>
+
+        <!-- Contexto + imagens pro Figma Make: não é integração automática
+             (não existe API pra isso, nem do lado do Figma Plugin API nem
+             do Figma Make) -- baixa um .zip com o texto do _aiContext +
+             um PNG por frame documentado, pronto pra colar como prompt. -->
+        <li>
+          <label class="flex items-center gap-3 px-4 py-3 bg-gray-50 dark:bg-dark-bg hover:bg-gray-100 dark:hover:bg-slate-800 border border-gray-200 dark:border-dark-line rounded-2xl transition-colors cursor-pointer">
+            <input type="checkbox" data-export-key="ai-context" class="w-4 h-4 rounded border-gray-300 text-[#005ca9] focus:ring-[#005ca9] shrink-0" />
+            <div class="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-700 rounded-lg shrink-0">
+              <i data-lucide="sparkles" class="w-4 h-4 text-slate-600 dark:text-slate-300"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[12px] font-bold text-slate-800 dark:text-white">Contexto + imagens pro Figma Make</p>
+              <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-0.5">.zip com o resumo do projeto e um PNG por tela documentada</p>
+            </div>
+          </label>
+        </li>
+
+      </ul>
+
+      </div>
+
+      <div class="px-5 py-4 border-t border-gray-100 dark:border-dark-line shrink-0">
+        <button onclick="executeSelectedExports()"
+          class="w-full flex items-center justify-center gap-2 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl text-[12px] font-bold transition-all shadow-sm">
+          <i data-lucide="download" class="w-4 h-4" aria-hidden="true"></i>
+          Exportar selecionados
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="ai-context-extra-frames-modal" role="dialog" aria-modal="true" aria-labelledby="ai-context-extra-frames-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+    <div class="bg-white dark:bg-dark-bg w-full max-w-[400px] rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-line flex items-center justify-between">
+        <div>
+          <h3 id="ai-context-extra-frames-title" class="text-[15px] font-extrabold text-slate-800 dark:text-white">Incluir mais frames no contexto?</h3>
+          <p class="text-[11px] text-slate-500 dark:text-dark-muted mt-0.5">As telas já documentadas sempre entram. Marque outras telas completas do canvas para dar mais contexto visual ao Figma Make.</p>
+        </div>
+        <button onclick="closeModal('ai-context-extra-frames-modal')" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-500 dark:text-dark-muted shrink-0">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div id="ai-context-extra-frames-list" class="px-5 py-4 space-y-2 max-h-[320px] overflow-y-auto">
+        <!-- Preenchido dinamicamente por _renderAiContextExtraFramesModal (design-data.js) -->
+      </div>
+
+      <div class="px-5 pb-5 flex gap-3">
+        <button onclick="_confirmAiContextExtraFrames(false)"
+          class="flex-1 py-2.5 text-[12px] font-bold text-slate-500 dark:text-dark-muted hover:text-slate-600 border border-gray-100 dark:border-dark-line rounded-2xl transition-colors">
+          Pular
+        </button>
+        <button onclick="_confirmAiContextExtraFrames(true)"
+          class="flex-1 py-2.5 bg-blue-500 hover:bg-blue-600 text-white text-[13px] font-extrabold rounded-2xl transition-colors flex items-center justify-center gap-2">
+          <i data-lucide="download" class="w-4 h-4"></i>
+          Baixar pacote
+        </button>
+      </div>
+    </div>
+  </div>
+
 <!-- MODAL: VERSIONAMENTO DA FICHA DE PROJETO -->
   <div id="versioning-modal" role="dialog" aria-modal="true" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
     <div class="bg-white dark:bg-dark-bg w-full max-w-[400px] rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line overflow-hidden">
@@ -1254,6 +1445,37 @@
 </div>
 
 <!-- ── Modal: Confirmar limpeza de dados ─────────────────────────── -->
+<!-- Pergunta ao designer se quer incluir a lista completa de frames na
+     Ficha mesmo quando o scan não achou nada fora do escopo do DSC (nenhum
+     item marcado Personalizado, nenhum frame com Novo Componente). Aberto
+     por openFramesRelevanceModal (handoff.js), disparado a partir da
+     resposta de check-frames-relevance (messages.js). -->
+<div id="frames-relevance-modal" role="dialog" aria-modal="true" aria-labelledby="frames-relevance-modal-title" class="modal-overlay hidden fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+  <div class="modal-content bg-white dark:bg-dark-surface rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0">
+        <i data-lucide="check-circle-2" class="w-5 h-5 text-[#005ca9] dark:text-blue-400"></i>
+      </div>
+      <div>
+        <p id="frames-relevance-modal-title" class="text-[13px] font-bold text-slate-800 dark:text-white">Nada fora do DSC encontrado</p>
+      </div>
+    </div>
+    <p class="text-[11.5px] text-slate-600 dark:text-dark-muted leading-relaxed">
+      Dentre os itens escaneados, nenhum elemento parece estar fora do escopo do DSC. Deseja incluir a lista de frames mapeados no handoff mesmo assim?
+    </p>
+    <div class="flex flex-col gap-2">
+      <button onclick="_resolveFramesRelevanceModal(true)"
+        class="w-full py-2.5 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white text-[11px] font-bold transition-colors">
+        Incluir lista de frames mesmo assim
+      </button>
+      <button onclick="_resolveFramesRelevanceModal(false)"
+        class="w-full py-2.5 rounded-2xl bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line text-slate-600 dark:text-dark-muted text-[11px] font-bold hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
+        Não incluir
+      </button>
+    </div>
+  </div>
+</div>
+
 <div id="confirm-clear-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-clear-modal-title" class="modal-overlay hidden fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
   <div class="modal-content bg-white dark:bg-dark-surface rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col gap-4 max-h-[85vh] overflow-y-auto">
     <div class="flex items-center gap-3">
@@ -1494,12 +1716,8 @@
     <!-- Estado: único item -->
     <div id="inject-state-single" class="hidden px-5 py-5 space-y-4">
       <p id="inject-single-msg" class="text-[12px] text-slate-700 dark:text-white leading-snug"></p>
-      <div class="flex items-center gap-2.5 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30">
-        <i data-lucide="info" class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0"></i>
-        <p class="text-[11px] text-blue-700 dark:text-blue-300 leading-snug">Você pode continuar documentando para enriquecer a ficha antes de gerar.</p>
-      </div>
       <div class="flex gap-2 pt-1">
-        <button onclick="closeModal('handoff-inject-modal')"
+        <button onclick="closeModal('handoff-inject-modal'); navigate('view-home')"
           class="flex-1 py-2.5 border border-gray-200 dark:border-dark-line rounded-2xl text-[12px] font-bold text-slate-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
           Continuar documentando
         </button>
