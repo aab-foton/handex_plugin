@@ -22,7 +22,26 @@ const path = require('path');
 
 const REFS_DIR = __dirname;
 const MANIFEST_PATH = path.join(REFS_DIR, '_manifest.json');
-const TOKEN = process.env.FIGMA_TOKEN;
+
+// process.env.FIGMA_TOKEN sozinho não pega o .env do projeto (este script
+// roda direto via `node`, sem dotenv/-r carregado) -- sem isso, `npm run
+// refs:update` falhava aqui, mas com process.exit(1) mascarado pelo `&&`
+// da chain de scripts em alguns terminais, deixando o skeleton ser
+// reconstruído com o cache antigo sem avisar que nada foi buscado de novo
+// (achado real 2026-09-24). Mesmo padrão de leitura manual já usado em
+// scripts/create-figma-ds.mjs -- sem dependência de dotenv.
+function loadEnvToken() {
+  try {
+    const envPath = path.join(REFS_DIR, '..', '..', '..', '.env');
+    const content = fs.readFileSync(envPath, 'utf-8');
+    const match = content.match(/FIGMA_TOKEN=(.+)/);
+    return match ? match[1].trim() : '';
+  } catch {
+    return '';
+  }
+}
+
+const TOKEN = process.env.FIGMA_TOKEN || loadEnvToken();
 // Fallback opcional caso FIGMA_TOKEN não tenha escopo file_variables:read
 // (já aconteceu neste projeto — um token de leitura retornava 403 só nesse
 // endpoint, mesmo funcionando normal em /styles e /components). Se

@@ -983,7 +983,7 @@
     };
     return "#" + toHex(r) + toHex(g) + toHex(b);
   }
-  var PLUGIN_VERSION = true ? "6.29.4" : "dev";
+  var PLUGIN_VERSION = true ? "6.31.1" : "dev";
   var DSC_HANDOFF_SUMMARY_ENABLED = false;
   async function _writeSharedPluginData(data) {
     var _a, _b, _c, _d, _e, _f, _g;
@@ -3034,10 +3034,8 @@
             if (!elementMatchedIn) elementMatchedIn = "DSC (conven\xE7\xE3o de nome)";
           }
           if (!_ownLibLink) {
-            if (dsElement === true) {
-              dsElement = "warning";
-              isCustomComponent = true;
-            }
+            dsElement = "warning";
+            isCustomComponent = true;
           } else {
             const _auditableProps = props.filter((p) => p.isDS !== void 0 && p.type !== "variant");
             if (_auditableProps.length > 0) {

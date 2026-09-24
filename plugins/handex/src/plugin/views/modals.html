@@ -1,3 +1,45 @@
+<!-- MODAL: SOBRE O HANDEX -- aberta pelo logo/título no header (build.cjs),
+     mesmo padrão do plugin irmão hac ("Sobre o hac"). Versão preenchida
+     dinamicamente pelo mesmo handler que já atualiza #version-badge
+     (init-plugin, messages.js) -- sem os botões de manutenção do hac
+     (limpar cache/canvas): o Handex já tem essas ações no ícone de lixeira
+     da home, não precisa duplicar aqui. -->
+  <div id="about-modal" role="dialog" aria-modal="true" aria-labelledby="about-modal-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+    <div class="bg-white dark:bg-dark-bg w-full max-w-[380px] rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-line flex items-center justify-between">
+        <h3 id="about-modal-title" class="flex items-center gap-2 text-[15px] font-extrabold text-slate-800 dark:text-white">
+          <i data-lucide="package" class="w-4 h-4 text-[#005ca9]"></i> Sobre o Handex
+        </h3>
+        <button onclick="closeModal('about-modal')" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-500 dark:text-dark-muted shrink-0">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="px-5 py-4 space-y-4">
+        <p class="text-[12px] text-slate-600 dark:text-dark-muted leading-relaxed">
+          <strong class="text-slate-800 dark:text-white">Handex</strong> — Handoff Express CAIXA. Automatiza a documentação de handoff no canvas do Figma: tokens, especificações técnicas, medidas e fluxos de tela, consolidados numa Ficha de Handoff única.
+        </p>
+
+        <div>
+          <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wide mb-1">Versão</p>
+          <p id="about-modal-version" class="text-[13px] font-bold text-slate-800 dark:text-white">—</p>
+        </div>
+
+        <div>
+          <p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wide mb-1">Vertical Responsável</p>
+          <p class="text-[13px] font-bold text-slate-800 dark:text-white">Padrões de Handoff</p>
+        </div>
+      </div>
+
+      <div class="px-5 pb-5">
+        <button onclick="closeModal('about-modal')"
+          class="w-full py-2.5 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-slate-700 dark:text-white text-[12px] font-bold rounded-2xl transition-colors">
+          Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+
 <!-- LOADING OVERLAY: Scan de Tokens -->
   <div id="scan-loading-overlay" class="hidden fixed inset-0 z-[1500] flex items-end justify-center pb-24 pointer-events-none">
     <div class="bg-slate-900/90 dark:bg-dark-bg/95 text-white rounded-2xl shadow-2xl px-5 py-3.5 flex items-center gap-3 pointer-events-auto">

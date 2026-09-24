@@ -3600,11 +3600,23 @@ figma.ui.onmessage = async (msg) => {
         // algum arquivo, é um componente PERSONALIZADO -- ex.: "NavBar"
         // reutilizada de outro projeto de design via biblioteca própria, sem
         // existir como componente oficial do DSC.
+        // Incondicional de propósito: "sem vínculo real com o DSC" é sempre
+        // COMPONENTE PERSONALIZADO (âmbar), nunca FORA DO PADRÃO (vermelho) --
+        // independente do que audit() devolveu antes. A versão anterior só
+        // cobria a transição true -> "warning", assumindo implicitamente que
+        // audit() teria achado ALGUM match antes; quando ele já devolve false
+        // de cara (key fora do skeleton + nome sem [dsc] + soft-match
+        // desligado no scan normal, isAudit false), não havia nada a rebaixar
+        // e o item caía em vermelho. Achado real 2026-09-24: "Ação 2", sub-
+        // componente interno de ".[dsc] Header Actions" (vínculo DSC válido no
+        // painel do Figma), aparecia FORA DO PADRÃO com TODAS as propriedades
+        // conformes (checks verdes) -- contradição visível pro designer.
+        // Sub-componente estrutural nunca é publicado sozinho na lib, então
+        // seu componentKey jamais bate no skeleton: ausência de vínculo aqui
+        // significa "não dá pra afirmar nada", não "está errado".
         if (!_ownLibLink) {
-          if (dsElement === true) {
-            dsElement = "warning";
-            isCustomComponent = true;
-          }
+          dsElement = "warning";
+          isCustomComponent = true;
         } else {
           // Componente COM vínculo real: a conformidade também depende das
           // próprias propriedades (gap, padding etc.) -- uma instância

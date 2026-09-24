@@ -2650,7 +2650,14 @@ function restoreUIFromState() {
 }
 
 // ── Initialization ─────────────────────────────────────────────────────
-window.addEventListener('load', () => {
+// DOMContentLoaded (não window.onload de propósito): onload só dispara depois
+// que TODO recurso externo termina, incluindo o script defer do Lucide via
+// CDN (unpkg.com, ver ui.html) -- isso prendia o handshake ui-ready (e toda a
+// restauração de handoffData que depende dele) à latência de rede de um ícone,
+// mesmo sem nenhum dado do usuário envolvido. O shim síncrono de window.lucide
+// (ui.html) e o listener de load do próprio script Lucide (que chama
+// _refreshIcons quando terminar) já cobrem o ícone chegar depois.
+window.addEventListener('DOMContentLoaded', () => {
   try { _refreshIcons(); } catch(e) {}
   parent.postMessage({ pluginMessage: { type: 'ui-ready' } }, '*');
   if (typeof initResizable === 'function') initResizable();

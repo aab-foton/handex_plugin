@@ -26,6 +26,7 @@ const ONBOARDING_TOOLS = {
     icon: 'layout-grid',
     color: '#334155',
     format: 'single',
+    docUrl: 'https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=1-54',
     purpose: 'É o painel central do handoff: daqui você navega para cada ferramenta de documentação e, quando tudo estiver pronto, consolida o trabalho numa Ficha de Handoff única no canvas.',
     steps: [
       { text: 'Os 6 cards levam a cada ferramenta do handoff: <strong>Informações do Projeto</strong>, <strong>Escanear Tokens</strong>, <strong>Anotar Specs</strong>, <strong>Anotar Medidas</strong> e <strong>Fluxos de Tela</strong>.' },
@@ -40,6 +41,7 @@ const ONBOARDING_TOOLS = {
     icon: 'clipboard-list',
     color: '#005ca9',
     format: 'single',
+    docUrl: 'https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=117-505',
     purpose: 'Registra o contexto do que está sendo entregue — título, objetivo, equipe responsável e, dentro de Contexto de Negócio, o briefing estratégico, as regras de negócio/HUs e os links de referência. Esse contexto aparece no topo da ficha final, para o dev entender o "porquê" da entrega antes de mergulhar no "como" — sem precisar te perguntar no Slack ou adivinhar pelo protótipo.',
     steps: [
       { text: 'Clique em <strong>Informações do Projeto</strong> na home para abrir esta tela completa. Para uma consulta ou edição rápida de Título/Versão/Status/Objetivo sem sair de onde você está, use o ícone <strong>📋</strong> no header principal — ele abre uma modal leve, com um atalho para vir até aqui se precisar editar Equipe, Briefing, Regras ou Links.' },
@@ -58,6 +60,7 @@ const ONBOARDING_TOOLS = {
     icon: 'scan-line',
     color: '#0284c7',
     format: 'stepper',
+    docUrl: 'https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=117-342',
     purpose: 'Não é uma leitura automática que basta rodar uma vez: o scan traz cores, tipografia, componentes e vetores do frame, já com um batimento automático contra o Design System CAIXA — mas o critério é exigente. Sem token vinculado, o item conta como fora do padrão, sem meio-termo. Cabe a você revisar cada caso, como no Check Designs nativo do Figma, e decidir: ajustar o elemento ou justificar o desvio por escrito. Quando o frame traz um componente inédito, ainda fora do DSC, a ferramenta registra as propriedades dele como referência para uma futura incorporação.',
     steps: [
       { text: 'Com esta ferramenta aberta, <strong>selecione um Frame</strong> (ou Componente, Seção, Grupo) no canvas do Figma.' },
@@ -75,6 +78,7 @@ const ONBOARDING_TOOLS = {
     icon: 'tag',
     color: '#4f46e5',
     format: 'stepper',
+    docUrl: 'https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=117-431',
     purpose: 'Registra decisões técnicas específicas de um elemento — regra de negócio, comportamento, valor de token aplicado — que o scan automático não capta sozinho. É a camada de contexto que só o designer sabe explicar, ancorada visualmente no elemento certo do canvas.',
     steps: [
       { text: '<strong>Selecione um elemento</strong> no canvas do Figma — pode ser um componente, texto, ícone ou qualquer elemento.' },
@@ -109,6 +113,7 @@ const ONBOARDING_TOOLS = {
     icon: 'ruler',
     color: '#0e7490',
     format: 'stepper',
+    docUrl: 'https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=117-342',
     purpose: 'Converte espaçamentos e dimensões do canvas em anotações visíveis — altura, largura, margens, paddings e gaps — para o dev implementar sem precisar inspecionar o Figma medida por medida.',
     steps: [
       { text: '<strong>Selecione 1 ou mais elementos</strong> no canvas do Figma que você quer documentar dimensionalmente.' },
@@ -135,6 +140,7 @@ const ONBOARDING_TOOLS = {
     icon: 'git-branch',
     color: '#9333ea',
     format: 'single',
+    docUrl: 'https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=117-383',
     purpose: 'Mapeia a navegação entre telas — sequências, decisões e eventos — para o dev enxergar a jornada completa antes de implementar cada tela isoladamente.',
     steps: [
       { text: 'Selecione <strong>2 ou mais elementos</strong> no canvas e clique em <strong>+ Conectar Frames</strong>. Com 3 ou mais, o plugin conecta em cadeia automaticamente.' },
@@ -164,6 +170,7 @@ const ONBOARDING_TOOLS = {
     icon: 'send',
     color: '#004d8d',
     format: 'single',
+    docUrl: 'https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=117-465',
     purpose: 'Consolida tudo que foi documentado — specs, medidas, fluxos e conformidade com o DSC — num documento único e versionado no canvas, pronto para a entrega ao time de desenvolvimento.',
     steps: [
       { text: 'Verifique os <strong>pré-requisitos</strong>: título, objetivo, ao menos 1 membro de equipe com nome preenchido.' },
@@ -284,6 +291,22 @@ function _onboardingReferenceHTML(reference) {
   `;
 }
 
+// Link pro frame correspondente na documentação oficial do Handex (arquivo
+// Figma "Handex - Handoff Expresso", páginas de metodologia -- não o
+// docs/site/ técnico, que é sobre arquitetura/código do plugin, não sobre
+// como fazer handoff). Só aparece na tela de propósito (Passo -1), logo
+// abaixo do bloco que já explica "para que serve" essa ferramenta.
+function _onboardingDocLinkHTML(tool) {
+  if (!tool.docUrl) return '';
+  return `
+    <a href="${tool.docUrl}" target="_blank" rel="noopener noreferrer"
+      class="flex items-center gap-2 mt-3 text-[11px] font-bold" style="color:${tool.color}">
+      <i data-lucide="book-open" class="w-3.5 h-3.5 shrink-0"></i>
+      Ver documentação completa
+    </a>
+  `;
+}
+
 function _renderOnboardingModal() {
   const tool = ONBOARDING_TOOLS[_onboardingCurrentTool];
   if (!tool) return;
@@ -318,6 +341,7 @@ function _renderOnboardingModal() {
       <div class="rounded-xl p-3.5" style="background-color:${tool.color}0d">
         <p class="text-[13px] text-slate-700 dark:text-white leading-relaxed">${tool.purpose}</p>
       </div>
+      ${_onboardingDocLinkHTML(tool)}
     `;
     footer.innerHTML = `
       <button type="button" onclick="closeOnboarding()" class="${_outlineBtnClasses}">Pular</button>

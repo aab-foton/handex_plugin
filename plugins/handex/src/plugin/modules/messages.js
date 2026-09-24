@@ -26,6 +26,8 @@
         applyFigmaTheme(msg.theme);
         const badge = document.getElementById('version-badge');
         if (badge) badge.textContent = 'v' + msg.version;
+        const aboutVersion = document.getElementById('about-modal-version');
+        if (aboutVersion) aboutVersion.textContent = 'v' + msg.version;
 
         // Armazena o usuário Figma identificado automaticamente (sem login)
         if (msg.currentUser) {

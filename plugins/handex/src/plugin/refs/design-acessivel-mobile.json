@@ -2,7 +2,7 @@
   "meta": {
     "libraryName": "Design Acessível | Super App (React Native)",
     "figmaFileKey": "3zdtN13YvPlCGPdXeL0Y2i",
-    "exportedAt": "2026-09-16T12:46:50.703Z",
+    "exportedAt": "2026-09-24T12:35:33.721Z",
     "generator": "fetch-design-refs.cjs",
     "warnings": [
       "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
@@ -54,24 +54,6 @@
   },
   "components": [
     {
-      "key": "2a3d40deab05f4b8ec67a807fb1536d623ed7eed",
-      "name": "Exemplo de aplicação - Handoff de acessibilidade",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "7ecac450a8909e2c4eeeedfee3fb2ecd6233e037",
-      "name": "Handoff de acessibilidade - Ordem de Tabulação e Leitor de Telas [Super App] V1",
-      "description": "",
-      "containingFrame": ""
-    },
-    {
-      "key": "dc9a3b3d903b4d89ca1173bca5eb0537c9afd136",
-      "name": "Conector=Elementos e imagens",
-      "description": "",
-      "containingFrame": "Specs - Estrutura [Handoff]"
-    },
-    {
       "key": "01acc2917e26866d5b468f8aef3a8bfb99881202",
       "name": "tipo=elementos interativos e imagens, orientação=inferior",
       "description": "",
@@ -82,18 +64,6 @@
       "name": "tipo=estrutura da página, orientação=inferior",
       "description": "",
       "containingFrame": "Conectores  [Handoff]"
-    },
-    {
-      "key": "2e2ed48f6e4574a873bbb2d9a4391cc63572a6d2",
-      "name": "Conector=Títulos",
-      "description": "",
-      "containingFrame": "Specs - Estrutura [Handoff]"
-    },
-    {
-      "key": "7d3ccfcea95ea4159d78244f6f6c84963dd54adf",
-      "name": "Conector=Elementos decorativos",
-      "description": "",
-      "containingFrame": "Specs - Estrutura [Handoff]"
     },
     {
       "key": "06c9ac2cae9926e57456ddad6eda7a70ffc9bca0",
@@ -286,6 +256,36 @@
       "name": "tipo=decorativo, orientação=superior",
       "description": "",
       "containingFrame": "Conectores  [Handoff]"
+    },
+    {
+      "key": "2e2ed48f6e4574a873bbb2d9a4391cc63572a6d2",
+      "name": "Conector=Títulos",
+      "description": "",
+      "containingFrame": "Specs - Estrutura [Handoff]"
+    },
+    {
+      "key": "7d3ccfcea95ea4159d78244f6f6c84963dd54adf",
+      "name": "Conector=Elementos decorativos",
+      "description": "",
+      "containingFrame": "Specs - Estrutura [Handoff]"
+    },
+    {
+      "key": "7ecac450a8909e2c4eeeedfee3fb2ecd6233e037",
+      "name": "Handoff de acessibilidade - Ordem de Tabulação e Leitor de Telas [Super App] V1",
+      "description": "",
+      "containingFrame": ""
+    },
+    {
+      "key": "dc9a3b3d903b4d89ca1173bca5eb0537c9afd136",
+      "name": "Conector=Elementos e imagens",
+      "description": "",
+      "containingFrame": "Specs - Estrutura [Handoff]"
+    },
+    {
+      "key": "2a3d40deab05f4b8ec67a807fb1536d623ed7eed",
+      "name": "Exemplo de aplicação - Handoff de acessibilidade",
+      "description": "",
+      "containingFrame": ""
     }
   ],
   "spacing": [],

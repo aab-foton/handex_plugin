@@ -75,7 +75,10 @@ const html = `<!doctype html>
 
 <head>
   <meta charset="UTF-8">
-  <script src="https://unpkg.com/lucide@latest" defer></script>
+  <!-- Versão fixada (não @latest): cache de CDN mais previsível e evita
+       quebra silenciosa se uma versão nova do Lucide mudar a API de ícones.
+       Atualizar manualmente quando quiser ícones novos. -->
+  <script src="https://unpkg.com/lucide@1.47.0" defer></script>
   <script>
     // Shim síncrono: garante que window.lucide existe antes dos módulos rodarem
     // (lucide é defer — pode não ter carregado ainda ao executar os módulos).
@@ -104,7 +107,8 @@ ${css}
     class="relative flex items-center justify-between px-4 py-2 border-b border-light-line dark:border-dark-line shrink-0 bg-light-surface dark:bg-dark-bg z-50">
     <!-- Home Header -->
     <div id="header-home" class="flex items-center justify-between w-full">
-      <div class="flex items-center gap-2">
+      <button type="button" onclick="openModal('about-modal')" title="Sobre o Handex" aria-label="Sobre o Handex"
+        class="flex items-center gap-2 -m-1 p-1 rounded-md hover:bg-light-line dark:hover:bg-dark-surface transition-colors cursor-pointer">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 205.51265 46.553631" class="h-5 w-auto">
           <g transform="translate(-284.78446,-475.51214)">
             <g transform="matrix(1.25,0,0,-1.25,15.493106,1024.9702)">
@@ -124,7 +128,7 @@ ${css}
           HANDEX
         </h1>
         <span id="version-badge" class="ml-2 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-[10px] font-bold rounded flex items-center justify-center">v4.2.2</span>
-      </div>
+      </button>
       <div class="flex items-center gap-2 shrink-0">
         <button onclick="ensureExpanded(); openDadosProjetoModal()" title="Dados do Projeto" aria-label="Dados do Projeto"
           class="p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
@@ -225,12 +229,6 @@ ${modHandoff}
     class="fixed bottom-6 right-6 w-10 h-10 rounded-full flex items-center justify-center opacity-0 pointer-events-none translate-y-10 z-[100] transition-colors duration-200">
     <i data-lucide="chevron-up" class="w-5 h-5"></i>
   </button>
-
-  <script>
-    window.addEventListener('load', () => {
-      if (typeof lucide !== 'undefined') lucide.createIcons();
-    });
-  </script>
 
   <div id="toast-container" role="status" aria-live="polite" aria-atomic="true"></div>
   <div id="resize-handle"></div>
