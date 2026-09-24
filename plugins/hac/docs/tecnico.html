@@ -1221,6 +1221,35 @@ hr {
       <li><strong>Nunca reparentar artefato para DENTRO do clone</strong>
       (selo de Tabulação, linha de Swipe, specGroup) — sempre no grupo-
       overlay IRMÃO do clone, via <code>_reparentIntoAreaGroup</code>.</li>
+      <li><strong>"Não achei o clone" nunca é caso normal</strong>
+      (2026-09-23) — um artefato de uma Área Marcada que cai no fallback
+      "solto na Section" está no lugar errado da árvore de camadas E perde a
+      única referência de posição que faz sentido pra ele (o clone),
+      nascendo a milhares de px de distância. Antes de desistir, resgatar o
+      clone da área pelo <code>pluginData</code>
+      (<code>_findSpecCloneForArea</code> e equivalentes); se ainda assim não
+      houver, <strong>avisar o designer</strong> por <code>figma.notify</code>,
+      nunca só <code>console.error</code>. Precedente: o silêncio no console
+      já deixou um bug equivalente de Tabulação sobreviver a duas rodadas de
+      correção em 2026-09-08.</li>
+      <li><strong>A referência do clone é uma só por chamada</strong>
+      (2026-09-23) — o mesmo node resolvido precisa alimentar TANTO o
+      cálculo de posição (<code>_anchorBounds</code>) QUANTO o destino do
+      reparenting. Dois caminhos independentes divergem em silêncio: a
+      posição é calculada contra um frame e o artefato acaba dentro de
+      outro.</li>
+      <li><strong>Ordem do overlay acima do clone é reafirmada a cada
+      uso</strong> (2026-09-23, <code>_raiseOverlayAboveClone</code>) — não
+      só na criação. Overlay reaproveitado (2ª spec em diante) fica por baixo
+      se qualquer coisa reinseriu o clone no pai nesse meio-tempo
+      (reparenting pra Ficha, troca de clone da área), e todo artefato nasce
+      escondido atrás da réplica.</li>
+      <li><strong>Varredura de artefatos já desenhados é RECURSIVA</strong>
+      (2026-09-23) — ler só <code>section.children</code> não encontra nada
+      depois que a tela entra na Ficha, quando o clone passa a viver em
+      <code>Documentação › Tela N › Assets do Handoff › {feature} › overlay</code>.
+      Scan raso faz o anti-colisão e o empilhamento por coluna ficarem cegos,
+      e cada artefato novo nasce por cima do anterior.</li>
       <li><strong>Clone de INSTANCE sempre precisa de
       <code>detachInstance()</code></strong> antes de qualquer
       <code>appendChild</code> — a Plugin API proíbe <code>appendChild</code>
@@ -1263,6 +1292,56 @@ hr {
       O cancelamento EXPLÍCITO do designer (<code>delete-tab-order-draft-copy</code>)
       é o único caminho que pode continuar removendo incondicionalmente.</li>
     </ul>
+
+    <h3>Layout dos cards de spec — colunas por categoria</h3>
+
+    <p><strong>Regra de produto</strong> (confirmada pelo usuário em
+    2026-09-23, vale para web e mobile, para uma ou várias telas
+    documentadas): <em>cada categoria de spec ocupa uma coluna própria,
+    lado a lado; specs da mesma categoria empilham verticalmente dentro da
+    sua coluna.</em></p>
+
+    <p>O cálculo em <code>create-unified-spec</code>
+    (<code>backend/onmessage.js</code>) é uma cadeia de branches, cada um
+    ancorando numa referência diferente — coluna da mesma categoria
+    (<code>_areaMap</code>), elemento clicado (<code>_manualAnchorBounds</code>),
+    coluna mais à direita de outra categoria
+    (<code>_areaRightmostOtherCategory</code>), letra repetida
+    (<code>_letterMap</code>, só no fluxo legado sem Área Marcada) e, por
+    fim, a réplica (<code>_anchorBounds</code>). Depois que qualquer branch
+    decide, roda uma <strong>normalização final</strong> que impõe o
+    invariante que nenhum branch pode violar: <em>o card pertence à faixa da
+    réplica que ele documenta</em>.</p>
+
+    <ul>
+      <li><strong>Limite horizontal</strong> — mede a partir da borda da
+      réplica e precisa ser <strong>maior</strong> que o teto do wrap de
+      categoria (<code>_AREA_MAX_COLS</code>), que mede a partir da borda da
+      coluna anterior. Com os dois no mesmo valor eles se cancelam: o wrap
+      abre a coluna da 2ª categoria e o limite puxa de volta pra 1ª,
+      sobrepondo as categorias. O limite existe pra barrar distância absurda
+      (faixa de outra tela), nunca pra disciplinar layout legítimo.</li>
+      <li><strong>Limite vertical</strong> — o card nunca sobe acima do topo
+      da réplica; pra baixo, o teto acompanha o que a coluna já ocupa (soma
+      das specs daquela tela). Um teto fixo na altura da réplica trava o
+      empilhamento: todo card bate no limite e volta pro mesmo ponto.</li>
+      <li><strong>Anti-colisão muda de COLUNA, não só de altura</strong> —
+      quando a coluna atual enche, o card vai pra próxima à direita, no topo.
+      Empurrar sempre pra baixo contraria a regra de produto e, sem teto,
+      joga o card pra faixa vertical de outra área.</li>
+      <li><strong><code>pinnedPosition</code> escapa da normalização</strong>
+      — é a posição que a spec já tinha (edição/recriação); reposicioná-la
+      moveria sozinho um card que o designer pode ter ajustado à mão.</li>
+    </ul>
+
+    <p><strong>Lição de diagnóstico</strong> (registrada porque custou várias
+    rodadas): o sintoma "card nasce longe da réplica" foi tratado como
+    problema de aritmética de posição em 4 tentativas seguidas, cada uma
+    tapando um branch e deixando outro passar. A causa raiz era
+    <strong>estrutural</strong> — a spec no pai errado — e só ficou visível
+    quando o usuário mostrou o <strong>painel de camadas</strong> em vez do
+    canvas. Diante de um artefato mal posicionado, conferir primeiro ONDE ele
+    está na árvore; a posição errada costuma ser consequência, não causa.</p>
 
     <p><strong>Migração defensiva de overlay legado
     (<code>_rescueLegacyOverlayNestedInsideClone</code>, 2026-09-09)</strong>:
@@ -2490,31 +2569,152 @@ hr {
     só reconhecidas por pluginData).</p>
 
     <p><strong>Versionamento v1.0 → v1.1 → v1.2...</strong> (incremento do
-    MENOR): novo pluginData <code>hacSessionVersion</code> ("1.0" na criação).
-    Toda chamada bem-sucedida de <code>insert-ficha-section</code> localiza a
-    Section de sessão da área, faz o parse <code>major.minor</code> do valor
-    atual (default <code>"1.0"</code> em caso de campo ausente/corrompido — nunca
-    trava o handler principal), incrementa o <code>minor</code>, regrava
+    MENOR): pluginData <code>hacSessionVersion</code> ("1.0" na criação). O
+    incremento é feito pelo handler dedicado
+    <code>bump-a11y-session-version</code>: faz o parse
+    <code>major.minor</code> do valor atual (default <code>"1.0"</code> em caso
+    de campo ausente/corrompido — nunca trava nada), incrementa, regrava
     <code>hacSessionVersion</code> e substitui só o segmento
     <code>| vN.N</code> no final do nome via regex, preservando
     timestamp/designer intactos. Nomes de Sections antigas (sem esse formato)
     simplesmente não batem com a regex e ficam como estão.</p>
 
-    <p><strong>Incremento do MAIOR (v1.x → v2.0) — NÃO implementado nesta
-    rodada, decisão deliberada</strong>: o plano original previa subir o
-    <code>major</code> (replicando a Section inteira como nova versão,
-    preservando a anterior) quando o designer "gerar um Handoff Completo do
-    zero sobre algo que já existia" — distinto de uma atualização incremental.
-    Investigação do fluxo real (<code>_fichaGenerateCompleteHandoff</code>,
-    <code>handoff-ficha.js</code>, seção 8h) mostrou que <strong>não existe hoje
-    nenhuma ação de UI que corresponda a isso</strong>: o único botão
-    agregador ("Gerar handoff completo") é deliberadamente incremental por
-    design — reinsere só seções pendentes/desatualizadas
-    (<code>_fichaSectionIsStale</code>), nunca as 4 incondicionalmente, e usa o
-    MESMO <code>insert-ficha-section</code> que já incrementa o menor. Inventar
-    um gatilho novo (ex.: um botão "Gerar do zero") mudaria comportamento de
-    produto já validado sem pedido explícito — fora do que foi autorizado.
-    Ver pendência na seção 11.</p>
+    <p><strong>UMA entrega = UM incremento</strong> (corrigido 2026-09-22,
+    bug real relatado pelo usuário: <em>"tudo que eu mexo começa na versão
+    1.3"</em>). Até aqui o incremento vivia DENTRO de
+    <code>insert-ficha-section</code>, que roda <strong>uma vez por
+    seção</strong> (Tabulação/Swipe/Leitor de Tela) — um único clique em
+    "Gerar handoff completo" com as 3 seções pendentes disparava 3 inserções
+    e saltava <code>v1.0 → v1.3</code> de uma vez, embora conceitualmente
+    aquilo seja uma entrega só. Agora:</p>
+    <ul>
+      <li><code>insert-ficha-section</code> não mexe mais em versão
+      nenhuma.</li>
+      <li><strong>Clique avulso</strong> em "Inserir/Atualizar" de uma seção
+      é uma entrega própria → sobe 0.1
+      (<code>_fichaHandleSectionInserted</code>, só na resposta de
+      sucesso).</li>
+      <li><strong>"Gerar handoff completo"</strong> sobe 0.1 <strong>uma
+      única vez ao final do laço</strong>
+      (<code>_fichaGenerateCompleteHandoff</code>), independentemente de ter
+      inserido 1, 2 ou 3 seções — e só se ao menos uma entrou de fato (lote
+      inteiramente falho não é entrega).</li>
+      <li>A distinção entre os dois casos reaproveita
+      <code>_fichaPendingResolvers</code>, que já existia: ter um resolver
+      registrado para aquela <code>sectionKey</code> significa "esta inserção
+      faz parte de um lote", então ela se abstém de incrementar.</li>
+    </ul>
+
+    <p><strong>MENOR só em EDIÇÃO — conteúdo novo não versiona</strong>
+    (revisto 2026-09-22, no mesmo dia, após o usuário observar que <em>"a
+    cada nova tela roda um bump de versão"</em>). A correção acima resolveu o
+    salto <code>v1.0 → v1.3</code> de um clique só, mas manteve um segundo
+    problema: <strong>toda</strong> inserção subia 0.1, inclusive a primeira
+    de cada seção. Documentar 3 telas novas levava a <code>v1.3</code> sem
+    nenhuma edição ter acontecido — montar o handoff inicial <em>é</em>
+    construir a v1.0, não produzir v1.1, v1.2, v1.3. Regra vigente:</p>
+    <ul>
+      <li><strong>Seção entrando pela primeira vez</strong> (sem
+      <code>insertedAt</code> prévio) → <strong>não versiona</strong>.</li>
+      <li><strong>Seção reinserida</strong> (já tinha <code>insertedAt</code>,
+      ou seja, conteúdo já documentado sendo atualizado) → sobe 0.1.</li>
+      <li><strong>MAIOR</strong> continua sendo a ação explícita de finalizar
+      o handoff do projeto (ver abaixo).</li>
+    </ul>
+    <p>Implementação: <code>_fichaHandleSectionInserted</code> lê
+    <code>insertedAt</code> <strong>antes</strong> de sobrescrever o estado
+    da seção (<code>_sectionWasAlreadyInserted</code>) — depois da escrita o
+    campo sempre existe, e a distinção seria impossível. Em
+    <code>_fichaGenerateCompleteHandoff</code> a mesma checagem
+    (<code>_hasEdit</code>) roda <strong>antes do laço</strong>, sobre
+    <code>pendingKeys</code>: uma seção com <code>insertedAt</code> só entrou
+    na lista por estar <em>stale</em>, o que por definição é edição.</p>
+
+    <p><strong>Incremento do MAIOR (v1.x → v2.0) — implementado
+    2026-09-22</strong>: ação explícita do designer ao <strong>finalizar o
+    Handoff de Acessibilidade do projeto</strong> (botão "Finalizar" no bloco
+    de completude, ao final da lista de telas, visível só quando todas as
+    telas da página do handoff têm o checklist fechado) →
+    <code>_fichaConfirmFinalize</code> dispara
+    <code>bump-a11y-session-version</code> com <code>kind: 'major'</code>,
+    que sobe o maior e zera o menor — mesma semântica de
+    <code>bumpVersion</code> no Handex
+    (<code>modules/core.js</code>). Nunca automático, por design: marca uma
+    nova GERAÇÃO de documentação, distinta de uma atualização incremental.
+    Diferente do incremento menor (silencioso), o major devolve um toast com
+    a versão resultante — é uma decisão consciente e precisa de retorno
+    visível.</p>
+
+    <p><strong>Gatilho anterior do MAIOR, removido no mesmo dia</strong>:
+    existiu por algumas horas um botão "Iniciar nova versão do handoff"
+    dentro do dashboard da aba Handoff de <em>cada tela</em>
+    (<code>_fichaStartNewVersion</code>). Removido a pedido do usuário
+    (<em>"o botão de iniciar nova versão do handoff perdeu total sentido
+    aqui"</em>): versão é propriedade da Section de sessão — do PROJETO
+    inteiro —, e oferecê-la dentro do contexto de uma tela individual
+    sugeria que afetaria só aquela tela. O único gatilho de major hoje é a
+    finalização do projeto.</p>
+
+    <p><strong>REVISÃO 2026-09-24 — MENOR deixou de existir como número
+    visível; a versão só é real depois de "Finalizar"</strong>: pedido do
+    usuário, ao ver o toast/versão subindo a cada entrega enquanto o botão
+    "Finalizar" ainda aparecia desabilitado — <em>"penso que o versionamento
+    final deve acontecer apenas quando finalizado aí. Enquanto a ficha ainda
+    está sendo preenchida, a versão fica sendo algo preliminar, só consolida
+    a versão quando finalizada"</em>. Muda o que as seções acima descrevem
+    como "incremento do MENOR":</p>
+    <ul>
+      <li>A Section nasce com <code>| rascunho</code> no nome (não mais
+      <code>| v1.0</code>), e <code>hacSessionVersion</code> fica AUSENTE do
+      pluginData até a 1ª finalização — a ausência do campo é o próprio sinal
+      de "ainda em rascunho", lido tanto no nome quanto por
+      <code>check-my-prior-session</code> (que agora reporta
+      <code>version: 'rascunho'</code>, texto, nunca um número, quando o
+      campo não existe).</li>
+      <li><code>bump-a11y-session-version</code> com <code>kind: 'minor'</code>
+      (disparado a cada entrega, exatamente como antes) virou <strong>NO-OP</strong>
+      no backend — não grava pluginData, não muda o nome, responde
+      <code>version: null</code> sem gerar toast. Os call-sites do frontend
+      (<code>_fichaHandleSectionInserted</code>/<code>_fichaGenerateCompleteHandoff</code>)
+      não precisaram mudar — o efeito colateral que muda é só do lado
+      backend.</li>
+      <li><code>kind: 'major'</code> (Finalizar) passa a ser o
+      <strong>único</strong> jeito de a versão avançar de verdade: sempre
+      <code>major + 1</code> sobre o valor atual (0 se
+      <code>hacSessionVersion</code> nunca existiu), <code>minor</code> fixo
+      em 0. Ou seja, a 1ª finalização de um handoff é sempre <code>v1.0</code>
+      — não importa quantas entregas de rascunho aconteceram antes, elas não
+      deixam resíduo no número final. Finalizações seguintes sobem puro:
+      <code>v1.0 → v2.0 → v3.0</code>.</li>
+      <li>O toast de retorno saiu de <code>_fichaConfirmFinalize</code>
+      (que antes mostrava um toast otimista, síncrono, sem o número real) e
+      passou a vir só da resposta de <code>a11y-session-version-bumped</code>
+      (<code>messages.js</code>) — evita dois toasts pra mesma ação, e o
+      texto muda de "Nova versão do handoff" para "Handoff finalizado:
+      vN.0", mais preciso ao novo significado do MAIOR.</li>
+    </ul>
+    <p>Formato de dado inalterado propositalmente: <code>hacSessionVersion</code>
+    continua sendo salvo como string <code>"major.minor"</code> (ex.
+    <code>"1.0"</code>), mesmo o <code>minor</code> nunca mais aparecendo
+    diferente de zero — mantém compatibilidade com o regex
+    <code>/^(\d+)\.(\d+)$/</code> já usado nos dois pontos de leitura
+    (<code>bump-a11y-session-version</code> e
+    <code>check-my-prior-session</code>), sem precisar migrar dado antigo de
+    sessões já existentes no formato <code>"N.M"</code> com M≠0.</p>
+
+    <p><strong>Histórico da decisão sobre o MAIOR</strong>: até 2026-09-22 o
+    incremento do <code>major</code> era uma pendência deliberada — o plano
+    original de 2026-09-10 previa replicar a Section inteira como nova
+    versão preservando a anterior, mas não existia nenhuma ação de UI que
+    correspondesse a "gerar do zero sobre algo que já existia" (o único
+    botão agregador, "Gerar handoff completo", é incremental por design:
+    reinsere só seções pendentes/desatualizadas, nunca todas
+    incondicionalmente). A implementação atual resolveu isso sem mudar o
+    comportamento do botão existente: em vez de inferir a intenção a partir
+    de um fluxo já validado, criou-se uma ação SEPARADA e explícita — hoje a
+    finalização do handoff do projeto ("Finalizar") —, que só sobe o número.
+    A replicação da Section como histórico paralelo continua não
+    implementada e segue como pendência na seção 11.</p>
 
     <p><strong>Detecção de handoff de outro designer</strong>: nova função
     <code>_findOtherDesignersSessionSections(currentUserId)</code> varre
@@ -3912,17 +4112,19 @@ hr {
     vertical de acessibilidade receber o sinal de componentes "Outro" (seção
     6) — hoje é só um rótulo visível ao designer.</p>
 
-    <p><strong>Versionamento maior (v1.x → v2.0) da Section de sessão</strong>
-    (seção 8m): não implementado — não existe hoje, na UI real do hac, uma
-    ação que corresponda de forma segura a "gerar um Handoff Completo do zero
-    sobre uma área que já tinha documentação", distinta de "atualizar
-    incrementalmente" (o único botão agregador existente,
-    <code>_fichaGenerateCompleteHandoff</code>, é deliberadamente incremental
-    por design). Requer, quando houver um gatilho de produto real e aprovado:
-    (1) decidir a UI que dispara essa ação distinta da atualização normal, e
-    (2) a lógica de replicar a Section inteira como nova versão major,
-    preservando a anterior intacta (não só renomear/incrementar em cima da
-    mesma Section, como o menor já faz).</p>
+    <p><strong>Versionamento maior — replicação da Section como histórico
+    paralelo</strong> (seção 8m): <strong>parcialmente resolvido em
+    2026-09-22</strong>. O item (1) desta pendência (gatilho de UI próprio,
+    distinto da atualização incremental) foi implementado: "Iniciar nova
+    versão do handoff" no dashboard da aba Handoff, que sobe
+    <code>v1.x → v2.0</code> pelo handler
+    <code>bump-a11y-session-version</code>. O item (2) continua em aberto: o
+    major hoje apenas <em>renomeia/incrementa</em> a mesma Section — não
+    replica a Section inteira preservando a anterior intacta como histórico
+    paralelo. Quem clicar em "nova versão" hoje ganha o número novo, mas a
+    documentação anterior não fica guardada em paralelo; requer decidir onde
+    a cópia histórica viveria no canvas (mesma página ao lado? página
+    própria?) e o custo de peso do arquivo, antes de implementar.</p>
 
     <p><strong>Planejado — reidratação de <code>hacData</code> a partir do
     canvas (não implementado)</strong>: o alerta de handoff próprio (seção 8p)

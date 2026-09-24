@@ -4,7 +4,7 @@
     "slug": "design-acessivel-mobile",
     "libraryName": "Design Acessível (mobile)",
     "fileKey": "HhriLSpKnCB2dHhyiU16iB",
-    "generatedAt": "2026-09-21T20:12:42.067Z",
+    "generatedAt": "2026-09-23T18:23:18.121Z",
     "generator": "fetch-component-properties.cjs",
     "deepScan": true,
     "discoverySignature": "95178d90b7d71421262d6d2ffcf1b33c2e4a3a000c0697ef38e3c76c31dd4eb8",
@@ -1186,40 +1186,8 @@
                 ]
               },
               {
-                "variantName": "Leitor de Tela=Success",
+                "variantName": "Leitor de Tela=With Feedbacks",
                 "variantId": "10725:2123",
-                "activeToggles": [
-                  "Observações",
-                  "Nome Acessível"
-                ]
-              },
-              {
-                "variantName": "Leitor de Tela=Error",
-                "variantId": "10852:3514",
-                "activeToggles": [
-                  "Observações",
-                  "Nome Acessível"
-                ]
-              },
-              {
-                "variantName": "Leitor de Tela=Leitor de Tela4",
-                "variantId": "10852:3527",
-                "activeToggles": [
-                  "Observações",
-                  "Nome Acessível"
-                ]
-              },
-              {
-                "variantName": "Leitor de Tela=Leitor de Tela5",
-                "variantId": "10852:3540",
-                "activeToggles": [
-                  "Observações",
-                  "Nome Acessível"
-                ]
-              },
-              {
-                "variantName": "Leitor de Tela=Leitor de Tela6",
-                "variantId": "10852:3553",
                 "activeToggles": [
                   "Observações",
                   "Nome Acessível"
@@ -1409,6 +1377,13 @@
                 "variantId": "10852:3566",
                 "activeToggles": [
                   "Nome Acessível",
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=With Expansion",
+                "variantId": "10874:1919",
+                "activeToggles": [
                   "Observações"
                 ]
               }

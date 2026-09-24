@@ -425,6 +425,7 @@ li { margin: 4px 0; }
         <li><a href="#s7">Componentes — badges de categoria</a></li>
         <li><a href="#s8">Componentes — modal</a></li>
         <li><a href="#s9">Componentes — toggles/seletores</a></li>
+        <li><a href="#s9b">Componentes — select nativo (dsc-select)</a></li>
         <li><a href="#s10">Componentes — contador de caracteres</a></li>
         <li><a href="#s11">Componentes — snackbar e toast</a></li>
         <li><a href="#s12">Componentes — paginador do wizard</a></li>
@@ -862,6 +863,47 @@ li { margin: 4px 0; }
       <p class="caption">Estado "selecionado" (esquerda, simulado): borda + fundo + texto na cor de
       acento do contexto (azul institucional aqui — dentro de modal). Sem depender de JS para o
       estilo, só <code>has-[:checked]</code> do Tailwind; JS cuida apenas da lógica de negócio.</p>
+    </div>
+
+    <h2 id="s9b">9.1 Componentes — Select nativo (<code>dsc-select</code>)</h2>
+    <p class="evidence">Fonte: <code>src/plugin/styles/plugin.css</code> (classe <code>.dsc-select</code>,
+    2026-09-24) — aplicada nos 12 <code>&lt;select&gt;</code> visíveis do plugin
+    (<code>src/plugin/views/modals.html</code> e <code>src/plugin/modules/accessibility.js</code>).
+    Bug real reportado pelo usuário, com print: a seta nativa do <code>&lt;select&gt;</code>
+    (renderizada pelo SO/browser, fora do controle do Tailwind) ficava colada na borda direita,
+    sem respiro — e o <code>border-radius</code> divergia entre selects
+    (<code>rounded-dsc-medium</code>, <code>-small</code> e <code>-large</code> coexistiam sem
+    motivo funcional). Corrigido como PADRÃO — não um ajuste pontual num campo só.</p>
+    <div class="stage">
+      <div class="stage-row" style="align-items:flex-start;gap:24px">
+        <div>
+          <p style="font-size:9px;font-weight:700;color:#dc2626;text-transform:uppercase;letter-spacing:.03em;margin:0 0 6px">Antes — sem respiro, radius divergente</p>
+          <select style="width:220px;background:#fff;border:1px solid #e5e7eb;border-radius:6px;padding:8px 10px;font-size:12px;color:#334155;-webkit-appearance:auto;appearance:auto">
+            <option>Icon Button</option>
+          </select>
+        </div>
+        <div>
+          <p style="font-size:9px;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:.03em;margin:0 0 6px">Depois — dsc-select</p>
+          <select style="width:220px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:8px 36px 8px 10px;font-size:12px;color:#334155;-webkit-appearance:none;appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2724%27 height=%2724%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2364748b%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpolyline points=%276 9 12 15 18 9%27%3E%3C/polyline%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 12px center;background-size:14px">
+            <option>Icon Button</option>
+          </select>
+        </div>
+      </div>
+      <p class="caption"><code>appearance:none</code> remove a seta do SO (que não aceita CSS de
+      posição/padding); o chevron reaparece como SVG inline embutido via <code>background-image</code>
+      — mesmo traço/proporção do ícone Lucide <code>chevron-down</code> já usado no resto do plugin,
+      cor <code>#64748b</code> (claro) / <code>#94a3b8</code> (escuro, <code>.dark select.dsc-select</code>).
+      <code>border-radius:10px</code> (<code>rounded-dsc-medium</code>) forçado em TODO select, sem
+      exceção — inclusive os 2 de idioma/velocidade do simulador de narração (Ordem de Tabulação),
+      que antes usavam <code>rounded-dsc-large</code> por serem visualmente compactos/pill; e o de
+      variável secundária de componente desktop.</p>
+      <p class="caption"><strong>Uso:</strong> adicionar a classe <code>dsc-select</code> ao
+      <code>&lt;select&gt;</code> nativo, mantendo as classes Tailwind de cor/borda/tipografia já
+      existentes (<code>bg-*</code>, <code>border-*</code>, <code>text-*</code>,
+      <code>focus:ring-*</code>) — a classe só resolve <code>appearance</code>/chevron/radius/
+      <code>padding-right</code>, nunca substitui o resto do estilo. Nunca aplicar em
+      <code>&lt;select class="hidden"&gt;</code> (proxy de valor sem UI visível, ex.
+      <code>#a11y-el-componente-select</code>) — não há chevron a corrigir num elemento invisível.</p>
     </div>
 
     <h2 id="s10">10. Componentes — Contador de caracteres</h2>

@@ -2,7 +2,7 @@
   "meta": {
     "libraryName": "Super DSC | Web",
     "figmaFileKey": "erkqbRKIbaFWbkHe51BeiZ",
-    "exportedAt": "2026-09-22T13:14:43.478Z",
+    "exportedAt": "2026-09-23T18:20:42.114Z",
     "generator": "fetch-design-refs.cjs (hac)",
     "warnings": [
       "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
@@ -88,18 +88,18 @@
         "value": "#03453b"
       },
       {
-        "key": "d042013351a71c7c1dc19ece7754c20590d1fbc2",
-        "name": "dsc/color/accent/accentBg",
-        "resolvedType": "COLOR",
-        "collection": "dsc",
-        "value": "#ffefd6"
-      },
-      {
         "key": "178b280421e2efa7a88bfd25cbec1b305fc16f1c",
         "name": "dsc/color/decorative/decorativeOutlined",
         "resolvedType": "COLOR",
         "collection": "dsc",
         "value": "#d0f2ed"
+      },
+      {
+        "key": "d042013351a71c7c1dc19ece7754c20590d1fbc2",
+        "name": "dsc/color/accent/accentBg",
+        "resolvedType": "COLOR",
+        "collection": "dsc",
+        "value": "#ffefd6"
       },
       {
         "key": "6da4e0966193e5e4d85e5a60812822577f8c8460",
@@ -781,15 +781,15 @@
         "value": "#ffffff"
       },
       {
-        "key": "7a79b9c773da353bc342e9e3d26f1390d18ef748",
-        "name": "dsc/color/state/highlight/hover2",
+        "key": "e6b75fec7f7bd7659b054937dc29c9923f44c2f5",
+        "name": "dsc/icon/color/highlight 1 [color 9]",
         "resolvedType": "COLOR",
         "collection": "dsc",
         "value": "#005194"
       },
       {
-        "key": "e6b75fec7f7bd7659b054937dc29c9923f44c2f5",
-        "name": "dsc/icon/color/highlight 1 [color 9]",
+        "key": "7a79b9c773da353bc342e9e3d26f1390d18ef748",
+        "name": "dsc/color/state/highlight/hover2",
         "resolvedType": "COLOR",
         "collection": "dsc",
         "value": "#005194"
@@ -1145,18 +1145,18 @@
         "value": 0.25
       },
       {
-        "key": "2ffdb9fca2840a717b2d00de1e185ccbf36a5cba",
-        "name": "dsc/font/letter-spacing/extended",
-        "resolvedType": "FLOAT",
-        "collection": "dsc",
-        "value": 0.5
-      },
-      {
         "key": "52f9ce01da92ed6befa569191d0cf84b8f2cf295",
         "name": "dsc/icon/size/quark",
         "resolvedType": "FLOAT",
         "collection": "dsc",
         "value": 12
+      },
+      {
+        "key": "2ffdb9fca2840a717b2d00de1e185ccbf36a5cba",
+        "name": "dsc/font/letter-spacing/extended",
+        "resolvedType": "FLOAT",
+        "collection": "dsc",
+        "value": 0.5
       },
       {
         "key": "a72bcb9cc5273853555e67a07ff2c7c9068a2892",

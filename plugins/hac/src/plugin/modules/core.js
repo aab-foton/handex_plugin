@@ -130,7 +130,8 @@ Object.assign(window, {
   openModal,
   closeModal,
   ensureExpanded,
-  clearPluginCache
+  clearPluginCache,
+  clearPluginCanvasAndCache
 });
 
 function clearPluginCache() {
@@ -138,7 +139,34 @@ function clearPluginCache() {
     'Limpar todo o cache do plugin?\n\nIsso removerá: telas selecionadas, especificações de acessibilidade e ordem de tabulação.\n\nEssa ação não pode ser desfeita.'
   );
   if (!confirmed) return;
+  // Loading (2026-09-24, pedido do usuário: "para o usuário não achar que
+  // está travado") — reaproveita showA11yCanvasLoading/hideA11yCanvasLoading
+  // (accessibility.js), o mesmo mecanismo já usado pro salvamento de spec
+  // (a resposta 'cache-cleared' esconde, ver messages.js). Fica visível até
+  // a confirmação do backend chegar, nunca por um tempo fixo chutado.
+  if (typeof showA11yCanvasLoading === 'function') showA11yCanvasLoading('Limpando cache…');
   parent.postMessage({ pluginMessage: { type: 'clear-cache' } }, '*');
+}
+
+// "Limpeza completa" (2026-09-22, pedido do usuário) — distinta de
+// clearPluginCache acima: além do dado (cache), remove também os NÓS já
+// inseridos no canvas (selos de Área, réplicas, Ficha de Handoff), escopado
+// ao designer atual (ver _clearHacCanvasForCurrentUser, code.js — nunca
+// toca o trabalho de outro designer no mesmo arquivo). Confirmação própria,
+// mais explícita sobre o canvas ser afetado — é uma ação mais destrutiva
+// que "Limpar Cache" sozinho.
+function clearPluginCanvasAndCache() {
+  const confirmed = window.confirm(
+    'Limpar completamente o Handoff de Acessibilidade?\n\nIsso removerá o cache do plugin E os itens já inseridos no canvas (selos, réplicas e a Ficha de Handoff) criados por você nesta sessão.\n\nTrabalho de outros designers no mesmo arquivo não é afetado.\n\nEssa ação não pode ser desfeita.'
+  );
+  if (!confirmed) return;
+  // Loading (2026-09-24) — mesmo mecanismo de clearPluginCache acima. Esta
+  // ação varre TODAS as páginas do documento em busca da Section de sessão
+  // (_clearHacCanvasForCurrentUser, code.js) — pode demorar mais que o
+  // "Limpar cache" simples num arquivo com muitas páginas, então o feedback
+  // visual importa ainda mais aqui.
+  if (typeof showA11yCanvasLoading === 'function') showA11yCanvasLoading('Limpando cache e canvas…');
+  parent.postMessage({ pluginMessage: { type: 'clear-canvas-and-cache' } }, '*');
 }
 
 // ── Storage ────────────────────────────────────────────────────────────
@@ -232,6 +260,12 @@ function exportHacBackupJson() {
       _backupVersion: 1,
       exportedAt: new Date().toISOString(),
       pluginVersion: (window.PLUGIN_VERSION || hacData._pluginVersion || null),
+      // fileKey (2026-09-22) — identifica o arquivo Figma que gerou este
+      // backup. _handleHacBackupFileChosen recusa restaurar quando o
+      // arquivo atual não bate: os IDs de nó (targetNodeId, frameId da
+      // Ficha, etc.) só existem no arquivo de origem — em outro arquivo o
+      // dado "restaurado" nunca corresponderia a nada real no canvas.
+      fileKey: (window.PLUGIN_FILE_KEY || null),
       data: hacData,
     };
     const ok = _downloadFile(_hacBackupFilename('json'), JSON.stringify(payload, null, 2), 'application/json');
@@ -338,6 +372,31 @@ function _handleHacBackupFileChosen(event) {
     const incoming = (payload && payload._hacBackup && payload.data) ? payload.data : payload;
     if (!incoming || typeof incoming !== 'object' || !Array.isArray(incoming.a11yAreas)) {
       showToast('Arquivo inválido — não parece um backup do hac.', 'error');
+      return;
+    }
+
+    // Bloqueio por ARQUIVO (2026-09-22, pedido do usuário — print real: "não
+    // faz sentido eu conseguir restaurar o backup do handoff em outro
+    // arquivo"). O backup guarda targetNodeId/frameId/nodeId reais do
+    // arquivo de origem — em outro arquivo esses IDs não correspondem a
+    // nada no canvas, e a lista do plugin ficaria "documentada" sobre um
+    // handoff fantasma. Só bloqueia quando os dois lados têm fileKey
+    // conhecido e eles DIVERGEM — backups antigos (sem fileKey, exportados
+    // antes desta mudança) e arquivos ainda não salvos (window.
+    // PLUGIN_FILE_KEY null) passam sem checagem, para não travar em cima de
+    // dado legítimo só por falta de metadado.
+    //
+    // Retomar quando a Fase 3 do plano de página dedicada (👐 | HAC -
+    // Handoff de Acessibilidade CAIXA) estiver pronta: aí um backup poderá
+    // trazer a PROPOSTA de recriar as telas (cópias reais) em outro
+    // arquivo, em vez de só o dado solto — ver plano em
+    // C:\Users\augus\.claude\plans\encapsulated-booping-toucan.md.
+    if (incoming.fileKey && window.PLUGIN_FILE_KEY && incoming.fileKey !== window.PLUGIN_FILE_KEY) {
+      window.alert(
+        'Este backup foi gerado em outro arquivo Figma.\n\n' +
+        'Restaurar aqui não é possível: as telas e specs documentadas apontam para elementos que só existem no arquivo de origem, então a documentação restaurada não corresponderia a nada no canvas deste arquivo.\n\n' +
+        'Abra o arquivo original para restaurar este backup.'
+      );
       return;
     }
     const nAreas = incoming.a11yAreas.length;

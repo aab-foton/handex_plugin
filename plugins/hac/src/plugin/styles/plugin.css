@@ -642,3 +642,54 @@ body {
       border-left: none !important;
       border-right: none !important;
     }
+
+    /* ── .dsc-select — padrão de <select> nativo do plugin (2026-09-24) ──
+       Bug real reportado pelo usuário, com print: a seta nativa do
+       <select> (renderizada pelo SO/browser, fora do controle do Tailwind)
+       ficava colada na borda direita, sem respiro — e o border-radius
+       variava entre os ~9 selects visíveis do plugin (rounded-dsc-medium
+       vs. rounded-dsc-small, conforme quem escreveu cada um). "Corrija em
+       todo o plugin" — pedido explícito de manter como PADRÃO de Design
+       System, não um ajuste pontual num select só (ver
+       docs/design-system.html, seção "Selects").
+
+       `appearance: none` remove a seta nativa do SO (que não aceita
+       padding/CSS); o chevron reaparece como um SVG inline embutido via
+       background-image, com respiro real (background-position à direita +
+       padding-right maior no elemento). Mesmo traço/proporção do ícone
+       Lucide "chevron-down" já usado em todo o resto do plugin (menus
+       customizados, accordions) — não um ícone novo.
+
+       Cor do chevron: #64748b (slate-500), a mesma cor de texto secundário
+       já usada nos labels dos campos (text-slate-500) — depois de
+       URL-encoded pra caber no data URI do CSS.
+
+       Radius: força rounded-dsc-medium (10px, ver tailwind.config.cjs) em
+       TODOS os selects, mesmo os que hoje usam rounded-dsc-small — decisão
+       de padronizar num só valor em vez de preservar a divergência
+       existente (nenhum motivo funcional pra um select ter radius menor
+       que outro).
+
+       Uso: adicionar a classe `dsc-select` ao <select> nativo, MANTENDO as
+       classes Tailwind de cor/borda/tipografia que já existem (bg-*,
+       border-*, text-*, focus:ring-*) — esta classe só resolve
+       appearance/chevron/radius/padding-right, não substitui o resto do
+       estilo. Nunca aplicar em <select class="hidden"> (proxy de valor sem
+       UI visível, ex. #a11y-el-componente-select) — não há chevron a
+       corrigir num elemento invisível. */
+    select.dsc-select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      border-radius: 10px !important; /* rounded-dsc-medium, ver tailwind.config.cjs */
+      padding-right: 2.25rem !important; /* respiro real entre o texto/valor e o chevron */
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.75rem center;
+      background-size: 0.875rem;
+    }
+    .dark select.dsc-select {
+      /* Mesmo SVG, traço dark-muted (#94a3b8, slate-400) — cor real usada
+         em dark:text-dark-muted no resto do plugin. */
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    }

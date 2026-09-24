@@ -38,6 +38,11 @@
         // qual versão do plugin foi gerado — útil ao restaurar um arquivo
         // antigo e entender divergências de schema.
         window.PLUGIN_VERSION = msg.version || null;
+        // Identificador do ARQUIVO Figma atual (2026-09-22) — gravado no
+        // backup exportado (exportHacBackupJson) e comparado na restauração
+        // (_handleHacBackupFileChosen): ver comentário completo em
+        // onmessage.js, handler 'ui-ready'.
+        window.PLUGIN_FILE_KEY = msg.fileKey || null;
 
         // Armazena o usuário Figma identificado automaticamente (sem login)
         if (msg.currentUser) {
@@ -145,7 +150,28 @@
         }
       }
 
+      // Página dedicada do handoff pronta (2026-09-22) — resposta de
+      // 'ensure-hac-page', disparado ao escolher a lib. O designer já foi
+      // levado até a página pelo backend; aqui só abre a instrução de
+      // Ctrl+C/Ctrl+V. A própria função decide se deve abrir (página nova
+      // ou vazia) ou ficar quieta.
+      if (msg.type === 'hac-page-ready') {
+        if (typeof _openHacPageInstructionModal === 'function') {
+          _openHacPageInstructionModal(msg);
+        }
+        return;
+      }
+
       if (msg.type === 'cache-cleared') {
+        // Esconde o loading disparado por clearPluginCache (core.js,
+        // 2026-09-24) — mesmo par showA11yCanvasLoading/hideA11yCanvasLoading
+        // já usado noutras ações assíncronas do plugin.
+        if (typeof hideA11yCanvasLoading === 'function') hideA11yCanvasLoading();
+        // msg.failed (2026-09-24): o backend não conseguiu completar a
+        // limpeza (erro já mostrado via figma.notify nativo, fora do
+        // iframe) — não resetar hacData local aqui, porque não dá pra saber
+        // se a limpeza foi parcial. Só sai, com o loading já escondido.
+        if (msg.failed) return;
         hacData = {
           _schemaVersion: 1,
           a11yAreas: [],
@@ -176,6 +202,44 @@
         tabOrderItems = [];
         if (typeof renderA11yGroupedList === 'function') renderA11yGroupedList();
         showToast('Cache limpo. Plugin reiniciado.');
+        return;
+      }
+
+      // Resposta de "Limpeza completa" (clear-canvas-and-cache,
+      // 2026-09-22) — mesmo reset de estado de 'cache-cleared' acima
+      // (dado zerado), mais o resultado da remoção de nós no canvas
+      // (_clearHacCanvasForCurrentUser, code.js). `blocked: true` (sem
+      // figma.currentUser.id disponível) significa que o dado foi limpo
+      // mas os nós do canvas NÃO foram tocados — avisar o designer em vez
+      // de deixar parecer que a limpeza foi completa.
+      if (msg.type === 'canvas-and-cache-cleared') {
+        // Esconde o loading disparado por clearPluginCanvasAndCache
+        // (core.js, 2026-09-24) — mesmo par de sempre.
+        if (typeof hideA11yCanvasLoading === 'function') hideA11yCanvasLoading();
+        // msg.failed (2026-09-24) — mesmo raciocínio de 'cache-cleared'
+        // acima: erro real no backend, não resetar hacData local sem saber
+        // o estado verdadeiro do dado/canvas.
+        if (msg.failed) return;
+        hacData = {
+          _schemaVersion: 1,
+          a11yAreas: [],
+          a11ySpecs: [],
+          tabOrderItems: [],
+          a11ySwipePaths: [],
+          currentUser: hacData.currentUser,
+          a11yLeitorInstructionSeen: false
+        };
+        a11yAreas = [];
+        a11ySpecs = [];
+        tabOrderItems = [];
+        if (typeof renderA11yGroupedList === 'function') renderA11yGroupedList();
+        if (msg.blocked) {
+          showToast('Cache limpo, mas não foi possível identificar seu usuário — os itens no canvas não foram removidos.');
+        } else if (msg.removed > 0) {
+          showToast('Handoff removido do canvas e cache limpo. Plugin reiniciado.');
+        } else {
+          showToast('Cache limpo. Nenhum item seu foi encontrado no canvas.');
+        }
         return;
       }
 
@@ -555,6 +619,18 @@
       if (msg.type === "ficha-section-insert-failed") {
         if (typeof _fichaHandleSectionInsertFailed === 'function') {
           _fichaHandleSectionInsertFailed(msg);
+        }
+      }
+      // Resposta de bump-a11y-session-version (onmessage.js) — modelo
+      // revisado em 2026-09-24: 'minor' agora é sempre no-op no backend
+      // (version sempre null nesse kind — não existe mais número visível
+      // pra entrega do dia a dia), então esta condição já cobre os dois
+      // motivos de não mostrar nada (falha no backend OU minor por design).
+      // Só MAJOR (Finalizar) tem retorno visível — decisão explícita do
+      // designer, e a única que de fato consolida uma versão real agora.
+      if (msg.type === "a11y-session-version-bumped") {
+        if (msg.kind === 'major' && msg.version) {
+          showToast(`Handoff finalizado: v${msg.version}.`);
         }
       }
       // Resposta de prepare-ficha-section-edit (code.js) — mesmo padrão de

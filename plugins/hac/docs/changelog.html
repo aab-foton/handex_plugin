@@ -2817,6 +2817,313 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
     <code>npm run lint:figma-api</code> — limpos a cada rodada. Bundle
     exportado para <code>hac-plugin/</code>.</p>
 
+    <h2>2026-09-22 — Posicionamento manual de spec, matching de componentes e
+    persistência de dados (v0.1.0-beta.48)</h2>
+
+    <h3>Bug real com dupla causa raiz: "Value Section documentado como Button"</h3>
+    <p>Reportado com print pelo usuário — precedente registrado no
+    <code>CLAUDE.md</code> como "Regra de ouro 3: uma causa raiz plausível não
+    é a causa raiz confirmada". Duas causas independentes, achadas em duas
+    rodadas separadas:</p>
+    <ul>
+      <li><strong>1ª causa (real, mas parcial)</strong> — o matching de
+      seleção podia resolver contra um elemento FILHO durante drill-in/foco
+      concorrente, em vez do elemento efetivamente selecionado. Corrigida, e
+      o teste seguinte (feedback visual "X selecionado" aparecendo certo)
+      pareceu confirmar o fim do bug.</li>
+      <li><strong>2ª causa (a que efetivamente causava o sintoma do print)</strong>
+      — a property <code>"Componente"</code> (VARIANT) do wrapper mobile do
+      card final tem default publicado pela lib = <code>"Button"</code>, e o
+      código nunca a preenchia com o valor real detectado — toda spec mobile
+      "Elementos e Imagens" nascia <code>"Button"</code> independente do
+      matching estar certo. Só apareceu numa revisão com print novo, depois
+      do primeiro fix já parecer suficiente.</li>
+    </ul>
+
+    <h3>Posicionamento manual do card de spec</h3>
+    <p>Card nasce ao lado do elemento selecionado no canvas (sem gate/modal
+    perguntando), com checagem de colisão pra nunca sobrepor specs já
+    existentes. Corrige também a numeração do selo/marcador e do card não
+    refletindo a tag real — property key desatualizada na lib "Design
+    Acessível" via <code>setProperties</code>, com fallback de escrita
+    direta no <code>TEXT</code> node quando a property não existe mais com
+    esse nome.</p>
+
+    <h3>Outras correções de matching desta entrega</h3>
+    <p>Subtipo "Gerais/Imagem" de Elemento Decorativo (exclusivo do wrapper
+    desktop) deixou de ser aplicado indevidamente a specs mobile. Curadoria
+    de matching DSC→a11y ampliada para as libs mobile/super-dsc-web
+    (cobertura real de ~30% para ~54%/70%). Empilhamento vertical entre
+    telas diferentes corrigido (frame de medição ficava desatualizado depois
+    de novos cards). Stroke removido do frame "[HAC] Documentação", que
+    cortava por cima dos cards de spec.</p>
+
+    <h3>Persistência de dados no próprio documento Figma</h3>
+    <p>Antes, <code>hacData</code> vivia só em <code>figma.clientStorage</code>
+    local — perdido se o arquivo nunca foi salvo, ou inacessível ao trocar de
+    máquina. Agora também grava no próprio documento (<code>setSharedPluginData</code>,
+    <code>_writeHacDataToDocument</code>/<code>_readHacDataFromDocument</code>,
+    <code>src/plugin/backend/onmessage.js:422-441</code>) — sobrevive a arquivo
+    não salvo, troca de máquina, outra pessoa abrindo o arquivo, cache limpo e
+    reinstalação do plugin. Estratégia de merge entre as duas fontes: vence
+    quem tem MAIS CONTEÚDO, nunca "o mais recente" — não há timestamp
+    confiável por item para decidir recência, e a prioridade de produto é
+    nunca apagar trabalho por engano. Exportação de backup <code>.json</code>
+    (restaurável) e de documento <code>.md</code> legível para o time de dev,
+    via novo menu no header.</p>
+
+    <h3>Regressão de dado corrigida</h3>
+    <p><code>design-acessivel-properties.json</code> tinha sido regenerado
+    numa execução anterior sem <code>--deep-scan</code>, perdendo dado já
+    obtido — restaurado ao deep-scan completo. Precedente registrado como
+    "Regra de ouro 2" no <code>CLAUDE.md</code> (nunca retroceder o que já
+    funciona).</p>
+
+    <p><strong>Validação</strong>: <code>npx tsc --noEmit</code>,
+    <code>npm run bundle:ui</code>, <code>npm run bundle:code</code>,
+    <code>npm run lint:figma-api</code> — limpos a cada rodada.</p>
+
+    <h2>2026-09-22 — Contraste WCAG de badges/chips e CI de atualização de
+    dependências (v0.1.0-beta.50)</h2>
+
+    <h3>Contraste WCAG AA corrigido</h3>
+    <p>Chips de categoria em specs já criadas: as 5 categorias falhavam o
+    mínimo de 4.5:1 — cor de texto escurecida, mesmo matiz/fundo de
+    identidade preservado. Badges de letra (círculo/estrela/quadrado): texto
+    branco fixo falhava em 4 das 5 categorias, trocado para
+    <code>#22292E</code>, alinhando com o que o componente real da lib já usa
+    (confirmado via REST API) — Elemento Decorativo é a exceção, já passava
+    com branco. Ícone ilustrativo de Elementos e Imagens no picker/guia de
+    categorias corrigido de "A" para "1" (a categoria usa tag numérica desde
+    2026-09-18, o SVG do ícone nunca tinha sido atualizado junto).</p>
+
+    <h3>CI de atualização de dependências</h3>
+    <p><code>check-npm-deps.yml</code> (GitHub Actions) — atualização mensal
+    de dependências dentro dos ranges semver já declarados, valida com
+    lint+bundle e abre PR para revisão. Automação que já existia no Handex e
+    nunca tinha sido portada para o hac.</p>
+
+    <p><strong>Validação</strong>: <code>npx tsc --noEmit</code>,
+    <code>npm run bundle:ui</code>, <code>npm run bundle:code</code>,
+    <code>npm run lint:figma-api</code> — limpos a cada rodada.</p>
+
+    <h2>2026-09-22 — Versionamento do handoff corrigido: uma entrega = um
+    incremento, e "nova versão" explícita</h2>
+
+    <p>Bug real relatado pelo usuário: <em>"tudo que eu mexo começa na versão
+    1.3"</em>. A causa raiz não era o ponto de partida, era o passo: o
+    incremento de <code>hacSessionVersion</code> vivia dentro de
+    <code>insert-ficha-section</code>, handler que roda <strong>uma vez por
+    seção</strong> (Tabulação, Swipe, Leitor de Tela). Um único clique em
+    "Gerar handoff completo" com as 3 seções pendentes disparava 3 inserções
+    e saltava <code>v1.0 → v1.3</code> de uma vez — quando aquilo é,
+    conceitualmente, uma entrega só.</p>
+
+    <h3>Uma entrega = um incremento</h3>
+    <p>O incremento saiu de <code>insert-ficha-section</code> e virou um
+    handler dedicado (<code>bump-a11y-session-version</code>), disparado
+    explicitamente pelo frontend uma única vez por entrega: no clique avulso
+    de uma seção, na resposta de sucesso; no "Gerar handoff completo", ao
+    final do laço, independentemente de terem entrado 1, 2 ou 3 seções (e só
+    se ao menos uma entrou — lote inteiramente falho não é entrega). A
+    distinção entre "clique avulso" e "parte de um lote" reaproveita
+    <code>_fichaPendingResolvers</code>, estrutura que já existia para
+    sequenciar o laço — não foi preciso inventar estado novo.</p>
+
+    <h3>"Iniciar nova versão do handoff" (major)</h3>
+    <p>Referência adotada: o modelo do Handex, onde a versão é uma decisão
+    consciente do designer e não um efeito colateral. O incremento menor
+    (<code>v1.0 → v1.1</code>) continua automático e silencioso a cada
+    entrega; o maior (<code>v1.x → v2.0</code>, zera o menor — mesma
+    semântica de <code>bumpVersion</code> no Handex) passa a ter ação própria
+    no dashboard da aba Handoff, visível só quando já existe handoff gerado,
+    com toast de retorno (decisão consciente merece confirmação visível).
+    Deliberadamente NÃO se mexeu no comportamento do botão "Gerar handoff
+    completo" para inferir intenção de major — criar uma ação separada
+    preserva um fluxo já validado, em vez de sobrecarregá-lo.</p>
+
+    <p><strong>Pendência que permanece</strong>: o major hoje só renomeia/
+    incrementa a mesma Section — ainda não replica a Section anterior como
+    histórico paralelo preservado (requer decidir onde essa cópia viveria no
+    canvas e o custo de peso no arquivo). Registrada na seção 11 de
+    <code>tecnico.html</code>.</p>
+
+    <h3>Revisão no mesmo dia: onde o major mora, e o que o menor significa</h3>
+    <p>Dois ajustes depois de o fluxo ser exercitado de ponta a ponta:</p>
+    <p><strong>1. O gatilho do major mudou de lugar.</strong> O botão
+    "Iniciar nova versão do handoff" no dashboard de cada tela foi removido
+    (<em>"perdeu total sentido aqui"</em>): versão é propriedade da Section
+    de sessão — do projeto inteiro —, e oferecê-la dentro de uma tela
+    individual sugeria que afetaria só aquela tela. O major passou a ser
+    disparado pela <strong>finalização do handoff do projeto</strong>, ação
+    que só existe quando todas as telas têm o checklist fechado.</p>
+    <p><strong>2. Conteúdo novo deixou de versionar.</strong> A correção de
+    "uma entrega = um incremento" resolveu o salto de 3 números num clique,
+    mas manteve um segundo problema: <em>toda</em> inserção subia 0.1,
+    inclusive a primeira de cada seção. Documentar 3 telas novas levava a
+    <code>v1.3</code> sem nenhuma edição — montar o handoff inicial é
+    construir a v1.0, não produzir v1.1, v1.2, v1.3. Agora o menor sobe
+    <strong>só em edição</strong> (seção que já tinha
+    <code>insertedAt</code> sendo reinserida); seção entrando pela primeira
+    vez não versiona.</p>
+
+    <h3>2ª revisão no mesmo dia: o menor deixa de existir como número — só "Finalizar" consolida uma versão</h3>
+    <p>O ajuste acima ainda deixava um número subindo (v1.0→1.1→1.2...) a
+    cada entrega, mesmo antes de o handoff estar completo. Pedido do
+    usuário, ao ver a versão avançando enquanto o botão "Finalizar" ainda
+    aparecia desabilitado: <em>"o versionamento final deve acontecer apenas
+    quando finalizado aí. Enquanto a ficha ainda está sendo preenchida, a
+    versão fica sendo algo preliminar, só consolida a versão quando
+    finalizada"</em>.</p>
+    <p>Mudança: a Section nasce <code>| rascunho</code> (não mais
+    <code>| v1.0</code>). O menor (<code>kind: 'minor'</code>, disparado a
+    cada entrega, sem mudança nos pontos de chamada) virou um NO-OP no
+    backend — não grava nada, não muda o nome. Só "Finalizar"
+    (<code>kind: 'major'</code>) consolida uma versão real: a 1ª finalização
+    é sempre <code>v1.0</code>, não importa quantas entregas de rascunho
+    aconteceram antes; as seguintes sobem puro (<code>v1.0→v2.0→v3.0</code>).
+    O toast de retorno saiu do clique síncrono e passou a vir só da resposta
+    do backend, que já tem o número real — evita o toast duplicado que
+    existia antes (um otimista no clique, outro com a versão na resposta).
+    Detalhe completo na seção "Versionamento" de <code>tecnico.html</code>.</p>
+
+    <h3>Loading em "Limpar cache"/"Limpar tudo" — e um erro real que ele expôs</h3>
+    <p>Pedido do usuário: "para o usuário não achar que está travado" durante
+    a limpeza. Reaproveitado <code>showA11yCanvasLoading</code>/
+    <code>hideA11yCanvasLoading</code> (mesmo par já usado noutras ações
+    assíncronas do plugin), disparado no clique e escondido só na resposta
+    real do backend — nunca por um tempo fixo chutado.</p>
+    <p>Ao adicionar isso, ficou claro um bug preexistente: os dois handlers
+    de backend (<code>clear-cache</code>/<code>clear-canvas-and-cache</code>),
+    em caso de erro, só chamavam <code>figma.notify</code> (toast NATIVO do
+    Figma, fora do iframe da UI) e nunca respondiam ao frontend — sem o
+    loading isso passava despercebido; com ele, o loading ficaria PRESO pra
+    sempre se <code>clientStorage</code>/limpeza do canvas falhasse.
+    Corrigido: os dois <code>catch</code> agora sempre respondem
+    (<code>failed: true</code>), e o frontend esconde o loading sem resetar
+    o dado local nesse caso (por segurança — não dá pra saber se a limpeza
+    foi parcial).</p>
+
+    <h3>"Baixar backup" ainda dizia "restaurável em outro arquivo" — corrigido</h3>
+    <p>Inconsistência apontada pelo usuário com print: "Restaurar backup"
+    já tinha sido corrigido pra "Só no mesmo arquivo de origem" (trava por
+    <code>fileKey</code>), mas "Baixar backup" continuava dizendo
+    "Restaurável neste ou em outro arquivo" — texto órfão de uma versão
+    anterior à trava. Ajustado pra "Restaurável só neste arquivo",
+    consistente com o outro item do mesmo menu.</p>
+
+    <h3>Padrão de Design System: select nativo (<code>dsc-select</code>) e "Ver handoff no canvas" como ícone</h3>
+    <p>Três correções pedidas com prints, tratadas como padrão do plugin
+    (não ajustes pontuais) e documentadas em <code>design-system.html</code>
+    (seção 9.1):</p>
+    <ul>
+      <li><strong>Chevron colado na borda + radius divergente entre selects</strong>
+      — a seta nativa do <code>&lt;select&gt;</code> (do SO/browser, fora do
+      alcance do Tailwind) ficava sem respiro da borda direita, e o
+      <code>border-radius</code> variava entre <code>rounded-dsc-medium</code>/
+      <code>-small</code>/<code>-large</code> sem motivo funcional. Nova
+      classe global <code>.dsc-select</code> (<code>plugin.css</code>):
+      <code>appearance:none</code> remove a seta nativa, um SVG inline
+      (mesmo traço do ícone Lucide <code>chevron-down</code> já usado no
+      resto do plugin) reaparece via <code>background-image</code> com
+      respiro real, e <code>border-radius</code> fica fixo em 10px
+      (<code>rounded-dsc-medium</code>) em TODOS os 12 selects visíveis do
+      plugin, sem exceção — inclusive os 2 do simulador de narração (Ordem
+      de Tabulação), que tinham uma correção manual antiga
+      (<code>pr-8</code>) tratando só o sintoma, não a causa.</li>
+      <li><strong>"Ver handoff no canvas" virou ícone discreto</strong> — era
+      um 2º botão largo, empilhado abaixo dos cards de status na aba
+      Handoff. Agora é um ícone compacto (<code>scan-eye</code> + tooltip),
+      na MESMA linha de "Gerar Handoff", só visível quando já existe algo
+      inserido no canvas.</li>
+    </ul>
+
+    <p><strong>Validação</strong>: <code>npx tsc --noEmit</code>,
+    <code>npm run lint</code>, <code>npm run bundle:ui</code>,
+    <code>npm run bundle:code</code> — limpos.</p>
+
+    <h2>2026-09-23 — Specs de Leitor de Tela: parentesco correto na árvore de
+    camadas e layout em colunas por categoria (v0.1.0-beta.56)</h2>
+
+    <p>Sequência longa de correções sobre o mesmo sintoma visível ("a spec
+    nasce longe da réplica"), reportado repetidas vezes com print. As
+    primeiras rodadas trataram o sintoma como problema de aritmética de
+    posição e não resolveram; a causa raiz só apareceu quando o usuário
+    mostrou o <strong>painel de camadas</strong>, não o canvas.</p>
+
+    <h3>Causa raiz: a spec não estava no pai certo</h3>
+    <p>Os grupos <code>[SpecA11y | …]</code> estavam nascendo como filhos
+    <strong>diretos da Section</strong>, irmãos de <code>[HAC]
+    Documentação</code> — quando o lugar deles é dentro do <code>[HAC] Leitor
+    de Tela</code> da própria tela. O reparenting para o grupo-overlay do
+    clone já existia, mas tratava "não consegui o clone" como caso normal:
+    <code>specClone</code> podia chegar nulo por caminhos que falham em
+    silêncio (<code>a11yAreaTargetNodeId</code> ausente, ou apontando para um
+    node que não existe mais) e a spec caía num fallback "solta na Section"
+    sem nenhum aviso. Solta, ela perde a única referência de posição que faz
+    sentido — o próprio clone — e nasce a milhares de px de distância. Era
+    essa, o tempo todo, a origem dos cards distantes.</p>
+
+    <p>Três mudanças fecham isso: <strong>resgate do clone</strong> pelo
+    mesmo <code>pluginData</code> que identifica o clone de cada área
+    (<code>_findSpecCloneForArea</code>) antes de desistir; <strong>uma
+    referência só</strong> (<code>_specHostClone</code>) alimentando tanto o
+    cálculo de posição quanto o reparenting, que antes podiam divergir; e
+    <strong>falha visível</strong> — se ainda assim não houver clone, a spec
+    cai na Section mas o designer é avisado por <code>figma.notify</code>.
+    Esse último ponto segue o precedente da Ordem de Tabulação, cujo próprio
+    comentário de 2026-09-08 já registrava que foi o silêncio no console que
+    deixou um bug equivalente sobreviver a duas rodadas de correção.</p>
+
+    <h3>Efeitos colaterais da correção, e o layout em colunas</h3>
+    <p>Com as specs finalmente dentro do overlay, três coisas que dependiam
+    delas estarem soltas na Section quebraram — todas corrigidas na mesma
+    entrega:</p>
+    <ul>
+      <li><strong>Busca das specs existentes era rasa</strong> — lia só
+      <code>section.children</code>. Depois que a tela entra na Ficha, o clone
+      fica vários níveis abaixo (<code>Documentação › Tela N › Assets do
+      Handoff › Leitor de Tela › overlay › spec</code>), então o scan não via
+      spec nenhuma e cada card novo nascia por cima do anterior. Agora é
+      recursivo.</li>
+      <li><strong>Teto de Y travava a coluna</strong> — o limite anti-fuga
+      (rodapé da réplica + altura dela) é menor que uma coluna real de specs;
+      todo card batia no teto e voltava ao mesmo ponto. O teto agora acompanha
+      o que a coluna já ocupa.</li>
+      <li><strong>Overlay atrás da réplica</strong> — a ordenação do overlay
+      acima do clone só acontecia na criação. A partir da 2ª spec ele é
+      reaproveitado, e qualquer reinserção do clone no pai (reparenting para a
+      Ficha, troca de clone da área) o deixava por baixo, escondendo os cards.
+      A ordem passa a ser reafirmada a cada uso
+      (<code>_raiseOverlayAboveClone</code>).</li>
+    </ul>
+
+    <p>Por fim, o layout pedido — <strong>cada categoria em sua coluna, lado a
+    lado, valendo para uma ou várias telas</strong>. Dois ajustes: o limite
+    horizontal de segurança usava a mesma constante que o wrap de categoria,
+    medindo de pontos diferentes, e os dois se cancelavam (o wrap abria a
+    coluna da 2ª categoria, o limite puxava de volta para a 1ª, sobrepondo) —
+    resolvido com uma coluna de folga, devolvendo ao limite o papel de barrar
+    só distância absurda. E a anti-colisão, que empurrava sempre para baixo,
+    agora <strong>muda de coluna</strong> quando a atual enche: o card vai
+    para a próxima à direita, no topo, nunca empilhado por cima de outro nem
+    descendo para fora da área.</p>
+
+    <h3>Scan das libs</h3>
+    <p>Refs atualizados (4 libs DSC de produção + as 2 de a11y, estas com
+    <code>--deep-scan</code>, mesma flag do scan anterior conforme a "Regra de
+    ouro 2"). Mudança real na lib mobile: sub-variantes de "Leitor de Tela"
+    com nomes provisórios (<code>Success</code>, <code>Error</code>,
+    <code>Leitor de Tela4/5/6</code>) foram consolidadas em
+    <code>With Feedbacks</code> e <code>With Expansion</code> — nomenclatura
+    definitiva. Nenhum código referenciava os nomes antigos como literal (o
+    formulário lê a estrutura via constantes geradas), então nada quebrou.</p>
+
+    <p><strong>Validação</strong>: <code>npm run lint</code>
+    (<code>tsc --noEmit</code> + <code>lint:figma-api</code>),
+    <code>npm run bundle:ui</code>, <code>npm run bundle:code</code> — limpos
+    a cada rodada. Confirmado em uso real pelo usuário no Figma.</p>
+
     <hr>
 
     <p><em>Entradas anteriores a 2026-08-24 pertencem ao histórico do plugin Handex

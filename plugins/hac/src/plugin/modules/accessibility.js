@@ -610,6 +610,18 @@ const A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL = A11Y_MOBILE_COMPONENTS_WITH_N
 // _renderA11yElementoMobileFields/_updateA11yMobileScreenReaderVariantOptions/
 // _updateA11yMobileNomeAcessivelVisibility.
 const A11Y_MOBILE_SCREEN_READER_VARIANTS = A11Y_MOBILE_SCREEN_READER_VARIANTS_GENERATED;
+
+// Mapa { [nomeComponente]: string[] } com os nomes BOOLEAN reais ("Nome
+// Acessível"/"Observações", raw — mesma grafia de A11Y_MOBILE_SCREEN_READER_
+// VARIANTS[x].variants[].activeToggles) que aquele componente tem em
+// QUALQUER sub-variante — fallback defensivo pra componentes SEM
+// screenReaderVariants ("folha simples") ou pra antes de uma sub-variante
+// ser escolhida. Fonte de verdade 100% real (fetch-component-properties.cjs
+// --deep-scan → build-a11y-constants.cjs), nunca lista hardcoded. Consumido
+// por _a11yMobileComponentHasToggle (generalização 2026-09-22 do critério
+// que já existia só para "Nome Acessível" — ver comentário lá — agora
+// aplicável a QUALQUER toggle booleano real, ex. "Observações").
+const A11Y_MOBILE_COMPONENT_TOGGLES = A11Y_MOBILE_COMPONENT_TOGGLES_GENERATED;
 const A11Y_SUPER_APP_FILE_KEY = A11Y_SUPER_APP_FILE_KEY_GENERATED;
 const A11Y_SUPER_APP_FILE_NAME = A11Y_SUPER_APP_FILE_NAME_GENERATED;
 
@@ -1587,6 +1599,18 @@ function _toggleA11yElementoDesktopBlock(isMobile) {
     if (variantsWrap) variantsWrap.classList.add('hidden');
     if (togglesWrap) togglesWrap.classList.add('hidden');
   }
+  // Reavalia a visibilidade do campo Label (#a11y-el-label-wrap) aqui,
+  // incondicionalmente — este é o único ponto por onde TODO re-render da
+  // categoria "elemento" passa (mobile e desktop), então cobre os dois
+  // ramos sem depender só do caminho mobile-only de
+  // _renderA11yElementoMobileFields (que faz early-return antes de chegar
+  // lá quando !isMobile). Chamada aqui no TOPO de updateA11yElementoFields
+  // (antes de isImagem/desktopSelect.value serem lidos mais abaixo nesta
+  // função) é segura: o <select> só dispara 'change' (que chama
+  // updateA11yElementoFields) DEPOIS que o DOM já atualizou seu .value —
+  // _updateA11yMobileLabelVisibility lê esse valor de novo, direto do
+  // select, então nunca vê um valor desatualizado.
+  if (typeof _updateA11yMobileLabelVisibility === 'function') _updateA11yMobileLabelVisibility();
 }
 
 // ── Elementos e Imagens ──────────────────────────────────────────────────
@@ -1625,6 +1649,10 @@ window.updateA11yElementoVariante = updateA11yElementoVariante;
 function updateA11yElementoFields() {
   const modal = document.getElementById('a11y-spec-modal');
   const isMobile = !!modal && modal.dataset.a11yOrigin === 'mobile';
+  // _toggleA11yElementoDesktopBlock já reavalia _updateA11yMobileLabelVisibility
+  // incondicionalmente no fim de si mesma (único ponto por onde todo
+  // re-render desta categoria passa, mobile e desktop) — não duplicar a
+  // chamada aqui.
   _toggleA11yElementoDesktopBlock(isMobile);
   if (isMobile) {
     _renderA11yElementoMobileFields();
@@ -1693,9 +1721,9 @@ function _renderA11yElementoVariants(selectValue) {
       `<option value="${escapeHtml(o.value)}"${o.value === f.defaultValue ? ' selected' : ''}>${escapeHtml(o.label)}</option>`
     ).join('');
     row.innerHTML = `
-      <label class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">${escapeHtml(_capitalizeFirst(f.name))}</label>
+      <label class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1.5 ml-1">${escapeHtml(_capitalizeFirst(f.name))}</label>
       <select data-a11y-variant-name="${escapeHtml(f.rawName)}"
-        class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all">
+        class="dsc-select w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all">
         ${optionsHtml}
       </select>
     `;
@@ -1780,10 +1808,24 @@ function _renderA11yElementoToggles(selectValue) {
 // limpa o texto ao desligar, pra não persistir um valor "fantasma" de um
 // toggle desativado. `row` é o container criado em
 // _renderA11yElementoToggles (checkbox e textarea são sempre irmãos diretos
-// dentro dele).
+// dentro dele) — cobre o padrão "card fechado" original (toggleRowHtml).
+//
+// Fallback por data-a11y-toggle-key (2026-09-22): o checkbox "Observações"
+// do formulário mobile "componente" foi movido pra linha da Tag (pedido do
+// usuário: "checkbox ao lado, input abre abaixo"), ficando fisicamente longe
+// do textarea companheiro — não são mais irmãos dentro do mesmo `div`, então
+// `closest('div')` nunca encontra o wrap certo (sobe até um container maior
+// sem o textarea dentro). Quando isso acontece, busca por id fixo específico
+// desse caso (#a11y-el-mobile-observacoes-textarea-wrap) — não por
+// querySelector global (que pegaria o wrap errado se houver mais de um
+// toggle "observacoes" simultâneo no DOM, hoje não acontece mas evita a
+// armadilha se algum dia acontecer).
 function _onA11yElementoToggleChange(checkbox) {
   const row = checkbox.closest('div');
-  const wrap = row ? row.querySelector('[data-a11y-toggle-textarea-wrap]') : null;
+  let wrap = row ? row.querySelector('[data-a11y-toggle-textarea-wrap]') : null;
+  if (!wrap && checkbox.closest('#a11y-el-mobile-observacoes-inline-wrap')) {
+    wrap = document.getElementById('a11y-el-mobile-observacoes-textarea-wrap');
+  }
   if (!wrap) return;
   wrap.classList.toggle('hidden', !checkbox.checked);
   const ta = wrap.querySelector('[data-a11y-toggle-value]');
@@ -2009,19 +2051,20 @@ function _renderA11yElementoMobileFields() {
     wrapDiv.className = 'space-y-2.5';
     wrapDiv.innerHTML = `
       <div class="p-3 bg-gray-50 dark:bg-dark-bg rounded-dsc-medium border border-gray-200 dark:border-dark-line">
-        <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Descrição (fixa)</p>
+        <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1">Descrição (fixa)</p>
         <p class="text-[12px] text-slate-700 dark:text-white leading-snug">${escapeHtml(A11Y_CONTENT.elemento.mobileLink.descricao)}</p>
       </div>
       ${toggleRowHtml('observacoes', A11Y_TOGGLE_LABELS.observacoes, 'Insira seu texto de observações.')}
     `;
     list.appendChild(wrapDiv);
+    _resetA11yMobileNomeAcessivelSlot();
   } else if (variant === A11Y_ELEMENTO_MOBILE_VARIANTS.textoAlternativo) {
     const wrapDiv = document.createElement('div');
     wrapDiv.className = 'space-y-2.5';
     wrapDiv.innerHTML = `
       <div>
         <div class="flex items-center justify-between mb-1.5 ml-1">
-          <label for="a11y-el-mobile-alt-descricao" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Descrição (texto alternativo) *</label>
+          <label for="a11y-el-mobile-alt-descricao" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal">Descrição (texto alternativo) *</label>
           <span id="a11y-el-mobile-alt-descricao-counter" class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted shrink-0">0/180</span>
         </div>
         <textarea id="a11y-el-mobile-alt-descricao" maxlength="180" rows="2" placeholder="Insira aqui o texto alternativo da imagem/mídia."
@@ -2031,43 +2074,47 @@ function _renderA11yElementoMobileFields() {
       ${toggleRowHtml('observacoes', A11Y_TOGGLE_LABELS.observacoes, 'Insira seu texto de observações.')}
     `;
     list.appendChild(wrapDiv);
+    _resetA11yMobileNomeAcessivelSlot();
   } else {
     // "componente" — toggle opcional Observações (reaproveita o rótulo
-    // canônico do catálogo desktop, sempre renderizado, já que o catálogo
-    // desktop nunca compartilha tela com este bloco) + Nome Acessível
-    // (informativo, condicional — ver abaixo) + Link do Componente sempre
-    // visível. "Dica para Leitor de Tela" (A11Y_MOBILE_ONLY_TOGGLES) NÃO é
-    // mais renderizada aqui — ver comentário na declaração da constante:
-    // não corresponde a nenhuma property real da lib nova, só existia na
-    // lib antiga descontinuada. Fica só na restauração de dado histórico
+    // canônico do catálogo desktop) + Nome Acessível (informativo,
+    // condicional — ver abaixo) + Link do Componente sempre visível. "Dica
+    // para Leitor de Tela" (A11Y_MOBILE_ONLY_TOGGLES) NÃO é mais renderizada
+    // aqui — ver comentário na declaração da constante: não corresponde a
+    // nenhuma property real da lib nova, só existia na lib antiga
+    // descontinuada. Fica só na restauração de dado histórico
     // (_restoreA11yElementoMobileToggles).
-    const wrapDiv = document.createElement('div');
-    wrapDiv.className = 'space-y-2.5';
-    wrapDiv.innerHTML = toggleRowHtml('observacoes', A11Y_TOGGLE_LABELS.observacoes, 'Insira seu texto de observações.');
-    list.appendChild(wrapDiv);
+    // EXTENSÃO (2026-09-22, pedido explícito do usuário: "o plugin tem que
+    // refletir a mesma estrutura [do box spec], só que se modificar a
+    // depender da variante, do componente listado"): "Observações" deixou de
+    // ser sempre renderizado — visibilidade agora segue o mesmo critério
+    // real já usado por Nome Acessível/Label (_a11yMobileComponentHasToggle
+    // generalizado), sincronizado por _updateA11yMobileObservacoesVisibility
+    // nos MESMOS pontos de _updateA11yMobileNomeAcessivelVisibility. Impacto
+    // real hoje é raro (109 sub-variantes reais mapeadas, só 1 sem
+    // Observações — "Top App Bar"/"Show Filters") mas a lib é quem decide,
+    // não uma lista fixa no código (ver CLAUDE.md, "a lib é a referência").
+    //
+    // Checkbox movido pra linha da Tag (2026-09-22, ver
+    // #a11y-el-mobile-observacoes-inline-wrap em modals.html — pedido do
+    // usuário: "o checkbox de observações pode estar ao lado pra ser
+    // marcado"): não cria mais um card novo aqui dentro da lista — o
+    // checkbox JÁ existe fixo no HTML, só precisa ser (re)exibido/ocultado
+    // por _updateA11yMobileObservacoesVisibility, chamada logo abaixo neste
+    // mesmo render (mesmo padrão de Nome Acessível/Label, que também vivem
+    // fora desta lista dinâmica).
 
-    // "Nome Acessível" (informativo, decisão de produto 2026-09-17) — sem
-    // textarea próprio (o texto continua vindo só do campo Label do topo,
-    // #a11y-el-label, mesmo princípio "fonte única" já aplicado ao restante
-    // do formulário mobile/desktop — ver comentário em
-    // _renderA11yElementoToggles). Só aparece quando o componente escolhido
-    // no dropdown "Link do Componente" (abaixo) está em
-    // A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL — dado real extraído da
-    // instância aninhada de cada variante da lib (não lista hardcoded).
-    // Sempre "ligado" (não é um toggle que o designer desmarca — é uma
-    // confirmação de que aquele componente real tem a property e ela será
-    // preenchida a partir do Label), sincronizado por
-    // _updateA11yMobileNomeAcessivelVisibility a cada troca do select.
-    const nomeAcessivelRow = document.createElement('div');
-    nomeAcessivelRow.id = 'a11y-el-mobile-nome-acessivel-row';
-    nomeAcessivelRow.className = 'hidden flex items-center gap-dsc-nano px-dsc-micro py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium';
-    nomeAcessivelRow.innerHTML = `
-      <i data-lucide="check-circle-2" class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0"></i>
-      <span class="text-[12px] font-bold text-slate-700 dark:text-white">${escapeHtml(A11Y_TOGGLE_LABELS.nomeAcessivel)}</span>
-      <span class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted ml-auto">Preenchido pelo Label acima</span>
-    `;
-    list.appendChild(nomeAcessivelRow);
-    _refreshIcons(nomeAcessivelRow);
+    // "Nome Acessível" (editável, revisto 2026-09-23) — o card
+    // #a11y-el-mobile-nome-acessivel-row NÃO é mais criado aqui: é FIXO no
+    // HTML (modals.html, dentro de #a11y-el-mobile-toggles-wrap, logo antes
+    // desta lista), e sua visibilidade + o REALOCAMENTO do input real
+    // (#a11y-el-label-wrap) pra dentro dele são feitos por
+    // _updateA11yMobileNomeAcessivelVisibility (chamada logo abaixo neste
+    // mesmo render). Recriar via innerHTML a cada troca de variante — como
+    // acontecia antes — destruiria e reconstruiria o card em toda mudança de
+    // select, o que é desnecessário agora que ele é um elemento único
+    // persistente (mesmo padrão já aplicado ao checkbox de Observações em
+    // 2026-09-22).
 
     // Link do Componente — sempre visível, sem toggle (reflete a árvore real
     // do Figma: a instância "Link do componente" não tem visible vinculado a
@@ -2134,28 +2181,28 @@ function _renderA11yElementoMobileFields() {
     linkRow.innerHTML = `
       <p class="text-[12px] font-bold text-slate-700 dark:text-white">${escapeHtml(A11Y_TOGGLE_LABELS.linkComponente)}</p>
       <div>
-        <label for="a11y-el-mobile-link-select" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Componente do DSC (escolha "Personalizado" se não encontrar)</label>
+        <label for="a11y-el-mobile-link-select" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1.5 ml-1">Componente do DSC</label>
         <select id="a11y-el-mobile-link-select"
-          class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-dsc-small px-2.5 py-dsc-nano text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all">
+          class="dsc-select w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-dsc-medium px-2.5 py-dsc-nano text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all">
           ${linkOptionsHtml}
         </select>
       </div>
       <div id="a11y-el-mobile-screen-reader-variant-wrap" class="hidden">
-        <label for="a11y-el-mobile-screen-reader-variant-select" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Leitor de Tela</label>
+        <label for="a11y-el-mobile-screen-reader-variant-select" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1.5 ml-1">Leitor de Tela</label>
         <select id="a11y-el-mobile-screen-reader-variant-select"
-          class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-dsc-small px-2.5 py-dsc-nano text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all">
+          class="dsc-select w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-dsc-medium px-2.5 py-dsc-nano text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all">
         </select>
       </div>
       <div>
         <div class="flex items-center justify-between mb-1.5 ml-1">
-          <label for="a11y-el-mobile-link-url" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Link ou nome do componente *</label>
+          <label for="a11y-el-mobile-link-url" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal">Link ou nome do componente *</label>
           <span id="a11y-el-mobile-link-url-counter" class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted shrink-0">0/300</span>
         </div>
         <input type="text" id="a11y-el-mobile-link-url" maxlength="300" placeholder="${escapeHtml(A11Y_MOBILE_LINK_URL_PLACEHOLDER)}"
           oninput="updateA11yCharCounter(this)"
           class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-dsc-small px-2.5 py-dsc-nano text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all" />
         <p id="a11y-el-mobile-link-url-lock-hint" class="hidden flex items-center gap-dsc-quark mt-1 ml-1 text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted">
-          <i data-lucide="lock" class="w-2.5 h-2.5"></i> Preenchido automaticamente a partir do componente do DSC. Escolha "Personalizado" acima para editar.
+          <i data-lucide="lock" class="w-2.5 h-2.5"></i> Preenchido automaticamente a partir do componente do DSC.
         </p>
       </div>
     `;
@@ -2184,11 +2231,17 @@ function _renderA11yElementoMobileFields() {
         // então a 1ª da lista real é o default mais conservador).
         _updateA11yMobileScreenReaderVariantOptions();
         _updateA11yMobileNomeAcessivelVisibility();
+        _updateA11yMobileLabelVisibility();
+        _updateA11yMobileObservacoesVisibility();
       });
     }
     const screenReaderSelectEl = linkRow.querySelector('#a11y-el-mobile-screen-reader-variant-select');
     if (screenReaderSelectEl) {
-      screenReaderSelectEl.addEventListener('change', _updateA11yMobileNomeAcessivelVisibility);
+      screenReaderSelectEl.addEventListener('change', () => {
+        _updateA11yMobileNomeAcessivelVisibility();
+        _updateA11yMobileLabelVisibility();
+        _updateA11yMobileObservacoesVisibility();
+      });
     }
 
     // Se a pré-seleção automática encontrou match, preenche a URL de bônus
@@ -2205,6 +2258,8 @@ function _renderA11yElementoMobileFields() {
     if (autoMatchedOption) _autofillA11yMobileLinkUrlFromComponentName();
     else _syncA11yMobileLinkUrlLockState();
     _updateA11yMobileNomeAcessivelVisibility();
+    _updateA11yMobileLabelVisibility();
+    _updateA11yMobileObservacoesVisibility();
   }
 }
 
@@ -2237,47 +2292,429 @@ function _updateA11yMobileScreenReaderVariantOptions() {
 }
 window._updateA11yMobileScreenReaderVariantOptions = _updateA11yMobileScreenReaderVariantOptions;
 
-// Mostra/esconde a linha informativa "Nome Acessível" (ver render acima)
-// conforme a COMBINAÇÃO componente (#a11y-el-mobile-link-select) + sub-
-// variante de Leitor de Tela (#a11y-el-mobile-screen-reader-variant-select,
-// quando aplicável) — decisão de produto 2026-09-17, substitui o critério
-// anterior "existe em qualquer sub-variante" (que ficava em
-// A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL, mantida como está pra resolver
-// a lista de opções do <select> "Componente do DSC" independentemente desta
-// função). Dois caminhos:
+// Resolve se o componente (+ sub-variante de Leitor de Tela, quando
+// aplicável) ATUALMENTE selecionado nos dois <select> mobile tem, de fato,
+// uma property real de nome acessível na lib — dado real extraído da
+// instância aninhada de cada variante (A11Y_MOBILE_SCREEN_READER_VARIANTS/
+// A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL, nunca lista hardcoded). Fonte
+// única de verdade usada tanto pela linha informativa "Nome Acessível"
+// quanto pela visibilidade do campo "Label (accessibilityLabel)" do topo do
+// formulário (ver _updateA11yMobileNomeAcessivelVisibility/
+// _updateA11yMobileLabelVisibility abaixo) — os dois precisam concordar
+// sempre, então não duplicar a lógica de leitura do dado. Dois caminhos:
 //   1. Componente TEM sub-variantes reais (chave presente em
-//      A11Y_MOBILE_SCREEN_READER_VARIANTS): a visibilidade depende só do
-//      hasNomeAcessivel da sub-variante ATUALMENTE selecionada — ignora
+//      A11Y_MOBILE_SCREEN_READER_VARIANTS): depende só do hasNomeAcessivel
+//      da sub-variante ATUALMENTE selecionada — ignora
 //      A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL nesse caso (seria menos
 //      preciso, já temos o dado exato aqui). Sub-variante ainda não
 //      populada (select.value vazio, ex. innerHTML acabou de ser limpo)
-//      conta como "sem Nome Acessível" — nunca mostra a linha por engano
-//      antes do <select> nativo assumir a primeira option.
+//      conta como "sem Nome Acessível" — nunca assume por engano antes do
+//      <select> nativo assumir a primeira option.
 //   2. Componente NÃO tem sub-variantes (chave ausente — "folha simples"):
-//      comportamento antigo inalterado, critério único
-//      A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL.includes(componente).
-// Chamada na renderização inicial, a cada 'change' de qualquer um dos dois
-// selects, e por _restoreA11yElementoMobileToggles (modo edição) depois de
-// restaurar linkComponenteNome/leitorDeTela — sempre reavalia a partir do
-// valor ATUAL dos selects, nunca guarda estado próprio.
-function _updateA11yMobileNomeAcessivelVisibility() {
+//      critério único A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL.includes.
+function _a11yMobileComponentHasNomeAcessivel() {
+  return _a11yMobileComponentHasToggle('Nome Acessível');
+}
+
+// Generalização (2026-09-22, pedido explícito do usuário: "o plugin tem que
+// refletir a mesma estrutura [do box spec], só que se modificar a depender
+// da variante, do componente listado") do critério acima — mesma lógica,
+// mas parametrizada pelo NOME RAW do toggle (ex. "Nome Acessível",
+// "Observações"), não mais hardcoded só pra Nome Acessível. Usa o dado mais
+// preciso disponível, nesta ordem:
+//   1. Componente TEM sub-variantes reais em A11Y_MOBILE_SCREEN_READER_
+//      VARIANTS: verifica `activeToggles` da sub-variante ATUALMENTE
+//      selecionada (dado real por combinação componente+sub-variante, o
+//      mais preciso que existe) — sub-variante ainda não populada conta
+//      como "sem o toggle", nunca assume por engano.
+//   2. Componente NÃO tem sub-variantes ("folha simples"): consulta
+//      A11Y_MOBILE_COMPONENT_TOGGLES (união de toggles reais daquele
+//      componente — sem ambiguidade de sub-variante nesse caso).
+// _a11yMobileComponentHasNomeAcessivel (acima) é só um atalho desta função
+// pro caso mais comum — mantido com o nome antigo pra não exigir alterar
+// todos os pontos de consumo já espalhados neste arquivo.
+function _a11yMobileComponentHasToggle(rawToggleName) {
   const select = document.getElementById('a11y-el-mobile-link-select');
-  const row = document.getElementById('a11y-el-mobile-nome-acessivel-row');
-  if (!select || !row) return;
+  if (!select) return false;
 
   const srvEntry = A11Y_MOBILE_SCREEN_READER_VARIANTS[select.value];
-  let has;
   if (srvEntry && Array.isArray(srvEntry.variants) && srvEntry.variants.length > 0) {
     const variantSelect = document.getElementById('a11y-el-mobile-screen-reader-variant-select');
     const currentVariantName = variantSelect ? variantSelect.value : '';
     const activeVariant = srvEntry.variants.find(v => v.name === currentVariantName);
-    has = !!(activeVariant && activeVariant.hasNomeAcessivel);
-  } else {
-    has = A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL.includes(select.value);
+    if (!activeVariant) return false;
+    // activeToggles é o dado novo (2026-09-22); hasNomeAcessivel (antigo)
+    // continua existindo em paralelo só pra retrocompatibilidade — nunca
+    // deveriam divergir (mesmo array de origem), mas o fallback abaixo evita
+    // quebrar se algum dado gerado mais antigo (cache/skeleton desatualizado)
+    // ainda não tiver activeToggles.
+    //
+    // Estado do dado VIGENTE (auditoria 2026-09-23): 0 de 109 sub-variantes
+    // reais estão sem activeToggles — a migração está 100% completa e este
+    // fallback não é exercitado hoje. Mantido mesmo assim: é proteção contra
+    // dado gerado por uma versão ANTERIOR do pipeline (ex. designer com
+    // ui.html antigo em cache, ou refs não regeneradas depois de um pull),
+    // não uma migração pendente. Não remover por "código morto".
+    if (Array.isArray(activeVariant.activeToggles)) {
+      return activeVariant.activeToggles.includes(rawToggleName);
+    }
+    return rawToggleName === 'Nome Acessível' && !!activeVariant.hasNomeAcessivel;
   }
-  row.classList.toggle('hidden', !has);
+  // Caminho 2 — componente "folha simples" (sem sub-variantes). Só chega
+  // aqui quando A11Y_MOBILE_SCREEN_READER_VARIANTS não tem entrada com
+  // variants para este componente; os 15 componentes que aparecem nas DUAS
+  // listas (ver comentário em build-a11y-constants.cjs) nunca alcançam
+  // estas linhas, e é por isso que a sobreposição do dado gerado é
+  // inofensiva.
+  if (rawToggleName === 'Nome Acessível') {
+    return A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL.includes(select.value);
+  }
+  const toggles = A11Y_MOBILE_COMPONENT_TOGGLES[select.value];
+  return Array.isArray(toggles) && toggles.includes(rawToggleName);
+}
+
+// Mostra/esconde o slot "Nome Acessível" e REALOCA o input real
+// (#a11y-el-label-wrap) entre o lar original — na linha da Tag, posição
+// default/desktop, ver #a11y-el-label-wrap em modals.html — e o slot
+// #a11y-el-mobile-nome-acessivel-slot, um segundo campo NA MESMA LINHA
+// (2026-09-23, pedido do usuário: "coloque o nome acessível ao lado da tag
+// e observações abaixo deles", revisão no mesmo dia de uma versão anterior
+// onde o slot vivia lá embaixo, dentro de um card em "Campos exclusivos
+// mobile"). Inverte a decisão original de 2026-09-17 (card puramente
+// informativo, campo só no topo).
+//
+// appendChild MOVE o nó (nunca clona) — o mesmo <input id="a11y-el-label">
+// circula entre os dois lugares, preservando o valor digitado e todos os
+// listeners. Clonar criaria um segundo elemento com o mesmo id, quebrando
+// todo getElementById('a11y-el-label') espalhado pelo arquivo (prefill,
+// contador de caracteres, coleta ao salvar).
+//
+// _a11yMobileLabelWrapHomeParent/_a11yMobileLabelWrapHomeNext (module-level,
+// abaixo) guardam ONDE o wrapper vivia antes de ser movido a primeira vez,
+// pra devolvê-lo exatamente à mesma posição (não só "em algum lugar do
+// topo") quando a condição deixa de valer.
+//
+// Critério de quando mover pro card: mobile E o componente selecionado tem
+// a property real "Nome Acessível" (_a11yMobileComponentHasNomeAcessivel).
+// Fora disso (desktop, ou mobile sem a property) o campo fica no topo —
+// mesmo comportamento de sempre nesses dois casos.
+//
+// Chamada na renderização inicial, a cada 'change' de qualquer um dos dois
+// selects, e por _restoreA11yElementoMobileToggles (modo edição) depois de
+// restaurar linkComponenteNome/leitorDeTela — sempre reavalia a partir do
+// valor ATUAL dos selects, nunca guarda estado próprio.
+let _a11yMobileLabelWrapHomeParent = null;
+let _a11yMobileLabelWrapHomeNext = null;
+
+// Devolve o campo ao lar original e esconde o slot "Nome Acessível", SEM
+// consultar os selects mobile — usada pelos branches "link"/"texto
+// alternativo" de _renderA11yElementoMobileFields, que não têm
+// #a11y-el-mobile-link-select nenhum (esse select só existe no branch
+// "componente") e onde "Nome Acessível" nunca se aplica.
+//
+// Por que existe (auditoria 2026-09-23, achado de FRAGILIDADE, não de bug):
+// esses dois branches faziam `list.innerHTML = ...` e retornavam sem chamar
+// nenhuma das funções de visibilidade. O resultado final ficava correto por
+// ACIDENTE — _restoreA11yElementoMobileToggles roda depois e chama
+// _updateA11yMobileNomeAcessivelVisibility, que nesse ponto lê
+// getElementById('a11y-el-mobile-link-select') === null (o select foi
+// destruído pelo innerHTML acima) e resolve "sem a property", escondendo o
+// slot. Ou seja: a rede de segurança era um efeito colateral de o elemento
+// não existir, não uma decisão explícita. Se algum dia esses branches
+// ganharem um select próprio com esse id, o vazamento (card "Nome
+// Acessível" visível numa spec "link") passaria a ser real e silencioso.
+// Esta chamada explícita remove a dependência desse acidente.
+function _resetA11yMobileNomeAcessivelSlot() {
+  const row = document.getElementById('a11y-el-mobile-nome-acessivel-row');
+  const slot = document.getElementById('a11y-el-mobile-nome-acessivel-slot');
+  const labelWrap = document.getElementById('a11y-el-label-wrap');
+  const labelWrapHeading = document.getElementById('a11y-el-label-wrap-heading');
+  if (row) row.classList.add('hidden');
+  if (labelWrapHeading) labelWrapHeading.classList.remove('hidden');
+  if (labelWrap && slot && labelWrap.parentNode === slot && _a11yMobileLabelWrapHomeParent) {
+    _a11yMobileLabelWrapHomeParent.insertBefore(labelWrap, _a11yMobileLabelWrapHomeNext);
+  }
+}
+
+function _updateA11yMobileNomeAcessivelVisibility() {
+  const row = document.getElementById('a11y-el-mobile-nome-acessivel-row');
+  const slot = document.getElementById('a11y-el-mobile-nome-acessivel-slot');
+  const labelWrap = document.getElementById('a11y-el-label-wrap');
+  const labelWrapHeading = document.getElementById('a11y-el-label-wrap-heading');
+  const select = document.getElementById('a11y-el-mobile-link-select');
+  if (!row || !slot || !labelWrap) return;
+
+  const modal = document.getElementById('a11y-spec-modal');
+  const isMobile = !!modal && modal.dataset.a11yOrigin === 'mobile';
+  const shouldMoveToCard = isMobile && !!select && _a11yMobileComponentHasNomeAcessivel();
+
+  row.classList.toggle('hidden', !shouldMoveToCard);
+  // Esconde "Label (accessibilityLabel)" + contador SÓ quando o input está
+  // dentro do card (o cabeçalho "Nome Acessível" já identifica o campo —
+  // repetir os dois textos era a duplicação reportada pelo usuário). No
+  // topo (desktop, ou mobile sem a property) o label interno volta.
+  if (labelWrapHeading) labelWrapHeading.classList.toggle('hidden', shouldMoveToCard);
+
+  if (shouldMoveToCard) {
+    // Guarda o lar original SÓ na primeira vez que move (labelWrap.parentNode
+    // ainda é o topo nesse momento) — chamadas seguintes com o wrapper já
+    // dentro do slot não devem sobrescrever essa referência com o próprio
+    // slot.
+    if (labelWrap.parentNode !== slot) {
+      _a11yMobileLabelWrapHomeParent = labelWrap.parentNode;
+      _a11yMobileLabelWrapHomeNext = labelWrap.nextSibling;
+    }
+    slot.appendChild(labelWrap);
+    // Limpa 'hidden' residual (bug real 2026-09-24, print do usuário:
+    // "Button/Loading" mostrava o título "Nome Acessível" mas SEM o input
+    // embaixo). Introduzido pela correção do mesmo dia que passou a
+    // ESCONDER #a11y-el-label-wrap quando o componente não tem a property:
+    // ao trocar de um componente sem a property (wrap fica hidden) pra um
+    // COM (wrap é movido pro slot aqui), ninguém removia a classe — o slot
+    // aparecia populado com um filho invisível. Antes dessa correção o
+    // wrap nunca ficava hidden, então mover bastava.
+    labelWrap.classList.remove('hidden');
+  } else if (labelWrap.parentNode === slot && _a11yMobileLabelWrapHomeParent) {
+    // Devolve pro lar original, na posição exata (antes do irmão que vinha
+    // depois dele) — nextSibling null (era o último filho) cai no caso
+    // insertBefore(node, null), que a spec do DOM já trata como appendChild.
+    _a11yMobileLabelWrapHomeParent.insertBefore(labelWrap, _a11yMobileLabelWrapHomeNext);
+  }
+}
+
+// Mostra/esconde o toggle "Observações" (variante "componente", ver render
+// em _renderA11yElementoMobileFields) conforme _a11yMobileComponentHasToggle
+// ('Observações') — mesmo critério/mesma fonte real de Nome Acessível acima,
+// generalizado (2026-09-22, pedido explícito do usuário). Chamada nos MESMOS
+// pontos de _updateA11yMobileNomeAcessivelVisibility (render inicial,
+// 'change' dos dois selects, _restoreA11yElementoMobileToggles em modo
+// edição) — nunca sozinha, pra não divergir de quando o bloco é
+// reconstruído. Ao esconder, limpa o checkbox/textarea por padrão (não deixa
+// um valor digitado "fantasma" persistir escondido e ser gravado sem o
+// designer ver o campo) — mesma lógica de _onA11yElementoToggleChange ao
+// desligar. `preserveValue=true` (usado só por _restoreA11yElementoMobile
+// Toggles, modo edição) pula essa limpeza: uma spec ANTIGA pode ter
+// Observações preenchida numa combinação componente+sub-variante que hoje
+// não oferece mais o campo (ex.: componente reclassificado na lib desde que
+// a spec foi criada) — esconder a UI nunca deve apagar o dado histórico já
+// salvo, só parar de expor/regravar por engano (_collectA11yElementoMobile
+// ToggleProperties já não lê um checkbox invisível/unchecked, então o valor
+// simplesmente para de ser SALVO de novo a partir daqui, sem ser perdido
+// agora).
+function _updateA11yMobileObservacoesVisibility(preserveValue) {
+  // Checkbox FIXO na linha da Tag (2026-09-22, ver comentário completo em
+  // modals.html) — não mais um card criado dentro da lista dinâmica. O
+  // textarea companheiro (#a11y-el-mobile-observacoes-textarea-wrap) também é
+  // fixo; escondê-lo aqui junto com o checkbox evita que um textarea aberto
+  // de uma variante anterior fique visível "solto" depois de trocar pra uma
+  // variante/componente sem o toggle.
+  const inlineWrap = document.getElementById('a11y-el-mobile-observacoes-inline-wrap');
+  const textareaWrap = document.getElementById('a11y-el-mobile-observacoes-textarea-wrap');
+  const select = document.getElementById('a11y-el-mobile-link-select');
+  if (!inlineWrap || !select) return;
+  const has = _a11yMobileComponentHasToggle('Observações');
+  inlineWrap.classList.toggle('hidden', !has);
+  const checkbox = inlineWrap.querySelector('[data-a11y-toggle-key="observacoes"]');
+  if (!has) {
+    if (textareaWrap) textareaWrap.classList.add('hidden');
+    if (!preserveValue && checkbox && checkbox.checked) {
+      checkbox.checked = false;
+      const ta = textareaWrap ? textareaWrap.querySelector('[data-a11y-toggle-value]') : null;
+      if (ta) ta.value = '';
+    }
+  }
+  _syncA11yMobileObservacoesPlacement(has);
+}
+
+// Move o checkbox "Observações" pra linha da Tag quando ele é o ÚNICO campo
+// daquela linha (2026-09-24, pedido do usuário: "quando tivermos só
+// observações, o checkbox fica ao lado da TAG e o input das observações abre
+// abaixo deles"). Quando há Nome Acessível/Label ocupando o espaço ao lado
+// da Tag, Observações volta pro lar original (linha própria, abaixo) —
+// senão os dois disputariam a mesma linha e o layout truncaria, que foi
+// exatamente o problema já reportado em 2026-09-22/23.
+//
+// appendChild MOVE o nó (nunca clona) — o checkbox é sempre o mesmo
+// elemento, com o mesmo data-a11y-toggle-key que
+// _onA11yElementoToggleChange/_collectA11yElementoMobileToggleProperties já
+// resolvem independente de onde ele esteja no DOM (o textarea companheiro
+// continua fixo, abaixo da linha, e abre pelo mesmo onchange — "o input das
+// observações abre abaixo deles" é o comportamento que já existia).
+let _a11yObservacoesWrapHomeParent = null;
+let _a11yObservacoesWrapHomeNext = null;
+
+function _syncA11yMobileObservacoesPlacement(hasObservacoes) {
+  const inlineWrap = document.getElementById('a11y-el-mobile-observacoes-inline-wrap');
+  const inlineSlot = document.getElementById('a11y-el-mobile-observacoes-inline-slot');
+  const labelWrap = document.getElementById('a11y-el-label-wrap');
+  const nomeAcessivelRow = document.getElementById('a11y-el-mobile-nome-acessivel-row');
+  if (!inlineWrap || !inlineSlot) return;
+
+  // "Linha da Tag está livre" = o campo de texto acessível não está
+  // ocupando espaço nela, em nenhuma das suas 2 formas possíveis:
+  //   a) Label genérico, fisicamente na própria linha e sem 'hidden';
+  //   b) slot "Nome Acessível" visível (que é onde o MESMO campo vai parar
+  //      quando o componente tem a property — ver
+  //      _updateA11yMobileNomeAcessivelVisibility).
+  const nomeAcessivelSlot = document.getElementById('a11y-el-mobile-nome-acessivel-slot');
+  const labelNaLinhaDaTag = !!labelWrap
+    && labelWrap.parentNode !== nomeAcessivelSlot
+    && !labelWrap.classList.contains('hidden');
+  const nomeAcessivelVisivel = !!nomeAcessivelRow && !nomeAcessivelRow.classList.contains('hidden');
+  const tagRowLivre = !labelNaLinhaDaTag && !nomeAcessivelVisivel;
+  const moverParaLinhaDaTag = hasObservacoes && tagRowLivre;
+
+  inlineSlot.classList.toggle('hidden', !moverParaLinhaDaTag);
+
+  if (moverParaLinhaDaTag) {
+    if (inlineWrap.parentNode !== inlineSlot) {
+      _a11yObservacoesWrapHomeParent = inlineWrap.parentNode;
+      _a11yObservacoesWrapHomeNext = inlineWrap.nextSibling;
+    }
+    inlineSlot.appendChild(inlineWrap);
+  } else if (inlineWrap.parentNode === inlineSlot && _a11yObservacoesWrapHomeParent) {
+    _a11yObservacoesWrapHomeParent.insertBefore(inlineWrap, _a11yObservacoesWrapHomeNext);
+  }
+}
+
+// Mostra/esconde o campo "Label (accessibilityLabel)" do topo do formulário
+// (#a11y-el-label-wrap) em specs MOBILE, conforme
+// _a11yMobileComponentHasNomeAcessivel() — bug real reportado 2026-09-22:
+// o campo era estrutural/sempre visível (sobrevivência de quando existia um
+// toggle "Nome Acessível" próprio, removido em 2026-09 na consolidação "fonte
+// única"), então aceitava texto mesmo para componentes sem a property real
+// (ex: "[dsc] Value Section", que só tem "Leitor de Tela"/"Observações" —
+// confirmado via REST API, fileKey HhriLSpKnCB2dHhyiU16iB, node 10206:2177,
+// perVariantProperties de "Value Section": nenhuma sub-variante de Leitor de
+// Tela tem toggle de nome acessível entre os activeToggles). Em specs WEB
+// este campo permanece sempre visível — não existe hoje dado real
+// equivalente (por componente do catálogo desktop) pra decidir isso com a
+// mesma precisão, e o critério documentado aqui é estritamente mobile (ver
+// chamada condicionada a modal.dataset.a11yOrigin === 'mobile' nos pontos
+// abaixo). Chamada nos MESMOS pontos de _updateA11yMobileNomeAcessivelVisibility
+// (render inicial, 'change' dos dois selects, _restoreA11yElementoMobileToggles
+// em modo edição).
+//
+// Bug real corrigido (2026-09-22, print do usuário: "essa proposta ficou
+// péssima! O espaço truncado, o checkbox sem um card"): a versão anterior
+// fazia #a11y-el-tag-wrap perder "w-11 shrink-0" e virar "w-full" quando o
+// Label sumia, esticando o campo Tag (só "1"/"A1", conceitualmente pequeno)
+// até a largura inteira do modal — e o checkbox de Observações, que
+// continua na mesma linha flex com shrink-0, quebrava pra linha de baixo
+// sem nenhum agrupamento visual que explicasse por que estava ali. Tag
+// agora SEMPRE mantém "w-11 shrink-0" no HTML (ver modals.html), visível ou
+// não o Label — o espaço vago da linha é absorvido pelo flex-wrap do
+// container pai, sem esticar nenhum campo além do seu tamanho real.
+//
+// _syncA11yObservacoesFlexWithLabel REMOVIDA em 2026-09-23 (revisão no
+// mesmo dia): existia pra fazer Observações crescer (flex-1) quando o Label
+// saía da linha da Tag, ocupando o vão vazio. Descartada porque o próprio
+// card de Observações passou a ter largura compacta fixa e conteúdo visível
+// (checkbox + texto "Observações" lado a lado, mesmo padrão da Tag) — não
+// existe mais "vão vazio" a preencher, ver comentário completo no HTML.
+//
+// Bug real corrigido (2026-09-24, print do usuário — painel real do
+// componente "[hac mob] Box spec..." no Figma para "Value Section": só
+// expõe Variante/Componente/Leitor de Tela/Observações, NENHUM campo de
+// texto acessível em nenhuma das 4 sub-variantes reais, confirmado contra
+// A11Y_MOBILE_SCREEN_READER_VARIANTS — "a fonte é o componente da lib, não
+// é o plugin. O plugin tem que apresentar exatamente o que tem na lib"):
+// o comentário anterior desta função dizia "o campo nunca deveria sumir de
+// vez, só ser reposicionado" — PREMISSA ERRADA. Existe um terceiro estado,
+// além de "no topo" (desktop/mobile-com-Label-genérico) e "dentro do slot"
+// (mobile-com-Nome-Acessível): mobile SEM property alguma de texto
+// acessível, onde o campo inteiro não deveria existir na tela — a lib não
+// declara Nome Acessível NEM um Label genérico equivalente para esses
+// componentes/sub-variantes.
+//
+// Esconde #a11y-el-label-wrap (E a linha inteira #a11y-el-mobile-nome-
+// acessivel-row, que compartilha a mesma linha flex) quando mobile e o
+// componente não tem a property em NENHUMA forma. Limpa o valor digitado
+// ao esconder (mesmo padrão de _updateA11yMobileObservacoesVisibility) —
+// preserveValue=true (usado só por _restoreA11yElementoMobileToggles, modo
+// edição) pula a limpeza: uma spec ANTIGA pode ter 'label' preenchido numa
+// combinação componente+sub-variante que hoje não oferece mais o campo,
+// e esconder a UI nunca deve apagar dado histórico já salvo.
+// EXTENSÃO 2026-09-24 (pedido do usuário: "não é pra ter no mobile e nem no
+// web"): a mesma regra sem fallback passou a valer pro DESKTOP também — até
+// aqui o Label desktop era tratado como "anotação sempre válida do
+// designer", existindo mesmo sem o BOOLEAN "nome acessível"/variações real
+// no componente selecionado (só o RÓTULO "Nome Acessível" no payload salvo
+// era condicional, ver _buildA11yElementoPayload). Decisão confirmada:
+// campo inteiro segue o mesmo padrão do mobile — sem a property real, sem
+// campo na tela. Fonte: _getA11yComponentToggles(selectValue), MESMA função
+// já usada por _renderA11yElementoToggles (lista de toggles reais) e pelo
+// payload de salvamento — nenhuma lógica nova, só aplicada também aqui.
+function _a11yDesktopComponentHasNomeAcessivel(selectValue) {
+  if (!selectValue) return false;
+  const info = _getA11yComponentToggles(selectValue);
+  return !!(info && info.toggles && info.toggles.some(t => t.key === 'nomeAcessivel'));
+}
+
+function _updateA11yMobileLabelVisibility(preserveValue) {
+  const labelWrap = document.getElementById('a11y-el-label-wrap');
+  const slot = document.getElementById('a11y-el-mobile-nome-acessivel-slot');
+  const labelInput = document.getElementById('a11y-el-label');
+  if (!labelWrap) return;
+
+  const modal = document.getElementById('a11y-spec-modal');
+  const isMobile = !!modal && modal.dataset.a11yOrigin === 'mobile';
+
+  // SEM FALLBACK, nos dois ramos (2026-09-24, pedido explícito do usuário:
+  // "não é pra ter fallback de nada. Fallback aqui é invenção" — extensão
+  // "não é pra ter no mobile e nem no web"). A lib é a única fonte: o campo
+  // de texto acessível aparece SE E SOMENTE SE o dado real confirmar a
+  // property "Nome Acessível" pra este componente (desktop) ou esta
+  // combinação componente+sub-variante (mobile). Não existe estado "não
+  // sei, deixa visível" — ausência de dado é ausência de campo.
+  //
+  // Histórico das tentativas anteriores no ramo MOBILE, ambas com fallback,
+  // ambas erradas (cada uma reintroduziu o campo fantasma num conjunto
+  // diferente de componentes):
+  //   1ª: `hasNomeAcessivel || !hasSubVariants` — tratava componente folha
+  //       como "sem dado", deixando visível em 26 componentes que declaram
+  //       só ["Observações"] (Alert Dialog, Card, Menu, Tooltip, Imagem...).
+  //   2ª: `hasNomeAcessivel || !hasAnyRealData` — reduziu pra 1 caso
+  //       ("Loading Animation", sem toggles no scan), mas ainda inventava
+  //       um campo que a lib não declara.
+  let hasNomeAcessivel;
+  if (isMobile) {
+    const select = document.getElementById('a11y-el-mobile-link-select');
+    // Select mobile ainda não montado no DOM (early na renderização) — não
+    // decide nada aqui, a próxima chamada (já com o select presente)
+    // resolve de verdade. Diferente de "sem dado real": é só timing.
+    if (!select) { labelWrap.classList.remove('hidden'); return; }
+    // O wrap está DENTRO do slot "Nome Acessível" agora — quem decide a
+    // visibilidade desse caminho é _updateA11yMobileNomeAcessivelVisibility
+    // (o slot inteiro fica hidden/visible junto do card). Não mexer aqui.
+    if (slot && labelWrap.parentNode === slot) return;
+    hasNomeAcessivel = _a11yMobileComponentHasNomeAcessivel();
+  } else {
+    const desktopSelect = document.getElementById('a11y-el-componente-select');
+    const isImagem = _getA11yElementoVariante() === 'imagem';
+    const isOutro = !isImagem && desktopSelect && desktopSelect.value === 'outro';
+    // "Outro (fora do catálogo)" não tem entrada em A11Y_COMPONENT_PROPERTIES
+    // (é, por definição, um componente não catalogado) — não há dado real
+    // pra confirmar OU negar a property, e nesse caso específico o campo
+    // continua a anotação livre de sempre (não é "sem property", é "sem
+    // catálogo pra consultar").
+    if (isOutro) { labelWrap.classList.remove('hidden'); return; }
+    const shortNameKey = isImagem ? 'imagem' : (desktopSelect ? desktopSelect.value : null);
+    hasNomeAcessivel = _a11yDesktopComponentHasNomeAcessivel(shortNameKey);
+  }
+
+  labelWrap.classList.toggle('hidden', !hasNomeAcessivel);
+
+  if (!hasNomeAcessivel) {
+    if (!preserveValue && labelInput && labelInput.value) {
+      labelInput.value = '';
+      if (typeof updateA11yCharCounter === 'function') updateA11yCharCounter(labelInput);
+    }
+  }
 }
 window._updateA11yMobileNomeAcessivelVisibility = _updateA11yMobileNomeAcessivelVisibility;
+window._updateA11yMobileLabelVisibility = _updateA11yMobileLabelVisibility;
+window._updateA11yMobileObservacoesVisibility = _updateA11yMobileObservacoesVisibility;
 
 // Lê os toggles mobile ligados com texto preenchido de volta em
 // properties[], mais o campo de Descrição livre (variante "texto
@@ -2290,16 +2727,26 @@ function _collectA11yElementoMobileToggleProperties() {
   const list = document.getElementById('a11y-el-mobile-toggles-list');
   if (!list) return [];
   const result = [];
-  list.querySelectorAll('[data-a11y-toggle-key]').forEach(checkbox => {
+  const _collectFrom = (checkbox) => {
     if (!checkbox.checked) return;
-    const row = checkbox.closest('div');
-    const wrap = row ? row.querySelector('[data-a11y-toggle-textarea-wrap]') : null;
+    // "observacoes" (2026-09-22): checkbox fixo na linha da Tag, textarea
+    // companheiro fixo logo abaixo — não são mais irmãos dentro do mesmo
+    // `div` (ver comentário completo em _updateA11yMobileObservacoesVisibility/
+    // modals.html), então closest('div')+querySelector nunca encontra o wrap
+    // certo pra esse caso específico. Demais toggles continuam no padrão
+    // antigo (checkbox e textarea irmãos dentro do mesmo card).
+    const key = checkbox.getAttribute('data-a11y-toggle-key');
+    const wrap = key === 'observacoes'
+      ? document.getElementById('a11y-el-mobile-observacoes-textarea-wrap')
+      : (checkbox.closest('div') ? checkbox.closest('div').querySelector('[data-a11y-toggle-textarea-wrap]') : null);
     const ta = wrap ? wrap.querySelector('[data-a11y-toggle-value]') : null;
     const value = ta ? ta.value.trim() : '';
     if (!value) return;
-    const key = checkbox.getAttribute('data-a11y-toggle-key');
     result.push({ key, label: A11Y_TOGGLE_LABELS[key] || key, value });
-  });
+  };
+  list.querySelectorAll('[data-a11y-toggle-key]').forEach(_collectFrom);
+  const observacoesInlineCheckbox = document.querySelector('#a11y-el-mobile-observacoes-inline-wrap [data-a11y-toggle-key="observacoes"]');
+  if (observacoesInlineCheckbox) _collectFrom(observacoesInlineCheckbox);
 
   const altDescricao = document.getElementById('a11y-el-mobile-alt-descricao');
   if (altDescricao && altDescricao.value.trim()) {
@@ -2367,11 +2814,19 @@ function _restoreA11yElementoMobileToggles(props) {
       return;
     }
     if (mobileToggleKeys.has(p.key)) {
-      const checkbox = list.querySelector(`[data-a11y-toggle-key="${p.key}"]`);
+      // "observacoes" (2026-09-22): checkbox e textarea foram movidos pra
+      // fora de #a11y-el-mobile-toggles-list (ver comentário completo em
+      // _updateA11yMobileObservacoesVisibility) — busca no par fixo em vez
+      // de dentro da lista, que não os contém mais. Os demais
+      // A11Y_MOBILE_ONLY_TOGGLES continuam dentro da lista, sem mudança.
+      const checkbox = p.key === 'observacoes'
+        ? document.querySelector('#a11y-el-mobile-observacoes-inline-wrap [data-a11y-toggle-key="observacoes"]')
+        : list.querySelector(`[data-a11y-toggle-key="${p.key}"]`);
       if (!checkbox) return;
       checkbox.checked = true;
-      const row = checkbox.closest('div');
-      const wrap = row ? row.querySelector('[data-a11y-toggle-textarea-wrap]') : null;
+      const wrap = p.key === 'observacoes'
+        ? document.getElementById('a11y-el-mobile-observacoes-textarea-wrap')
+        : (checkbox.closest('div') ? checkbox.closest('div').querySelector('[data-a11y-toggle-textarea-wrap]') : null);
       if (wrap) {
         wrap.classList.remove('hidden');
         const ta = wrap.querySelector('[data-a11y-toggle-value]');
@@ -2410,6 +2865,12 @@ function _restoreA11yElementoMobileToggles(props) {
   // da ordem em que a spec salvou 'linkComponenteNome'/'linkComponente').
   _syncA11yMobileLinkUrlLockState();
   _updateA11yMobileNomeAcessivelVisibility();
+  // preserveValue=true nos dois: nunca apagar Label/Observações de uma spec
+  // ANTIGA já salva, mesmo que a combinação componente+sub-variante
+  // restaurada não ofereça mais o campo hoje (ver comentário completo na
+  // declaração de cada função).
+  _updateA11yMobileLabelVisibility(true);
+  _updateA11yMobileObservacoesVisibility(true);
 }
 
 // Menu customizado do "Componente" — o <select> nativo escondido continua
@@ -3062,22 +3523,21 @@ function updateA11yTituloFields() {
   if (notaWrap) notaWrap.classList.toggle('hidden', !isMobile);
   if (notaEl) notaEl.textContent = (isMobile && entry && entry.notaCodigo) || '';
 
-  // 2026-09-17 (pedido explícito do usuário): o formulário de Título mostra
-  // só Nível + Modo de Marcação + Lado da Guia — o accordion "Campos do
-  // componente" (toggle "Observações", único campo realmente digitável desta
-  // categoria) fica sempre oculto pra specs NOVAS, com shortName forçado a
-  // null (nunca renderiza a lista, então nunca há checkbox pra marcar).
-  // Descrição/Nota de Código continuam sendo escritas nos nós escondidos
-  // acima (#a11y-fixed-descricao/#a11y-fixed-nota) porque nunca foram
-  // digitáveis — são texto fixo do catálogo (A11Y_CONTENT.titulo), que
-  // confirmA11ySpec ainda lê de lá pra montar properties.descricao/
-  // notaCodigo sem mudança de comportamento. Specs de Título já existentes
-  // com Observações salvas de sessões anteriores continuam sendo
-  // restauradas em memória por _restoreA11yFixedToggles (ver
-  // _prefillA11ySpecForEdit) — só não ficam mais visíveis/editáveis neste
-  // formulário simplificado; o dado não é apagado ao reabrir/reeditar a
-  // spec, seguindo intacto no properties[] até uma nova gravação.
-  _renderA11yFixedToggles('a11y-titulo-toggles-wrap', 'a11y-titulo-toggles-list', null);
+  // REABERTO em 2026-09-24 (pedido explícito do usuário: "cada propriedade
+  // específica [deve] ser apresentada da maneira correta quando selecionado
+  // o componente" — reafirmado após auditoria confirmar que o shortName
+  // real 'niveis de titulo' declara um BOOLEAN "observacoes" verdadeiro na
+  // lib, que ficava escondido incondicionalmente). Histórico: entre
+  // 2026-09-17 e 2026-09-24 o accordion "Campos do componente" desta
+  // categoria ficava sempre oculto pra specs NOVAS (shortName forçado a
+  // null, decisão de simplificação de UX). Revertido — mesmo shortName real
+  // usado por Informações Adicionais/Estrutura da Página, sem gambiarra:
+  // 'niveis de titulo' é o único shortName real desta categoria (não varia
+  // por nível h1-h6 escolhido, confirmado no dado gerado). Descrição/Nota de
+  // Código continuam vindo do catálogo fixo A11Y_CONTENT.titulo (não são
+  // property BOOLEAN/TEXT opcional, são conteúdo didático por role — nunca
+  // foram o alvo desta reabertura).
+  _renderA11yFixedToggles('a11y-titulo-toggles-wrap', 'a11y-titulo-toggles-list', 'niveis de titulo');
 }
 window.updateA11yTituloFields = updateA11yTituloFields;
 
@@ -3115,19 +3575,19 @@ function updateA11yDecorativoFields() {
   if (notaWrap) notaWrap.classList.toggle('hidden', !notaTexto);
   if (notaEl) notaEl.textContent = notaTexto;
 
-  // 2026-09-17 (pedido explícito do usuário, complementar à simplificação de
-  // Título): o formulário de Elemento Decorativo mostra só Subtipo + card
-  // fixo de Descrição/Nota de Código + Modo de Marcação (Contorno/Linha,
-  // nenhuma opção removida) + Lado da Guia. O accordion "Campos do
-  // componente" (toggles "Observações"/"Notas de Código") fica sempre
-  // oculto pra specs NOVAS, com shortName forçado a null (mesmo padrão de
-  // updateA11yTituloFields) — nunca renderiza a lista, então nunca há
-  // checkbox pra marcar. Specs de Elemento Decorativo já existentes com
-  // esses campos preenchidos de sessões anteriores continuam restauradas em
-  // memória por _restoreA11yFixedToggles (ver _prefillA11ySpecForEdit) e
-  // persistidas normalmente; só não ficam mais visíveis/editáveis neste
-  // formulário simplificado — nenhum dado é apagado ao reabrir/reeditar.
-  _renderA11yFixedToggles('a11y-decorativo-toggles-wrap', 'a11y-decorativo-toggles-list', null);
+  // REABERTO em 2026-09-24 (mesmo motivo de updateA11yTituloFields — ver
+  // comentário lá). Entre 2026-09-17 e hoje o accordion "Campos do
+  // componente" ficava sempre oculto pra specs NOVAS (shortName forçado a
+  // null), mesmo os shortNames reais 'ED gerais'/'ED imagem' declarando
+  // BOOLEAN "observacoes" (os dois) e "notas" (os dois) na lib.
+  // select.value já é 'gerais'/'imagem' — bate 1:1 com os shortNames reais
+  // 'ED gerais'/'ED imagem' (confirmado no dado gerado), sem precisar de
+  // dicionário de tradução. Em mobile, _applyA11yDecorativoOriginLock (logo
+  // acima) já trava select.value em 'gerais' antes desta linha rodar — a
+  // mesma distinção real que a lib desktop declara (mobile não tem os 2
+  // subtipos, só 1 toggle "Observações" no wrapper "[hac mob] Box specs
+  // leitor de tela", ver comentário 2026-09-22 acima).
+  _renderA11yFixedToggles('a11y-decorativo-toggles-wrap', 'a11y-decorativo-toggles-list', select.value === 'imagem' ? 'ED imagem' : 'ED gerais');
 }
 
 // Trava o select "Subtipo" (Gerais/Imagem) por origem — mesmo padrão de
@@ -3288,11 +3748,27 @@ function _buildA11yElementoPayload(letter, componenteKey, label, options) {
   if (entry && entry.notasCodigo) properties.push({ key: 'notaCodigo', label: 'Nota de Código', value: entry.notasCodigo });
   // O Label do topo é a ÚNICA fonte do accessibilityLabel (checkbox "Nome
   // Acessível" removido do formulário em 2026-09, mesmo padrão do mobile) —
-  // sempre injeta esse valor em properties['nomeAcessivel'] pro backend
-  // ligar o BOOLEAN real da instância e escrever o texto quando o
-  // componente tiver essa property (code.js ignora silenciosamente quando
-  // não tiver, ver _dynamicToggleKeys/toggleMap em code.js).
-  properties.push({ key: 'nomeAcessivel', label: A11Y_TOGGLE_LABELS.nomeAcessivel, value: label });
+  // injeta esse valor em properties['nomeAcessivel'] pro backend ligar o
+  // BOOLEAN real da instância e escrever o texto quando o componente tiver
+  // essa property (code.js já ignora silenciosamente o setProperties quando
+  // não tiver, ver _dynamicToggleKeys/toggleMap em code.js). Fix real
+  // 2026-09-22 (mesma classe do bug mobile "Label em Value Section", ver
+  // _updateA11yMobileLabelVisibility): só GRAVA 'nomeAcessivel' em
+  // properties[] (o que o CARD/Ficha exibem) quando o componente
+  // selecionado REALMENTE tem esse toggle na lib — usa a mesma leitura
+  // dinâmica já confiável (_getA11yComponentToggles/_normalizeA11yToggleName,
+  // que já resolve as 3 grafias divergentes "nome acessivel"/"nome
+  // acesivel"/"nome acessível" publicadas nos 25 component sets, confirmado
+  // via REST API). O campo 'label' em si continua sempre gravado (não é
+  // exclusivo de nenhuma property específica — é a anotação do texto
+  // acessível independente de o Figma ter ou não um BOOLEAN próprio pra
+  // isso); só o rótulo redundante "Nome Acessível" que reivindicava suporte
+  // real do componente deixa de aparecer quando é falso.
+  const _toggles = (_getA11yComponentToggles(componenteKey) || {}).toggles || [];
+  const _hasNomeAcessivelToggle = _toggles.some(t => t.key === 'nomeAcessivel');
+  if (_hasNomeAcessivelToggle) {
+    properties.push({ key: 'nomeAcessivel', label: A11Y_TOGGLE_LABELS.nomeAcessivel, value: label });
+  }
   properties.push(...toggleProperties);
   properties = properties.filter(p => p.value);
   return { letter, properties, a11ySubtype };
@@ -3483,7 +3959,17 @@ function _finishA11ySpecConfirm() {
       // pra essa spec); linkComponente/linkComponenteNome (variante
       // "componente") é quem de fato identifica o componente real
       // documentado, coletado via _collectA11yElementoMobileToggleProperties.
-      if (!label) {
+      // Label só é exigido/gravado quando o componente (+ sub-variante de
+      // Leitor de Tela) REALMENTE tem property de nome acessível na lib —
+      // mesmo critério de _updateA11yMobileLabelVisibility (dado real, ver
+      // comentário lá). Bug real corrigido 2026-09-22: antes o campo era
+      // sempre obrigatório/gravado mesmo pra componentes como "[dsc] Value
+      // Section" (só "Leitor de Tela"/"Observações" na lib, confirmado via
+      // REST API), fazendo o card/Ficha exibirem um "Label" que o componente
+      // não suporta.
+      const hasNomeAcessivel = typeof _a11yMobileComponentHasNomeAcessivel === 'function'
+        ? _a11yMobileComponentHasNomeAcessivel() : true;
+      if (hasNomeAcessivel && !label) {
         showToast('Informe o Label (accessibilityLabel) do elemento.');
         return;
       }
@@ -3493,7 +3979,7 @@ function _finishA11ySpecConfirm() {
         ? A11Y_CONTENT.elemento.mobileLink.descricao
         : null;
       properties = [
-        { key: 'label', label: 'Label', value: label },
+        ...(hasNomeAcessivel ? [{ key: 'label', label: 'Label', value: label }] : []),
         ...(overrideDescricao ? [{ key: 'descricao', label: 'Descrição', value: overrideDescricao }] : []),
         // Dica para Leitor de Tela/Observações/Link do Componente/Descrição
         // (texto alternativo) — coletados conforme a sub-variante mobile ativa
@@ -3858,7 +4344,18 @@ window._finishA11ySpecConfirm = _finishA11ySpecConfirm;
 // Áreas Marcadas são o agrupamento principal (accordion). Toda spec de A11y
 // nasce DENTRO de uma área específica; não existe spec "solta" no fluxo
 // normal (o bucket "Sem área" só acolhe dado legado/órfão).
-function _a11ySpecItemHtml(spec) {
+// `showCategoryChip` (2026-09-24, pedido do usuário: "remova o chip de
+// categoria de dentro do accordion, isso já é trazido dentro do header do
+// accordion") — default true por compatibilidade com o único outro
+// call-site (_a11ySemAreaAccordionEl, bucket "Sem tela"/legado, mais
+// abaixo), onde specs de categorias DIFERENTES aparecem misturadas sob um
+// header genérico ("Sem tela") sem nenhuma outra indicação de categoria.
+// _a11yCategoryAccordionEl passa false explicitamente — ali o header do
+// próprio accordion já mostra ícone + nome da categoria + contagem, e
+// repetir o mesmo chip em cada item era redundante (todas as specs dali são
+// da mesma categoria, por definição).
+function _a11ySpecItemHtml(spec, showCategoryChip) {
+  if (showCategoryChip === undefined) showCategoryChip = true;
   const meta = A11Y_CATEGORIES[spec.a11yType] || { label: 'Acessibilidade', icon: 'accessibility' };
   // Label por ORIGEM DA PRÓPRIA SPEC (spec.a11yOrigin), não a lib atualmente
   // selecionada no projeto — uma spec 'titulo' criada em contexto mobile
@@ -3897,9 +4394,10 @@ function _a11ySpecItemHtml(spec) {
         <div class="flex-1 min-w-0">
           <p class="text-dsc-label-tiny normal-case tracking-normal font-semibold text-slate-700 dark:text-white truncate">${escapeHtml(spec.targetNodeName || spec.name || 'Elemento')}</p>
           <div class="flex items-center flex-wrap gap-dsc-quark mt-0.5">
+            ${showCategoryChip ? `
             <span class="inline-flex items-center gap-dsc-quark px-1.5 py-0.5 rounded-dsc-circ border text-dsc-label-tiny normal-case tracking-normal font-bold" style="background-color:${fill};border-color:${textColor};color:${textColor};">
               <i data-lucide="${meta.icon}" class="w-2.5 h-2.5"></i> ${escapeHtml(categoryLabel)}
-            </span>
+            </span>` : ''}
             ${spec.a11ySourceLib ? `
             <span class="inline-flex items-center px-1.5 py-0.5 rounded-dsc-circ border text-dsc-label-tiny normal-case tracking-normal font-medium bg-slate-50 dark:bg-dark-bg/60 border-slate-200 dark:border-dark-line text-slate-500 dark:text-dark-muted">
               ${escapeHtml(spec.a11ySourceLib.label)}
@@ -4061,7 +4559,7 @@ function _a11yCategoryAccordionEl(uid, catKey, catSpecs) {
         <i data-lucide="chevron-down" id="chevron-${uid}" class="w-3.5 h-3.5 text-gray-400 transition-transform shrink-0" style="transform:${expand ? 'rotate(180deg)' : 'rotate(0deg)'}"></i>
       </div>
       <div id="body-${uid}" class="accordion-content ${expand ? '' : 'hidden'} border-t border-gray-100 dark:border-dark-line p-1.5 space-y-1.5">
-        ${catSpecs.map(_a11ySpecItemHtml).join('')}
+        ${catSpecs.map(spec => _a11ySpecItemHtml(spec, false)).join('')}
       </div>
     </div>
   `;
@@ -4300,13 +4798,16 @@ function _a11yWorkspaceTabTabulacao(area) {
              (A11Y_NARRATION_TYPE_LABELS vs. _EN); o nome do elemento nunca
              muda, sempre vem como está gravado no Figma. Lido ao clicar em
              "Simular leitura" (toggleTabOrderNarration), não reage sozinho.
-             pr-8 (2026-09-14, corrigido de pr-6): o chevron nativo do
-             <select> é desenhado sobre o padding-right — pr-6 (24px) ainda
-             deixava o ícone colado quase em cima do texto (achado real com
-             print do usuário); pr-8 (32px) dá respiro real entre "PT"/"2.5x"
-             e a seta. -->
+             dsc-select (2026-09-24, substitui o pr-8 manual de 2026-09-14
+             — ver plugin.css): a correção anterior só aumentava o padding
+             sem tratar a causa raiz (chevron nativo do SO, fora de
+             controle do CSS); dsc-select resolve isso globalmente
+             (appearance:none + chevron SVG próprio) e também padroniza o
+             radius (rounded-dsc-medium em vez de -large, pedido do
+             usuário: "corrija o border radius dos selects... em todo o
+             plugin", sem exceção). -->
         <select id="tab-order-narration-lang-${uid}" title="Idioma da narração" aria-label="Idioma da narração"
-          class="shrink-0 h-8 pl-2.5 pr-8 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm hover:shadow transition-all border-0 cursor-pointer">
+          class="dsc-select shrink-0 h-8 pl-2.5 rounded-dsc-medium text-dsc-label-tiny normal-case tracking-normal font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm hover:shadow transition-all border-0 cursor-pointer">
           <option value="pt" selected>PT</option>
           <option value="en">EN</option>
         </select>
@@ -4316,7 +4817,7 @@ function _a11yWorkspaceTabTabulacao(area) {
              relido a cada item narrado pra que mudar a velocidade no meio
              da simulação valha já no próximo item, sem reiniciar. -->
         <select id="tab-order-narration-rate-${uid}" title="Velocidade da narração" aria-label="Velocidade da narração"
-          class="shrink-0 h-8 pl-2.5 pr-8 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm hover:shadow transition-all border-0 cursor-pointer">
+          class="dsc-select shrink-0 h-8 pl-2.5 rounded-dsc-medium text-dsc-label-tiny normal-case tracking-normal font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm hover:shadow transition-all border-0 cursor-pointer">
           <option value="1">1x</option>
           <option value="1.5" selected>1.5x</option>
           <option value="2">2x</option>
@@ -4602,6 +5103,16 @@ function _a11yWorkspaceTabLeitorDeTela(area, areaSpecs) {
           <i data-lucide="plus" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i>
           <span class="truncate">Nova spec</span>
         </button>
+        <!-- Excluir todas as especificações (2026-09-24, pedido do usuário:
+             "todas as outras abas têm o ícone da lixeira pra excluir tudo,
+             no leitor de tela temos apenas a exclusão por item") — mesmo
+             padrão visual/posição do botão equivalente em Tabulação
+             (deleteAllTabOrderForArea) e Swipe (deleteSwipePathForArea). -->
+        <button type="button" onclick="deleteAllA11ySpecsForArea('${escapeHtml(area.id)}')"
+          data-tooltip="Excluir todas as especificações de Leitor de Tela desta tela" aria-label="Excluir todas as especificações de Leitor de Tela desta tela"
+          class="tooltip-bottom tooltip-left shrink-0 w-9 h-9 flex items-center justify-center rounded-dsc-large border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 active:scale-[0.99] transition-all">
+          <i data-lucide="trash-2" class="w-3.5 h-3.5" aria-hidden="true"></i>
+        </button>
       </div>` : `
       <!-- Estado VAZIO (2026-09-18, reestruturado) — coluna centralizada
            no CENTRO VERTICAL do espaço restante da aba (hint fica fixo no
@@ -4664,6 +5175,15 @@ function _a11yWorkspaceTabLeitorDeTela(area, areaSpecs) {
 // aba mostra). areaSpecs continua recebido só porque outros chamadores desta
 // função ainda passam esse argumento — não usado mais neste corpo.
 function _a11yWorkspaceTabHandoffDashboard(area, areaSpecs) {
+  // "Ver handoff no canvas" (2026-09-24, pedido do usuário: "pode ser um
+  // botão mais discreto ao lado do gerar handoff. pode ser um ícone de
+  // focus com o tooltip") — deixou de ser um 2º botão largo, empilhado
+  // abaixo de "Gerar Handoff" (ver _fichaDashboardHtml, handoff-ficha.js,
+  // onde vivia antes) e virou um ícone compacto NA MESMA LINHA, ao lado
+  // dele. Só aparece quando já existe algo inserido no canvas
+  // (area.handoffFicha.frameId) — mesma condição de sempre, só reposicionada
+  // aqui porque "Gerar Handoff" (que sempre existe) é quem define a linha.
+  const hasAnyInserted = !!(area.handoffFicha && area.handoffFicha.frameId);
   return `
     <div class="space-y-4">
       <div>
@@ -4674,11 +5194,19 @@ function _a11yWorkspaceTabHandoffDashboard(area, areaSpecs) {
              handoff-ficha.js). Ícone "layers" pra não colidir visualmente
              com "sparkles" (já usado em "ou usar Mapeamento Automático"
              nesta mesma workspace, em outro contexto). -->
-        <button type="button" onclick="_fichaGenerateCompleteHandoff('${escapeHtml(area.id)}')"
-          class="w-full flex items-center justify-center gap-dsc-nano h-9 mb-2 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#005ca9] text-white hover:bg-blue-700 active:scale-[0.99] shadow-sm shadow-blue-500/20">
-          <i data-lucide="layers" class="w-3.5 h-3.5" aria-hidden="true"></i>
-          Gerar Handoff
-        </button>
+        <div class="flex items-center gap-dsc-nano mb-2">
+          <button type="button" onclick="_fichaGenerateCompleteHandoff('${escapeHtml(area.id)}')"
+            class="flex-1 min-w-0 flex items-center justify-center gap-dsc-nano h-9 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold transition-all bg-[#005ca9] text-white hover:bg-blue-700 active:scale-[0.99] shadow-sm shadow-blue-500/20">
+            <i data-lucide="layers" class="w-3.5 h-3.5" aria-hidden="true"></i>
+            Gerar Handoff
+          </button>
+          ${hasAnyInserted ? `
+          <button type="button" onclick="_fichaViewOnCanvas()"
+            data-tooltip="Ver handoff no canvas" aria-label="Ver handoff no canvas"
+            class="tooltip-bottom tooltip-left shrink-0 w-9 h-9 flex items-center justify-center rounded-dsc-large border border-gray-200 dark:border-dark-line text-slate-500 dark:text-dark-muted hover:bg-slate-50 dark:hover:bg-dark-line/40 active:scale-[0.99] transition-all">
+            <i data-lucide="scan-eye" class="w-3.5 h-3.5" aria-hidden="true"></i>
+          </button>` : ''}
+        </div>
         ${typeof _fichaDashboardHtml === 'function' ? _fichaDashboardHtml(area) : ''}
       </div>
     </div>
@@ -4864,7 +5392,23 @@ function _a11yAreaAccordionEl(area, areaSpecs) {
   // code.js). "X/N seções inseridas" abaixo se ajusta sozinho (N vem do
   // length deste array).
   const fichaSectionKeys = isMobile ? ['tabulacao', 'swipe', 'leitor'] : ['tabulacao', 'leitor'];
-  const fichaInsertedCount = fichaState ? fichaSectionKeys.filter(k => fichaState[k] && fichaState[k].insertedAt).length : 0;
+  // Critério corrigido em 2026-09-24 (print do usuário: card mostrava "3/3
+  // seções inseridas" ao mesmo tempo em que Tabulação/Ordem de Leitura
+  // apareciam como "pendente" no mesmo card) — antes contava só
+  // `insertedAt`, então uma seção inserida VAZIA (0 itens reais no canvas)
+  // contava como pronta. Agora usa o MESMO critério rigoroso de
+  // _fichaAreaIsComplete (handoff-ficha.js): insertedAt presente E conteúdo
+  // real (_fichaCurrentSectionCount > 0) E em dia (!_fichaSectionIsStale).
+  // As 3 funções são globais (window.*), carregadas de handoff-ficha.js —
+  // mesmo bundle final, chamada só acontece em runtime de render, não há
+  // problema de ordem de declaração.
+  const fichaInsertedCount = fichaSectionKeys.filter(k => {
+    const state = typeof _fichaSectionState === 'function' ? _fichaSectionState(area, k) : (fichaState && fichaState[k]);
+    if (!state || !state.insertedAt) return false;
+    if (typeof _fichaCurrentSectionCount === 'function' && _fichaCurrentSectionCount(area, k) === 0) return false;
+    if (typeof _fichaSectionIsStale === 'function' && _fichaSectionIsStale(area, k)) return false;
+    return true;
+  }).length;
 
   const li = document.createElement('li');
   li.className = 'list-none bg-white dark:bg-dark-surface rounded-dsc-large border border-gray-100 dark:border-dark-line shadow-dsc-elevation-1 overflow-hidden';
@@ -5105,6 +5649,15 @@ function renderA11yGroupedList() {
       </li>
     `;
     _refreshIcons();
+    // Bug real corrigido (2026-09-22, print do usuário após "Limpar tudo"):
+    // este ramo tem return ANTECIPADO, então a chamada no fim da função
+    // nunca rodava com a lista vazia — o bloco de completude ficava
+    // congelado no último HTML renderizado ("1 de 1 tela com o checklist
+    // fechado") mesmo com tudo apagado. Precisa rodar aqui também, para
+    // ESCONDER o bloco (total === 0 → classList.add('hidden')).
+    if (typeof _fichaRenderProjectSummary === 'function') {
+      _fichaRenderProjectSummary();
+    }
     return;
   }
   list.classList.remove('flex-1');
@@ -5147,6 +5700,13 @@ function renderA11yGroupedList() {
   // desatualizado até o designer trocar de tab manualmente.
   if (window._a11yWorkspaceAreaId && typeof _renderA11yWorkspaceTab === 'function') {
     _renderA11yWorkspaceTab();
+  }
+
+  // Resumo de completude do PROJETO (2026-09-22, distinto do status por
+  // TELA de cada card acima) — ver _fichaRenderProjectSummary,
+  // handoff-ficha.js.
+  if (typeof _fichaRenderProjectSummary === 'function') {
+    _fichaRenderProjectSummary();
   }
 }
 window.renderA11yGroupedList = renderA11yGroupedList;
@@ -5306,8 +5866,70 @@ function chooseA11yHomeOrigin(lib) {
   // esperar nenhuma ação subsequente do usuário.
   parent.postMessage({ pluginMessage: { type: 'check-other-designers-sections', currentUserId: getA11yDesignerId() } }, '*');
   parent.postMessage({ pluginMessage: { type: 'check-my-prior-session', currentUserId: getA11yDesignerId() } }, '*');
+  // Página dedicada do handoff (2026-09-22, jornada pedida pelo usuário:
+  // "seleciona a lib, a página do HAC é criada e abre-se a modal para ctrl
+  // c e ctrl v das telas a serem documentadas"). O backend cria/reaproveita
+  // a página, leva o designer até ela e responde 'hac-page-ready' — só
+  // então a modal de instrução abre (ver _openHacPageInstructionModal
+  // abaixo e o handler em messages.js).
+  parent.postMessage({ pluginMessage: { type: 'ensure-hac-page' } }, '*');
 }
 window.chooseA11yHomeOrigin = chooseA11yHomeOrigin;
+
+// Modal de instrução da página do handoff — aberta em resposta a
+// 'hac-page-ready' (messages.js), nunca direto daqui: só faz sentido
+// instruir "cole as telas aqui" depois que a página existe de fato e o
+// designer já foi levado até ela.
+//
+// Abre em DOIS casos (decisão 2026-09-22): página recém-criada (`created`)
+// ou página que já existia mas está VAZIA — reabrir o plugin num arquivo
+// onde a página foi criada mas nada foi colado ainda deve reinstruir, senão
+// o designer fica numa página vazia sem saber o que fazer. Página já com
+// telas dentro não interrompe: ele já passou por isso e está trabalhando.
+function _openHacPageInstructionModal(msg) {
+  if (!msg || msg.failed) return;
+
+  // Persiste qual página é a do handoff (2026-09-22) — a completude do
+  // PROJETO (_fichaProjectCompletion) usa isso pra contar só as telas
+  // documentadas DENTRO dela, ignorando Áreas avulsas no resto do arquivo.
+  // Gravado sempre que a página é resolvida, inclusive quando a modal não
+  // abre (página já existente e com telas) — o dado é necessário de
+  // qualquer forma.
+  if (msg.pageId && hacData.hacPageId !== msg.pageId) {
+    hacData.hacPageId = msg.pageId;
+    saveToStorage();
+    if (typeof renderA11yGroupedList === 'function') renderA11yGroupedList();
+  }
+
+  if (!msg.created && !msg.isEmpty) return;
+
+  // ENFILEIRA atrás do onboarding (bug real evitado, 2026-09-22): na
+  // primeira escolha de lib, chooseA11yHomeOrigin abre o onboarding
+  // SÍNCRONO e só depois chega a resposta assíncrona de 'ensure-hac-page'.
+  // Como openModal (core.js) fecha qualquer outro modal aberto antes de
+  // abrir o novo, esta modal MATARIA o onboarding no meio — repetindo o
+  // sintoma de "dois onboardings distintos pro mesmo momento" que já foi
+  // corrigido em 2026-09-09 (ver comentário em chooseA11yHomeOrigin). Com
+  // o onboarding aberto, guarda o payload e deixa closeOnboarding
+  // (onboarding.js) disparar esta mesma função no fim.
+  const onboardingEl = document.getElementById('onboarding-modal');
+  const onboardingOpen = !!onboardingEl && !onboardingEl.classList.contains('hidden');
+  if (onboardingOpen) {
+    window._pendingHacPageInstruction = msg;
+    return;
+  }
+  window._pendingHacPageInstruction = null;
+
+  const intro = document.getElementById('hac-page-instruction-intro');
+  if (intro) {
+    intro.textContent = msg.created
+      ? 'Criamos a página do handoff e levamos você até ela. Agora copie e cole aqui as telas que serão documentadas.'
+      : 'Esta é a página do handoff. Copie e cole aqui as telas que serão documentadas.';
+  }
+  openModal('hac-page-instruction-modal');
+  if (typeof _refreshIcons === 'function') _refreshIcons();
+}
+window._openHacPageInstructionModal = _openHacPageInstructionModal;
 
 // Alterna, na Home, entre a ETAPA 1 (pergunta de plataforma, objetiva) e a
 // ETAPA 1b (sub-escolha de lib web) — nunca as duas ao mesmo tempo. A
@@ -5698,7 +6320,11 @@ function renderA11yPriorSessionAlert(priorSession) {
   const areaCount = (Array.isArray(a11yAreas) && a11yAreas.length > 0)
     ? a11yAreas.length
     : (priorSession.areaCount || 0);
-  const version = priorSession.version || '1.0';
+  // 'rascunho' (2026-09-24, revisão do modelo de versionamento) — texto,
+  // não número: nunca foi finalizado ainda. "versão rascunho" leria mal, daí
+  // o texto muda de forma pra esse caso em vez de só interpolar o valor cru.
+  const version = priorSession.version || 'rascunho';
+  const versionText = version === 'rascunho' ? 'ainda em rascunho (não finalizado)' : `versão ${version}`;
   const timestamp = priorSession.timestamp || null;
   const designerName = priorSession.designerName || null;
   const sectionId = priorSession.sectionId || null;
@@ -5711,7 +6337,7 @@ function renderA11yPriorSessionAlert(priorSession) {
     <i data-lucide="history" class="w-4 h-4 text-[#005ca9] dark:text-blue-300 shrink-0 mt-0.5" aria-hidden="true"></i>
     <div class="flex-1 min-w-0">
       <p class="text-dsc-label-tiny normal-case tracking-normal font-bold text-[#005ca9] dark:text-blue-300">${whenBy}</p>
-      <p class="text-dsc-label-tiny normal-case tracking-normal text-[#005ca9]/80 dark:text-blue-300/80 leading-relaxed mt-0.5">${areaCount} tela${areaCount === 1 ? '' : 's'}, versão ${version}.</p>
+      <p class="text-dsc-label-tiny normal-case tracking-normal text-[#005ca9]/80 dark:text-blue-300/80 leading-relaxed mt-0.5">${areaCount} tela${areaCount === 1 ? '' : 's'}, ${versionText}.</p>
       ${sectionId ? `<button type="button" onclick="focusNode('${sectionId}')" class="mt-1 text-dsc-label-tiny normal-case tracking-normal font-bold text-[#005ca9] dark:text-blue-300 underline hover:no-underline">Ver no canvas</button>` : ''}
     </div>
     <button type="button" onclick="this.closest('#a11y-prior-session-alert').classList.add('hidden')" title="Dispensar" aria-label="Dispensar" class="p-1 text-[#005ca9]/60 hover:text-[#005ca9] dark:text-blue-300/60 dark:hover:text-blue-300 transition-colors shrink-0">
@@ -6968,6 +7594,40 @@ function deleteA11ySpec(specId) {
 }
 window.deleteA11ySpec = deleteA11ySpec;
 
+// "Excluir todas as especificações" da aba Leitor de Tela (2026-09-24,
+// pedido do usuário: "todas as outras abas têm o ícone da lixeira pra
+// excluir tudo, no leitor de tela temos apenas a exclusão por item" — mesmo
+// padrão visual/de confirmação de deleteAllTabOrderForArea (tab-order.js) e
+// deleteSwipePathForArea (swipe-path.js), que já têm esse botão na mesma
+// posição do header da aba).
+//
+// Diferente de Tabulação/Swipe (uma cópia clonada única, um só id a
+// apagar), cada spec de Leitor de Tela é um nó PRÓPRIO no canvas (spec.id) —
+// não há um único id "pai" que arraste todos ao ser removido. Reaproveita
+// 'delete-specs-for-area' (mesmo handler já usado por deleteA11yArea, ver
+// linha ~7925), que varre por pluginData ('hacSpecForArea'/
+// 'hacSpecCloneForArea') em vez de depender da lista local de specs — cobre
+// inclusive specs órfãs (array dessincronizado do canvas), sem precisar
+// disparar um 'delete-node' por item (que geraria uma notificação do Figma
+// por spec).
+function deleteAllA11ySpecsForArea(areaId) {
+  if (!areaId) return;
+  const hasSpecs = (a11ySpecs || []).some(s => s && s.a11yAreaId === areaId);
+  if (!hasSpecs) return;
+
+  // Sem window.confirm (2026-09-24) — mesmo padrão de
+  // deleteAllTabOrderForArea/deleteSwipePathForArea/deleteA11yArea, nenhum
+  // pede confirmação: a ação é imediata, avisada só pelo texto do tooltip
+  // do botão ("Excluir todas as especificações... — não pode ser desfeito").
+  parent.postMessage({ pluginMessage: { type: 'delete-specs-for-area', areaId } }, '*');
+  a11ySpecs = (a11ySpecs || []).filter(s => !(s && s.a11yAreaId === areaId));
+  saveToStorage();
+  showToast('Especificações de Leitor de Tela removidas.');
+  if (typeof _renderA11yWorkspaceTab === 'function') _renderA11yWorkspaceTab();
+  renderA11yGroupedList();
+}
+window.deleteAllA11ySpecsForArea = deleteAllA11ySpecsForArea;
+
 // Mostrar/ocultar o nó da spec no canvas — mesmo par de mensagens
 // ('hide-node'/'show-node') que specs normais usam no Handex.
 function toggleA11ySpecVisibility(specId) {
@@ -7144,6 +7804,15 @@ function _prefillA11ySpecForEdit(spec) {
     if (mobileList) delete mobileList.dataset.renderedVariant; // força reconstrução do bloco certo
     updateA11yElementoFields();
     setVal('a11y-el-label', getProp('label'));
+    // Reavalia a visibilidade do Label DEPOIS de escrever o valor salvo
+    // (2026-09-24): a chamada de dentro de updateA11yElementoFields acima
+    // rodou ANTES do setVal, então via o campo ainda vazio — inofensivo pra
+    // decidir show/hide, mas preserveValue não fazia diferença nesse
+    // momento. Esta chamada, com preserveValue=true, garante que uma spec
+    // ANTIGA cujo componente perdeu a property "nome acessível" num scan
+    // mais novo da lib tenha o valor salvo PRESERVADO (campo escondido, mas
+    // dado intacto) — nunca apagado só por reabrir pra editar.
+    if (typeof _updateA11yMobileLabelVisibility === 'function') _updateA11yMobileLabelVisibility(true);
     // Restaura a variante secundária salva (ex: Button → "de icone") —
     // updateA11yElementoFields acima já recriou o <select> pro componente
     // certo, aqui só aplicamos o valor gravado em cima do default.

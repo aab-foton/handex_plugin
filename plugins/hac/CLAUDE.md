@@ -85,6 +85,47 @@ estendido, não recriado).
 
 ---
 
+## Regra 0b — grafo de conhecimento do contrato de mensagens
+
+**Antes de mexer em qualquer `postMessage`/`figma.ui.onmessage` (adicionar,
+remover ou renomear um campo de payload; adicionar um `msg.type` novo; ou
+investigar um sintoma de "campo undefined no frontend"/"resposta não
+chegou"), consultar primeiro:**
+
+1. `docs/knowledge-graph.json` — grafo de conhecimento próprio do hac
+   (construído lendo o código real, NÃO o plugin de terceiros Understand
+   Anything instalado em `.ua/`, que é genérico e não captura nenhuma
+   aresta de `postMessage`). Cobre os ~93 tipos de mensagem trocados entre
+   backend (`code.js`/`backend/*.js`) e frontend (`modules/*.js`), com
+   `payloadFields`, `senders` (todos os pontos de disparo — inclusive
+   quando há mais de um, sinal de possível ponta solta), `consumers`, e
+   arestas `propagatesField` para os campos que aparecem em mais de um
+   lugar (`workAnchor`, `savedAnchor`, `nodeMap`, `a11yDscComponentName`,
+   `areaId`, `generation`).
+2. `docs/knowledge-graph-guide.md` — receitas de consulta ("vou mudar o
+   campo X da mensagem Y, o que mais preciso tocar?") e o estado resumido
+   (mensagens mortas conhecidas como `clear-highlight`, assimetrias
+   documentadas entre os 3 fluxos paralelos de clone — Tabulação/Swipe/
+   Leitor de Tela — em `pattern:3-parallel-clone-flows`).
+
+**Por quê**: o padrão de bug mais recorrente e caro em investigações
+recentes foi mudança de contrato de mensagem propagada em ALGUNS pontos e
+esquecida em outros (`anchorRefNodeId`/`savedAnchor` em alguns pontos de
+criação de clone mas não em outros; um campo devolvido só por 1 dos 3
+handlers de criação de clone e esquecido nos outros 2). A ponte
+`postMessage` é invisível para análise estática genérica de imports/calls
+(passagem de mensagem por string de `type`, sem tipagem) — é exatamente a
+amarra que este grafo existe para tornar explícita antes de qualquer
+mudança.
+
+O grafo é um ponto de partida, não a fonte de verdade absoluta — ele fica
+desatualizado se o código mudar e ninguém regenerar; sempre confirmar com
+grep real (`grep -rn "nomeDoCampo" src/plugin/`) antes de declarar uma
+mudança de contrato pronta, e sinalizar para `qa-plugin` qualquer mudança
+de contrato de mensagem ou schema mapeada.
+
+---
+
 ## Regra de ouro — nunca inventar/desenhar o que a lib já fornece
 
 Sempre que um elemento visual precisar refletir algo que existe na lib
@@ -323,3 +364,34 @@ dropdown como fallback.
   genérica dele) contra o fix proposto antes de declará-lo pronto — no caso
   acima, isso teria pego o dropdown vazio antes do usuário precisar
   reportar de novo.
+
+**Corolário — posição errada no canvas costuma ser SINTOMA de parentesco
+errado na árvore (2026-09-23, o caso mais caro deste padrão até hoje):** o
+sintoma "o card de spec nasce longe da réplica" foi tratado como problema
+de aritmética de posição em QUATRO rodadas seguidas (reancoragem
+horizontal, alinhamento de topo entre categorias, filtro por área no
+`_letterMap`, filtro por área na anti-colisão). Cada rodada tinha
+explicação plausível, corrigia um branch real do cálculo — e o usuário
+voltava com print novo. A causa raiz era estrutural: o `specGroup` estava
+caindo num fallback "solto na Section" em vez de entrar no grupo-overlay do
+clone da tela, e uma spec fora do overlay não tem referência de posição que
+faça sentido. **Só ficou visível quando o usuário mandou o painel de
+CAMADAS em vez do canvas.**
+
+Como aplicar:
+- Diante de qualquer artefato mal posicionado no canvas, conferir PRIMEIRO
+  onde ele está na árvore (`node.parent`, painel de camadas) antes de olhar
+  o cálculo de X/Y. Se o pai está errado, a posição errada é consequência —
+  corrigir a aritmética só vai mascarar.
+- Quando 2 rodadas de correção no mesmo sintoma não resolvem, parar de
+  refinar a hipótese atual e trocar a CLASSE de hipótese (de "cálculo" para
+  "estrutura", de "dado" para "ciclo de vida"). Insistir na mesma classe é o
+  que produziu as 4 rodadas acima.
+- Pedir ao usuário o print do painel de camadas, não só do canvas, sempre
+  que o sintoma envolver posição/visibilidade de artefato — foi o dado que
+  encerrou a investigação, e poderia ter sido pedido na 1ª rodada.
+- Fallback silencioso é o que permite esse tipo de bug sobreviver: se um
+  caminho de exceção coloca o artefato num lugar diferente do projetado,
+  ele precisa AVISAR o designer (`figma.notify`), nunca só
+  `console.error` — ver a invariante correspondente em `docs/tecnico.html`,
+  seção 8a.

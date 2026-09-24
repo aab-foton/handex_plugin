@@ -1,7 +1,7 @@
 {
   "_meta": {
     "description": "Mapa containingFrame -> categoria de a11y, ESSENCIAL EM RUNTIME no hac (consumido por _getDscFrameToA11yMap em code.js para a Detecção Automática de a11y). Gerado por build-dsc-a11y-mapping.cjs a partir de refs/web-angular-react.json (dados reais da REST API do Figma, sem valores inventados). Adaptação do Handex Beta (onde este mesmo formato de arquivo é descrito como \"fundação de dados, não usado em runtime\" — desatualizado lá, mas aqui no hac o consumo em runtime é o desenho intencional desde o início).",
-    "generatedAt": "2026-09-22T13:53:05.100Z",
+    "generatedAt": "2026-09-23T18:24:09.410Z",
     "generator": "build-dsc-a11y-mapping.cjs (hac)",
     "sourceFile": "super-app.json",
     "sourceFileKey": "epCGtlKQxedDxQVlK3lNcN",
@@ -41,20 +41,20 @@
         "variantCount": 494
       },
       "baixaConfianca": {
-        "families": 61,
-        "variantCount": 651
+        "families": 65,
+        "variantCount": 715
       },
       "semMatch": {
-        "families": 1482,
-        "variantCount": 3386
+        "families": 1478,
+        "variantCount": 3322
       },
       "pctFamiliesAlta": 0.9,
       "pctVariantsAlta": 10.9
     },
     "byShortName": {
       "accordion": {
-        "families": 3,
-        "variantCount": 28
+        "families": 4,
+        "variantCount": 52
       },
       "breadcrumb": {
         "families": 0,
@@ -81,8 +81,8 @@
         "variantCount": 0
       },
       "listas": {
-        "families": 22,
-        "variantCount": 190
+        "families": 23,
+        "variantCount": 215
       },
       "paginator": {
         "families": 1,
@@ -97,8 +97,8 @@
         "variantCount": 3
       },
       "stepper": {
-        "families": 1,
-        "variantCount": 6
+        "families": 2,
+        "variantCount": 18
       },
       "switch": {
         "families": 1,
@@ -119,6 +119,10 @@
       "estrutura": {
         "families": 3,
         "variantCount": 21
+      },
+      "informacoes": {
+        "families": 1,
+        "variantCount": 3
       }
     }
   },
@@ -406,6 +410,34 @@
       }
     },
     {
+      "containingFrame": "[dsc] Value Section",
+      "variantCount": 25,
+      "sampleKeys": [
+        "120f00983c24cea8e1ac3eec93861d8aa0de85dc",
+        "351ea48773c0cc1987652a5c3f9f25d02ba724fe",
+        "d05eaf439f46539252dbffb975047e438a1b949b"
+      ],
+      "match": {
+        "shortName": "listas",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Value Section\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Timeline Collapse",
+      "variantCount": 24,
+      "sampleKeys": [
+        "118f7118c28534a1f08a3f6faf76d948ef942b7d",
+        "39c80af6de5a543c13557737f8fea84c62ab087b",
+        "3b657d1c20411c57f12ca7b577bb6a9c524fc078"
+      ],
+      "match": {
+        "shortName": "accordion",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Timeline Collapse\""
+      }
+    },
+    {
       "containingFrame": "[dsc] Text Field Single",
       "variantCount": 20,
       "sampleKeys": [
@@ -543,6 +575,20 @@
         "shortName": "dialog",
         "confidence": "baixa",
         "reason": "tabela curada (super-app) \"Tipkit Popover\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Timeline Item",
+      "variantCount": 12,
+      "sampleKeys": [
+        "09b52e8492c71c0e44b16de782ab59817cdf7611",
+        "1e872780a0787ef821ed6e3ac118dad2e9805678",
+        "56258037c62c98627bb32993e184e3548113298d"
+      ],
+      "match": {
+        "shortName": "stepper",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-app) \"Timeline Item\""
       }
     },
     {
@@ -1092,6 +1138,20 @@
       }
     },
     {
+      "containingFrame": "[dsc-tc] State Message",
+      "variantCount": 3,
+      "sampleKeys": [
+        "4bcc94ba11f04d5b5f991412b5ddec4bc6054541",
+        "4ec661e9315248601b7e099debf503de8e60eb7a",
+        "c036b6d03f418da5d48bf1233cc0f84461cbd320"
+      ],
+      "match": {
+        "shortName": "informacoes",
+        "confidence": "baixa",
+        "reason": "bloco de estado vazio/erro de tela inteira (título+descrição+CTA) — conteúdo informativo substantivo, sem equivalente nos 16 componentes interativos"
+      }
+    },
+    {
       "containingFrame": "[dsc] Avatar",
       "variantCount": 3,
       "sampleKeys": [
@@ -1203,32 +1263,12 @@
       "match": null
     },
     {
-      "containingFrame": "[dsc] Value Section",
-      "variantCount": 25,
-      "sampleKeys": [
-        "120f00983c24cea8e1ac3eec93861d8aa0de85dc",
-        "351ea48773c0cc1987652a5c3f9f25d02ba724fe",
-        "d05eaf439f46539252dbffb975047e438a1b949b"
-      ],
-      "match": null
-    },
-    {
       "containingFrame": "[dsc] Spinner",
       "variantCount": 24,
       "sampleKeys": [
         "0f56cafa106019e44c97095922d71f32c13821a1",
         "036d04cb5eee375db3f61971ad39fe7cf6d7e9f8",
         "2d77cc5e891e69188d0e198ae9c89c89d5d1fab4"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc] Timeline Collapse",
-      "variantCount": 24,
-      "sampleKeys": [
-        "118f7118c28534a1f08a3f6faf76d948ef942b7d",
-        "39c80af6de5a543c13557737f8fea84c62ab087b",
-        "3b657d1c20411c57f12ca7b577bb6a9c524fc078"
       ],
       "match": null
     },
@@ -1279,16 +1319,6 @@
         "19b96d1d814fe2124116eb2314f9b45a3fd3e2f4",
         "349988cdbf3ef515f8c3b531c5a57a4c30c7005e",
         "35cba3552f434e5e020452c5340baa4c1010d4bf"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc] Timeline Item",
-      "variantCount": 12,
-      "sampleKeys": [
-        "09b52e8492c71c0e44b16de782ab59817cdf7611",
-        "1e872780a0787ef821ed6e3ac118dad2e9805678",
-        "56258037c62c98627bb32993e184e3548113298d"
       ],
       "match": null
     },
@@ -1679,16 +1709,6 @@
         "091964f7b312d82ed275241a6827de26b6e7332f",
         "43d7a24ec9aa5da9d3a14ff646b558b3a2623c11",
         "a8e612ed085d37b09fd2441b2afe7de217f97fd3"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc-tc] State Message",
-      "variantCount": 3,
-      "sampleKeys": [
-        "4bcc94ba11f04d5b5f991412b5ddec4bc6054541",
-        "4ec661e9315248601b7e099debf503de8e60eb7a",
-        "c036b6d03f418da5d48bf1233cc0f84461cbd320"
       ],
       "match": null
     },

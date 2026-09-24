@@ -1,7 +1,7 @@
 {
   "_meta": {
     "description": "Mapa containingFrame -> categoria de a11y, ESSENCIAL EM RUNTIME no hac (consumido por _getDscFrameToA11yMap em code.js para a Detecção Automática de a11y). Gerado por build-dsc-a11y-mapping.cjs a partir de refs/web-angular-react.json (dados reais da REST API do Figma, sem valores inventados). Adaptação do Handex Beta (onde este mesmo formato de arquivo é descrito como \"fundação de dados, não usado em runtime\" — desatualizado lá, mas aqui no hac o consumo em runtime é o desenho intencional desde o início).",
-    "generatedAt": "2026-09-22T13:53:05.233Z",
+    "generatedAt": "2026-09-23T18:24:09.832Z",
     "generator": "build-dsc-a11y-mapping.cjs (hac)",
     "sourceFile": "super-dsc-web.json",
     "sourceFileKey": "erkqbRKIbaFWbkHe51BeiZ",
@@ -41,12 +41,12 @@
         "variantCount": 715
       },
       "baixaConfianca": {
-        "families": 46,
-        "variantCount": 748
+        "families": 48,
+        "variantCount": 786
       },
       "semMatch": {
-        "families": 1441,
-        "variantCount": 3287
+        "families": 1439,
+        "variantCount": 3249
       },
       "pctFamiliesAlta": 1.3,
       "pctVariantsAlta": 15.1
@@ -81,8 +81,8 @@
         "variantCount": 0
       },
       "listas": {
-        "families": 8,
-        "variantCount": 147
+        "families": 9,
+        "variantCount": 179
       },
       "paginator": {
         "families": 3,
@@ -119,6 +119,10 @@
       "estrutura": {
         "families": 4,
         "variantCount": 37
+      },
+      "informacoes": {
+        "families": 1,
+        "variantCount": 6
       }
     }
   },
@@ -456,6 +460,20 @@
         "shortName": "listas",
         "confidence": "baixa",
         "reason": "tabela curada (super-dsc-web) \"Sidebar Menu Item\""
+      }
+    },
+    {
+      "containingFrame": "[dsc] Label Value Pair",
+      "variantCount": 32,
+      "sampleKeys": [
+        "128f597b32bb2ad71cb896aaf7cc20e386d1ea26",
+        "16ca1785de67efe6c3e115ff0cfdccc68b647906",
+        "171c61815288bcb40a30b70523ddd9579b43d538"
+      ],
+      "match": {
+        "shortName": "listas",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-dsc-web) \"Label Value Pair\""
       }
     },
     {
@@ -865,6 +883,20 @@
       }
     },
     {
+      "containingFrame": "[dsc-tc] State Message",
+      "variantCount": 6,
+      "sampleKeys": [
+        "38ece60c9c30482089b558b12450d225de2fdd1a",
+        "a0e7d4230219446debb2eace7d868f79b83e36fa",
+        "213813775ce71e056499fbfd688331d7b53b382e"
+      ],
+      "match": {
+        "shortName": "informacoes",
+        "confidence": "baixa",
+        "reason": "bloco de estado vazio/erro de tela inteira (título+descrição+CTA) — conteúdo informativo substantivo, sem equivalente nos 16 componentes interativos"
+      }
+    },
+    {
       "containingFrame": "[dsc] Toast",
       "variantCount": 5,
       "sampleKeys": [
@@ -1073,16 +1105,6 @@
       "match": null
     },
     {
-      "containingFrame": "[dsc] Label Value Pair",
-      "variantCount": 32,
-      "sampleKeys": [
-        "128f597b32bb2ad71cb896aaf7cc20e386d1ea26",
-        "16ca1785de67efe6c3e115ff0cfdccc68b647906",
-        "171c61815288bcb40a30b70523ddd9579b43d538"
-      ],
-      "match": null
-    },
-    {
       "containingFrame": "[dsc-ts] Print Receipt - Comprovantes",
       "variantCount": 29,
       "sampleKeys": [
@@ -1219,16 +1241,6 @@
         "39cdf7f2b22d2b1785d60703ce7844a8dd32ca8a",
         "3d36b32213e00f2afac77fec6300ac73f690abcb",
         "8369e101faf0bc22c5beadc92c74183f307b1878"
-      ],
-      "match": null
-    },
-    {
-      "containingFrame": "[dsc-tc] State Message",
-      "variantCount": 6,
-      "sampleKeys": [
-        "38ece60c9c30482089b558b12450d225de2fdd1a",
-        "a0e7d4230219446debb2eace7d868f79b83e36fa",
-        "213813775ce71e056499fbfd688331d7b53b382e"
       ],
       "match": null
     },

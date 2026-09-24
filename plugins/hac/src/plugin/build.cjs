@@ -175,7 +175,7 @@ ${css}
               <i data-lucide="download" class="w-4 h-4 mt-0.5 text-slate-500 dark:text-dark-muted shrink-0" aria-hidden="true"></i>
               <span class="min-w-0">
                 <span class="block">Baixar backup (.json)</span>
-                <span class="block text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted leading-snug">Restaurável neste ou em outro arquivo.</span>
+                <span class="block text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted leading-snug">Restaurável só neste arquivo.</span>
               </span>
             </button>
             <button type="button" onclick="closeHacBackupMenu(); exportHacHandoffDoc()"
@@ -192,7 +192,7 @@ ${css}
               <i data-lucide="upload" class="w-4 h-4 mt-0.5 text-slate-500 dark:text-dark-muted shrink-0" aria-hidden="true"></i>
               <span class="min-w-0">
                 <span class="block">Restaurar backup (.json)</span>
-                <span class="block text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted leading-snug">Substitui a documentação atual.</span>
+                <span class="block text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted leading-snug">Substitui a documentação atual. Só no mesmo arquivo de origem.</span>
               </span>
             </button>
           </div>

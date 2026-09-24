@@ -80,6 +80,8 @@ import {
   _writeHacDataToDocument,
   _readHacDataFromDocument,
   _clearHacDataFromDocument,
+  _clearHacCanvasForCurrentUser,
+  _getOrCreateHacPage,
   _hacDataWeight,
   _getSceneNodeById,
   _getOrCreateA11ySection,
@@ -206,6 +208,60 @@ let _a11ySuppressNextSelectionChange = false;
 // no comportamento antigo (ler figma.currentPage.selection direto).
 let _a11yManualMatchLastRealSelectionId = null;
 
+// BUG REAL CORRIGIDO (2026-09-22, reincidencia -- print do usuario: card
+// "Selecionado no canvas" mostrou "[Leitor de Tela] [dsc-ts] Screen Mini App
+// Home", o nome do CLONE/replica de trabalho inteiro, nao o icone/elemento
+// que o designer clicou). A correcao anterior (_a11ySuppressNextSelectionChange/
+// _a11yManualMatchRealClickAfterOpen, ver comentarios acima) resolve a
+// corrida ENTRE o foco automatico concorrente e um clique real do designer
+// DEPOIS que o picker ja abriu -- mas nao cobre o caso em que a propria
+// selecao "herdada" (capturada de forma sincrona na abertura, antes de
+// qualquer clique novo) ja E o clone: residuo de um foco automatico de uma
+// acao ANTERIOR do proprio plugin (ex.: replica de uma spec ja aplicada
+// nesta area, ou de outra) que nunca foi substituido porque o designer nao
+// clicou em mais nada no canvas entre uma acao e a proxima ("aplicar spec"
+// -> "+ Nova spec" de novo, em sequencia, sem tocar no canvas). Documentar o
+// clone inteiro como "elemento" nunca e uma intencao real do fluxo de
+// Elementos e Imagens/Titulo/Decorativo -- este helper identifica esse caso
+// via pluginData 'hacSpecCloneForArea' (gravado em QUALQUER clone de
+// trabalho do Leitor de Tela, de qualquer area, ver _createSpecCloneForArea)
+// e e usado nos pontos que podem tratar uma selecao do Figma como "escolha
+// real do designer" (resolve-manual-spec-match, o listener de
+// selectionchange e get-selection-name) para descarta-la como candidata,
+// nunca aceitando o clone raiz como resposta valida. Escopo restrito de
+// proposito ao clone de Especificacoes/Leitor de Tela -- Tabulacao/Swipe tem
+// seus proprios marcadores (hacTabOrderCloneForArea/hacSwipePathCloneForArea,
+// nomes ilustrativos) e nao sao tocados por este helper nem por esta correcao.
+function _isA11ySpecCloneRootNode(node) {
+  if (!node) return false;
+  try {
+    return !!(node.getPluginData && node.getPluginData('hacSpecCloneForArea'));
+  } catch (e) {
+    return false;
+  }
+}
+
+// Distingue "seleção que já existia ANTES de clicar + Nova spec" (captura
+// inicial, resolve-manual-spec-match) de "o designer clicou em algo novo
+// DEPOIS que o picker já abriu" (listener de selectionchange abaixo,
+// _a11yManualMatchModeActive). false na captura inicial (mesmo que ela
+// preencha _a11yManualMatchLastRealSelectionId com um id válido — é só a
+// seleção herdada, não uma escolha feita já com o picker aberto); vira true
+// no primeiro selectionchange real recebido enquanto o modo já está ativo,
+// e volta a false em stop-manual-spec-match-mode.
+//
+// Existe para o handler 'highlight-node' (ver comentário completo lá, BUG
+// REAL CORRIGIDO 2026-09-22) decidir se o foco AUTOMÁTICO da réplica de
+// trabalho (spec-copy-started → focusA11yCloneNode, adiantado desde
+// 2026-09-15) ainda pode tomar a seleção do Figma com segurança: só faz
+// sentido sobrescrever a seleção pré-existente (o designer ainda não agiu),
+// nunca uma escolha que ele já fez depois de abrir o picker — sem esta
+// distinção, QUALQUER seleção real capturada (mesmo a herdada, sempre
+// presente) bloquearia o foco automático adiantado, quebrando o pedido
+// original de 2026-09-15 ("assim que eu clico pra criar a spec, já
+// deveríamos ter... o canvas focar na réplica").
+let _a11yManualMatchRealClickAfterOpen = false;
+
 // Listener único de seleção do canvas para os modos de captura de Ordem de
 // Tabulação e Trilha de Swipe — LEITURA LITERAL (2026-09-04-af).
 //
@@ -308,12 +364,21 @@ figma.on('selectionchange', () => {
   }
 
   if (_a11yManualMatchModeActive) {
+    // Marca que o designer já clicou em algo DEPOIS de abrir o picker (ver
+    // comentário completo em _a11yManualMatchRealClickAfterOpen) — chegou
+    // até aqui porque não foi suprimido acima, então é garantidamente um
+    // clique real, nunca o foco automático na réplica.
+    _a11yManualMatchRealClickAfterOpen = true;
     // Registra a seleção REAL corrente (ver comentário em
     // _a11yManualMatchLastRealSelectionId) — chegou até aqui porque não foi
     // suprimida acima, então é garantidamente um clique do designer, nunca
-    // o foco automático na réplica.
+    // o foco automático na réplica. Defensivo (ver _isA11ySpecCloneRootNode):
+    // mesmo um clique "real" nunca deve resolver pro clone raiz inteiro —
+    // não é uma intenção válida de documentação, então trata como "nada
+    // selecionado" em vez de gravar o id do clone.
     const _sel = figma.currentPage.selection;
-    _a11yManualMatchLastRealSelectionId = _sel.length > 0 ? _sel[0].id : null;
+    const _selNode = _sel.length > 0 ? _sel[0] : null;
+    _a11yManualMatchLastRealSelectionId = (_selNode && !_isA11ySpecCloneRootNode(_selNode)) ? _selNode.id : null;
     clearTimeout(_a11yManualMatchDebounceTimer);
     // Mesmo debounce (500ms) do padrão acima — evita disparar
     // getMainComponentAsync a cada passo de drill-in até o elemento real.
@@ -384,6 +449,18 @@ figma.ui.onmessage = async (msg) => {
       figma.ui.postMessage({
         type: 'init-plugin',
         version: PLUGIN_VERSION,
+        // fileKey (2026-09-22) — mesmo identificador usado por
+        // _getHacDataStorageKey (code.js) para escopar o clientStorage por
+        // arquivo. Enviado ao frontend pra gravar dentro do backup .json
+        // exportado (exportHacBackupJson, core.js) e comparar na restauração
+        // (_handleHacBackupFileChosen): restaurar em ARQUIVO DIFERENTE do
+        // que gerou o backup é bloqueado — os IDs de nó do canvas
+        // referenciados pelas Áreas/specs só existem no arquivo de origem,
+        // então o dado "restaurado" nunca corresponderia a nada real no
+        // canvas de outro arquivo. null quando o arquivo ainda não foi
+        // salvo (sem figma.fileKey) — nesse caso a checagem é pulada
+        // (mesmo raciocínio de tolerância já usado em _getHacDataStorageKey).
+        fileKey: figma.fileKey || null,
         currentUser,
         theme,
         savedState: savedState || null,
@@ -394,6 +471,7 @@ figma.ui.onmessage = async (msg) => {
       figma.ui.postMessage({
         type: 'init-plugin',
         version: PLUGIN_VERSION,
+        fileKey: figma.fileKey || null,
         currentUser,
         theme,
         savedState: null,
@@ -487,6 +565,77 @@ figma.ui.onmessage = async (msg) => {
     } catch (e) {
       console.error("clear-cache failed:", e);
       figma.notify('Erro ao limpar cache', { error: true });
+      // Bug real evitado (2026-09-24, ao adicionar o loading de
+      // clearPluginCache no frontend): sem este postMessage, um erro aqui
+      // nunca chegava ao frontend (figma.notify é um toast NATIVO do
+      // Figma, fora do iframe da UI) — o loading disparado antes de mandar
+      // 'clear-cache' ficaria preso pra sempre, já que só a resposta
+      // 'cache-cleared' de sucesso o escondia.
+      figma.ui.postMessage({ type: 'cache-cleared', failed: true });
+    }
+    return;
+  }
+
+  // "Limpeza completa" (2026-09-22, pedido do usuário, distinto de
+  // 'clear-cache' acima) — apaga DADO (mesmo caminho de clear-cache) E os
+  // NÓS do canvas (Section de sessão do designer atual, ver
+  // _clearHacCanvasForCurrentUser em code.js: escopo "só o que o hac criou
+  // nesta sessão/designer", nunca o trabalho de outro designer no mesmo
+  // arquivo). `blocked: true` (figma.currentUser indisponível) ainda assim
+  // limpa o dado — só a remoção de nós é abortada, nunca silenciosamente
+  // ignorada: o frontend precisa saber pra avisar o designer.
+  // Página dedicada do Handoff (2026-09-22) — disparado logo após o
+  // designer escolher a lib na Home (chooseA11yHomeOrigin,
+  // accessibility.js). Cria ou reaproveita a página, LEVA o designer até
+  // ela (setCurrentPageAsync — única forma sob dynamic-page) e responde ao
+  // frontend, que então abre a modal instruindo o Ctrl+C/Ctrl+V das telas.
+  //
+  // Navegar ANTES de instruir é deliberado: a modal diz "cole aqui", e o
+  // designer precisa já estar "aqui" para que isso faça sentido. Diferente
+  // do plano original de clone em lote, onde a navegação vinha só no fim
+  // (depois das cópias prontas) — aqui não há cópia automática nenhuma,
+  // quem traz as telas é o próprio designer.
+  if (msg.type === 'ensure-hac-page') {
+    try {
+      const { page, created } = await _getOrCreateHacPage();
+      // isEmpty decide se a modal de instrução reabre numa página que já
+      // existia: página criada mas ainda sem nada colado deve reinstruir
+      // (o designer ficaria numa página vazia sem saber o que fazer),
+      // página já com telas não interrompe. _getOrCreateHacPage já fez o
+      // loadAsync obrigatório antes de .children ser legível aqui.
+      const isEmpty = page.children.length === 0;
+      await figma.setCurrentPageAsync(page);
+      // pageId vai junto (2026-09-22): o frontend guarda em
+      // hacData.hacPageId e a completude do projeto usa isso pra considerar
+      // só as telas documentadas DENTRO da página do handoff — ver
+      // _fichaAreasInScope (handoff-ficha.js).
+      figma.ui.postMessage({ type: 'hac-page-ready', created, isEmpty, pageId: page.id, pageName: page.name });
+    } catch (e) {
+      console.error('ensure-hac-page failed:', e);
+      // Falha aqui NÃO pode travar a jornada: o designer continua podendo
+      // documentar na página em que já está (comportamento de sempre). O
+      // frontend recebe ok:false e simplesmente não abre a modal.
+      figma.ui.postMessage({ type: 'hac-page-ready', created: false, isEmpty: false, pageId: null, pageName: null, failed: true });
+    }
+    return;
+  }
+
+  if (msg.type === 'clear-canvas-and-cache') {
+    try {
+      const scopedKey = _getHacDataStorageKey();
+      if (scopedKey) {
+        await figma.clientStorage.setAsync(scopedKey, null);
+      }
+      _clearHacDataFromDocument();
+      const result = await _clearHacCanvasForCurrentUser();
+      figma.ui.postMessage({ type: 'canvas-and-cache-cleared', removed: result.removed, blocked: result.blocked });
+    } catch (e) {
+      console.error("clear-canvas-and-cache failed:", e);
+      figma.notify('Erro ao limpar o handoff do canvas', { error: true });
+      // Mesmo motivo do 'clear-cache' acima (2026-09-24) — sem isto, o
+      // loading do frontend ficaria preso se esta ação (que varre TODAS as
+      // páginas do documento) falhar no meio do caminho.
+      figma.ui.postMessage({ type: 'canvas-and-cache-cleared', removed: 0, blocked: false, failed: true });
     }
     return;
   }
@@ -506,14 +655,46 @@ figma.ui.onmessage = async (msg) => {
     // precisar de um retângulo extra pra gerenciar/limpar.
     const node = await _getSceneNodeById(msg.id);
     if (node && node.visible && _nodeOnCurrentPage(node)) {
-      if (msg.selectNode !== false) {
+      // BUG REAL CORRIGIDO (2026-09-22, print do usuário: card "Selecionado
+      // no canvas" mostrou "Actions" — um node diferente do último clicado,
+      // com sensação de delay/precisar clicar 2x). Causa raiz: este handler
+      // é também o destino final do foco AUTOMÁTICO da réplica de trabalho
+      // (spec-copy-started → focusA11yCloneNode → resolve-a11y-focus-node →
+      // focusNode → aqui), disparado em paralelo por
+      // _openA11yCategoryPickerModalAfterInstruction. Como a clonagem é
+      // assíncrona (vários `await`, ver _resolveActiveSpecClone), esse foco
+      // automático frequentemente só chega DEPOIS que o designer já clicou
+      // no elemento real dentro do frame — o clique real já tinha sido
+      // corretamente registrado em _a11yManualMatchLastRealSelectionId
+      // (listener de selectionchange, ver comentário completo acima), mas
+      // este handler, sem checar isso, sobrescrevia
+      // figma.currentPage.selection de qualquer forma (linha abaixo),
+      // roubando visualmente a seleção do designer e trocando o frame em
+      // exibição para a réplica — o designer via a UI "sem reagir" ao
+      // clique dele e precisava clicar de novo (agora dentro da réplica) pra
+      // "forçar" o plugin a trazer o elemento certo. A supressão de
+      // selectionchange (_a11ySuppressNextSelectionChange) já evitava que
+      // esse foco fosse capturado como um clique real, mas não evitava a
+      // sobrescrita física da seleção do Figma, que é o que o designer via.
+      // Fix: enquanto o gate de matching manual está ativo, se o designer já
+      // clicou em algo REAL depois de abrir o picker
+      // (_a11yManualMatchRealClickAfterOpen — não conta a seleção herdada de
+      // antes de abrir, que precisa continuar permitindo o foco automático
+      // adiantado pedido em 2026-09-15), preserva a seleção real do designer
+      // (nem seleção nem viewport são tomados de volta) — o foco automático
+      // da réplica só deve vencer enquanto o designer ainda não escolheu
+      // nada por conta própria; mover a viewport pro clone sem mover a
+      // seleção reintroduziria a mesma confusão ("cadê o que eu cliquei"),
+      // então os dois ficam condicionados à mesma checagem.
+      const _skipAutoSelect = _a11yManualMatchModeActive && _a11yManualMatchRealClickAfterOpen;
+      if (msg.selectNode !== false && !_skipAutoSelect) {
         // Foco programático (ver _a11ySuppressNextSelectionChange acima) —
         // nunca deve ser confundido com um clique real do designer pelos
         // modos de captura/matching que escutam 'selectionchange'.
         _a11ySuppressNextSelectionChange = true;
         figma.currentPage.selection = [node];
       }
-      if (msg.shouldScroll !== false) {
+      if (msg.shouldScroll !== false && !_skipAutoSelect) {
         figma.viewport.scrollAndZoomIntoView([node]);
       }
     }
@@ -586,13 +767,24 @@ figma.ui.onmessage = async (msg) => {
     // o designer efetivamente clicou. Nesse caso, prefere o registro da
     // última seleção REAL conhecida; fora do modo (ou sem nada capturado
     // ainda), cai no comportamento de sempre.
+    // BUG REAL CORRIGIDO (2026-09-22, reincidência — ver comentário completo
+    // em _isA11ySpecCloneRootNode): chooseA11yType (frontend) fecha o picker
+    // (stop-manual-spec-match-mode, zera o estado protegido acima) ANTES de
+    // abrir o formulário de categoria, que por sua vez chama get-selection-name
+    // de novo — nessa janela, _a11yManualMatchModeActive já voltou a false, e
+    // o fallback abaixo lia figma.currentPage.selection "cru", vulnerável ao
+    // mesmo resíduo do clone (foco automático da réplica). Nunca aceita o
+    // clone raiz como resposta válida, nem pelo registro protegido nem pelo
+    // fallback bruto.
     let node = null;
     if (_a11yManualMatchModeActive && _a11yManualMatchLastRealSelectionId) {
       node = await _getSceneNodeById(_a11yManualMatchLastRealSelectionId);
     }
+    if (node && _isA11ySpecCloneRootNode(node)) node = null;
     if (!node) {
       const sel = figma.currentPage.selection;
-      node = sel.length > 0 ? sel[0] : null;
+      const rawNode = sel.length > 0 ? sel[0] : null;
+      node = (rawNode && !_isA11ySpecCloneRootNode(rawNode)) ? rawNode : null;
     }
     // Resolve o componente DSC real da seleção manual — mesmo padrão do scan
     // (_a11yScanArea): só INSTANCE com mainComponent remoto é candidato,
@@ -803,6 +995,14 @@ figma.ui.onmessage = async (msg) => {
           targetNodeId: node.id,
           targetNodeName: node.name,
           autoDetect: !!msg.autoDetect,
+          // pageId (2026-09-22) — em qual página esta Área foi criada.
+          // Usado pela completude do PROJETO (_fichaProjectCompletion,
+          // handoff-ficha.js), que deve considerar só as telas que vivem na
+          // página dedicada do HAC, nunca Áreas avulsas espalhadas pelo
+          // resto do arquivo. Campo aditivo: Áreas criadas antes desta
+          // versão não o têm, e a completude trata ausência como "conta"
+          // (ver _fichaAreasInScope) para não invalidar trabalho anterior.
+          pageId: figma.currentPage.id,
         }
       });
 
@@ -1328,6 +1528,22 @@ figma.ui.onmessage = async (msg) => {
       let _absCardX = 0, _absCardY = 0, _absCardW = 0, _absCardH = 0;
       let _markerImportFailReason = null;
 
+      // Bug real corrigido (2026-09-23, prints do usuário: specs soltas
+      // como filhas diretas da Section, longe da réplica). `specClone` pode
+      // chegar nulo por um caminho que falha em silêncio (
+      // opts.a11yAreaTargetNodeId ausente, ou apontando pra um node que não
+      // existe mais) mesmo com o clone real da área já existindo no canvas.
+      // Resgata pelo mesmo pluginData que identifica o clone de cada área
+      // (_findSpecCloneForArea) — usado tanto por _anchorBounds (cálculo de
+      // posição, abaixo) quanto pelo reparenting (mais abaixo, fora do `if
+      // (bounds)`), pra nunca divergir entre os dois. Declarado no escopo
+      // externo de propósito: precisa sobreviver além do bloco `if (bounds)`.
+      let _specHostClone = (specClone && !specClone.removed) ? specClone : null;
+      if (!_specHostClone && opts.a11yAreaId) {
+        const _rescuedHostClone = _findSpecCloneForArea(opts.a11yAreaId);
+        if (_rescuedHostClone && !_rescuedHostClone.removed) _specHostClone = _rescuedHostClone;
+      }
+
       const bounds = node.absoluteBoundingBox || node.absoluteRenderBounds;
       if (bounds) {
         let marker = null;
@@ -1391,9 +1607,20 @@ figma.ui.onmessage = async (msg) => {
         // contendo qualquer coisa já desenhada nela), não no clone. Usa
         // `specClone` diretamente quando existir; só cai no loop antigo
         // (subir até o pai de nível página) no caminho legado sem clone.
+        //
+        // Bug real corrigido (2026-09-23, prints do usuário: specs soltas
+        // como filhas diretas da Section, longe da réplica): `specClone`
+        // podia vir nulo por um caminho que falha em silêncio bem acima
+        // (opts.a11yAreaTargetNodeId ausente, ou apontando pra um node que
+        // não existe mais) mesmo com o clone real da área já existindo no
+        // canvas. `_specHostClone` (resolvido no escopo externo, antes do
+        // `if (bounds)` — precisa sobreviver até o reparenting mais abaixo,
+        // fora deste bloco) já cobre esse resgate — mesma referência usada
+        // aqui e no reparenting, pra nunca divergir (posição calculada
+        // contra uma coisa, card reparentado contra outra).
         let _anchorBounds;
-        if (specClone && specClone.absoluteBoundingBox) {
-          _anchorBounds = specClone.absoluteBoundingBox;
+        if (_specHostClone && _specHostClone.absoluteBoundingBox) {
+          _anchorBounds = _specHostClone.absoluteBoundingBox;
         } else {
           let _anchorNode = node;
           while (_anchorNode.parent && _anchorNode.parent.type !== 'PAGE') {
@@ -1452,7 +1679,34 @@ figma.ui.onmessage = async (msg) => {
         // tipicamente têm X diferente mas Y igual/sobreposto — mesma faixa Y
         // é o sinal confiável de "mesma tela", sem precisar de novo
         // pluginData pra registrar o frame de origem de cada spec.
-        const _stackScanNodes = _getOrCreateA11ySessionSection(opts.designerName, opts.designerId).children || [];
+        // Bug real corrigido (2026-09-23, print do usuário: "as marcações
+        // estão ficando uma sobre a outra, quando deveria estar em colunas
+        // por tipo"). Desde que o reparenting das specs passou a funcionar
+        // de fato (mesma data, correção anterior), elas vivem DENTRO do
+        // grupo-overlay irmão do clone — não mais soltas como filhas diretas
+        // da Section. Este scan, que só lia `section.children`, passou a não
+        // enxergar spec NENHUMA: tanto o empilhamento por letra (_letterMap)
+        // quanto a anti-colisão mais abaixo ficaram cegos, e cada card novo
+        // nascia por cima do anterior. Varre os filhos diretos da Section
+        // MAIS os filhos de cada grupo-overlay de spec encontrado nela
+        // (um nível a mais, exatamente onde as specs estão hoje).
+        // A busca é RECURSIVA de propósito: um nível abaixo da Section não
+        // basta. Assim que a tela entra na Ficha, o clone (e o overlay irmão
+        // que carrega as specs) passa a viver bem mais fundo —
+        // Section › "[HAC] Documentação" › "Tela N" › "[HAC] Assets do
+        // Handoff" › "[HAC] Leitor de Tela" › overlay › spec. Varre a árvore
+        // inteira da Section recolhendo os grupos de spec onde quer que
+        // estejam, sem depender da profundidade de cada momento do fluxo
+        // (antes/depois de consolidar a Ficha muda o caminho).
+        const _sessionSectionChildren = _getOrCreateA11ySessionSection(opts.designerName, opts.designerId).children || [];
+        const _stackScanNodes = [];
+        (function _collectSpecGroups(nodes, depth) {
+          if (!nodes || depth > 8) return;
+          nodes.forEach(n => {
+            _stackScanNodes.push(n);
+            if ('children' in n && n.children) _collectSpecGroups(n.children, depth + 1);
+          });
+        })(_sessionSectionChildren, 0);
         const _yRangesIntersect = (bb, anchor) =>
           bb.y < anchor.y + anchor.height && bb.y + bb.height > anchor.y;
         if (opts.a11yType !== 'titulo') _stackScanNodes.forEach(n => {
@@ -1574,6 +1828,26 @@ figma.ui.onmessage = async (msg) => {
           // manual ligado por engano.
           targetX = opts.pinnedPosition.x;
           targetY = opts.pinnedPosition.y;
+        } else if (opts.a11yAreaId && _areaMap[_areaColKey]) {
+          // Bug real corrigido (2026-09-24, print do usuário: "paramos de
+          // empilhar as specs como antes... o empilhamento acontece para
+          // specs do mesmo tipo. Além da criação de colunas por spec"):
+          // desde 2026-09-21 a âncora manual (_manualAnchorBounds, abaixo)
+          // tinha prioridade INCONDICIONAL sobre este branch — toda spec
+          // nova, mesmo a 2ª+ de uma categoria já existente na área,
+          // ancorava no elemento RECÉM-CLICADO em vez de empilhar na coluna
+          // das specs irmãs. Como cada spec documenta um elemento diferente
+          // (posições X diferentes no canvas), cada uma abria sua PRÓPRIA
+          // coluna nova — exatamente o "criação de colunas por spec"
+          // reportado. Movido pra ANTES do branch de âncora manual: quando
+          // já existe spec da MESMA área+categoria (_areaMap[_areaColKey],
+          // calculado ANTES deste ponto varrendo opts.existingAreaSpecIds),
+          // a coluna X delas manda — o elemento recém-clicado só decide a
+          // coluna quando é a 1ª spec daquela categoria na área (branch
+          // _manualAnchorBounds logo abaixo, agora só alcançado nesse
+          // caso).
+          targetX = _areaMap[_areaColKey].x;
+          targetY = _areaMap[_areaColKey].bottom + _SPEC_GAP;
         } else if (_manualAnchorBounds) {
           // Elemento selecionado no canvas no momento de "Aplicar" (sempre
           // lido, ver confirmA11ySpec no frontend, accessibility.js) —
@@ -1586,52 +1860,51 @@ figma.ui.onmessage = async (msg) => {
           // abaixo, que empurra pra baixo se o card cair sobre outro já
           // existente.
           if (side === 'right') {
-            targetX = _manualAnchorBounds.x + _manualAnchorBounds.width + 100;
+            targetX = _manualAnchorBounds.x + _manualAnchorBounds.width + _SPEC_COL_GAP;
             targetY = _manualAnchorBounds.y;
           } else if (side === 'left') {
-            targetX = _manualAnchorBounds.x - cardW - 100;
+            targetX = _manualAnchorBounds.x - cardW - _SPEC_COL_GAP;
             targetY = _manualAnchorBounds.y;
           } else if (side === 'bottom') {
             targetX = _manualAnchorBounds.x;
-            targetY = _manualAnchorBounds.y + _manualAnchorBounds.height + 100;
+            targetY = _manualAnchorBounds.y + _manualAnchorBounds.height + _SPEC_GAP;
           } else { // top
             targetX = _manualAnchorBounds.x;
-            targetY = _manualAnchorBounds.y - cardH - 100;
+            targetY = _manualAnchorBounds.y - cardH - _SPEC_GAP;
           }
-          // Bug real corrigido (2026-09-21, pedido do usuário: "garantir que
-          // ao selecionar um elemento do canvas, um card nunca fique um
-          // sobre o outro, ele deve posicionar mais abaixo") — a posição
-          // manual, ao contrário de todos os outros branches acima, nunca
-          // checava colisão com cards JÁ existentes: dois designers (ou o
-          // mesmo, duas vezes) escolhendo o mesmo elemento de referência
-          // sempre calculavam o MESMO X/Y, sobrepondo os cards. Reusa
-          // _rectsOverlap (já usado por _findFreeTabOrderCopyPosition) contra
-          // TODAS as specs já desenhadas na Section de sessão (mesmo
-          // conjunto que _stackScanNodes varre logo acima) — em colisão,
-          // empurra o card pra baixo, mesmo X, até achar uma faixa Y livre.
-          // Nunca mexe em X (o designer escolheu explicitamente "ao lado
-          // deste elemento" — só a altura é renegociada).
-          // specGroup (o GROUP desta spec) só é criado mais abaixo via
-          // figma.group — neste ponto _stackScanNodes só pode conter specs
-          // JÁ existentes, nunca a que está sendo criada agora.
-          const _manualOccupied = [];
-          _stackScanNodes.forEach(n => {
-            if (n.type !== 'GROUP') return;
-            const _notes = n.children && n.children.find(c => (c.type === 'FRAME' || c.type === 'INSTANCE') && c.name === 'Spec Notes');
-            const _bb = _notes && ('absoluteRenderBounds' in _notes ? (_notes.absoluteBoundingBox || _notes.absoluteRenderBounds) : _notes.absoluteBoundingBox);
-            if (_bb) _manualOccupied.push(_bb);
-          });
-          let _manualGuard = 0;
-          while (_manualGuard < 200) {
-            const _rect = { left: targetX, right: targetX + cardW, top: targetY, bottom: targetY + cardH };
-            const _hit = _manualOccupied.find(bb => _rectsOverlap(_rect, { left: bb.x, right: bb.x + bb.width, top: bb.y, bottom: bb.y + bb.height }));
-            if (!_hit) break;
-            targetY = _hit.y + _hit.height + _SPEC_GAP;
-            _manualGuard++;
+          // Bug real corrigido (2026-09-24, print do usuário: card nascendo
+          // SOBRE a réplica em vez de ao lado dela): o offset a partir do
+          // ELEMENTO clicado nem sempre basta — em mobile a réplica inteira
+          // (~375-414px de largura) é estreita e o card é largo (~260-320px)
+          // — um ícone pequeno perto da borda direita da réplica gera um
+          // targetX que ainda cai dentro da faixa X da réplica, porque o
+          // card "vaza" de volta sobre ela. O elemento de referência está
+          // SEMPRE dentro do frame documentado (nunca fora), então _anchorBounds
+          // (a réplica/clone inteiro, resolvido bem acima) é o limite real
+          // que o card nunca pode invadir — não o offset a partir do
+          // elemento, que só basta quando a réplica é bem maior que o card
+          // (caso comum em desktop, raro em mobile). Empurra targetX/Y pra
+          // fora de _anchorBounds quando o cálculo acima ainda cair dentro
+          // dela, com o MESMO _SPEC_COL_GAP usado em todo o resto do
+          // arquivo pra espaçamento entre colunas — não um valor maior
+          // (100px) inventado à parte, que deixava um vão visualmente maior
+          // que o padrão entre a réplica e o card (2ª rodada de correção,
+          // mesmo dia, print do usuário: "ficou longe demais").
+          if (_anchorBounds) {
+            const _anchorLeft = _anchorBounds.x;
+            const _anchorRight = _anchorBounds.x + _anchorBounds.width;
+            const _anchorTop = _anchorBounds.y;
+            const _anchorBottom = _anchorBounds.y + _anchorBounds.height;
+            if (side === 'right' && targetX < _anchorRight + _SPEC_COL_GAP) {
+              targetX = _anchorRight + _SPEC_COL_GAP;
+            } else if (side === 'left' && targetX + cardW > _anchorLeft - _SPEC_COL_GAP) {
+              targetX = _anchorLeft - cardW - _SPEC_COL_GAP;
+            } else if (side === 'bottom' && targetY < _anchorBottom + _SPEC_GAP) {
+              targetY = _anchorBottom + _SPEC_GAP;
+            } else if (side === 'top' && targetY + cardH > _anchorTop - _SPEC_GAP) {
+              targetY = _anchorTop - cardH - _SPEC_GAP;
+            }
           }
-        } else if (opts.a11yAreaId && _areaMap[_areaColKey]) {
-          targetX = _areaMap[_areaColKey].x;
-          targetY = _areaMap[_areaColKey].bottom + _SPEC_GAP;
         } else if (opts.a11yAreaId && _areaRightmostOtherCategory) {
           const _anchorRight = _anchorBounds ? (_anchorBounds.x + _anchorBounds.width) : _areaRightmostOtherCategory.right;
           const _maxRight = _anchorRight + (_AREA_MAX_COLS * (cardW + _SPEC_COL_GAP));
@@ -1643,16 +1916,45 @@ figma.ui.onmessage = async (msg) => {
             targetY = (_areaBottomMost != null ? _areaBottomMost : _anchorBounds.y) + _SPEC_GAP;
           } else {
             targetX = _areaRightmostOtherCategory.right + _SPEC_COL_GAP;
-            targetY = _areaRightmostOtherCategory.topY;
+            // Alinhar ao topo REAL da área (_anchorBounds.y, o topo da
+            // própria réplica/frame de origem) em vez do topY da spec
+            // vizinha específica — essa vizinha pode ter sido empurrada
+            // pra baixo por uma proteção anti-overlap anterior, e uma
+            // categoria nova herdando esse Y deslocado é o que produzia
+            // colunas de categorias diferentes em alturas diferentes
+            // (2026-09-23, print do usuário: "Título" nascendo mais baixo
+            // que "Elementos e Imagens" na mesma área).
+            targetY = _anchorBounds ? _anchorBounds.y : _areaRightmostOtherCategory.topY;
           }
-        } else if (_letterMap[_specLetter]) {
+        } else if (!opts.a11yAreaId && _letterMap[_specLetter]) {
+          // Bug real corrigido (2026-09-23, print do usuário: 2ª Área
+          // Marcada na mesma Section produzindo specs "soltas" longe de
+          // toda réplica). `_letterMap` é montado varrendo TODOS os grupos
+          // de spec da Section do designer inteira (_stackScanNodes acima),
+          // filtrado só por geometria (side + faixa Y intersectando
+          // _anchorBounds) — nunca por identidade de área. Quando a área
+          // ATUAL ainda não tem nenhuma spec própria (nem _areaMap nem
+          // _areaRightmostOtherCategory acharam algo, os 2 branches acima
+          // que SÃO filtrados por opts.a11yAreaId), a spec caía neste
+          // fallback por letra e podia herdar X/Y de uma spec de OUTRA
+          // área — sempre que as réplicas de trabalho das duas áreas
+          // ficam em faixas Y parecidas (comum: `_findFreeTabOrderCopyPosition`
+          // em code.js nasce cada réplica nova na MESMA linha Y do frame
+          // original, salvo quando já existe Ficha consolidada). Com área
+          // conhecida, este fallback por letra nunca deveria ser
+          // consultado — ele existe só para o fluxo legado sem Área
+          // Marcada (opts.a11yAreaId ausente), onde não há um universo
+          // mais preciso (_anchorBounds) pra usar em seu lugar. Com área
+          // conhecida e nenhuma spec própria ainda, cai direto no `else`
+          // final abaixo (_anchorBounds puro — sempre por-área, nunca
+          // cacheado/global).
           targetX = _letterMap[_specLetter].x;
           if (side === 'top') {
             targetY = _letterMap[_specLetter].topY - cardH - _SPEC_GAP;
           } else {
             targetY = _letterMap[_specLetter].bottom + _SPEC_GAP;
           }
-        } else if (Object.keys(_letterMap).length > 0) {
+        } else if (!opts.a11yAreaId && Object.keys(_letterMap).length > 0) {
           if (side === 'left') {
             const _leftmost = Object.values(_letterMap).reduce((a, v) => v.x < a.x ? v : a);
             targetX = _leftmost.x - cardW - _SPEC_COL_GAP;
@@ -1664,17 +1966,138 @@ figma.ui.onmessage = async (msg) => {
           }
         } else {
           if (side === 'right') {
-            targetX = _anchorBounds.x + _anchorBounds.width + 100;
+            targetX = _anchorBounds.x + _anchorBounds.width + _SPEC_COL_GAP;
             targetY = _anchorBounds.y;
           } else if (side === 'left') {
-            targetX = _anchorBounds.x - cardW - 100;
+            targetX = _anchorBounds.x - cardW - _SPEC_COL_GAP;
             targetY = _anchorBounds.y;
           } else if (side === 'bottom') {
             targetX = _anchorBounds.x;
-            targetY = _anchorBounds.y + _anchorBounds.height + 100;
+            targetY = _anchorBounds.y + _anchorBounds.height + _SPEC_GAP;
           } else { // top
             targetX = _anchorBounds.x;
-            targetY = _anchorBounds.y - cardH - 100;
+            targetY = _anchorBounds.y - cardH - _SPEC_GAP;
+          }
+        }
+
+        // NORMALIZAÇÃO FINAL — invariante único do posicionamento de spec
+        // (2026-09-23, reescrita depois de 4 rodadas de correção pontual no
+        // mesmo bug, cada uma tapando um branch e deixando outro passar).
+        //
+        // O cálculo acima tem 6 branches, cada um ancorando em uma
+        // referência diferente (coluna da mesma categoria, elemento clicado,
+        // coluna de outra categoria, letra repetida, réplica). Qualquer uma
+        // dessas referências pode estar longe da réplica ATUAL — por
+        // contaminação entre áreas (scans da Section inteira), por uma spec
+        // irmã que já nasceu deslocada, ou por wrap de coluna. Guards
+        // pontuais por branch não resolvem: sempre sobra um caminho novo.
+        //
+        // A regra real do produto é simples e vale para TODO branch: o card
+        // de uma spec pertence à faixa da réplica que ele documenta. Aqui,
+        // depois que qualquer branch decidiu, essa faixa é imposta — nos
+        // DOIS eixos.
+        //
+        // Limites:
+        //  - X: no máximo _AREA_MAX_COLS colunas de card a partir da borda
+        //    da réplica (mesma constante que o wrap de categoria usa acima,
+        //    para as duas regras nunca se contradizerem).
+        //  - Y: o topo do card nunca sobe acima do topo da réplica nem
+        //    desce mais que a altura da réplica abaixo do rodapé dela. Esse
+        //    teto dá espaço de sobra para empilhamento legítimo (uma coluna
+        //    de specs cabe folgada na altura de uma tela) e ainda assim
+        //    barra o caso real: o loop anti-colisão empurrando o card para a
+        //    faixa vertical de OUTRA área.
+        //
+        // pinnedPosition escapa: é a posição que a spec já tinha no canvas
+        // (edição/recriação) e reposicioná-la seria mover, sozinho, um card
+        // que o designer pode ter ajustado à mão.
+        if (_anchorBounds && !opts.pinnedPosition) {
+          const _anchorL = _anchorBounds.x;
+          const _anchorR = _anchorBounds.x + _anchorBounds.width;
+          const _anchorT = _anchorBounds.y;
+          const _anchorB = _anchorBounds.y + _anchorBounds.height;
+          // O teto de X precisa ser MAIOR que o do wrap de categoria (que
+          // cresce até _AREA_MAX_COLS colunas a partir da borda da coluna
+          // anterior, enquanto este mede a partir da borda da réplica). Com
+          // os dois no mesmo valor eles se cancelavam: o wrap abria a coluna
+          // da 2ª categoria e o clamp puxava de volta pra primeira, com as
+          // categorias sobrepostas — print do usuário de 2026-09-23 ("um box
+          // spec em cima do outro, deveriam estar em colunas"). Uma coluna
+          // de folga resolve o conflito e mantém o clamp fazendo o que ele
+          // existe pra fazer: barrar distância absurda (milhares de px,
+          // faixa de outra tela), nunca disciplinar layout legítimo.
+          const _maxSpread = (_AREA_MAX_COLS + 1) * (cardW + _SPEC_COL_GAP);
+
+          if (targetX > _anchorR + _maxSpread) {
+            targetX = _anchorR + _SPEC_COL_GAP;
+          } else if (targetX + cardW < _anchorL - _maxSpread) {
+            targetX = _anchorL - cardW - _SPEC_COL_GAP;
+          }
+
+          // Specs já desenhadas nesta MESMA tela (mesmo critério "mesma
+          // faixa Y da réplica" do scan de _letterMap acima) — base tanto do
+          // teto de Y logo abaixo quanto da anti-colisão no fim.
+          const _occupied = [];
+          _stackScanNodes.forEach(n => {
+            if (n.type !== 'GROUP') return;
+            const _notes = n.children && n.children.find(c => (c.type === 'FRAME' || c.type === 'INSTANCE') && c.name === 'Spec Notes');
+            const _bb = _notes && ('absoluteRenderBounds' in _notes ? (_notes.absoluteBoundingBox || _notes.absoluteRenderBounds) : _notes.absoluteBoundingBox);
+            if (!_bb) return;
+            if (!_yRangesIntersect(_bb, _anchorBounds)) return;
+            _occupied.push(_bb);
+          });
+
+          // Y: o card nunca sobe acima do topo da réplica. Para baixo, o
+          // teto precisa acomodar uma COLUNA inteira de specs empilhadas —
+          // uma tela com 10 elementos documentados na mesma categoria gera
+          // uma coluna bem mais alta que a própria réplica, e prender em
+          // `_anchorB + altura da réplica` (tentativa anterior, 2026-09-23)
+          // travava o empilhamento: todo card batia no teto e vinha parar em
+          // cima do anterior, exatamente o "uma sobre a outra" reportado.
+          // O teto acompanha o que a coluna já ocupa (soma das specs desta
+          // tela + o card novo) — generoso o bastante para nunca atrapalhar
+          // empilhamento legítimo, e ainda assim finito, impedindo o card de
+          // escapar para a faixa vertical de outra área.
+          const _columnHeight = _occupied.reduce((acc, bb) => acc + bb.height + _SPEC_GAP, cardH + _SPEC_GAP);
+          const _minY = _anchorT;
+          const _maxY = _anchorB + Math.max(_anchorBounds.height, _columnHeight);
+          if (targetY < _minY) {
+            targetY = _minY;
+          } else if (targetY > _maxY) {
+            targetY = _maxY;
+          }
+
+          // Anti-colisão (2026-09-21, pedido do usuário: "garantir que ao
+          // selecionar um elemento do canvas, um card nunca fique um sobre o
+          // outro, ele deve posicionar mais abaixo"). Antes vivia dentro do
+          // branch de âncora manual; roda aqui porque QUALQUER branch pode
+          // calcular a mesma posição duas vezes, e porque a normalização
+          // acima pode trazer um card de volta para cima de outro — ordem
+          // invertida, a colisão voltaria a acontecer.
+          //
+          // Primeiro tenta descer na MESMA coluna (empilhamento normal de
+          // specs da mesma categoria). Se a coluna encher até o teto de
+          // _maxY, muda de COLUNA em vez de continuar descendo: o layout
+          // pedido é "cada tipo em uma coluna, lado a lado", então quando
+          // um card não cabe na coluna atual o lugar certo dele é a próxima
+          // coluna à direita, no topo — nunca empilhado por cima de outro
+          // (print do usuário, 2026-09-23) nem descendo para fora da área.
+          let _collisionGuard = 0;
+          while (_collisionGuard < 200) {
+            const _rect = { left: targetX, right: targetX + cardW, top: targetY, bottom: targetY + cardH };
+            const _hit = _occupied.find(bb => _rectsOverlap(_rect, { left: bb.x, right: bb.x + bb.width, top: bb.y, bottom: bb.y + bb.height }));
+            if (!_hit) break;
+            const _nextY = _hit.y + _hit.height + _SPEC_GAP;
+            if (_nextY + cardH <= _maxY) {
+              targetY = _nextY;
+            } else {
+              // Coluna cheia: próxima coluna à direita, de volta ao topo.
+              const _nextX = targetX + cardW + _SPEC_COL_GAP;
+              if (_nextX > _anchorR + _maxSpread) break;
+              targetX = _nextX;
+              targetY = _minY;
+            }
+            _collisionGuard++;
           }
         }
 
@@ -1774,19 +2197,42 @@ figma.ui.onmessage = async (msg) => {
       //   Section de sessão, como antes desta mudança já fazia via
       //   _reparentArtifactIntoArea/_reparentIntoA11ySection (Grupo da
       //   Área mantido só como fallback de áreas legadas).
+      // Bug real corrigido (2026-09-23, prints do usuário — painel de
+      // camadas mostrando vários "[SpecA11y | ...]" soltos como filhos
+      // DIRETOS da Section, irmãos de "[HAC] Documentação", em vez de
+      // dentro do "[HAC] Leitor de Tela" da própria tela): a Section era
+      // tratada como um fallback aceitável. Não é. Uma spec de uma Área
+      // Marcada SEMPRE pertence ao overlay do clone daquela área — solta na
+      // Section ela bagunça a árvore de camadas da documentação e, pior,
+      // perde a única referência de posição que faz sentido pra ela (o
+      // próprio clone), nascendo a milhares de px de distância: era essa a
+      // origem real dos cards distantes reportados nas rodadas anteriores,
+      // que eu vinha tratando como um problema de aritmética de posição.
+      // `_specHostClone` já foi resolvido lá em cima (mesma referência usada
+      // por _anchorBounds, pra nunca divergir entre posição calculada e
+      // destino do reparenting).
       let _reparentedIntoOverlay = false;
-      if (specClone && !specClone.removed) {
+      if (_specHostClone) {
         try {
-          const specOverlayGroup = _getOrCreateCloneOverlayGroup(specClone, 'hacSpecGroupForClone', '[Specs de Leitor de Tela]', opts.a11yAreaId);
+          const specOverlayGroup = _getOrCreateCloneOverlayGroup(_specHostClone, 'hacSpecGroupForClone', '[Specs de Leitor de Tela]', opts.a11yAreaId);
           _reparentIntoAreaGroup(specGroup, specOverlayGroup);
           _reparentedIntoOverlay = true;
-          await _ensureCloneWorkFrame(specClone, specOverlayGroup, 'Réplica de Trabalho — Leitor de Tela');
+          await _ensureCloneWorkFrame(_specHostClone, specOverlayGroup, 'Réplica de Trabalho — Leitor de Tela');
         } catch (e) {
           console.error('[hac] create-unified-spec: reparenting pro grupo overlay falhou, caindo pra Section de sessão.', e && e.message);
         }
       }
       if (!_reparentedIntoOverlay) {
         _reparentIntoSection(specGroup, () => _getOrCreateA11ySessionSection(opts.designerName, opts.designerId));
+        // Avisa o designer, em vez de engolir no console (mesmo padrão já
+        // adotado por Tabulação em 2026-09-08, cujo comentário registra que
+        // foi justamente o silêncio que deixou um bug real sobreviver a
+        // duas rodadas de correção). Uma spec de área que cai aqui está no
+        // lugar errado da árvore de camadas e o designer precisa saber na
+        // hora — não depois, ao abrir o painel de camadas.
+        if (opts.a11yAreaId) {
+          figma.notify('A spec não pôde ser encaixada na réplica desta tela e ficou solta na Section — reabra a tela no plugin e crie a spec de novo.');
+        }
       }
 
       // BUG REAL CORRIGIDO (2026-09-21, item 3 — "empilhamento entre telas
@@ -3765,9 +4211,23 @@ figma.ui.onmessage = async (msg) => {
     // forma síncrona, ANTES de qualquer foco automático concorrente
     // (start-spec-copy/spec-copy-started, disparado em paralelo pelo mesmo
     // clique) ter chance de mudar figma.currentPage.selection.
+    //
+    // BUG REAL CORRIGIDO (2026-09-22, reincidência — ver comentário completo
+    // em _isA11ySpecCloneRootNode): essa garantia de "antes do foco
+    // automático mudar a seleção" só vale pra corrida entre ESTA mensagem e
+    // o start-spec-copy do MESMO clique — não cobre quando a seleção
+    // "herdada" já É o clone raiz, resíduo de um foco automático de uma ação
+    // ANTERIOR do plugin (spec anterior aplicada nesta área sem o designer
+    // clicar em mais nada no canvas depois). Descarta esse caso como "sem
+    // seleção real" em vez de propagar o clone como se fosse a escolha do
+    // designer — nunca uma intenção válida de documentação.
     const _sel = figma.currentPage.selection;
-    const _openNode = _sel.length > 0 ? _sel[0] : null;
+    const _rawOpenNode = _sel.length > 0 ? _sel[0] : null;
+    const _openNode = (_rawOpenNode && !_isA11ySpecCloneRootNode(_rawOpenNode)) ? _rawOpenNode : null;
     _a11yManualMatchLastRealSelectionId = _openNode ? _openNode.id : null;
+    // Captura inicial, não um clique real feito já com o picker aberto — ver
+    // comentário completo em _a11yManualMatchRealClickAfterOpen.
+    _a11yManualMatchRealClickAfterOpen = false;
     (async () => { await _resolveManualSpecMatchAndNotify(msg.token || null, _openNode); })();
     return;
   }
@@ -3775,6 +4235,7 @@ figma.ui.onmessage = async (msg) => {
   if (msg.type === "stop-manual-spec-match-mode") {
     _a11yManualMatchModeActive = false;
     _a11yManualMatchLastRealSelectionId = null;
+    _a11yManualMatchRealClickAfterOpen = false;
     clearTimeout(_a11yManualMatchDebounceTimer);
     return;
   }
@@ -5010,35 +5471,16 @@ figma.ui.onmessage = async (msg) => {
         console.error('[hac] insert-ficha-section: falha ao limpar a réplica de trabalho de "' + sectionKey + '" (não impede o handoff).', e && e.message);
       }
 
-      // Incremento de versão MENOR (Parte 4.1, 2026-09-10): toda inserção/
-      // atualização de seção do Handoff Completo processada com sucesso
-      // sobe hacSessionVersion em 0.1 (ex. "1.0" -> "1.1") e reflete no nome
-      // visível da Section de sessão. Best-effort — qualquer falha aqui
-      // (parse corrompido, Section não encontrada) nunca deve derrubar a
-      // resposta já bem-sucedida de ficha-section-inserted acima; cai em
-      // "1.0" como default só nesta rotina, sem afetar o handoff em si.
-      try {
-        const sessionSection = _getOrCreateA11ySessionSection(msg.designerName, msg.designerId);
-        let currentVersion = sessionSection.getPluginData('hacSessionVersion') || '';
-        let major = 1, minor = 0;
-        const versionMatch = currentVersion.match(/^(\d+)\.(\d+)$/);
-        if (versionMatch) {
-          major = parseInt(versionMatch[1], 10);
-          minor = parseInt(versionMatch[2], 10);
-        }
-        minor += 1;
-        const nextVersion = `${major}.${minor}`;
-        sessionSection.setPluginData('hacSessionVersion', nextVersion);
-        // Substitui só o segmento de versão do nome (" | vN.N" no final),
-        // preservando timestamp/designer intactos — nomes de Sections
-        // antigas (sem esse formato) simplesmente não batem com a regex e
-        // ficam como estão, sem versão anexada (migração aditiva).
-        if (/\|\s*v\d+\.\d+$/.test(sessionSection.name)) {
-          sessionSection.name = sessionSection.name.replace(/\|\s*v\d+\.\d+$/, `| v${nextVersion}`);
-        }
-      } catch (e) {
-        console.error('[hac] insert-ficha-section: falha ao incrementar a versão da Section de sessão (não impede o handoff).', e && e.message);
-      }
+      // Bug real corrigido (2026-09-22, relato do usuário: "tudo que eu mexo
+      // começa na versão 1.3"): o incremento de versão MENOR ficava AQUI,
+      // dentro de insert-ficha-section — que é chamado UMA VEZ POR SEÇÃO
+      // (Tabulação, Swipe, Leitor de Tela). Um único "Gerar Handoff" com as
+      // 3 seções pendentes disparava 3 inserções e saltava v1.0 → v1.3 de
+      // uma vez, quando conceitualmente aquilo é UMA entrega (+0.1).
+      // O incremento passou a ser explícito e único por entrega, via o
+      // handler 'bump-a11y-session-version' (abaixo neste arquivo), disparado
+      // pelo frontend ao FINAL do fluxo de geração — ver
+      // _fichaGenerateCompleteHandoff/_fichaInsertSection em handoff-ficha.js.
 
       // Readequa o tamanho da Section de sessão ao conteúdo real — a
       // Ficha cresceu dentro dela (Auto Layout em cascata cuida do resto,
@@ -5075,6 +5517,68 @@ figma.ui.onmessage = async (msg) => {
         frameId: fichaFrame.id,
       });
     })();
+    return;
+  }
+
+  // Versionamento da Section de sessão (reescrito 2026-09-24 — 2ª revisão do
+  // modelo, ver histórico abaixo) — a versão só existe de fato depois de
+  // "Finalizar". Enquanto o handoff está sendo preenchido, não há número
+  // nenhum a mostrar: a Section fica "| rascunho" (nome gravado na criação,
+  // ver _getOrCreateA11ySessionSection, code.js) e hacSessionVersion
+  // permanece AUSENTE — sua ausência É o sinal de "ainda não finalizado",
+  // consumido por _fichaSessionVersionLabel/check-my-prior-session.
+  //
+  // Histórico do modelo (2 revisões no mesmo mês):
+  //   1ª (2026-09-22): "uma entrega = um incremento" — corrigiu o bug de
+  //     saltar 3 números por clique, mas manteve um MINOR visível subindo a
+  //     cada entrega (v1.0→1.1→1.2...), com MAJOR só em ação explícita.
+  //   2ª (2026-09-24, ESTA): pedido do usuário — "o versionamento final deve
+  //     acontecer apenas quando finalizado... enquanto a ficha ainda está
+  //     sendo preenchida, a versão fica sendo algo preliminar". O conceito
+  //     de MINOR deixa de existir como número visível: toda entrega do dia
+  //     a dia (`kind: 'minor'`) vira NO-OP aqui — não grava nada, não muda
+  //     o nome. Só "Finalizar" (`kind: 'major'`) consolida uma versão real:
+  //     1ª finalização sempre vira v1.0 (major parte de 0, nunca de um
+  //     minor acumulado durante o rascunho); finalizações seguintes sobem
+  //     major puro (v1.0→v2.0→v3.0), sempre zerando o minor (que não é mais
+  //     exposto, mas o formato "N.0" é mantido pra continuar batendo no
+  //     regex /^(\d+)\.(\d+)$/ usado tanto aqui quanto na leitura de
+  //     hacSessionVersion em 'check-my-prior-session', code.js).
+  //
+  // O frontend ainda chama esta mensagem com kind:'minor' a cada entrega
+  // (handoff-ficha.js, _fichaBumpSessionVersion) — não foi removido do
+  // fluxo de chamada pra não precisar tocar em todos os call-sites; o no-op
+  // acontece aqui, num único lugar.
+  if (msg.type === "bump-a11y-session-version") {
+    if (msg.kind !== 'major') {
+      // Minor não existe mais como número visível — sinaliza de volta sem
+      // tocar em pluginData/nome nenhum.
+      figma.ui.postMessage({ type: 'a11y-session-version-bumped', version: null, kind: 'minor' });
+      return;
+    }
+    try {
+      const sessionSection = _getOrCreateA11ySessionSection(msg.designerName, msg.designerId);
+      const currentVersion = sessionSection.getPluginData('hacSessionVersion') || '';
+      let major = 0; // 0, não 1: 1ª finalização precisa chegar em "1.0" após o +1 abaixo.
+      const versionMatch = currentVersion.match(/^(\d+)\.(\d+)$/);
+      if (versionMatch) major = parseInt(versionMatch[1], 10);
+      const nextVersion = `${major + 1}.0`;
+      sessionSection.setPluginData('hacSessionVersion', nextVersion);
+      // Substitui o segmento final do nome — "| rascunho" (nunca finalizado
+      // ainda) OU "| vN.0" (já finalizado antes) — pelos novos "| vN.0".
+      // Nomes de Sections antigas do modelo anterior (ex. "| v1.3", minor
+      // não-zero) também batem no regex de vN.N e são migrados aqui, na
+      // primeira finalização depois desta mudança.
+      if (/\|\s*(rascunho|v\d+\.\d+)$/.test(sessionSection.name)) {
+        sessionSection.name = sessionSection.name.replace(/\|\s*(rascunho|v\d+\.\d+)$/, `| v${nextVersion}`);
+      }
+      figma.ui.postMessage({ type: 'a11y-session-version-bumped', version: nextVersion, kind: 'major' });
+    } catch (e) {
+      // Versão é metadado de organização — nunca deve derrubar um handoff
+      // que já foi desenhado com sucesso no canvas.
+      console.error('[hac] bump-a11y-session-version: falha ao incrementar a versão da Section de sessão (não impede o handoff).', e && e.message);
+      figma.ui.postMessage({ type: 'a11y-session-version-bumped', version: null, kind: 'major' });
+    }
     return;
   }
 

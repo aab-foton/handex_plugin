@@ -201,8 +201,46 @@ function _fichaBuildSpecPayload(spec) {
 // Clique em "Inserir na ficha"/"Atualizar ficha" nas abas de trabalho —
 // monta o payload da seção pedida (itens de tabOrderItems já persistidos,
 // a trilha de hacData.a11ySwipePaths já resolvida, ou specs de a11ySpecs
+// Incremento de versão da Section de sessão — UMA entrega = UM incremento
+// (2026-09-22, bug real: "tudo que eu mexo começa na versão 1.3"). O backend
+// costumava subir 0.1 dentro de insert-ficha-section, que roda uma vez POR
+// SEÇÃO: um "Gerar Handoff" com 3 seções pendentes saltava v1.0 → v1.3.
+// Agora o bump é explícito e disparado daqui, exatamente uma vez por
+// entrega concluída (ver handler bump-a11y-session-version em onmessage.js).
+//
+// `kind`: 'minor' (default, disparado a cada entrega) ou 'major' (só por
+// "Finalizar", ver _fichaConfirmFinalize abaixo).
+//
+// REVISÃO 2026-09-24: 'minor' virou NO-OP no backend (ver comentário
+// completo no handler bump-a11y-session-version, onmessage.js) — pedido do
+// usuário, "o versionamento final deve acontecer apenas quando finalizado".
+// Continua sendo chamado daqui a cada entrega (não vale a pena remover
+// esses call-sites só porque o efeito colateral do lado backend mudou),
+// mas não sobe número nenhum enquanto o handoff está em "rascunho". Só
+// 'major' (Finalizar) consolida uma versão real — sempre v1.0 na 1ª vez,
+// depois v2.0/v3.0/... Existiu um botão de bump major dentro do dashboard
+// de CADA TELA — removido em 2026-09-22, versão é propriedade do projeto
+// inteiro, não de uma tela.
+function _fichaBumpSessionVersion(kind) {
+  parent.postMessage({
+    pluginMessage: {
+      type: 'bump-a11y-session-version',
+      kind: kind === 'major' ? 'major' : 'minor',
+      designerName: getA11yDesignerName(),
+      designerId: getA11yDesignerId(),
+    }
+  }, '*');
+}
+window._fichaBumpSessionVersion = _fichaBumpSessionVersion;
+
 // já persistidas) e dispara insert-ficha-section.
 // sectionKey ∈ 'tabulacao'|'swipe'|'leitor'.
+//
+// Versionamento (2026-09-22): esta função NÃO decide se a versão sobe — quem
+// decide é _fichaHandleSectionInserted, na resposta de sucesso, checando se
+// existe um resolver pendente daquela sectionKey (= chamada veio do laço de
+// "Gerar handoff completo", que sobe a versão uma vez só ao final). Clique
+// avulso numa seção é uma entrega própria e sobe 0.1 normalmente.
 function _fichaInsertSection(sectionKey) {
   const areaId = window._a11yWorkspaceAreaId;
   const area = _fichaLiveArea(areaId);
@@ -317,6 +355,13 @@ function _fichaHandleSectionInserted(msg) {
   if (!area.handoffFicha.sections) area.handoffFicha.sections = _fichaEmptySectionsState();
   area.handoffFicha.frameId = msg.frameId || area.handoffFicha.frameId || null;
 
+  // Lido ANTES de sobrescrever o estado (linha abaixo): se esta seção já
+  // tinha insertedAt, esta inserção é uma REINSERÇÃO (edição do que já
+  // estava no handoff); se não tinha, é conteúdo ENTRANDO no handoff pela
+  // primeira vez. É o que distingue bump minor de nenhum bump — ver
+  // comentário na decisão de versão, mais abaixo nesta função.
+  const _sectionWasAlreadyInserted = !!(_fichaSectionState(area, msg.sectionKey) || {}).insertedAt;
+
   const countKey = msg.sectionKey === 'leitor' ? 'specCount' : 'itemCount';
   area.handoffFicha.sections[msg.sectionKey] = {
     insertedAt: new Date().toISOString(),
@@ -328,6 +373,27 @@ function _fichaHandleSectionInserted(msg) {
   showToast('Handoff de Acessibilidade atualizado.');
 
   if (typeof _renderA11yWorkspaceTab === 'function') _renderA11yWorkspaceTab();
+
+  // Incremento de versão (2026-09-22, regra revista no mesmo dia após o
+  // usuário observar "a cada nova tela roda um bump de versão"):
+  //
+  //   - MENOR (v1.0 → v1.1): só quando há EDIÇÃO — uma seção que já estava
+  //     no handoff sendo reinserida com conteúdo atualizado.
+  //   - Tela/seção ENTRANDO no handoff pela primeira vez NÃO versiona.
+  //     Montar o handoff inicial é construir a v1.0, não produzir v1.1,
+  //     v1.2, v1.3... — era esse o comportamento errado: documentar 3 telas
+  //     novas levava a v1.3 sem nenhuma edição ter acontecido.
+  //   - MAIOR (v1.x → v2.0): ação explícita do designer ao finalizar o
+  //     handoff do projeto (_fichaConfirmFinalize).
+  //
+  // O laço de "Gerar handoff completo" continua tratado como UMA entrega:
+  // com resolver registrado (_fichaPendingResolvers) o bump não sai daqui,
+  // e _fichaGenerateCompleteHandoff decide uma única vez ao final. Roda
+  // antes de resolver a promise (a checagem precisa enxergar o resolver
+  // ainda registrado).
+  const _isPartOfBatch = !!_fichaPendingResolvers[msg.sectionKey];
+  if (!_isPartOfBatch && _sectionWasAlreadyInserted) _fichaBumpSessionVersion('minor');
+
   _fichaResolvePending(msg.sectionKey, true);
 }
 window._fichaHandleSectionInserted = _fichaHandleSectionInserted;
@@ -403,6 +469,196 @@ function _fichaSectionIsStale(area, sectionKey) {
 }
 window._fichaSectionIsStale = _fichaSectionIsStale;
 
+// ── Completude do HANDOFF DO PROJETO (2026-09-22) ───────────────────────
+// Distinção conceitual pedida pelo usuário: o status "3/3 seções inseridas"
+// que o card de cada tela mostra é completude DAQUELA TELA — não de um
+// "Handoff de Acessibilidade completo", que é do PROJETO e só existe quando
+// TODAS as telas documentadas têm o checklist fechado. Antes desta entrega o
+// produto usava o mesmo nome para as duas coisas, o que sugeria que uma tela
+// pronta bastava.
+//
+// Critério de "tela completa" (decisão do usuário, opção mais rigorosa) —
+// as seções aplicáveis precisam cumprir TRÊS condições:
+//   1. estar INSERIDAS (insertedAt presente);
+//   2. ter CONTEÚDO REAL (_fichaCurrentSectionCount > 0);
+//   3. estar em dia (não _fichaSectionIsStale — a contagem documentada não
+//      divergiu do que foi pro canvas).
+//
+// A condição 2 foi acrescentada em 2026-09-22 por bug real (print do
+// usuário: card com "Tabulação pendente / Ordem de Leitura pendente /
+// Leitor de Tela pendente" e "0 especificações", mas "3/3 seções
+// inseridas" e o projeto declarado COMPLETO). Causa: inserir uma seção
+// VAZIA grava insertedAt com itemCount/specCount = 0, e _fichaSectionIsStale
+// compara `currentCount !== grantedCount` — com os dois zerados a
+// comparação dá false (em dia), então "inserida + em dia" bastava para
+// contar como completa. Uma seção inserida vazia está genuinamente em dia
+// e genuinamente não documenta nada: "em dia" nunca foi sinônimo de
+// "documentada", e tratar os dois como a mesma coisa é o que produzia um
+// "handoff completo" sem uma única spec dentro.
+//
+// Seções aplicáveis variam por origem: Swipe (Ordem de Leitura) só existe em
+// mobile — mesma regra de _fichaDashboardHtml/_fichaGenerateCompleteHandoff,
+// nunca duplicada por conta própria aqui.
+function _fichaSectionKeysForProject() {
+  return isA11yMobileProject() ? ['tabulacao', 'swipe', 'leitor'] : ['tabulacao', 'leitor'];
+}
+
+function _fichaAreaIsComplete(area) {
+  if (!area) return false;
+  return _fichaSectionKeysForProject().every(key => {
+    const state = _fichaSectionState(area, key);
+    if (!state || !state.insertedAt) return false;
+    if (_fichaCurrentSectionCount(area, key) === 0) return false;
+    return !_fichaSectionIsStale(area, key);
+  });
+}
+window._fichaAreaIsComplete = _fichaAreaIsComplete;
+
+// Resumo de completude do projeto inteiro — consumido pelo bloco de
+// finalização ao final da lista de telas (_fichaProjectSummaryHtml) e pela
+// modal de finalização. `pending` traz as telas que faltam, já com o motivo
+// legível de cada uma (o designer precisa saber O QUE fazer, não só que
+// "falta algo").
+// Telas que CONTAM para a completude do projeto (2026-09-22, pedido do
+// usuário: "ele tem que verificar isso na página criada, não no arquivo
+// todo"). O handoff é o que está na página dedicada do HAC — uma Área
+// avulsa criada em outra página do arquivo (fluxo antigo, ou trabalho
+// paralelo do designer) não deve fazer o projeto parecer incompleto, nem
+// entrar na conta de "X de Y telas".
+//
+// Só filtra quando SABE qual é a página do handoff (hacData.hacPageId,
+// gravado por _openHacPageInstructionModal a partir de 'hac-page-ready').
+// Sem esse dado — arquivo que nunca passou pela jornada nova — devolve
+// todas as áreas, preservando o comportamento anterior.
+//
+// Área sem `pageId` (criada antes desta versão) CONTA mesmo com o filtro
+// ativo: excluí-la esconderia trabalho real já feito, que é pior do que
+// incluir uma tela que talvez esteja fora da página. Campo aditivo, mesma
+// política de migração do resto do schema.
+function _fichaAreasInScope() {
+  const areas = (a11yAreas || []).filter(Boolean);
+  const hacPageId = hacData && hacData.hacPageId;
+  if (!hacPageId) return areas;
+  return areas.filter(a => !a.pageId || a.pageId === hacPageId);
+}
+window._fichaAreasInScope = _fichaAreasInScope;
+
+function _fichaProjectCompletion() {
+  const areas = _fichaAreasInScope();
+  const keys = _fichaSectionKeysForProject();
+  const pending = [];
+
+  for (const area of areas) {
+    if (_fichaAreaIsComplete(area)) continue;
+    const missing = [];
+    for (const key of keys) {
+      const state = _fichaSectionState(area, key);
+      if (!state || !state.insertedAt) missing.push(`${_fichaSectionDisplayName(key)} não inserida`);
+      else if (_fichaSectionIsStale(area, key)) missing.push(`${_fichaSectionDisplayName(key)} desatualizada`);
+    }
+    pending.push({ id: area.id, number: area.number, label: area.label || '', missing });
+  }
+
+  const total = areas.length;
+  const complete = total - pending.length;
+  return {
+    total,
+    complete,
+    pending,
+    // Um projeto sem nenhuma tela documentada não é "completo" — é vazio.
+    isComplete: total > 0 && pending.length === 0,
+  };
+}
+window._fichaProjectCompletion = _fichaProjectCompletion;
+
+// Renderiza o bloco de finalização ao final da lista de telas
+// (#a11y-project-handoff-summary, specifications.html) — chamado ao final de
+// renderA11yGroupedList (accessibility.js), toda vez que a lista é
+// reconstruída. Fica OCULTO enquanto não houver nenhuma tela documentada
+// (projeto vazio não é "incompleto", é vazio — mesmo critério de
+// _fichaProjectCompletion.isComplete).
+function _fichaRenderProjectSummary() {
+  const el = document.getElementById('a11y-project-handoff-summary');
+  if (!el) return;
+
+  const completion = _fichaProjectCompletion();
+  if (completion.total === 0) {
+    el.classList.add('hidden');
+    el.innerHTML = '';
+    return;
+  }
+  el.classList.remove('hidden');
+
+  // Botão "Finalizar" SEMPRE presente (2026-09-24, revisão do usuário —
+  // antes só existia quando completion.isComplete, o que deixava o card
+  // "Handoff do projeto" sem nenhuma ação visível enquanto incompleto,
+  // ambíguo sobre o que falta pra chegar lá). Agora ele é desabilitado
+  // (disabled, sem onclick funcional) até isComplete ficar true — mesmo
+  // padrão de "mostrar a ação e explicar por que ela ainda não pode ser
+  // usada" já adotado noutros pontos do plugin (ex. botão Confirmar de
+  // Ordem de Tabulação, disabled até o Tag ser válido).
+  const corDeStatus = completion.isComplete
+    ? 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800/40'
+    : 'bg-gray-50/60 dark:bg-dark-bg/40 border-gray-100 dark:border-dark-line';
+  const corDoIcone = completion.isComplete ? 'text-green-600 dark:text-green-400' : 'text-slate-400 dark:text-dark-muted';
+  const corDoTexto = completion.isComplete ? 'text-green-700 dark:text-green-400' : 'text-slate-500 dark:text-dark-muted';
+  const titulo = completion.isComplete ? 'Handoff de Acessibilidade completo' : 'Handoff de Acessibilidade do projeto';
+  const icone = completion.isComplete ? 'check-circle-2' : 'circle-dashed';
+
+  el.innerHTML = `
+    <div class="flex items-center gap-2.5 px-dsc-micro py-2.5 rounded-dsc-medium border ${corDeStatus}">
+      <i data-lucide="${icone}" class="w-4 h-4 shrink-0 ${corDoIcone}" aria-hidden="true"></i>
+      <div class="flex-1 min-w-0">
+        <p class="text-dsc-label-tiny normal-case tracking-normal font-semibold text-slate-700 dark:text-white">${titulo}</p>
+        <p class="text-dsc-label-tiny normal-case tracking-normal ${corDoTexto}">${completion.complete} de ${completion.total} tela${completion.total === 1 ? '' : 's'} com o checklist fechado</p>
+      </div>
+      <button type="button" onclick="_fichaOpenFinalizeModal()"
+        data-tooltip="${completion.isComplete ? '' : 'Todas as telas precisam ter o checklist fechado antes de finalizar'}"
+        class="shrink-0 inline-flex items-center gap-dsc-quark h-8 px-dsc-nano rounded-dsc-circ text-dsc-label-tiny normal-case tracking-normal font-bold transition-all ${completion.isComplete
+          ? 'tooltip-bottom bg-[#005ca9] text-white hover:bg-blue-700 active:scale-95'
+          : 'tooltip-bottom tooltip-left bg-gray-200 dark:bg-dark-line text-gray-400 dark:text-dark-muted cursor-not-allowed'}">
+        <i data-lucide="flag" class="w-3.5 h-3.5"></i> Finalizar
+      </button>
+    </div>
+  `;
+  _refreshIcons();
+}
+window._fichaRenderProjectSummary = _fichaRenderProjectSummary;
+
+// ── Modal de finalização do Handoff de Acessibilidade (2026-09-22) ──────
+// Só abre quando _fichaProjectCompletion().isComplete é true (o botão
+// "Finalizar" só existe nesse estado, ver _fichaRenderProjectSummary acima).
+// Conteúdo: resumo do que foi documentado + confirmação. Não bloqueia nada
+// no canvas — é uma confirmação/registro para o designer, não um gate
+// técnico (o handoff já está completo antes de a modal abrir).
+function _fichaOpenFinalizeModal() {
+  const completion = _fichaProjectCompletion();
+  if (!completion.isComplete) return;
+
+  const countEl = document.getElementById('a11y-finalize-handoff-count');
+  if (countEl) countEl.textContent = `${completion.total} tela${completion.total === 1 ? '' : 's'} documentada${completion.total === 1 ? '' : 's'}, checklist fechado em todas.`;
+
+  openModal('a11y-finalize-handoff-modal');
+}
+window._fichaOpenFinalizeModal = _fichaOpenFinalizeModal;
+
+// Confirmar finalização: sobe a versão MAIOR — finalizar o handoff é, por
+// definição, fechar uma geração de documentação. Único gatilho de bump
+// major hoje (o botão que existia por tela foi removido, ver comentário
+// em _fichaBumpSessionVersion acima).
+//
+// Sem toast otimista aqui (2026-09-24) — antes mostrava "Handoff finalizado"
+// de imediato, e a resposta assíncrona de bump-a11y-session-version
+// (messages.js) mostrava um SEGUNDO toast com o número da versão, os dois
+// pra mesma ação. Agora o único toast é o de lá, que já carrega o número
+// real consolidado (vN.0) — informação que este ponto síncrono não tem
+// ainda (a versão só existe depois da resposta do backend).
+function _fichaConfirmFinalize() {
+  _fichaBumpSessionVersion('major');
+  closeModal('a11y-finalize-handoff-modal');
+}
+window._fichaConfirmFinalize = _fichaConfirmFinalize;
+
 // ── Dashboard (aba Handoff) — 3 cards de status ─────────────────────────
 // Mesmo padrão visual de ícone já usado pro status de Tabulação no card da
 // listagem principal de áreas (_a11yAreaAccordionEl): check-circle-2 verde
@@ -458,13 +714,18 @@ function _fichaStatusCardHtml(area, sectionKey, label, countLabelFn) {
 }
 
 // Chamado por _a11yWorkspaceTabHandoffDashboard (accessibility.js) — monta
-// os 3 cards de status + o atalho "Ver ficha no canvas" (visível só quando
-// pelo menos 1 seção já foi inserida, ou seja, handoffFicha.frameId existe).
-// Havia um 4º card ("Consolidado"/Handoff Review) — removido em 2026-09-10,
-// funcionalidade descontinuada (ver _buildFichaReviewSection em code.js).
+// os 3 cards de status. Havia um 4º card ("Consolidado"/Handoff Review) —
+// removido em 2026-09-10, funcionalidade descontinuada (ver
+// _buildFichaReviewSection em code.js).
+//
+// "Ver handoff no canvas" NÃO é mais renderizado aqui (2026-09-24, pedido
+// do usuário: "pode ser um botão mais discreto ao lado do gerar handoff.
+// pode ser um ícone de focus com o tooltip") — virou um ícone compacto na
+// mesma linha de "Gerar Handoff", em
+// _a11yWorkspaceTabHandoffDashboard (accessibility.js), em vez de um 2º
+// botão largo empilhado abaixo dos cards de status.
 function _fichaDashboardHtml(area) {
   const isMobile = isA11yMobileProject();
-  const hasAnyInserted = !!(area.handoffFicha && area.handoffFicha.frameId);
 
   const cards = [
     _fichaStatusCardHtml(area, 'tabulacao', 'Tabulação', n => `${n} selo${n === 1 ? '' : 's'} no handoff`),
@@ -483,12 +744,6 @@ function _fichaDashboardHtml(area) {
     <div class="space-y-1.5">
       ${cards.join('')}
     </div>
-    ${hasAnyInserted ? `
-    <button type="button" onclick="_fichaViewOnCanvas()"
-      class="w-full flex items-center justify-center gap-dsc-nano h-9 mt-3 rounded-dsc-large bg-[#005ca9] text-white text-dsc-label-tiny normal-case tracking-normal font-bold hover:bg-blue-700 active:scale-95 shadow-sm shadow-blue-500/20 transition-all">
-      <i data-lucide="scan-eye" class="w-4 h-4" aria-hidden="true"></i>
-      Ver handoff no canvas
-    </button>` : ''}
   `;
 }
 window._fichaDashboardHtml = _fichaDashboardHtml;
@@ -513,6 +768,10 @@ window._fichaDashboardHtml = _fichaDashboardHtml;
 // o clique manual de "Inserir/Atualizar ficha" não passa por ela).
 function _fichaInsertSectionAwaitable(sectionKey) {
   return new Promise(resolve => {
+    // O resolver é registrado ANTES do disparo — é ele que
+    // _fichaHandleSectionInserted usa pra saber que esta inserção faz parte
+    // de um lote e, portanto, não deve incrementar a versão sozinha
+    // (o lote inteiro sobe 0.1 uma vez só, ao final).
     _fichaPendingResolvers[sectionKey] = resolve;
     _fichaInsertSection(sectionKey);
   });
@@ -542,9 +801,45 @@ async function _fichaGenerateCompleteHandoff(areaId) {
     return;
   }
 
+  // Avaliado ANTES do laço, enquanto o estado ainda reflete o que havia no
+  // handoff: uma seção com insertedAt que entrou em pendingKeys só pode ter
+  // entrado por estar STALE, ou seja, EDIÇÃO de conteúdo já documentado.
+  // Seção sem insertedAt é conteúdo novo entrando pela primeira vez, que
+  // não versiona (ver regra completa em _fichaHandleSectionInserted).
+  const _hasEdit = pendingKeys.some(key => {
+    const state = _fichaSectionState(area, key);
+    return !!(state && state.insertedAt);
+  });
+
+  let anyOk = false;
   for (const key of pendingKeys) {
     // eslint-disable-next-line no-await-in-loop
-    await _fichaInsertSectionAwaitable(key);
+    const ok = await _fichaInsertSectionAwaitable(key);
+    if (ok) anyOk = true;
   }
+
+  // UMA entrega = UM incremento (2026-09-22, bug real: "tudo que eu mexo
+  // começa na versão 1.3"). O laço acima pode ter inserido 1, 2 ou 3 seções
+  // — todas fazem parte da MESMA geração de handoff, então a versão sobe
+  // 0.1 uma única vez aqui, não uma vez por seção (cada
+  // _fichaHandleSectionInserted do laço se abstém, ver checagem de
+  // _fichaPendingResolvers lá).
+  //
+  // Duas condições, ambas necessárias (regra revista no mesmo dia):
+  //   anyOk   — um lote inteiro que falhou não é uma entrega;
+  //   _hasEdit — o lote precisa conter ao menos uma seção que JÁ estava no
+  //              handoff e foi reinserida (edição). Um lote só de seções
+  //              novas é a montagem inicial do handoff, que não versiona.
+  if (anyOk && _hasEdit) _fichaBumpSessionVersion('minor');
 }
 window._fichaGenerateCompleteHandoff = _fichaGenerateCompleteHandoff;
+
+// "Nova versão" (major, v1.x → v2.0) — decisão explícita do designer, nunca
+// automática. Existiu como botão "Iniciar nova versão do handoff" no
+// dashboard de CADA TELA (2026-09-22) — removido no mesmo dia: versão é uma
+// propriedade da Section de sessão (o PROJETO inteiro), não de uma tela
+// individual, e o botão ali sugeria o contrário. A única forma de subir a
+// versão maior agora é finalizar o Handoff de Acessibilidade do projeto
+// (_fichaConfirmFinalize, disparado pela modal de finalização no resumo
+// geral da lista de telas) — mesma semântica de bumpVersion('major') no
+// Handex (modules/core.js): sobe o maior e zera o menor.

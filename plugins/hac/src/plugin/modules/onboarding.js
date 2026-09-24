@@ -339,5 +339,14 @@ function closeOnboarding() {
   closeModal('onboarding-modal');
   _onboardingCurrentTool = null;
   _onboardingCurrentStep = 0;
+  // Instrução da página do handoff que chegou enquanto o onboarding estava
+  // aberto (2026-09-22) — ver _openHacPageInstructionModal em
+  // accessibility.js: ela se enfileira em vez de fechar o onboarding no
+  // meio. Agora que o onboarding saiu, é a vez dela.
+  if (window._pendingHacPageInstruction && typeof _openHacPageInstructionModal === 'function') {
+    const pending = window._pendingHacPageInstruction;
+    window._pendingHacPageInstruction = null;
+    _openHacPageInstructionModal(pending);
+  }
 }
 window.closeOnboarding = closeOnboarding;

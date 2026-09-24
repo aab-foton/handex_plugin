@@ -252,34 +252,136 @@
              já resolvem isso via _getA11yComponentToggles('imagem') — nenhuma
              segunda fonte de verdade foi criada). -->
       <div id="a11y-fields-elemento" class="hidden space-y-4">
-        <!-- 1) Tag — primeiro campo, ao lado do Label (accessibilityLabel)
-             que sempre esteve aqui. -->
-        <div class="flex flex-wrap gap-dsc-micro">
-          <div class="w-12 shrink-0">
-            <label for="a11y-el-tag-input" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Tag</label>
+        <!-- #a11y-el-mobile-toggles-wrap — PRIMEIRO campo do formulário
+             (2026-09-23, revisão no mesmo dia, 3 pedidos em sequência: 1)
+             "o select do componente deveria vir antes, pois ele é o que
+             modifica a interface da UI"; 2) "coloque a tag pra baixo do
+             link do componente também" — Tag desceu, isolada; 3) "mas
+             coloque ele ao lado do nome acessível, como fizemos antes" —
+             Tag voltou a ficar NA MESMA LINHA do slot "Nome Acessível",
+             só que agora essa linha inteira vem DEPOIS deste bloco, não
+             antes). Contém, quando populado por
+             _renderA11yElementoMobileFields (accessibility.js): "Componente
+             do DSC" (#a11y-el-mobile-link-select) + "Leitor de Tela"
+             (sub-variante condicional) + "Link ou nome do componente" — o
+             SELETOR de onde vêm todas as decisões de Nome Acessível/
+             Observações abaixo. Também é o container que recebe o bloco das
+             variantes mobile antigas "link"/"texto alternativo" (dado
+             histórico, ver radios ocultos mais abaixo neste arquivo). Mesmo
+             id de sempre — só REPOSICIONADO no HTML, o JS que o popula
+             (`list.appendChild(linkRow)`, dentro de
+             #a11y-el-mobile-toggles-list) não precisa de nenhuma mudança. -->
+        <div id="a11y-el-mobile-toggles-wrap" class="hidden space-y-2.5">
+          <div id="a11y-el-mobile-toggles-list" class="space-y-2"></div>
+        </div>
+
+        <!-- Tag + Nome Acessível/Label — MESMA LINHA (2026-09-23, voltou a
+             ser lado a lado: "coloque ele ao lado do nome acessível, como
+             fizemos antes" — só a posição RELATIVA ao bloco "Componente do
+             DSC" mudou, não a disposição Tag+Label entre si). -->
+        <!-- Tag encolhida e sem contador (2026-09-22, pedido explícito do
+             usuário: "Melhor a apresentação do input da tag no plugin. Ela
+             não precisa estar em toda a largura e nem precisa do contador
+             de caracteres") — maxlength=8 continua valendo (validateA11yTagInput
+             segue validando o formato via regex, não pelo contador visual),
+             só o CONTADOR (redundante pra um campo de 1-8 caracteres,
+             sempre visível por inteiro no próprio input) foi removido. -->
+        <div class="flex flex-wrap items-start gap-dsc-micro">
+          <div id="a11y-el-tag-wrap" class="w-11 shrink-0">
+            <label for="a11y-el-tag-input" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1.5 ml-1">Tag</label>
             <input type="text" id="a11y-el-tag-input" maxlength="8" value="1" placeholder="1, 1.1..."
-              oninput="validateA11yTagInput(); updateA11yCharCounter(this)"
+              oninput="validateA11yTagInput()"
               class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-1 py-2.5 text-[13px] text-center font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-blue-100 outline-none transition-all" />
-            <span id="a11y-el-tag-input-counter" class="block text-center text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted mt-0.5">1/8</span>
           </div>
-          <div class="flex-1 min-w-[10rem]">
-            <div class="flex items-center justify-between mb-1.5 ml-1">
-              <label for="a11y-el-label" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Label (accessibilityLabel)</label>
+          <div id="a11y-el-label-wrap" class="flex-1 min-w-[10rem]">
+            <!-- #a11y-el-label-wrap-heading (2026-09-23): escondido quando
+                 este wrapper está DENTRO do slot "Nome Acessível" mobile
+                 (título próprio ao lado, ver #a11y-el-mobile-nome-acessivel-row
+                 abaixo) — repetir "Label (accessibilityLabel)" + contador
+                 aqui dentro seria a duplicação de texto reportada pelo
+                 usuário. Visibilidade alternada por
+                 _updateA11yMobileNomeAcessivelVisibility (accessibility.js),
+                 sempre junto do appendChild que move o wrapper. Continua
+                 visível normalmente quando o wrapper está aqui no lar
+                 original (desktop, ou mobile sem a property). -->
+            <div id="a11y-el-label-wrap-heading" class="flex items-center justify-between mb-1.5 ml-1">
+              <label for="a11y-el-label" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal">Label (accessibilityLabel)</label>
               <span id="a11y-el-label-counter" class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted shrink-0">0/100</span>
             </div>
             <input type="text" id="a11y-el-label" maxlength="100" placeholder="Ex: Botão de enviar formulário"
               oninput="updateA11yCharCounter(this)"
               class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all" />
           </div>
+          <!-- Slot "Nome Acessível" — MESMA linha da Tag (2026-09-23). O
+               mesmo <input id="a11y-el-label"> é MOVIDO (appendChild) pra
+               dentro de #a11y-el-mobile-nome-acessivel-slot quando mobile +
+               componente com a property real (ver
+               _updateA11yMobileNomeAcessivelVisibility, accessibility.js).
+               Sem título/card duplicado aqui fora — o título "Nome
+               Acessível" mostrado é o que vive DENTRO do bloco movido.
+               flex-1 min-w igual ao Label, porque ocupa o MESMO lugar dele
+               na linha (nunca os dois visíveis ao mesmo tempo — são o
+               mesmo campo real, alternando de posição). -->
+          <div id="a11y-el-mobile-nome-acessivel-row" class="hidden flex-1 min-w-[10rem]">
+            <p class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1.5 ml-1">Nome Acessível</p>
+            <div id="a11y-el-mobile-nome-acessivel-slot"></div>
+          </div>
+          <!-- Destino do checkbox "Observações" quando ele é o ÚNICO campo
+               da linha (2026-09-24, pedido do usuário: "quando tivermos só
+               observações, o checkbox fica ao lado da TAG e o input das
+               observações abre abaixo deles"). Vazio por padrão: o
+               <label id="a11y-el-mobile-observacoes-inline-wrap"> real
+               (logo abaixo, fora desta linha) é MOVIDO pra cá via
+               appendChild por _updateA11yMobileObservacoesVisibility quando
+               não há Nome Acessível/Label ocupando o espaço — mesmo padrão
+               de realocação já usado pelo campo de texto acessível acima
+               (nunca duplica elemento, o checkbox é sempre o mesmo nó).
+               Alinhamento vertical (2026-09-24, pedido do usuário:
+               "centralize o checkbox na linha"): mt-[1.375rem] compensa a
+               altura do <label> "Tag" (que este slot não tem), e
+               h-[2.375rem] + flex items-center centraliza o checkbox na
+               MESMA altura do input da Tag ao lado — antes ele encostava no
+               topo do campo. Os dois valores espelham o input real da Tag
+               (py-2.5 + text-[13px] = 2.375rem de altura). -->
+          <div id="a11y-el-mobile-observacoes-inline-slot" class="hidden shrink-0 mt-[1.375rem] h-[2.375rem] flex items-center"></div>
         </div>
+        <!-- Campo "Observações" (2026-09-22/23, pedido explícito do
+             usuário) — LINHA PRÓPRIA abaixo de Nome Acessível. Checkbox
+             FORA do card do campo, ao lado da label "Observações" — não
+             mais dentro de uma caixa própria (2026-09-23: "deixe o
+             checkbox fora do
+             card, ele fica ao lado da Label de observações"). Visibilidade
+             controlada por _updateA11yMobileObservacoesVisibility (mesmo
+             mecanismo de sempre, aponta pro checkbox FIXO aqui). O textarea
+             companheiro continua vivendo dentro da lista dinâmica, abaixo —
+             abre/fecha pelo MESMO checkbox (data-a11y-toggle-key="observacoes"). -->
+        <label id="a11y-el-mobile-observacoes-inline-wrap" class="hidden flex items-center gap-1.5 cursor-pointer select-none">
+          <input type="checkbox" id="a11y-el-mobile-observacoes-checkbox" data-a11y-toggle-key="observacoes"
+            onchange="_onA11yElementoToggleChange(this)"
+            class="w-4 h-4 shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer" />
+          <span class="text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-500 dark:text-dark-muted">Observações</span>
+        </label>
         <p id="a11y-el-tag-error" class="hidden text-dsc-label-tiny normal-case tracking-normal text-red-500 -mt-2.5 ml-1">Formato: A, B, A1, A2, A1.1, A1.2...</p>
+        <!-- Textarea companheiro do checkbox acima — mesma estrutura de
+             data-a11y-toggle-textarea-wrap que toggleRowHtml() já gera pros
+             outros toggles, movida pra fora do card fechado (sem borda
+             própria aqui, já está dentro do fluxo natural do formulário).
+             Some/aparece pelo MESMO onchange do checkbox de cima
+             (_onA11yElementoToggleChange já resolve o textarea companheiro
+             subindo pelo DOM a partir do checkbox — ver função). -->
+        <div id="a11y-el-mobile-observacoes-textarea-wrap" class="hidden" data-a11y-toggle-textarea-wrap>
+          <textarea data-a11y-toggle-value maxlength="1000" rows="2" placeholder="Insira seu texto de observações."
+            oninput="updateA11yCharCounterEl(this, this.nextElementSibling)"
+            class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-2.5 py-dsc-nano text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all resize-none"></textarea>
+          <span class="block text-right text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted mt-0.5">0/1000</span>
+        </div>
 
         <!-- 2) Componente ou Imagem — property REAL "variante" do component
              set base (2 opções, confirmadas via REST API). Escondido por
              completo em specs mobile (bloco desktop inteiro, ver
              _toggleA11yElementoDesktopBlock). -->
         <div id="a11y-el-desktop-variante-wrap">
-          <label class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Tipo de elemento</label>
+          <label class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1.5 ml-1">Tipo de elemento</label>
           <div class="grid grid-cols-2 gap-dsc-nano">
             <label class="relative flex items-center gap-dsc-nano p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#005ca9] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
               <input type="radio" name="a11y-el-variante" value="componente" checked onchange="updateA11yElementoVariante()" class="w-3.5 h-3.5 text-blue-600 focus:ring-blue-500" />
@@ -298,7 +400,7 @@
              = componente) — 15 itens reais do catálogo + "Outro". "Imagem"
              saiu desta lista (virou a opção acima). -->
         <div id="a11y-el-desktop-componente-col" class="relative">
-          <label for="a11y-el-componente-trigger" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Componente do DSC</label>
+          <label for="a11y-el-componente-trigger" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1.5 ml-1">Componente do DSC</label>
           <button type="button" id="a11y-el-componente-trigger" onclick="toggleA11yComponenteMenu(event)"
             aria-haspopup="listbox" aria-expanded="false"
             class="w-full flex items-center justify-between gap-dsc-nano bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all">
@@ -360,7 +462,7 @@
         <div id="a11y-el-desktop-block" class="space-y-4">
           <div id="a11y-el-componente-outro-wrap" class="hidden">
             <div class="flex items-center justify-between mb-1.5 ml-1">
-              <label for="a11y-el-componente-outro" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Nome do componente</label>
+              <label for="a11y-el-componente-outro" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal">Nome do componente</label>
               <span id="a11y-el-componente-outro-counter" class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted shrink-0">0/80</span>
             </div>
             <input type="text" id="a11y-el-componente-outro" maxlength="80" placeholder="Ex: Botão primário"
@@ -369,11 +471,11 @@
           </div>
           <div id="a11y-el-preview" class="p-3 bg-gray-50 dark:bg-dark-bg rounded-dsc-medium border border-gray-200 dark:border-dark-line space-y-2.5">
             <div>
-              <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Descrição</p>
+              <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1">Descrição</p>
               <p id="a11y-el-preview-descricao" class="text-[12px] text-slate-700 dark:text-white leading-snug"></p>
             </div>
             <div id="a11y-el-preview-nota-wrap">
-              <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Nota de Código</p>
+              <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1">Nota de Código</p>
               <p id="a11y-el-preview-nota" class="text-[12px] font-mono text-slate-700 dark:text-white leading-snug"></p>
             </div>
           </div>
@@ -396,7 +498,7 @@
              componente sem essa property real não mostra o campo. Também
              faz parte do bloco desktop — escondida junto em specs mobile. -->
         <div id="a11y-el-toggles-wrap" class="hidden space-y-2.5">
-          <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider ml-1">Propriedades do elemento selecionado</p>
+          <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal ml-1">Propriedades do elemento selecionado</p>
           <div id="a11y-el-toggles-list" class="space-y-2"></div>
         </div>
         <!-- Sub-variante mobile ("Variante" real do component set
@@ -441,7 +543,7 @@
              _renderA11yElementoMobileFields, accessibility.js) — mantido
              aqui, redundante e sem custo. -->
         <div id="a11y-el-mobile-variant-wrap" class="hidden space-y-2">
-          <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider ml-1">Variante (mobile)</p>
+          <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal ml-1">Variante (mobile)</p>
           <input type="radio" name="a11y-el-mobile-variant" value="componente" checked onchange="updateA11yElementoMobileVariant()" class="hidden" />
           <!-- Mantidos hidden (nunca renderizados como opção clicável) só
                para _prefillA11ySpecForEdit conseguir marcar o valor salvo de
@@ -470,27 +572,29 @@
              com a origem resolvida corretamente. Restaurado o toggle
              condicional. Specs mobile já existentes continuam restauradas em
              memória normalmente (_restoreA11yElementoMobileToggles, ver
-             _prefillA11ySpecForEdit). -->
-        <div id="a11y-el-mobile-toggles-wrap" class="hidden space-y-2.5">
-          <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider ml-1">Campos exclusivos mobile</p>
-          <div id="a11y-el-mobile-toggles-list" class="space-y-2"></div>
-        </div>
+             _prefillA11ySpecForEdit).
+             #a11y-el-mobile-toggles-wrap (Componente do DSC + Leitor de Tela
+             + Link/nome do componente) foi MOVIDO daqui pra logo após a Tag
+             (2026-09-23, pedido do usuário: "o select do componente deveria
+             vir antes, pois ele é o que modifica a interface da UI") — ver
+             o elemento real no início de #a11y-fields-elemento, mais acima
+             neste arquivo. -->
       </div>
 
       <!-- Estrutura da Página -->
       <div id="a11y-fields-estrutura" class="hidden space-y-4">
         <div class="grid grid-cols-4 gap-dsc-micro">
           <div class="col-span-1">
-            <label for="a11y-estrutura-tag-input" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Tag</label>
+            <label for="a11y-estrutura-tag-input" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1.5 ml-1">Tag</label>
             <input type="text" id="a11y-estrutura-tag-input" maxlength="8" value="A" placeholder="A, A1..."
               oninput="validateA11yTagInput(); updateA11yCharCounter(this)"
               class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-2 py-2.5 text-[13px] text-center font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-blue-100 outline-none transition-all uppercase" />
             <span id="a11y-estrutura-tag-input-counter" class="block text-center text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted mt-0.5">1/8</span>
           </div>
           <div class="col-span-3">
-            <label for="a11y-estrutura-subtipo-select" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Subtipo</label>
+            <label for="a11y-estrutura-subtipo-select" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1.5 ml-1">Subtipo</label>
             <select id="a11y-estrutura-subtipo-select" onchange="updateA11yEstruturaFields()"
-              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all">
+              class="dsc-select w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all">
               <option value="idiomas">Idiomas</option>
               <option value="marco de navegacao">Marco de Navegação</option>
               <option value="titulo da pagina">Título da Página</option>
@@ -501,18 +605,18 @@
         <p id="a11y-estrutura-tag-error" class="hidden text-dsc-label-tiny normal-case tracking-normal text-red-500 -mt-2.5 ml-1">Formato: A, B, A1, A2, A1.1, A1.2...</p>
 
         <div id="a11y-estrutura-idiomas-wrap" class="hidden">
-          <label for="a11y-estrutura-idiomas-select" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Idioma de</label>
+          <label for="a11y-estrutura-idiomas-select" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1.5 ml-1">Idioma de</label>
           <select id="a11y-estrutura-idiomas-select" onchange="updateA11yEstruturaFields()"
-            class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all">
+            class="dsc-select w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all">
             <option value="da pagina">Da página</option>
             <option value="das partes">Das partes</option>
           </select>
         </div>
 
         <div id="a11y-estrutura-marco-wrap" class="hidden">
-          <label for="a11y-estrutura-marco-select" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Marco</label>
+          <label for="a11y-estrutura-marco-select" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1.5 ml-1">Marco</label>
           <select id="a11y-estrutura-marco-select" onchange="updateA11yEstruturaFields()"
-            class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all">
+            class="dsc-select w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all">
             <option value="header">Header</option>
             <option value="nav">Nav</option>
             <option value="main">Main</option>
@@ -524,7 +628,7 @@
 
         <div>
           <div class="flex items-center justify-between mb-1.5 ml-1">
-            <label for="a11y-estrutura-descricao" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Descrição</label>
+            <label for="a11y-estrutura-descricao" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal">Descrição</label>
             <span id="a11y-estrutura-descricao-counter" class="hidden text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted shrink-0">0/200</span>
           </div>
           <input type="text" id="a11y-estrutura-descricao" readonly maxlength="200"
@@ -532,7 +636,7 @@
             class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all" />
         </div>
         <div id="a11y-estrutura-nota-wrap" class="p-3 bg-gray-50 dark:bg-dark-bg rounded-dsc-medium border border-gray-200 dark:border-dark-line">
-          <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Nota de Código</p>
+          <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1">Nota de Código</p>
           <p id="a11y-estrutura-nota" class="text-[12px] font-mono text-slate-700 dark:text-white leading-snug"></p>
         </div>
         <!-- Campos dinâmicos reais dos sub-níveis "EE idiomas"/"EE marco de
@@ -540,7 +644,7 @@
              componente real catalogado. Vazio em "Título da Página" e em
              "Customizável". -->
         <div id="a11y-estrutura-toggles-wrap" class="hidden space-y-2.5">
-          <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider ml-1">Campos do componente</p>
+          <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal ml-1">Campos do componente</p>
           <div id="a11y-estrutura-toggles-list" class="space-y-2"></div>
         </div>
       </div>
@@ -569,9 +673,9 @@
            nem editáveis neste formulário simplificado. -->
       <div id="a11y-fields-titulo" class="hidden space-y-4">
         <div>
-          <label for="a11y-titulo-nivel-select" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Nível</label>
+          <label for="a11y-titulo-nivel-select" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1.5 ml-1">Nível</label>
           <select id="a11y-titulo-nivel-select" onchange="updateA11yTituloFields()"
-            class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all">
+            class="dsc-select w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all">
             <option value="h1">H1</option>
             <option value="h2">H2</option>
             <option value="h3">H3</option>
@@ -591,19 +695,24 @@
         </div>
         <div class="hidden p-3 bg-gray-50 dark:bg-dark-bg rounded-dsc-medium border border-gray-200 dark:border-dark-line space-y-2.5">
           <div>
-            <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Descrição</p>
+            <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1">Descrição</p>
             <p id="a11y-fixed-descricao" class="text-[12px] text-slate-700 dark:text-white leading-snug"></p>
           </div>
           <div id="a11y-fixed-nota-wrap" class="hidden">
-            <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Nota de Código</p>
+            <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1">Nota de Código</p>
             <p id="a11y-fixed-nota" class="text-[12px] font-mono text-slate-700 dark:text-white leading-snug"></p>
           </div>
         </div>
-        <!-- Campo dinâmico real do set "niveis de titulo" (só "Observações")
-             — some no modo mobile ("H", sem nível real catalogado) e agora
-             também fica sempre oculto por padrão (ver comentário acima). -->
+        <!-- Campo dinâmico real do shortName "niveis de titulo" (BOOLEAN
+             "observacoes" confirmado no scan da lib) — REABERTO em
+             2026-09-24 (ver updateA11yTituloFields, accessibility.js, pra
+             o histórico completo: ficou oculto por padrão entre 2026-09-17
+             e hoje). Único shortName desta categoria — não varia entre
+             mobile ("H" fixo) e desktop (H1-H6 escolhido), então aparece
+             igual nos dois casos; a origem só afeta qual OPÇÃO de nível
+             fica disponível no select acima, não os toggles aqui. -->
         <div id="a11y-titulo-toggles-wrap" class="hidden space-y-2.5">
-          <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider ml-1">Campos do componente</p>
+          <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal ml-1">Campos do componente</p>
           <div id="a11y-titulo-toggles-list" class="space-y-2"></div>
         </div>
       </div>
@@ -627,9 +736,9 @@
            mais visíveis nem editáveis neste formulário simplificado. -->
       <div id="a11y-fields-decorativo" class="hidden space-y-4">
         <div>
-          <label for="a11y-decorativo-subtipo-select" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Subtipo</label>
+          <label for="a11y-decorativo-subtipo-select" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1.5 ml-1">Subtipo</label>
           <select id="a11y-decorativo-subtipo-select" onchange="updateA11yDecorativoFields()"
-            class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all">
+            class="dsc-select w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all">
             <option value="gerais">Gerais</option>
             <option value="imagem">Imagem</option>
           </select>
@@ -646,24 +755,28 @@
         </div>
         <div class="p-3 bg-gray-50 dark:bg-dark-bg rounded-dsc-medium border border-gray-200 dark:border-dark-line space-y-2.5">
           <div>
-            <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Descrição</p>
+            <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1">Descrição</p>
             <p id="a11y-fixed-descricao-dec" class="text-[12px] text-slate-700 dark:text-white leading-snug">Não deve ser anunciado pelo Leitor de Tela.</p>
           </div>
           <!-- Nota de Código não existe na lib mobile (nem HTML nem RN) —
                este wrapper some no formulário mobile (ver
                A11Y_CONTENT.decorativo.mobile/updateA11yDecorativoFields). -->
           <div id="a11y-fixed-nota-dec-wrap">
-            <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1">Nota de Código</p>
+            <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1">Nota de Código</p>
             <p id="a11y-fixed-nota-dec" class="text-[12px] font-mono text-slate-700 dark:text-white leading-snug"></p>
           </div>
         </div>
-        <!-- Campos dinâmicos reais do set correspondente ao subtipo (ED
-             gerais/ED imagem) — Observações e Notas de Código. Sempre oculto
-             pra specs novas por pedido explícito de 2026-09-17 (ver
-             comentário acima); shortName forçado a null em
-             updateA11yDecorativoFields, então esta lista nunca é populada. -->
+        <!-- Campos dinâmicos reais do shortName correspondente ao subtipo
+             ('ED gerais'/'ED imagem') — Observações e Notas de Código,
+             ambos BOOLEAN confirmados no scan da lib pros 2 shortNames.
+             REABERTO em 2026-09-24 (ver updateA11yDecorativoFields,
+             accessibility.js — ficou oculto por padrão entre 2026-09-17 e
+             hoje, com shortName forçado a null). Em mobile,
+             _applyA11yDecorativoOriginLock trava o select em 'gerais' antes
+             de updateA11yDecorativoFields rodar, então o shortName usado
+             ali é sempre 'ED gerais' nesse caso. -->
         <div id="a11y-decorativo-toggles-wrap" class="hidden space-y-2.5">
-          <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider ml-1">Campos do componente</p>
+          <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal ml-1">Campos do componente</p>
           <div id="a11y-decorativo-toggles-list" class="space-y-2"></div>
         </div>
       </div>
@@ -672,16 +785,16 @@
       <div id="a11y-fields-informacoes" class="hidden space-y-4">
         <div class="grid grid-cols-4 gap-dsc-micro">
           <div class="col-span-1">
-            <label for="a11y-informacoes-tag-input" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Tag</label>
+            <label for="a11y-informacoes-tag-input" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1.5 ml-1">Tag</label>
             <input type="text" id="a11y-informacoes-tag-input" maxlength="8" value="A" placeholder="A, A1..."
               oninput="validateA11yTagInput(); updateA11yCharCounter(this)"
               class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-2 py-2.5 text-[13px] text-center font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-blue-100 outline-none transition-all uppercase" />
             <span id="a11y-informacoes-tag-input-counter" class="block text-center text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted mt-0.5">1/8</span>
           </div>
           <div class="col-span-3">
-            <label for="a11y-informacoes-subtipo-select" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Subtipo</label>
+            <label for="a11y-informacoes-subtipo-select" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1.5 ml-1">Subtipo</label>
             <select id="a11y-informacoes-subtipo-select" onchange="updateA11yInformacoesFields()"
-              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all">
+              class="dsc-select w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all">
               <option value="handoffs">Handoffs</option>
               <option value="conteudo extra">Conteúdo extra</option>
               <option value="customizavel">Customizável</option>
@@ -691,7 +804,7 @@
         <p id="a11y-informacoes-tag-error" class="hidden text-dsc-label-tiny normal-case tracking-normal text-red-500 -mt-2.5 ml-1">Formato: A, B, A1, A2, A1.1, A1.2...</p>
         <div>
           <div class="flex items-center justify-between mb-1.5 ml-1">
-            <label for="a11y-informacoes-descricao" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Descrição</label>
+            <label for="a11y-informacoes-descricao" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal">Descrição</label>
             <span id="a11y-informacoes-descricao-counter" class="hidden text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted shrink-0">0/200</span>
           </div>
           <input type="text" id="a11y-informacoes-descricao" readonly maxlength="200"
@@ -702,14 +815,14 @@
              "Observações") — some no subtipo "Customizável" (sem
              componente real catalogado). -->
         <div id="a11y-informacoes-toggles-wrap" class="hidden space-y-2.5">
-          <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider ml-1">Campos do componente</p>
+          <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal ml-1">Campos do componente</p>
           <div id="a11y-informacoes-toggles-list" class="space-y-2"></div>
         </div>
       </div>
 
       <!-- Modo de marcação: Contorno (Agrupamento, envolve a área) vs Linha (Conector, liga a um ponto) -->
       <div class="mt-4">
-        <label class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Modo de marcação</label>
+        <label class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1.5 ml-1">Modo de marcação</label>
         <div class="grid grid-cols-2 gap-dsc-nano">
           <label class="relative flex items-center gap-dsc-nano p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#005ca9] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
             <input type="radio" name="a11y-draw-mode" value="contorno" checked class="sr-only" />
@@ -727,7 +840,7 @@
 
       <!-- Guide Side Selection (todas as categorias) -->
       <div class="mt-3 mb-1">
-        <label class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Lado da Guia</label>
+        <label class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1.5 ml-1">Lado da Guia</label>
         <div class="grid grid-cols-4 gap-dsc-nano">
           <label class="relative flex flex-col items-center gap-dsc-quark p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#005ca9] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
             <input type="radio" name="a11y-guide-side" value="right" checked class="sr-only" />
@@ -793,7 +906,7 @@
            na Section ativa, sem perguntar. -->
       <div>
         <div class="flex items-center justify-between mb-1.5 ml-1">
-          <label for="a11y-area-label-input" class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Rótulo da tela</label>
+          <label for="a11y-area-label-input" class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal">Rótulo da tela</label>
           <button type="button" onclick="refreshA11yAreaLabelFromSelection()" title="Puxar nome do elemento selecionado no canvas" aria-label="Puxar nome do elemento selecionado no canvas"
             class="flex items-center gap-dsc-quark text-dsc-label-tiny normal-case tracking-normal font-bold text-[#005ca9] hover:text-blue-600 dark:text-blue-400 transition-colors">
             <i data-lucide="refresh-cw" class="w-3 h-3"></i> Atualizar nome
@@ -955,6 +1068,100 @@
   </div>
 
   </div></div>
+
+<!-- MODAL: PÁGINA DO HANDOFF CRIADA — instrução de Ctrl+C/Ctrl+V (2026-09-22)
+     Jornada pedida pelo usuário: "seleciona a lib, a página do HAC é criada
+     e abre-se a modal para ctrl c e ctrl v das telas a serem documentadas".
+     Aberta por _openHacPageInstructionModal (accessibility.js) em resposta a
+     'hac-page-ready', disparada logo após chooseA11yHomeOrigin.
+
+     Os dois blocos de conteúdo são RECOLHÍVEIS (data-accordion-toggle +
+     toggleAccordion de core.js, mesmo mecanismo dos accordions do resto do
+     plugin) — pedido explícito: "passível de ser recolhida". O primeiro
+     nasce aberto (é a instrução principal); o segundo, fechado.
+
+     Deliberadamente NÃO bloqueia nada: o designer pode fechar e trabalhar
+     como sempre. A página já foi criada e ele já está nela quando esta modal
+     aparece. -->
+<div id="hac-page-instruction-modal" role="dialog" aria-modal="true" aria-labelledby="hac-page-instruction-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-dsc-tiny">
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeModal('hac-page-instruction-modal')" aria-hidden="true"></div>
+  <div class="relative z-10 w-full max-w-sm max-h-[85%] min-h-0 flex flex-col rounded-dsc-large overflow-hidden shadow-dsc-elevation-2 bg-white dark:bg-dark-surface">
+    <div class="flex items-center justify-between p-dsc-tiny border-b border-gray-100 dark:border-dark-line shrink-0">
+      <h3 id="hac-page-instruction-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-dsc-nano">
+        <i data-lucide="copy" class="w-4 h-4 text-[#005ca9]" aria-hidden="true"></i> Traga as telas para o handoff
+      </h3>
+      <button onclick="closeModal('hac-page-instruction-modal')" title="Fechar" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+    <div class="p-dsc-smaller space-y-3 overflow-y-auto min-h-0">
+      <p id="hac-page-instruction-intro" class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed"></p>
+
+      <div class="rounded-dsc-medium border border-gray-100 dark:border-dark-line">
+        <button type="button" data-accordion-toggle onclick="toggleAccordion(this)" aria-expanded="true"
+          class="w-full flex items-center justify-between gap-dsc-nano p-3.5 text-left">
+          <span class="font-bold text-[12px] text-slate-800 dark:text-white">Como fazer</span>
+          <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 dark:text-dark-muted shrink-0 transition-transform" style="transform: rotate(180deg)" aria-hidden="true"></i>
+        </button>
+        <div data-accordion-content class="px-3.5 pb-3.5">
+          <ol class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed list-decimal list-inside space-y-2.5">
+            <li>Vá até a página onde estão as telas que você quer documentar.</li>
+            <li>Selecione as telas e copie com <strong>Ctrl&nbsp;+&nbsp;C</strong> (ou Cmd&nbsp;+&nbsp;C no Mac).</li>
+            <li>Volte para a página do handoff e cole com <strong>Ctrl&nbsp;+&nbsp;V</strong> (ou Cmd&nbsp;+&nbsp;V).</li>
+            <li>Repita para telas de outras páginas, se houver — pode colar todas aqui.</li>
+            <li>Com as telas já aqui, use <strong>Selecionar Tela</strong> para começar a documentar cada uma.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="rounded-dsc-medium border border-gray-100 dark:border-dark-line">
+        <button type="button" data-accordion-toggle onclick="toggleAccordion(this)" aria-expanded="false"
+          class="w-full flex items-center justify-between gap-dsc-nano p-3.5 text-left">
+          <span class="font-bold text-[12px] text-slate-800 dark:text-white">Por que uma página separada?</span>
+          <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 dark:text-dark-muted shrink-0 transition-transform" aria-hidden="true"></i>
+        </button>
+        <div data-accordion-content class="hidden px-3.5 pb-3.5">
+          <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed">
+            O handoff de acessibilidade vira um material próprio, que o time de desenvolvimento consulta sem precisar navegar pelo arquivo de produto. Trabalhar sobre cópias também mantém as telas originais intactas: nada do que o hac desenha aqui — selos, réplicas, fichas — toca o design original.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="p-dsc-tiny border-t border-gray-100 dark:border-dark-line flex gap-dsc-nano shrink-0">
+      <button onclick="closeModal('hac-page-instruction-modal')" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#005ca9] hover:bg-blue-700 rounded-dsc-large transition-colors shadow-lg shadow-blue-500/20">Entendi</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: FINALIZAÇÃO DO HANDOFF DE ACESSIBILIDADE (2026-09-22) — só abre
+     via _fichaOpenFinalizeModal (handoff-ficha.js), que só dispara quando
+     _fichaProjectCompletion().isComplete é true (todas as telas
+     documentadas com checklist fechado). Confirmar aqui sobe a versão MAIOR
+     do handoff (_fichaConfirmFinalize) — mesma ação de "Iniciar nova versão
+     do handoff", mas neste contexto marca o fechamento de uma geração
+     completa de documentação, não uma correção pontual. -->
+<div id="a11y-finalize-handoff-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-finalize-handoff-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-dsc-tiny">
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeModal('a11y-finalize-handoff-modal')" aria-hidden="true"></div>
+  <div class="relative z-10 w-full max-w-sm max-h-full min-h-0 flex flex-col rounded-dsc-large overflow-hidden shadow-dsc-elevation-2 bg-white dark:bg-dark-surface">
+    <div class="flex items-center justify-between p-dsc-tiny border-b border-gray-100 dark:border-dark-line">
+      <h3 id="a11y-finalize-handoff-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-dsc-nano">
+        <i data-lucide="flag" class="w-4 h-4 text-[#005ca9]" aria-hidden="true"></i> Finalizar Handoff de Acessibilidade
+      </h3>
+      <button onclick="closeModal('a11y-finalize-handoff-modal')" title="Fechar" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+    <div class="p-dsc-smaller space-y-2.5">
+      <p class="text-[12px] text-slate-600 dark:text-dark-muted leading-relaxed">Todas as telas do projeto têm o checklist de acessibilidade fechado.</p>
+      <p id="a11y-finalize-handoff-count" class="text-[12px] font-semibold text-slate-700 dark:text-white"></p>
+      <p class="text-[12px] text-slate-500 dark:text-dark-muted leading-relaxed">Finalizar marca esta geração do handoff como concluída e inicia uma nova versão. Você pode continuar editando o projeto normalmente depois.</p>
+    </div>
+    <div class="p-dsc-tiny border-t border-gray-100 dark:border-dark-line flex gap-dsc-nano">
+      <button onclick="closeModal('a11y-finalize-handoff-modal')" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 dark:text-dark-muted bg-gray-100 dark:bg-dark-line hover:bg-gray-200 dark:hover:bg-dark-line/70 rounded-dsc-large transition-colors">Cancelar</button>
+      <button onclick="_fichaConfirmFinalize()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#005ca9] hover:bg-blue-600 rounded-dsc-large transition-colors">Finalizar</button>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL: INSTRUÇÃO DO TEMPLATE OFICIAL — Especificações para Leitor de
      Tela, e reabertura manual de Ordem de Tabulação/Ordem de Leitura Mobile
@@ -1186,9 +1393,9 @@
   <div class="p-5 overflow-y-auto flex-1 min-h-0" onscroll="handleScroll(this)">
     <div class="max-w-sm mx-auto">
       <div id="a11y-batch-area-wrap" class="mb-4">
-        <label for="a11y-batch-area-select" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1.5 ml-1">Tela mapeada para especificação</label>
+        <label for="a11y-batch-area-select" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1.5 ml-1">Tela mapeada para especificação</label>
         <select id="a11y-batch-area-select"
-          class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all">
+          class="dsc-select w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all">
         </select>
         <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted mt-1.5 leading-tight">Todas as especificações do lote nascem dentro desta tela.</p>
       </div>
@@ -1481,8 +1688,7 @@
 <div id="about-hac-modal" role="dialog" aria-modal="true" aria-labelledby="about-hac-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-dsc-tiny">
   <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeModal('about-hac-modal')" aria-hidden="true"></div>
   <div class="relative z-10 w-full max-w-sm max-h-full min-h-0 flex flex-col rounded-dsc-large overflow-hidden shadow-dsc-elevation-2 bg-white dark:bg-dark-surface">
-  <div class="w-full max-w-sm">
-    <div class="flex items-center justify-between p-dsc-tiny border-b border-gray-100 dark:border-dark-line">
+    <div class="flex items-center justify-between p-dsc-tiny border-b border-gray-100 dark:border-dark-line shrink-0">
       <h3 id="about-hac-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-dsc-nano">
         <i data-lucide="person-standing" class="w-4 h-4 text-[#005ca9]" aria-hidden="true"></i> Sobre o hac
       </h3>
@@ -1490,7 +1696,12 @@
         <i data-lucide="x" class="w-4 h-4"></i>
       </button>
     </div>
-    <div class="p-dsc-smaller space-y-4">
+    <!-- overflow-y-auto flex-1 min-h-0 (2026-09-22, corrige print real de
+         corte): antes deste corpo não rolava — ao crescer (bloco
+         "Manutenção" com 2 botões novos) o conteúdo estourava o max-h-full
+         do modal sem scroll, cortando o rodapé "Fechar". Mesmo padrão já
+         usado nas demais modais deste arquivo (ex. linha ~831). -->
+    <div class="p-dsc-smaller space-y-4 overflow-y-auto flex-1 min-h-0" onscroll="handleScroll(this)">
       <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed">
         <strong>HAC</strong> — Handoff de Acessibilidade CAIXA. Documenta, direto no canvas do Figma, como cada elemento da tela deve ser interpretado por um leitor de tela e em que ordem o teclado deve navegá-la.
       </p>
@@ -1512,12 +1723,31 @@
             class="shrink-0 px-dsc-micro py-1.5 text-dsc-label-tiny normal-case tracking-normal font-bold text-[#005ca9] bg-[#005ca9]/10 hover:bg-[#005ca9]/20 rounded-dsc-medium transition-colors">Trocar</button>
         </div>
       </dl>
+      <!-- Manutenção (2026-09-22, pedido do usuário: "temos que ter uma
+           funcionalidade pra limpeza do cache e para limpeza completa,
+           tanto do cache, como dos itens inseridos no canvas") — duas ações
+           de gravidade crescente, cada uma com sua própria confirmação
+           (window.confirm em clearPluginCache/clearPluginCanvasAndCache,
+           core.js). Separadas visualmente do resto da modal (borda
+           superior) por serem destrutivas, não informativas como o
+           conteúdo acima. -->
+      <div class="pt-3 border-t border-gray-100 dark:border-dark-line space-y-1.5">
+        <p class="text-dsc-label-tiny font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wider">Manutenção</p>
+        <button type="button" onclick="clearPluginCache()"
+          class="w-full flex items-center gap-2.5 px-dsc-micro py-2.5 rounded-dsc-medium border border-gray-200 dark:border-dark-line text-slate-600 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-line text-dsc-label-tiny normal-case tracking-normal font-bold transition-colors text-left">
+          <i data-lucide="trash-2" class="w-4 h-4 shrink-0" aria-hidden="true"></i>
+          Limpar cache
+        </button>
+        <button type="button" onclick="clearPluginCanvasAndCache()"
+          class="w-full flex items-center gap-2.5 px-dsc-micro py-2.5 rounded-dsc-medium border border-red-200 dark:border-red-800/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 text-dsc-label-tiny normal-case tracking-normal font-bold transition-colors text-left">
+          <i data-lucide="trash" class="w-4 h-4 shrink-0" aria-hidden="true"></i>
+          Limpar tudo (cache + canvas)
+        </button>
+      </div>
     </div>
-    <div class="p-dsc-tiny border-t border-gray-100 dark:border-dark-line">
+    <div class="p-dsc-tiny border-t border-gray-100 dark:border-dark-line shrink-0">
       <button onclick="closeModal('about-hac-modal')" class="w-full py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-dsc-large transition-colors">Fechar</button>
     </div>
-  </div>
-
   </div></div>
 
 <!-- MODAL: CONFIRMAÇÃO GENÉRICA (sim/não) -->

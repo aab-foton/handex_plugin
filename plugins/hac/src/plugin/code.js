@@ -1822,6 +1822,74 @@ export function _computeNextA11ySectionName() {
   return `${A11Y_SECTION_NAME} v${maxVersion + 1}`;
 }
 
+// ── Página dedicada do Handoff (2026-09-22) ─────────────────────────────
+// Jornada pedida pelo usuário: ao escolher a lib, o plugin cria (ou
+// reaproveita) uma página própria para o handoff e instrui o designer a
+// colar ali, com Ctrl+C/Ctrl+V, as telas que quer documentar. A partir daí
+// todo o trabalho de a11y acontece nessa página, não espalhado sobre a
+// página de produto.
+//
+// Identificação em DUAS camadas, nesta ordem:
+//   1. pluginData 'hacDedicatedPage' — sobrevive a um rename manual da
+//      página pelo designer. Mesma lição já aplicada em
+//      _getOrCreateA11ySessionSection ("identificada por pluginData, nunca
+//      por nome").
+//   2. nome exato — cobre páginas criadas antes desta versão, ou por outro
+//      designer num plugin desatualizado. Ao encontrar por nome, o
+//      pluginData é gravado (migração aditiva), então a busca 1 passa a
+//      valer dali em diante.
+//
+// figma.root.children é legível direto sob documentAccess "dynamic-page"
+// (só o CONTEÚDO de uma página é lazy, não a lista de páginas) — não
+// precisa de loadAllPagesAsync. Mas ler .children de uma página que NÃO é a
+// corrente exige page.loadAsync() antes; por isso esta função é async
+// mesmo quando só cria.
+//
+// HISTÓRICO: esta função existiu no commit 412588d (Fase 1 do plano de
+// seleção múltipla) e foi desfeita pelo revert b228343 junto com as Fases
+// 0-3, cujo teste manual falhou em cadeia — todas as 4 falhas no caminho de
+// CLONE AUTOMÁTICO em lote (reconciliação de seleção, COMPONENT_SET,
+// ComponentNode.clone, _isHacOwnedNode sobre o próprio clone), nenhuma na
+// criação da página. Reescrita aqui isolada, sem reintroduzir nada daquele
+// caminho: quem traz as telas para cá é o designer, com Ctrl+C/Ctrl+V.
+export const HAC_PAGE_NAME = '👐 | HAC - Handoff de Acessibilidade CAIXA';
+
+export async function _getOrCreateHacPage() {
+  let page = null;
+  let byName = null;
+
+  for (const p of figma.root.children) {
+    if (p.type !== 'PAGE') continue;
+    try {
+      if (p.getPluginData && p.getPluginData('hacDedicatedPage') === 'true') {
+        page = p;
+        break;
+      }
+      if (!byName && p.name === HAC_PAGE_NAME) byName = p;
+    } catch (e) { }
+  }
+
+  if (!page && byName) {
+    page = byName;
+    // Migração aditiva: passa a ser reconhecível por pluginData daqui em
+    // diante, mesmo que o designer renomeie a página depois.
+    try { page.setPluginData('hacDedicatedPage', 'true'); } catch (e) { }
+  }
+
+  if (page) {
+    // Obrigatório sob dynamic-page antes de qualquer leitura de .children
+    // por quem chamar esta função — a página encontrada quase nunca é a
+    // corrente neste fluxo.
+    try { await page.loadAsync(); } catch (e) { }
+    return { page, created: false };
+  }
+
+  page = figma.createPage();
+  page.name = HAC_PAGE_NAME;
+  page.setPluginData('hacDedicatedPage', 'true');
+  return { page, created: true };
+}
+
 // legacyName (opcional, 2026-09-09): usado só pela Section-mãe da Ficha
 // (renomeada de "hac — Ficha de Handoff" pra "hac — Handoff Completo",
 // pedido de produto) — arquivos já existentes têm essa Section gravada no
@@ -1938,10 +2006,17 @@ export function _getOrCreateA11ySessionSection(designerName, currentUserId, refe
     const _now = new Date();
     const _pad = (v) => String(v).padStart(2, '0');
     const _timestamp = `${_pad(_now.getDate())}/${_pad(_now.getMonth() + 1)}/${_now.getFullYear()} ${_pad(_now.getHours())}:${_pad(_now.getMinutes())}`;
-    section.name = `[HAC] Handoff de Acessibilidade | ${_timestamp} | ${designerName || 'Designer não identificado'} | v1.0`;
+    // Nasce "| rascunho", NÃO "| v1.0" (2026-09-24, revisão do modelo de
+    // versionamento — pedido do usuário: "o versionamento final deve
+    // acontecer apenas quando finalizado... enquanto a ficha ainda está
+    // sendo preenchida, a versão fica sendo algo preliminar"). hacSessionVersion
+    // fica AUSENTE até a 1ª finalização — sua presença/ausência é o próprio
+    // sinal de "já foi finalizado alguma vez", consumido pelo handler
+    // bump-a11y-session-version (ver comentário completo lá) e pelo
+    // frontend (_fichaSessionVersionLabel, handoff-ficha.js).
+    section.name = `[HAC] Handoff de Acessibilidade | ${_timestamp} | ${designerName || 'Designer não identificado'} | rascunho`;
     section.setPluginData('hacSessionSection', 'true');
     if (currentUserId) section.setPluginData('hacSessionOwnerId', currentUserId);
-    section.setPluginData('hacSessionVersion', '1.0');
     section.x = 0;
     section.y = 0;
     section.resizeWithoutConstraints(200, 200);
@@ -2060,7 +2135,11 @@ export function _findOwnPriorSessionSection(currentUserId) {
         return {
           name: n.name,
           ownerId: currentUserId,
-          version: n.getPluginData('hacSessionVersion') || '1.0',
+          // Fallback 'rascunho' (2026-09-24, revisão do modelo de
+          // versionamento) — hacSessionVersion só existe depois da 1ª
+          // finalização; ausência do pluginData é o estado normal de um
+          // handoff ainda em preenchimento, não um dado corrompido.
+          version: n.getPluginData('hacSessionVersion') || 'rascunho',
           areaCount,
           timestamp,
           designerName,
@@ -2638,6 +2717,14 @@ export function _getOrCreateCloneOverlayGroup(clone, pluginDataKey, namePrefix, 
     if (areaId) {
       try { existing.setPluginData(pluginDataKey + 'ForArea', areaId); } catch (e) { }
     }
+    // Bug real corrigido (2026-09-23, print do usuário: "as marcações estão
+    // aparecendo atrás da réplica"). A ordenação logo acima do clone só
+    // acontecia na CRIAÇÃO do overlay (mais abaixo) — num overlay
+    // REAPROVEITADO, qualquer coisa que tenha reinserido o clone no pai
+    // depois disso (reparenting pra Ficha, troca de clone da área) o deixa
+    // na frente, e todo card de spec nasce escondido atrás da réplica.
+    // Reafirma a ordem a cada uso, não só na primeira vez.
+    _raiseOverlayAboveClone(clone, existing);
     return existing;
   }
   const cloneParent = clone.parent;
@@ -2697,20 +2784,31 @@ export function _getOrCreateCloneOverlayGroup(clone, pluginDataKey, namePrefix, 
   // _findCloneOverlaySibling.
   if (areaId) overlayGroup.setPluginData(pluginDataKey + 'ForArea', areaId);
 
-  // Sempre logo ACIMA do clone na pilha de filhos do pai comum — garante
-  // que o overlay fique visualmente por cima do clone inteiro (grupo sem
-  // Auto Layout/clip, então esta ordem de índice já basta, sem depender de
-  // itemReverseZIndex nenhum aqui).
-  if (cloneParent && typeof cloneParent.insertChild === 'function') {
-    try {
-      const cloneIndex = cloneParent.children.indexOf(clone);
-      cloneParent.insertChild(cloneIndex + 1, overlayGroup);
-    } catch (e) { /* ordem cosmética — grupo já existe e já está correto por baixo */ }
-  }
+  _raiseOverlayAboveClone(clone, overlayGroup);
 
   _setCloneOverlayGroupAbsolutePositioning(overlayGroup);
 
   return overlayGroup;
+}
+
+// Sempre logo ACIMA do clone na pilha de filhos do pai comum — garante
+// que o overlay fique visualmente por cima do clone inteiro (grupo sem
+// Auto Layout/clip, então esta ordem de índice já basta, sem depender de
+// itemReverseZIndex nenhum aqui). Chamada tanto na criação do overlay
+// quanto a cada reaproveitamento: um overlay já existente pode ter ficado
+// atrás do clone se algo reinseriu o clone no pai depois (reparenting pra
+// Ficha, troca de clone da área) — ver bug de 2026-09-23, specs nascendo
+// escondidas atrás da réplica.
+function _raiseOverlayAboveClone(clone, overlayGroup) {
+  const cloneParent = clone && clone.parent;
+  if (!cloneParent || typeof cloneParent.insertChild !== 'function') return;
+  try {
+    const cloneIndex = cloneParent.children.indexOf(clone);
+    const overlayIndex = cloneParent.children.indexOf(overlayGroup);
+    if (cloneIndex < 0) return;
+    if (overlayIndex >= 0 && overlayIndex > cloneIndex) return;
+    cloneParent.insertChild(cloneIndex + 1, overlayGroup);
+  } catch (e) { /* ordem cosmética — grupo já existe e segue utilizável */ }
 }
 
 // Bug real corrigido (2026-09-08, 8ª rodada): a Ficha de Handoff é o
@@ -5437,6 +5535,62 @@ export function _clearHacDataFromDocument() {
   } catch (e) {
     console.warn('[hac] falha ao limpar o backup do documento:', e && e.message);
   }
+}
+
+// ── Limpeza COMPLETA (cache + canvas) — 2026-09-22, pedido do usuário ────
+// "Limpar Cache" (clear-cache, onmessage.js) só apaga DADO (clientStorage +
+// backup no documento) — nunca tocou o canvas, então Áreas/selos/réplicas/
+// Ficha já inseridos ficavam órfãos (visíveis no canvas, mas sem
+// correspondência em hacData). Esta função remove também os NÓS reais.
+//
+// Escopo (decisão do usuário: "Só o que o hac criou nesta sessão/
+// designer"): remove SÓ a Section de sessão (hacSessionSection==='true')
+// cujo hacSessionOwnerId bate com figma.currentUser.id — nunca a de outro
+// designer que tenha trabalhado no mesmo arquivo (mesmo isolamento já
+// aplicado por _getOrCreateA11ySessionSection). Varre TODAS as páginas do
+// documento (dynamic-page: precisa de loadAsync antes de ler .children de
+// uma página que não é a corrente) — uma Área pode ter sido criada em
+// qualquer página onde o designer selecionou um frame.
+//
+// Sem currentUserId (figma.currentUser indisponível, caso raro): não
+// remove nada — mesma cautela do fallback de leitura em
+// _getOrCreateA11ySessionSection, mas aqui numa operação destrutiva o
+// fallback correto é ABSTER, nunca "sem filtro" (isso arriscaria apagar
+// trabalho de outro designer).
+export async function _clearHacCanvasForCurrentUser() {
+  const currentUserId = figma.currentUser ? figma.currentUser.id : null;
+  if (!currentUserId) {
+    return { removed: 0, blocked: true };
+  }
+
+  let removed = 0;
+  for (const pageNode of figma.root.children) {
+    if (pageNode.type !== 'PAGE') continue;
+    try {
+      await pageNode.loadAsync();
+    } catch (e) {
+      continue;
+    }
+    const sectionsToRemove = [];
+    for (const n of pageNode.children) {
+      if (n.type !== 'SECTION') continue;
+      try {
+        if (n.getPluginData && n.getPluginData('hacSessionSection') === 'true'
+          && n.getPluginData('hacSessionOwnerId') === currentUserId) {
+          sectionsToRemove.push(n);
+        }
+      } catch (e) { }
+    }
+    for (const section of sectionsToRemove) {
+      try {
+        section.remove();
+        removed++;
+      } catch (e) {
+        console.warn('[hac] falha ao remover Section de sessão do canvas:', e && e.message);
+      }
+    }
+  }
+  return { removed, blocked: false };
 }
 
 // Quantas Áreas/specs um hacData carrega — usado só para decidir qual das

@@ -2,7 +2,7 @@
   "meta": {
     "libraryName": "DSC | Super App",
     "figmaFileKey": "epCGtlKQxedDxQVlK3lNcN",
-    "exportedAt": "2026-09-22T13:13:28.511Z",
+    "exportedAt": "2026-09-23T18:19:18.058Z",
     "generator": "fetch-design-refs.cjs (hac)",
     "warnings": [
       "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
@@ -10,6 +10,27 @@
   },
   "designTokens": {
     "variables": [
+      {
+        "key": "eb3ddb00d95838255af587ad1eb890abbb18a35b",
+        "name": "color blind on",
+        "resolvedType": "BOOLEAN",
+        "collection": "Accessibility",
+        "value": null
+      },
+      {
+        "key": "46a7bea58854c19170e7152b4f3ed97718aafb60",
+        "name": "Width - Screen",
+        "resolvedType": "FLOAT",
+        "collection": "Screen size",
+        "value": 360
+      },
+      {
+        "key": "713214ddb27195af0824f84fab30b31526f4eb3e",
+        "name": "Height - Screen",
+        "resolvedType": "FLOAT",
+        "collection": "Screen size",
+        "value": 800
+      },
       {
         "key": "84a507d1b885b05f356cc444daa786a0965f065d",
         "name": "dsc/color/highlight/highlight [Azul CX - Color 8]",
@@ -67,18 +88,18 @@
         "value": "#03453b"
       },
       {
-        "key": "1416193b41f620131c30e8d26f42a5150330fd18",
-        "name": "dsc/color/decorative/decorativeOutlined [Color 3]",
-        "resolvedType": "COLOR",
-        "collection": "SuperApp Theme",
-        "value": "#d0f2ed"
-      },
-      {
         "key": "f7d0c2ecc99d5ea43afd7a47ac8a4062d4871c3c",
         "name": "dsc/color/accent/accentBg [Color 2]",
         "resolvedType": "COLOR",
         "collection": "SuperApp Theme",
         "value": "#ffefd6"
+      },
+      {
+        "key": "1416193b41f620131c30e8d26f42a5150330fd18",
+        "name": "dsc/color/decorative/decorativeOutlined [Color 3]",
+        "resolvedType": "COLOR",
+        "collection": "SuperApp Theme",
+        "value": "#d0f2ed"
       },
       {
         "key": "5770cb929fafef3eb752fdb5d3c3b9b2d5b36e47",
@@ -1257,18 +1278,18 @@
         "value": 0.25
       },
       {
-        "key": "cae03ed80cab99d438ac67cb5293a5fbcc9da9bf",
-        "name": "dsc/font/letter-spacing/extended",
-        "resolvedType": "FLOAT",
-        "collection": "SuperApp Theme",
-        "value": 0.5
-      },
-      {
         "key": "6d0401fcfda74d9c436d5990d2a221d5f9a69863",
         "name": "dsc/icon/size/quark",
         "resolvedType": "FLOAT",
         "collection": "SuperApp Theme",
         "value": 12
+      },
+      {
+        "key": "cae03ed80cab99d438ac67cb5293a5fbcc9da9bf",
+        "name": "dsc/font/letter-spacing/extended",
+        "resolvedType": "FLOAT",
+        "collection": "SuperApp Theme",
+        "value": 0.5
       },
       {
         "key": "06b6fd6d856205c6131d9101e95da6719e48503b",
@@ -1626,27 +1647,6 @@
         "resolvedType": "STRING",
         "collection": "Properties glossary",
         "value": "1:1"
-      },
-      {
-        "key": "46a7bea58854c19170e7152b4f3ed97718aafb60",
-        "name": "Width - Screen",
-        "resolvedType": "FLOAT",
-        "collection": "Screen size",
-        "value": 360
-      },
-      {
-        "key": "713214ddb27195af0824f84fab30b31526f4eb3e",
-        "name": "Height - Screen",
-        "resolvedType": "FLOAT",
-        "collection": "Screen size",
-        "value": 800
-      },
-      {
-        "key": "eb3ddb00d95838255af587ad1eb890abbb18a35b",
-        "name": "color blind on",
-        "resolvedType": "BOOLEAN",
-        "collection": "Accessibility",
-        "value": null
       },
       {
         "key": "441e5c9892c6b8422b58d7fde53fd14a11ac9bb5",

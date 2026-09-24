@@ -155,7 +155,16 @@ function hasDscPrefix(containingFrameName) {
 const A11Y_LIB_COMPONENT_MAP = [
   { shortName: 'accordion', libs: {
     'web-angular-react': ['Accordion'],
-    'super-app': ['Accordion', 'List Accordion'],
+    'super-app': [
+      'Accordion', 'List Accordion',
+      // Ampliação (2026-09-22, varredura completa): confirmado via REST API
+      // (fileKey epCGtlKQxedDxQVlK3lNcN, nodeId 7565:4788) — "[dsc] Timeline
+      // Collapse" é um item "Ver mais"/"Ver menos" com estado
+      // collapsed=true/false, mesmo padrão de expandir/recolher conteúdo já
+      // coberto por Accordion/List Accordion, só aplicado a um item de linha
+      // do tempo em vez de uma lista genérica.
+      'Timeline Collapse',
+    ],
     // super-dsc-web: SEM correspondência clara — não existe family "Accordion"
     // nem "List Accordion" nos dados reais desta lib (confirmado 2026-09-01).
     // dsc-android: SEM correspondência — não existe family "Accordion" nos
@@ -185,7 +194,10 @@ const A11Y_LIB_COMPONENT_MAP = [
     // dsc-android: "Checkbox" já bate por wordMatch direto (ALTA confiança).
   } },
   { shortName: 'dialog', libs: {
-    'web-angular-react': ['Dialog'],
+    // Ampliação (2026-09-22, varredura completa): "[dsc] Tooltip" (nomenclatura
+    // legada web-angular-react) é overlay de conteúdo sobreposto — mesmo
+    // critério já aplicado a "Tooltip" em super-app/super-dsc-web abaixo.
+    'web-angular-react': ['Dialog', 'Tooltip'],
     // super-app: nomenclatura mobile usa "Sheet"/"Tipkit Popover" em vez de
     // "Dialog" — equivalente semântico de plataforma (modal/overlay bloqueante),
     // decisão de curadoria explícita, não substring incidental.
@@ -199,6 +211,10 @@ const A11Y_LIB_COMPONENT_MAP = [
     // equivalência semântica (Dialog do Angular Material ~ Modal do DSC web).
     'super-dsc-web': ['Modal', 'Popover', 'Tooltip', 'Drawer Panel'],
     // dsc-android: "Dialog" já bate por wordMatch direto (ALTA confiança).
+    // Ampliação (2026-09-22): "Plain Tooltip" é o overlay de dica contextual
+    // nativo Android — mesmo critério de "Tooltip" já curado nas outras 3
+    // libs (overlay de conteúdo sobreposto).
+    'dsc-android': ['Plain Tooltip'],
   } },
   { shortName: 'inputs', libs: {
     'web-angular-react': [
@@ -234,9 +250,15 @@ const A11Y_LIB_COMPONENT_MAP = [
     // Picker"/"Date Field Form" já curados — mesmo conceito de seletor de
     // data, variação "modal" é detalhe de apresentação Android, não muda a
     // categoria de a11y.
+    // Ampliação (2026-09-22, varredura completa): os 4 Chips nativos Android
+    // (Assist/Filter/Input/Suggestion) são controles de filtro/seleção
+    // acionáveis — mesmo critério e mesmo precedente já curado para "Chip"
+    // em super-app nesta sessão (seleção de valor seleção de valor, não
+    // ação/submit — ver comentário de 'Chip' acima).
     'dsc-android': [
       'Text Field', 'Discrete Slider', 'Continuous Slider', 'Centered Slider',
       'Range Selection Slider', 'Modal Date Picker', 'Modal Date Input',
+      'Assist Chip', 'Filter Chip', 'Input Chip', 'Suggestion Chip',
     ],
   } },
   { shortName: 'link', libs: {
@@ -249,10 +271,13 @@ const A11Y_LIB_COMPONENT_MAP = [
     // dsc-android: mesma ausência — sem family "Link" nos dados reais.
   } },
   { shortName: 'listas', libs: {
-    // web-angular-react: sem family "Lista" — "Menu item"/"Menu Lateral" são
-    // os candidatos mais próximos de navegação em lista, mas sem prefixo
-    // [dsc] (vêm sem prefixo nos dados reais) — não incluídos aqui por não
-    // atender ao filtro de prefixo de qualquer forma.
+    // Ampliação (2026-09-22, varredura completa): "Menu item" e "Menu
+    // Lateral" TÊM prefixo [dsc] nos dados reais desta lib (confirmado via
+    // fetch-design-refs.cjs — o comentário anterior, de 2026-09-01, estava
+    // desatualizado/incorreto sobre isso), e são navegação em lista de itens
+    // percorridos em sequência — mesmo critério já usado para "Sidebar
+    // Menu"/"Sidebar Menu Item" em super-dsc-web abaixo.
+    'web-angular-react': ['Menu item', 'Menu Lateral'],
     'super-app': [
       'List Item', 'List Heading', 'List Footer', 'List Accordion', 'Transaction List Item',
       // Ampliação de curadoria (2026-09-22, pedido do usuário: "as sugestões
@@ -271,6 +296,24 @@ const A11Y_LIB_COMPONENT_MAP = [
       'Carousel - Horizontal', 'Carousel - Vertical', 'Carousel - Card Content',
       'Carousel Product Offer', 'Card Carousel Horizontal', 'Card Carousel Vertical',
       'Card Notification Stack',
+      // Ampliação (2026-09-22, bug real reportado pelo usuário: "documentei
+      // Value Section, o plugin não trouxe a sugestão, mesmo sendo um item
+      // explícito do catálogo"). Confirmado via REST API (fileKey
+      // epCGtlKQxedDxQVlK3lNcN, nodeId 9169:8460): "[dsc] Value Section" É um
+      // component set real (25 variantes: state=defined/text/loading/error ×
+      // size=standard/large × type=editable/navigation/display) — screenshot
+      // renderizado confirma visualmente uma grade de linhas "Label + Valor"
+      // com ação de editar (lápis "Alterar") ou navegar (chevron ">") em
+      // parte das variantes, exatamente o padrão de linha acionável percorrida
+      // em sequência já coberto por 'List Item'/'Transaction List Item' acima
+      // — não é um componente sem categoria sensata (diferente de Card/Badge/
+      // Product Card/Spinner desta mesma lib, mantidos SEM entrada aqui de
+      // propósito, mesmo critério "sem correspondência clara" já documentado
+      // no topo deste arquivo). NÃO era bug de comparação de string entre
+      // dropdown mobile e esta tabela (o nome real do containingFrame já é
+      // "Value Section", idêntico ao nome do dropdown) — era ausência real de
+      // curadoria: a família nunca tinha sido incluída aqui.
+      'Value Section',
     ],
     // 'Progress List'/'Progress List Item' REMOVIDOS daqui (2026-09-14,
     // correção real encontrada por revisão do Gemini via MCP, inspeção
@@ -283,11 +326,34 @@ const A11Y_LIB_COMPONENT_MAP = [
       // Ampliação de curadoria (2026-09-22) — mesmo critério aplicado a
       // super-app acima (agregadores de itens percorridos em sequência).
       'Search Results', 'Sidebar Menu', 'Sidebar Menu Item', 'card carousel',
+      // Ampliação (2026-09-22, varredura completa). Confirmado via REST API
+      // (fileKey erkqbRKIbaFWbkHe51BeiZ, nodeId 19469:25954, 32 variantes:
+      // variant=badge text/emphasized/link/copy/external, alignment=left/
+      // right, configuration=list/inline) — screenshot renderizado confirma
+      // o MESMO padrão visual "Label + Valor" navegável/editável/copiável já
+      // curado para "Value Section" na lib MOBILE (super-app) acima, mas aqui
+      // o nome web é "Label Value Pair" (containingFrame diferente, mesma
+      // semântica). IMPORTANTE — "[dsc] Value Section" NESTA lib (web) NÃO é
+      // o mesmo componente que o da lib mobile apesar do nome idêntico:
+      // confirmado via screenshot (nodeId 9169:8460 desta lib) que aqui é um
+      // bloco ÚNICO de valor financeiro (Label + "R$ 0,00" + chevron/Button),
+      // não uma grade de linhas percorríveis — por isso "Value Section" NÃO
+      // entra em 'listas' para super-dsc-web (fica sem categoria de
+      // propósito, mesmo critério "sem correspondência clara" do restante
+      // desta tabela — ver também comentário do bloco de exclusões no final
+      // do arquivo).
+      'Label Value Pair',
     ],
     // dsc-android: SEM correspondência clara — não existe family "[dsc] List
     // *" nos dados reais desta lib (confirmado 2026-09-02); "[base] Item"/
     // "[base] Menu item" são componentes internos sem prefixo [dsc], fora do
     // filtro de qualquer forma.
+    // Ampliação (2026-09-22, varredura completa): "Menu", "Navigation
+    // Drawer" e "Navigation Rail" são estruturas de navegação em lista de
+    // itens (menu de opções / gaveta de navegação lateral / trilho de
+    // navegação) — mesmo critério de "Sidebar Menu"/"Sidebar Menu Item" já
+    // curado em super-dsc-web acima.
+    'dsc-android': ['Menu', 'Navigation Drawer', 'Navigation Rail'],
   } },
   { shortName: 'paginator', libs: {
     'web-angular-react': ['Paginator'],
@@ -324,6 +390,16 @@ const A11Y_LIB_COMPONENT_MAP = [
     // (que documenta navegação sequencial entre etapas), por isso NÃO
     // incluído aqui apesar de conter a palavra "Stepper". SEM correspondência
     // clara pro conceito de a11y nesta lib.
+    // Ampliação (2026-09-22, varredura completa). Confirmado via REST API +
+    // screenshot (fileKey epCGtlKQxedDxQVlK3lNcN, nodeId 7565:4671, 12
+    // variantes: status=in progress/success/danger/completed, size=small/
+    // standard/large) — visual de sequência vertical de etapas com conector
+    // de linha e marcador de status, exatamente o mesmo conceito de
+    // navegação sequencial entre etapas já curado como "Progress List"/
+    // "Progress List Item" em super-dsc-web abaixo (2026-09-14). "Timeline
+    // Collapse" (variante irmã, com "Ver mais/Ver menos") NÃO entra aqui —
+    // ver 'accordion' acima.
+    'super-app': ['Timeline Item'],
     // 'Progress List'/'Progress List Item' adicionados aqui (2026-09-14,
     // correção real — ver comentário removido em 'listas' acima): são
     // stepper de fato (properties 'steps'/'current step', estados de
@@ -413,6 +489,24 @@ const A11Y_STRUCTURAL_EXACT_OVERRIDES = {
   '[dsc] Toolbar': { shortName: 'estrutura', reason: 'marco de navegação "header" (nomenclatura super-dsc-web)' },
   '[dsc] Title Bar': { shortName: 'estrutura', reason: 'marco de navegação "header" (barra de título)' },
   '[dsc-tc] Screen Footer': { shortName: 'estrutura', reason: 'marco de navegação "footer" (rodapé de tela mobile)' },
+  // Varredura completa das 4 libs (2026-09-22, pedido explícito do usuário:
+  // "percorra a lista por completo, não quero nenhum elemento faltante").
+  // 'informacoes' é uma das 5 CATEGORIAS FIXAS de a11y (não um dos 16
+  // shortNames de "Elementos e Imagens", mesmo caso de 'estrutura' acima) —
+  // confirmado via screenshot real (REST API /v1/images) que os 3 abaixo são
+  // blocos de conteúdo informativo autônomo (banner de classificação de
+  // sensibilidade do conteúdo da página, alerta inline persistente com
+  // título+mensagem, bloco de estado vazio/erro de tela inteira com
+  // título+descrição+CTA) — não são um dos 16 componentes interativos
+  // catalogados, mas também não são "Elementos e Imagens" genéricos: têm
+  // texto substantivo próprio que precisa ser anunciado pelo leitor de tela,
+  // o mesmo critério que já classifica 'informacoes' como categoria (ver
+  // A11Y_CATEGORIES em accessibility.js). Precisa do branch simétrico a
+  // 'estrutura' em _resolveA11yFormPresetFromItem (accessibility.js) para o
+  // preset funcionar de ponta a ponta — feito na mesma sessão.
+  '[dsc] Classificação de Conteúdo': { shortName: 'informacoes', reason: 'banner de classificação de sensibilidade do conteúdo da página — bloco informativo autônomo' },
+  '[dsc] Alert': { shortName: 'informacoes', reason: 'alerta inline persistente (ícone+título+mensagem) — bloco informativo autônomo, distinto de Toast/Snackbar (transiente) e Modal/Dialog (overlay bloqueante)' },
+  '[dsc-tc] State Message': { shortName: 'informacoes', reason: 'bloco de estado vazio/erro de tela inteira (título+descrição+CTA) — conteúdo informativo substantivo, sem equivalente nos 16 componentes interativos' },
 };
 
 // Padrão de exclusão (2026-09-14, achado real da revisão do Gemini via MCP,
@@ -629,6 +723,11 @@ function main() {
   const byShortName = {};
   for (const s of A11Y_SHORTNAMES) byShortName[s] = { families: 0, variantCount: 0 };
   byShortName['estrutura'] = { families: 0, variantCount: 0 };
+  // 'informacoes' pode aparecer como match.shortName via
+  // A11Y_STRUCTURAL_EXACT_OVERRIDES (ver comentário no bloco de overrides
+  // acima, ampliação 2026-09-22) — mesma necessidade de 'estrutura' logo
+  // acima, sem essa entrada o incremento abaixo quebraria.
+  byShortName['informacoes'] = { families: 0, variantCount: 0 };
   for (const entry of [...alta, ...baixa]) {
     byShortName[entry.match.shortName].families += 1;
     byShortName[entry.match.shortName].variantCount += entry.variantCount;

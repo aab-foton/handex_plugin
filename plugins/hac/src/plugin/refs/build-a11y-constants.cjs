@@ -268,6 +268,19 @@ function buildMobileLinkOptions(mobileJSON) {
 // Card, Badge, Spinner), cai no critério antigo (variant.toggles) — nesses
 // casos não há ambiguidade a resolver, o default já é o único valor
 // possível.
+//
+// SOBREPOSIÇÃO ESPERADA com A11Y_MOBILE_SCREEN_READER_VARIANTS (auditoria
+// 2026-09-23): 15 dos 66 componentes aparecem NAS DUAS listas — os que têm
+// sub-variantes E cuja aproximação "pelo menos uma" dá true. Isso é
+// redundante mas INTENCIONAL, não defeito: o consumidor
+// (_a11yMobileComponentHasToggle, accessibility.js) sempre prioriza o dado
+// granular por sub-variante quando ele existe, e só cai nesta lista para
+// componentes "folha simples" — então, para esses 15, as entradas aqui
+// nunca são lidas hoje. Mantidas de propósito: filtrá-las daqui
+// economizaria alguns bytes, mas deixaria a lista INCOMPLETA se algum dia
+// a precedência do consumidor mudar — dado sobrando é inofensivo, dado
+// faltando vira bug silencioso. Não "otimizar" isso sem antes mudar o
+// consumidor.
 function buildMobileComponentsWithNomeAcessivel(mobileJSON) {
   if (!mobileJSON || !Array.isArray(mobileJSON.components)) return [];
 
@@ -324,6 +337,21 @@ function buildMobileComponentsWithNomeAcessivel(mobileJSON) {
 // achado real 2026-09-17 — deep-scan). Os outros ~38 ("folha simples", sem
 // SET-neto de sub-variantes) simplesmente não aparecem aqui — o frontend
 // trata ausência de chave como "sem dropdown novo, comportamento antigo".
+//
+// EXTENSÃO (2026-09-22, pedido explícito do usuário: "o plugin tem que
+// refletir a mesma estrutura [do box spec], só que se modificar a depender
+// da variante, do componente listado"): cada sub-variante agora carrega
+// `activeToggles` (array COMPLETO de nomes BOOLEAN reais com binding ativo
+// naquela sub-variante específica — Nome Acessível/Observações/Dica Leitor
+// de Tela, o que existir), não só o booleano reduzido `hasNomeAcessivel` de
+// antes. `hasNomeAcessivel` continua presente (retrocompatibilidade, nenhum
+// ponto de consumo antigo quebra), mas passa a ser só um atalho derivado do
+// array novo, nunca uma segunda fonte de verdade. Isso permite ao formulário
+// decidir a visibilidade de QUALQUER toggle (não só Nome Acessível/Label)
+// pela combinação real componente+sub-variante — ex.: "Top App Bar" na
+// sub-variante "Show Filters" não tem "Observações" em activeToggles
+// (confirmado via REST API, 1/109 sub-variantes reais), diferente de todas
+// as outras sub-variantes do catálogo, que têm.
 function buildMobileScreenReaderVariants(mobileJSON) {
   if (!mobileJSON || !Array.isArray(mobileJSON.components)) return {};
 
@@ -349,11 +377,53 @@ function buildMobileScreenReaderVariants(mobileJSON) {
     const prefixRe = new RegExp('^' + String(srv.subModeProperty || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '=');
     const variants = srv.variants.map(sv => {
       const name = String(sv.variantName || '').replace(prefixRe, '').trim() || sv.variantName;
-      const hasNomeAcessivel = Array.isArray(sv.activeToggles) && sv.activeToggles.includes('Nome Acessível');
-      return { name, hasNomeAcessivel };
+      const activeToggles = Array.isArray(sv.activeToggles) ? sv.activeToggles.slice() : [];
+      const hasNomeAcessivel = activeToggles.includes('Nome Acessível');
+      return { name, hasNomeAcessivel, activeToggles };
     });
 
     result[componentName] = { subModeProperty: srv.subModeProperty, variants };
+  }
+  return result;
+}
+
+// ── A11Y_MOBILE_COMPONENT_TOGGLES ───────────────────────────────────────
+// Mapa { [nomeComponente]: string[] } com os nomes BOOLEAN reais (raw, ex.
+// "Nome Acessível"/"Observações") que o componente tem em QUALQUER
+// sub-variante — usado como fallback pelo formulário para componentes
+// "folha simples" (sem screenReaderVariants, ver A11Y_MOBILE_SCREEN_READER_
+// VARIANTS acima): nesse caso não há ambiguidade de sub-variante, `toggles`
+// (camada 1 do scan) já é a lista real e definitiva. Para componentes COM
+// screenReaderVariants, o formulário deve preferir a combinação
+// componente+sub-variante (mais precisa) — este mapa aqui vira só um
+// resumo "união de todas as sub-variantes", útil como fallback defensivo
+// (ex. sub-variante ainda não escolhida) mas nunca a fonte primária nesse
+// caso. 100% derivado de perVariantProperties — nunca lista hardcoded.
+function buildMobileComponentToggles(mobileJSON) {
+  if (!mobileJSON || !Array.isArray(mobileJSON.components)) return {};
+
+  const elementosSet = mobileJSON.components.find(c => c.nodeId === '10206:2177')
+    || mobileJSON.components.find(c => /^\.?\[hac mob base\]\s*elementos e imagens$/i.test(c.fullName || ''));
+  if (!elementosSet || !Array.isArray(elementosSet.perVariantProperties)) {
+    console.warn('⚠  perVariantProperties de ".[hac mob base] Elementos e imagens" não encontrado no JSON mobile — A11Y_MOBILE_COMPONENT_TOGGLES ficará vazio (rode fetch-component-properties.cjs --lib design-acessivel-mobile --deep-scan)');
+    return {};
+  }
+
+  const result = {};
+  for (const variant of elementosSet.perVariantProperties) {
+    const m = /Componente=(.+)$/.exec(variant.variantName || '');
+    const componentName = m ? m[1].trim() : (variant.variantName || '').trim();
+    if (!componentName) continue;
+
+    const names = new Set();
+    if (variant.screenReaderVariants && Array.isArray(variant.screenReaderVariants.variants)) {
+      variant.screenReaderVariants.variants.forEach(sv => {
+        (sv.activeToggles || []).forEach(name => names.add(name));
+      });
+    } else {
+      (variant.toggles || []).forEach(t => { if (t && t.name) names.add(t.name); });
+    }
+    result[componentName] = Array.from(names);
   }
   return result;
 }
@@ -410,6 +480,7 @@ const mobileLinkOptions = buildMobileLinkOptions(mobileJSON);
 const mobileComponentLinkNodeIds = buildMobileComponentLinkNodeIds(superAppJSON, mobileLinkOptions);
 const mobileComponentsWithNomeAcessivel = buildMobileComponentsWithNomeAcessivel(mobileJSON);
 const mobileScreenReaderVariants = buildMobileScreenReaderVariants(mobileJSON);
+const mobileComponentToggles = buildMobileComponentToggles(mobileJSON);
 
 const superAppLibMeta = manifestJSON && Array.isArray(manifestJSON.libraries)
   ? manifestJSON.libraries.find(l => l.slug === 'super-app')
@@ -442,6 +513,7 @@ const header = `// ============================================================
 //   const A11Y_MOBILE_COMPONENT_LINK_NODE_IDS = A11Y_MOBILE_COMPONENT_LINK_NODE_IDS_GENERATED;
 //   const A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL = A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL_GENERATED;
 //   const A11Y_MOBILE_SCREEN_READER_VARIANTS = A11Y_MOBILE_SCREEN_READER_VARIANTS_GENERATED;
+//   const A11Y_MOBILE_COMPONENT_TOGGLES = A11Y_MOBILE_COMPONENT_TOGGLES_GENERATED;
 //   const A11Y_SUPER_APP_FILE_KEY = A11Y_SUPER_APP_FILE_KEY_GENERATED;
 //   const A11Y_SUPER_APP_FILE_NAME = A11Y_SUPER_APP_FILE_NAME_GENERATED;
 // Concatenado por build.cjs no bundle final (ui.html) ANTES de
@@ -456,6 +528,7 @@ const body =
   `const A11Y_MOBILE_COMPONENT_LINK_NODE_IDS_GENERATED = ${JSON.stringify(mobileComponentLinkNodeIds, null, 2)};\n\n` +
   `const A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL_GENERATED = ${JSON.stringify(mobileComponentsWithNomeAcessivel, null, 2)};\n\n` +
   `const A11Y_MOBILE_SCREEN_READER_VARIANTS_GENERATED = ${JSON.stringify(mobileScreenReaderVariants, null, 2)};\n\n` +
+  `const A11Y_MOBILE_COMPONENT_TOGGLES_GENERATED = ${JSON.stringify(mobileComponentToggles, null, 2)};\n\n` +
   `const A11Y_SUPER_APP_FILE_KEY_GENERATED = ${JSON.stringify(superAppFileKey)};\n` +
   `const A11Y_SUPER_APP_FILE_NAME_GENERATED = ${JSON.stringify(superAppFileName)};\n`;
 
@@ -486,5 +559,6 @@ console.log(`   A11Y_MOBILE_LINK_COMPONENT_OPTIONS_GENERATED: ${mobileLinkOption
 console.log(`   A11Y_MOBILE_COMPONENT_LINK_NODE_IDS_GENERATED: ${Object.keys(mobileComponentLinkNodeIds).length} nomes com nodeId real (de ${mobileLinkOptions.length} opções)`);
 console.log(`   A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL_GENERATED: ${mobileComponentsWithNomeAcessivel.length} componentes com property real`);
 console.log(`   A11Y_MOBILE_SCREEN_READER_VARIANTS_GENERATED: ${Object.keys(mobileScreenReaderVariants).length} componentes com sub-variantes de Leitor de Tela`);
+console.log(`   A11Y_MOBILE_COMPONENT_TOGGLES_GENERATED: ${Object.keys(mobileComponentToggles).length} componentes mapeados`);
 console.log(`✅ design-acessivel-mobile-wrapper.generated.json`);
 console.log(`   wrapper: ${mobileWrapper ? 'resolvido (' + Object.keys(mobileWrapper.componentKeyByA11yType).length + ' keys de variante)' : 'NULO — ver warnings acima'}`);
