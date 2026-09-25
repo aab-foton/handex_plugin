@@ -11,11 +11,22 @@ figma.showUI(__html__, { width: 480, height: 750 });
 // principal defesa (focusNode parou de criar stroke, ver core.js) -- é só
 // o backstop pro que já pode ter sobrado antes dessa mudança, ou de qualquer
 // caso de borda futuro.
+//
+// Só filhos DIRETOS da página, nunca findAll: o stroke é sempre criado via
+// figma.currentPage.appendChild (handler highlight-node), nunca aninhado --
+// então a busca recursiva não alcançava nada a mais, e travava o arquivo
+// inteiro na abertura do plugin (percorria todos os nós da página de forma
+// síncrona, na mesma thread do documento; em telas reais com milhares de
+// instâncias, segundos de congelamento). Achado real 2026-09-24.
 try {
-  figma.currentPage.findAll(n => n.name === '[HighlightStroke]').forEach(n => { try { n.remove(); } catch (e) {} });
+  figma.currentPage.children
+    .filter(n => n.name === '[HighlightStroke]')
+    .forEach(n => { try { n.remove(); } catch (e) {} });
 } catch (e) {}
 
 let activeHighlightNode = null;
+// Skeleton das libs DSC recebido do frontend no 1º scan-frame da sessão.
+let _refSkeletonCache = null;
 // Incrementado a cada chamada de highlight-node -- o handler é async
 // (await getNodeByIdAsync) e o Figma não serializa mensagens, então focos
 // em sucessão rápida (hover, cliques rápidos) podiam ter duas chamadas em
@@ -3232,7 +3243,13 @@ figma.ui.onmessage = async (msg) => {
     const frameJson = frameJsonTemplate();
 
     const selectedLibSlugs = Array.isArray(msg.selectedLibSlugs) && msg.selectedLibSlugs.length > 0 ? msg.selectedLibSlugs : null;
-    const rawReferenceTokens = msg.referenceTokens || null;
+    // O frontend manda o skeleton das libs DSC só no primeiro scan da sessão
+    // (1MB de clone por mensagem); daí em diante reaproveita a cópia daqui.
+    // Mesmo objeto entre scans = índice de chaves de auditProperty (audit.js)
+    // construído uma vez só. UI e backend reiniciam juntos, então o cache
+    // nunca fica órfão.
+    if (msg.referenceTokens) _refSkeletonCache = msg.referenceTokens;
+    const rawReferenceTokens = msg.referenceTokens || _refSkeletonCache || null;
     const referenceTokens = (() => {
       if (!rawReferenceTokens || !selectedLibSlugs) return rawReferenceTokens;
       const list = Array.isArray(rawReferenceTokens) ? rawReferenceTokens : [rawReferenceTokens];
@@ -3246,12 +3263,30 @@ figma.ui.onmessage = async (msg) => {
     // Returns an object that can be spread into the prop, e.g.:
     //   props.push({ ..., ...audit("colors", hex, key) });
     // isRemote: variável ou estilo vem de lib publicada (variable.remote / style.remote).
-    // Nesse caso o Figma já garante a origem — não precisa checar no skeleton.
-    function audit(propType, propValue, propKey, propName, isRemote) {
-      if (isRemote) {
-        return { isDS: true, score: isAudit ? AUDIT_SCORE.EXACT : null, matchedBy: 'remote', matchedIn: null, matchedTokenName: null, closestMatch: null };
+    // altKey: a outra chave da mesma propriedade (estilo x variável) -- uma prop
+    // pode ter as duas, e basta uma bater no skeleton.
+    //
+    // "remote" NÃO prova que o token é do DSC: só que vem de ALGUMA lib
+    // publicada (pode ser lib pessoal, de outro projeto, de terceiros). Até a
+    // v6.32.0 isso aprovava direto, sem consultar o skeleton -- mesma brecha já
+    // corrigida pra componentes em v6.8.3. Agora a lib publicada do DSC (o
+    // skeleton é o snapshot dela) é a única prova: bateu a chave = conforme;
+    // remoto sem match = "warning" (necessita revisão -- pode ser lib fora do
+    // DSC ou skeleton desatualizado), nunca false (vermelho é desvio
+    // comprovado, não desconhecimento). Sem skeleton disponível não há como
+    // verificar, e aí o atalho antigo continua valendo.
+    function audit(propType, propValue, propKey, propName, isRemote, altKey) {
+      let result = auditProperty(propName, propValue, propType, propKey, referenceTokens, isAudit);
+      if (result.score < AUDIT_SCORE.EXACT && altKey && altKey !== propKey) {
+        const alt = auditProperty(propName, propValue, propType, altKey, referenceTokens, isAudit);
+        if (alt.score > result.score) result = alt;
       }
-      const result = auditProperty(propName, propValue, propType, propKey, referenceTokens, isAudit);
+      if (result.score < AUDIT_SCORE.EXACT && isRemote) {
+        if (!referenceTokens) {
+          return { isDS: true, score: isAudit ? AUDIT_SCORE.EXACT : null, matchedBy: 'remote', matchedIn: null, matchedTokenName: null, closestMatch: null };
+        }
+        return { isDS: "warning", score: isAudit ? AUDIT_SCORE.SOFT : null, matchedBy: 'remote-unverified', matchedIn: null, matchedTokenName: null, closestMatch: null };
+      }
       const isDS = result.score >= AUDIT_SCORE.EXACT ? true
                  : result.score >= AUDIT_SCORE.SOFT ? "warning"
                  : false;
@@ -3330,7 +3365,7 @@ figma.ui.onmessage = async (msg) => {
             const name = (vInfo && vInfo.name) || styleName || hex;
             const key = (vInfo && vInfo.key) || styleKey;
             const _isRemote = (vInfo && vInfo.remote) || fillStyleRemote;
-            props.push({ type: "color", name, value: hex, rawValue: hex, key, variableKey: vInfo ? vInfo.key : null, styleKey, label: "Cor (Fill)", ...audit("colors", hex, key, name, _isRemote) });
+            props.push({ type: "color", name, value: hex, rawValue: hex, key, variableKey: vInfo ? vInfo.key : null, styleKey, label: "Cor (Fill)", ...audit("colors", hex, key, name, _isRemote, styleKey) });
           }
         }
       }
@@ -3359,7 +3394,7 @@ figma.ui.onmessage = async (msg) => {
         const name = styleName || (sizeVar && sizeVar.name) || `${family} ${fontStyle} (${size}px)`;
         const rawSize = typeof size === "number" ? size : null;
         const typoKey = styleKey || (sizeVar ? sizeVar.key : null);
-        props.push({ type: "typography", name, value: name, rawValue: rawSize, key: typoKey, variableKey: sizeVar ? sizeVar.key : null, styleKey, label: "Tipografia", ...audit("typography", name, typoKey, name, textStyleRemote || (sizeVar && sizeVar.remote)) });
+        props.push({ type: "typography", name, value: name, rawValue: rawSize, key: typoKey, variableKey: sizeVar ? sizeVar.key : null, styleKey, label: "Tipografia", ...audit("typography", name, typoKey, name, textStyleRemote || (sizeVar && sizeVar.remote), sizeVar ? sizeVar.key : null) });
       }
 
       // Spacing, Alignment
@@ -3415,7 +3450,7 @@ figma.ui.onmessage = async (msg) => {
             const sVar = await getPaintVar(visibleStroke);
             const strokeKey = (sVar && sVar.key) || styleKey;
             const strokeName = (sVar && sVar.name) || styleName || hex;
-            props.push({ type: "stroke", name: strokeName, value: hex, rawValue: hex, key: strokeKey, variableKey: sVar ? sVar.key : null, styleKey, label: "Border Color", ...audit("colors", hex, strokeKey, strokeName, (sVar && sVar.remote) || strokeStyleRemote) });
+            props.push({ type: "stroke", name: strokeName, value: hex, rawValue: hex, key: strokeKey, variableKey: sVar ? sVar.key : null, styleKey, label: "Border Color", ...audit("colors", hex, strokeKey, strokeName, (sVar && sVar.remote) || strokeStyleRemote, styleKey) });
           }
         }
       }
@@ -3452,7 +3487,7 @@ figma.ui.onmessage = async (msg) => {
              const effVar = await getEffectVar(effect, 'radius');
              const name = styleName || (effVar && effVar.name) || `${effect.type} (${effect.type.includes('SHADOW') ? 'Sombra' : 'Blur'})`;
              const effKey = styleKey || (effVar ? effVar.key : null);
-             props.push({ type: "effect", name, value: effect.type, key: effKey, variableKey: effVar ? effVar.key : null, styleKey, label: "Effect", ...audit("effects", effect.type, effKey, name, effectStyleRemote || (effVar && effVar.remote)) });
+             props.push({ type: "effect", name, value: effect.type, key: effKey, variableKey: effVar ? effVar.key : null, styleKey, label: "Effect", ...audit("effects", effect.type, effKey, name, effectStyleRemote || (effVar && effVar.remote), effVar ? effVar.key : null) });
           }
         }
       }

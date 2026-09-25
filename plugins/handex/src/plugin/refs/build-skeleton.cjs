@@ -56,6 +56,11 @@ for (const libMeta of manifest.libraries) {
     slug: libMeta.slug,
     name: clean(libMeta.name),
     fileKey: libMeta.fileKey,
+    // 'priority' | 'legacy' | 'standalone' -- ver _manifest.json._meta.tierPriority.
+    // 'legacy' por padrão pra qualquer lib cadastrada sem o campo (nunca some
+    // silenciosamente do índice de auditoria, só perde a prioridade que não
+    // foi declarada).
+    tier: libMeta.tier || 'legacy',
     styleTokens: { colors: [], typography: [], effects: [] },
     variables: { colors: [], numbers: [] },
     componentKeys: []
@@ -82,6 +87,17 @@ for (const libMeta of manifest.libraries) {
   entry.variables.numbers = vars
     .filter(v => v.resolvedType === 'FLOAT' && v.value !== null && v.value !== undefined)
     .map(v => ({ key: v.key, name: clean(v.name), value: v.value, collection: clean(v.collection || '') }));
+
+  // Chave de TODA variável publicada pela lib, de qualquer tipo e com ou sem
+  // valor resolvido -- só pra provar vínculo (audit.js). As listas acima
+  // descartam STRING/BOOLEAN e apelidos sem valor próprio (ex: tokens
+  // semânticos de spacing/radius que apontam pra outro token), porque servem
+  // pra sugerir valor, não pra checar origem. Medido em 2026-09-24: ~370
+  // variáveis publicadas ficavam fora (121 só na Super DSC | Web), e um nó
+  // vinculado a qualquer uma delas seria reportado como "não é do DSC".
+  entry.variableKeys = vars
+    .filter(v => v && v.key)
+    .map(v => ({ key: v.key, name: clean(v.name || '') }));
 
   if (Array.isArray(lib.components)) {
     entry.componentKeys = lib.components

@@ -1,7 +1,7 @@
 # Design System do Handex
 
-**Versão do DS:** 1.5
-**Data de fechamento:** 2026-08-25 · última revisão: 2026-08-26 (auditoria de contraste WCAG + padronização de botões brancos + peso visual de ícones + tamanho de ícones-irmãos)
+**Versão do DS:** 1.6
+**Data de fechamento:** 2026-08-25 · última revisão: 2026-09-24 (catálogo completo de 97 ícones com referência de import `lucide-react`, espelhado 1:1 com a página navegável)
 **Escopo:** a linguagem visual da própria interface do plugin Handex (tokens, componentes, padrões de interação). **Não é o DSC** (Design System CAIXA) — esse é o design system externo que o Handex audita/referencia via `refs/_manifest.json` e os scans de conformidade. Os dois domínios não devem ser confundidos: o DSC é fonte de verdade de conformidade de produto CAIXA; este documento é sobre a ferramenta interna que a Fóton usa para produzir handoff.
 
 **Este é o arquivo de referência normativo.** Toda nova tela, componente ou variante visual do Handex deve seguir o que está definido aqui. Quando o código atual diverge do que está documentado, isso é dívida técnica a ser corrigida — não uma segunda opção válida. A seção 9 lista essa dívida.
@@ -181,7 +181,111 @@ Sistema único (`#toast-container`, `plugin.css:284-309`), sem variação de mar
 
 ### Ícones
 
-Biblioteca exclusiva: **Lucide** (`data-lucide="nome"`). Ícone decorativo (ao lado de label, dentro de badge) segue o tamanho visual do contexto (`w-3.5`–`w-5`), sem regra de área de toque. Ícone interativo segue a regra de botão-ícone da seção "Botões" acima (40×40px de área de toque, glifo proporcionalmente visível).
+Biblioteca exclusiva: **Lucide** (`data-lucide="nome"` no plugin, equivalente a `lucide-react` em código) — versão fixada em **1.47.0** (`unpkg.com/lucide@1.47.0`, ver `build.cjs`) desde a correção de boot da v6.30.1. Ícone decorativo (ao lado de label, dentro de badge) segue o tamanho visual do contexto (`w-3.5`–`w-5`), sem regra de área de toque. Ícone interativo segue a regra de botão-ícone da seção "Botões" acima (40×40px de área de toque, glifo proporcionalmente visível).
+
+**Divergência de versão conhecida:** a Ficha HTML interativa exportada (`modules/handoff.js`, template `fullHTML`) ainda carrega `lucide@latest` sem versão fixada — só a UI do plugin em si foi corrigida na v6.30.1. Não é o mesmo bug (a Ficha exportada roda fora do iframe do plugin, sem o gargalo de handshake `ui-ready`), mas é uma inconsistência de versão a alinhar.
+
+**Catálogo completo — 97 ícones únicos** confirmados por varredura de `data-lucide="..."` em todo o código-fonte (`views/*.html`, `modules/*.js`), incluindo os resolvidos só via variável dinâmica (eixos do Briefing, categorias de spec, tipo de conexão de fluxo). Espelhado 1:1 com a tabela navegável de `docs/site/design-system.html` §4 — qualquer ícone novo precisa entrar nos dois lugares.
+
+| Ícone (`data-lucide`) | Import React (`lucide-react`) | Uso no plugin |
+|---|---|---|
+| `x` | `import { X } from 'lucide-react'` | Fechar modal / dispensar banner / snackbar. |
+| `chevron-down` | `import { ChevronDown } from 'lucide-react'` | Accordion (toggleAccordion) — expandir/recolher. |
+| `trash-2` | `import { Trash2 } from 'lucide-react'` | Ação destrutiva — excluir spec/medida/frame, limpar dados. |
+| `alert-triangle` | `import { AlertTriangle } from 'lucide-react'` | Alerta/aviso — card "Importante", desvio de conformidade. |
+| `check` | `import { Check } from 'lucide-react'` | Confirmação — propriedade conforme ao DSC, checkbox marcado. |
+| `sparkles` | `import { Sparkles } from 'lucide-react'` | Gerar Ficha de Handoff (CTA primário), contexto pra IA. |
+| `eye-off` | `import { EyeOff } from 'lucide-react'` | Ocultar spec/medida/grupo — metade dinâmica do par eye/eye-off. |
+| `eye` | `import { Eye } from 'lucide-react'` | Exibir spec/medida/grupo — metade dinâmica do par eye/eye-off. |
+| `download` | `import { Download } from 'lucide-react'` | Baixar backup JSON, exportações da Ficha. |
+| `book-open` | `import { BookOpen } from 'lucide-react'` | Ver documentação completa — link pro Figma de metodologia. |
+| `help-circle` | `import { HelpCircle } from 'lucide-react'` | Ajuda contextual em campos e popovers. |
+| `arrow-left` | `import { ArrowLeft } from 'lucide-react'` | Botão voltar do header — sempre w-5, exceção deliberada de tamanho maior. |
+| `plus` | `import { Plus } from 'lucide-react'` | Adicionar item — nova spec, nova medida, novo membro de equipe. |
+| `git-branch` | `import { GitBranch } from 'lucide-react'` | Card Fluxos de Tela na home. |
+| `circle-help` | `import { CircleHelp } from 'lucide-react'` | Ícone de ajuda/onboarding no header secundário — w-4.5. |
+| `pencil` | `import { Pencil } from 'lucide-react'` | Editar — renomear grupo, editar campo. |
+| `grip-vertical` | `import { GripVertical } from 'lucide-react'` | Alça de arrastar — reordenar cards da home. |
+| `clipboard-list` | `import { ClipboardList } from 'lucide-react'` | Card Informações do Projeto na home. |
+| `spline` | `import { Spline } from 'lucide-react'` | Estilo de linha Angular em conexões de fluxo. |
+| `scan-line` | `import { ScanLine } from 'lucide-react'` | Card Escanear Tokens na home. |
+| `loader-2` | `import { Loader2 } from 'lucide-react'` | Spinner de carregamento (animação de rotação via CSS). |
+| `file-plus-2` | `import { FilePlus2 } from 'lucide-react'` | Criar novo documento/anexo. |
+| `check-circle` | `import { CheckCircle } from 'lucide-react'` | EM CONFORMIDADE — selo de auditoria DSC. |
+| `tag` | `import { Tag } from 'lucide-react'` | Card Anotar Specs na home; badge de tag de spec. |
+| `send` | `import { Send } from 'lucide-react'` | Gerar Ficha de Handoff — ícone alternativo em onboarding. |
+| `search` | `import { Search } from 'lucide-react'` | Campo de busca — filtro de specs/frames. |
+| `ruler` | `import { Ruler } from 'lucide-react'` | Card Anotar Medidas na home. |
+| `refresh-cw` | `import { RefreshCw } from 'lucide-react'` | Re-escanear frame / atualizar seção já inserida na Ficha. |
+| `move` | `import { Move } from 'lucide-react'` | Reordenar — junto de grip-vertical no drag-and-drop da home. |
+| `minus` | `import { Minus } from 'lucide-react'` | Remover item de lista / decrementar contador. |
+| `link-2` | `import { Link2 } from 'lucide-react'` | Vínculo entre elementos — referência cruzada. |
+| `link` | `import { Link } from 'lucide-react'` | Link de referência — Protótipo, Handoff de Acessibilidade, Pesquisa UX. |
+| `layers` | `import { Layers } from 'lucide-react'` | Toolkit DSC — link de documentação de apoio. |
+| `graduation-cap` | `import { GraduationCap } from 'lucide-react'` | Onboarding contextual por ferramenta. |
+| `file-text` | `import { FileText } from 'lucide-react'` | Exportação em Markdown / documento de leitura. |
+| `external-link` | `import { ExternalLink } from 'lucide-react'` | Abrir no Figma — deep link pro elemento no canvas. |
+| `corner-down-right` | `import { CornerDownRight } from 'lucide-react'` | Indicador de sub-item / resposta aninhada. |
+| `arrow-right` | `import { ArrowRight } from 'lucide-react'` | Avançar — navegação entre etapas, seta de fluxo. |
+| `zoom-in` | `import { ZoomIn } from 'lucide-react'` | Aumentar escala da interface do plugin. |
+| `upload` | `import { Upload } from 'lucide-react'` | Importar JSON — rodapé da home. |
+| `sticky-note` | `import { StickyNote } from 'lucide-react'` | Nota personalizada em spec. |
+| `search-x` | `import { SearchX } from 'lucide-react'` | Estado vazio de busca — nenhum resultado encontrado. |
+| `plus-circle` | `import { PlusCircle } from 'lucide-react'` | Adicionar (variante circular) — cenário de exceção, também usado dinamicamente em diffs de versão. |
+| `minimize-2` | `import { Minimize2 } from 'lucide-react'` | Minimizar o plugin. |
+| `info` | `import { Info } from 'lucide-react'` | Hint informativo — bullets de contexto dispensáveis. |
+| `component` | `import { Component } from 'lucide-react'` | Referência de componente DSC vinculado a uma spec. |
+| `check-circle-2` | `import { CheckCircle2 } from 'lucide-react'` | Confirmação de sucesso — variante preenchida. |
+| `alert-circle` | `import { AlertCircle } from 'lucide-react'` | FORA DO PADRÃO — selo de auditoria DSC (desvio). |
+| `zap` | `import { Zap } from 'lucide-react'` | Comportamento — categoria de spec (reação do sistema). |
+| `x-circle` | `import { XCircle } from 'lucide-react'` | Erro/falha — cenário de exceção tipo Erro. |
+| `shield-check` | `import { ShieldCheck } from 'lucide-react'` | Conformidade validada / selo de segurança. |
+| `scaling` | `import { Scaling } from 'lucide-react'` | Altura e Largura — tipo de medida (W×H). |
+| `pencil-ruler` | `import { PencilRuler } from 'lucide-react'` | Refinamento de componentes — edição técnica. |
+| `move-right` | `import { MoveRight } from 'lucide-react'` | Transição/sequência — conexão de fluxo tipo Sequência. |
+| `more-horizontal` | `import { MoreHorizontal } from 'lucide-react'` | Menu de mais ações — horizontal. |
+| `message-square-plus` | `import { MessageSquarePlus } from 'lucide-react'` | Exportar Briefing Estratégico. |
+| `lock` | `import { Lock } from 'lucide-react'` | Bloquear spec/grupo — travar posição no canvas. |
+| `locate` | `import { Locate } from 'lucide-react'` | Focar elemento no canvas. |
+| `library` | `import { Library } from 'lucide-react'` | Referência de biblioteca DSC. |
+| `crosshair` | `import { Crosshair } from 'lucide-react'` | Ancoragem/mira — mini-mapa de conexão de fluxo. |
+| `chevron-right` | `import { ChevronRight } from 'lucide-react'` | Navegação — trilha de token (cor, primária, 500). |
+| `zoom-out` | `import { ZoomOut } from 'lucide-react'` | Diminuir escala da interface do plugin. |
+| `sun` | `import { Sun } from 'lucide-react'` | Tema claro — metade do par sun/moon. |
+| `sliders-horizontal` | `import { SlidersHorizontal } from 'lucide-react'` | Controles do grupo de specs — ocultar linhas/grupo, cadeado. |
+| `package` | `import { Package } from 'lucide-react'` | Sobre o Handex — modal de informações do plugin. |
+| `more-vertical` | `import { MoreVertical } from 'lucide-react'` | Menu de mais ações — vertical. |
+| `moon` | `import { Moon } from 'lucide-react'` | Tema escuro — metade do par sun/moon. |
+| `minus-circle` | `import { MinusCircle } from 'lucide-react'` | Remover (variante circular) — propriedade não aplicada/inativa, também em diffs de versão. |
+| `maximize-2` | `import { Maximize2 } from 'lucide-react'` | Expandir/restaurar tamanho do plugin. |
+| `lock-open` | `import { LockOpen } from 'lucide-react'` | Destravar spec/grupo — metade do par lock/lock-open. |
+| `line-chart` | `import { LineChart } from 'lucide-react'` | Indicador de progresso/estatística. |
+| `lightbulb` | `import { Lightbulb } from 'lucide-react'` | Dica/sugestão contextual. |
+| `layout-dashboard` | `import { LayoutDashboard } from 'lucide-react'` | Loading overlay de geração da Ficha. |
+| `layout` | `import { Layout } from 'lucide-react'` | Categoria frames no scan de tokens. |
+| `image` | `import { Image } from 'lucide-react'` | Categoria ícones / preview de imagem. |
+| `focus` | `import { Focus } from 'lucide-react'` | Padding Interno — tipo de medida. |
+| `file-down` | `import { FileDown } from 'lucide-react'` | Baixar arquivo — variante de export. |
+| `file-check` | `import { FileCheck } from 'lucide-react'` | Documento validado/completo. |
+| `file` | `import { File } from 'lucide-react'` | Documento genérico — anexo. |
+| `code-2` | `import { Code2 } from 'lucide-react'` | Referência técnica/código — Code Connect. |
+| `clock` | `import { Clock } from 'lucide-react'` | Histórico/tempo — changelog, versão. |
+| `circle` | `import { Circle } from 'lucide-react'` | Marcador neutro — bullet genérico de propriedade. |
+| `chevron-up` | `import { ChevronUp } from 'lucide-react'` | Voltar ao topo — botão flutuante (btn-top). |
+| `braces` | `import { Braces } from 'lucide-react'` | Exportação em JSON — dado bruto. |
+| `box-select` | `import { BoxSelect } from 'lucide-react'` | Espaçamento Externo — tipo de medida (margin). |
+| `align-horizontal-space-between` | `import { AlignHorizontalSpaceBetween } from 'lucide-react'` | Padding e Gaps — tipo de medida (Auto Layout). |
+| `alert-octagon` | `import { AlertOctagon } from 'lucide-react'` | Erro crítico — variante de alerta mais severa. |
+| `git-fork` | `import { GitFork } from 'lucide-react'` | Conexão de fluxo tipo Decisão paralela/gateway — só via variável dinâmica. |
+| `layout-grid` | `import { LayoutGrid } from 'lucide-react'` | Onboarding da Página Inicial — só via ONBOARDING_TOOLS.home.icon. |
+| `database` | `import { Database } from 'lucide-react'` | Dados da API — categoria de spec, só via reference.items. |
+| `scale` | `import { Scale } from 'lucide-react'` | Regra de Negócio — categoria de spec, só via reference.items. |
+| `edit-3` | `import { Edit3 } from 'lucide-react'` | Campo modificado — diff de versão da Ficha, só via mapa de cor dinâmico. |
+| `briefcase` | `import { Briefcase } from 'lucide-react'` | Eixo Contexto do Projeto — Briefing Estratégico, só via config de eixo. |
+| `git-merge` | `import { GitMerge } from 'lucide-react'` | Eixo Escopo e Riscos — Briefing Estratégico, só via config de eixo. |
+| `users` | `import { Users } from 'lucide-react'` | Eixo Usuários e Stakeholders — Briefing Estratégico, só via config de eixo. |
+| `compass` | `import { Compass } from 'lucide-react'` | Eixo UX e Design — Briefing Estratégico, só via config de eixo. |
+| `flask-conical` | `import { FlaskConical } from 'lucide-react'` | Eixo Pesquisa e Evidências — Briefing Estratégico, só via config de eixo. |
 
 **Peso visual uniforme (`plugin.css`):** todo ícone Lucide nasce com `stroke-width: 2` (padrão da lib, calibrado para o viewBox nativo de 24px). Como o plugin usa ~7 tamanhos diferentes de ícone (`w-2.5` a `w-6`) no mesmo viewBox, o mesmo traço de 2px parece mais grosso nos ícones pequenos e mais fino nos grandes — regra CSS global compensa por faixa de tamanho:
 
@@ -277,5 +381,6 @@ Lista de prioridade — cada item é uma correção pontual, não um redesenho:
 - **2026-08-26** — botão branco/outline neutro formalizado como variante própria no catálogo (antes confundido com "secundária/ghost", que hoje é só o caso sobre header azul). Dimensão única fechada: `py-3` + `text-[12px] font-bold` — 2 variações de tamanho coexistentes (rodapé da home em `py-2.5`/`text-[11px]`, links do guia DSC em `py-3`/`text-[11px]`) convergidas para o padrão. Sub-variante "link externo" (borda/texto azul) mantida intencionalmente nos 3 links do guia DSC — sinaliza navegação pra fora do plugin. Cards seletores de opção em grid (modal de medidas) ficam fora do catálogo por serem um componente estruturalmente diferente.
 - **2026-08-26** — peso visual dos ícones Lucide uniformizado. Todos já usavam o mesmo `stroke-width` nativo (2), mas o plugin usa ~7 tamanhos diferentes (`w-2.5` a `w-6`) no mesmo viewBox de 24px — o traço fixo de 2px parecia mais grosso nos ícones pequenos e mais fino nos grandes. Regra CSS global (`plugin.css`) compensa por faixa de tamanho (`stroke-width: 2.5` em `w-2.5`/`w-3`, `2.25` em `w-3.5`/`w-4`), herdada automaticamente por qualquer ícone novo sem precisar de atributo manual por instância.
 - **2026-08-26** — tamanho de ícones-irmãos revisado em todo o app, depois de a compensação de stroke-width acima não resolver um caso real (download `w-5` ao lado de lixeira `w-4.5` no rodapé da home, mesmo par de botões, mesma hierarquia). Convergido para `w-4.5`. Varredura sistemática encontrou e corrigiu mais 4 casos: botão de ajuda do header em 3 views (`w-5` → `w-4.5`, alinhando com as outras 4 views que já usavam `w-4.5`) e o chevron de expandir dentro da linha de ações de spec no hub de Frames (`w-3.5` → `w-3`, igualando aos 4 ícones de ação vizinhos). Regra nova documentada: ícones-irmãos (mesma linha, mesma hierarquia de ação) sempre usam o mesmo tamanho — exceção deliberada preservada para "voltar" (`w-5`) vs. botões de ajuda (`w-4.5`), que é hierarquia intencional, não inconsistência.
+- **2026-09-24** — catálogo de ícones passou de menção genérica ("biblioteca Lucide via `data-lucide`") para tabela nomeada de **97 ícones únicos**, cada um com a importação equivalente em `lucide-react` (conversão kebab-case → PascalCase, ex: `circle-help` → `CircleHelp`, dígito colado ao segmento anterior em `edit-3` → `Edit3`). Motivado por pedido do usuário de cobrir todos os ícones do plugin com referência de código React na documentação. Levantamento por grep real em todo `views/*.html`/`modules/*.js`, incluindo ícones resolvidos só via variável dinâmica (eixos do Briefing, categorias de spec, tipo de conexão de fluxo) — a estimativa anterior de "~70 ícones" (só existia na página navegável, nunca neste `.md`) estava desatualizada. Tabela espelhada 1:1 em `docs/site/design-system.html` §4, cujos SVGs também deixaram de ser desenhados à mão e passaram a usar o traço real de `lucide-static@1.47.0` (mesma versão fixada em `build.cjs`). Achado incidental: a Ficha HTML interativa exportada (`modules/handoff.js`) ainda usa `lucide@latest` sem versão fixada — divergência sinalizada, não corrigida nesta rodada de documentação.
 
 **Arquivos-fonte:** `src/plugin/styles/{tailwind.config.cjs,plugin.css}`, `src/plugin/modules/{core,messages,home-cards,onboarding,specifications,measurement,handoff}.js`, `src/plugin/views/*.html`, `src/plugin/ui.html`, `CLAUDE.md`.

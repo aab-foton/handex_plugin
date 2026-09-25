@@ -1,9 +1,8 @@
 <!-- MODAL: SOBRE O HANDEX -- aberta pelo logo/título no header (build.cjs),
      mesmo padrão do plugin irmão hac ("Sobre o hac"). Versão preenchida
-     dinamicamente pelo mesmo handler que já atualiza #version-badge
-     (init-plugin, messages.js) -- sem os botões de manutenção do hac
-     (limpar cache/canvas): o Handex já tem essas ações no ícone de lixeira
-     da home, não precisa duplicar aqui. -->
+     dinamicamente pelo handler init-plugin (messages.js) -- sem os botões
+     de manutenção do hac (limpar cache/canvas): o Handex já tem essas
+     ações no ícone de lixeira da home, não precisa duplicar aqui. -->
   <div id="about-modal" role="dialog" aria-modal="true" aria-labelledby="about-modal-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
     <div class="bg-white dark:bg-dark-bg w-full max-w-[380px] rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line overflow-hidden">
       <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-line flex items-center justify-between">

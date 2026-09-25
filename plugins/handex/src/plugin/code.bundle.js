@@ -41,39 +41,62 @@
   function emptyResult() {
     return { score: AUDIT_SCORE.NONE, matchedBy: null, matchedIn: null, matchedTokenName: null };
   }
+  var _TIER_RANK = { priority: 2, legacy: 1, standalone: 1 };
+  var _keyIndexCache = /* @__PURE__ */ new WeakMap();
+  function _libNameOf(ref) {
+    return ref.meta && ref.meta.libraryName || ref.libraryName || ref.name || null;
+  }
+  function _buildKeyIndex(referenceList) {
+    const index = /* @__PURE__ */ new Map();
+    const add = (key, libName, tokenName, tierRank) => {
+      if (!key) return;
+      const existing = index.get(key);
+      if (!existing || tierRank > existing.tierRank) {
+        index.set(key, { matchedIn: libName, matchedTokenName: tokenName || null, tierRank });
+      }
+    };
+    for (const ref of referenceList) {
+      if (!ref) continue;
+      const libName = _libNameOf(ref);
+      const tierRank = _TIER_RANK[ref.tier] || _TIER_RANK.legacy;
+      if (ref.designTokens && Array.isArray(ref.designTokens.variables)) {
+        ref.designTokens.variables.forEach((t) => {
+          add(t.key, libName, t.name, tierRank);
+          add(t.$key, libName, t.name, tierRank);
+        });
+      }
+      if (ref.variables && typeof ref.variables === "object") {
+        for (const group in ref.variables) {
+          const list = ref.variables[group];
+          if (Array.isArray(list)) list.forEach((t) => add(t.key, libName, t.name, tierRank));
+        }
+      }
+      if (Array.isArray(ref.variableKeys)) ref.variableKeys.forEach((v) => add(v.key, libName, v.name, tierRank));
+      if (ref.styleTokens) {
+        for (const styleType in ref.styleTokens) {
+          const list = ref.styleTokens[styleType];
+          if (Array.isArray(list)) list.forEach((s) => add(s.key, libName, s.name, tierRank));
+        }
+      }
+      if (Array.isArray(ref.components)) ref.components.forEach((c) => add(c.key, libName, c.name, tierRank));
+      if (Array.isArray(ref.componentKeys)) ref.componentKeys.forEach((k) => add(k, libName, null, tierRank));
+    }
+    return index;
+  }
+  function _keyIndexFor(referenceTokensInput, referenceList) {
+    const cacheKey = typeof referenceTokensInput === "object" ? referenceTokensInput : null;
+    if (cacheKey && _keyIndexCache.has(cacheKey)) return _keyIndexCache.get(cacheKey);
+    const index = _buildKeyIndex(referenceList);
+    if (cacheKey) _keyIndexCache.set(cacheKey, index);
+    return index;
+  }
   function auditProperty(name, value, type, figmaKey, referenceTokensInput, isAudit) {
     if (!referenceTokensInput) return emptyResult();
     const referenceList = Array.isArray(referenceTokensInput) ? referenceTokensInput : [referenceTokensInput];
     if (figmaKey) {
-      for (const referenceTokens of referenceList) {
-        if (!referenceTokens) continue;
-        const libName = referenceTokens.meta && referenceTokens.meta.libraryName || referenceTokens.libraryName || null;
-        if (referenceTokens.designTokens && Array.isArray(referenceTokens.designTokens.variables)) {
-          const v = referenceTokens.designTokens.variables.find((t) => t.key === figmaKey || t.$key === figmaKey);
-          if (v) {
-            return { score: AUDIT_SCORE.EXACT, matchedBy: "key", matchedIn: libName, matchedTokenName: v.name || null };
-          }
-        }
-        if (referenceTokens.styleTokens) {
-          for (const styleType in referenceTokens.styleTokens) {
-            const stylesArray = referenceTokens.styleTokens[styleType];
-            if (Array.isArray(stylesArray)) {
-              const s = stylesArray.find((item) => item.key === figmaKey);
-              if (s) {
-                return { score: AUDIT_SCORE.EXACT, matchedBy: "key", matchedIn: libName, matchedTokenName: s.name || null };
-              }
-            }
-          }
-        }
-        if (Array.isArray(referenceTokens.components)) {
-          const c = referenceTokens.components.find((item) => item.key === figmaKey);
-          if (c) {
-            return { score: AUDIT_SCORE.EXACT, matchedBy: "key", matchedIn: libName, matchedTokenName: c.name || null };
-          }
-        }
-        if (Array.isArray(referenceTokens.componentKeys) && referenceTokens.componentKeys.includes(figmaKey)) {
-          return { score: AUDIT_SCORE.EXACT, matchedBy: "key", matchedIn: libName, matchedTokenName: null };
-        }
+      const hit = _keyIndexFor(referenceTokensInput, referenceList).get(figmaKey);
+      if (hit) {
+        return { score: AUDIT_SCORE.EXACT, matchedBy: "key", matchedIn: hit.matchedIn, matchedTokenName: hit.matchedTokenName };
       }
     }
     if (!isAudit || !name) return emptyResult();
@@ -87,7 +110,7 @@
     };
     for (const referenceTokens of referenceList) {
       if (!referenceTokens) continue;
-      const libName = referenceTokens.meta && referenceTokens.meta.libraryName || referenceTokens.libraryName || null;
+      const libName = referenceTokens.meta && referenceTokens.meta.libraryName || referenceTokens.libraryName || referenceTokens.name || null;
       const categoryList = referenceTokens[type] || referenceTokens[type.replace(/s$/, "")] || null;
       const softMatchList = (list) => {
         if (!Array.isArray(list)) return null;
@@ -149,7 +172,7 @@
       const target = hexToRgb(hexMatch[1]);
       let best = null;
       for (const ref of referenceList) {
-        const libName = ref.meta && ref.meta.libraryName || ref.libraryName || null;
+        const libName = ref.meta && ref.meta.libraryName || ref.libraryName || ref.name || null;
         const styleList = ref.styleTokens && ref.styleTokens.colors || [];
         for (const item of styleList) {
           if (!item.value) continue;
@@ -198,7 +221,7 @@
     if (type === "typography") {
       let best = null;
       for (const ref of referenceList) {
-        const libName = ref.meta && ref.meta.libraryName || ref.libraryName || null;
+        const libName = ref.meta && ref.meta.libraryName || ref.libraryName || ref.name || null;
         const list = ref.styleTokens && ref.styleTokens.typography || [];
         for (const item of list) {
           if (!item.key) continue;
@@ -236,7 +259,7 @@
       const target = parseFloat(numMatch[1]);
       let best = null;
       for (const ref of referenceList) {
-        const libName = ref.meta && ref.meta.libraryName || ref.libraryName || null;
+        const libName = ref.meta && ref.meta.libraryName || ref.libraryName || ref.name || null;
         const candidates = collectNumericCandidates(ref, type);
         for (const c of candidates) {
           const d = Math.abs(target - c.value);
@@ -295,7 +318,7 @@
   // src/plugin/code.js
   figma.showUI(__html__, { width: 480, height: 750 });
   try {
-    figma.currentPage.findAll((n) => n.name === "[HighlightStroke]").forEach((n) => {
+    figma.currentPage.children.filter((n) => n.name === "[HighlightStroke]").forEach((n) => {
       try {
         n.remove();
       } catch (e) {
@@ -304,6 +327,7 @@
   } catch (e) {
   }
   var activeHighlightNode = null;
+  var _refSkeletonCache = null;
   var _highlightToken = 0;
   figma.on("close", () => {
     if (activeHighlightNode) {
@@ -983,7 +1007,7 @@
     };
     return "#" + toHex(r) + toHex(g) + toHex(b);
   }
-  var PLUGIN_VERSION = true ? "6.31.1" : "dev";
+  var PLUGIN_VERSION = true ? "6.32.0" : "dev";
   var DSC_HANDOFF_SUMMARY_ENABLED = false;
   async function _writeSharedPluginData(data) {
     var _a, _b, _c, _d, _e, _f, _g;
@@ -2740,11 +2764,18 @@
       })();
     }
     if (msg.type === "scan-frame") {
-      let audit = function(propType, propValue, propKey, propName, isRemote) {
-        if (isRemote) {
-          return { isDS: true, score: isAudit ? AUDIT_SCORE.EXACT : null, matchedBy: "remote", matchedIn: null, matchedTokenName: null, closestMatch: null };
+      let audit = function(propType, propValue, propKey, propName, isRemote, altKey) {
+        let result = auditProperty(propName, propValue, propType, propKey, referenceTokens, isAudit);
+        if (result.score < AUDIT_SCORE.EXACT && altKey && altKey !== propKey) {
+          const alt = auditProperty(propName, propValue, propType, altKey, referenceTokens, isAudit);
+          if (alt.score > result.score) result = alt;
         }
-        const result = auditProperty(propName, propValue, propType, propKey, referenceTokens, isAudit);
+        if (result.score < AUDIT_SCORE.EXACT && isRemote) {
+          if (!referenceTokens) {
+            return { isDS: true, score: isAudit ? AUDIT_SCORE.EXACT : null, matchedBy: "remote", matchedIn: null, matchedTokenName: null, closestMatch: null };
+          }
+          return { isDS: "warning", score: isAudit ? AUDIT_SCORE.SOFT : null, matchedBy: "remote-unverified", matchedIn: null, matchedTokenName: null, closestMatch: null };
+        }
         const isDS = result.score >= AUDIT_SCORE.EXACT ? true : result.score >= AUDIT_SCORE.SOFT ? "warning" : false;
         let closestMatch = null;
         if (isAudit && result.score < AUDIT_THRESHOLDS.AJUSTE) {
@@ -2790,7 +2821,8 @@
       };
       const frameJson = frameJsonTemplate();
       const selectedLibSlugs = Array.isArray(msg.selectedLibSlugs) && msg.selectedLibSlugs.length > 0 ? msg.selectedLibSlugs : null;
-      const rawReferenceTokens = msg.referenceTokens || null;
+      if (msg.referenceTokens) _refSkeletonCache = msg.referenceTokens;
+      const rawReferenceTokens = msg.referenceTokens || _refSkeletonCache || null;
       const referenceTokens = (() => {
         if (!rawReferenceTokens || !selectedLibSlugs) return rawReferenceTokens;
         const list = Array.isArray(rawReferenceTokens) ? rawReferenceTokens : [rawReferenceTokens];
@@ -2841,7 +2873,7 @@
               const name = vInfo && vInfo.name || styleName || hex;
               const key = vInfo && vInfo.key || styleKey;
               const _isRemote = vInfo && vInfo.remote || fillStyleRemote;
-              props.push(__spreadValues({ type: "color", name, value: hex, rawValue: hex, key, variableKey: vInfo ? vInfo.key : null, styleKey, label: "Cor (Fill)" }, audit("colors", hex, key, name, _isRemote)));
+              props.push(__spreadValues({ type: "color", name, value: hex, rawValue: hex, key, variableKey: vInfo ? vInfo.key : null, styleKey, label: "Cor (Fill)" }, audit("colors", hex, key, name, _isRemote, styleKey)));
             }
           }
         }
@@ -2864,7 +2896,7 @@
           const name = styleName || sizeVar && sizeVar.name || `${family} ${fontStyle} (${size}px)`;
           const rawSize = typeof size === "number" ? size : null;
           const typoKey = styleKey || (sizeVar ? sizeVar.key : null);
-          props.push(__spreadValues({ type: "typography", name, value: name, rawValue: rawSize, key: typoKey, variableKey: sizeVar ? sizeVar.key : null, styleKey, label: "Tipografia" }, audit("typography", name, typoKey, name, textStyleRemote || sizeVar && sizeVar.remote)));
+          props.push(__spreadValues({ type: "typography", name, value: name, rawValue: rawSize, key: typoKey, variableKey: sizeVar ? sizeVar.key : null, styleKey, label: "Tipografia" }, audit("typography", name, typoKey, name, textStyleRemote || sizeVar && sizeVar.remote, sizeVar ? sizeVar.key : null)));
         }
         if ("layoutMode" in n && n.layoutMode !== "NONE") {
           if (n.itemSpacing !== figma.mixed && n.itemSpacing > 0) {
@@ -2916,7 +2948,7 @@
               const sVar = await getPaintVar(visibleStroke);
               const strokeKey = sVar && sVar.key || styleKey;
               const strokeName = sVar && sVar.name || styleName || hex;
-              props.push(__spreadValues({ type: "stroke", name: strokeName, value: hex, rawValue: hex, key: strokeKey, variableKey: sVar ? sVar.key : null, styleKey, label: "Border Color" }, audit("colors", hex, strokeKey, strokeName, sVar && sVar.remote || strokeStyleRemote)));
+              props.push(__spreadValues({ type: "stroke", name: strokeName, value: hex, rawValue: hex, key: strokeKey, variableKey: sVar ? sVar.key : null, styleKey, label: "Border Color" }, audit("colors", hex, strokeKey, strokeName, sVar && sVar.remote || strokeStyleRemote, styleKey)));
             }
           }
         }
@@ -2944,7 +2976,7 @@
               const effVar = await getEffectVar(effect, "radius");
               const name = styleName || effVar && effVar.name || `${effect.type} (${effect.type.includes("SHADOW") ? "Sombra" : "Blur"})`;
               const effKey = styleKey || (effVar ? effVar.key : null);
-              props.push(__spreadValues({ type: "effect", name, value: effect.type, key: effKey, variableKey: effVar ? effVar.key : null, styleKey, label: "Effect" }, audit("effects", effect.type, effKey, name, effectStyleRemote || effVar && effVar.remote)));
+              props.push(__spreadValues({ type: "effect", name, value: effect.type, key: effKey, variableKey: effVar ? effVar.key : null, styleKey, label: "Effect" }, audit("effects", effect.type, effKey, name, effectStyleRemote || effVar && effVar.remote, effVar ? effVar.key : null)));
             }
           }
         }

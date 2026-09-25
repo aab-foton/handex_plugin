@@ -40,14 +40,29 @@
       }
       _refreshIcons();
 
+      // referenceTokens: skeleton real das libs DSC (window.__HANDEX_REF_SKELETON__,
+      // embarcado no build via build.cjs a partir de refs/_skeleton.json).
+      // Reconectado em 2026-09-24 -- antes ia sempre null, e auditProperty()
+      // (audit.js) devolve "sem match" de cara sem esse dado: a checagem de
+      // componentKey contra a lib publicada nunca rodava de fato, mascarada
+      // pelo fallback de convenção [dsc] no nome. A lib publicada continua
+      // sendo a fonte da verdade -- isto só entrega o snapshot local dela
+      // (atualizado via `npm run refs:update`) pro backend comparar.
+      // Enviado só no primeiro scan da sessão -- o backend guarda a cópia
+      // (_refSkeletonCache, code.js) e reaproveita nos seguintes.
+      let _refSkeleton = null;
+      if (!window._handexRefSkeletonSent && window.__HANDEX_REF_SKELETON__) {
+        _refSkeleton = window.__HANDEX_REF_SKELETON__.libraries;
+        window._handexRefSkeletonSent = true;
+      }
       parent.postMessage({
         pluginMessage: {
           type: "scan-frame",
           frameId: activeFrameId || null,
           nodeId: frame ? frame.figmaId : null,
           isAudit: false,
-          referenceTokens: null,
-          selectedLibSlugs: null,
+          referenceTokens: _refSkeleton,
+          selectedLibSlugs: selectedLibSlugs,
           categories: categories,
           previousSpecs: frame ? frame.specs : (handoffData.step2 && handoffData.step2.specs) || null
         }
@@ -1394,7 +1409,7 @@
         props.forEach(p => {
           const pStatus = isCurrentFrameAuditEnabled() ?
             (p.isDS === true ? `<span class="text-[#10b981] shrink-0"><i data-lucide="check" class="w-3 h-3"></i></span>` :
-             (p.isDS === "warning" ? `<span class="text-amber-500 shrink-0"><i data-lucide="alert-triangle" class="w-3 h-3"></i></span>` :
+             (p.isDS === "warning" ? `<span class="text-amber-500 shrink-0" title="${p.matchedBy === 'remote-unverified' ? 'Token de uma biblioteca publicada que não está nas libs do DSC cadastradas no Handex. Confira se é um token DSC ou atualize as referências.' : 'Necessita revisão'}"><i data-lucide="alert-triangle" class="w-3 h-3 pointer-events-none"></i></span>` :
               `<span class="text-red-400 shrink-0"><i data-lucide="x" class="w-3 h-3"></i></span>`)) : "";
 
           let icon = "circle";

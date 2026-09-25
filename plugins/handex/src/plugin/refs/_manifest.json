@@ -1,7 +1,8 @@
 {
   "_meta": {
     "note": "Migração de design system em andamento (2026-08-26): 'web-angular-react' (fileKey 8QvOeTODSBi3PquJT5CISP) é o DSC legado. A lib antes chamada 'Super Gerenciador' foi reaproveitada/expandida pela equipe de design e renomeada para 'Super DSC | Web' (mesmo fileKey erkqbRKIbaFWbkHe51BeiZ, slug super-gerenciador mantido por compatibilidade) — é a sucessora oficial do legado. As duas COEXISTEM enquanto a migração não termina: um mesmo projeto pode ter componentes das duas libs simultaneamente. Não desativar/remover nenhuma das duas sem confirmação explícita.",
-    "dscAndroidRemoved": "A lib 'DSC | Android' (fileKey W8GUeHypdco1I3dneN6P3H, slug dsc-android) foi cadastrada em 2026-08-26 e removida por completo no mesmo dia, a pedido explícito do usuário ('não usaremos isso') — decisão de produto: o Handex não audita/escaneia projetos Android nativo. Entrada do manifest, refs/dsc-android.json e a entrada correspondente em code-mappings.json foram todos removidos, não só ocultados. Se precisar mapear no futuro, tratar como trabalho novo (recadastrar no manifest + rodar fetch-design-refs.cjs de novo) — ver histórico de commit deste arquivo só como referência do fileKey/contagens que existiam."
+    "dscAndroidRemoved": "A lib 'DSC | Android' (fileKey W8GUeHypdco1I3dneN6P3H, slug dsc-android) foi cadastrada em 2026-08-26 e removida por completo no mesmo dia, a pedido explícito do usuário ('não usaremos isso') — decisão de produto: o Handex não audita/escaneia projetos Android nativo. Entrada do manifest, refs/dsc-android.json e a entrada correspondente em code-mappings.json foram todos removidos, não só ocultados. Se precisar mapear no futuro, tratar como trabalho novo (recadastrar no manifest + rodar fetch-design-refs.cjs de novo) — ver histórico de commit deste arquivo só como referência do fileKey/contagens que existiam.",
+    "tierPriority": "2026-09-24: as libs 'Super' (super-gerenciador/'Super DSC | Web' e super-app/'DSC | Super App') são PRIORIDADE — cada uma já carrega seus próprios tokens de cor/tipografia/espaçamento/efeito, específicos por plataforma (web/mobile), e são a fonte válida quando uma chave existir em mais de uma lib. 'fundamentos-visuais' e 'web-angular-react' são LEGADO — ainda contam como vínculo real do DSC (o projeto pode legitimamente não ter migrado ainda), mas nunca vencem uma lib 'priority' na mesma chave. As duas libs 'design-acessivel*' são STANDALONE — vertical de acessibilidade à parte, fora dessa hierarquia migração/legado, sempre válidas por si. Campo `tier` em cada entrada abaixo: 'priority' | 'legacy' | 'standalone'. Consumido por build-skeleton.cjs (propaga pro skeleton) e audit.js (índice de chaves prioriza 'priority' sobre 'legacy'/'standalone' quando a mesma chave aparece em mais de uma lib)."
   },
   "generatedAt": "2026-09-24T12:35:37.189Z",
   "libraries": [
@@ -9,6 +10,7 @@
       "slug": "fundamentos-visuais",
       "name": "Fundamentos Visuais",
       "fileKey": "nbv8CUA2nbukjSkhK44kgQ",
+      "tier": "legacy",
       "file": "fundamentos-visuais.json",
       "counts": {
         "variables": 248,
@@ -22,6 +24,7 @@
       "slug": "web-angular-react",
       "name": "Web Angular & React",
       "fileKey": "8QvOeTODSBi3PquJT5CISP",
+      "tier": "legacy",
       "file": "web-angular-react.json",
       "counts": {
         "variables": 7,
@@ -35,6 +38,7 @@
       "slug": "super-gerenciador",
       "name": "Super DSC | Web",
       "fileKey": "erkqbRKIbaFWbkHe51BeiZ",
+      "tier": "priority",
       "file": "super-gerenciador.json",
       "counts": {
         "variables": 400,
@@ -48,6 +52,7 @@
       "slug": "super-app",
       "name": "DSC | Super App",
       "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+      "tier": "priority",
       "file": "super-app.json",
       "counts": {
         "variables": 295,
@@ -61,6 +66,7 @@
       "slug": "design-acessivel",
       "name": "Design Acessível",
       "fileKey": "Wy0IhXRVZMSOOr8E609UqI",
+      "tier": "standalone",
       "file": "design-acessivel.json",
       "counts": {
         "variables": 139,
@@ -74,6 +80,7 @@
       "slug": "design-acessivel-mobile",
       "name": "Design Acessível | Super App (React Native)",
       "fileKey": "3zdtN13YvPlCGPdXeL0Y2i",
+      "tier": "standalone",
       "file": "design-acessivel-mobile.json",
       "counts": {
         "variables": 5,

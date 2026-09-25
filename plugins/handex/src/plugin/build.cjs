@@ -36,11 +36,29 @@ const modOnboard = read('modules/onboarding.js');
 const modData    = read('modules/design-data.js');
 const modMsgs    = read('modules/messages.js');
 
-// Nota: refs/_skeleton.json (gerado por refs/build-skeleton.cjs) não é mais
-// embarcado no ui.html — nenhum código de runtime o lê hoje (o scan/auditoria
-// DSC resolve estilos direto via figma.getStyleByIdAsync no nó do canvas).
-// O script continua rodando via `npm run bundle:refs` (parte de bundle:ui)
-// e o arquivo continua no repo, caso outro processo dependa dele.
+// Skeleton das libs DSC (refs/_skeleton.json, gerado por refs/build-skeleton.cjs)
+// -- reintroduzido no embed em 2026-09-24. Tinha sido removido achando que
+// nada o consumia mais ("scan resolve via figma.getStyleByIdAsync"), mas
+// getStyleByIdAsync só resolve NOME/flag remote de um estilo -- nunca
+// confere componentKey contra a lib DSC de verdade. Sem o skeleton
+// disponível, auditProperty() (audit.js) recebe referenceTokens null e
+// NUNCA acha match por key -- toda auditoria de conformidade por
+// componentKey ficava só no fallback de convenção [dsc] no nome, ou no
+// proxy mais fraco remote===true (que não distingue "é do DSC" de "é de
+// QUALQUER lib publicada"). Achado real: ícone "menu" (Fundamentos
+// Visuais, vínculo confirmado no painel do Figma) reportado como
+// "COMPONENTE PERSONALIZADO" mesmo com componentKey presente no skeleton,
+// porque o skeleton nunca chegava ao backend pra comparação. A lib
+// publicada continua sendo a fonte da verdade -- o skeleton é só o
+// snapshot local dela, atualizado via `npm run refs:update`, nunca gerado
+// nem inferido pelo próprio plugin.
+let skeletonJSON = 'null';
+const skeletonPath = path.join(BASE, 'refs', '_skeleton.json');
+if (fs.existsSync(skeletonPath)) {
+  skeletonJSON = fs.readFileSync(skeletonPath, 'utf8').trim();
+} else {
+  console.warn('⚠  refs/_skeleton.json not found — auditoria por componentKey ficará sem dados');
+}
 
 // ── Load Code Connect mappings (lib name → import path / docs) ──
 const codeMapPath = path.join(BASE, 'refs', 'code-mappings.json');
@@ -95,6 +113,14 @@ const html = `<!doctype html>
     // Edit refs/code-mappings.json and rebuild to update.
     window.__HANDEX_CODE_MAPPINGS__ = ${codeMappingsJSON};
   </script>
+  <script>
+    // Skeleton das libs DSC (fonte real: refs/_skeleton.json, atualizado via
+    // 'npm run refs:update') -- enviado ao backend em cada scan-frame pra
+    // auditProperty() (audit.js) checar componentKey/style/variable contra a
+    // lib publicada de verdade. Objeto já parseado (não é fetch nem JSON.parse
+    // de string em runtime) -- não bloqueia DOMContentLoaded/ui-ready.
+    window.__HANDEX_REF_SKELETON__ = ${skeletonJSON};
+  </script>
   <!-- jszip + jspdf carregados sob demanda ao exportar -->
   <style>
 ${tailwindCSS}
@@ -127,7 +153,6 @@ ${css}
         <h1 class="font-bold text-[#1E293B] dark:text-white text-[12px] tracking-[0.15em] uppercase">
           HANDEX
         </h1>
-        <span id="version-badge" class="ml-2 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-[10px] font-bold rounded flex items-center justify-center">v4.2.2</span>
       </button>
       <div class="flex items-center gap-2 shrink-0">
         <button onclick="ensureExpanded(); openDadosProjetoModal()" title="Dados do Projeto" aria-label="Dados do Projeto"

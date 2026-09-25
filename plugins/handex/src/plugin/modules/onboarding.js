@@ -35,6 +35,20 @@ const ONBOARDING_TOOLS = {
       { text: 'Quando terminar de documentar, use <strong>Gerar Ficha de Handoff</strong> no rodapé para consolidar tudo no canvas.' }
     ]
   },
+  guide: {
+    view: 'view-guide',
+    title: 'Como usar o plugin',
+    icon: 'book-open',
+    color: '#005ca9',
+    format: 'single',
+    docUrl: 'https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=1-54',
+    purpose: 'O Handex organiza a documentação de handoff em ferramentas independentes. Use cada uma no momento certo, sem ordem fixa. Quando tudo estiver pronto, gere a Ficha de Handoff no canvas.',
+    steps: [
+      { text: 'Expanda cada ferramenta da lista para ver <strong>para que ela serve</strong>.' },
+      { text: 'Use <strong>Ver documentação completa</strong> para o passo a passo detalhado, na documentação oficial do Handex no Figma.' },
+      { text: 'Dentro de cada tela do plugin, o ícone <strong>?</strong> no topo abre o guia específico daquela ferramenta.' }
+    ]
+  },
   dadosProjeto: {
     view: 'view-dados-projeto',
     title: 'Informações do Projeto',
