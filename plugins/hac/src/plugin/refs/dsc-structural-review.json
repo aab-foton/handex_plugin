@@ -1,19 +1,26 @@
 {
   "_meta": {
     "AGENTE_AUTOMATIZADO_LEIA_PRIMEIRO": "Se você é um agente (Gemini ou outro) chegando a este arquivo: você só tem permissão para editar ESTE arquivo (src/plugin/refs/dsc-structural-review.json). Não edite, crie, apague ou renomeie nenhum outro arquivo do repositório — isso inclui código-fonte (code.js, code.bundle.js, ui.html, módulos, views), documentação (docs/), workflows (.github/), ou qualquer outro JSON em src/plugin/refs/ (em especial os 4 arquivos dsc-component-a11y-mapping*.json, que são a FONTE deste arquivo, não devem ser editados por você — e design-acessivel-content.json/ficha-instruction-content.json, que são de outra tarefa). Não rode build/bundle/lint/commit/push.",
-    "description": "Revisão ESTRUTURAL (via MCP do Figma, lendo a árvore real de filhos de cada componente) dos 87 containingFrame que hoje têm match de a11y com confiança BAIXA nas 4 libs de produção do hac — candidatos reais a melhorar o matching DSC→categoria de acessibilidade, que hoje é feito só por nome/substring (script build-dsc-a11y-mapping.cjs). Cada entrada já foi extraída automaticamente dos 4 arquivos dsc-component-a11y-mapping*.json (campo baixaConfianca) — sampleComponentKey é uma key real de 1 variante desse componente, abrível no Figma via MCP (componente publicado, resolvível por key).",
-    "scope": "Escopo deliberadamente restrito aos 87 componentes de confiança BAIXA (não os milhares sem match nenhum, nem os já resolvidos com confiança alta) — são os candidatos reais onde uma segunda fonte de evidência (estrutura real, não só nome) pode confirmar ou corrigir o match atual.",
+    "description": "Revisão ESTRUTURAL dos componentes DSC que hoje têm match de a11y com confiança BAIXA nas 4 libs de produção do hac — candidatos reais a melhorar o matching DSC→categoria de acessibilidade (build-dsc-a11y-mapping.cjs), hoje feito só por nome/substring.",
+    "scope": "Escopo deliberadamente restrito aos componentes de confiança BAIXA (não os milhares sem match nenhum, nem os já resolvidos com confiança alta) — candidatos reais onde uma segunda fonte de evidência (estrutura real, não só nome) pode confirmar ou corrigir o match atual.",
     "howToFill": "Para cada entrada abaixo (dentro de cada lib: web-angular-react, super-app, super-dsc-web, dsc-android), use o MCP do Figma para abrir o componente real via fileKey + sampleComponentKey (é uma key de componente/variante publicada — use a ferramenta de leitura de componente/nó do seu MCP para resolver essa key dentro do arquivo fileKey e inspecionar a árvore de filhos dela). Preencha: hasComposedIcon (true/false — tem um ícone/vetor isolado como filho direto ou neto?), hasVisibleLabelText (true/false — tem um TEXT com conteúdo visível em nível raso?), structuralNote (1-2 frases objetivas sobre o que a estrutura real sugere: confirma o match atual (currentMatch/currentConfidence), ou sugere outra categoria, ou revela que é um componente COMPOSTO com sub-elementos que merecem virar specs próprias — mesmo padrão já usado no hac para \"[dsc-tc] Actions - Button Row\"). NÃO mude currentMatch/currentConfidence/currentReason (são o estado ATUAL, referência — não edite), NÃO adicione/remova entradas nem chaves novas, só preencha os 3 campos PREENCHER de cada entrada. Se não conseguir resolver um sampleComponentKey específico (componente removido/renomeado desde o scan), preencha structuralNote com \"não foi possível resolver o componente — key pode estar desatualizada\" e deixe os 2 campos booleanos como null.",
-    "totalCandidates": 87,
+    "totalCandidates": 156,
+    "pendingCount": 1,
     "extractedFrom": [
       "dsc-component-a11y-mapping.json",
       "dsc-component-a11y-mapping-mobile.json",
       "dsc-component-a11y-mapping-superdscweb.json",
       "dsc-component-a11y-mapping-android.json"
     ],
-    "extractedAt": "2026-09-09",
+    "lastAutomatedRunAt": "2026-09-29T12:21:45.220Z",
+    "lastAutomatedRunStats": {
+      "resolved": 70,
+      "failed": 1,
+      "skipped": 85
+    },
     "extractedBy": "Gemini via MCP Figma",
-    "status": "preenchido"
+    "extractedAt": "2026-09-09",
+    "status": "preenchido-parcial — 1 de 156 entradas ainda pendentes"
   },
   "candidates": {
     "web-angular-react": [
@@ -174,6 +181,18 @@
         "structuralNote": "Confirma o match atual com imagem. Representa a marca institucional CAIXA e necessita de texto alternativo descritivo no leitor de telas."
       },
       {
+        "containingFrame": "[dsc] Menu item",
+        "currentMatch": "listas",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (web-angular-react) \"Menu item\"",
+        "variantCount": 36,
+        "sampleComponentKey": "066212db92dc155d01b49114e6483c6a390eb52e",
+        "fileKey": "8QvOeTODSBi3PquJT5CISP",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('Item level 3') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
         "containingFrame": "[dsc] Slider",
         "currentMatch": "inputs",
         "currentConfidence": "baixa",
@@ -198,6 +217,42 @@
         "structuralNote": "Componente estrutural composto de rodapé (landmark contentinfo). Agrupa seções de navegação secundária, ícones de redes sociais e texto institucional."
       },
       {
+        "containingFrame": "[dsc] Classificação de Conteúdo",
+        "currentMatch": "informacoes",
+        "currentConfidence": "baixa",
+        "currentReason": "banner de classificação de sensibilidade do conteúdo da página — bloco informativo autônomo",
+        "variantCount": 12,
+        "sampleComponentKey": "9f35761337054df2f09e447ad79c792df08abf58",
+        "fileKey": "8QvOeTODSBi3PquJT5CISP",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('Conteúdo') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
+        "containingFrame": "[dsc] Tooltip",
+        "currentMatch": "dialog",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (web-angular-react) \"Tooltip\"",
+        "variantCount": 8,
+        "sampleComponentKey": "15e22783892f754a9f1dd1f554eb98e4770bff92",
+        "fileKey": "8QvOeTODSBi3PquJT5CISP",
+        "hasComposedIcon": true,
+        "hasVisibleLabelText": true,
+        "structuralNote": "Tem ícone isolado (VECTOR, 12x6) e texto visível ('Use para descrever ou identificar um ele') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
+        "containingFrame": "[dsc] Alert",
+        "currentMatch": "informacoes",
+        "currentConfidence": "baixa",
+        "currentReason": "alerta inline persistente (ícone+título+mensagem) — bloco informativo autônomo, distinto de Toast/Snackbar (transiente) e Modal/Dialog (overlay bloqueante)",
+        "variantCount": 8,
+        "sampleComponentKey": "15e320d5a236df4f645c510650f4d34088303aad",
+        "fileKey": "8QvOeTODSBi3PquJT5CISP",
+        "hasComposedIcon": true,
+        "hasVisibleLabelText": true,
+        "structuralNote": "Tem ícone isolado (VECTOR, 27x27) e texto visível ('Title') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
         "containingFrame": "[dsc] Dropdown Select with Chips",
         "currentMatch": "inputs",
         "currentConfidence": "baixa",
@@ -208,6 +263,18 @@
         "hasComposedIcon": true,
         "hasVisibleLabelText": true,
         "structuralNote": "Confirma o match atual com inputs. Menu suspenso de seleção avançado que combina menu expansível e seleção em formato de chips."
+      },
+      {
+        "containingFrame": "[dsc] Menu Lateral",
+        "currentMatch": "listas",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (web-angular-react) \"Menu Lateral\"",
+        "variantCount": 3,
+        "sampleComponentKey": "1d1ae77aa876123913c0dae00930f7b8b3453bf3",
+        "fileKey": "8QvOeTODSBi3PquJT5CISP",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('◇') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
       },
       {
         "containingFrame": "[dsc] Datepicker Calendar",
@@ -248,6 +315,18 @@
     ],
     "super-app": [
       {
+        "containingFrame": "[dsc] Page Controller",
+        "currentMatch": "paginator",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Page Controller\"",
+        "variantCount": 90,
+        "sampleComponentKey": "f312242947b4f9747f843352d877122dbec6e4c8",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": false,
+        "structuralNote": "Sem ícone nem texto filho detectado em nível raso — estrutura simples, match atual provavelmente já suficiente."
+      },
+      {
         "containingFrame": "[dsc] List Item",
         "currentMatch": "listas",
         "currentConfidence": "baixa",
@@ -284,16 +363,52 @@
         "structuralNote": "Confirma o match atual com inputs. Campo de formulário completo com suporte a múltiplas linhas, rótulo, mensagens de erro e ícones de apoio."
       },
       {
-        "containingFrame": "[dsc] Radio",
-        "currentMatch": "radio button",
+        "containingFrame": "[dsc] Card Carousel Horizontal",
+        "currentMatch": "listas",
         "currentConfidence": "baixa",
-        "currentReason": "tabela curada (super-app) \"Radio\"",
-        "variantCount": 20,
-        "sampleComponentKey": "07be1fd4c8ab8fa1fd7ce34a1ae76dc788ee9899",
+        "currentReason": "tabela curada (super-app) \"Card Carousel Horizontal\"",
+        "variantCount": 30,
+        "sampleComponentKey": "8d165cbbf8819744516b3f566d9909ed04c4c8f6",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('Title card') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
+        "containingFrame": "[dsc] Icon Container",
+        "currentMatch": "imagem",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Icon Container\"",
+        "variantCount": 28,
+        "sampleComponentKey": "0eff0582d425401f3a7c699de035815156731858",
         "fileKey": "epCGtlKQxedDxQVlK3lNcN",
         "hasComposedIcon": true,
+        "hasVisibleLabelText": false,
+        "structuralNote": "Tem ícone isolado (VECTOR, 15x15) — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
+        "containingFrame": "[dsc] Value Section",
+        "currentMatch": "listas",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Value Section\"",
+        "variantCount": 25,
+        "sampleComponentKey": "120f00983c24cea8e1ac3eec93861d8aa0de85dc",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": false,
         "hasVisibleLabelText": true,
-        "structuralNote": "Confirma o match atual com radio button. Controle de opção única com botão circular de marcação e rótulo textual associado."
+        "structuralNote": "texto visível ('Label') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
+        "containingFrame": "[dsc] Timeline Collapse",
+        "currentMatch": "accordion",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Timeline Collapse\"",
+        "variantCount": 24,
+        "sampleComponentKey": "118f7118c28534a1f08a3f6faf76d948ef942b7d",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('Ver mais') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
       },
       {
         "containingFrame": "[dsc] Text Field Single",
@@ -306,6 +421,18 @@
         "hasComposedIcon": true,
         "hasVisibleLabelText": true,
         "structuralNote": "Confirma o match atual com inputs. Campo de entrada de linha única com label flutuante, placeholder e mensagens de validação."
+      },
+      {
+        "containingFrame": "[dsc] Radio",
+        "currentMatch": "radio button",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Radio\"",
+        "variantCount": 20,
+        "sampleComponentKey": "07be1fd4c8ab8fa1fd7ce34a1ae76dc788ee9899",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": true,
+        "hasVisibleLabelText": true,
+        "structuralNote": "Confirma o match atual com radio button. Controle de opção única com botão circular de marcação e rótulo textual associado."
       },
       {
         "containingFrame": "[dsc] Transaction List Item",
@@ -332,6 +459,42 @@
         "structuralNote": "Confirma o match atual com inputs. Campo de busca interativo com ícone de lupa, placeholder e botão de limpeza de texto."
       },
       {
+        "containingFrame": "[dsc] List Item Funds",
+        "currentMatch": "listas",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"List Item\"",
+        "variantCount": 15,
+        "sampleComponentKey": "fccde502105e6f81f719cda33b2861989d2e6bc0",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('Label top left') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
+        "containingFrame": "[dsc] Account Select",
+        "currentMatch": "inputs",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Account Select\"",
+        "variantCount": 12,
+        "sampleComponentKey": "2ee27a397298a4180b5183044ba242d21e620b92",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": true,
+        "hasVisibleLabelText": true,
+        "structuralNote": "Confirma o match atual com inputs. Componente seletor de conta bancária com dados textuais de agência/conta, avatar e chevron expansível."
+      },
+      {
+        "containingFrame": "[dsc-tc] Transactions List",
+        "currentMatch": "listas",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Transactions List\"",
+        "variantCount": 12,
+        "sampleComponentKey": "01d35d10abf5d82fbce79e8a4f0a94cc4b5e2d59",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('Title') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
         "containingFrame": "[dsc] Input Money",
         "currentMatch": "inputs",
         "currentConfidence": "baixa",
@@ -356,16 +519,40 @@
         "structuralNote": "Componente composto que une imagem de perfil/avatar com nome do usuário e mensagem de boas-vindas. Deve ser tratado como imagem acompanhada de cabeçalho."
       },
       {
-        "containingFrame": "[dsc] Account Select",
-        "currentMatch": "inputs",
+        "containingFrame": "[dsc] Tipkit Popover",
+        "currentMatch": "dialog",
         "currentConfidence": "baixa",
-        "currentReason": "tabela curada (super-app) \"Account Select\"",
+        "currentReason": "tabela curada (super-app) \"Tipkit Popover\"",
         "variantCount": 12,
-        "sampleComponentKey": "2ee27a397298a4180b5183044ba242d21e620b92",
+        "sampleComponentKey": "a14305028258a9d94513392b4e39830e81f92850",
         "fileKey": "epCGtlKQxedDxQVlK3lNcN",
         "hasComposedIcon": true,
+        "hasVisibleLabelText": false,
+        "structuralNote": "Tem ícone isolado (VECTOR, 20x10) — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
+        "containingFrame": "[dsc] Timeline Item",
+        "currentMatch": "stepper",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Timeline Item\"",
+        "variantCount": 12,
+        "sampleComponentKey": "09b52e8492c71c0e44b16de782ab59817cdf7611",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": false,
         "hasVisibleLabelText": true,
-        "structuralNote": "Confirma o match atual com inputs. Componente seletor de conta bancária com dados textuais de agência/conta, avatar e chevron expansível."
+        "structuralNote": "texto visível ('Label') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
+        "containingFrame": "[dsc] Selectable Media",
+        "currentMatch": "imagem",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Selectable Media\"",
+        "variantCount": 12,
+        "sampleComponentKey": "05f2747333d756677e6cec9740a04e4e2fd65cde",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": false,
+        "structuralNote": "Sem ícone nem texto filho detectado em nível raso — estrutura simples, match atual provavelmente já suficiente."
       },
       {
         "containingFrame": "[dsc] Banking Logos",
@@ -392,6 +579,30 @@
         "structuralNote": "Confirma o match atual com imagem. Avatar de destaque com imagem de perfil ou iniciais para áreas principais de identificação."
       },
       {
+        "containingFrame": "[dsc] Top App Bar",
+        "currentMatch": "estrutura",
+        "currentConfidence": "baixa",
+        "currentReason": "marco de navegação \"header\" (nomenclatura mobile)",
+        "variantCount": 10,
+        "sampleComponentKey": "605463a25465f41ef568639faeb384b0931cfe67",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": false,
+        "structuralNote": "Sem ícone nem texto filho detectado em nível raso — estrutura simples, match atual provavelmente já suficiente."
+      },
+      {
+        "containingFrame": "[dsc] Chip",
+        "currentMatch": "inputs",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Chip\"",
+        "variantCount": 10,
+        "sampleComponentKey": "12b4036740a8d3e230eb5d8fc59447031ad4539f",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('Label') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
         "containingFrame": "[dsc] Input Chat",
         "currentMatch": "inputs",
         "currentConfidence": "baixa",
@@ -416,6 +627,18 @@
         "structuralNote": "Confirma o match atual com imagem. Ícones de bandeiras de países para seleção de nacionalidade ou idioma, exigindo rótulo acessível descritivo."
       },
       {
+        "containingFrame": "[dsc] Popover",
+        "currentMatch": "dialog",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Popover\"",
+        "variantCount": 8,
+        "sampleComponentKey": "e255cb52c592de50fcc805ca7fe7245b62454fb3",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": false,
+        "structuralNote": "Sem ícone nem texto filho detectado em nível raso — estrutura simples, match atual provavelmente já suficiente."
+      },
+      {
         "containingFrame": "[dsc] List Heading",
         "currentMatch": "listas",
         "currentConfidence": "baixa",
@@ -426,18 +649,6 @@
         "hasComposedIcon": true,
         "hasVisibleLabelText": true,
         "structuralNote": "Confirma o match atual com listas. Cabeçalho de seção de lista com título textual e botão de ação secundária opcional."
-      },
-      {
-        "containingFrame": "[dsc] Sheet",
-        "currentMatch": "dialog",
-        "currentConfidence": "baixa",
-        "currentReason": "tabela curada (super-app) \"Sheet\"",
-        "variantCount": 8,
-        "sampleComponentKey": "6ca2b8873a2c2e8fe0e2dfe608225f51685f9e23",
-        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
-        "hasComposedIcon": true,
-        "hasVisibleLabelText": true,
-        "structuralNote": "Confirma o match atual com dialog. Painel modal inferior (bottom sheet) que sobrepõe a tela para apresentar opções contextuais."
       },
       {
         "containingFrame": "[dsc-ts] Sheet - Single Filter",
@@ -452,6 +663,42 @@
         "structuralNote": "Confirma o match atual com dialog. Bottom sheet composto contendo lista de opções de filtro com caixas de seleção e botões de confirmação."
       },
       {
+        "containingFrame": "[dsc] Sheet",
+        "currentMatch": "dialog",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Sheet\"",
+        "variantCount": 8,
+        "sampleComponentKey": "6ca2b8873a2c2e8fe0e2dfe608225f51685f9e23",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": true,
+        "hasVisibleLabelText": true,
+        "structuralNote": "Confirma o match atual com dialog. Painel modal inferior (bottom sheet) que sobrepõe a tela para apresentar opções contextuais."
+      },
+      {
+        "containingFrame": "[dsc] Card Carousel Vertical",
+        "currentMatch": "listas",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Card Carousel Vertical\"",
+        "variantCount": 8,
+        "sampleComponentKey": "25976ab9451a5898112bd891349b9226ab660bf4",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('Label') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
+        "containingFrame": "[dsc] Tooltip",
+        "currentMatch": "dialog",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Tooltip\"",
+        "variantCount": 8,
+        "sampleComponentKey": "24a5fdcf49d0434f5444ad2510138e75ff3ce4f5",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": true,
+        "hasVisibleLabelText": true,
+        "structuralNote": "Tem ícone isolado (VECTOR, 20x10) e texto visível ('Lorem ipsum') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
         "containingFrame": "[dsc] Social Programs Logos",
         "currentMatch": "imagem",
         "currentConfidence": "baixa",
@@ -462,6 +709,30 @@
         "hasComposedIcon": true,
         "hasVisibleLabelText": false,
         "structuralNote": "Confirma o match atual com imagem. Logotipos gráficos de programas sociais do governo, requerendo texto alternativo identificador."
+      },
+      {
+        "containingFrame": "[dsc-tc] Sortable List",
+        "currentMatch": "listas",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Sortable List\"",
+        "variantCount": 7,
+        "sampleComponentKey": "21423e07207ccb30b1d80aa51e2ded66fadbbe88",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('Atualizar 30s') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
+        "containingFrame": "[dsc] Icon",
+        "currentMatch": "imagem",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Icon\"",
+        "variantCount": 7,
+        "sampleComponentKey": "047fe8d76a923e10caa87a2fef038e66588a2a9d",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": true,
+        "hasVisibleLabelText": false,
+        "structuralNote": "Tem ícone isolado (VECTOR, 15x15) — candidato a componente composto, revisar se sub-elementos merecem spec própria."
       },
       {
         "containingFrame": "[dsc] Logo CAIXA",
@@ -476,6 +747,30 @@
         "structuralNote": "Confirma o match atual com imagem. Marca oficial CAIXA aplicada em contexto mobile, demandando acessibilidade como logotipo institucional."
       },
       {
+        "containingFrame": "[dsc-tc] Screen Footer",
+        "currentMatch": "estrutura",
+        "currentConfidence": "baixa",
+        "currentReason": "marco de navegação \"footer\" (rodapé de tela mobile)",
+        "variantCount": 6,
+        "sampleComponentKey": "182c0bef5a25c6ef8400dd9facae39a9b8f08ca6",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": true,
+        "hasVisibleLabelText": true,
+        "structuralNote": "Tem ícone isolado (RECTANGLE, 28x28) e texto visível ('Switch') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
+        "containingFrame": "[dsc-tc] Select Group List",
+        "currentMatch": "listas",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Select Group List\"",
+        "variantCount": 6,
+        "sampleComponentKey": "cac822946d03ee53244c517a80f68faccab6ae8a",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('Limpar filtros') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
         "containingFrame": "[dsc] Input Slider",
         "currentMatch": "inputs",
         "currentConfidence": "baixa",
@@ -488,16 +783,16 @@
         "structuralNote": "Confirma o match atual com inputs. Controle deslizante para seleção de valores numéricos com rótulo e texto de apoio informativo."
       },
       {
-        "containingFrame": "[dsc] Date Picker Container",
-        "currentMatch": "inputs",
+        "containingFrame": "[dsc] Navigation Bar",
+        "currentMatch": "estrutura",
         "currentConfidence": "baixa",
-        "currentReason": "tabela curada (super-app) \"Date Picker\"",
+        "currentReason": "marco de navegação principal (barra de navegação mobile)",
         "variantCount": 5,
-        "sampleComponentKey": "a972f212e699b6188d5b0698ce92bb35bbd30298",
+        "sampleComponentKey": "eea7c5c511632421f165558662a0cbae8f2cb940",
         "fileKey": "epCGtlKQxedDxQVlK3lNcN",
-        "hasComposedIcon": true,
-        "hasVisibleLabelText": true,
-        "structuralNote": "Confirma o match atual com inputs. Contêiner estrutural para seleção de datas (mês/ano) em visualização de calendário."
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": false,
+        "structuralNote": "Sem ícone nem texto filho detectado em nível raso — estrutura simples, match atual provavelmente já suficiente."
       },
       {
         "containingFrame": "[dsc] Date Picker",
@@ -512,6 +807,54 @@
         "structuralNote": "Confirma o match atual com inputs. Seletor de calendário interativo para escolha de dia, mês e ano em interfaces mobile."
       },
       {
+        "containingFrame": "[dsc] Card Notification Stack",
+        "currentMatch": "listas",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Card Notification Stack\"",
+        "variantCount": 5,
+        "sampleComponentKey": "675025a12aef7395bdbdfc3ccacd387c7db8a164",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('Label') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
+        "containingFrame": "[dsc] Date Picker Container",
+        "currentMatch": "inputs",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Date Picker\"",
+        "variantCount": 5,
+        "sampleComponentKey": "a972f212e699b6188d5b0698ce92bb35bbd30298",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": true,
+        "hasVisibleLabelText": true,
+        "structuralNote": "Confirma o match atual com inputs. Contêiner estrutural para seleção de datas (mês/ano) em visualização de calendário."
+      },
+      {
+        "containingFrame": "[dsc-tc] Feedback Illustration",
+        "currentMatch": "imagem",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Feedback Illustration\"",
+        "variantCount": 4,
+        "sampleComponentKey": "f63cfdb8a9417a6141a75f75d21904575b8f2a3e",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": false,
+        "structuralNote": "Sem ícone nem texto filho detectado em nível raso — estrutura simples, match atual provavelmente já suficiente."
+      },
+      {
+        "containingFrame": "[dsc-tc] Carousel - Horizontal",
+        "currentMatch": "listas",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Carousel - Horizontal\"",
+        "variantCount": 4,
+        "sampleComponentKey": "a41e67638bbca94643c96d2996db613bb125ed63",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('Title') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
         "containingFrame": "[dsc] List Footer",
         "currentMatch": "listas",
         "currentConfidence": "baixa",
@@ -524,28 +867,64 @@
         "structuralNote": "Confirma o match atual com listas. Rodapé de lista com indicador de carregamento ou link para ver mais registros."
       },
       {
-        "containingFrame": "[dsc-ts] Screen Input Money",
-        "currentMatch": "inputs",
-        "currentConfidence": "baixa",
-        "currentReason": "tabela curada (super-app) \"Input Money\"",
-        "variantCount": 4,
-        "sampleComponentKey": "d908b7393800afa8f9fdd02d7447960e9290f018",
-        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
-        "hasComposedIcon": true,
-        "hasVisibleLabelText": true,
-        "structuralNote": "Tela completa/template de inserção de valor monetário com teclado virtual e campo de entrada. Requer divisão em seus componentes individuais."
-      },
-      {
-        "containingFrame": "[dsc-ts] Screen Item Select List",
+        "containingFrame": "[dsc-tc] Card Feed List",
         "currentMatch": "listas",
         "currentConfidence": "baixa",
-        "currentReason": "tabela curada (super-app) \"List Item\"",
+        "currentReason": "tabela curada (super-app) \"Card Feed List\"",
         "variantCount": 3,
-        "sampleComponentKey": "a69cb94fd9396c00c6d4934e7acf4a5ca3ba314b",
+        "sampleComponentKey": "2e35db520992e354ddfcb8ce7c0857b3df87fa36",
         "fileKey": "epCGtlKQxedDxQVlK3lNcN",
-        "hasComposedIcon": true,
+        "hasComposedIcon": false,
         "hasVisibleLabelText": true,
-        "structuralNote": "Tela modal completa para seleção de itens em lista com campo de busca. Deve ser decomposta nos sub-elementos de busca, lista e ações."
+        "structuralNote": "texto visível ('Title') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
+        "containingFrame": "[dsc-tc] Funds List",
+        "currentMatch": "listas",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Funds List\"",
+        "variantCount": 3,
+        "sampleComponentKey": "332d2632219b371974427bcaa4ea2d7a8815e5cd",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('Title') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
+        "containingFrame": "[dsc-tc] Carousel - Card Content",
+        "currentMatch": "listas",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Carousel - Card Content\"",
+        "variantCount": 3,
+        "sampleComponentKey": "165cc2315d0e06a3d3002e5f51f1c194eaad44d6",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('Title') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
+        "containingFrame": "[dsc-tc] Carousel Product Offer",
+        "currentMatch": "listas",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Carousel Product Offer\"",
+        "variantCount": 3,
+        "sampleComponentKey": "f5b9c5f2cdb504dfc99aed52c0de4149fe499306",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('Title') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
+        "containingFrame": "[dsc-tc] Actions List",
+        "currentMatch": "listas",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Actions List\"",
+        "variantCount": 3,
+        "sampleComponentKey": "3ee3d8eed8a3ee003bf3775f7117e73b587af07a",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('Title') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
       },
       {
         "containingFrame": "[dsc] Input Pin",
@@ -560,18 +939,6 @@
         "structuralNote": "Confirma o match atual com inputs. Campo para digitação de senha PIN ou código OTP com marcadores visuais mascarados."
       },
       {
-        "containingFrame": "[dsc] Avatar",
-        "currentMatch": "imagem",
-        "currentConfidence": "baixa",
-        "currentReason": "tabela curada (super-app) \"Avatar\"",
-        "variantCount": 3,
-        "sampleComponentKey": "04232af1991edd4dc7536b3040cf68b175bfaee8",
-        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
-        "hasComposedIcon": true,
-        "hasVisibleLabelText": false,
-        "structuralNote": "Confirma o match atual com imagem. Elemento visual circular para exibição de foto do usuário ou avatar genérico."
-      },
-      {
         "containingFrame": "[dsc] Toast",
         "currentMatch": "snackbar",
         "currentConfidence": "baixa",
@@ -584,6 +951,102 @@
         "structuralNote": "Confirma o match atual com snackbar. Notificação temporária de feedback com ícone de status, mensagem de texto e ação opcional."
       },
       {
+        "containingFrame": "[dsc-tc] Card Product Offer List",
+        "currentMatch": "listas",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Card Product Offer List\"",
+        "variantCount": 3,
+        "sampleComponentKey": "342d4d24f062c1dced3c51951403fe6c468caedc",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": false,
+        "structuralNote": "Sem ícone nem texto filho detectado em nível raso — estrutura simples, match atual provavelmente já suficiente."
+      },
+      {
+        "containingFrame": "[dsc-tc] Carousel - Vertical",
+        "currentMatch": "listas",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Carousel - Vertical\"",
+        "variantCount": 3,
+        "sampleComponentKey": "3e88bf4a26bbb83f685f776e8e58ccf04ab5d327",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('Title') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
+        "containingFrame": "[dsc-tc] Feedback - List",
+        "currentMatch": "listas",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Feedback - List\"",
+        "variantCount": 3,
+        "sampleComponentKey": "c2f0b562622765c58cb315d5daed888500392bea",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('Title') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
+        "containingFrame": "[dsc-tc] Options List",
+        "currentMatch": "listas",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Options List\"",
+        "variantCount": 3,
+        "sampleComponentKey": "658fe79f58b520d7b3fa6eb9c7009365023638fb",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('Title') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
+        "containingFrame": "[dsc-tc] Multi-select - List",
+        "currentMatch": "listas",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Multi-select - List\"",
+        "variantCount": 3,
+        "sampleComponentKey": "1450dcac3e14001c0637116278d28db57b1d9128",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": false,
+        "structuralNote": "Sem ícone nem texto filho detectado em nível raso — estrutura simples, match atual provavelmente já suficiente."
+      },
+      {
+        "containingFrame": "[dsc-tc] State Message",
+        "currentMatch": "informacoes",
+        "currentConfidence": "baixa",
+        "currentReason": "bloco de estado vazio/erro de tela inteira (título+descrição+CTA) — conteúdo informativo substantivo, sem equivalente nos 16 componentes interativos",
+        "variantCount": 3,
+        "sampleComponentKey": "4bcc94ba11f04d5b5f991412b5ddec4bc6054541",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('Label') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
+        "containingFrame": "[dsc] Avatar",
+        "currentMatch": "imagem",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Avatar\"",
+        "variantCount": 3,
+        "sampleComponentKey": "04232af1991edd4dc7536b3040cf68b175bfaee8",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": true,
+        "hasVisibleLabelText": false,
+        "structuralNote": "Confirma o match atual com imagem. Elemento visual circular para exibição de foto do usuário ou avatar genérico."
+      },
+      {
+        "containingFrame": "[dsc-tc] Selectable Media Grid",
+        "currentMatch": "imagem",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Selectable Media Grid\"",
+        "variantCount": 2,
+        "sampleComponentKey": "89cf6d509c44a04a28793a8c6848cc39800e654d",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": false,
+        "structuralNote": "Sem ícone nem texto filho detectado em nível raso — estrutura simples, match atual provavelmente já suficiente."
+      },
+      {
         "containingFrame": "[dsc] Tabs",
         "currentMatch": "tab group",
         "currentConfidence": "baixa",
@@ -594,9 +1057,69 @@
         "hasComposedIcon": true,
         "hasVisibleLabelText": true,
         "structuralNote": "Confirma o match atual com tab group. Conjunto de abas de navegação horizontal mobile com rótulos e indicadores de seleção ativa."
+      },
+      {
+        "containingFrame": "[dsc] Wheel Picker",
+        "currentMatch": "inputs",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Wheel Picker\"",
+        "variantCount": 2,
+        "sampleComponentKey": "1668d5088fcf02ca814a3da9af779f9ac84bbfe0",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": false,
+        "structuralNote": "Sem ícone nem texto filho detectado em nível raso — estrutura simples, match atual provavelmente já suficiente."
+      },
+      {
+        "containingFrame": "[dsc] Slider",
+        "currentMatch": "inputs",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Slider\"",
+        "variantCount": 2,
+        "sampleComponentKey": "0706593148fc93daf35f8bfd9f92c2580c44018e",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": true,
+        "hasVisibleLabelText": false,
+        "structuralNote": "Tem ícone isolado (ELLIPSE, 4x4) — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
+        "containingFrame": "[dsc] Credit Card Illustration",
+        "currentMatch": "imagem",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-app) \"Credit Card Illustration\"",
+        "variantCount": 2,
+        "sampleComponentKey": "0b4a262bed90d5ac4826bec10bb25f9ef0a8bdc8",
+        "fileKey": "epCGtlKQxedDxQVlK3lNcN",
+        "hasComposedIcon": true,
+        "hasVisibleLabelText": false,
+        "structuralNote": "Tem ícone isolado (VECTOR, 7x4) — candidato a componente composto, revisar se sub-elementos merecem spec própria."
       }
     ],
     "super-dsc-web": [
+      {
+        "containingFrame": "[dsc] Page Controller",
+        "currentMatch": "paginator",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-dsc-web) \"Page Controller\"",
+        "variantCount": 90,
+        "sampleComponentKey": "05a82ee5ed9be0f3f5dba228732a41e12f29e7d4",
+        "fileKey": "erkqbRKIbaFWbkHe51BeiZ",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('0') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
+        "containingFrame": "[dsc] Credit Card",
+        "currentMatch": "imagem",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-dsc-web) \"Credit Card\"",
+        "variantCount": 85,
+        "sampleComponentKey": "8c385f8b2fe7da454c9f853f1a0ce0f3c4641c44",
+        "fileKey": "erkqbRKIbaFWbkHe51BeiZ",
+        "hasComposedIcon": true,
+        "hasVisibleLabelText": false,
+        "structuralNote": "Tem ícone isolado (VECTOR, 9x5) — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
       {
         "containingFrame": "[dsc] List Item",
         "currentMatch": "listas",
@@ -622,6 +1145,42 @@
         "structuralNote": "Confirma o match atual com inputs. Seletor dropdown de conta bancária com dados textuais e indicador de expansão."
       },
       {
+        "containingFrame": "[dsc] Sidebar Menu Item",
+        "currentMatch": "listas",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-dsc-web) \"Sidebar Menu Item\"",
+        "variantCount": 32,
+        "sampleComponentKey": "8d333f57dee3048c92d606212cdc8ca8f3af042c",
+        "fileKey": "erkqbRKIbaFWbkHe51BeiZ",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('Menu Item') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
+        "containingFrame": "[dsc] Label Value Pair",
+        "currentMatch": "listas",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-dsc-web) \"Label Value Pair\"",
+        "variantCount": 32,
+        "sampleComponentKey": "128f597b32bb2ad71cb896aaf7cc20e386d1ea26",
+        "fileKey": "erkqbRKIbaFWbkHe51BeiZ",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('Label') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
+        "containingFrame": "[dsc] Icon Container",
+        "currentMatch": "imagem",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-dsc-web) \"Icon Container\"",
+        "variantCount": 24,
+        "sampleComponentKey": "7b5e37b047e38fad9e76ef8ede1890c2dca3d7cd",
+        "fileKey": "erkqbRKIbaFWbkHe51BeiZ",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": false,
+        "structuralNote": "Sem ícone nem texto filho detectado em nível raso — estrutura simples, match atual provavelmente já suficiente."
+      },
+      {
         "containingFrame": "[dsc] Date Field Form",
         "currentMatch": "inputs",
         "currentConfidence": "baixa",
@@ -632,6 +1191,18 @@
         "hasComposedIcon": true,
         "hasVisibleLabelText": true,
         "structuralNote": "Confirma o match atual com inputs. Campo de formulário para inserção de data com ícone de calendário e mensagens de validação."
+      },
+      {
+        "containingFrame": "[dsc-tc] card carousel",
+        "currentMatch": "listas",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-dsc-web) \"card carousel\"",
+        "variantCount": 24,
+        "sampleComponentKey": "63268df9f0deab8e6235065a98598b0c3a691e39",
+        "fileKey": "erkqbRKIbaFWbkHe51BeiZ",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": false,
+        "structuralNote": "Sem ícone nem texto filho detectado em nível raso — estrutura simples, match atual provavelmente já suficiente."
       },
       {
         "containingFrame": "[dsc] Input with Chips ",
@@ -730,6 +1301,18 @@
         "structuralNote": "Componente estrutural composto de cabeçalho web (landmark banner). Inclui sigla do sistema, menu, busca e botões de usuário."
       },
       {
+        "containingFrame": "[dsc-tc] Drawer Panel",
+        "currentMatch": "dialog",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-dsc-web) \"Drawer Panel\"",
+        "variantCount": 19,
+        "sampleComponentKey": "27f9422d281582335d1a596d014a163824acff33",
+        "fileKey": "erkqbRKIbaFWbkHe51BeiZ",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": false,
+        "structuralNote": "Sem ícone nem texto filho detectado em nível raso — estrutura simples, match atual provavelmente já suficiente."
+      },
+      {
         "containingFrame": "[dsc-tc] List Item",
         "currentMatch": "listas",
         "currentConfidence": "baixa",
@@ -778,6 +1361,42 @@
         "structuralNote": "Confirma o match atual com imagem. Logotipo vetorial de bancos para identificação em transações financeiras."
       },
       {
+        "containingFrame": "[dsc] Overflow Controller",
+        "currentMatch": "paginator",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-dsc-web) \"Overflow Controller\"",
+        "variantCount": 10,
+        "sampleComponentKey": "2af3866a500a48e85d2ccacf694f5bd6c7885217",
+        "fileKey": "erkqbRKIbaFWbkHe51BeiZ",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('0') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
+        "containingFrame": "[dsc] Toolbar",
+        "currentMatch": "estrutura",
+        "currentConfidence": "baixa",
+        "currentReason": "marco de navegação \"header\" (nomenclatura super-dsc-web)",
+        "variantCount": 8,
+        "sampleComponentKey": "3329d2137161ecdf7c3b9321ea975a5440219e4f",
+        "fileKey": "erkqbRKIbaFWbkHe51BeiZ",
+        "hasComposedIcon": null,
+        "hasVisibleLabelText": null,
+        "structuralNote": "não foi possível resolver o componente — key pode estar desatualizada"
+      },
+      {
+        "containingFrame": "[dsc] Popover",
+        "currentMatch": "dialog",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-dsc-web) \"Popover\"",
+        "variantCount": 8,
+        "sampleComponentKey": "412b8298504c8df405eed3141822a791af427d4d",
+        "fileKey": "erkqbRKIbaFWbkHe51BeiZ",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('0') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
         "containingFrame": "[dsc] Input Chat",
         "currentMatch": "inputs",
         "currentConfidence": "baixa",
@@ -814,6 +1433,30 @@
         "structuralNote": "Confirma o match atual com imagem. Ilustração vetorial de bandeiras nacionais exigindo texto alternativo com o nome do país."
       },
       {
+        "containingFrame": "[dsc] Tooltip",
+        "currentMatch": "dialog",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-dsc-web) \"Tooltip\"",
+        "variantCount": 8,
+        "sampleComponentKey": "223b0f9435d309b9430811a61fb0a34e48ecb0fe",
+        "fileKey": "erkqbRKIbaFWbkHe51BeiZ",
+        "hasComposedIcon": true,
+        "hasVisibleLabelText": true,
+        "structuralNote": "Tem ícone isolado (VECTOR, 10x20) e texto visível ('Lorem ipsum') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
+        "containingFrame": "[dsc] Title Bar",
+        "currentMatch": "estrutura",
+        "currentConfidence": "baixa",
+        "currentReason": "marco de navegação \"header\" (barra de título)",
+        "variantCount": 8,
+        "sampleComponentKey": "8ea5bd9869b8f8992185b29a5e446f0328a34ef1",
+        "fileKey": "erkqbRKIbaFWbkHe51BeiZ",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": false,
+        "structuralNote": "Sem ícone nem texto filho detectado em nível raso — estrutura simples, match atual provavelmente já suficiente."
+      },
+      {
         "containingFrame": "[dsc-tc] Modal",
         "currentMatch": "dialog",
         "currentConfidence": "baixa",
@@ -824,6 +1467,18 @@
         "hasComposedIcon": true,
         "hasVisibleLabelText": true,
         "structuralNote": "Confirma o match atual com dialog. Janela modal web com padrões de tela (ex: forma de pagamento, autenticação de senha)."
+      },
+      {
+        "containingFrame": "[dsc] Icon",
+        "currentMatch": "imagem",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-dsc-web) \"Icon\"",
+        "variantCount": 7,
+        "sampleComponentKey": "941800f47cd30c36c5ee7b6f9879f1ab71dd4588",
+        "fileKey": "erkqbRKIbaFWbkHe51BeiZ",
+        "hasComposedIcon": true,
+        "hasVisibleLabelText": false,
+        "structuralNote": "Tem ícone isolado (VECTOR, 30x30) — candidato a componente composto, revisar se sub-elementos merecem spec própria."
       },
       {
         "containingFrame": "[dsc] Social Programs Logos",
@@ -838,6 +1493,18 @@
         "structuralNote": "Confirma o match atual com imagem. Marcas de programas governamentais para identificação institucional acessível."
       },
       {
+        "containingFrame": "[dsc] Sidebar Menu",
+        "currentMatch": "listas",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-dsc-web) \"Sidebar Menu\"",
+        "variantCount": 6,
+        "sampleComponentKey": "31d8f0f1d671c067e14ba059cc165217fc833166",
+        "fileKey": "erkqbRKIbaFWbkHe51BeiZ",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": false,
+        "structuralNote": "Sem ícone nem texto filho detectado em nível raso — estrutura simples, match atual provavelmente já suficiente."
+      },
+      {
         "containingFrame": "[dsc] Logotipo",
         "currentMatch": "imagem",
         "currentConfidence": "baixa",
@@ -848,6 +1515,18 @@
         "hasComposedIcon": true,
         "hasVisibleLabelText": true,
         "structuralNote": "Confirma o match atual com imagem. Marca oficial CAIXA para ambientes desktop com variações sobre fundo claro ou escuro."
+      },
+      {
+        "containingFrame": "[dsc-tc] State Message",
+        "currentMatch": "informacoes",
+        "currentConfidence": "baixa",
+        "currentReason": "bloco de estado vazio/erro de tela inteira (título+descrição+CTA) — conteúdo informativo substantivo, sem equivalente nos 16 componentes interativos",
+        "variantCount": 6,
+        "sampleComponentKey": "38ece60c9c30482089b558b12450d225de2fdd1a",
+        "fileKey": "erkqbRKIbaFWbkHe51BeiZ",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('Nenhum resultado encontrado') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
       },
       {
         "containingFrame": "[dsc] Toast",
@@ -872,6 +1551,30 @@
         "hasComposedIcon": true,
         "hasVisibleLabelText": true,
         "structuralNote": "Confirma o match atual com listas. Item individual de etapa de progresso com título de passo e texto de suporte."
+      },
+      {
+        "containingFrame": "[dsc-tc] Sidebar Menu",
+        "currentMatch": "listas",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-dsc-web) \"Sidebar Menu\"",
+        "variantCount": 4,
+        "sampleComponentKey": "3517251b239b51d28353d2cb3ee4f22885ffd0c6",
+        "fileKey": "erkqbRKIbaFWbkHe51BeiZ",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": false,
+        "structuralNote": "Sem ícone nem texto filho detectado em nível raso — estrutura simples, match atual provavelmente já suficiente."
+      },
+      {
+        "containingFrame": "[dsc] Drawer Panel",
+        "currentMatch": "dialog",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-dsc-web) \"Drawer Panel\"",
+        "variantCount": 4,
+        "sampleComponentKey": "a5e87e8985b2e18d5a9295f62e3d0bb455aa5d92",
+        "fileKey": "erkqbRKIbaFWbkHe51BeiZ",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": false,
+        "structuralNote": "Sem ícone nem texto filho detectado em nível raso — estrutura simples, match atual provavelmente já suficiente."
       },
       {
         "containingFrame": "[dsc] Modal",
@@ -908,6 +1611,18 @@
         "hasComposedIcon": true,
         "hasVisibleLabelText": true,
         "structuralNote": "Confirma o match atual com inputs. Menu suspenso de seleção com múltiplas opções roláveis e chevron de abertura."
+      },
+      {
+        "containingFrame": "[dsc] Search Results",
+        "currentMatch": "listas",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (super-dsc-web) \"Search Results\"",
+        "variantCount": 3,
+        "sampleComponentKey": "a289b5b357783cc13dd47aafb1540b3dea35f109",
+        "fileKey": "erkqbRKIbaFWbkHe51BeiZ",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": false,
+        "structuralNote": "Sem ícone nem texto filho detectado em nível raso — estrutura simples, match atual provavelmente já suficiente."
       },
       {
         "containingFrame": "[dsc] Input Pin",
@@ -960,6 +1675,18 @@
     ],
     "dsc-android": [
       {
+        "containingFrame": "[dsc] Input Chip",
+        "currentMatch": "inputs",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (dsc-android) \"Input Chip\"",
+        "variantCount": 72,
+        "sampleComponentKey": "03e818f544fc94deca77b9c80bae22b6d6e77840",
+        "fileKey": "W8GUeHypdco1I3dneN6P3H",
+        "hasComposedIcon": true,
+        "hasVisibleLabelText": true,
+        "structuralNote": "Tem ícone isolado (VECTOR, 15x11) e texto visível ('Label') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
         "containingFrame": "[dsc] Text Field",
         "currentMatch": "inputs",
         "currentConfidence": "baixa",
@@ -970,6 +1697,42 @@
         "hasComposedIcon": true,
         "hasVisibleLabelText": true,
         "structuralNote": "Confirma o match atual com inputs. Campo de texto Material Design com suporte a ícones, rótulo flutuante, mensagens de erro e contador."
+      },
+      {
+        "containingFrame": "[dsc] Filter Chip",
+        "currentMatch": "inputs",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (dsc-android) \"Filter Chip\"",
+        "variantCount": 48,
+        "sampleComponentKey": "04200d95cb328fd76396704aaee4360548823519",
+        "fileKey": "W8GUeHypdco1I3dneN6P3H",
+        "hasComposedIcon": true,
+        "hasVisibleLabelText": true,
+        "structuralNote": "Tem ícone isolado (VECTOR, 15x11) e texto visível ('Label') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
+        "containingFrame": "[dsc] Suggestion Chip",
+        "currentMatch": "inputs",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (dsc-android) \"Suggestion Chip\"",
+        "variantCount": 24,
+        "sampleComponentKey": "40c606cb270f8ce3c311024db6231893c1e166bc",
+        "fileKey": "W8GUeHypdco1I3dneN6P3H",
+        "hasComposedIcon": true,
+        "hasVisibleLabelText": true,
+        "structuralNote": "Tem ícone isolado (VECTOR, 17x17) e texto visível ('Label') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
+        "containingFrame": "[dsc] Assist Chip",
+        "currentMatch": "inputs",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (dsc-android) \"Assist Chip\"",
+        "variantCount": 24,
+        "sampleComponentKey": "7b252de4c5de0067054322fee2054366f0712339",
+        "fileKey": "W8GUeHypdco1I3dneN6P3H",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('Label') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
       },
       {
         "containingFrame": "[dsc] Tabs",
@@ -1032,6 +1795,18 @@
         "structuralNote": "Confirma o match atual com inputs. Controle deslizante de variação contínua para seleção fluida de valores numéricos."
       },
       {
+        "containingFrame": "[dsc] Top App Bar",
+        "currentMatch": "estrutura",
+        "currentConfidence": "baixa",
+        "currentReason": "marco de navegação \"header\" (nomenclatura mobile)",
+        "variantCount": 8,
+        "sampleComponentKey": "ee9c8aa9a9bd3753dc7bd98aac2061725f8aba5f",
+        "fileKey": "W8GUeHypdco1I3dneN6P3H",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('Title') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
         "containingFrame": "[dsc] Logotipo",
         "currentMatch": "imagem",
         "currentConfidence": "baixa",
@@ -1042,6 +1817,18 @@
         "hasComposedIcon": true,
         "hasVisibleLabelText": true,
         "structuralNote": "Confirma o match atual com imagem. Marca oficial CAIXA para aplicativos Android com variações de aplicação e contraste."
+      },
+      {
+        "containingFrame": "[dsc] Navigation Bar",
+        "currentMatch": "estrutura",
+        "currentConfidence": "baixa",
+        "currentReason": "marco de navegação principal (barra de navegação mobile)",
+        "variantCount": 4,
+        "sampleComponentKey": "774a4e1fd145dbeb0bc9ca31e20ef3ed9f1e2210",
+        "fileKey": "W8GUeHypdco1I3dneN6P3H",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('Label') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
       },
       {
         "containingFrame": "[dsc] Modal Date Picker",
@@ -1056,6 +1843,42 @@
         "structuralNote": "Confirma o match atual com inputs. Diálogo modal de seleção de calendário com faixa de datas e cabeçalho informativo."
       },
       {
+        "containingFrame": "[dsc] Navigation Rail",
+        "currentMatch": "listas",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (dsc-android) \"Navigation Rail\"",
+        "variantCount": 3,
+        "sampleComponentKey": "8651d2936e345d06477bd7d3d14d876c61049b27",
+        "fileKey": "W8GUeHypdco1I3dneN6P3H",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": false,
+        "structuralNote": "Sem ícone nem texto filho detectado em nível raso — estrutura simples, match atual provavelmente já suficiente."
+      },
+      {
+        "containingFrame": "[dsc] Menu",
+        "currentMatch": "listas",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (dsc-android) \"Menu\"",
+        "variantCount": 2,
+        "sampleComponentKey": "82e8b46ebeccc2ece4267992c2f7b1faf2b40c57",
+        "fileKey": "W8GUeHypdco1I3dneN6P3H",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('Sem resultados') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
+        "containingFrame": "[dsc] Plain Tooltip",
+        "currentMatch": "dialog",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (dsc-android) \"Plain Tooltip\"",
+        "variantCount": 2,
+        "sampleComponentKey": "5b5a5baa2a3e633ac99c7c5fb5d99f488a059617",
+        "fileKey": "W8GUeHypdco1I3dneN6P3H",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('Use para descrever ou identificar um ele') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
+      },
+      {
         "containingFrame": "[dsc] Modal Date Input",
         "currentMatch": "inputs",
         "currentConfidence": "baixa",
@@ -1066,6 +1889,18 @@
         "hasComposedIcon": true,
         "hasVisibleLabelText": true,
         "structuralNote": "Confirma o match atual com inputs. Diálogo modal para entrada manual de datas via teclado com suporte a datas únicas ou intervalos."
+      },
+      {
+        "containingFrame": "[dsc] Navigation Drawer",
+        "currentMatch": "listas",
+        "currentConfidence": "baixa",
+        "currentReason": "tabela curada (dsc-android) \"Navigation Drawer\"",
+        "variantCount": 2,
+        "sampleComponentKey": "24ea67ea817058dadacceeeddc2116c3e3614368",
+        "fileKey": "W8GUeHypdco1I3dneN6P3H",
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('Este é apenas um exemplo do navigation d') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
       }
     ]
   }

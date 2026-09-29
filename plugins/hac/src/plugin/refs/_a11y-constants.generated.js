@@ -1,13 +1,13 @@
 // ============================================================
 // GERADO AUTOMATICAMENTE por build-a11y-constants.cjs — não editar à mão.
-// Fonte: refs/design-acessivel-properties.json (2026-09-23T18:22:20.494Z)
-//      + refs/design-acessivel-mobile-properties.json (2026-09-23T18:23:18.121Z)
-//      + refs/super-app.json (2026-09-23T18:19:18.058Z)
+// Fonte: refs/design-acessivel-properties.json (2026-09-29T12:21:56.008Z)
+//      + refs/design-acessivel-mobile-properties.json (2026-09-29T12:22:55.015Z)
+//      + refs/super-app.json (2026-09-29T12:11:08.899Z)
 //      + refs/_manifest.json (fileKey da lib 'super-app')
 // Regenerar via: node src/plugin/refs/build-a11y-constants.cjs
 //            ou: npm run refs:a11y-constants
 //
-// Gerado em: 2026-09-23T19:38:58.836Z
+// Gerado em: 2026-09-29T12:23:33.084Z
 //
 // Consumido via alias em src/plugin/modules/accessibility.js:
 //   const A11Y_COMPONENT_PROPERTIES = A11Y_COMPONENT_PROPERTIES_GENERATED;
@@ -152,11 +152,11 @@ const A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL_GENERATED = [
   "Button",
   "Card Product Offer",
   "Card Wallet",
+  "Card Widget",
   "Checkbox",
   "Chips",
   "Comparison Table",
   "Credit Card Button",
-  "Digital Wallet Button",
   "Icon Button",
   "Input Stepper",
   "List Accordion",
@@ -216,13 +216,6 @@ const A11Y_MOBILE_SCREEN_READER_VARIANTS_GENERATED = {
         "activeToggles": [
           "Observações"
         ]
-      },
-      {
-        "name": "Left Slots",
-        "hasNomeAcessivel": false,
-        "activeToggles": [
-          "Observações"
-        ]
       }
     ]
   },
@@ -246,7 +239,7 @@ const A11Y_MOBILE_SCREEN_READER_VARIANTS_GENERATED = {
         ]
       },
       {
-        "name": "Leitor de Tela3",
+        "name": "With Expansion",
         "hasNomeAcessivel": true,
         "activeToggles": [
           "Nome Acessível",
@@ -259,7 +252,7 @@ const A11Y_MOBILE_SCREEN_READER_VARIANTS_GENERATED = {
     "subModeProperty": "Leitor de Tela",
     "variants": [
       {
-        "name": "Show Badge On",
+        "name": "With Base and Edit",
         "hasNomeAcessivel": true,
         "activeToggles": [
           "Observações",
@@ -318,6 +311,32 @@ const A11Y_MOBILE_SCREEN_READER_VARIANTS_GENERATED = {
       }
     ]
   },
+  "Card Feed": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Loading",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Error",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      }
+    ]
+  },
   "Card Product Offer": {
     "subModeProperty": "Leitor de Tela",
     "variants": [
@@ -345,7 +364,7 @@ const A11Y_MOBILE_SCREEN_READER_VARIANTS_GENERATED = {
         ]
       },
       {
-        "name": "State Message",
+        "name": "Error",
         "hasNomeAcessivel": false,
         "activeToggles": [
           "Observações"
@@ -357,7 +376,7 @@ const A11Y_MOBILE_SCREEN_READER_VARIANTS_GENERATED = {
     "subModeProperty": "Leitor de Tela",
     "variants": [
       {
-        "name": "Baseline",
+        "name": "Card Info",
         "hasNomeAcessivel": true,
         "activeToggles": [
           "Observações",
@@ -365,7 +384,7 @@ const A11Y_MOBILE_SCREEN_READER_VARIANTS_GENERATED = {
         ]
       },
       {
-        "name": "With Button",
+        "name": "Credit Card Statement",
         "hasNomeAcessivel": false,
         "activeToggles": [
           "Observações"
@@ -392,9 +411,10 @@ const A11Y_MOBILE_SCREEN_READER_VARIANTS_GENERATED = {
       },
       {
         "name": "Loading",
-        "hasNomeAcessivel": false,
+        "hasNomeAcessivel": true,
         "activeToggles": [
-          "Observações"
+          "Observações",
+          "Nome Acessível"
         ]
       }
     ]
@@ -466,9 +486,10 @@ const A11Y_MOBILE_SCREEN_READER_VARIANTS_GENERATED = {
       },
       {
         "name": "Removable",
-        "hasNomeAcessivel": false,
+        "hasNomeAcessivel": true,
         "activeToggles": [
-          "Observações"
+          "Observações",
+          "Nome Acessível"
         ]
       },
       {
@@ -480,7 +501,7 @@ const A11Y_MOBILE_SCREEN_READER_VARIANTS_GENERATED = {
         ]
       },
       {
-        "name": "Leitor de Tela7",
+        "name": "Disabled",
         "hasNomeAcessivel": false,
         "activeToggles": [
           "Observações"
@@ -500,9 +521,10 @@ const A11Y_MOBILE_SCREEN_READER_VARIANTS_GENERATED = {
         ]
       },
       {
-        "name": "Disabled",
-        "hasNomeAcessivel": false,
+        "name": "Baseline",
+        "hasNomeAcessivel": true,
         "activeToggles": [
+          "Nome Acessível",
           "Observações"
         ]
       },
@@ -516,30 +538,72 @@ const A11Y_MOBILE_SCREEN_READER_VARIANTS_GENERATED = {
       }
     ]
   },
-  "Icon Button": {
-    "subModeProperty": "Propriedade 1",
+  "Date Picker": {
+    "subModeProperty": "Leitor de Tela",
     "variants": [
       {
-        "name": "Padrão",
-        "hasNomeAcessivel": true,
-        "activeToggles": [
-          "Observações",
-          "Nome Acessível"
-        ]
-      },
-      {
-        "name": "Variante 2",
-        "hasNomeAcessivel": true,
-        "activeToggles": [
-          "Observações",
-          "Nome Acessível"
-        ]
-      },
-      {
-        "name": "Variante 3",
+        "name": "Baseline",
         "hasNomeAcessivel": false,
         "activeToggles": [
           "Observações"
+        ]
+      },
+      {
+        "name": "Range Selected",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Month",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Year",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Icon Button": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": true,
+        "activeToggles": [
+          "Observações",
+          "Nome Acessível"
+        ]
+      },
+      {
+        "name": "With Badge",
+        "hasNomeAcessivel": true,
+        "activeToggles": [
+          "Observações",
+          "Nome Acessível"
+        ]
+      },
+      {
+        "name": "Disabled",
+        "hasNomeAcessivel": true,
+        "activeToggles": [
+          "Observações",
+          "Nome Acessível"
+        ]
+      },
+      {
+        "name": "With Expansion",
+        "hasNomeAcessivel": true,
+        "activeToggles": [
+          "Observações",
+          "Nome Acessível"
         ]
       }
     ]
@@ -1153,7 +1217,8 @@ const A11Y_MOBILE_COMPONENT_TOGGLES_GENERATED = {
     "Nome Acessível"
   ],
   "Card Widget": [
-    "Observações"
+    "Observações",
+    "Nome Acessível"
   ],
   "Checkbox": [
     "Observações",
@@ -1175,7 +1240,6 @@ const A11Y_MOBILE_COMPONENT_TOGGLES_GENERATED = {
     "Observações"
   ],
   "Digital Wallet Button": [
-    "Nome Acessível",
     "Observações"
   ],
   "Icon Button": [

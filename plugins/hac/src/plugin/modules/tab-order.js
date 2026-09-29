@@ -971,7 +971,72 @@ window.handleTabOrderBadgeDrawFailed = handleTabOrderBadgeDrawFailed;
 // (window._tabOrderActiveCloneId) — guarda de defesa pro caso raro de o
 // backend não ter conseguido criar a cópia (área não encontrada/não
 // clonável).
+// Resolvida pelo `finally` do loop sequencial de addTabOrderItemsFromLayers
+// (Mapeamento Automático) assim que ele efetivamente para — ver
+// _tabOrderResolvePendingCancel abaixo. Enquanto não resolvida,
+// _tabOrderFinishCancelTabOrderReview não deve rodar a parte destrutiva
+// (apagar a cópia rascunho), porque o backend pode ainda ter um
+// draw-tab-order-badge em voo para essa mesma área.
+let _tabOrderCancelWaiters = [];
+function _tabOrderResolvePendingCancel() {
+  const waiters = _tabOrderCancelWaiters;
+  _tabOrderCancelWaiters = [];
+  waiters.forEach(fn => { try { fn(); } catch (e) { } });
+}
+
+// Fecha o modal descartando tudo — a cópia "rascunho" do frame (criada em
+// startTabOrderManualMode OU _confirmGenerateTabOrderFromLayers) pode ter
+// selos reais desenhados nela quando o cancelamento acontece DEPOIS de já
+// ter clicado "Criar ordem de tabulação" uma vez com falha parcial, ou
+// vier do scan automático (que já desenha em lote sequencial); no modo
+// manual em lote (2026-09-04-e), cancelar ANTES de confirmar nunca vai ter
+// nenhum selo desenhado — só a cópia rascunho vazia. Em qualquer um desses
+// casos, 'delete-tab-order-draft-copy' apaga a cópia INTEIRA de uma vez —
+// cobre selos parciais (ou nenhum) sem precisar apagar um por um. Só
+// dispara quando havia de fato uma cópia ativa desta área
+// (window._tabOrderActiveCloneId) — guarda de defesa pro caso raro de o
+// backend não ter conseguido criar a cópia (área não encontrada/não
+// clonável).
+//
+// Bug real corrigido (2026-09-28, mesma causa raiz do comentário em
+// addTabOrderItemsFromLayers): esta função apagava a cópia rascunho de
+// forma SÍNCRONA e INCONDICIONAL, mesmo quando o Mapeamento Automático
+// ainda tinha um ou mais draw-tab-order-badge em voo no backend para a
+// MESMA área (loop sequencial do scan automático, cada item aguardando sua
+// resposta). O clone sumia debaixo do loop, e o(s) selo(s) ainda em voo
+// caíam no fallback de _createTabOrderBadge (Grupo da Área/Section, nunca
+// a réplica). Agora, se window._tabOrderScanInFlight ainda é `true` ao
+// cancelar, só sinaliza a intenção (_tabOrderCancelRequested) — o loop em
+// addTabOrderItemsFromLayers checa essa flag a cada iteração e para assim
+// que possível, e SÓ ENTÃO (via _tabOrderResolvePendingCancel) a limpeza
+// destrutiva de fato roda. O modal fecha imediatamente e o designer recebe
+// feedback na hora — só o apagar da cópia é adiado o mínimo necessário.
 function cancelTabOrderReview() {
+  const _hadScanInFlight = !!window._tabOrderScanInFlight;
+  window._tabOrderCancelRequested = true;
+  closeModal('a11y-tab-order-review-modal');
+  if (_hadScanInFlight) {
+    showToast('Cancelando a varredura em andamento…');
+    _tabOrderCancelWaiters.push(_tabOrderFinishCancelTabOrderReview);
+    // Rede de segurança: se por algum motivo o loop nunca chamar
+    // _tabOrderResolvePendingCancel (ex.: exceção fora do try/finally
+    // esperado), não deixa a limpeza travada pra sempre — dispara sozinha
+    // depois de um tempo generoso, avisando explicitamente que a limpeza
+    // foi forçada.
+    setTimeout(() => {
+      if (_tabOrderCancelWaiters.length === 0) return;
+      _tabOrderCancelWaiters = [];
+      console.error('[hac] cancelTabOrderReview: limpeza da cópia rascunho forçada após timeout — o loop de desenho automático não sinalizou o fim a tempo.');
+      _tabOrderFinishCancelTabOrderReview();
+    }, 15000);
+    return;
+  }
+  _tabOrderFinishCancelTabOrderReview();
+}
+window.cancelTabOrderReview = cancelTabOrderReview;
+
+function _tabOrderFinishCancelTabOrderReview() {
+  window._tabOrderCancelRequested = false;
   _tabOrderSetCaptureMode(null);
   window._tabOrderResumeCaptureMode = null;
   window._tabOrderAddItemWaiting = false;
@@ -996,9 +1061,7 @@ function cancelTabOrderReview() {
   window._tabOrderDeclaredOrigin = null;
   _tabOrderResetAddItemButton();
   parent.postMessage({ pluginMessage: { type: 'clear-highlight' } }, '*');
-  closeModal('a11y-tab-order-review-modal');
 }
-window.cancelTabOrderReview = cancelTabOrderReview;
 
 // "Criar ordem de tabulação" (antigo "Concluir") — modelo EM LOTE
 // (2026-09-04-e, pedido da vertical de acessibilidade, revertendo
@@ -1152,6 +1215,7 @@ function _confirmGenerateTabOrderFromLayers(areaId, targetNodeId) {
   ensureA11yProjectOriginThen((origin) => {
     const myGeneration = ++_tabOrderScanGeneration;
     window._tabOrderScanInFlight = true;
+    window._tabOrderCancelRequested = false;
     window._tabOrderDeclaredOrigin = origin;
     window._tabOrderPendingList = [];
     window._tabOrderPendingAreaId = areaId;
@@ -1190,7 +1254,32 @@ async function addTabOrderItemsFromLayers(items, cloneId, nodeMap, generation) {
   // disparo enquanto _tabOrderScanInFlight é true — esta checagem cobre a
   // resposta em si, que pode chegar fora de ordem.
   if (generation !== undefined && generation !== window._tabOrderPendingGeneration) return;
-  window._tabOrderScanInFlight = false;
+  // Bug real corrigido (2026-09-28, print do usuário: "os marcadores estão
+  // sendo inseridos na principal" + "aplica um marcador que não é mobile"):
+  // window._tabOrderScanInFlight virava `false` AQUI, antes do loop
+  // sequencial de desenho abaixo — a guarda em
+  // _confirmGenerateTabOrderFromLayers ("Aguarde a varredura em andamento
+  // terminar") só cobria a fase de DESCOBERTA (varredura de camadas +
+  // criação do clone), nunca a fase de DESENHO (que pode levar vários
+  // segundos numa tela com muitos elementos interativos, um selo real
+  // importado por vez). Nessa janela, nada impedia um 2º clique em "Gerar
+  // Automaticamente" (mesma área ou outra) — o novo scan chamava
+  // generate-tab-order-from-layers, que via _createTabOrderCloneForArea
+  // remove INCONDICIONALMENTE a cópia rascunho da área
+  // (_removeExistingTabOrderCopiesForArea) mesmo com o lote anterior ainda
+  // no meio do desenho. Selos cujo draw-tab-order-badge já estava em voo
+  // quando isso acontecia caíam no fallback de _createTabOrderBadge (clone
+  // removido → reparenting pro Grupo da Área, que envolve o FRAME ORIGINAL
+  // + selo da própria Área) — visualmente colado no frame original, não na
+  // réplica — e, se o 2º clique também disparou cancelTabOrderReview no
+  // meio do caminho (window._tabOrderDeclaredOrigin zerado), os itens ainda
+  // em voo desenhavam com a.11yOrigin 'web' (fallback), mesmo em projeto
+  // mobile: a MESMA janela de corrida produzia os dois sintomas relatados,
+  // não duas causas separadas. Mantendo a flag `true` até o loop de desenho
+  // terminar de verdade (ou ser abortado por geração mais nova/cancelamento
+  // explícito) fecha a janela por completo — nenhum outro clique consegue
+  // mais disparar generate-tab-order-from-layers/cancelTabOrderReview
+  // enquanto este lote ainda está desenhando.
   if (typeof hideA11yCanvasLoading === 'function') hideA11yCanvasLoading();
 
   window._tabOrderActiveCloneId = cloneId || null;
@@ -1200,7 +1289,9 @@ async function addTabOrderItemsFromLayers(items, cloneId, nodeMap, generation) {
   // ou não clonável) — nesse caso não há onde marcar nada, então não abre o
   // modal, só avisa (figma.notify do backend já cobriu o motivo).
   if (!cloneId) {
+    window._tabOrderScanInFlight = false;
     window._tabOrderPendingList = [];
+    if (typeof _tabOrderResolvePendingCancel === 'function') _tabOrderResolvePendingCancel();
     return;
   }
 
@@ -1209,18 +1300,32 @@ async function addTabOrderItemsFromLayers(items, cloneId, nodeMap, generation) {
     : [];
   openTabOrderReviewModal();
   if (window._tabOrderPendingList.length === 0) {
+    window._tabOrderScanInFlight = false;
     showToast('Nenhum elemento interativo encontrado automaticamente. A cópia da tela já está pronta para marcação manual ("+ Adicionar item").');
+    if (typeof _tabOrderResolvePendingCancel === 'function') _tabOrderResolvePendingCancel();
     return;
   }
   showToast(`${window._tabOrderPendingList.length} elemento${window._tabOrderPendingList.length === 1 ? '' : 's'} encontrado${window._tabOrderPendingList.length === 1 ? '' : 's'}, desenhando no canvas…`);
 
-  for (const it of window._tabOrderPendingList.slice()) {
-    // Aborta o loop se, no meio do caminho, uma geração mais nova assumiu
-    // (outro clique disparou um novo scan que já foi liberado por algum
-    // motivo) — nunca continua desenhando itens de uma lista que não é mais
-    // a atual.
-    if (window._tabOrderPendingGeneration !== generation) return;
-    await _tabOrderDrawPendingBadgeAwaitable(it.tempId);
+  try {
+    for (const it of window._tabOrderPendingList.slice()) {
+      // Aborta o loop se, no meio do caminho, uma geração mais nova assumiu
+      // (outro clique disparou um novo scan que já foi liberado por algum
+      // motivo) — nunca continua desenhando itens de uma lista que não é mais
+      // a atual. Também aborta se o designer cancelou explicitamente
+      // (cancelTabOrderReview — ver comentário lá: agora ela espera este
+      // loop terminar antes de apagar a cópia, mas ainda pode marcar
+      // _tabOrderCancelRequested pra interromper o quanto antes).
+      if (window._tabOrderPendingGeneration !== generation || window._tabOrderCancelRequested) return;
+      await _tabOrderDrawPendingBadgeAwaitable(it.tempId);
+    }
+  } finally {
+    // SEMPRE libera a flag ao final do lote — sucesso, abort por geração
+    // nova, ou cancelamento explícito — nunca deixa _tabOrderScanInFlight
+    // travado em `true` para sempre (o que bloquearia permanentemente
+    // qualquer novo "Gerar Automaticamente").
+    if (window._tabOrderPendingGeneration === generation) window._tabOrderScanInFlight = false;
+    if (typeof _tabOrderResolvePendingCancel === 'function') _tabOrderResolvePendingCancel();
   }
 }
 window.addTabOrderItemsFromLayers = addTabOrderItemsFromLayers;

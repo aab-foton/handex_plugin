@@ -2532,6 +2532,12 @@ figma.ui.onmessage = async (msg) => {
       // causa real em vez de engolir silenciosamente — sem isso, "por que
       // saiu o círculo azul em vez do selo de verdade" ficava indiagnosticável.
       console.error('[hac] _createTabOrderBadge: falha ao importar selo real, usando fallback procedural.', e && e.message);
+      // figma.notify adicionado (2026-09-28) — este catch só logava no
+      // console antes, deixando "por que saiu um círculo azul simples em
+      // vez do selo real da lib" indiagnosticável para o designer (mesmo
+      // padrão de fallback silencioso já corrigido em outros pontos deste
+      // arquivo, ver comentário logo abaixo em _reparentedIntoClone).
+      try { figma.notify('Não foi possível importar o selo real da lib "Design Acessível" — um marcador provisório foi desenhado no lugar dele.', { error: true, timeout: 6000 }); } catch (e2) { }
       usedRealComponent = false;
       badge = figma.createEllipse();
       badge.name = 'Selo de Ordem de Tabulação';

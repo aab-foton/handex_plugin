@@ -1,7 +1,7 @@
 {
   "_meta": {
     "description": "Mapa containingFrame -> categoria de a11y, ESSENCIAL EM RUNTIME no hac (consumido por _getDscFrameToA11yMap em code.js para a Detecção Automática de a11y). Gerado por build-dsc-a11y-mapping.cjs a partir de refs/web-angular-react.json (dados reais da REST API do Figma, sem valores inventados). Adaptação do Handex Beta (onde este mesmo formato de arquivo é descrito como \"fundação de dados, não usado em runtime\" — desatualizado lá, mas aqui no hac o consumo em runtime é o desenho intencional desde o início).",
-    "generatedAt": "2026-09-23T18:24:09.832Z",
+    "generatedAt": "2026-09-29T12:13:26.691Z",
     "generator": "build-dsc-a11y-mapping.cjs (hac)",
     "sourceFile": "super-dsc-web.json",
     "sourceFileKey": "erkqbRKIbaFWbkHe51BeiZ",
@@ -34,8 +34,8 @@
       "imagem"
     ],
     "counts": {
-      "totalComponentsVariants": 4750,
-      "totalFamilies": 1506,
+      "totalComponentsVariants": 4756,
+      "totalFamilies": 1507,
       "altaConfianca": {
         "families": 19,
         "variantCount": 715
@@ -45,11 +45,11 @@
         "variantCount": 786
       },
       "semMatch": {
-        "families": 1439,
-        "variantCount": 3249
+        "families": 1440,
+        "variantCount": 3255
       },
       "pctFamiliesAlta": 1.3,
-      "pctVariantsAlta": 15.1
+      "pctVariantsAlta": 15
     },
     "byShortName": {
       "accordion": {
@@ -1241,6 +1241,16 @@
         "39cdf7f2b22d2b1785d60703ce7844a8dd32ca8a",
         "3d36b32213e00f2afac77fec6300ac73f690abcb",
         "8369e101faf0bc22c5beadc92c74183f307b1878"
+      ],
+      "match": null
+    },
+    {
+      "containingFrame": "[dsc] Floating Toolbar",
+      "variantCount": 6,
+      "sampleKeys": [
+        "6f3f382bdde0960d0dfc049ad446aab379cb1eeb",
+        "23810592aa29c32cc74928f5ee8f968b0c9a1f50",
+        "99793f61742b02187cf828ef12f27a92ba767616"
       ],
       "match": null
     },
