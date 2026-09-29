@@ -353,8 +353,24 @@
   var _selectionClickOrder = [];
   var _selectionOrderReliable = true;
   var _flowSelectionBoundsDebounceTimer = null;
+  var _quickSpecCaptureModeActive = false;
+  var _quickSpecCaptureSelection = [];
+  var _quickSpecCaptureCountDebounceTimer = null;
   figma.on("selectionchange", () => {
     const currentIds = figma.currentPage.selection.map((n) => n.id);
+    if (_quickSpecCaptureModeActive) {
+      const currentIdSet = new Set(currentIds);
+      _quickSpecCaptureSelection = _quickSpecCaptureSelection.filter((item) => currentIdSet.has(item.nodeId));
+      const knownIds = new Set(_quickSpecCaptureSelection.map((item) => item.nodeId));
+      for (const n of figma.currentPage.selection) {
+        if (knownIds.has(n.id)) continue;
+        _quickSpecCaptureSelection.push({ nodeId: n.id, name: n.name, nodeType: n.type });
+      }
+      clearTimeout(_quickSpecCaptureCountDebounceTimer);
+      _quickSpecCaptureCountDebounceTimer = setTimeout(() => {
+        figma.ui.postMessage({ type: "quick-spec-capture-count-changed", count: _quickSpecCaptureSelection.length });
+      }, 300);
+    }
     if (currentIds.length === 0) {
       _selectionClickOrder = [];
       _selectionOrderReliable = true;
@@ -462,7 +478,7 @@
       b: parseInt(result[3], 16) / 255
     } : { r: 0.5, g: 0.5, b: 0.5 };
   }
-  var HANDEX_SECTION_NAMES = { medida: "Handex | Medidas", spec: "Handex | Specs", fluxo: "Handex | Fluxos", ficha: "Handex | Ficha" };
+  var HANDEX_SECTION_NAMES = { medida: "Handex | Medidas", spec: "Handex | Specs", fluxo: "Handex | Fluxos", ficha: "Handex | Ficha", quickspec: "Handex | Spec Express" };
   function _hdEnsureCategorySection(category) {
     const sectionName = HANDEX_SECTION_NAMES[category];
     if (!sectionName) return null;
@@ -1007,7 +1023,7 @@
     };
     return "#" + toHex(r) + toHex(g) + toHex(b);
   }
-  var PLUGIN_VERSION = true ? "6.32.0" : "dev";
+  var PLUGIN_VERSION = true ? "6.33.0" : "dev";
   var DSC_HANDOFF_SUMMARY_ENABLED = false;
   async function _writeSharedPluginData(data) {
     var _a, _b, _c, _d, _e, _f, _g;
@@ -1114,8 +1130,8 @@
       figma.ui.postMessage({ type: "flow-marker-moved", flow: result, removedOldId });
     }
   }
-  function _orthogonalElbowPoints(a, b) {
-    const OFFSET = 24;
+  function _orthogonalElbowPoints(a, b, offset) {
+    const OFFSET = typeof offset === "number" ? offset : 24;
     const dirOf = (side) => ({
       top: { x: 0, y: -1 },
       bottom: { x: 0, y: 1 },
@@ -1705,7 +1721,8 @@
         ficha: !!msg.ficha,
         spec: !!msg.specs,
         medida: !!msg.medidas,
-        fluxo: !!msg.fluxos
+        fluxo: !!msg.fluxos,
+        quickspec: !!msg.quickspec
       };
       const matchCategory = (node) => {
         const tag = node.getPluginData("handexCategory");
@@ -1715,9 +1732,10 @@
         if (wanted.spec && (node.name.startsWith("[Spec | ") || node.name.startsWith("[Spec]"))) return "spec";
         if (wanted.medida && node.name.startsWith("[Medida]")) return "medida";
         if (wanted.fluxo && node.name.startsWith("[Fluxo")) return "fluxo";
+        if (wanted.quickspec && node.name.startsWith("Spec Express")) return "quickspec";
         return null;
       };
-      const counts = { ficha: 0, spec: 0, medida: 0, fluxo: 0 };
+      const counts = { ficha: 0, spec: 0, medida: 0, fluxo: 0, quickspec: 0 };
       const toRemove = [];
       const _handexSections = [];
       figma.currentPage.children.forEach((node) => {
@@ -1750,6 +1768,24 @@
             } catch (e) {
             }
           }
+        }
+      }
+      if (wanted.quickspec) {
+        const quickSpecCardIds = new Set(
+          toRemove.filter((n) => n.getPluginData("handexCategory") === "quickspec" && "children" in n).flatMap((wrapper) => wrapper.children.map((c) => c.id))
+        );
+        if (quickSpecCardIds.size > 0) {
+          _handexSections.forEach((section) => {
+            section.children.forEach((n) => {
+              const markerFor = n.getPluginData && n.getPluginData("handexQuickSpecMarkerFor");
+              if (markerFor && quickSpecCardIds.has(markerFor)) {
+                try {
+                  n.remove();
+                } catch (e) {
+                }
+              }
+            });
+          });
         }
       }
       toRemove.forEach((node) => {
@@ -5332,8 +5368,699 @@
       })();
       return;
     }
+    if (msg.type === "start-quick-spec-capture") {
+      _quickSpecCaptureModeActive = true;
+      _quickSpecCaptureSelection = [];
+      return;
+    }
+    if (msg.type === "stop-quick-spec-capture") {
+      _quickSpecCaptureModeActive = false;
+      _quickSpecCaptureSelection = [];
+      return;
+    }
+    if (msg.type === "quick-spec-capture-finish") {
+      _quickSpecCaptureModeActive = false;
+      const accumulated = _quickSpecCaptureSelection.slice();
+      _quickSpecCaptureSelection = [];
+      if (accumulated.length === 0) {
+        figma.ui.postMessage({ type: "quick-spec-result", error: "Nenhum elemento selecionado durante a captura." });
+        return;
+      }
+      try {
+        const seenIds = /* @__PURE__ */ new Set();
+        const elements = [];
+        for (const acc of accumulated) {
+          const node = await figma.getNodeByIdAsync(acc.nodeId);
+          if (!node) continue;
+          const found = await _qsExtractRaw(node, msg.categories);
+          for (const el of found) {
+            if (seenIds.has(el.nodeId)) continue;
+            seenIds.add(el.nodeId);
+            elements.push(el);
+          }
+        }
+        figma.ui.postMessage({ type: "quick-spec-result", elements });
+      } catch (err) {
+        const errMsg = err && err.message ? err.message : String(err);
+        console.error("Erro no Spec Express:", errMsg);
+        figma.ui.postMessage({ type: "quick-spec-result", error: "Erro ao ler propriedades dos elementos: " + errMsg });
+      }
+      return;
+    }
+    function _qsFindTopLevelFrame(node) {
+      const topLevelTypes = ["FRAME", "COMPONENT", "COMPONENT_SET"];
+      let current = node;
+      while (current && current.parent) {
+        if (topLevelTypes.includes(current.type) && (current.parent.type === "PAGE" || current.parent.type === "SECTION")) {
+          return current;
+        }
+        current = current.parent;
+      }
+      return null;
+    }
+    if (msg.type === "quick-spec-insert-canvas") {
+      try {
+        const items = Array.isArray(msg.items) ? msg.items : [];
+        if (items.length === 0) {
+          figma.ui.postMessage({ type: "quick-spec-canvas-result", error: "Nada para inserir." });
+          return;
+        }
+        const cards = [];
+        const createdMap = [];
+        let anchorX = null, anchorY = null;
+        const totalToCreate = items.length;
+        figma.ui.postMessage({ type: "quick-spec-canvas-progress", done: 0, total: totalToCreate });
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          const node = item.nodeId ? await figma.getNodeByIdAsync(item.nodeId) : null;
+          const card = await _qsBuildElementCard(item, node);
+          if (anchorX === null && node && "absoluteBoundingBox" in node && node.absoluteBoundingBox) {
+            const topFrame = _qsFindTopLevelFrame(node);
+            const anchorBox = topFrame && topFrame.absoluteBoundingBox ? topFrame.absoluteBoundingBox : node.absoluteBoundingBox;
+            anchorX = anchorBox.x + anchorBox.width + 60;
+            anchorY = anchorBox.y;
+          }
+          cards.push(card);
+          createdMap.push({ sourceNodeId: item.nodeId || null, tag: item.tag, cardId: card.id });
+          figma.ui.postMessage({ type: "quick-spec-canvas-progress", done: i + 1, total: totalToCreate });
+        }
+        const columns = Math.max(1, Math.round(Number(msg.columns) || 1));
+        const GRID_GAP = 48;
+        const cardWidth = cards.length > 0 ? Math.max(...cards.map((c) => c.width)) : 280;
+        const wrapper = figma.createFrame();
+        wrapper.name = "Spec Express \u2014 Cards";
+        wrapper.layoutMode = "HORIZONTAL";
+        wrapper.layoutWrap = "WRAP";
+        wrapper.itemSpacing = GRID_GAP;
+        wrapper.counterAxisSpacing = GRID_GAP;
+        wrapper.paddingLeft = wrapper.paddingRight = wrapper.paddingTop = wrapper.paddingBottom = 0;
+        wrapper.fills = [];
+        wrapper.clipsContent = false;
+        wrapper.primaryAxisSizingMode = "FIXED";
+        wrapper.counterAxisSizingMode = "AUTO";
+        wrapper.resize(columns * cardWidth + (columns - 1) * GRID_GAP, wrapper.height);
+        for (const card of cards) wrapper.appendChild(card);
+        figma.currentPage.appendChild(wrapper);
+        wrapper.setPluginData("handexCategory", "quickspec");
+        _hdMoveToCategorySection(wrapper, "quickspec");
+        const vp = figma.viewport.bounds;
+        let _wrapperX = anchorX !== null ? Math.round(anchorX) : Math.round(vp.x + vp.width / 2);
+        let _wrapperY = anchorY !== null ? Math.round(anchorY) : Math.round(vp.y + vp.height / 2);
+        const _qsSection = figma.currentPage.children.find((n) => n.type === "SECTION" && n.getPluginData("handexCategorySection") === "quickspec");
+        if (_qsSection) {
+          const _prevWrappers = _qsSection.children.filter((n) => n.id !== wrapper.id && n.getPluginData("handexCategory") === "quickspec" && n.absoluteBoundingBox);
+          if (_prevWrappers.length > 0) {
+            const _lowest = _prevWrappers.reduce((a, n) => {
+              const bb = n.absoluteBoundingBox;
+              return bb.y + bb.height > a.bottom ? { bottom: bb.y + bb.height, x: bb.x } : a;
+            }, { bottom: -Infinity, x: _wrapperX });
+            _wrapperX = Math.round(_lowest.x);
+            _wrapperY = Math.round(_lowest.bottom + 60);
+          }
+        }
+        wrapper.x = _wrapperX;
+        wrapper.y = _wrapperY;
+        const _qsAllCardBounds = cards.map((c) => c.absoluteBoundingBox);
+        const markers = [];
+        const markerParts = [];
+        for (let i = 0; i < cards.length; i++) {
+          const item = items[i];
+          const node = item.nodeId ? await figma.getNodeByIdAsync(item.nodeId) : null;
+          const obstacles = _qsAllCardBounds.filter((b, j) => j !== i && b);
+          const built = _qsBuildConnectorForCard(cards[i], node, item.tag, obstacles);
+          if (built) {
+            markers.push(built.marker);
+            markerParts.push(...built.parts);
+          }
+        }
+        const _qsSectionForOrder = wrapper.parent;
+        if (_qsSectionForOrder && typeof _qsSectionForOrder.insertChild === "function") {
+          for (const part of markerParts) {
+            try {
+              _qsSectionForOrder.insertChild(0, part);
+            } catch (e) {
+            }
+          }
+        }
+        figma.currentPage.selection = [wrapper, ...markers];
+        figma.viewport.scrollAndZoomIntoView([wrapper, ...markers]);
+        figma.ui.postMessage({ type: "quick-spec-canvas-result", count: cards.length, created: createdMap });
+        figma.notify(cards.length > 1 ? `${cards.length} cards do Spec Express inseridos no canvas \u2713` : "Card do Spec Express inserido no canvas \u2713");
+      } catch (err) {
+        const errMsg = err && err.message ? err.message : String(err);
+        console.error("Erro ao inserir card do Spec Express:", errMsg);
+        figma.ui.postMessage({ type: "quick-spec-canvas-result", error: "Erro ao criar o card: " + errMsg });
+      }
+      return;
+    }
+    if (msg.type === "quick-spec-list-canvas-cards") {
+      const cards = [];
+      const quickSpecSection = figma.currentPage.children.find((n) => n.type === "SECTION" && n.getPluginData("handexCategorySection") === "quickspec");
+      if (quickSpecSection) {
+        quickSpecSection.children.forEach((wrapper) => {
+          if (wrapper.getPluginData("handexCategory") !== "quickspec" || !("children" in wrapper)) return;
+          wrapper.children.forEach((card) => {
+            const tag = card.getPluginData("handexQuickSpecTag");
+            if (!tag) return;
+            cards.push({
+              cardId: card.id,
+              tag,
+              name: card.getPluginData("handexQuickSpecName") || card.name,
+              nodeType: card.getPluginData("handexQuickSpecNodeType") || "",
+              sourceNodeId: card.getPluginData("handexQuickSpecSourceId") || null
+            });
+          });
+        });
+      }
+      figma.ui.postMessage({ type: "quick-spec-canvas-cards-list", cards });
+      return;
+    }
+    if (msg.type === "quick-spec-delete-canvas-cards") {
+      const ids = Array.isArray(msg.cardIds) ? msg.cardIds : [];
+      let removed = 0;
+      const touchedWrappers = /* @__PURE__ */ new Set();
+      const idSet = new Set(ids);
+      const markersByCard = /* @__PURE__ */ new Map();
+      if (idSet.size > 0) {
+        const quickSpecSection = figma.currentPage.children.find((n) => n.type === "SECTION" && n.getPluginData("handexCategorySection") === "quickspec");
+        if (quickSpecSection) {
+          quickSpecSection.children.forEach((n) => {
+            const cardId = n.getPluginData && n.getPluginData("handexQuickSpecMarkerFor");
+            if (cardId && idSet.has(cardId)) {
+              if (!markersByCard.has(cardId)) markersByCard.set(cardId, []);
+              markersByCard.get(cardId).push(n);
+            }
+          });
+        }
+      }
+      for (const id of ids) {
+        try {
+          const node = await figma.getNodeByIdAsync(id);
+          if (!node) continue;
+          const parent = node.parent;
+          if (parent && parent.type === "FRAME" && parent.getPluginData("handexCategory") === "quickspec") {
+            touchedWrappers.add(parent);
+          }
+          (markersByCard.get(id) || []).forEach((n) => {
+            try {
+              n.remove();
+            } catch (e) {
+            }
+          });
+          node.remove();
+          removed++;
+        } catch (e) {
+        }
+      }
+      touchedWrappers.forEach((w) => {
+        try {
+          if (w.children.length === 0) w.remove();
+        } catch (e) {
+        }
+      });
+      figma.ui.postMessage({ type: "quick-spec-canvas-cards-deleted", removed });
+      if (removed > 0) figma.notify(removed > 1 ? `${removed} cards removidos do canvas \u2713` : "Card removido do canvas \u2713");
+      return;
+    }
+    if (msg.type === "quick-spec-toggle-visibility") {
+      const cardId = msg.cardId;
+      if (cardId) {
+        const card = await figma.getNodeByIdAsync(cardId);
+        if (card) {
+          const targetVisible = msg.visible !== void 0 ? msg.visible : !card.visible;
+          card.visible = targetVisible;
+          const quickSpecSection = figma.currentPage.children.find((n) => n.type === "SECTION" && n.getPluginData("handexCategorySection") === "quickspec");
+          if (quickSpecSection) {
+            quickSpecSection.children.forEach((n) => {
+              if (n.getPluginData("handexQuickSpecMarkerFor") === cardId) n.visible = targetVisible;
+            });
+          }
+        }
+      }
+      return;
+    }
     if (msg.type === "close") {
       figma.closePlugin();
     }
   };
+  function _qsRgbToHex(r, g, b) {
+    const toHex = (c) => {
+      const hex = Math.round(c * 255).toString(16);
+      return hex.length === 1 ? "0" + hex : hex;
+    };
+    return "#" + toHex(r) + toHex(g) + toHex(b);
+  }
+  async function _qsGetVar(n, prop) {
+    if (!n.boundVariables) return null;
+    const v = n.boundVariables[prop];
+    if (!v) return null;
+    const id = Array.isArray(v) ? v[0] && v[0].id : v.id;
+    if (!id) return null;
+    const variable = await figma.variables.getVariableByIdAsync(id);
+    return variable ? { name: variable.name, key: variable.key } : null;
+  }
+  async function _qsResolveVarById(id) {
+    if (!id) return null;
+    const variable = await figma.variables.getVariableByIdAsync(id);
+    return variable ? { name: variable.name, key: variable.key } : null;
+  }
+  async function _qsGetPaintVar(paint) {
+    return _qsResolveVarById(paint && paint.boundVariables && paint.boundVariables.color && paint.boundVariables.color.id);
+  }
+  async function _qsGetEffectVar(effect, field) {
+    return _qsResolveVarById(effect && effect.boundVariables && effect.boundVariables[field] && effect.boundVariables[field].id);
+  }
+  function _qsFindLibForKey(key) {
+    if (!key || !_refSkeletonCache) return null;
+    const libs = Array.isArray(_refSkeletonCache) ? _refSkeletonCache : [_refSkeletonCache];
+    let found = null;
+    for (const lib of libs) {
+      if (!lib) continue;
+      const inVariableKeys = Array.isArray(lib.variableKeys) && lib.variableKeys.some((v) => v.key === key);
+      const inComponentKeys = Array.isArray(lib.componentKeys) && lib.componentKeys.includes(key);
+      const inStyles = lib.styleTokens && Object.values(lib.styleTokens).some((arr) => Array.isArray(arr) && arr.some((s) => s.key === key));
+      if (inVariableKeys || inComponentKeys || inStyles) {
+        const tierRank = lib.tier === "priority" ? 2 : 1;
+        if (!found || tierRank > found._rank) found = { name: lib.name, _rank: tierRank };
+      }
+    }
+    return found ? found.name : null;
+  }
+  var QUICK_SPEC_CATEGORIES = ["dimensions", "spacing", "fill", "border", "radius", "effect", "typography", "component"];
+  async function _qsExtractNodeProperties(n, categories) {
+    const props = [];
+    const want = (cat) => categories.includes(cat);
+    const withOrigin = async (label, value, tokenName, tokenKey) => {
+      const libName = tokenKey ? _qsFindLibForKey(tokenKey) : null;
+      props.push({ label, value, tokenName: tokenName || null, libName });
+    };
+    if (want("fill") && "fills" in n && Array.isArray(n.fills)) {
+      let styleName = null, styleKey = null;
+      if ("fillStyleId" in n && typeof n.fillStyleId === "string" && n.fillStyleId) {
+        const style = await figma.getStyleByIdAsync(n.fillStyleId);
+        if (style) {
+          styleName = style.name;
+          styleKey = style.key;
+        }
+      }
+      for (const fill of n.fills) {
+        if (fill.visible === false) continue;
+        if (fill.type === "SOLID" && fill.color) {
+          const hex = _qsRgbToHex(fill.color.r, fill.color.g, fill.color.b).toUpperCase();
+          const vInfo = await _qsGetPaintVar(fill);
+          const name = vInfo && vInfo.name || styleName || null;
+          const key = vInfo && vInfo.key || styleKey || null;
+          await withOrigin("Cor (Fill)", hex, name, key);
+        }
+      }
+    }
+    if (want("typography") && n.type === "TEXT") {
+      let styleName = null, styleKey = null;
+      if ("textStyleId" in n && typeof n.textStyleId === "string" && n.textStyleId !== figma.mixed && n.textStyleId) {
+        const style = await figma.getStyleByIdAsync(n.textStyleId);
+        if (style) {
+          styleName = style.name;
+          styleKey = style.key;
+        }
+      }
+      const sizeVar = await _qsGetVar(n, "fontSize");
+      const family = n.fontName && n.fontName !== figma.mixed ? n.fontName.family : "Mixed";
+      const fontStyle = n.fontName && n.fontName !== figma.mixed ? n.fontName.style : "Mixed";
+      const size = n.fontSize && n.fontSize !== figma.mixed ? n.fontSize : "Mixed";
+      const rawLabel = `${family} ${fontStyle} (${size}px)`;
+      const tokenName = styleName || sizeVar && sizeVar.name || null;
+      const tokenKey = styleKey || (sizeVar ? sizeVar.key : null);
+      await withOrigin("Tipografia", rawLabel, tokenName, tokenKey);
+    }
+    if (want("spacing") && "layoutMode" in n && n.layoutMode !== "NONE") {
+      if (n.itemSpacing !== figma.mixed && n.itemSpacing > 0) {
+        const vInfo = await _qsGetVar(n, "itemSpacing");
+        await withOrigin("Gap", `${n.itemSpacing}px`, vInfo && vInfo.name, vInfo && vInfo.key);
+      }
+      const paddings = [
+        { prop: "paddingTop", label: "Padding Top" },
+        { prop: "paddingRight", label: "Padding Right" },
+        { prop: "paddingBottom", label: "Padding Bottom" },
+        { prop: "paddingLeft", label: "Padding Left" }
+      ];
+      for (const p of paddings) {
+        if (n[p.prop] > 0) {
+          const vInfo = await _qsGetVar(n, p.prop);
+          await withOrigin(p.label, `${n[p.prop]}px`, vInfo && vInfo.name, vInfo && vInfo.key);
+        }
+      }
+    }
+    if (want("border") && "strokes" in n && Array.isArray(n.strokes) && n.strokes.length > 0) {
+      const visibleStroke = n.strokes.find((s) => s.visible !== false && (s.opacity === void 0 || s.opacity > 0));
+      if (visibleStroke && "strokeWeight" in n && n.strokeWeight !== figma.mixed && n.strokeWeight > 0) {
+        const vInfo = await _qsGetVar(n, "strokeWeight");
+        await withOrigin("Border Width", `${n.strokeWeight}px`, vInfo && vInfo.name, vInfo && vInfo.key);
+        if (visibleStroke.type === "SOLID") {
+          const hex = _qsRgbToHex(visibleStroke.color.r, visibleStroke.color.g, visibleStroke.color.b).toUpperCase();
+          let styleName = null, styleKey = null;
+          if ("strokeStyleId" in n && n.strokeStyleId) {
+            const st = await figma.getStyleByIdAsync(n.strokeStyleId);
+            if (st) {
+              styleName = st.name;
+              styleKey = st.key;
+            }
+          }
+          const sVar = await _qsGetPaintVar(visibleStroke);
+          const name = sVar && sVar.name || styleName || null;
+          const key = sVar && sVar.key || styleKey || null;
+          await withOrigin("Border Color", hex, name, key);
+        }
+      }
+    }
+    if (want("radius") && "cornerRadius" in n && n.cornerRadius !== figma.mixed && n.cornerRadius > 0) {
+      const vInfo = await _qsGetVar(n, "topLeftRadius");
+      await withOrigin("Radius", `${n.cornerRadius}px`, vInfo && vInfo.name, vInfo && vInfo.key);
+    }
+    if (want("effect") && "effects" in n && Array.isArray(n.effects)) {
+      let styleName = null, styleKey = null;
+      if ("effectStyleId" in n && n.effectStyleId) {
+        const style = await figma.getStyleByIdAsync(n.effectStyleId);
+        if (style) {
+          styleName = style.name;
+          styleKey = style.key;
+        }
+      }
+      for (const effect of n.effects) {
+        if (effect.visible) {
+          const effVar = await _qsGetEffectVar(effect, "radius");
+          const name = styleName || effVar && effVar.name || null;
+          const key = styleKey || (effVar ? effVar.key : null);
+          const label = effect.type.includes("SHADOW") ? "Sombra" : "Blur";
+          await withOrigin("Effect (" + label + ")", effect.type, name, key);
+        }
+      }
+    }
+    if (want("dimensions") && n.type !== "PAGE" && n.parent && n.parent.type !== "PAGE") {
+      const parent = n.parent;
+      let wMode = "Fixed";
+      let hMode = "Fixed";
+      if (parent.layoutMode === "HORIZONTAL" && n.layoutGrow === 1) wMode = "Fill Container";
+      else if (parent.layoutMode === "VERTICAL" && n.layoutAlign === "STRETCH") wMode = "Fill Container";
+      else if (n.layoutMode && (n.layoutMode === "HORIZONTAL" && n.primaryAxisSizingMode === "AUTO" || n.layoutMode === "VERTICAL" && n.counterAxisSizingMode === "AUTO")) wMode = "Hug Contents";
+      if (parent.layoutMode === "VERTICAL" && n.layoutGrow === 1) hMode = "Fill Container";
+      else if (parent.layoutMode === "HORIZONTAL" && n.layoutAlign === "STRETCH") hMode = "Fill Container";
+      else if (n.layoutMode && (n.layoutMode === "VERTICAL" && n.primaryAxisSizingMode === "AUTO" || n.layoutMode === "HORIZONTAL" && n.counterAxisSizingMode === "AUTO")) hMode = "Hug Contents";
+      props.push({ label: "W Sizing", value: wMode, tokenName: null, libName: null });
+      props.push({ label: "H Sizing", value: hMode, tokenName: null, libName: null });
+    }
+    if (want("dimensions") && "width" in n && "height" in n && typeof n.width === "number" && typeof n.height === "number") {
+      props.push({ label: "Dimens\xF5es", value: `${Math.round(n.width)} \xD7 ${Math.round(n.height)}px`, tokenName: null, libName: null });
+    }
+    if (want("component-props") && n.type === "INSTANCE" && n.componentProperties) {
+      Object.entries(n.componentProperties).forEach(([propName, propObj]) => {
+        const cleanName = propName.split("#")[0];
+        props.push({ label: "Prop: " + cleanName, value: String(propObj.value), tokenName: null, libName: null });
+      });
+    }
+    if (want("component") && n.type === "INSTANCE") {
+      try {
+        const mainComp = await n.getMainComponentAsync();
+        if (mainComp) {
+          const libName = _qsFindLibForKey(mainComp.key);
+          props.push({ label: "Componente", value: mainComp.name, tokenName: null, libName });
+        }
+      } catch (e) {
+      }
+    }
+    return props;
+  }
+  async function _qsExtractRaw(rootNode, categories) {
+    const cats = Array.isArray(categories) && categories.length > 0 ? categories : QUICK_SPEC_CATEGORIES;
+    const elements = [];
+    async function walk(n, depth) {
+      if ((depth || 0) > 8) return;
+      if (n.visible === false) return;
+      try {
+        const props = await _qsExtractNodeProperties(n, cats);
+        if (props.length > 0) {
+          elements.push({ nodeId: n.id, name: n.name, nodeType: n.type, properties: props });
+        }
+      } catch (e) {
+        console.error("Spec Express: erro ao ler n\xF3", n.name, e && e.message);
+      }
+      if ("children" in n && n.children) {
+        for (const child of n.children) await walk(child, (depth || 0) + 1);
+      }
+    }
+    await walk(rootNode, 0);
+    return elements;
+  }
+  async function _qsBuildElementCard(item, node) {
+    await figma.loadFontAsync({ family: "Inter", style: "Regular" });
+    await figma.loadFontAsync({ family: "Inter", style: "Bold" });
+    const card = _hdCreateFrame("VERTICAL", 16, 10, { r: 1, g: 1, b: 1 });
+    card.name = "Spec Express " + item.tag + " | " + item.name;
+    card.strokes = [{ type: "SOLID", color: { r: 0.88, g: 0.9, b: 0.93 } }];
+    card.strokeWeight = 1;
+    card.cornerRadius = 12;
+    card.resize(280, card.height || 100);
+    card.counterAxisSizingMode = "FIXED";
+    card.setPluginData("handexQuickSpecTag", item.tag);
+    card.setPluginData("handexQuickSpecName", item.name);
+    card.setPluginData("handexQuickSpecNodeType", item.nodeType || "");
+    if (node) card.setPluginData("handexQuickSpecSourceId", node.id);
+    const headerRow = _hdCreateFrame("HORIZONTAL", 0, 8, null);
+    headerRow.layoutAlign = "STRETCH";
+    headerRow.counterAxisAlignItems = "CENTER";
+    const tagBadge = _hdCreateFrame("HORIZONTAL", 0, 0, { r: 0, g: 0.36, b: 0.66 });
+    tagBadge.cornerRadius = 6;
+    tagBadge.paddingLeft = 8;
+    tagBadge.paddingRight = 8;
+    tagBadge.paddingTop = 3;
+    tagBadge.paddingBottom = 3;
+    const tagText = _hdCreateText(item.tag, 11, "Bold", { r: 1, g: 1, b: 1 });
+    tagBadge.appendChild(tagText);
+    headerRow.appendChild(tagBadge);
+    const nameCol = _hdCreateFrame("VERTICAL", 0, 0, null);
+    const elName = _hdCreateText(item.name, 12, "Bold", { r: 0.09, g: 0.13, b: 0.2 });
+    elName.layoutAlign = "STRETCH";
+    elName.textAutoResize = "HEIGHT";
+    nameCol.appendChild(elName);
+    const elType = _hdCreateText(item.nodeType, 9, "Regular", { r: 0.55, g: 0.58, b: 0.62 });
+    elType.layoutAlign = "STRETCH";
+    elType.textAutoResize = "HEIGHT";
+    nameCol.appendChild(elType);
+    headerRow.appendChild(nameCol);
+    _hdSetFillAndHug(nameCol);
+    card.appendChild(headerRow);
+    const divider = figma.createRectangle();
+    divider.resize(248, 1);
+    divider.fills = [{ type: "SOLID", color: { r: 0.9, g: 0.91, b: 0.93 } }];
+    divider.layoutAlign = "STRETCH";
+    card.appendChild(divider);
+    if (!item.properties || item.properties.length === 0) {
+      const empty = _hdCreateText("Nenhuma propriedade nas categorias marcadas.", 10, "Regular", { r: 0.5, g: 0.53, b: 0.58 });
+      empty.layoutAlign = "STRETCH";
+      empty.textAutoResize = "HEIGHT";
+      card.appendChild(empty);
+    }
+    for (const prop of item.properties || []) {
+      if (prop.tokenName) {
+        const tokenColor = prop.libName ? { r: 0, g: 0.36, b: 0.66 } : { r: 0.15, g: 0.17, b: 0.2 };
+        const tokenLine = prop.libName ? `${prop.label}: ${prop.tokenName}  \xB7  ${prop.libName}` : `${prop.label}: ${prop.tokenName}`;
+        const tokenText = _hdCreateText(tokenLine, 10, "Bold", tokenColor);
+        tokenText.layoutAlign = "STRETCH";
+        tokenText.textAutoResize = "HEIGHT";
+        card.appendChild(tokenText);
+        const rawLine = `\u21B3 valor bruto: ${prop.value}`;
+        const rawText = _hdCreateText(rawLine, 9.5, "Regular", { r: 0.55, g: 0.58, b: 0.63 });
+        rawText.layoutAlign = "STRETCH";
+        rawText.textAutoResize = "HEIGHT";
+        card.appendChild(rawText);
+      } else {
+        const rawLine = `${prop.label}: ${prop.value}`;
+        const propText = _hdCreateText(rawLine, 10, "Regular", { r: 0.36, g: 0.4, b: 0.46 });
+        propText.layoutAlign = "STRETCH";
+        propText.textAutoResize = "HEIGHT";
+        card.appendChild(propText);
+      }
+    }
+    figma.currentPage.appendChild(card);
+    card.setPluginData("handexCategory", "quickspec");
+    return card;
+  }
+  function _qsSegmentIntersectsRect(p1, p2, rect) {
+    const { x, y, width: w, height: h } = rect;
+    const pointInRect = (p) => p.x >= x && p.x <= x + w && p.y >= y && p.y <= y + h;
+    if (pointInRect(p1) || pointInRect(p2)) return true;
+    const ccw = (a, b, c) => (c.y - a.y) * (b.x - a.x) > (b.y - a.y) * (c.x - a.x);
+    const segmentsIntersect = (a, b, c, d) => ccw(a, c, d) !== ccw(b, c, d) && ccw(a, b, c) !== ccw(a, b, d);
+    const corners = [
+      { x, y },
+      { x: x + w, y },
+      { x: x + w, y: y + h },
+      { x, y: y + h }
+    ];
+    for (let i = 0; i < 4; i++) {
+      if (segmentsIntersect(p1, p2, corners[i], corners[(i + 1) % 4])) return true;
+    }
+    return false;
+  }
+  function _qsPathObstacles(pathPoints, obstacles) {
+    const hit = [];
+    for (const rect of obstacles) {
+      for (let i = 0; i < pathPoints.length - 1; i++) {
+        if (_qsSegmentIntersectsRect(pathPoints[i], pathPoints[i + 1], rect)) {
+          hit.push(rect);
+          break;
+        }
+      }
+    }
+    return hit;
+  }
+  function _qsDetourAroundObstacles(startPt, endPt, side, oppositeSide, obstacles) {
+    const MARGIN = 40;
+    const union = obstacles.reduce((acc, r) => ({
+      x: Math.min(acc.x, r.x),
+      y: Math.min(acc.y, r.y),
+      right: Math.max(acc.right, r.x + r.width),
+      bottom: Math.max(acc.bottom, r.y + r.height)
+    }), { x: Infinity, y: Infinity, right: -Infinity, bottom: -Infinity });
+    union.width = union.right - union.x;
+    union.height = union.bottom - union.y;
+    const detourVertical = side === "left" || side === "right";
+    let waypoints;
+    if (detourVertical) {
+      const distTop = Math.abs(startPt.y - (union.y - MARGIN));
+      const distBottom = Math.abs(union.bottom + MARGIN - startPt.y);
+      const clearY = distTop <= distBottom ? union.y - MARGIN : union.bottom + MARGIN;
+      waypoints = [
+        { x: startPt.x, y: clearY },
+        { x: endPt.x, y: clearY }
+      ];
+    } else {
+      const distLeft = Math.abs(startPt.x - (union.x - MARGIN));
+      const distRight = Math.abs(union.right + MARGIN - startPt.x);
+      const clearX = distLeft <= distRight ? union.x - MARGIN : union.right + MARGIN;
+      waypoints = [
+        { x: clearX, y: startPt.y },
+        { x: clearX, y: endPt.y }
+      ];
+    }
+    return [startPt, ...waypoints, endPt];
+  }
+  function _qsBuildConnectorForCard(card, node, tag, obstacleBounds) {
+    if (!node) return null;
+    const bounds = node.absoluteBoundingBox || node.absoluteRenderBounds;
+    if (!bounds) return null;
+    const themeColor = { r: 148 / 255, g: 163 / 255, b: 184 / 255 };
+    const THEME_OPACITY = 0.5;
+    const cardAbs = card.absoluteBoundingBox;
+    const cardBounds = cardAbs ? { x: cardAbs.x, y: cardAbs.y, width: cardAbs.width, height: cardAbs.height } : { x: card.x, y: card.y, width: card.width, height: card.height };
+    const contour = figma.createFrame();
+    contour.name = "Destaque";
+    contour.resize(Math.max(bounds.width + 32, 40), Math.max(bounds.height + 32, 40));
+    figma.currentPage.appendChild(contour);
+    contour.x = bounds.x - 16;
+    contour.y = bounds.y - 16;
+    contour.fills = [];
+    contour.strokes = [{ type: "SOLID", color: themeColor, opacity: THEME_OPACITY }];
+    contour.strokeWeight = 2;
+    contour.dashPattern = [4, 4];
+    contour.locked = true;
+    contour.setPluginData("handexCategory", "quickspec");
+    const chip = figma.createFrame();
+    chip.name = "Chip";
+    chip.layoutMode = "HORIZONTAL";
+    chip.primaryAxisSizingMode = "FIXED";
+    chip.counterAxisSizingMode = "FIXED";
+    chip.resize(28, 28);
+    chip.cornerRadius = 14;
+    chip.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+    chip.strokes = [{ type: "SOLID", color: themeColor, opacity: THEME_OPACITY }];
+    chip.strokeWeight = 1.5;
+    chip.primaryAxisAlignItems = "CENTER";
+    chip.counterAxisAlignItems = "CENTER";
+    const chipText = figma.createText();
+    chipText.fontName = { family: "Inter", style: "Bold" };
+    chipText.fontSize = 12;
+    chipText.fills = [{ type: "SOLID", color: themeColor, opacity: THEME_OPACITY }];
+    chipText.characters = tag;
+    chip.appendChild(chipText);
+    contour.appendChild(chip);
+    chip.x = 0;
+    chip.y = 0;
+    const elCx = bounds.x + bounds.width / 2, elCy = bounds.y + bounds.height / 2;
+    const cardCx = cardBounds.x + cardBounds.width / 2, cardCy = cardBounds.y + cardBounds.height / 2;
+    const dx = cardCx - elCx, dy = cardCy - elCy;
+    const side = Math.abs(dx) >= Math.abs(dy) ? dx >= 0 ? "right" : "left" : dy >= 0 ? "bottom" : "top";
+    let startPt, endPt;
+    if (side === "right") {
+      startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
+      endPt = { x: cardBounds.x, y: cardBounds.y + cardBounds.height / 2 };
+    } else if (side === "left") {
+      startPt = { x: bounds.x, y: bounds.y + bounds.height / 2 };
+      endPt = { x: cardBounds.x + cardBounds.width, y: cardBounds.y + cardBounds.height / 2 };
+    } else if (side === "bottom") {
+      startPt = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height };
+      endPt = { x: cardBounds.x + cardBounds.width / 2, y: cardBounds.y };
+    } else {
+      startPt = { x: bounds.x + bounds.width / 2, y: bounds.y };
+      endPt = { x: cardBounds.x + cardBounds.width / 2, y: cardBounds.y + cardBounds.height };
+    }
+    const OPPOSITE_SIDE = { right: "left", left: "right", bottom: "top", top: "bottom" };
+    const QS_ELBOW_OFFSET = 40;
+    let qsPathPoints = [
+      startPt,
+      ..._orthogonalElbowPoints(
+        { x: startPt.x, y: startPt.y, side },
+        { x: endPt.x, y: endPt.y, side: OPPOSITE_SIDE[side] },
+        QS_ELBOW_OFFSET
+      ),
+      endPt
+    ];
+    if (obstacleBounds && obstacleBounds.length > 0) {
+      const hitRects = _qsPathObstacles(qsPathPoints, obstacleBounds);
+      if (hitRects.length > 0) {
+        qsPathPoints = _qsDetourAroundObstacles(startPt, endPt, side, OPPOSITE_SIDE[side], hitRects);
+      }
+    }
+    const qsSegs = qsPathPoints.map((p) => `${p.x} ${p.y}`).join(" L ");
+    const connectorPath = `M ${qsSegs}`;
+    const connector = figma.createVector();
+    connector.name = "Conector";
+    connector.strokes = [{ type: "SOLID", color: themeColor, opacity: THEME_OPACITY }];
+    connector.strokeWeight = 1.5;
+    connector.dashPattern = [4, 4];
+    connector.strokeCap = "ROUND";
+    figma.currentPage.appendChild(connector);
+    connector.vectorPaths = [{ windingRule: "NONZERO", data: connectorPath }];
+    connector.setPluginData("handexCategory", "quickspec");
+    connector.setPluginData("handexQuickSpecMarkerFor", card.id);
+    const _DOT_R = 4;
+    const startDot = figma.createEllipse();
+    startDot.name = "DotInicio";
+    startDot.resize(_DOT_R * 2, _DOT_R * 2);
+    startDot.fills = [{ type: "SOLID", color: themeColor, opacity: THEME_OPACITY }];
+    startDot.strokes = [];
+    startDot.locked = true;
+    figma.currentPage.appendChild(startDot);
+    startDot.x = startPt.x - _DOT_R;
+    startDot.y = startPt.y - _DOT_R;
+    startDot.setPluginData("handexCategory", "quickspec");
+    startDot.setPluginData("handexQuickSpecMarkerFor", card.id);
+    const endDot = figma.createEllipse();
+    endDot.name = "DotFim";
+    endDot.resize(_DOT_R * 2, _DOT_R * 2);
+    endDot.fills = [{ type: "SOLID", color: themeColor, opacity: THEME_OPACITY }];
+    endDot.strokes = [];
+    endDot.locked = true;
+    figma.currentPage.appendChild(endDot);
+    endDot.x = endPt.x - _DOT_R;
+    endDot.y = endPt.y - _DOT_R;
+    endDot.setPluginData("handexCategory", "quickspec");
+    endDot.setPluginData("handexQuickSpecMarkerFor", card.id);
+    contour.setPluginData("handexQuickSpecMarkerFor", card.id);
+    card.setPluginData("handexQuickSpecMarkerId", contour.id);
+    _hdMoveToCategorySection(contour, "quickspec");
+    _hdMoveToCategorySection(connector, "quickspec");
+    _hdMoveToCategorySection(startDot, "quickspec");
+    _hdMoveToCategorySection(endDot, "quickspec");
+    return { marker: contour, parts: [contour, connector, startDot, endDot] };
+  }
 })();

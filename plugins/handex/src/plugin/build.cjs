@@ -35,6 +35,9 @@ const modSpecs   = read('modules/specifications.js');
 const modOnboard = read('modules/onboarding.js');
 const modData    = read('modules/design-data.js');
 const modMsgs    = read('modules/messages.js');
+// Spec Express -- módulo isolado (consulta rápida de propriedades brutas,
+// sem conformidade DSC, sem persistência). Ver quick-spec.js/quick-spec.html.
+const modQuickSpec = read('modules/quick-spec.js');
 
 // Skeleton das libs DSC (refs/_skeleton.json, gerado por refs/build-skeleton.cjs)
 // -- reintroduzido no embed em 2026-09-24. Tinha sido removido achando que
@@ -86,6 +89,7 @@ const viewFlows            = read('views/flows.html');
 const viewDadosProjeto     = read('views/dados-projeto.html');
 const viewHandoffSummary   = read('views/handoff-summary.html');
 const modalsShared         = read('views/modals.html');
+const viewQuickSpec        = read('views/quick-spec.html');
 
 // ── Assemble ──────────────────────────────────────────────────
 const html = `<!doctype html>
@@ -191,6 +195,7 @@ ${viewFrames}
 ${viewFlows}
 ${viewDadosProjeto}
 ${viewHandoffSummary}
+${viewQuickSpec}
 ${modalsShared}
   </div>
 
@@ -245,6 +250,11 @@ ${modData}
 // MODULE: handoff.js
 // ============================================================
 ${modHandoff}
+
+// ============================================================
+// MODULE: quick-spec.js (Spec Express — módulo isolado)
+// ============================================================
+${modQuickSpec}
   </script>
 
   <!-- Back-to-top button (ghost at rest, highlighted on hover -- estilo real

@@ -222,6 +222,28 @@
         showToast(msg.message);
       }
 
+      // Spec Express (módulo isolado, ver quick-spec.js/code.js) --
+      // handlers dedicados, nunca compartilhados com o dispatcher de
+      // Anotar Specs/scan de tokens.
+      if (msg.type === 'quick-spec-capture-count-changed') {
+        if (typeof handleQuickSpecCaptureCountChanged === 'function') handleQuickSpecCaptureCountChanged(msg);
+      }
+      if (msg.type === 'quick-spec-result') {
+        if (typeof handleQuickSpecResult === 'function') handleQuickSpecResult(msg);
+      }
+      if (msg.type === 'quick-spec-canvas-progress') {
+        if (typeof handleQuickSpecCanvasProgress === 'function') handleQuickSpecCanvasProgress(msg);
+      }
+      if (msg.type === 'quick-spec-canvas-result') {
+        if (typeof handleQuickSpecCanvasResult === 'function') handleQuickSpecCanvasResult(msg);
+      }
+      if (msg.type === 'quick-spec-canvas-cards-deleted') {
+        if (typeof handleQuickSpecCanvasCardsDeleted === 'function') handleQuickSpecCanvasCardsDeleted(msg);
+      }
+      if (msg.type === 'quick-spec-canvas-cards-list') {
+        if (typeof handleQuickSpecCanvasCardsList === 'function') handleQuickSpecCanvasCardsList(msg);
+      }
+
       if (msg.type === 'snapshot-history') {
         handoffData._history = Array.isArray(msg.history) ? msg.history : [];
         handoffData.previousSnapshot = handoffData._history[0] || null;

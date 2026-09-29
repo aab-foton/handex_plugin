@@ -29,7 +29,7 @@ const ONBOARDING_TOOLS = {
     docUrl: 'https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=1-54',
     purpose: 'É o painel central do handoff: daqui você navega para cada ferramenta de documentação e, quando tudo estiver pronto, consolida o trabalho numa Ficha de Handoff única no canvas.',
     steps: [
-      { text: 'Os 6 cards levam a cada ferramenta do handoff: <strong>Informações do Projeto</strong>, <strong>Escanear Tokens</strong>, <strong>Anotar Specs</strong>, <strong>Anotar Medidas</strong> e <strong>Fluxos de Tela</strong>.' },
+      { text: 'Os cards levam a cada ferramenta do handoff: <strong>Informações do Projeto</strong>, <strong>Escanear Tokens</strong>, <strong>Anotar Specs</strong>, <strong>Anotar Medidas</strong>, <strong>Fluxos de Tela</strong> e <strong>Spec Express</strong>.' },
       { text: 'Você pode <strong>reorganizar os cards</strong> do jeito que preferir: passe o mouse sobre um card, segure a alcinha <strong>⠿</strong> que aparece no canto e arraste sobre outro card para trocar de lugar.' },
       { text: 'A ordem escolhida fica <strong>salva neste computador</strong> — é uma preferência pessoal sua, não é salva no projeto nem exportada junto com a ficha.' },
       { text: 'Quando terminar de documentar, use <strong>Gerar Ficha de Handoff</strong> no rodapé para consolidar tudo no canvas.' }

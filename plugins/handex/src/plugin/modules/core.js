@@ -1698,12 +1698,27 @@ const _modalReturnFocus = {};
 // matam qualquer loop anterior ainda em voo, sem depender só de
 // offsetParent.
 let _persistentFocusToken = 0;
+// Ponteiro sobre a janela do plugin. Com o mouse fora, o plugin nunca puxa
+// foco de teclado pra si: sem isso, Espaço/atalhos do Figma param de
+// funcionar no canvas enquanto o plugin está aberto.
+let _pointerInsidePlugin = false;
+document.addEventListener('mouseenter', () => { _pointerInsidePlugin = true; });
+document.addEventListener('mousemove', () => { _pointerInsidePlugin = true; }, { passive: true });
+document.addEventListener('mouseleave', () => {
+  _pointerInsidePlugin = false;
+  _persistentFocusToken++;
+  const active = document.activeElement;
+  if (active && active !== document.body && typeof active.blur === 'function') active.blur();
+  try { window.parent.focus(); } catch (e) {}
+});
+
 function _persistentFocus(target, attempts = 15, intervalMs = 200) {
   if (!target) return;
   const token = ++_persistentFocusToken;
   let tries = 0;
   const tryFocus = () => {
     if (token !== _persistentFocusToken) return;
+    if (!_pointerInsidePlugin) return;
     if (target.offsetParent === null) return;
     tries++;
     target.focus();
@@ -1714,12 +1729,18 @@ function _persistentFocus(target, attempts = 15, intervalMs = 200) {
 }
 window._persistentFocus = _persistentFocus;
 
+// Modais só de feedback (sem nada pra digitar/clicar) não pegam foco nem o
+// devolvem ao fechar -- o loading roda enquanto o designer olha o canvas.
+const _NO_FOCUS_MODALS = new Set(['generic-loading-modal']);
+
 function openModal(id) {
   const el = document.getElementById(id);
   if (!el) return;
-  _modalReturnFocus[id] = document.activeElement;
+  const alreadyOpen = !el.classList.contains('hidden');
   el.classList.remove("hidden");
   updateFABVisibility(true);
+  if (_NO_FOCUS_MODALS.has(id) || alreadyOpen) return;
+  _modalReturnFocus[id] = document.activeElement;
   const focusTarget = el.querySelector(FOCUSABLE_SELECTOR);
   if (focusTarget) {
     _persistentFocus(focusTarget);
@@ -1739,7 +1760,7 @@ function closeModal(id) {
   // forma esperada (ver comentário de _persistentFocus).
   _persistentFocusToken++;
   const returnEl = _modalReturnFocus[id];
-  if (returnEl && document.contains(returnEl)) returnEl.focus();
+  if (_pointerInsidePlugin && returnEl && document.contains(returnEl)) returnEl.focus();
   delete _modalReturnFocus[id];
   // Desliga o listener de selectionchange do mini-mapa de ancoragem do
   // backend — ligado só em openFlowFormModal(), independente de por onde o
@@ -1748,6 +1769,36 @@ function closeModal(id) {
     parent.postMessage({ pluginMessage: { type: 'track-flow-anchor-preview', active: false } }, '*');
   }
 }
+
+// Modal genérica de loading (2026-09-25) -- padrão único pra qualquer etapa
+// do Handex que precise de feedback bloqueante de progresso, evitando cada
+// feature nova inventar seu próprio overlay inline (ver HTML e nota
+// completa em #generic-loading-modal, modals.html). `text` aceita ser
+// chamado de novo enquanto a modal já está aberta, só reescrevendo o
+// parágrafo -- não fecha/reabre, então é seguro usar pra um contador "X de
+// Y" chamando showLoadingModal(novoTexto) a cada iteração de um loop.
+// `opts.title` e `opts.icon` (nome de ícone Lucide) são opcionais --
+// omitidos, mantêm o que já está na tela (padrão "Processando..."/
+// loader-2 na primeira chamada).
+function showLoadingModal(text, opts) {
+  const titleEl = document.getElementById('generic-loading-title');
+  const textEl = document.getElementById('generic-loading-text');
+  const iconEl = document.getElementById('generic-loading-icon');
+  if (opts && opts.title && titleEl) titleEl.textContent = opts.title;
+  if (textEl) { textEl.textContent = text || ''; textEl.classList.toggle('hidden', !text); }
+  if (opts && opts.icon && iconEl) {
+    iconEl.setAttribute('data-lucide', opts.icon);
+    iconEl.classList.toggle('animate-spin', opts.icon === 'loader-2');
+  }
+  openModal('generic-loading-modal');
+  if (typeof _refreshIcons === 'function') _refreshIcons();
+}
+window.showLoadingModal = showLoadingModal;
+
+function hideLoadingModal() {
+  closeModal('generic-loading-modal');
+}
+window.hideLoadingModal = hideLoadingModal;
 
 function _topmostVisibleModal() {
   const visibleModals = Array.from(document.querySelectorAll('[id$="-modal"]:not(.hidden)'));
@@ -1834,6 +1885,26 @@ document.addEventListener('click', function (e) {
   closeModal(e.target.id);
 });
 
+// Bug real corrigido (2026-09-25, "preso no tabeamento do plugin" -- Espaço
+// no canvas do Figma não fazia pan/mão, ficava preso dentro do plugin):
+// <button> nativo do HTML mantém o foco de teclado depois de clicado, e
+// Espaço/Enter em cima de um botão focado o REATIVA (comportamento padrão
+// do navegador) em vez do evento chegar ao Figma por trás do iframe. Como
+// nenhuma tela do plugin usa Espaço como atalho (diferente do canvas do
+// Figma, onde Espaço é pan), tirar o foco do botão logo após o clique é
+// seguro em qualquer contexto -- exceto DENTRO de um modal aberto, onde o
+// focus trap de Tab (ver listener acima) depende de saber qual é o último
+// elemento focado para ciclar corretamente.
+document.addEventListener('click', function (e) {
+  const btn = e.target.closest && e.target.closest('button');
+  if (!btn) return;
+  if (_topmostVisibleModal()) return;
+  // rAF: deixa o próprio onclick do botão rodar antes de tirar o foco --
+  // alguns handlers (ex: abrir uma modal) precisam do foco ainda presente
+  // no momento do clique pra decidir o que fazer.
+  requestAnimationFrame(() => { try { btn.blur(); } catch (err) {} });
+});
+
 function startHandoff() {
   navigate("view-frames");
   restoreUIFromState();
@@ -1875,8 +1946,7 @@ function updateHomeFooterButtonsState() {
 
 // Badge de check nos cards da home (grid 2×3) indicando que aquele card já
 // tem documentação salva no projeto -- ver getHomeCardsDocumentedState em
-// design-data.js pro critério de cada card. "guide" nunca recebe badge (é
-// onboarding, não dado do projeto). Chamada junto de
+// design-data.js pro critério de cada card. Chamada junto de
 // updateHomeFooterButtonsState, mesmo gatilho (entrar na home + init-plugin).
 function updateHomeCardsCheckState() {
   if (typeof getHomeCardsDocumentedState !== 'function') return;
@@ -1922,6 +1992,7 @@ function navigate(viewId) {
     populateFrameSelector('spec-frame-selector');
   }
   if (viewId === 'view-flows') renderFlowsList();
+  if (viewId === 'view-quick-spec' && typeof quickSpecSyncFromCanvas === 'function') quickSpecSyncFromCanvas();
   if (viewId === 'view-measurement') {
     renderAllMeasurements();
     populateFrameSelector('measure-frame-selector');

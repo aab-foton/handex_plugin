@@ -90,8 +90,47 @@ let _selectionOrderReliable = true;
 // eventos); só o envio pro frontend é coalescido.
 let _flowSelectionBoundsDebounceTimer = null;
 
+// Modo de captura do Spec Express (2026-09-25) -- liga/desliga via
+// start-quick-spec-capture/stop-quick-spec-capture. Guarda só metadado leve
+// (id/nome/tipo), nunca a extração pesada de propriedades -- essa só roda
+// depois do "Concluir" (ver quick-spec-capture-finish).
+//
+// Modelo por SHIFT+CLIQUE (corrigido 2026-09-25 -- primeira versão
+// acumulava qualquer elemento que passasse por selectionchange, mesmo sem
+// Shift; isso incluía cliques de TRÂNSITO, como um drill-in que seleciona o
+// frame pai antes de alcançar o filho desejado, capturando elementos que o
+// designer nunca teve intenção de escanear). Com Shift pressionado, a
+// própria API do Figma já acumula a seleção real em
+// figma.currentPage.selection -- mas essa lista vem na ordem de
+// z-index/árvore de camadas, não na ordem cronológica de clique (corrigido
+// 2026-09-28: a lista final estava embaralhada em relação à sequência real
+// do designer). Por isso _quickSpecCaptureSelection é mantido como
+// HISTÓRICO por ordem de entrada, não um espelho bruto do array do Figma: a
+// cada selectionchange, remove quem saiu da seleção e só ACRESCENTA no
+// final quem entrou e ainda não estava presente -- se um elemento for
+// desmarcado e remarcado depois, ele volta pro final, o que é o
+// comportamento esperado (reflete a nova ordem de entrada).
+let _quickSpecCaptureModeActive = false;
+let _quickSpecCaptureSelection = []; // [{nodeId, name, nodeType}] -- histórico por ordem de entrada, não espelho bruto da seleção
+let _quickSpecCaptureCountDebounceTimer = null;
+
 figma.on('selectionchange', () => {
   const currentIds = figma.currentPage.selection.map(n => n.id);
+
+  if (_quickSpecCaptureModeActive) {
+    const currentIdSet = new Set(currentIds);
+    _quickSpecCaptureSelection = _quickSpecCaptureSelection.filter(item => currentIdSet.has(item.nodeId));
+    const knownIds = new Set(_quickSpecCaptureSelection.map(item => item.nodeId));
+    for (const n of figma.currentPage.selection) {
+      if (knownIds.has(n.id)) continue;
+      _quickSpecCaptureSelection.push({ nodeId: n.id, name: n.name, nodeType: n.type });
+    }
+    clearTimeout(_quickSpecCaptureCountDebounceTimer);
+    _quickSpecCaptureCountDebounceTimer = setTimeout(() => {
+      figma.ui.postMessage({ type: 'quick-spec-capture-count-changed', count: _quickSpecCaptureSelection.length });
+    }, 300);
+  }
+
   if (currentIds.length === 0) {
     _selectionClickOrder = [];
     _selectionOrderReliable = true;
@@ -253,7 +292,7 @@ function hexToRgb(hex) {
 // categoria aparece. Nunca redimensiona a Section pra "abraçar" os filhos
 // automaticamente -- ela só existe pra dar um agrupamento visível na árvore
 // de camadas, o layout dos itens dentro continua exatamente como já era.
-const HANDEX_SECTION_NAMES = { medida: 'Handex | Medidas', spec: 'Handex | Specs', fluxo: 'Handex | Fluxos', ficha: 'Handex | Ficha' };
+const HANDEX_SECTION_NAMES = { medida: 'Handex | Medidas', spec: 'Handex | Specs', fluxo: 'Handex | Fluxos', ficha: 'Handex | Ficha', quickspec: 'Handex | Spec Express' };
 function _hdEnsureCategorySection(category) {
   const sectionName = HANDEX_SECTION_NAMES[category];
   if (!sectionName) return null;
@@ -1164,8 +1203,13 @@ async function _moveFlowEndpointMarker(targetNode, isStart, nextFlowNumber) {
 // os segmentos A→A' e B'→B já retos nas direções certas. Depois conecta
 // A'→B' com 0 dobras (se já alinhados), 1 dobra (se eixos perpendiculares)
 // ou 2 dobras (se eixos paralelos, evitando cruzar os próprios elementos).
-function _orthogonalElbowPoints(a, b) {
-  const OFFSET = 24;
+function _orthogonalElbowPoints(a, b, offset) {
+  // `offset` opcional (default 24, comportamento original intocado) --
+  // parametrizado em 2026-09-29 só pra permitir que o Spec Express
+  // (_qsBuildConnectorForCard) peça um afastamento maior antes da dobra
+  // final, sem alterar as especificações tradicionais nem os conectores de
+  // Fluxos de Tela, que continuam chamando sem esse argumento.
+  const OFFSET = typeof offset === 'number' ? offset : 24;
   const dirOf = (side) => ({
     top: { x: 0, y: -1 }, bottom: { x: 0, y: 1 },
     left: { x: -1, y: 0 }, right: { x: 1, y: 0 }
@@ -1822,6 +1866,7 @@ figma.ui.onmessage = async (msg) => {
       spec: !!msg.specs,
       medida: !!msg.medidas,
       fluxo: !!msg.fluxos,
+      quickspec: !!msg.quickspec,
     };
 
     const matchCategory = (node) => {
@@ -1832,10 +1877,11 @@ figma.ui.onmessage = async (msg) => {
       if (wanted.spec && (node.name.startsWith('[Spec | ') || node.name.startsWith('[Spec]'))) return 'spec';
       if (wanted.medida && node.name.startsWith('[Medida]')) return 'medida';
       if (wanted.fluxo && node.name.startsWith('[Fluxo')) return 'fluxo';
+      if (wanted.quickspec && node.name.startsWith('Spec Express')) return 'quickspec';
       return null;
     };
 
-    const counts = { ficha: 0, spec: 0, medida: 0, fluxo: 0 };
+    const counts = { ficha: 0, spec: 0, medida: 0, fluxo: 0, quickspec: 0 };
     const toRemove = [];
     const _handexSections = [];
 
@@ -1869,6 +1915,39 @@ figma.ui.onmessage = async (msg) => {
       if (markerId) {
         const marker = await figma.getNodeByIdAsync(markerId);
         if (marker) { try { marker.remove(); } catch (e) {} }
+      }
+    }
+    // Mesmo cuidado pros cards do Spec Express: o vínculo (contour/Conector/
+    // DotInicio/DotFim, handexQuickSpecMarkerFor) é por CARD individual, não
+    // pelo wrapper (que é o que está em toRemove) -- precisa achatar os
+    // filhos de cada wrapper marcado pra "quickspec" antes de coletar os
+    // marcadores, senão eles ficam órfãos após a limpeza em massa.
+    //
+    // Bug real de performance corrigido (2026-09-25, reportado pelo
+    // usuário: Figma trava por vários segundos ao confirmar a exclusão) --
+    // a versão anterior usava figma.currentPage.findAll aqui, uma varredura
+    // RECURSIVA de toda a árvore da página (pode ter milhares de nós num
+    // arquivo real de produto). Os marcadores soltos do Spec Express já são
+    // movidos pra dentro da mesma Section "Handex | Spec Express" do
+    // wrapper (ver _qsBuildConnectorForCard/_hdMoveToCategorySection) -- a
+    // busca não precisa nunca sair dali, então usa os filhos DIRETOS da
+    // Section (já coletados em _handexSections acima), sem tocar o resto da
+    // árvore do documento.
+    if (wanted.quickspec) {
+      const quickSpecCardIds = new Set(
+        toRemove
+          .filter(n => n.getPluginData('handexCategory') === 'quickspec' && 'children' in n)
+          .flatMap(wrapper => wrapper.children.map(c => c.id))
+      );
+      if (quickSpecCardIds.size > 0) {
+        _handexSections.forEach(section => {
+          section.children.forEach(n => {
+            const markerFor = n.getPluginData && n.getPluginData('handexQuickSpecMarkerFor');
+            if (markerFor && quickSpecCardIds.has(markerFor)) {
+              try { n.remove(); } catch (e) {}
+            }
+          });
+        });
       }
     }
     toRemove.forEach(node => { try { node.remove(); } catch (e) {} });
@@ -6445,9 +6524,1079 @@ figma.ui.onmessage = async (msg) => {
     return;
   }
 
+  // ═══════════════════════════════════════════════════════════════════════
+  // MÓDULO: Spec Express — consulta rápida e efêmera de propriedades brutas
+  // de elementos, sem conformidade DSC, sem persistência em handoffData.
+  // Handler isolado: não chama nem é chamado por nenhuma função do scan de
+  // tokens (scan-frame) ou de Anotar Specs (create-unified-spec). Ver
+  // funções _qsExtractRaw/_qsBuildElementCard no final deste arquivo, e o
+  // modo de captura por Shift+clique no listener de selectionchange (topo
+  // do arquivo, _quickSpecCaptureModeActive).
+  // ═══════════════════════════════════════════════════════════════════════
+  // Início do modo de captura (2026-09-25): a modal de filtro já foi
+  // confirmada no frontend, o plugin colapsa e o designer marca os
+  // elementos no canvas com Shift+clique -- a seleção múltipla resultante é
+  // espelhada em tempo real (ver listener de selectionchange acima), sem
+  // nenhuma extração pesada ainda.
+  if (msg.type === "start-quick-spec-capture") {
+    _quickSpecCaptureModeActive = true;
+    _quickSpecCaptureSelection = [];
+    return;
+  }
+
+  // Cancelar a captura -- descarta a seleção corrente, sem rodar extração
+  // nenhuma.
+  if (msg.type === "stop-quick-spec-capture") {
+    _quickSpecCaptureModeActive = false;
+    _quickSpecCaptureSelection = [];
+    return;
+  }
+
+  // "Concluir": encerra a captura e roda a extração pesada (propriedades +
+  // snapshot) só agora, para toda a seleção marcada com Shift -- nunca
+  // durante a seleção, pra não pesar enquanto o designer ainda está
+  // escolhendo (pedido explícito do usuário). `msg.categories` vem
+  // preservado do frontend desde a confirmação da modal de filtro (antes do
+  // colapso).
+  if (msg.type === "quick-spec-capture-finish") {
+    _quickSpecCaptureModeActive = false;
+    const accumulated = _quickSpecCaptureSelection.slice();
+    _quickSpecCaptureSelection = [];
+    if (accumulated.length === 0) {
+      figma.ui.postMessage({ type: "quick-spec-result", error: "Nenhum elemento selecionado durante a captura." });
+      return;
+    }
+    try {
+      // Um elemento acumulado pode ser descendente de outro (ex: designer
+      // clicou no ícone e depois no frame que o contém) -- _qsExtractRaw já
+      // faz o walk em árvore a partir de cada raiz, então dedupe por nodeId
+      // do RESULTADO final evita o mesmo elemento aparecer 2x na lista.
+      const seenIds = new Set();
+      const elements = [];
+      for (const acc of accumulated) {
+        const node = await figma.getNodeByIdAsync(acc.nodeId);
+        if (!node) continue;
+        const found = await _qsExtractRaw(node, msg.categories);
+        for (const el of found) {
+          if (seenIds.has(el.nodeId)) continue;
+          seenIds.add(el.nodeId);
+          elements.push(el);
+        }
+      }
+      // Sem snapshot por elemento (removido 2026-09-25, pedido do usuário)
+      // -- a extração de propriedades sozinha é rápida o suficiente pra não
+      // precisar de contador incremental nesta etapa; o loading genérico
+      // (showLoadingModal, já disparado em _quickSpecCaptureFinish) cobre o
+      // tempo de espera sem granularidade por elemento.
+      figma.ui.postMessage({ type: "quick-spec-result", elements: elements });
+    } catch (err) {
+      const errMsg = err && err.message ? err.message : String(err);
+      console.error("Erro no Spec Express:", errMsg);
+      figma.ui.postMessage({ type: "quick-spec-result", error: "Erro ao ler propriedades dos elementos: " + errMsg });
+    }
+    return;
+  }
+
+  // Sobe por node.parent (nunca findAll/varredura de página) até achar o
+  // ancestral FRAME/COMPONENT/COMPONENT_SET de nível superior -- mesmo
+  // critério de "frame de nível superior" já usado em
+  // list-canvas-frames-for-ai (pai é a PAGE ou uma SECTION do Handex).
+  // Usada só por quick-spec-insert-canvas pra ancorar o wrapper de cards
+  // pela borda do FRAME, não do elemento individual (ver comentário no
+  // handler). Retorna null se o nó for solto direto na página/Section, sem
+  // nenhum ancestral desses tipos.
+  function _qsFindTopLevelFrame(node) {
+    const topLevelTypes = ['FRAME', 'COMPONENT', 'COMPONENT_SET'];
+    let current = node;
+    while (current && current.parent) {
+      if (topLevelTypes.includes(current.type) && (current.parent.type === 'PAGE' || current.parent.type === 'SECTION')) {
+        return current;
+      }
+      current = current.parent;
+    }
+    return null;
+  }
+
+  if (msg.type === "quick-spec-insert-canvas") {
+    // Um card por elemento (não mais 1 card por frame) -- cada card leva a
+    // tag (A, B, C..., atribuída pelo frontend por sessão) e o snapshot
+    // daquele elemento específico. Ver _qsBuildElementCard.
+    try {
+      const items = Array.isArray(msg.items) ? msg.items : [];
+      if (items.length === 0) {
+        figma.ui.postMessage({ type: "quick-spec-canvas-result", error: "Nada para inserir." });
+        return;
+      }
+      const cards = [];
+      const createdMap = [];
+      let anchorX = null, anchorY = null;
+      // Loading com contador na UI durante a criação (2026-09-25, pedido do
+      // usuário): montar o card no canvas por elemento é o passo caro aqui
+      // -- reporta progresso incremental pra UI não ficar sem feedback até
+      // o fim do lote inteiro. Sem snapshot (removido 2026-09-25, pedido do
+      // usuário) -- o card só traz nome/tipo/propriedades em texto.
+      const totalToCreate = items.length;
+      figma.ui.postMessage({ type: "quick-spec-canvas-progress", done: 0, total: totalToCreate });
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        const node = item.nodeId ? await figma.getNodeByIdAsync(item.nodeId) : null;
+        const card = await _qsBuildElementCard(item, node);
+        if (anchorX === null && node && 'absoluteBoundingBox' in node && node.absoluteBoundingBox) {
+          // Ancora pelo FRAME PRINCIPAL do elemento, não pelo elemento em si
+          // (bug real reportado pelo usuário com print, 2026-09-28): o
+          // elemento escaneado costuma estar no meio/topo de um frame de tela
+          // inteira, então `elemento.x + elemento.width + 60` ainda cai
+          // dentro da área horizontal do próprio frame documentado -- o
+          // wrapper de cards nascia sobrepondo o frame em vez de nascer ao
+          // lado. Usar a borda direita do frame ancestral resolve isso;
+          // se não houver frame de nível superior identificável (nó solto
+          // direto na página), cai de volta pro bounding box do elemento.
+          const topFrame = _qsFindTopLevelFrame(node);
+          const anchorBox = (topFrame && topFrame.absoluteBoundingBox) ? topFrame.absoluteBoundingBox : node.absoluteBoundingBox;
+          anchorX = anchorBox.x + anchorBox.width + 60;
+          anchorY = anchorBox.y;
+        }
+        cards.push(card);
+        // Devolve o par (elemento de origem -> card criado) pra UI saber
+        // quais itens da lista já têm card no canvas -- é o que permite
+        // perguntar "apagar do canvas também?" ao excluir da lista.
+        createdMap.push({ sourceNodeId: item.nodeId || null, tag: item.tag, cardId: card.id });
+        figma.ui.postMessage({ type: "quick-spec-canvas-progress", done: i + 1, total: totalToCreate });
+      }
+      // Organiza os cards num FRAME com Auto Layout WRAP (2026-09-25,
+      // pedido do usuário) -- em vez de posicionar cada card manualmente
+      // por x/y (frágil, sem organização real na árvore de camadas), um
+      // frame HORIZONTAL + layoutWrap="WRAP" faz o próprio Figma quebrar em
+      // linhas conforme a largura, exatamente o efeito de uma grade de N
+      // colunas. `columns` vem da modal "Organizar cards" (padrão 1 =
+      // efetivamente empilha tudo numa coluna, comportamento original antes
+      // da modal existir). A largura do wrapper é calculada pra caber
+      // exatamente N cards por linha (lida a largura real de cada card, já
+      // que todos nascem com a mesma largura fixa em _qsBuildElementCard,
+      // mas a leitura direta evita acoplar esse número aqui) -- sem alterar
+      // NADA da configuração interna de cada card (Auto Layout próprio,
+      // largura fixa, padding), só o container que os agrupa.
+      const columns = Math.max(1, Math.round(Number(msg.columns) || 1));
+      // 48px (dobro do valor original) -- pedido do Augusto: com 24px as
+      // linhas guia em cotovelo (cinza, semi-transparentes) ficavam
+      // praticamente coladas entre os cards, quase somem no espaço apertado.
+      const GRID_GAP = 48;
+      const cardWidth = cards.length > 0 ? Math.max(...cards.map(c => c.width)) : 280;
+      const wrapper = figma.createFrame();
+      wrapper.name = "Spec Express — Cards";
+      wrapper.layoutMode = "HORIZONTAL";
+      wrapper.layoutWrap = "WRAP";
+      wrapper.itemSpacing = GRID_GAP;
+      wrapper.counterAxisSpacing = GRID_GAP;
+      wrapper.paddingLeft = wrapper.paddingRight = wrapper.paddingTop = wrapper.paddingBottom = 0;
+      wrapper.fills = [];
+      wrapper.clipsContent = false;
+      wrapper.primaryAxisSizingMode = "FIXED";
+      wrapper.counterAxisSizingMode = "AUTO";
+      wrapper.resize(columns * cardWidth + (columns - 1) * GRID_GAP, wrapper.height);
+      for (const card of cards) wrapper.appendChild(card);
+      figma.currentPage.appendChild(wrapper);
+      wrapper.setPluginData('handexCategory', 'quickspec');
+      _hdMoveToCategorySection(wrapper, 'quickspec');
+      const vp = figma.viewport.bounds;
+      let _wrapperX = anchorX !== null ? Math.round(anchorX) : Math.round(vp.x + vp.width / 2);
+      let _wrapperY = anchorY !== null ? Math.round(anchorY) : Math.round(vp.y + vp.height / 2);
+      // Bug real corrigido (2026-09-25, reportado pelo usuário: "os cards
+      // não podem se sobrepor, tem de estar empilhados") -- cada clique em
+      // "Inserir" cria um wrapper NOVO, mas até aqui sempre na mesma âncora
+      // (posição do elemento escaneado ou centro do viewport), sem checar
+      // se um wrapper anterior já ocupa esse lugar. Empilha o novo wrapper
+      // ABAIXO do último já existente na mesma Section (mesmo princípio já
+      // usado no resto do plugin: sugestão simples, o designer reorganiza
+      // livremente depois -- aqui só evita a colisão total).
+      const _qsSection = figma.currentPage.children.find(n => n.type === 'SECTION' && n.getPluginData('handexCategorySection') === 'quickspec');
+      if (_qsSection) {
+        const _prevWrappers = _qsSection.children.filter(n => n.id !== wrapper.id && n.getPluginData('handexCategory') === 'quickspec' && n.absoluteBoundingBox);
+        if (_prevWrappers.length > 0) {
+          const _lowest = _prevWrappers.reduce((a, n) => {
+            const bb = n.absoluteBoundingBox;
+            return (bb.y + bb.height) > a.bottom ? { bottom: bb.y + bb.height, x: bb.x } : a;
+          }, { bottom: -Infinity, x: _wrapperX });
+          _wrapperX = Math.round(_lowest.x);
+          _wrapperY = Math.round(_lowest.bottom + 60);
+        }
+      }
+      wrapper.x = _wrapperX;
+      wrapper.y = _wrapperY;
+
+      // Linha guia até o elemento de origem (2026-09-25, pedido do usuário:
+      // "mesma proposta das specs tradicionais") -- SÓ depois que o wrapper
+      // já está no canvas com posição definitiva: o Auto Layout WRAP calcula
+      // a posição final de cada card (card.x/card.y viram absolutos e
+      // estáveis) só depois do appendChild + wrapper.x/y setados acima.
+      // Reaproveita o essencial da arquitetura de specs tradicionais
+      // (contour tracejado no elemento + conector reto + dots), mas sem o
+      // sistema de empilhamento por letra/lado (irrelevante aqui: a posição
+      // de cada card já é decidida pelo grid, não por essa lógica). Ver
+      // _qsBuildConnectorForCard.
+      // Bounds absolutos de todo card do lote, na mesma ordem de `cards` --
+      // calculados uma vez aqui (não dentro do loop) pra cada chamada de
+      // _qsBuildConnectorForCard poder filtrar "todo card menos a origem e
+      // o destino desta linha específica" sem recalcular nada.
+      const _qsAllCardBounds = cards.map(c => c.absoluteBoundingBox);
+
+      const markers = [];
+      const markerParts = [];
+      for (let i = 0; i < cards.length; i++) {
+        const item = items[i];
+        const node = item.nodeId ? await figma.getNodeByIdAsync(item.nodeId) : null;
+        const obstacles = _qsAllCardBounds.filter((b, j) => j !== i && b);
+        const built = _qsBuildConnectorForCard(cards[i], node, item.tag, obstacles);
+        if (built) { markers.push(built.marker); markerParts.push(...built.parts); }
+      }
+
+      // Rede de segurança de z-order MANTIDA (2026-09-28) mesmo depois do
+      // desvio geométrico acima -- o desvio cobre o caso comum (grid com gap
+      // generoso), mas não há garantia geométrica de espaço suficiente pra
+      // desviar quando um card obstruindo está colado perto demais do
+      // elemento de origem (sem os 16px de margem cabendo). Nesse caso
+      // residual a linha ainda poderia cruzar por cima do texto de um card;
+      // manter os markers atrás do wrapper custa nada e evita esse resíduo
+      // ser visível. Figma Plugin API não tem z-index -- ordem de
+      // renderização é a ordem na lista de children do pai; reinserir cada
+      // marker no índice 0 da Section empurra o wrapper pra frente de todos.
+      const _qsSectionForOrder = wrapper.parent;
+      if (_qsSectionForOrder && typeof _qsSectionForOrder.insertChild === 'function') {
+        for (const part of markerParts) {
+          try { _qsSectionForOrder.insertChild(0, part); } catch (e) {}
+        }
+      }
+
+      figma.currentPage.selection = [wrapper, ...markers];
+      figma.viewport.scrollAndZoomIntoView([wrapper, ...markers]);
+      figma.ui.postMessage({ type: "quick-spec-canvas-result", count: cards.length, created: createdMap });
+      figma.notify(cards.length > 1 ? `${cards.length} cards do Spec Express inseridos no canvas ✓` : "Card do Spec Express inserido no canvas ✓");
+    } catch (err) {
+      const errMsg = err && err.message ? err.message : String(err);
+      console.error("Erro ao inserir card do Spec Express:", errMsg);
+      figma.ui.postMessage({ type: "quick-spec-canvas-result", error: "Erro ao criar o card: " + errMsg });
+    }
+    return;
+  }
+
+  // Reconstrói a lista da UI a partir do CANVAS (2026-09-25, pedido do
+  // usuário: "as specs express quando o plugin recarrega não ficam
+  // armazenadas, aí não consigo apagar itens que foram injetados pelo
+  // plugin") -- a sessão em memória (_quickSpecSessionResults) é
+  // deliberadamente efêmera (decisão de produto), mas isso deixava órfão
+  // qualquer card já inserido antes de um reload: sem saber que ele existe,
+  // o designer não tinha como excluí-lo (nem a lista, nem o card) pela UI.
+  // Devolve só o ESSENCIAL gravado por pluginData em cada card (tag, nome,
+  // tipo, sourceId, o próprio cardId) -- nunca as PROPRIEDADES escaneadas
+  // (cor, spacing etc.), que exigiriam re-ler cada elemento de origem; a UI
+  // monta entradas "mínimas" a partir disso, focáveis/excluíveis mas sem
+  // accordion de propriedades (ver _quickSpecMergeCanvasCards).
+  if (msg.type === "quick-spec-list-canvas-cards") {
+    const cards = [];
+    const quickSpecSection = figma.currentPage.children.find(n => n.type === 'SECTION' && n.getPluginData('handexCategorySection') === 'quickspec');
+    if (quickSpecSection) {
+      quickSpecSection.children.forEach(wrapper => {
+        if (wrapper.getPluginData('handexCategory') !== 'quickspec' || !('children' in wrapper)) return;
+        wrapper.children.forEach(card => {
+          const tag = card.getPluginData('handexQuickSpecTag');
+          if (!tag) return;
+          cards.push({
+            cardId: card.id,
+            tag,
+            name: card.getPluginData('handexQuickSpecName') || card.name,
+            nodeType: card.getPluginData('handexQuickSpecNodeType') || '',
+            sourceNodeId: card.getPluginData('handexQuickSpecSourceId') || null
+          });
+        });
+      });
+    }
+    figma.ui.postMessage({ type: 'quick-spec-canvas-cards-list', cards });
+    return;
+  }
+
+  // Remove cards específicos do Spec Express do canvas (2026-09-25, pedido
+  // do usuário): ao excluir um item da lista do plugin que já tem card
+  // inserido, o designer é perguntado se quer apagar do canvas também.
+  // Recebe os ids dos CARDS (não dos elementos de origem) -- a UI conhece
+  // esse par desde a inserção (ver `created` em quick-spec-canvas-result).
+  // Se o wrapper do lote ficar vazio depois das remoções, ele também sai:
+  // um frame de Auto Layout vazio no canvas é lixo visual, não organização.
+  if (msg.type === "quick-spec-delete-canvas-cards") {
+    const ids = Array.isArray(msg.cardIds) ? msg.cardIds : [];
+    let removed = 0;
+    const touchedWrappers = new Set();
+    // Bug real de performance corrigido (2026-09-25, reportado pelo
+    // usuário: "está completamente lento... quando mando apagar, ele
+    // trava"): a versão original usava figma.currentPage.findAll, uma
+    // varredura RECURSIVA de toda a árvore da página (pode ter milhares de
+    // nós num arquivo real de produto) -- e pior, rodava DENTRO do loop, uma
+    // vez por card apagado. Os marcadores soltos do Spec Express já vivem
+    // só dentro da Section "Handex | Spec Express" (ver
+    // _qsBuildConnectorForCard/_hdMoveToCategorySection), então a busca não
+    // precisa nunca sair dali -- olha só os filhos DIRETOS dessa Section,
+    // uma única vez, fora do loop.
+    const idSet = new Set(ids);
+    const markersByCard = new Map();
+    if (idSet.size > 0) {
+      const quickSpecSection = figma.currentPage.children.find(n => n.type === 'SECTION' && n.getPluginData('handexCategorySection') === 'quickspec');
+      if (quickSpecSection) {
+        quickSpecSection.children.forEach(n => {
+          const cardId = n.getPluginData && n.getPluginData('handexQuickSpecMarkerFor');
+          if (cardId && idSet.has(cardId)) {
+            if (!markersByCard.has(cardId)) markersByCard.set(cardId, []);
+            markersByCard.get(cardId).push(n);
+          }
+        });
+      }
+    }
+    for (const id of ids) {
+      try {
+        const node = await figma.getNodeByIdAsync(id);
+        if (!node) continue;
+        const parent = node.parent;
+        if (parent && parent.type === 'FRAME' && parent.getPluginData('handexCategory') === 'quickspec') {
+          touchedWrappers.add(parent);
+        }
+        // Marcadores soltos (contour/Conector/DotInicio/DotFim, vinculados
+        // por handexQuickSpecMarkerFor) ficam FORA do wrapper -- remover o
+        // card sozinho não os leva junto (mesmo cuidado já aplicado nas
+        // specs tradicionais, ver delete-canvas-content/handexSpecMarkerId).
+        (markersByCard.get(id) || []).forEach(n => { try { n.remove(); } catch (e) {} });
+        node.remove();
+        removed++;
+      } catch (e) { /* card já removido à mão pelo designer -- ignora */ }
+    }
+    touchedWrappers.forEach(w => {
+      try { if (w.children.length === 0) w.remove(); } catch (e) {}
+    });
+    figma.ui.postMessage({ type: "quick-spec-canvas-cards-deleted", removed });
+    if (removed > 0) figma.notify(removed > 1 ? `${removed} cards removidos do canvas ✓` : "Card removido do canvas ✓");
+    return;
+  }
+
+  // Ocultar/exibir um card do Spec Express NO CANVAS (2026-09-28, pedido do
+  // usuário) -- diferente de hide-node/show-node (specs tradicionais, um
+  // marcador só via handexSpecMarkerId), aqui são 4 nós soltos vinculados
+  // por handexQuickSpecMarkerFor (contour/Conector/DotInicio/DotFim, ver
+  // _qsBuildConnectorForCard) -- reaproveita o mesmo critério de busca já
+  // usado em quick-spec-delete-canvas-cards (filhos diretos da Section
+  // "Handex | Spec Express", sem findAll recursivo). Só chamado pelo
+  // frontend quando o elemento já tem card inserido (insertedCardId) --
+  // card ainda não inserido não tem nada no canvas pra ocultar.
+  if (msg.type === "quick-spec-toggle-visibility") {
+    const cardId = msg.cardId;
+    if (cardId) {
+      const card = await figma.getNodeByIdAsync(cardId);
+      if (card) {
+        const targetVisible = msg.visible !== undefined ? msg.visible : !card.visible;
+        card.visible = targetVisible;
+        const quickSpecSection = figma.currentPage.children.find(n => n.type === 'SECTION' && n.getPluginData('handexCategorySection') === 'quickspec');
+        if (quickSpecSection) {
+          quickSpecSection.children.forEach(n => {
+            if (n.getPluginData('handexQuickSpecMarkerFor') === cardId) n.visible = targetVisible;
+          });
+        }
+      }
+    }
+    return;
+  }
+
   if (msg.type === "close") {
     figma.closePlugin();
   }
 };
+
+// ═══════════════════════════════════════════════════════════════════════
+// MÓDULO: Spec Express — funções isoladas, sem dependência de nenhum
+// estado/closure do scan de tokens ou de Anotar Specs. Propositalmente
+// duplica um subconjunto pequeno da extração de propriedades já usada em
+// scan-frame (fills, tipografia, spacing, bordas, radius, effects, sizing,
+// variants) -- SEM chamar audit()/auditProperty(): aqui não existe
+// conformidade DSC, só o valor bruto e o nome do token quando houver
+// (variável ou estilo vinculado). Ver decisão de produto: "Spec Express não
+// audita, só consulta" -- nunca reintroduzir bateção contra o skeleton
+// aqui, é isso que a separa da Escanear Tokens.
+// ═══════════════════════════════════════════════════════════════════════
+
+function _qsRgbToHex(r, g, b) {
+  const toHex = (c) => {
+    const hex = Math.round(c * 255).toString(16);
+    return hex.length === 1 ? "0" + hex : hex;
+  };
+  return "#" + toHex(r) + toHex(g) + toHex(b);
+}
+
+async function _qsGetVar(n, prop) {
+  if (!n.boundVariables) return null;
+  const v = n.boundVariables[prop];
+  if (!v) return null;
+  const id = Array.isArray(v) ? (v[0] && v[0].id) : v.id;
+  if (!id) return null;
+  const variable = await figma.variables.getVariableByIdAsync(id);
+  return variable ? { name: variable.name, key: variable.key } : null;
+}
+
+async function _qsResolveVarById(id) {
+  if (!id) return null;
+  const variable = await figma.variables.getVariableByIdAsync(id);
+  return variable ? { name: variable.name, key: variable.key } : null;
+}
+
+async function _qsGetPaintVar(paint) {
+  return _qsResolveVarById(paint && paint.boundVariables && paint.boundVariables.color && paint.boundVariables.color.id);
+}
+
+async function _qsGetEffectVar(effect, field) {
+  return _qsResolveVarById(effect && effect.boundVariables && effect.boundVariables[field] && effect.boundVariables[field].id);
+}
+
+// Acha qual lib DSC publicou uma key (componentKey, key de variável ou de
+// estilo) -- usa o mesmo skeleton já reconectado ao scan normal
+// (_refSkeletonCache, populado no primeiro scan-frame da sessão). PURA
+// IDENTIFICAÇÃO DE ORIGEM, nunca julgamento: não existe aqui o conceito de
+// "conforme"/"fora do padrão" -- só "essa key está publicada nesta lib" ou
+// "não foi encontrada em nenhuma lib cadastrada" (pode ser variável local do
+// arquivo, ou lib não sincronizada via refs:update). Reaproveita o mesmo
+// índice de precedência priority > legacy/standalone do scan normal (ver
+// audit.js) através de uma varredura simples, já que aqui o volume de
+// lookups por card é pequeno (dezenas, não milhares) -- não justifica montar
+// o índice completo de audit.js só para isso.
+function _qsFindLibForKey(key) {
+  if (!key || !_refSkeletonCache) return null;
+  const libs = Array.isArray(_refSkeletonCache) ? _refSkeletonCache : [_refSkeletonCache];
+  let found = null;
+  for (const lib of libs) {
+    if (!lib) continue;
+    const inVariableKeys = Array.isArray(lib.variableKeys) && lib.variableKeys.some(v => v.key === key);
+    const inComponentKeys = Array.isArray(lib.componentKeys) && lib.componentKeys.includes(key);
+    const inStyles = lib.styleTokens && Object.values(lib.styleTokens).some(arr => Array.isArray(arr) && arr.some(s => s.key === key));
+    if (inVariableKeys || inComponentKeys || inStyles) {
+      const tierRank = lib.tier === 'priority' ? 2 : 1;
+      if (!found || tierRank > found._rank) found = { name: lib.name, _rank: tierRank };
+    }
+  }
+  return found ? found.name : null;
+}
+
+// Categorias fixas oferecidas na modal de filtro (quick-spec-filters-modal,
+// ver quick-spec.js) -- decisão de produto: lista genérica sempre igual,
+// nunca calculada a partir de uma pré-leitura do frame. Se uma categoria
+// marcada não existir naquele frame/elemento específico, ela simplesmente
+// não aparece no resultado -- o filtro só reduz o que É perguntado, nunca
+// gera linha vazia.
+// 'component-props' (opcional, desmarcada por padrão na modal -- ver
+// comentário em _qsExtractNodeProperties) fica fora desta lista de
+// propósito: ela só é usada como FALLBACK quando `categories` vem vazio,
+// e nesse caso o comportamento seguro é o mesmo padrão "sem ruído" da
+// modal, não incluir a categoria que o designer teria que marcar à parte.
+const QUICK_SPEC_CATEGORIES = ['dimensions', 'spacing', 'fill', 'border', 'radius', 'effect', 'typography', 'component'];
+
+// Extrai as propriedades brutas de UM nó, filtradas pelas categorias
+// marcadas na modal -- sem auditoria, sem filtro de vetores/frames (aqui o
+// designer quer ver TUDO que existe dentro do frame, diferente do scan de
+// tokens que filtra shapes primitivas e containers puros por não
+// representarem conformidade DS). Cada prop devolve { label, value,
+// tokenName, tokenKey, libName } -- libName só é preenchido quando tokenKey
+// bate em alguma lib do skeleton (ver _qsFindLibForKey).
+async function _qsExtractNodeProperties(n, categories) {
+  const props = [];
+  const want = (cat) => categories.includes(cat);
+  const withOrigin = async (label, value, tokenName, tokenKey) => {
+    const libName = tokenKey ? _qsFindLibForKey(tokenKey) : null;
+    props.push({ label, value, tokenName: tokenName || null, libName });
+  };
+
+  if (want('fill') && 'fills' in n && Array.isArray(n.fills)) {
+    let styleName = null, styleKey = null;
+    if ('fillStyleId' in n && typeof n.fillStyleId === "string" && n.fillStyleId) {
+      const style = await figma.getStyleByIdAsync(n.fillStyleId);
+      if (style) { styleName = style.name; styleKey = style.key; }
+    }
+    for (const fill of n.fills) {
+      if (fill.visible === false) continue;
+      if (fill.type === "SOLID" && fill.color) {
+        const hex = _qsRgbToHex(fill.color.r, fill.color.g, fill.color.b).toUpperCase();
+        const vInfo = await _qsGetPaintVar(fill);
+        const name = (vInfo && vInfo.name) || styleName || null;
+        const key = (vInfo && vInfo.key) || styleKey || null;
+        await withOrigin("Cor (Fill)", hex, name, key);
+      }
+    }
+  }
+
+  if (want('typography') && n.type === "TEXT") {
+    let styleName = null, styleKey = null;
+    if ('textStyleId' in n && typeof n.textStyleId === "string" && n.textStyleId !== figma.mixed && n.textStyleId) {
+      const style = await figma.getStyleByIdAsync(n.textStyleId);
+      if (style) { styleName = style.name; styleKey = style.key; }
+    }
+    const sizeVar = await _qsGetVar(n, "fontSize");
+    const family = (n.fontName && n.fontName !== figma.mixed) ? n.fontName.family : "Mixed";
+    const fontStyle = (n.fontName && n.fontName !== figma.mixed) ? n.fontName.style : "Mixed";
+    const size = (n.fontSize && n.fontSize !== figma.mixed) ? n.fontSize : "Mixed";
+    const rawLabel = `${family} ${fontStyle} (${size}px)`;
+    const tokenName = styleName || (sizeVar && sizeVar.name) || null;
+    const tokenKey = styleKey || (sizeVar ? sizeVar.key : null);
+    await withOrigin("Tipografia", rawLabel, tokenName, tokenKey);
+  }
+
+  if (want('spacing') && 'layoutMode' in n && n.layoutMode !== "NONE") {
+    if (n.itemSpacing !== figma.mixed && n.itemSpacing > 0) {
+      const vInfo = await _qsGetVar(n, "itemSpacing");
+      await withOrigin("Gap", `${n.itemSpacing}px`, vInfo && vInfo.name, vInfo && vInfo.key);
+    }
+    const paddings = [
+      { prop: 'paddingTop', label: 'Padding Top' }, { prop: 'paddingRight', label: 'Padding Right' },
+      { prop: 'paddingBottom', label: 'Padding Bottom' }, { prop: 'paddingLeft', label: 'Padding Left' }
+    ];
+    for (const p of paddings) {
+      if (n[p.prop] > 0) {
+        const vInfo = await _qsGetVar(n, p.prop);
+        await withOrigin(p.label, `${n[p.prop]}px`, vInfo && vInfo.name, vInfo && vInfo.key);
+      }
+    }
+  }
+
+  if (want('border') && 'strokes' in n && Array.isArray(n.strokes) && n.strokes.length > 0) {
+    const visibleStroke = n.strokes.find(s => s.visible !== false && (s.opacity === undefined || s.opacity > 0));
+    if (visibleStroke && 'strokeWeight' in n && n.strokeWeight !== figma.mixed && n.strokeWeight > 0) {
+      const vInfo = await _qsGetVar(n, "strokeWeight");
+      await withOrigin("Border Width", `${n.strokeWeight}px`, vInfo && vInfo.name, vInfo && vInfo.key);
+      if (visibleStroke.type === "SOLID") {
+        const hex = _qsRgbToHex(visibleStroke.color.r, visibleStroke.color.g, visibleStroke.color.b).toUpperCase();
+        let styleName = null, styleKey = null;
+        if ('strokeStyleId' in n && n.strokeStyleId) {
+          const st = await figma.getStyleByIdAsync(n.strokeStyleId);
+          if (st) { styleName = st.name; styleKey = st.key; }
+        }
+        const sVar = await _qsGetPaintVar(visibleStroke);
+        const name = (sVar && sVar.name) || styleName || null;
+        const key = (sVar && sVar.key) || styleKey || null;
+        await withOrigin("Border Color", hex, name, key);
+      }
+    }
+  }
+
+  if (want('radius') && 'cornerRadius' in n && n.cornerRadius !== figma.mixed && n.cornerRadius > 0) {
+    const vInfo = await _qsGetVar(n, "topLeftRadius");
+    await withOrigin("Radius", `${n.cornerRadius}px`, vInfo && vInfo.name, vInfo && vInfo.key);
+  }
+
+  if (want('effect') && 'effects' in n && Array.isArray(n.effects)) {
+    let styleName = null, styleKey = null;
+    if ('effectStyleId' in n && n.effectStyleId) {
+      const style = await figma.getStyleByIdAsync(n.effectStyleId);
+      if (style) { styleName = style.name; styleKey = style.key; }
+    }
+    for (const effect of n.effects) {
+      if (effect.visible) {
+        const effVar = await _qsGetEffectVar(effect, 'radius');
+        const name = styleName || (effVar && effVar.name) || null;
+        const key = styleKey || (effVar ? effVar.key : null);
+        const label = effect.type.includes('SHADOW') ? 'Sombra' : 'Blur';
+        await withOrigin("Effect (" + label + ")", effect.type, name, key);
+      }
+    }
+  }
+
+  if (want('dimensions') && n.type !== "PAGE" && n.parent && n.parent.type !== "PAGE") {
+    const parent = n.parent;
+    let wMode = "Fixed";
+    let hMode = "Fixed";
+    if (parent.layoutMode === "HORIZONTAL" && n.layoutGrow === 1) wMode = "Fill Container";
+    else if (parent.layoutMode === "VERTICAL" && n.layoutAlign === "STRETCH") wMode = "Fill Container";
+    else if (n.layoutMode && ((n.layoutMode === "HORIZONTAL" && n.primaryAxisSizingMode === "AUTO") || (n.layoutMode === "VERTICAL" && n.counterAxisSizingMode === "AUTO"))) wMode = "Hug Contents";
+    if (parent.layoutMode === "VERTICAL" && n.layoutGrow === 1) hMode = "Fill Container";
+    else if (parent.layoutMode === "HORIZONTAL" && n.layoutAlign === "STRETCH") hMode = "Fill Container";
+    else if (n.layoutMode && ((n.layoutMode === "VERTICAL" && n.primaryAxisSizingMode === "AUTO") || (n.layoutMode === "HORIZONTAL" && n.counterAxisSizingMode === "AUTO"))) hMode = "Hug Contents";
+    props.push({ label: "W Sizing", value: wMode, tokenName: null, libName: null });
+    props.push({ label: "H Sizing", value: hMode, tokenName: null, libName: null });
+  }
+
+  if (want('dimensions') && 'width' in n && 'height' in n && typeof n.width === 'number' && typeof n.height === 'number') {
+    props.push({ label: "Dimensões", value: `${Math.round(n.width)} × ${Math.round(n.height)}px`, tokenName: null, libName: null });
+  }
+
+  // Categoria separada e opcional (2026-09-25, pedido do usuário com
+  // exemplo real): n.componentProperties inclui BOOLEAN de sub-slot (ex:
+  // "icon: true", "badge: false") sem indicar A QUE elemento cada uma se
+  // refere -- ruído na maioria dos casos. As props VARIANT que têm valor de
+  // leitura rápida (ex: type=small, scroll=off) já aparecem embutidas no
+  // nome do mainComponent, sempre trazido pela categoria "component"
+  // abaixo -- então esta categoria fica reservada pra quando o dev pedir o
+  // detalhe completo de cada propriedade exposta pelo componente.
+  if (want('component-props') && n.type === "INSTANCE" && n.componentProperties) {
+    Object.entries(n.componentProperties).forEach(([propName, propObj]) => {
+      const cleanName = propName.split("#")[0];
+      props.push({ label: "Prop: " + cleanName, value: String(propObj.value), tokenName: null, libName: null });
+    });
+  }
+
+  if (want('component') && n.type === "INSTANCE") {
+    try {
+      const mainComp = await n.getMainComponentAsync();
+      if (mainComp) {
+        const libName = _qsFindLibForKey(mainComp.key);
+        props.push({ label: "Componente", value: mainComp.name, tokenName: null, libName });
+      }
+    } catch (e) {}
+  }
+
+  return props;
+}
+
+// Percorre a árvore do frame selecionado (profundidade máxima 8, mesmo
+// limite do scan de tokens) e devolve UMA lista plana: um item por nó com
+// pelo menos 1 propriedade extraída. Não agrupa por categoria (component/
+// icon/typography) -- é consulta rápida, não catalogação. `categories` vem
+// da modal de filtro (quick-spec-filters-modal) -- nunca vazio (frontend
+// garante ao menos 1 categoria marcada antes de disparar o scan).
+async function _qsExtractRaw(rootNode, categories) {
+  const cats = (Array.isArray(categories) && categories.length > 0) ? categories : QUICK_SPEC_CATEGORIES;
+  const elements = [];
+  async function walk(n, depth) {
+    if ((depth || 0) > 8) return;
+    if (n.visible === false) return;
+    try {
+      const props = await _qsExtractNodeProperties(n, cats);
+      if (props.length > 0) {
+        elements.push({ nodeId: n.id, name: n.name, nodeType: n.type, properties: props });
+      }
+    } catch (e) {
+      console.error("Spec Express: erro ao ler nó", n.name, e && e.message);
+    }
+    if ('children' in n && n.children) {
+      for (const child of n.children) await walk(child, (depth || 0) + 1);
+    }
+  }
+  await walk(rootNode, 0);
+  return elements;
+}
+
+// Monta UM card por ELEMENTO (não mais 1 card por frame com vários blocos
+// dentro) -- pedido do usuário: cada elemento com propriedade encontrada
+// precisa ser localizável e clicável de forma independente, com sua própria
+// tag. O card em si NÃO é agrupado num GROUP com o conector (diferente das
+// specs manuais) -- cada card já vive dentro do wrapper de grid (Auto
+// Layout WRAP, ver quick-spec-insert-canvas), e um GROUP por cima quebraria
+// essa distribuição. A linha guia até o elemento (contour+conector+dots) é
+// montada à parte, depois que o card já tem posição definitiva -- ver
+// _qsBuildConnectorForCard.
+//
+// `item` = { tag, name, nodeType, properties } -- sem snapshot (removido
+// 2026-09-25, pedido do usuário: card só em texto). `node` é o nó real no
+// canvas (pode ser null se o arquivo mudou entre o scan e a inserção --
+// card nasce sem o botão de foco nesse caso, mas os dados textuais
+// continuam válidos).
+async function _qsBuildElementCard(item, node) {
+  await figma.loadFontAsync({ family: "Inter", style: "Regular" });
+  await figma.loadFontAsync({ family: "Inter", style: "Bold" });
+
+  const card = _hdCreateFrame("VERTICAL", 16, 10, { r: 1, g: 1, b: 1 });
+  card.name = "Spec Express " + item.tag + " | " + item.name;
+  card.strokes = [{ type: "SOLID", color: { r: 0.88, g: 0.9, b: 0.93 } }];
+  card.strokeWeight = 1;
+  card.cornerRadius = 12;
+  card.resize(280, card.height || 100);
+  card.counterAxisSizingMode = "FIXED";
+  card.setPluginData('handexQuickSpecTag', item.tag);
+  card.setPluginData('handexQuickSpecName', item.name);
+  card.setPluginData('handexQuickSpecNodeType', item.nodeType || '');
+  if (node) card.setPluginData('handexQuickSpecSourceId', node.id);
+
+  // Header: tag em destaque (badge) + nome/tipo do elemento
+  const headerRow = _hdCreateFrame("HORIZONTAL", 0, 8, null);
+  headerRow.layoutAlign = "STRETCH";
+  headerRow.counterAxisAlignItems = "CENTER";
+
+  const tagBadge = _hdCreateFrame("HORIZONTAL", 0, 0, { r: 0.0, g: 0.36, b: 0.66 });
+  tagBadge.cornerRadius = 6;
+  tagBadge.paddingLeft = 8; tagBadge.paddingRight = 8; tagBadge.paddingTop = 3; tagBadge.paddingBottom = 3;
+  const tagText = _hdCreateText(item.tag, 11, "Bold", { r: 1, g: 1, b: 1 });
+  tagBadge.appendChild(tagText);
+  headerRow.appendChild(tagBadge);
+
+  const nameCol = _hdCreateFrame("VERTICAL", 0, 0, null);
+  const elName = _hdCreateText(item.name, 12, "Bold", { r: 0.09, g: 0.13, b: 0.2 });
+  elName.layoutAlign = "STRETCH";
+  elName.textAutoResize = "HEIGHT";
+  nameCol.appendChild(elName);
+  const elType = _hdCreateText(item.nodeType, 9, "Regular", { r: 0.55, g: 0.58, b: 0.62 });
+  elType.layoutAlign = "STRETCH";
+  elType.textAutoResize = "HEIGHT";
+  nameCol.appendChild(elType);
+  // appendChild ANTES de qualquer ajuste de sizing -- layoutGrow/
+  // layoutSizingHorizontal só têm efeito depois que o nó já é filho de um
+  // pai com Auto Layout (achado real 2026-09-25: setar layoutGrow num nó
+  // órfão, como acontecia aqui antes, é ineficaz e deixa o frame nascer
+  // encolhido em 1px assim que appendChild acontece depois, porque nenhuma
+  // das duas API (legada layoutGrow / moderna layoutSizingHorizontal) tinha
+  // rodado no contexto certo).
+  headerRow.appendChild(nameCol);
+  _hdSetFillAndHug(nameCol);
+  card.appendChild(headerRow);
+
+  const divider = figma.createRectangle();
+  divider.resize(248, 1);
+  divider.fills = [{ type: "SOLID", color: { r: 0.9, g: 0.91, b: 0.93 } }];
+  divider.layoutAlign = "STRETCH";
+  card.appendChild(divider);
+
+  if (!item.properties || item.properties.length === 0) {
+    const empty = _hdCreateText("Nenhuma propriedade nas categorias marcadas.", 10, "Regular", { r: 0.5, g: 0.53, b: 0.58 });
+    empty.layoutAlign = "STRETCH";
+    empty.textAutoResize = "HEIGHT";
+    card.appendChild(empty);
+  }
+
+  for (const prop of item.properties || []) {
+    // Hierarquia: quando há token vinculado, ELE vem primeiro e em destaque
+    // -- azul se a origem bateu numa lib DSC cadastrada (libName), cinza
+    // mais escuro se o token existe mas a lib não foi identificada (ex:
+    // variável local do arquivo, ou lib não sincronizada via refs:update).
+    // O valor bruto vem logo abaixo, menor, como conferência -- itens
+    // vindos de lib já têm a propriedade bem definida pelo token, então é
+    // essa a informação que o dev deve consumir primeiro (pedido do
+    // usuário 2026-09-25, com exemplo real de "[m3] Top app bar": o hex
+    // bruto aparecia antes do token de cor, precisava ser o oposto). Sem
+    // token, o valor bruto é a própria linha principal.
+    if (prop.tokenName) {
+      const tokenColor = prop.libName ? { r: 0.0, g: 0.36, b: 0.66 } : { r: 0.15, g: 0.17, b: 0.2 };
+      const tokenLine = prop.libName ? `${prop.label}: ${prop.tokenName}  ·  ${prop.libName}` : `${prop.label}: ${prop.tokenName}`;
+      const tokenText = _hdCreateText(tokenLine, 10, "Bold", tokenColor);
+      tokenText.layoutAlign = "STRETCH";
+      tokenText.textAutoResize = "HEIGHT";
+      card.appendChild(tokenText);
+
+      const rawLine = `↳ valor bruto: ${prop.value}`;
+      const rawText = _hdCreateText(rawLine, 9.5, "Regular", { r: 0.55, g: 0.58, b: 0.63 });
+      rawText.layoutAlign = "STRETCH";
+      rawText.textAutoResize = "HEIGHT";
+      card.appendChild(rawText);
+    } else {
+      const rawLine = `${prop.label}: ${prop.value}`;
+      const propText = _hdCreateText(rawLine, 10, "Regular", { r: 0.36, g: 0.4, b: 0.46 });
+      propText.layoutAlign = "STRETCH";
+      propText.textAutoResize = "HEIGHT";
+      card.appendChild(propText);
+    }
+  }
+
+  figma.currentPage.appendChild(card);
+  card.setPluginData('handexCategory', 'quickspec');
+  // Não move o card individual pra Section aqui -- o handler
+  // quick-spec-insert-canvas agrupa todos os cards do lote num FRAME
+  // wrapper (Auto Layout WRAP, grade de colunas), e é ESSE wrapper que
+  // acaba sendo movido pra dentro da Section "Handex | Spec Express" (ver
+  // _hdMoveToCategorySection lá) -- mover o card aqui e de novo lá
+  // duplicaria/desfaria o reparenting sem necessidade.
+
+  return card;
+}
+
+// Linha guia (contour tracejado no elemento + conector em cotovelo + dots)
+// do card até o elemento de origem -- reaproveita o ESSENCIAL da
+// arquitetura das specs tradicionais (createHandoffSpec, ver contour/
+// Conector/DotInicio/DotFim acima no arquivo), mas simplificado: sem o
+// sistema de empilhamento por letra/lado (a posição de cada card já é
+// decidida pelo grid do Spec Express, não por uma lógica de anti-colisão
+// própria) e sem GROUP amarrando conector+card (cada card aqui já vive
+// dentro do wrapper de grid -- criar mais um GROUP por cima quebraria o
+// Auto Layout WRAP que distribui os cards). O conector fica solto na
+// página, vinculado ao card por pluginData (mesmo padrão
+// handexSpecMarkerId/handexSpecMarkerFor), pra handlers futuros (focar/
+// ocultar/excluir) poderem achar um a partir do outro caso precisem.
+//
+// `card` já tem posição ABSOLUTA final (chamado depois do wrapper.x/y
+// setados e do Auto Layout WRAP já ter distribuído os cards). `node` é o
+// elemento de origem no canvas (pode ser null se o arquivo mudou desde o
+// scan -- nesse caso não há como desenhar a linha, e a função retorna null
+// sem quebrar a criação do card). `obstacleBounds` é a lista de bounds
+// absolutos de todo OUTRO card do lote (nem a origem nem o destino desta
+// linha) -- usada pra desviar o cotovelo de vizinhos que estariam no
+// caminho, ver _qsDetourAroundObstacles logo abaixo.
+// Desvio geométrico do conector em cotovelo ao redor de cards vizinhos
+// (2026-09-28, pedido do usuário -- reverte a tentativa anterior de resolver
+// isso só com z-order/insertChild(0,...): o Augusto quer que a linha nunca
+// passe por cima OU por trás de nenhum card, ela precisa contornar de
+// verdade). `points` é o path já calculado por _orthogonalElbowPoints
+// (lista ordenada de pontos, segmentos retos entre consecutivos). `obstacles`
+// é a lista de bounds (x/y/width/height) de todo card do lote MENOS o de
+// origem e o de destino desta linha (checados fora desta função).
+//
+// Teste segmento-retângulo: um segmento cruza um retângulo se qualquer um
+// dos seus dois pontos cai dentro dele, OU se ele intersecta qualquer uma
+// das 4 arestas do retângulo (caso o segmento atravesse de lado a lado sem
+// nenhum ponto interno -- ex: passando reto por cima de um card mais
+// estreito que o próprio segmento).
+function _qsSegmentIntersectsRect(p1, p2, rect) {
+  const { x, y, width: w, height: h } = rect;
+  const pointInRect = (p) => p.x >= x && p.x <= x + w && p.y >= y && p.y <= y + h;
+  if (pointInRect(p1) || pointInRect(p2)) return true;
+
+  const ccw = (a, b, c) => (c.y - a.y) * (b.x - a.x) > (b.y - a.y) * (c.x - a.x);
+  const segmentsIntersect = (a, b, c, d) =>
+    ccw(a, c, d) !== ccw(b, c, d) && ccw(a, b, c) !== ccw(a, b, d);
+
+  const corners = [
+    { x, y }, { x: x + w, y },
+    { x: x + w, y: y + h }, { x, y: y + h }
+  ];
+  for (let i = 0; i < 4; i++) {
+    if (segmentsIntersect(p1, p2, corners[i], corners[(i + 1) % 4])) return true;
+  }
+  return false;
+}
+
+// Verifica o path inteiro (lista de pontos) contra a lista de obstáculos e
+// devolve os retângulos que de fato colidem com algum segmento -- vazio se
+// o caminho direto já está livre (caso comum, grid com gap generoso).
+function _qsPathObstacles(pathPoints, obstacles) {
+  const hit = [];
+  for (const rect of obstacles) {
+    for (let i = 0; i < pathPoints.length - 1; i++) {
+      if (_qsSegmentIntersectsRect(pathPoints[i], pathPoints[i + 1], rect)) {
+        hit.push(rect);
+        break;
+      }
+    }
+  }
+  return hit;
+}
+
+// Recalcula o path desviando por fora da união dos obstáculos colididos.
+// Estratégia (cenário real: grid regular de cards com gap generoso, não
+// obstáculos arbitrários) -- calcula a bounding box união de todos os cards
+// no caminho, escolhe o lado mais curto a partir do ponto de saída (acima/
+// abaixo se o desvio vertical for menor, esquerda/direita caso contrário) e
+// insere 2 pontos de desvio (entrando e saindo da margem) antes de retomar
+// o cotovelo original em direção ao ponto de entrada do destino. Mantém
+// SEMPRE ângulos de 90° -- nunca diagonal.
+function _qsDetourAroundObstacles(startPt, endPt, side, oppositeSide, obstacles) {
+  // 40px -- alinhado ao QS_ELBOW_OFFSET do cotovelo sem desvio
+  // (_qsBuildConnectorForCard, 2026-09-29) por consistência visual entre os
+  // dois caminhos possíveis da mesma linha guia. Era 24px (pedido anterior
+  // do Augusto: "com 16px o desvio ainda vinha grudado no card").
+  const MARGIN = 40;
+  const union = obstacles.reduce((acc, r) => ({
+    x: Math.min(acc.x, r.x), y: Math.min(acc.y, r.y),
+    right: Math.max(acc.right, r.x + r.width), bottom: Math.max(acc.bottom, r.y + r.height)
+  }), { x: Infinity, y: Infinity, right: -Infinity, bottom: -Infinity });
+  union.width = union.right - union.x;
+  union.height = union.bottom - union.y;
+
+  const detourVertical = side === 'left' || side === 'right';
+  // Distância até contornar por cima vs. por baixo (perpendicular a `side`)
+  // a partir do ponto de saída -- escolhe o lado que produz o desvio mais
+  // curto, evitando dar a volta inteira quando o card obstruindo está
+  // encostado numa das bordas da união.
+  let waypoints;
+  if (detourVertical) {
+    const distTop = Math.abs(startPt.y - (union.y - MARGIN));
+    const distBottom = Math.abs((union.bottom + MARGIN) - startPt.y);
+    const clearY = distTop <= distBottom ? union.y - MARGIN : union.bottom + MARGIN;
+    waypoints = [
+      { x: startPt.x, y: clearY },
+      { x: endPt.x, y: clearY }
+    ];
+  } else {
+    const distLeft = Math.abs(startPt.x - (union.x - MARGIN));
+    const distRight = Math.abs((union.right + MARGIN) - startPt.x);
+    const clearX = distLeft <= distRight ? union.x - MARGIN : union.right + MARGIN;
+    waypoints = [
+      { x: clearX, y: startPt.y },
+      { x: clearX, y: endPt.y }
+    ];
+  }
+  return [startPt, ...waypoints, endPt];
+}
+
+function _qsBuildConnectorForCard(card, node, tag, obstacleBounds) {
+  if (!node) return null;
+  const bounds = node.absoluteBoundingBox || node.absoluteRenderBounds;
+  if (!bounds) return null;
+
+  // Cinza neutro (slate-400, #94A3B8) a 50% de opacidade -- decisão estética
+  // do usuário (2026-09-28) pra diferenciar visualmente o Spec Express
+  // (rascunho/efêmero) da spec tradicional (registro definitivo, que
+  // continua com a cor de marca azul). Só este módulo muda -- specifications.js
+  // permanece intocado.
+  const themeColor = { r: 148 / 255, g: 163 / 255, b: 184 / 255 };
+  const THEME_OPACITY = 0.5;
+  // Bug real corrigido (2026-09-25, reportado pelo usuário: "as linhas não
+  // se conectam ao card"): card.x/card.y são RELATIVOS ao pai quando o nó
+  // está dentro de um Auto Layout (o wrapper de grid, aqui) -- nunca
+  // coordenadas absolutas de página. absoluteBoundingBox é o que reflete a
+  // posição real na página independente do nível de aninhamento.
+  const cardAbs = card.absoluteBoundingBox;
+  const cardBounds = cardAbs
+    ? { x: cardAbs.x, y: cardAbs.y, width: cardAbs.width, height: cardAbs.height }
+    : { x: card.x, y: card.y, width: card.width, height: card.height };
+
+  const contour = figma.createFrame();
+  contour.name = 'Destaque';
+  contour.resize(Math.max(bounds.width + 32, 40), Math.max(bounds.height + 32, 40));
+  figma.currentPage.appendChild(contour);
+  contour.x = bounds.x - 16;
+  contour.y = bounds.y - 16;
+  contour.fills = [];
+  contour.strokes = [{ type: "SOLID", color: themeColor, opacity: THEME_OPACITY }];
+  contour.strokeWeight = 2;
+  contour.dashPattern = [4, 4];
+  contour.locked = true;
+  contour.setPluginData('handexCategory', 'quickspec');
+
+  // Tag chip no contour -- mesmo padrão visual das specs tradicionais,
+  // reaproveita a tag já atribuída ao card (A, B, C...) em vez de uma nova.
+  const chip = figma.createFrame();
+  chip.name = 'Chip';
+  chip.layoutMode = "HORIZONTAL";
+  chip.primaryAxisSizingMode = "FIXED";
+  chip.counterAxisSizingMode = "FIXED";
+  chip.resize(28, 28);
+  chip.cornerRadius = 14;
+  chip.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+  chip.strokes = [{ type: "SOLID", color: themeColor, opacity: THEME_OPACITY }];
+  chip.strokeWeight = 1.5;
+  chip.primaryAxisAlignItems = "CENTER";
+  chip.counterAxisAlignItems = "CENTER";
+  const chipText = figma.createText();
+  chipText.fontName = { family: "Inter", style: "Bold" };
+  chipText.fontSize = 12;
+  chipText.fills = [{ type: "SOLID", color: themeColor, opacity: THEME_OPACITY }];
+  chipText.characters = tag;
+  chip.appendChild(chipText);
+  contour.appendChild(chip);
+  chip.x = 0;
+  chip.y = 0;
+
+  // Lado de saída: eixo dominante entre o centro do elemento e o centro do
+  // card (mesmo critério de _computeSideFromBounds nas specs tradicionais,
+  // mas essa função vive dentro de outro closure/handler e não é acessível
+  // aqui -- reimplementado localmente por isso, não por preferência).
+  const elCx = bounds.x + bounds.width / 2, elCy = bounds.y + bounds.height / 2;
+  const cardCx = cardBounds.x + cardBounds.width / 2, cardCy = cardBounds.y + cardBounds.height / 2;
+  const dx = cardCx - elCx, dy = cardCy - elCy;
+  const side = Math.abs(dx) >= Math.abs(dy) ? (dx >= 0 ? 'right' : 'left') : (dy >= 0 ? 'bottom' : 'top');
+
+  let startPt, endPt;
+  if (side === 'right') {
+    startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
+    endPt = { x: cardBounds.x, y: cardBounds.y + cardBounds.height / 2 };
+  } else if (side === 'left') {
+    startPt = { x: bounds.x, y: bounds.y + bounds.height / 2 };
+    endPt = { x: cardBounds.x + cardBounds.width, y: cardBounds.y + cardBounds.height / 2 };
+  } else if (side === 'bottom') {
+    startPt = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height };
+    endPt = { x: cardBounds.x + cardBounds.width / 2, y: cardBounds.y };
+  } else {
+    startPt = { x: bounds.x + bounds.width / 2, y: bounds.y };
+    endPt = { x: cardBounds.x + cardBounds.width / 2, y: cardBounds.y + cardBounds.height };
+  }
+
+  // Cotovelo ortogonal SEMPRE (2026-09-28, pedido do usuário) -- a curva
+  // automática (detecção de cruzamento com o frame principal + Bézier
+  // perpendicular) foi removida: mesmo desviando do frame de origem, a
+  // curva ainda cruzava por cima do CARD de destino, que não entrava na
+  // conta do cálculo. Cotovelo/aresta reta com _orthogonalElbowPoints
+  // (mesma função das specs tradicionais, ver createHandoffSpec) desvia de
+  // verdade, sem ambiguidade -- sempre sai reto na direção de `side` e
+  // entra reto no card pelo lado oposto.
+  const OPPOSITE_SIDE = { right: 'left', left: 'right', bottom: 'top', top: 'bottom' };
+  // Offset maior SÓ no Spec Express (2026-09-29, print real do usuário:
+  // comparando dois cards do mesmo lote, o caso "bom" tinha um respiro
+  // visível antes da dobra final, o "ruim" aparecia colado/abraçando a
+  // lateral do card -- causa raiz é o mesmo OFFSET=24 de
+  // _orthogonalElbowPoints ficando visualmente pequeno demais em layouts
+  // mais compactos deste módulo). Isolado por parâmetro (default 24
+  // preservado para specs tradicionais e Fluxos de Tela, que nunca tiveram
+  // esse problema reportado) -- não mexer no valor default da função
+  // compartilhada.
+  const QS_ELBOW_OFFSET = 40;
+  let qsPathPoints = [
+    startPt,
+    ..._orthogonalElbowPoints(
+      { x: startPt.x, y: startPt.y, side },
+      { x: endPt.x, y: endPt.y, side: OPPOSITE_SIDE[side] },
+      QS_ELBOW_OFFSET
+    ),
+    endPt
+  ];
+
+  // Desvio de cards vizinhos (2026-09-28) -- checa o path direto contra todo
+  // card do lote que não seja nem a origem nem o destino desta linha (já
+  // filtrados em obstacleBounds pelo chamador). Se colidir, recalcula em
+  // volta da união dos obstáculos atingidos e checa de novo (o desvio
+  // sempre passa por fora da união inteira, então uma segunda rodada só
+  // aconteceria por um obstáculo fora da união detectada na 1ª -- caso
+  // extremo não esperado no cenário real de grid regular, mas a checagem
+  // final abaixo é honesta: se ainda colidir, mantém o path desviado mesmo
+  // assim, é sempre melhor que o direto).
+  if (obstacleBounds && obstacleBounds.length > 0) {
+    const hitRects = _qsPathObstacles(qsPathPoints, obstacleBounds);
+    if (hitRects.length > 0) {
+      qsPathPoints = _qsDetourAroundObstacles(startPt, endPt, side, OPPOSITE_SIDE[side], hitRects);
+    }
+  }
+
+  const qsSegs = qsPathPoints.map(p => `${p.x} ${p.y}`).join(' L ');
+  const connectorPath = `M ${qsSegs}`;
+
+  const connector = figma.createVector();
+  connector.name = 'Conector';
+  connector.strokes = [{ type: "SOLID", color: themeColor, opacity: THEME_OPACITY }];
+  connector.strokeWeight = 1.5;
+  connector.dashPattern = [4, 4];
+  connector.strokeCap = "ROUND";
+  figma.currentPage.appendChild(connector);
+  connector.vectorPaths = [{ windingRule: "NONZERO", data: connectorPath }];
+  connector.setPluginData('handexCategory', 'quickspec');
+  connector.setPluginData('handexQuickSpecMarkerFor', card.id);
+
+  const _DOT_R = 4;
+  const startDot = figma.createEllipse();
+  startDot.name = 'DotInicio';
+  startDot.resize(_DOT_R * 2, _DOT_R * 2);
+  startDot.fills = [{ type: "SOLID", color: themeColor, opacity: THEME_OPACITY }];
+  startDot.strokes = [];
+  startDot.locked = true;
+  figma.currentPage.appendChild(startDot);
+  startDot.x = startPt.x - _DOT_R;
+  startDot.y = startPt.y - _DOT_R;
+  startDot.setPluginData('handexCategory', 'quickspec');
+  startDot.setPluginData('handexQuickSpecMarkerFor', card.id);
+
+  const endDot = figma.createEllipse();
+  endDot.name = 'DotFim';
+  endDot.resize(_DOT_R * 2, _DOT_R * 2);
+  endDot.fills = [{ type: "SOLID", color: themeColor, opacity: THEME_OPACITY }];
+  endDot.strokes = [];
+  endDot.locked = true;
+  figma.currentPage.appendChild(endDot);
+  endDot.x = endPt.x - _DOT_R;
+  endDot.y = endPt.y - _DOT_R;
+  endDot.setPluginData('handexCategory', 'quickspec');
+  endDot.setPluginData('handexQuickSpecMarkerFor', card.id);
+
+  // Vínculo por pluginData -- mesmo padrão das specs tradicionais
+  // (handexSpecMarkerId/handexSpecMarkerFor), pra handlers de
+  // focar/ocultar/excluir conseguirem achar contour+conector+dots a partir
+  // do card (ver quick-spec-delete-canvas-cards, que usa
+  // handexQuickSpecMarkerFor pra limpar os 4 (contour+conector+2 dots)
+  // junto quando o card é removido -- sem isso, ficariam órfãos no canvas).
+  contour.setPluginData('handexQuickSpecMarkerFor', card.id);
+  card.setPluginData('handexQuickSpecMarkerId', contour.id);
+
+  // Mesma Section do wrapper (organização de canvas, ver
+  // _hdMoveToCategorySection) -- marcadores soltos ficam soltos na
+  // ÁRVORE (fora do wrapper/card, sem relação de parentesco), mas ainda
+  // organizados dentro da Section "Handex | Spec Express" junto do resto.
+  _hdMoveToCategorySection(contour, 'quickspec');
+  _hdMoveToCategorySection(connector, 'quickspec');
+  _hdMoveToCategorySection(startDot, 'quickspec');
+  _hdMoveToCategorySection(endDot, 'quickspec');
+
+  return { marker: contour, parts: [contour, connector, startDot, endDot] };
+}
 
 

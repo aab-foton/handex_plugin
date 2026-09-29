@@ -53,6 +53,31 @@
     </div>
   </div>
 
+<!-- MODAL GENÉRICA DE LOADING (2026-09-25) -- padrão único a ser reaproveitado
+     por QUALQUER etapa do Handex que precise de feedback bloqueante de
+     progresso (ex: criação de cards do Spec Express), em vez de cada
+     feature nova inventar seu próprio loading inline. Modelada no mesmo
+     padrão já usado no plugin irmão hac (overlay escurecido + blur, card
+     central, ícone Lucide `loader-2` com `animate-spin` como spinner) e no
+     card visual já existente aqui em #handoff-loading-overlay -- mas
+     genérica: título/ícone/texto são só placeholders substituídos em
+     runtime por showLoadingModal(text, opts) (core.js). Sem botão de
+     fechar/X de propósito -- só o próprio fluxo (via hideLoadingModal)
+     decide quando ela sai, nunca o designer no meio do processamento. Não
+     substitui handoff-loading-overlay/scan-loading-overlay (loadings mais
+     antigos, com lógica própria já testada, ex: hint de "ainda
+     processando" após 30s) -- essa modal é pra todo caso NOVO, e migrar os
+     dois antigos fica de fora desta entrega. -->
+  <div id="generic-loading-modal" role="dialog" aria-modal="true" aria-live="polite" aria-labelledby="generic-loading-title" class="hidden fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+    <div class="relative z-10 w-full max-w-[280px] rounded-2xl overflow-hidden shadow-2xl bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line">
+      <div class="px-5 py-6 flex flex-col items-center gap-3 text-center">
+        <i id="generic-loading-icon" data-lucide="loader-2" class="w-7 h-7 text-[#005ca9] animate-spin" aria-hidden="true"></i>
+        <p id="generic-loading-title" class="text-[13px] font-black text-slate-800 dark:text-white">Processando...</p>
+        <p id="generic-loading-text" class="text-[11px] text-slate-500 dark:text-dark-muted leading-snug"></p>
+      </div>
+    </div>
+  </div>
+
 <!-- LOADING OVERLAY: Geração da Ficha de Projeto -->
   <div id="handoff-loading-overlay" class="hidden fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 backdrop-blur-sm">
     <div class="bg-white dark:bg-dark-bg rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line p-8 flex flex-col items-center gap-5 w-[260px] mx-4">
@@ -1584,6 +1609,10 @@
         <label class="flex items-center gap-2 text-[11px] text-slate-700 dark:text-white cursor-pointer">
           <input type="checkbox" id="clear-canvas-fluxos" onchange="updateClearCanvasButtonState()" class="w-4 h-4 rounded accent-red-500">
           Fluxos
+        </label>
+        <label class="flex items-center gap-2 text-[11px] text-slate-700 dark:text-white cursor-pointer">
+          <input type="checkbox" id="clear-canvas-quickspec" onchange="updateClearCanvasButtonState()" class="w-4 h-4 rounded accent-red-500">
+          Spec Express
         </label>
       </div>
 

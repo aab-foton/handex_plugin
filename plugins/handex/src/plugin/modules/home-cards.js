@@ -1,8 +1,11 @@
-// Ordem dos 6 cards da home reorganizável por arrastar-e-soltar. Preferência
-// pessoal de UI do designer (como o tema claro/escuro), não dado de projeto
-// -- persistida em localStorage, nunca em handoffData/exportação.
+// Ordem dos cards de FERRAMENTA da home, reorganizável por arrastar-e-soltar.
+// "Como usar o plugin" saiu do grid (2026-09-25) -- o dashboard lista só
+// ferramentas de trabalho, o guia agora é acessado por ícone dedicado no
+// header (ver home.html). Preferência pessoal de UI do designer (como o
+// tema claro/escuro), não dado de projeto -- persistida em localStorage,
+// nunca em handoffData/exportação.
 const HOME_CARD_ORDER_KEY = 'handexHomeCardOrder';
-const HOME_CARD_IDS_DEFAULT = ['guide', 'dados-projeto', 'tokens', 'specs', 'measurement', 'flows'];
+const HOME_CARD_IDS_DEFAULT = ['dados-projeto', 'tokens', 'specs', 'measurement', 'flows', 'quick-spec'];
 
 let _homeDragSrcCard = null;
 

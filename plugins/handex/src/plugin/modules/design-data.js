@@ -811,7 +811,9 @@
     // Checagem por card da home (ver updateHomeCardsCheckState em core.js) --
     // cada card precisa saber se ELE MESMO tem conteúdo, diferente de
     // hasDocumentedContent() (agregado, usado só pra habilitar Baixar/Limpar).
-    // "guide" nunca entra aqui: é onboarding, não representa dado do projeto.
+    // "Como usar o plugin" nunca entra aqui: desde 2026-09-25 não é mais
+    // card do grid (ver home.html), e mesmo antes disso era onboarding, não
+    // dado de projeto.
     // Cada entrada é { done, label }: label é o texto final já exibido,
     // sempre "Ação + particípio" (ex: "Specs criadas") -- com a contagem real
     // entre parênteses quando o card tem uma (ex: "Specs criadas (3)").
@@ -926,6 +928,15 @@
       if (typeof createdSpecs !== 'undefined') createdSpecs.length = 0;
       if (typeof lastMeasurements !== 'undefined') lastMeasurements.length = 0;
       if (typeof nextMeasurementNumber !== 'undefined') nextMeasurementNumber = 1;
+      // Spec Express (quick-spec.js) é módulo isolado e nunca vive em
+      // handoffData -- mas "Apagar dados do plugin"/"Apagar tudo" precisa
+      // cobrir também a lista em memória dele (pedido do usuário
+      // 2026-09-25), senão ela sobrevive ao reset mostrando itens que podem
+      // referenciar cards já removidos do canvas por outro caminho.
+      if (typeof _quickSpecSessionResults !== 'undefined') {
+        _quickSpecSessionResults.length = 0;
+        if (typeof _quickSpecRenderList === 'function') _quickSpecRenderList();
+      }
       restoreUIFromState();
       // Sem isso, o reset só vive na sessão atual -- o figma.clientStorage
       // continua com os dados antigos e eles voltam ao reabrir o plugin.
@@ -965,7 +976,7 @@
     function confirmClearEverything() {
       _clearingEverything = true;
       parent.postMessage({
-        pluginMessage: { type: 'delete-canvas-content', ficha: true, specs: true, medidas: true, fluxos: true }
+        pluginMessage: { type: 'delete-canvas-content', ficha: true, specs: true, medidas: true, fluxos: true, quickspec: true }
       }, '*');
     }
     window.confirmClearEverything = confirmClearEverything;
@@ -985,6 +996,7 @@
       if (c.spec) parts.push(`${c.spec} spec${c.spec > 1 ? 's' : ''}`);
       if (c.medida) parts.push(`${c.medida} medida${c.medida > 1 ? 's' : ''}`);
       if (c.fluxo) parts.push(`${c.fluxo} fluxo${c.fluxo > 1 ? 's' : ''}`);
+      if (c.quickspec) parts.push(`${c.quickspec} card${c.quickspec > 1 ? 's' : ''} do Spec Express`);
       const canvasMsg = parts.length ? `, ${parts.join(', ')} removido(s) do canvas` : '';
       showToast(`Registro do plugin apagado${canvasMsg}.`);
     }
@@ -992,7 +1004,7 @@
     window._isClearingEverything = () => _clearingEverything;
 
     function toggleSelectAllCanvasDelete() {
-      const ids = ['clear-canvas-ficha', 'clear-canvas-specs', 'clear-canvas-medidas', 'clear-canvas-fluxos'];
+      const ids = ['clear-canvas-ficha', 'clear-canvas-specs', 'clear-canvas-medidas', 'clear-canvas-fluxos', 'clear-canvas-quickspec'];
       const boxes = ids.map(id => document.getElementById(id)).filter(Boolean);
       const allChecked = boxes.every(b => b.checked);
       boxes.forEach(b => { b.checked = !allChecked; });
@@ -1000,7 +1012,7 @@
     }
 
     function updateClearCanvasButtonState() {
-      const ids = ['clear-canvas-ficha', 'clear-canvas-specs', 'clear-canvas-medidas', 'clear-canvas-fluxos'];
+      const ids = ['clear-canvas-ficha', 'clear-canvas-specs', 'clear-canvas-medidas', 'clear-canvas-fluxos', 'clear-canvas-quickspec'];
       const anyChecked = ids.some(id => document.getElementById(id)?.checked);
       const btn = document.getElementById('clear-canvas-submit-btn');
       if (btn) btn.disabled = !anyChecked;
@@ -1011,10 +1023,11 @@
       const specs = !!document.getElementById('clear-canvas-specs')?.checked;
       const medidas = !!document.getElementById('clear-canvas-medidas')?.checked;
       const fluxos = !!document.getElementById('clear-canvas-fluxos')?.checked;
+      const quickspec = !!document.getElementById('clear-canvas-quickspec')?.checked;
 
-      if (!ficha && !specs && !medidas && !fluxos) return;
+      if (!ficha && !specs && !medidas && !fluxos && !quickspec) return;
 
       parent.postMessage({
-        pluginMessage: { type: 'delete-canvas-content', ficha, specs, medidas, fluxos }
+        pluginMessage: { type: 'delete-canvas-content', ficha, specs, medidas, fluxos, quickspec }
       }, '*');
     }

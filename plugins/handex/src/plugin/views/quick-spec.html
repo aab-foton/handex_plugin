@@ -1,0 +1,250 @@
+<!-- VIEW: SPEC EXPRESS -->
+<!-- Módulo isolado: consulta rápida e efêmera de propriedades brutas de
+     elementos (mescla visual entre Escanear Tokens e Anotar Specs), sem
+     conformidade DSC e sem persistência em handoffData. Ver quick-spec.js.
+     Estrutura: lista PLANA de accordions, 1 por ELEMENTO selecionado (tag
+     A/B/C sequencial por sessão, só texto -- sem snapshot -- ações de
+     focar/ocultar/excluir no header + inserir/excluir no conteúdo
+     expandido).
+     Fluxo: Escanear -> modal de filtro -> plugin colapsa (barra de captura
+     abaixo) -> designer seleciona no canvas -> Concluir -> extração das
+     propriedades. -->
+    <main id="view-quick-spec" class="view flex p-0 flex-col h-full overflow-hidden">
+      <!-- Header -->
+      <div class="subheader-brand px-4 py-3 bg-[#005ca9] dark:bg-[#00335c] flex items-center justify-between gap-3 shrink-0 shadow-md">
+        <div class="flex items-center gap-2 min-w-0">
+          <button onclick="navigate('view-home')" aria-label="Voltar para a página inicial"
+            class="min-w-[40px] min-h-[40px] flex items-center justify-center bg-white/10 dark:bg-white/10 rounded-xl hover:bg-white/20 dark:hover:bg-white/20 transition-colors shrink-0">
+            <i data-lucide="arrow-left" class="w-5 h-5 text-white" aria-hidden="true"></i>
+          </button>
+          <h2 class="text-white font-bold text-[18px] truncate min-w-0">Spec Express</h2>
+        </div>
+        <button id="btn-quick-spec-scan" onclick="openModal('quick-spec-filters-modal')"
+          class="fab-inline" title="Escanear elementos no canvas" aria-label="Escanear elementos no canvas">
+          <i data-lucide="scan-line" class="w-4 h-4 shrink-0"></i>
+          <span>Escanear</span>
+        </button>
+      </div>
+
+      <!-- Barra de captura colapsada -- substitui o header inteiro do
+           plugin (ver toggleCollapse/core.js) enquanto o designer seleciona
+           elementos no canvas. Contador ao vivo (debounced no backend) +
+           Cancelar/Concluir. Sem bloco de instrução expansível (diferente
+           do hac): Spec Express não tem sistema de templates por etapa,
+           então a instrução fica fixa e curta, sempre visível. -->
+      <div id="quick-spec-capture-bar" class="hidden flex-col w-full shrink-0 bg-white dark:bg-dark-bg border-b border-gray-100 dark:border-dark-line">
+        <div class="flex items-center justify-between w-full gap-2 px-4 py-2.5 shrink-0">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="w-2 h-2 rounded-full bg-[#005ca9] animate-pulse shrink-0" aria-hidden="true"></span>
+            <span id="quick-spec-capture-count" class="text-[11px] font-bold text-slate-700 dark:text-white truncate">0 elementos marcados</span>
+          </div>
+          <div class="flex items-center gap-1 shrink-0">
+            <button type="button" onclick="_quickSpecCaptureCancel()"
+              class="px-2.5 py-1.5 text-[10.5px] font-bold text-slate-500 dark:text-dark-muted hover:bg-gray-100 dark:hover:bg-dark-surface rounded-2xl transition-colors"
+              aria-label="Cancelar seleção e descartar o que foi marcado">
+              Cancelar
+            </button>
+            <button type="button" onclick="_quickSpecCaptureFinish()"
+              class="px-3 py-1.5 text-[10.5px] font-bold text-white bg-[#005ca9] hover:bg-blue-700 rounded-2xl transition-colors shadow-lg shadow-blue-500/20"
+              aria-label="Concluir seleção e ler as propriedades">
+              Concluir
+            </button>
+          </div>
+        </div>
+        <p class="px-4 pb-2.5 text-[10px] text-slate-400 dark:text-slate-500 leading-snug">
+          Segure <strong>Shift</strong> e clique em cada elemento que quer consultar no canvas — só o que estiver marcado com Shift entra na lista, evitando capturar cliques de passagem até chegar no elemento certo.
+        </p>
+      </div>
+
+      <!-- Scrollable content -->
+      <div id="quick-spec-scroll-container" class="flex-1 overflow-y-auto pt-3 px-4 pb-4">
+        <div class="space-y-3 max-w-[440px] mx-auto">
+
+          <!-- Título da seção + Buscar/filtrar + Expandir/Recolher todos --
+               só aparecem quando há ao menos 1 frame escaneado. Mesmo padrão
+               visual de Anotar Specs/Anotar Medidas. -->
+          <div id="quick-spec-toolbar" class="hidden flex items-center justify-between gap-2">
+            <p class="text-[11px] font-bold text-slate-600 dark:text-dark-muted uppercase tracking-wider">Elementos Escaneados</p>
+            <div class="flex items-center gap-3">
+              <button onclick="_quickSpecToggleSearchBar()" title="Buscar e filtrar" aria-label="Buscar e filtrar"
+                class="text-slate-500 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200 transition-colors">
+                <i data-lucide="search" class="w-4 h-4"></i>
+              </button>
+              <button data-collapse-toggle onclick="collapseAllAccordions(document.getElementById('quick-spec-list'))"
+                class="text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200 transition-colors">
+                Recolher todos
+              </button>
+              <button onclick="quickSpecRemoveAllElements()"
+                class="text-[11px] font-bold text-red-500 hover:text-red-600 transition-colors">
+                Excluir todos
+              </button>
+            </div>
+          </div>
+
+          <button id="quick-spec-insert-all" onclick="quickSpecInsertAllCanvasCards()" class="hidden w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-white text-[12px] font-bold rounded-2xl transition-colors items-center justify-center gap-2">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            Inserir todos os cards no canvas
+          </button>
+
+          <!-- Barra de busca -- filtra por nome (frame/elemento), tag
+               (A/B/C) ou token/valor de propriedade. Oculta por padrão. -->
+          <div id="quick-spec-search-bar" class="hidden relative">
+            <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+            <input type="text" id="quick-spec-search-input" oninput="_quickSpecApplySearch(this.value)"
+              placeholder="Buscar por nome, tag ou token/valor..."
+              class="w-full pl-9 pr-8 py-2 text-[11px] bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl outline-none focus:border-[#005ca9] dark:focus:border-blue-400 text-slate-700 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500">
+            <button onclick="_quickSpecToggleSearchBar()" title="Fechar busca" aria-label="Fechar busca"
+              class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white">
+              <i data-lucide="x" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+          <p id="quick-spec-search-empty" class="hidden text-[10.5px] text-slate-400 dark:text-slate-500 text-center py-4">Nenhum resultado para essa busca.</p>
+
+          <!-- Empty state -->
+          <div id="quick-spec-empty" class="flex flex-col items-center text-center py-10">
+            <i data-lucide="scan-line" class="w-16 h-16 text-slate-200 dark:text-slate-700 mb-4" style="opacity:0.25" aria-hidden="true"></i>
+            <p class="text-[12px] font-bold text-slate-600 dark:text-dark-muted mb-1">Nenhum elemento consultado ainda</p>
+            <p class="text-[10.5px] text-slate-400 dark:text-slate-500 max-w-[260px] leading-relaxed mb-4">Escolha as categorias a buscar e selecione, um por um, os elementos do canvas que quer consultar.</p>
+            <button onclick="openModal('quick-spec-filters-modal')"
+              class="px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white text-[12px] font-bold rounded-2xl transition-colors flex items-center gap-2">
+              <i data-lucide="scan-line" class="w-4 h-4" aria-hidden="true"></i>
+              Escanear elementos
+            </button>
+          </div>
+
+          <!-- Lista de frames escaneados nesta sessão (mais recente primeiro) -->
+          <ul id="quick-spec-list" class="space-y-3 list-none"></ul>
+
+        </div>
+      </div>
+    </main>
+
+<!-- MODAL: FILTRO DE PROPRIEDADES DO SPEC EXPRESS -->
+<!-- Lista fixa e genérica (sempre as mesmas 8 categorias) -- decisão de
+     produto: nunca calculada a partir de pré-leitura do frame. Categoria
+     marcada que não existir naquele frame simplesmente não aparece no
+     resultado (ver QUICK_SPEC_CATEGORIES, code.js). -->
+  <div id="quick-spec-filters-modal" role="dialog" aria-modal="true" aria-labelledby="quick-spec-filters-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+    <div class="bg-white dark:bg-dark-bg w-full max-w-[400px] rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-line flex items-center justify-between">
+        <div>
+          <h3 id="quick-spec-filters-title" class="text-[15px] font-extrabold text-slate-800 dark:text-white">O que buscar nos elementos?</h3>
+          <p class="text-[11px] text-slate-500 dark:text-dark-muted mt-0.5">Marque as categorias a consultar.</p>
+        </div>
+        <button onclick="closeModal('quick-spec-filters-modal')" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-500 dark:text-dark-muted shrink-0">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="px-5 py-4 space-y-1 max-h-[300px] overflow-y-auto">
+        <label class="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
+          <input type="checkbox" data-quick-spec-filter value="dimensions" checked class="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-400">
+          <span class="text-[12px] font-bold text-slate-700 dark:text-white">Dimensões</span>
+          <span class="text-[10px] text-slate-400 dark:text-slate-500 ml-auto">W/H, sizing</span>
+        </label>
+        <label class="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
+          <input type="checkbox" data-quick-spec-filter value="spacing" checked class="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-400">
+          <span class="text-[12px] font-bold text-slate-700 dark:text-white">Espaçamento</span>
+          <span class="text-[10px] text-slate-400 dark:text-slate-500 ml-auto">Gap, padding</span>
+        </label>
+        <label class="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
+          <input type="checkbox" data-quick-spec-filter value="fill" checked class="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-400">
+          <span class="text-[12px] font-bold text-slate-700 dark:text-white">Cor</span>
+          <span class="text-[10px] text-slate-400 dark:text-slate-500 ml-auto">Fill</span>
+        </label>
+        <label class="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
+          <input type="checkbox" data-quick-spec-filter value="border" checked class="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-400">
+          <span class="text-[12px] font-bold text-slate-700 dark:text-white">Borda</span>
+          <span class="text-[10px] text-slate-400 dark:text-slate-500 ml-auto">Width, cor</span>
+        </label>
+        <label class="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
+          <input type="checkbox" data-quick-spec-filter value="radius" checked class="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-400">
+          <span class="text-[12px] font-bold text-slate-700 dark:text-white">Radius</span>
+        </label>
+        <label class="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
+          <input type="checkbox" data-quick-spec-filter value="effect" checked class="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-400">
+          <span class="text-[12px] font-bold text-slate-700 dark:text-white">Efeito</span>
+          <span class="text-[10px] text-slate-400 dark:text-slate-500 ml-auto">Sombra, blur</span>
+        </label>
+        <label class="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
+          <input type="checkbox" data-quick-spec-filter value="typography" checked class="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-400">
+          <span class="text-[12px] font-bold text-slate-700 dark:text-white">Tipografia</span>
+        </label>
+        <label class="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
+          <input type="checkbox" data-quick-spec-filter value="component" checked class="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-400">
+          <span class="text-[12px] font-bold text-slate-700 dark:text-white">Componente</span>
+          <span class="text-[10px] text-slate-400 dark:text-slate-500 ml-auto">Nome e origem</span>
+        </label>
+        <!-- Opcional, desmarcada por padrão (2026-09-25, pedido do usuário
+             após ver exemplo real com ~10 linhas "Prop: icon: true"/"Prop:
+             badge: false" sem contexto de A QUE elemento cada uma se
+             refere -- ruído na maioria dos casos, já que as variantes com
+             valor de leitura (ex: type=small, scroll=off) já aparecem
+             embutidas no próprio nome do componente, sempre trazido pela
+             categoria "Componente" acima). Fica disponível pra quando o
+             dev pedir o detalhe completo das propriedades expostas. -->
+        <label class="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
+          <input type="checkbox" id="quick-spec-filter-component-props" data-quick-spec-filter value="component-props"
+            onchange="document.getElementById('quick-spec-component-props-hint').classList.toggle('hidden', !this.checked)"
+            class="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-400">
+          <span class="text-[12px] font-bold text-slate-700 dark:text-white">Propriedades do componente</span>
+          <span class="text-[10px] text-slate-400 dark:text-slate-500 ml-auto">Detalhe de cada slot</span>
+        </label>
+      </div>
+      <!-- Só aparece quando o checkbox acima está marcado (2026-09-25,
+           pedido do usuário) -- hint que só faz sentido no contexto da
+           categoria que ele explica, não precisa ocupar espaço o tempo
+           todo. -->
+      <div id="quick-spec-component-props-hint" class="hidden px-5 pb-1 -mt-1">
+        <p class="text-[10px] text-slate-400 dark:text-slate-500 leading-snug">"Propriedades do componente" traz o detalhe de cada slot exposto (ex: <em>icon: true</em>, <em>badge: false</em>) — só marque se o dev pedir esse nível de detalhe; na maioria dos casos gera bastante ruído sem indicar a qual elemento cada propriedade pertence.</p>
+      </div>
+
+      <div class="px-5 pb-5 flex gap-3">
+        <button onclick="_quickSpecToggleAllFilters()"
+          class="flex-1 py-2.5 text-[12px] font-bold text-slate-500 dark:text-dark-muted hover:text-slate-600 border border-gray-100 dark:border-dark-line rounded-2xl transition-colors">
+          Marcar/Desmarcar tudo
+        </button>
+        <button onclick="_quickSpecConfirmFiltersAndScan()"
+          class="flex-1 py-2.5 bg-blue-500 hover:bg-blue-600 text-white text-[13px] font-extrabold rounded-2xl transition-colors flex items-center justify-center gap-2">
+          <i data-lucide="scan-line" class="w-4 h-4"></i>
+          Escanear
+        </button>
+      </div>
+    </div>
+  </div>
+
+<!-- MODAL: ORGANIZAR CARDS DO SPEC EXPRESS -->
+<!-- Aberta antes de criar os cards no canvas (individual ou "Inserir
+     todos") -- deixa o designer escolher em quantas colunas/linhas os
+     cards vão nascer distribuídos, em vez de sempre empilhar numa única
+     coluna vertical (2026-09-25, pedido do usuário). Seletor de grade
+     estilo Excel/Word: passa o mouse pra ver o NxM em destaque, clique
+     confirma. `_quickSpecPendingInsertItems` guarda os itens a inserir
+     entre o clique em "Inserir..." e a confirmação da grade aqui (ver
+     quick-spec.js). -->
+  <div id="quick-spec-layout-modal" role="dialog" aria-modal="true" aria-labelledby="quick-spec-layout-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+    <div class="bg-white dark:bg-dark-bg w-full max-w-[340px] rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-line flex items-center justify-between">
+        <div>
+          <h3 id="quick-spec-layout-title" class="text-[15px] font-extrabold text-slate-800 dark:text-white">Organizar cards no canvas</h3>
+          <p class="text-[11px] text-slate-500 dark:text-dark-muted mt-0.5">Escolha em quantas colunas e linhas distribuir os cards.</p>
+        </div>
+        <button onclick="closeModal('quick-spec-layout-modal')" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-500 dark:text-dark-muted shrink-0">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="px-5 py-4 flex flex-col items-center">
+        <p id="quick-spec-layout-label" class="text-[12px] font-bold text-slate-700 dark:text-white mb-3">1 coluna × 1 linha</p>
+        <div id="quick-spec-layout-grid" class="grid gap-[3px]" onmouseleave="_quickSpecLayoutGridReset()"></div>
+      </div>
+
+      <div class="px-5 pb-5">
+        <button id="quick-spec-layout-confirm" onclick="_quickSpecConfirmLayoutAndInsert()"
+          class="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-white text-[13px] font-extrabold rounded-2xl transition-colors flex items-center justify-center gap-2">
+          <i data-lucide="download" class="w-4 h-4"></i>
+          Inserir no canvas
+        </button>
+      </div>
+    </div>
+  </div>
