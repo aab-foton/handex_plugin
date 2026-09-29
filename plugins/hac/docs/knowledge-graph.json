@@ -231,14 +231,14 @@
     {
       "id": "message:highlight-node",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:520",
-      "payloadFields": ["id", "selectNode", "shouldScroll"],
+      "handlerLocation": "src/plugin/backend/onmessage.js:664",
+      "payloadFields": ["id", "selectNode", "shouldScroll", "areaId (novo 2026-09-29, opcional)", "kind (novo 2026-09-29, opcional)"],
       "senders": [
-        "src/plugin/modules/core.js:992 (focusNode)",
-        "src/plugin/modules/core.js:1104 (via resolve-a11y-focus-node → focusNode, ver message:a11y-focus-node-resolved)"
+        "src/plugin/modules/core.js:1162 (focusNode(id, areaId, kind) — areaId/kind só preenchidos pela chamada vinda de a11y-focus-node-resolved)",
+        "src/plugin/modules/core.js:1177 (via resolve-a11y-focus-node → focusNode, ver message:a11y-focus-node-resolved)"
       ],
-      "consumers": ["backend: figma.currentPage.selection / figma.viewport.scrollAndZoomIntoView"],
-      "note": "BUG REAL CORRIGIDO 2026-09-22 documentado no próprio código (onmessage.js:534-566): este handler é também o destino final do foco automático da réplica de trabalho (spec-copy-started → focusA11yCloneNode → resolve-a11y-focus-node → focusNode → highlight-node aqui), que podia roubar a seleção de um clique real do designer. Fix: checa _a11yManualMatchModeActive + _a11yManualMatchRealClickAfterOpen antes de sobrescrever seleção/viewport."
+      "consumers": ["backend: figma.currentPage.selection / figma.viewport.scrollAndZoomIntoView / _activeSpecCloneMaps (novo 2026-09-29, só quando kind === 'leitor')"],
+      "note": "BUG REAL CORRIGIDO 2026-09-22 documentado no próprio código: este handler é também o destino final do foco automático da réplica de trabalho (spec-copy-started → focusA11yCloneNode → resolve-a11y-focus-node → focusNode → highlight-node aqui), que podia roubar a seleção de um clique real do designer. Fix 2026-09-22: checa _a11yManualMatchModeActive + _a11yManualMatchRealClickAfterOpen antes de sobrescrever seleção/viewport. CASO NOVO 2026-09-29 (pedido do usuário: 'Minha seleção vence, mas mostra a réplica'): quando existe seleção HERDADA válida (_a11yManualMatchLastRealSelectionId não-nulo, capturada em resolve-manual-spec-match, distinta de clique real pós-abertura), a seleção do Figma NUNCA é sobrescrita (mesma regra do fix de 2026-09-22), mas a VIEWPORT segue movendo — deliberadamente desamarrada da checagem de seleção só neste subcaso — e centraliza no elemento equivalente dentro do clone via _activeSpecCloneMaps.get(areaId).get(nodeId) (precisa de areaId/kind==='leitor' no payload, por isso os campos novos). Ver seção 8x de docs/tecnico.html."
     },
     {
       "id": "message:clear-highlight",
@@ -268,10 +268,10 @@
     {
       "id": "message:a11y-focus-node-resolved",
       "direction": "backend-to-frontend",
-      "handlerLocation": "src/plugin/modules/messages.js:427",
+      "handlerLocation": "src/plugin/modules/messages.js:502",
       "payloadFields": ["areaId", "kind", "nodeId", "requestId"],
-      "senders": ["src/plugin/backend/onmessage.js:606"],
-      "consumers": ["src/plugin/modules/messages.js:427 (chama focusNode → dispara message:highlight-node)"]
+      "senders": ["src/plugin/backend/onmessage.js:750"],
+      "consumers": ["src/plugin/modules/messages.js:502 (chama focusNode(msg.nodeId, msg.areaId, msg.kind) — repasse novo 2026-09-29 — → dispara message:highlight-node já com areaId/kind)"]
     },
     {
       "id": "message:hide-node",

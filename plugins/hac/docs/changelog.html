@@ -3184,6 +3184,58 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
     <code>npm run lint:figma-api</code> — todos limpos. Ver
     <a href="tecnico.html#s8w">tecnico.html, seção 8w</a>.</p>
 
+    <h2>2026-09-29 — Seleção herdada vence no fluxo manual "+ Nova spec"
+    (v0.1.0-beta.60)</h2>
+
+    <p>Pedido do usuário: "Se eu tiver um elemento já selecionado no canvas
+    e clicar em nova spec, eu tenho que conseguir começar a documentar a
+    partir desse elemento. Hoje eu preciso clicar no botão e depois
+    selecionar o elemento." Causa raiz: o foco automático adiantado na
+    réplica de trabalho (pedido de 2026-09-15) sobrescrevia a seleção física
+    do Figma com a raiz do clone mesmo quando o designer já tinha selecionado
+    o elemento-alvo real <em>antes</em> de clicar "+ Nova spec" — a correção
+    de 2026-09-22 só cobria clique real feito <em>depois</em> do picker
+    abrir, não a seleção herdada de antes.</p>
+
+    <h3>Decisão do usuário</h3>
+    <p>"Minha seleção vence, mas mostra a réplica" — a seleção do designer
+    nunca é sobrescrita quando há seleção herdada válida, mas a viewport
+    ainda move para a réplica de trabalho, com o elemento equivalente
+    centralizado ali dentro.</p>
+
+    <h3>O que foi novo</h3>
+    <p>No handler <code>highlight-node</code> (<code>onmessage.js</code>) —
+    único ponto de todo o trajeto que de fato sobrescreve
+    <code>figma.currentPage.selection</code>/<code>figma.viewport</code>,
+    confirmado por grep em todo <code>src/plugin/</code> antes de editar —
+    nova checagem <code>_hasInheritedRealSelection</code> passou a impedir a
+    sobrescrita de seleção também para a seleção HERDADA (capturada em
+    <code>resolve-manual-spec-match</code>, distinta de clique real
+    pós-abertura), sem bloquear o movimento de viewport nesse caso
+    específico (desamarrado de propósito da checagem de seleção). A viewport
+    centraliza no elemento equivalente dentro do clone via
+    <code>_activeSpecCloneMaps</code> (mesma tradução original→clone que
+    <code>create-unified-spec</code> já usa) — sem mapeamento, cai na raiz
+    do clone, nunca trava o fluxo. <code>areaId</code>/<code>kind</code>
+    passaram a viajar em <code>highlight-node</code>/<code>focusNode</code>
+    (campos novos opcionais, <code>null</code> em todos os outros ~7 usos de
+    <code>focusNode</code> no projeto) para o backend saber de qual área
+    resolver o clone.</p>
+
+    <h3>O que não foi tocado, de propósito</h3>
+    <p>Tabulação e Swipe usam o mesmo listener de <code>selectionchange</code>
+    e o mesmo handler <code>highlight-node</code>, mas nunca ligam o gate
+    manual do Leitor de Tela — nenhuma linha em <code>tab-order.js</code>/
+    <code>swipe-path.js</code> foi tocada.</p>
+
+    <p><strong>Validação</strong>: <code>node --input-type=module --check</code>
+    em <code>onmessage.js</code>/<code>code.js</code>, <code>node
+    --check</code> em <code>core.js</code>/<code>messages.js</code>/
+    <code>accessibility.js</code>, <code>npm run bundle:ui</code>,
+    <code>npm run bundle:code</code>, <code>npm run export:plugin</code>,
+    <code>npx tsc --noEmit</code> e <code>npm run lint:figma-api</code> —
+    todos limpos. Ver <a href="tecnico.html#s8x">tecnico.html, seção 8x</a>.</p>
+
     <hr>
 
     <p><em>Entradas anteriores a 2026-08-24 pertencem ao histórico do plugin Handex

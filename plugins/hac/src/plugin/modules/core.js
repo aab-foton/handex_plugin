@@ -1159,8 +1159,17 @@ function autoScrollToNewItem(containerId, targetElement = null) {
 }
 window.autoScrollToNewItem = autoScrollToNewItem;
 
-function focusNode(id) {
-  parent.postMessage({ pluginMessage: { type: 'highlight-node', id, highlight: true, shouldScroll: true, color: '#005ca9' } }, '*');
+// areaId/kind (2026-09-29, opcionais, default undefined) — só preenchidos
+// pela chamada que vem de 'a11y-focus-node-resolved' (foco automático na
+// réplica de trabalho, ver messages.js). Os outros ~7 call sites de
+// focusNode no projeto (botões "Ver no canvas"/"Focar no canvas" de specs,
+// áreas, seções) continuam chamando focusNode(id) sem eles — sem os dois,
+// o backend nem tenta resolver o caso de "seleção herdada + destaque na
+// réplica" (ver highlight-node, onmessage.js), preservando o
+// comportamento antigo (seleciona + scroll no id recebido) pra todos os
+// outros usos, exatamente como antes desta mudança.
+function focusNode(id, areaId, kind) {
+  parent.postMessage({ pluginMessage: { type: 'highlight-node', id, highlight: true, shouldScroll: true, color: '#005ca9', areaId: areaId || null, kind: kind || null } }, '*');
 }
 
 // Foca a RÉPLICA DE TRABALHO de uma etapa de a11y (Leitor de Tela/

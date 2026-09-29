@@ -499,9 +499,13 @@
       // resolveu qual node focar (réplica de trabalho da etapa, ou o Frame
       // Principal como fallback) e devolveu o id pra este lado chamar
       // focusNode de fato (highlight-node já existente, testado).
+      // areaId/kind (2026-09-29) repassados junto — só assim highlight-node
+      // (onmessage.js) consegue, no caso 'leitor' com seleção herdada
+      // válida, resolver o node equivalente dentro do MESMO clone que está
+      // sendo focado agora (ver comentário completo no handler).
       if (msg.type === "a11y-focus-node-resolved") {
         if (msg.nodeId && typeof focusNode === 'function') {
-          focusNode(msg.nodeId);
+          focusNode(msg.nodeId, msg.areaId, msg.kind);
         }
       }
       // Resposta de resolve-tab-order-clone (2026-09-04-aj) — "Adicionar

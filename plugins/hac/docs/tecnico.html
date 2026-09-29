@@ -4067,6 +4067,106 @@ hr {
     <code>0.1.0-beta.58</code> → <code>0.1.0-beta.59</code> no mesmo commit,
     conforme regra de versionamento do CLAUDE.md.</p>
 
+    <h2 id="s8x">8x. Seleção herdada vence no fluxo manual "+ Nova spec" (2026-09-29)</h2>
+
+    <p><strong>Motivação</strong>: pedido do usuário — "Se eu tiver um
+    elemento já selecionado no canvas e clicar em nova spec, eu tenho que
+    conseguir começar a documentar a partir desse elemento. Hoje eu preciso
+    clicar no botão e depois selecionar o elemento." Causa raiz: o foco
+    automático adiantado na réplica de trabalho (seção 8s +
+    <code>_openA11yCategoryPickerModalAfterInstruction</code>, pedido de
+    2026-09-15) sobrescrevia a <strong>seleção física do Figma</strong> com a
+    raiz do clone assim que a réplica terminava de ser criada/reaproveitada —
+    mesmo quando o designer já tinha selecionado o elemento-alvo real
+    <em>antes</em> de clicar "+ Nova spec". A correção de 2026-09-22 (mesma
+    seção 8s) só cobre o caso de um <strong>clique real depois</strong> do
+    picker abrir (<code>_a11yManualMatchRealClickAfterOpen</code>) — a
+    seleção herdada continuava sendo tratada como "ainda não agiu" e perdida.</p>
+
+    <p><strong>Decisão do usuário</strong>: "Minha seleção vence, mas mostra
+    a réplica" — quando existe seleção herdada válida, ela nunca é
+    sobrescrita, mas a viewport ainda move para a réplica de trabalho, com o
+    elemento equivalente ali centralizado.</p>
+
+    <p><strong>Implementação, toda dentro do handler <code>highlight-node</code>
+    (<code>onmessage.js</code>)</strong> — único ponto de todo o trajeto
+    (<code>resolve-manual-spec-match</code> → <code>start-spec-copy</code> →
+    <code>spec-copy-started</code> → <code>focusA11yCloneNode</code> →
+    <code>resolve-a11y-focus-node</code> → <code>a11y-focus-node-resolved</code>
+    → <code>focusNode</code>) que de fato escreve em
+    <code>figma.currentPage.selection</code>/<code>figma.viewport</code> — os
+    demais só repassam ids ou resolvem qual node focar, confirmado por
+    <code>grep -n "currentPage.selection = "</code> em todo <code>src/plugin/</code>
+    antes de editar (Regra de ouro 3 do CLAUDE.md: não parar na primeira
+    explicação sem confirmar que não há outro ponto concorrente — aqui havia
+    só um, mas a checagem foi feita mesmo assim).</p>
+
+    <p>Nova variável derivada <code>_hasInheritedRealSelection</code> — verdadeira
+    quando o gate manual está ativo (<code>_a11yManualMatchModeActive</code>), o
+    designer ainda não clicou em nada de real depois do picker abrir
+    (<code>!_a11yManualMatchRealClickAfterOpen</code>) e existe uma seleção
+    herdada conhecida e válida (<code>_a11yManualMatchLastRealSelectionId</code>
+    não-nulo — já descarta sozinho o resíduo de clone anterior, ver
+    <code>_isA11ySpecCloneRootNode</code>, seção 8s/comentário 2026-09-22).
+    <code>_skipAutoSelect</code> passou a cobrir os DOIS casos (clique real
+    pós-abertura OU seleção herdada válida) para a checagem de
+    <strong>seleção</strong> — nos dois, a seleção do Figma nunca é
+    sobrescrita. A checagem de <strong>viewport</strong> foi deliberadamente
+    <em>desamarrada</em> dessa mesma condição: só para de mover quando o
+    clique real pós-abertura aconteceu (o designer já está olhando a
+    réplica, mover de novo reintroduziria a confusão original de 2026-09-22)
+    — a seleção herdada sozinha nunca bloqueia o movimento de viewport,
+    porque o designer ainda não olhou pra réplica nenhuma vez nesta
+    interação.</p>
+
+    <p><strong>Elemento equivalente</strong>: quando <code>_hasInheritedRealSelection</code>
+    é verdadeiro e o foco é do tipo <code>'leitor'</code> com
+    <code>areaId</code> conhecido, o handler busca
+    <code>_activeSpecCloneMaps.get(areaId).get(_a11yManualMatchLastRealSelectionId)</code>
+    — a MESMA tradução original→clone que <code>create-unified-spec</code> e
+    <code>highlight-spec-copy-node</code> já usam, nada novo. Se o mapeamento
+    existir e tiver <code>absoluteBoundingBox</code>, a viewport centraliza
+    nesse node (o elemento real, dentro da réplica); sem mapeamento (seleção
+    herdada de outra área/fora da Área Marcada em questão, ou clone ainda não
+    populado), cai na raiz do clone que o foco automático já ia focar de
+    qualquer forma — nunca trava o fluxo. Nenhum retângulo de destaque
+    próprio foi reintroduzido (removido de propósito em 2026-09-11, seção
+    8s/comentário do handler) e nenhuma seleção múltipla foi usada (mudaria a
+    contagem real da seleção do designer, que a decisão dele explicitamente
+    não quer) — o "destaque dentro da réplica" é só o enquadramento da
+    viewport no elemento certo.</p>
+
+    <p><strong>Payload propagado</strong> (Regra 0b do CLAUDE.md):
+    <code>areaId</code>/<code>kind</code> passaram a viajar em
+    <code>highlight-node</code> (novos campos opcionais, <code>null</code> nos
+    outros ~7 call sites de <code>focusNode</code> do projeto — botões "Ver no
+    canvas"/"Focar no canvas" de specs/áreas/seções continuam chamando
+    <code>focusNode(id)</code> sem eles, comportamento idêntico ao anterior).
+    <code>focusNode(id, areaId, kind)</code> (<code>core.js</code>) só recebe
+    os dois novos argumentos na chamada feita pelo handler de
+    <code>a11y-focus-node-resolved</code> (<code>messages.js</code>), que já
+    tinha <code>msg.areaId</code>/<code>msg.kind</code> disponíveis (o backend
+    já devolvia os dois desde a criação de <code>resolve-a11y-focus-node</code>
+    em 2026-09-11 — só não eram repassados adiante).</p>
+
+    <p><strong>Fora de escopo, de propósito</strong>: Tabulação e Swipe usam o
+    mesmo listener de <code>selectionchange</code> e o mesmo handler
+    <code>highlight-node</code>, mas nunca ligam
+    <code>_a11yManualMatchModeActive</code> — a nova lógica só é alcançável
+    com o gate manual do Leitor de Tela ativo, então os dois fluxos
+    continuam com o comportamento de sempre, sem nenhuma linha tocada em
+    <code>tab-order.js</code>/<code>swipe-path.js</code> (Regra de ouro 2 do
+    CLAUDE.md — o usuário já rejeitou generalizar para os três fluxos sem
+    pedido explícito).</p>
+
+    <p><strong>Validação</strong>: <code>node --input-type=module --check</code>
+    em <code>onmessage.js</code>/<code>code.js</code>, <code>node --check</code>
+    em <code>core.js</code>/<code>messages.js</code>/<code>accessibility.js</code>,
+    <code>npm run bundle:ui</code>, <code>npm run bundle:code</code>,
+    <code>npm run export:plugin</code>, <code>npx tsc --noEmit</code> e
+    <code>npm run lint:figma-api</code> — todos limpos. Bump de versão
+    <code>0.1.0-beta.59</code> → <code>0.1.0-beta.60</code> no mesmo commit.</p>
+
     <h2 id="s9">9. Contrato de mensagens (UI ↔ backend)</h2>
 
     <p>Toda comunicação passa por <code>postMessage</code>/<code>window.onmessage</code> — o frontend

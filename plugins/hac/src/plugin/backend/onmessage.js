@@ -252,15 +252,18 @@ function _isA11ySpecCloneRootNode(node) {
 // e volta a false em stop-manual-spec-match-mode.
 //
 // Existe para o handler 'highlight-node' (ver comentário completo lá, BUG
-// REAL CORRIGIDO 2026-09-22) decidir se o foco AUTOMÁTICO da réplica de
-// trabalho (spec-copy-started → focusA11yCloneNode, adiantado desde
-// 2026-09-15) ainda pode tomar a seleção do Figma com segurança: só faz
-// sentido sobrescrever a seleção pré-existente (o designer ainda não agiu),
-// nunca uma escolha que ele já fez depois de abrir o picker — sem esta
-// distinção, QUALQUER seleção real capturada (mesmo a herdada, sempre
-// presente) bloquearia o foco automático adiantado, quebrando o pedido
-// original de 2026-09-15 ("assim que eu clico pra criar a spec, já
-// deveríamos ter... o canvas focar na réplica").
+// REAL CORRIGIDO 2026-09-22 + caso novo 2026-09-29) decidir se o foco
+// AUTOMÁTICO da réplica de trabalho (spec-copy-started → focusA11yCloneNode,
+// adiantado desde 2026-09-15) ainda pode tomar a SELEÇÃO do Figma com
+// segurança: só faz sentido sobrescrever a seleção quando o designer ainda
+// não agiu de forma alguma (nem tinha nada selecionado antes de clicar "+",
+// nem clicou em algo depois que o picker abriu) — qualquer seleção real
+// conhecida, herdada ou pós-abertura, VENCE (2026-09-29, "Minha seleção
+// vence, mas mostra a réplica"). A VIEWPORT segue uma regra diferente: só
+// para de mover quando o designer JÁ clicou algo real depois do picker
+// abrir (aí ele já está olhando a réplica, mover de novo reintroduziria
+// confusão) — a seleção herdada sozinha nunca bloqueia a viewport, pois o
+// designer ainda não olhou pra réplica nenhuma vez nesta interação.
 let _a11yManualMatchRealClickAfterOpen = false;
 
 // Listener único de seleção do canvas para os modos de captura de Ordem de
@@ -697,17 +700,52 @@ figma.ui.onmessage = async (msg) => {
       // selectionchange (_a11ySuppressNextSelectionChange) já evitava que
       // esse foco fosse capturado como um clique real, mas não evitava a
       // sobrescrita física da seleção do Figma, que é o que o designer via.
-      // Fix: enquanto o gate de matching manual está ativo, se o designer já
-      // clicou em algo REAL depois de abrir o picker
-      // (_a11yManualMatchRealClickAfterOpen — não conta a seleção herdada de
-      // antes de abrir, que precisa continuar permitindo o foco automático
-      // adiantado pedido em 2026-09-15), preserva a seleção real do designer
-      // (nem seleção nem viewport são tomados de volta) — o foco automático
-      // da réplica só deve vencer enquanto o designer ainda não escolheu
-      // nada por conta própria; mover a viewport pro clone sem mover a
-      // seleção reintroduziria a mesma confusão ("cadê o que eu cliquei"),
-      // então os dois ficam condicionados à mesma checagem.
-      const _skipAutoSelect = _a11yManualMatchModeActive && _a11yManualMatchRealClickAfterOpen;
+      // Fix (2026-09-22): enquanto o gate de matching manual está ativo, se
+      // o designer já clicou em algo REAL depois de abrir o picker
+      // (_a11yManualMatchRealClickAfterOpen), preserva a seleção real do
+      // designer (nem seleção nem viewport são tomados de volta) — o foco
+      // automático da réplica só deve vencer enquanto o designer ainda não
+      // escolheu nada por conta própria.
+      //
+      // Caso novo (2026-09-29, pedido do usuário: "Se eu tiver um elemento
+      // já selecionado no canvas e clicar em nova spec, eu tenho que
+      // conseguir começar a documentar a partir desse elemento... Minha
+      // seleção vence, mas mostra a réplica"). Até aqui, a seleção HERDADA
+      // (o que o designer já tinha selecionado ANTES de clicar "+ Nova
+      // spec", capturada em resolve-manual-spec-match) NÃO bloqueava este
+      // foco automático — de propósito, pra não quebrar o pedido de
+      // 2026-09-15 ("assim que eu clico, o canvas já foca a réplica"). Na
+      // prática isso fazia o foco automático sobrescrever a seleção
+      // herdada da mesma forma que sobrescrevia a seleção vazia, e o
+      // designer perdia o elemento que já tinha escolhido — exatamente o
+      // atrito relatado ("hoje eu preciso clicar no botão e depois
+      // selecionar o elemento").
+      //
+      // Decisão do usuário: quando existe seleção herdada válida (não é
+      // resíduo de clone — ver _isA11ySpecCloneRootNode/
+      // _a11yManualMatchLastRealSelectionId), ela VENCE a seleção do Figma
+      // (nunca é sobrescrita), mas a VIEWPORT ainda move pro clone — aqui,
+      // deliberadamente, DESAMARRADA da checagem de seleção (diferente do
+      // caso _skipAutoSelect abaixo, onde os dois ficam amarrados: lá o
+      // designer JÁ está com o clone em foco desde o clique real, mover a
+      // viewport de novo reintroduziria a mesma confusão; aqui o designer
+      // nunca olhou pra réplica ainda, então mostrar onde ele vai
+      // documentar é exatamente o que foi pedido). Sempre que possível, a
+      // viewport centraliza no elemento EQUIVALENTE dentro do clone (via
+      // _activeSpecCloneMaps, mesma tradução original→clone que
+      // create-unified-spec/highlight-spec-copy-node já usam) — "destacado
+      // dentro dela" aqui significa a própria réplica ficar centralizada
+      // nesse elemento (zoom/scroll), sem reintroduzir nenhum retângulo de
+      // highlight próprio (removido de propósito em 2026-09-11) e sem
+      // seleção múltipla (mudaria a seleção real do designer, o que a
+      // decisão dele explicitamente não quer). Sem equivalente mapeável
+      // (seleção herdada não pertence a esta área/clone, ou o gate nem tem
+      // seleção herdada nenhuma) cai no `node` do foco automático mesmo
+      // (raiz do clone) — nunca trava o fluxo.
+      const _hasInheritedRealSelection = _a11yManualMatchModeActive
+        && !_a11yManualMatchRealClickAfterOpen
+        && !!_a11yManualMatchLastRealSelectionId;
+      const _skipAutoSelect = (_a11yManualMatchModeActive && _a11yManualMatchRealClickAfterOpen) || _hasInheritedRealSelection;
       if (msg.selectNode !== false && !_skipAutoSelect) {
         // Foco programático (ver _a11ySuppressNextSelectionChange acima) —
         // nunca deve ser confundido com um clique real do designer pelos
@@ -715,8 +753,16 @@ figma.ui.onmessage = async (msg) => {
         _a11ySuppressNextSelectionChange = true;
         figma.currentPage.selection = [node];
       }
-      if (msg.shouldScroll !== false && !_skipAutoSelect) {
-        figma.viewport.scrollAndZoomIntoView([node]);
+      let _viewportTarget = node;
+      if (_hasInheritedRealSelection && msg.kind === 'leitor' && msg.areaId) {
+        try {
+          const cloneMap = _activeSpecCloneMaps.get(msg.areaId);
+          const mappedNode = cloneMap ? cloneMap.get(_a11yManualMatchLastRealSelectionId) : null;
+          if (mappedNode && mappedNode.absoluteBoundingBox) _viewportTarget = mappedNode;
+        } catch (e) { }
+      }
+      if (msg.shouldScroll !== false && (!_skipAutoSelect || _hasInheritedRealSelection)) {
+        figma.viewport.scrollAndZoomIntoView([_viewportTarget]);
       }
     }
     return;
