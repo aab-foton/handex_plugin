@@ -5,22 +5,22 @@
     "scope": "Escopo deliberadamente restrito aos componentes de confiança BAIXA (não os milhares sem match nenhum, nem os já resolvidos com confiança alta) — candidatos reais onde uma segunda fonte de evidência (estrutura real, não só nome) pode confirmar ou corrigir o match atual.",
     "howToFill": "Para cada entrada abaixo (dentro de cada lib: web-angular-react, super-app, super-dsc-web, dsc-android), use o MCP do Figma para abrir o componente real via fileKey + sampleComponentKey (é uma key de componente/variante publicada — use a ferramenta de leitura de componente/nó do seu MCP para resolver essa key dentro do arquivo fileKey e inspecionar a árvore de filhos dela). Preencha: hasComposedIcon (true/false — tem um ícone/vetor isolado como filho direto ou neto?), hasVisibleLabelText (true/false — tem um TEXT com conteúdo visível em nível raso?), structuralNote (1-2 frases objetivas sobre o que a estrutura real sugere: confirma o match atual (currentMatch/currentConfidence), ou sugere outra categoria, ou revela que é um componente COMPOSTO com sub-elementos que merecem virar specs próprias — mesmo padrão já usado no hac para \"[dsc-tc] Actions - Button Row\"). NÃO mude currentMatch/currentConfidence/currentReason (são o estado ATUAL, referência — não edite), NÃO adicione/remova entradas nem chaves novas, só preencha os 3 campos PREENCHER de cada entrada. Se não conseguir resolver um sampleComponentKey específico (componente removido/renomeado desde o scan), preencha structuralNote com \"não foi possível resolver o componente — key pode estar desatualizada\" e deixe os 2 campos booleanos como null.",
     "totalCandidates": 156,
-    "pendingCount": 1,
+    "pendingCount": 0,
     "extractedFrom": [
       "dsc-component-a11y-mapping.json",
       "dsc-component-a11y-mapping-mobile.json",
       "dsc-component-a11y-mapping-superdscweb.json",
       "dsc-component-a11y-mapping-android.json"
     ],
-    "lastAutomatedRunAt": "2026-09-29T12:21:45.220Z",
+    "lastAutomatedRunAt": "2026-09-29T19:03:16.267Z",
     "lastAutomatedRunStats": {
-      "resolved": 70,
-      "failed": 1,
-      "skipped": 85
+      "resolved": 1,
+      "failed": 0,
+      "skipped": 155
     },
     "extractedBy": "Gemini via MCP Figma",
     "extractedAt": "2026-09-09",
-    "status": "preenchido-parcial — 1 de 156 entradas ainda pendentes"
+    "status": "preenchido"
   },
   "candidates": {
     "web-angular-react": [
@@ -1380,9 +1380,9 @@
         "variantCount": 8,
         "sampleComponentKey": "3329d2137161ecdf7c3b9321ea975a5440219e4f",
         "fileKey": "erkqbRKIbaFWbkHe51BeiZ",
-        "hasComposedIcon": null,
-        "hasVisibleLabelText": null,
-        "structuralNote": "não foi possível resolver o componente — key pode estar desatualizada"
+        "hasComposedIcon": false,
+        "hasVisibleLabelText": true,
+        "structuralNote": "texto visível ('Buscar') — candidato a componente composto, revisar se sub-elementos merecem spec própria."
       },
       {
         "containingFrame": "[dsc] Popover",

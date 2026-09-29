@@ -1,13 +1,13 @@
 // ============================================================
 // GERADO AUTOMATICAMENTE por build-a11y-constants.cjs — não editar à mão.
-// Fonte: refs/design-acessivel-properties.json (2026-09-29T12:21:56.008Z)
-//      + refs/design-acessivel-mobile-properties.json (2026-09-29T12:22:55.015Z)
-//      + refs/super-app.json (2026-09-29T12:11:08.899Z)
+// Fonte: refs/design-acessivel-properties.json (2026-09-29T19:03:28.945Z)
+//      + refs/design-acessivel-mobile-properties.json (2026-09-29T19:04:29.969Z)
+//      + refs/super-app.json (2026-09-29T19:00:33.871Z)
 //      + refs/_manifest.json (fileKey da lib 'super-app')
 // Regenerar via: node src/plugin/refs/build-a11y-constants.cjs
 //            ou: npm run refs:a11y-constants
 //
-// Gerado em: 2026-09-29T15:14:06.112Z
+// Gerado em: 2026-09-29T19:06:15.118Z
 //
 // Consumido via alias em src/plugin/modules/accessibility.js:
 //   const A11Y_COMPONENT_PROPERTIES = A11Y_COMPONENT_PROPERTIES_GENERATED;

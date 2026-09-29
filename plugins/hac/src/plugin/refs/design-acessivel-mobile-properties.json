@@ -4,7 +4,7 @@
     "slug": "design-acessivel-mobile",
     "libraryName": "Design Acessível (mobile)",
     "fileKey": "HhriLSpKnCB2dHhyiU16iB",
-    "generatedAt": "2026-09-29T12:22:55.015Z",
+    "generatedAt": "2026-09-29T19:04:29.969Z",
     "generator": "fetch-component-properties.cjs",
     "deepScan": true,
     "discoverySignature": "95178d90b7d71421262d6d2ffcf1b33c2e4a3a000c0697ef38e3c76c31dd4eb8",
@@ -7175,13 +7175,11 @@
           "name": "Tipo",
           "syncId": null,
           "type": "VARIANT",
-          "defaultValue": "Header",
+          "defaultValue": "Nav",
           "variantOptions": [
-            "Header",
             "Nav",
             "Main",
-            "Aside",
-            "footer"
+            "Aside"
           ]
         }
       ],
@@ -7246,11 +7244,6 @@
             "subModeProperty": "Tipo",
             "variants": [
               {
-                "variantName": "Tipo=Header",
-                "variantId": "10740:4681",
-                "activeToggles": []
-              },
-              {
                 "variantName": "Tipo=Nav",
                 "variantId": "10740:4686",
                 "activeToggles": []
@@ -7263,11 +7256,6 @@
               {
                 "variantName": "Tipo=Aside",
                 "variantId": "10740:4696",
-                "activeToggles": []
-              },
-              {
-                "variantName": "Tipo=footer",
-                "variantId": "10740:4701",
                 "activeToggles": []
               }
             ]
