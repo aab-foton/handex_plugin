@@ -150,6 +150,17 @@
         }
       }
 
+      // Resposta de survey-existing-documentation (2026-09-29), disparada
+      // SÓ SOB DEMANDA por um botão explícito (ver
+      // _triggerA11yExistingDocumentationSurvey, accessibility.js) — nunca
+      // automaticamente. Sempre chama o render, mesmo com sections vazio ou
+      // failed:true — a própria função decide o empty state/aviso de falha.
+      if (msg.type === 'existing-documentation-surveyed') {
+        if (typeof renderA11yExistingDocumentationSurvey === 'function') {
+          renderA11yExistingDocumentationSurvey(msg);
+        }
+      }
+
       // Página dedicada do handoff pronta (2026-09-22) — resposta de
       // 'ensure-hac-page', disparado ao escolher a lib. O designer já foi
       // levado até a página pelo backend; aqui só abre a instrução de

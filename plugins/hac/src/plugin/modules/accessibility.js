@@ -5931,6 +5931,119 @@ function _openHacPageInstructionModal(msg) {
 }
 window._openHacPageInstructionModal = _openHacPageInstructionModal;
 
+// ── Levantamento de documentação hac já existente no arquivo (2026-09-29) ──
+// Pedido do usuário: quando a página do handoff já existir (ou já houver
+// handoff de OUTRO designer em qualquer página), o plugin deve identificar,
+// levar até lá e detalhar o que existe (quem fez, quando, quantas telas).
+// Decisões de produto FIXAS:
+//   - roda SÓ SOB DEMANDA, por este botão — nunca no boot/ensure-hac-page,
+//     pra nunca pesar em arquivo grande sem o designer pedir;
+//   - handoff de outro designer é só MOSTRADO — o trabalho do designer
+//     atual continua nascendo em Section própria (_getOrCreateA11ySessionSection
+//     não muda), nunca "documenta dentro da Section do colega".
+// Botão vive na própria modal de instrução da página do handoff
+// (hac-page-instruction-modal, modals.html) — é exatamente "a modal de
+// criar página" que o usuário pediu para avisar.
+function _triggerA11yExistingDocumentationSurvey() {
+  const loadingEl = document.getElementById('hac-existing-docs-loading');
+  const resultsEl = document.getElementById('hac-existing-docs-results');
+  const triggerEl = document.getElementById('hac-existing-docs-trigger');
+  if (loadingEl) loadingEl.classList.remove('hidden');
+  if (resultsEl) resultsEl.classList.add('hidden');
+  if (triggerEl) triggerEl.setAttribute('disabled', 'true');
+  parent.postMessage({ pluginMessage: { type: 'survey-existing-documentation', currentUserId: getA11yDesignerId() } }, '*');
+}
+window._triggerA11yExistingDocumentationSurvey = _triggerA11yExistingDocumentationSurvey;
+
+// `msg` é a resposta crua de existing-documentation-surveyed: { sections,
+// failedPages, failed }. Cada item de `sections` vem no mesmo formato de
+// _extractSessionSectionInfo (code.js) + ownerId/isOwn/pageId/pageName/
+// screens[] — ver _surveyExistingHacDocumentation.
+function renderA11yExistingDocumentationSurvey(msg) {
+  const loadingEl = document.getElementById('hac-existing-docs-loading');
+  const resultsEl = document.getElementById('hac-existing-docs-results');
+  const triggerEl = document.getElementById('hac-existing-docs-trigger');
+  if (loadingEl) loadingEl.classList.add('hidden');
+  if (triggerEl) triggerEl.removeAttribute('disabled');
+  if (!resultsEl) return;
+  resultsEl.classList.remove('hidden');
+
+  const sections = (msg && Array.isArray(msg.sections)) ? msg.sections : [];
+  const failedPages = (msg && Array.isArray(msg.failedPages)) ? msg.failedPages : [];
+
+  // Falha ao ponto de a função inteira não devolver nada (raro — cada
+  // página que falha ao carregar já é pulada dentro da própria varredura,
+  // sem interromper o resto). Comunicado no PRÓPRIO resultado, nunca por
+  // figma.notify (o designer já está olhando esta modal).
+  if (msg && msg.failed) {
+    resultsEl.innerHTML = `
+      <div class="flex items-start gap-2 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800/30 rounded-dsc-medium p-3">
+        <i data-lucide="alert-triangle" class="w-4 h-4 text-red-500 shrink-0 mt-0.5" aria-hidden="true"></i>
+        <p class="text-dsc-label-tiny normal-case tracking-normal text-red-600 dark:text-red-400 leading-relaxed">Não foi possível concluir a busca. Tente novamente.</p>
+      </div>`;
+    if (typeof _refreshIcons === 'function') _refreshIcons();
+    return;
+  }
+
+  if (sections.length === 0) {
+    resultsEl.innerHTML = `
+      <div class="flex items-start gap-2 text-slate-500 dark:text-dark-muted p-1">
+        <i data-lucide="search-x" class="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true"></i>
+        <p class="text-dsc-label-tiny normal-case tracking-normal leading-relaxed">Nenhum handoff de acessibilidade encontrado neste arquivo ainda.</p>
+      </div>`;
+    if (typeof _refreshIcons === 'function') _refreshIcons();
+    return;
+  }
+
+  const failedNote = failedPages.length > 0
+    ? `<p class="text-dsc-label-tiny normal-case tracking-normal text-amber-600 dark:text-amber-400 leading-relaxed mb-2">Não foi possível abrir ${failedPages.length} página${failedPages.length === 1 ? '' : 's'} durante a busca — o restante do arquivo foi verificado normalmente.</p>`
+    : '';
+
+  const cards = sections.map(s => {
+    const version = s.version || 'rascunho';
+    const versionText = version === 'rascunho' ? 'ainda em rascunho (não finalizado)' : `versão ${version}`;
+    const whenBy = (s.timestamp && s.designerName)
+      ? `${s.timestamp} · ${s.designerName}`
+      : 'Handoff sem data/autor identificáveis';
+    const screenCount = Array.isArray(s.screens) ? s.screens.length : (s.areaCount || 0);
+    const screensList = (Array.isArray(s.screens) && s.screens.length > 0)
+      ? `<ul class="mt-1.5 space-y-0.5">${s.screens.map(sc => `<li class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted truncate">• ${escapeHtml(sc.name)}</li>`).join('')}</ul>`
+      : '';
+
+    // Distinção visual próprio vs. outro designer (pedido do usuário) —
+    // mesmo acento azul (#005ca9) do alerta de sessão própria quando isOwn,
+    // acento neutro/cinza quando é de outro designer, com nota explícita de
+    // que o trabalho atual nasce em Section própria (decisão de produto:
+    // "mostrar, mas criar seção própria" — nunca gera a expectativa de que
+    // vai continuar dentro da Section do colega).
+    const accent = s.isOwn ? '#005ca9' : '#64748b';
+    const ownBadge = s.isOwn
+      ? `<span class="text-[10px] font-bold uppercase tracking-wide text-[#005ca9] dark:text-blue-300">Seu handoff</span>`
+      : `<span class="text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-dark-muted">Handoff de outro designer</span>`;
+    const otherDesignerNote = s.isOwn ? '' : `
+      <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-relaxed mt-1.5 italic">Seu trabalho continuará em uma Section própria — este handoff não será editado por você.</p>`;
+
+    return `
+      <div class="rounded-dsc-medium border p-3" style="border-color: ${accent}33;">
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            ${ownBadge}
+            <p class="font-bold text-[12px] text-slate-800 dark:text-white mt-0.5 truncate">${escapeHtml(whenBy)}</p>
+            <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted mt-0.5">${screenCount} tela${screenCount === 1 ? '' : 's'} · ${versionText}</p>
+            <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted/70 mt-0.5 truncate">Página: ${escapeHtml(s.pageName || '—')}</p>
+            ${screensList}
+            ${otherDesignerNote}
+          </div>
+        </div>
+        ${s.sectionId ? `<button type="button" onclick="focusNode('${s.sectionId}')" class="mt-2 text-dsc-label-tiny normal-case tracking-normal font-bold underline hover:no-underline" style="color: ${accent};">Ver no canvas</button>` : ''}
+      </div>`;
+  }).join('');
+
+  resultsEl.innerHTML = failedNote + `<div class="space-y-2">${cards}</div>`;
+  if (typeof _refreshIcons === 'function') _refreshIcons();
+}
+window.renderA11yExistingDocumentationSurvey = renderA11yExistingDocumentationSurvey;
+
 // Alterna, na Home, entre a ETAPA 1 (pergunta de plataforma, objetiva) e a
 // ETAPA 1b (sub-escolha de lib web) — nunca as duas ao mesmo tempo. A
 // antiga ETAPA 2 (resumo do fluxo + "Voltar"/"Começar") foi removida

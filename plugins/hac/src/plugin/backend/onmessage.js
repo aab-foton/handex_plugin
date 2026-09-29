@@ -66,6 +66,7 @@ import {
   _findMainTextContent,
   _findOtherDesignersSessionSections,
   _findOwnPriorSessionSection,
+  _surveyExistingHacDocumentation,
   _findTabOrderCopyForArea,
   _fitSectionToChildren,
   _fitSessionSectionFromItensFrame,
@@ -499,6 +500,26 @@ figma.ui.onmessage = async (msg) => {
   if (msg.type === 'check-my-prior-session') {
     const priorSession = _findOwnPriorSessionSection(msg.currentUserId || null);
     figma.ui.postMessage({ type: 'my-prior-session-checked', priorSession });
+    return;
+  }
+
+  // Levantamento completo de documentação hac já existente no ARQUIVO
+  // INTEIRO (2026-09-29) — disparado SÓ SOB DEMANDA por um botão explícito
+  // no frontend (decisão de produto do usuário: nunca no boot/
+  // ensure-hac-page, para não pesar em arquivo grande sem pedido). Varre
+  // todas as páginas via _surveyExistingHacDocumentation (code.js) — nunca
+  // bloqueante: falha na varredura (raro, capturado dentro da própria
+  // função por página) ainda assim devolve o resultado parcial já
+  // levantado, e `failed` só fica true se a chamada inteira lançar antes
+  // de devolver nada.
+  if (msg.type === 'survey-existing-documentation') {
+    try {
+      const survey = await _surveyExistingHacDocumentation(msg.currentUserId || null);
+      figma.ui.postMessage({ type: 'existing-documentation-surveyed', ...survey });
+    } catch (e) {
+      console.error('survey-existing-documentation failed:', e);
+      figma.ui.postMessage({ type: 'existing-documentation-surveyed', sections: [], failedPages: [], failed: true });
+    }
     return;
   }
 

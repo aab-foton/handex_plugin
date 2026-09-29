@@ -3972,6 +3972,101 @@ hr {
     correção. Nenhum bump de versão feito durante a sessão de trabalho —
     reservado pro commit final.</p>
 
+    <h2 id="s8w">8w. Levantamento de documentação hac já existente no arquivo (2026-09-29)</h2>
+
+    <p><strong>Motivação</strong>: pedido do usuário — "quando essa página já
+    existir e tiver documentação, temos como fazer com que o plugin
+    identifique e nos leve até ela, informando o que existe na página, quem
+    fez e quando fez". Diferente da seção 8m/8p (que detectam automaticamente,
+    ao escolher a lib, só a Section de sessão PRÓPRIA e a de OUTROS designers
+    <em>dentro da página corrente</em>), esta feature varre o
+    <strong>arquivo inteiro</strong> (todas as páginas) e detalha o conteúdo
+    (telas, não só a contagem), mas roda <strong>só sob demanda</strong>, por
+    um botão — nunca automaticamente no boot/<code>ensure-hac-page</code>,
+    decisão explícita de produto para nunca pesar em arquivo grande sem o
+    designer pedir.</p>
+
+    <p><strong>Backend</strong>: <code>_surveyExistingHacDocumentation(currentUserId)</code>
+    (<code>code.js</code>) varre <code>figma.root.children</code> (não só
+    <code>figma.currentPage</code>) — mesmo padrão multi-página de
+    <code>_clearHacCanvasForCurrentUser</code> (seção 8h/8j): sob
+    <code>documentAccess: "dynamic-page"</code>, ler <code>.children</code> de
+    uma página que não é a corrente exige <code>await page.loadAsync()</code>
+    antes; uma página que falha ao carregar é <strong>pulada</strong>
+    (try/catch por página, registrada em <code>failedPages</code>), nunca
+    aborta a varredura inteira. Para cada Section com
+    <code>hacSessionSection === 'true'</code> encontrada (própria ou de outro
+    designer), devolve <code>{ name, version, areaCount, timestamp,
+    designerName, sectionId, ownerId, isOwn, pageId, pageName, screens }</code>
+    — <code>screens</code> é o detalhamento pedido ("o que existe", não só a
+    contagem): nome + número de cada "Tela N" dentro de "[HAC] Documentação"
+    (via <code>hacFichaTelaForArea</code>/<code>hacFichaTelaNumber</code>).
+    Não conta specs por categoria: não existe hoje nenhum pluginData de
+    categoria por spec individual gravado no canvas (só o marcador genérico
+    <code>hacCategory === 'a11y'</code>, que já serve pra identificar Áreas) —
+    inventar essa contagem exigiria uma descida adicional cara e frágil por
+    nome de camada, então ficou fora deste levantamento.</p>
+
+    <p><strong>Reaproveitamento sem alterar comportamento existente</strong>:
+    a contagem de <code>areaCount</code> e o parsing de
+    <code>timestamp</code>/<code>designerName</code> por nome de Section
+    (mesmo split por <code>'|'</code> de sempre) foram extraídos para um
+    helper compartilhado, <code>_extractSessionSectionInfo(sectionNode)</code>
+    — <code>_findOwnPriorSessionSection</code> (seção 8p) passou a chamá-lo
+    internamente, mas seu retorno e comportamento observável não mudaram (
+    mesmo formato <code>{ name, ownerId, version, areaCount, timestamp,
+    designerName, sectionId }</code>, mesma busca restrita a
+    <code>figma.currentPage</code>). <code>_findOtherDesignersSessionSections</code>
+    (seção 8m) não foi tocada.</p>
+
+    <p><strong>Handler</strong> <code>survey-existing-documentation</code>
+    (<code>onmessage.js</code>, <code>msg.currentUserId</code>) → responde
+    <code>existing-documentation-surveyed</code> com <code>{ sections,
+    failedPages, failed }</code> — <code>failed</code> só aparece
+    <code>true</code> se a chamada inteira lançar antes de devolver nada
+    (raro; falhas por página já são absorvidas dentro da própria função).
+    Nunca bloqueante, mesmo padrão de todo handler de detecção do hac.</p>
+
+    <p><strong>Frontend</strong>: botão "Buscar documentação existente" vive
+    dentro da própria modal de instrução da página do handoff
+    (<code>hac-page-instruction-modal</code>, <code>modals.html</code>) — é
+    exatamente "a modal de criar página" mencionada no pedido do usuário, e
+    o lugar natural para avisar sobre documentação já existente antes de o
+    designer colar telas novas ali. <code>_triggerA11yExistingDocumentationSurvey()</code>
+    dispara a mensagem e mostra um loading (<code>#hac-existing-docs-loading</code>,
+    padrão <code>loader-2</code> + <code>animate-spin</code> já usado no
+    resto do plugin); <code>renderA11yExistingDocumentationSurvey(msg)</code>
+    (ambas em <code>accessibility.js</code>) renderiza um card por Section
+    encontrada em <code>#hac-existing-docs-results</code> — quem fez, quando,
+    quantas telas, versão, em qual página, lista de telas, e um botão
+    <strong>"Ver no canvas"</strong> que reaproveita <code>focusNode(sectionId)</code>
+    (já usado pelo alerta da seção 8p). Distinção visual clara entre "Seu
+    handoff" (acento azul <code>#005ca9</code>) e "Handoff de outro designer"
+    (acento neutro, com nota explícita: "Seu trabalho continuará em uma
+    Section própria — este handoff não será editado por você") — decisão de
+    produto fixa: mostra o que existe, mas nunca documenta dentro da Section
+    de outro designer. Empty state ("Nenhum handoff de acessibilidade
+    encontrado neste arquivo ainda") e aviso de páginas que falharam ao
+    carregar, ambos comunicados dentro do próprio resultado da varredura
+    (nunca <code>figma.notify</code> — é uma ação sob demanda, o designer já
+    está olhando esta modal).</p>
+
+    <p><strong>Grafo de conhecimento</strong>: <code>survey-existing-documentation</code>/
+    <code>existing-documentation-surveyed</code> adicionadas a
+    <code>docs/knowledge-graph.json</code> (Regra 0b do CLAUDE.md), com nota
+    explícita da diferença de gatilho (sob demanda) em relação a
+    <code>check-my-prior-session</code>/<code>check-other-designers-sections</code>
+    (automáticas, ao escolher a lib).</p>
+
+    <p><strong>Validação</strong>: <code>node --input-type=module --check</code>
+    em <code>code.js</code>/<code>onmessage.js</code>, <code>node --check</code>
+    em <code>accessibility.js</code>/<code>messages.js</code>, <code>npm run
+    bundle:ui</code>, <code>npm run bundle:code</code>, <code>npm run
+    export:plugin</code>, <code>npx tsc --noEmit</code> e <code>npm run
+    lint:figma-api</code> — todos limpos. Bump de versão
+    <code>0.1.0-beta.58</code> → <code>0.1.0-beta.59</code> no mesmo commit,
+    conforme regra de versionamento do CLAUDE.md.</p>
+
     <h2 id="s9">9. Contrato de mensagens (UI ↔ backend)</h2>
 
     <p>Toda comunicação passa por <code>postMessage</code>/<code>window.onmessage</code> — o frontend
@@ -3999,6 +4094,8 @@ hr {
       <tr><td><code>other-designers-sections-checked</code></td><td>backend → UI</td><td><code>otherDesignersSections: {name, ownerId}[]</code> — ver seção 8m</td></tr>
       <tr><td><code>check-my-prior-session</code></td><td>UI → backend</td><td><code>currentUserId</code> — novo em 2026-09-10, ver seção 8p</td></tr>
       <tr><td><code>my-prior-session-checked</code></td><td>backend → UI</td><td><code>priorSession: {name, ownerId, version, areaCount, timestamp, designerName, sectionId} | null</code> — <code>timestamp</code>/<code>designerName</code>/<code>sectionId</code> novos em 2026-09-11, ver seção 8s</td></tr>
+      <tr><td><code>survey-existing-documentation</code></td><td>UI → backend</td><td><code>currentUserId</code> — novo em 2026-09-29, ver seção 8w; roda SÓ SOB DEMANDA, nunca no boot</td></tr>
+      <tr><td><code>existing-documentation-surveyed</code></td><td>backend → UI</td><td><code>sections: {name, version, areaCount, timestamp, designerName, sectionId, ownerId, isOwn, pageId, pageName, screens}[]</code>, <code>failedPages</code>, <code>failed</code> — novo em 2026-09-29, ver seção 8w</td></tr>
       <tr><td><code>resolve-manual-spec-match</code></td><td>UI → backend</td><td><code>token</code> — novo em 2026-09-11, ver seção 8s</td></tr>
       <tr><td><code>stop-manual-spec-match-mode</code></td><td>UI → backend</td><td>sem payload — novo em 2026-09-11, desliga o re-matching ao vivo, ver seção 8s</td></tr>
       <tr><td><code>manual-spec-match-resolved</code></td><td>backend → UI</td><td><code>token</code> (pode ser <code>null</code> nas respostas do listener de <code>selectionchange</code>), <code>nodeId</code>, <code>nodeName</code>, <code>match: null | {isUnmapped:true,...} | {a11yCategory, confidence, origin, sourceLib, containingFrame}</code> — novo em 2026-09-11, ver seção 8s</td></tr>

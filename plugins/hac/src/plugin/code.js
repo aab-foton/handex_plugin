@@ -2072,6 +2072,72 @@ export function _findOtherDesignersSessionSections(currentUserId) {
   return result;
 }
 
+// Helper compartilhado (2026-09-29, extraído de _findOwnPriorSessionSection
+// SEM alterar o comportamento dela — mesma contagem, mesmo parsing de nome,
+// mesmo fallback 'rascunho') — usado também por
+// _surveyExistingHacDocumentation, que precisa da MESMA informação por
+// Section de sessão, só que varrendo o arquivo inteiro em vez de só a
+// página corrente. Não faz nenhuma leitura de página/currentPage aqui —
+// recebe o node da Section já resolvido pelo chamador, então funciona
+// igual em figma.currentPage.children (uso original) ou em
+// pageNode.children de qualquer outra página (uso novo).
+function _extractSessionSectionInfo(sectionNode) {
+  // Grupo de Área é o GROUP marcado com hacCategory 'a11y' (mesmo
+  // marcador gravado em create-a11y-area) — critério objetivo, não
+  // um chute por tipo de node genérico.
+  //
+  // Bug real corrigido (2026-09-14, reportado com print pelo
+  // usuário: alerta sempre mostrava "0 telas" mesmo com a Ficha
+  // visivelmente populada): esta contagem só olhava FILHOS DIRETOS
+  // da Section, premissa válida até 2026-09-10 (áreas nasciam soltas
+  // na Section). Desde a reorganização da árvore da Ficha (Section >
+  // [HAC] Documentação > Tela N > [HAC] Assets do Handoff > Grupo da
+  // Área, ver _ensureLegendBesideClone/_getOrCreateFichaItensFrame),
+  // o Grupo de Área fica bem mais fundo — a busca por filho direto
+  // nunca mais encontrava nada. Descida recursiva limitada (mesmo
+  // padrão de _forEachA11yFichaFrameChild, profundidade 12 — árvore
+  // real tem no máximo ~5 níveis hoje, a folga é intencional contra
+  // reestruturações futuras) substitui a busca de 1 nível só.
+  let areaCount = 0;
+  const _countAreaGroups = (node, depth) => {
+    if (!node || depth > 12 || !Array.isArray(node.children)) return;
+    for (const child of node.children) {
+      try {
+        if (child.type === 'GROUP' && child.getPluginData &&
+          child.getPluginData('hacCategory') === 'a11y') {
+          areaCount++;
+          continue; // Grupo de Área não tem outro Grupo de Área dentro — não desce mais.
+        }
+      } catch (e) { }
+      if (child.type === 'FRAME' || child.type === 'GROUP' || child.type === 'SECTION') {
+        _countAreaGroups(child, depth + 1);
+      }
+    }
+  };
+  _countAreaGroups(sectionNode, 0);
+  // timestamp/designerName extraídos do nome da própria Section
+  // ("[HAC] Handoff de Acessibilidade | {timestamp} | {designerName} |
+  // v{versão}") com o MESMO split por '|' que extractDesignerName usa
+  // no frontend (accessibility.js, openA11yOtherDesignerModal) — não é
+  // um parsing novo, só espelha o mesmo índice de partes aqui do lado
+  // backend, que não tem acesso a funções do frontend.
+  const _nameParts = String(sectionNode.name || '').split('|').map(s => s.trim());
+  const timestamp = (_nameParts.length >= 3 && _nameParts[1]) ? _nameParts[1] : null;
+  const designerName = (_nameParts.length >= 3 && _nameParts[2]) ? _nameParts[2] : null;
+  return {
+    name: sectionNode.name,
+    // Fallback 'rascunho' (2026-09-24, revisão do modelo de
+    // versionamento) — hacSessionVersion só existe depois da 1ª
+    // finalização; ausência do pluginData é o estado normal de um
+    // handoff ainda em preenchimento, não um dado corrompido.
+    version: sectionNode.getPluginData('hacSessionVersion') || 'rascunho',
+    areaCount,
+    timestamp,
+    designerName,
+    sectionId: sectionNode.id,
+  };
+}
+
 // Detecção de handoff PRÓPRIO já iniciado neste arquivo (2026-09-10) —
 // irmã de _findOtherDesignersSessionSections acima, mas com o filtro
 // invertido: acha a Section de sessão cujo 'hacSessionOwnerId' é o PRÓPRIO
@@ -2090,65 +2156,100 @@ export function _findOwnPriorSessionSection(currentUserId) {
       if (n.getPluginData && n.getPluginData('hacSessionSection') === 'true') {
         const ownerId = n.getPluginData('hacSessionOwnerId') || '';
         if (ownerId !== currentUserId) continue;
-        // Grupo de Área é o GROUP marcado com hacCategory 'a11y' (mesmo
-        // marcador gravado em create-a11y-area) — critério objetivo, não
-        // um chute por tipo de node genérico.
-        //
-        // Bug real corrigido (2026-09-14, reportado com print pelo
-        // usuário: alerta sempre mostrava "0 telas" mesmo com a Ficha
-        // visivelmente populada): esta contagem só olhava FILHOS DIRETOS
-        // da Section, premissa válida até 2026-09-10 (áreas nasciam soltas
-        // na Section). Desde a reorganização da árvore da Ficha (Section >
-        // [HAC] Documentação > Tela N > [HAC] Assets do Handoff > Grupo da
-        // Área, ver _ensureLegendBesideClone/_getOrCreateFichaItensFrame),
-        // o Grupo de Área fica bem mais fundo — a busca por filho direto
-        // nunca mais encontrava nada. Descida recursiva limitada (mesmo
-        // padrão de _forEachA11yFichaFrameChild, profundidade 12 — árvore
-        // real tem no máximo ~5 níveis hoje, a folga é intencional contra
-        // reestruturações futuras) substitui a busca de 1 nível só.
-        let areaCount = 0;
-        const _countAreaGroups = (node, depth) => {
-          if (!node || depth > 12 || !Array.isArray(node.children)) return;
-          for (const child of node.children) {
-            try {
-              if (child.type === 'GROUP' && child.getPluginData &&
-                child.getPluginData('hacCategory') === 'a11y') {
-                areaCount++;
-                continue; // Grupo de Área não tem outro Grupo de Área dentro — não desce mais.
-              }
-            } catch (e) { }
-            if (child.type === 'FRAME' || child.type === 'GROUP' || child.type === 'SECTION') {
-              _countAreaGroups(child, depth + 1);
-            }
-          }
-        };
-        _countAreaGroups(n, 0);
-        // timestamp/designerName extraídos do nome da própria Section
-        // ("[HAC] Handoff de Acessibilidade | {timestamp} | {designerName} |
-        // v{versão}") com o MESMO split por '|' que extractDesignerName usa
-        // no frontend (accessibility.js, openA11yOtherDesignerModal) — não é
-        // um parsing novo, só espelha o mesmo índice de partes aqui do lado
-        // backend, que não tem acesso a funções do frontend.
-        const _nameParts = String(n.name || '').split('|').map(s => s.trim());
-        const timestamp = (_nameParts.length >= 3 && _nameParts[1]) ? _nameParts[1] : null;
-        const designerName = (_nameParts.length >= 3 && _nameParts[2]) ? _nameParts[2] : null;
-        return {
-          name: n.name,
-          ownerId: currentUserId,
-          // Fallback 'rascunho' (2026-09-24, revisão do modelo de
-          // versionamento) — hacSessionVersion só existe depois da 1ª
-          // finalização; ausência do pluginData é o estado normal de um
-          // handoff ainda em preenchimento, não um dado corrompido.
-          version: n.getPluginData('hacSessionVersion') || 'rascunho',
-          areaCount,
-          timestamp,
-          designerName,
-          sectionId: n.id,
-        };
+        const info = _extractSessionSectionInfo(n);
+        return { ...info, ownerId: currentUserId };
       }
     } catch (e) { }
   }
   return null;
+}
+
+// Levantamento completo de documentação hac já existente no ARQUIVO
+// INTEIRO (2026-09-29, pedido do usuário: "quando essa página já existir e
+// tiver documentação, temos como fazer com que o plugin identifique e nos
+// leve até ela"). Roda SÓ SOB DEMANDA (disparado por um botão explícito no
+// frontend, nunca no boot/ensure-hac-page) — decisão de produto do usuário,
+// justamente para nunca pesar em arquivo grande sem pedido.
+//
+// Varre TODAS as páginas de figma.root.children (não só a corrente) —
+// mesmo padrão multi-página de _clearHacCanvasForCurrentUser: dynamic-page
+// exige page.loadAsync() antes de ler .children de uma página que não é a
+// corrente, e uma página que falha ao carregar é PULADA (try/catch por
+// página), nunca aborta a varredura inteira nem falha silenciosamente sem
+// registro — a falha entra em `failedPages` e é reportada de volta ao
+// frontend, que decide como avisar o designer (nunca um figma.notify
+// disparado daqui, ver decisão do usuário: comunicar no próprio resultado
+// da varredura, já que é ação sob demanda com o designer olhando a UI).
+//
+// Para cada Section de sessão encontrada (own ou de outro designer),
+// devolve o mesmo formato de _extractSessionSectionInfo + ownerId/isOwn +
+// pageId/pageName (em qual página está) + `screens` (detalhamento do item
+// "d": nome + número de cada "Tela N" dentro de "[HAC] Documentação",
+// via hacFichaTelaForArea/hacFichaTelaNumber — não reconta specs por
+// categoria: não existe hoje pluginData de categoria por spec individual
+// gravado no canvas, só o filtro genérico hacCategory==='a11y' que já
+// serve pra áreas; inventar uma contagem por categoria custaria uma
+// descida adicional cara e frágil por nome de camada, então fica fora
+// deste levantamento).
+export async function _surveyExistingHacDocumentation(currentUserId) {
+  const sections = [];
+  const failedPages = [];
+
+  for (const pageNode of figma.root.children) {
+    if (pageNode.type !== 'PAGE') continue;
+    try {
+      await pageNode.loadAsync();
+    } catch (e) {
+      failedPages.push(pageNode.name || pageNode.id);
+      continue;
+    }
+
+    for (const n of pageNode.children) {
+      if (n.type !== 'SECTION') continue;
+      try {
+        if (!n.getPluginData || n.getPluginData('hacSessionSection') !== 'true') continue;
+        const ownerId = n.getPluginData('hacSessionOwnerId') || '';
+        const info = _extractSessionSectionInfo(n);
+
+        // Detalhamento por tela — desce até "[HAC] Documentação"
+        // (hacFichaDocumentacaoFrame==='true') e lista os filhos "Tela N"
+        // (hacFichaTelaForArea presente), na mesma profundidade limitada
+        // usada acima para achar Grupos de Área (a Ficha nunca fica mais
+        // funda que isso).
+        const screens = [];
+        const _findScreens = (node, depth) => {
+          if (!node || depth > 12 || !Array.isArray(node.children)) return;
+          for (const child of node.children) {
+            try {
+              if (child.getPluginData && child.getPluginData('hacFichaTelaForArea')) {
+                screens.push({
+                  name: child.name || 'Tela',
+                  number: Number(child.getPluginData('hacFichaTelaNumber')) || null,
+                });
+                continue; // Tela não tem outra Tela dentro — não desce mais.
+              }
+            } catch (e) { }
+            if (child.type === 'FRAME' || child.type === 'GROUP' || child.type === 'SECTION') {
+              _findScreens(child, depth + 1);
+            }
+          }
+        };
+        _findScreens(n, 0);
+        screens.sort((a, b) => (a.number || 0) - (b.number || 0));
+
+        sections.push({
+          ...info,
+          ownerId: ownerId || null,
+          isOwn: !!(currentUserId && ownerId === currentUserId),
+          pageId: pageNode.id,
+          pageName: pageNode.name,
+          screens,
+        });
+      } catch (e) { }
+    }
+  }
+
+  return { sections, failedPages };
 }
 
 // area.id É o GROUP da Área desde 2026-09-05 (create-a11y-area envolve o

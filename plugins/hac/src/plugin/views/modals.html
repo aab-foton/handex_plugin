@@ -1126,6 +1126,28 @@
           </p>
         </div>
       </div>
+
+      <!-- Levantamento de documentação hac já existente no arquivo
+           (2026-09-29, pedido do usuário) — roda SÓ SOB DEMANDA, ao clicar
+           neste botão (_triggerA11yExistingDocumentationSurvey,
+           accessibility.js). Nunca disparado automaticamente. -->
+      <div class="rounded-dsc-medium border border-gray-100 dark:border-dark-line p-3.5 space-y-2.5">
+        <div class="flex items-start justify-between gap-2">
+          <div>
+            <p class="font-bold text-[12px] text-slate-800 dark:text-white">Já existe documentação neste arquivo?</p>
+            <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-relaxed mt-0.5">Busca em todas as páginas do arquivo por handoffs de acessibilidade já iniciados — seus ou de outros designers.</p>
+          </div>
+        </div>
+        <button type="button" id="hac-existing-docs-trigger" onclick="_triggerA11yExistingDocumentationSurvey()"
+          class="w-full py-2 text-[12px] font-bold text-[#005ca9] dark:text-blue-300 border border-[#005ca9]/30 dark:border-blue-800/40 rounded-dsc-large hover:bg-[#005ca9]/5 dark:hover:bg-blue-900/10 transition-colors flex items-center justify-center gap-1.5">
+          <i data-lucide="search" class="w-3.5 h-3.5" aria-hidden="true"></i> Buscar documentação existente
+        </button>
+        <div id="hac-existing-docs-loading" class="hidden flex items-center gap-2 text-slate-500 dark:text-dark-muted p-1">
+          <i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin" aria-hidden="true"></i>
+          <span class="text-dsc-label-tiny normal-case tracking-normal">Buscando em todas as páginas do arquivo…</span>
+        </div>
+        <div id="hac-existing-docs-results" class="hidden"></div>
+      </div>
     </div>
     <div class="p-dsc-tiny border-t border-gray-100 dark:border-dark-line flex gap-dsc-nano shrink-0">
       <button onclick="closeModal('hac-page-instruction-modal')" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#005ca9] hover:bg-blue-700 rounded-dsc-large transition-colors shadow-lg shadow-blue-500/20">Entendi</button>

@@ -156,6 +156,25 @@
       "consumers": ["src/plugin/modules/messages.js:142"]
     },
     {
+      "id": "message:survey-existing-documentation",
+      "direction": "frontend-to-backend",
+      "handlerLocation": "src/plugin/backend/onmessage.js (logo após check-my-prior-session)",
+      "payloadFields": ["currentUserId"],
+      "senders": ["src/plugin/modules/accessibility.js (botão de varredura sob demanda, modal hac-page-instruction-modal)"],
+      "consumers": ["backend: _surveyExistingHacDocumentation (code.js)"],
+      "respondsWith": ["message:existing-documentation-surveyed"],
+      "note": "2026-09-29. Roda SÓ SOB DEMANDA (decisão de produto do usuário) — nunca disparado no boot/ensure-hac-page/ui-ready, diferente de check-my-prior-session e check-other-designers-sections que rodam automaticamente ao escolher a lib."
+    },
+    {
+      "id": "message:existing-documentation-surveyed",
+      "direction": "backend-to-frontend",
+      "handlerLocation": "src/plugin/modules/messages.js (logo após my-prior-session-checked)",
+      "payloadFields": ["sections (array: name/version/areaCount/timestamp/designerName/sectionId/ownerId/isOwn/pageId/pageName/screens[])", "failedPages", "failed (só em erro que interrompeu a função inteira)"],
+      "senders": ["src/plugin/backend/onmessage.js (branch de sucesso e branch de catch do mesmo handler)"],
+      "consumers": ["src/plugin/modules/messages.js: renderA11yExistingDocumentationSurvey (accessibility.js)"],
+      "note": "2026-09-29. Reaproveita o mesmo shape de campo que message:my-prior-session-checked usa para uma única Section (name/version/areaCount/timestamp/designerName/sectionId), mas para TODAS as Sections do arquivo — ver propagatesField candidato se esse shape crescer mais pontos de uso."
+    },
+    {
       "id": "message:resize",
       "direction": "frontend-to-backend",
       "handlerLocation": "src/plugin/backend/onmessage.js:453",
