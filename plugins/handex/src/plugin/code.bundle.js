@@ -1007,7 +1007,7 @@
     };
     return "#" + toHex(r) + toHex(g) + toHex(b);
   }
-  var PLUGIN_VERSION = true ? "6.32.0" : "dev";
+  var PLUGIN_VERSION = true ? "6.32.1" : "dev";
   var DSC_HANDOFF_SUMMARY_ENABLED = false;
   async function _writeSharedPluginData(data) {
     var _a, _b, _c, _d, _e, _f, _g;

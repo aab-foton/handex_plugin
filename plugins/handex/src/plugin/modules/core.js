@@ -1698,12 +1698,27 @@ const _modalReturnFocus = {};
 // matam qualquer loop anterior ainda em voo, sem depender só de
 // offsetParent.
 let _persistentFocusToken = 0;
+// Ponteiro sobre a janela do plugin. Com o mouse fora, o plugin nunca puxa
+// foco de teclado pra si: sem isso, Espaço/atalhos do Figma param de
+// funcionar no canvas enquanto o plugin está aberto.
+let _pointerInsidePlugin = false;
+document.addEventListener('mouseenter', () => { _pointerInsidePlugin = true; });
+document.addEventListener('mousemove', () => { _pointerInsidePlugin = true; }, { passive: true });
+document.addEventListener('mouseleave', () => {
+  _pointerInsidePlugin = false;
+  _persistentFocusToken++;
+  const active = document.activeElement;
+  if (active && active !== document.body && typeof active.blur === 'function') active.blur();
+  try { window.parent.focus(); } catch (e) {}
+});
+
 function _persistentFocus(target, attempts = 15, intervalMs = 200) {
   if (!target) return;
   const token = ++_persistentFocusToken;
   let tries = 0;
   const tryFocus = () => {
     if (token !== _persistentFocusToken) return;
+    if (!_pointerInsidePlugin) return;
     if (target.offsetParent === null) return;
     tries++;
     target.focus();
@@ -1714,12 +1729,18 @@ function _persistentFocus(target, attempts = 15, intervalMs = 200) {
 }
 window._persistentFocus = _persistentFocus;
 
+// Modais só de feedback (sem nada pra digitar/clicar) não pegam foco nem o
+// devolvem ao fechar -- o loading roda enquanto o designer olha o canvas.
+const _NO_FOCUS_MODALS = new Set(['generic-loading-modal']);
+
 function openModal(id) {
   const el = document.getElementById(id);
   if (!el) return;
-  _modalReturnFocus[id] = document.activeElement;
+  const alreadyOpen = !el.classList.contains('hidden');
   el.classList.remove("hidden");
   updateFABVisibility(true);
+  if (_NO_FOCUS_MODALS.has(id) || alreadyOpen) return;
+  _modalReturnFocus[id] = document.activeElement;
   const focusTarget = el.querySelector(FOCUSABLE_SELECTOR);
   if (focusTarget) {
     _persistentFocus(focusTarget);
@@ -1739,7 +1760,7 @@ function closeModal(id) {
   // forma esperada (ver comentário de _persistentFocus).
   _persistentFocusToken++;
   const returnEl = _modalReturnFocus[id];
-  if (returnEl && document.contains(returnEl)) returnEl.focus();
+  if (_pointerInsidePlugin && returnEl && document.contains(returnEl)) returnEl.focus();
   delete _modalReturnFocus[id];
   // Desliga o listener de selectionchange do mini-mapa de ancoragem do
   // backend — ligado só em openFlowFormModal(), independente de por onde o
