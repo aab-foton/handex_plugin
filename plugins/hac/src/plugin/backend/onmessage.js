@@ -1299,7 +1299,20 @@ figma.ui.onmessage = async (msg) => {
               node = mappedNode;
               specClone = resolved.clone;
             } else {
+              // BUG REAL CORRIGIDO (2026-09-29, print do usuário: card de
+              // Elemento Decorativo criado, mas SEM o marcador visível na
+              // réplica) — este fallback desenhava o card E o marcador
+              // sobre o elemento ORIGINAL (fora da réplica de trabalho que
+              // o designer está olhando), só avisando via console.error
+              // (invisível pro designer, só aparece no devtools). O
+              // resultado parecia "marcador não apareceu" quando na
+              // verdade ele nasceu no lugar errado (a tela original, não a
+              // cópia). Agora avisa explicitamente via figma.notify — não
+              // aborta a criação (mesma filosofia de fallback brando já
+              // usada nos demais pontos desta função), mas o designer
+              // precisa saber que o resultado não está sobre a réplica.
               console.error('[hac] create-unified-spec: node não encontrado no clone da área — desenhando sobre o original.', JSON.stringify({ targetNodeId: node.id }));
+              figma.notify('Especificação criada sobre o elemento original (não foi possível localizá-lo na réplica de trabalho desta área). Revise a posição do card/marcador.', { error: true, timeout: 6000 });
             }
             if (_manualAnchorNode) {
               const mappedAnchor = resolved.nodeMap.get(_manualAnchorNode.id);
@@ -1313,7 +1326,12 @@ figma.ui.onmessage = async (msg) => {
             }
           }
         } catch (e) {
+          // Mesmo raciocínio do bloco acima (2026-09-29) — falha ao
+          // resolver/criar o clone da área é outro caminho que faz a spec
+          // nascer sobre o design ORIGINAL sem nenhum aviso visível ao
+          // designer além do devtools.
           console.error('[hac] create-unified-spec: falha ao resolver/criar o clone da área — desenhando sobre o original.', e && e.message);
+          figma.notify('Especificação criada sobre o elemento original (não foi possível preparar a réplica de trabalho desta área). Revise a posição do card/marcador.', { error: true, timeout: 6000 });
         }
       }
 
@@ -2034,6 +2052,23 @@ figma.ui.onmessage = async (msg) => {
             targetX = _anchorL - cardW - _SPEC_COL_GAP;
           }
 
+          // Empurra o card para FORA da faixa X da réplica, pro lado da guia
+          // (2026-09-29, print do usuário: specs manuais nascendo em cima da
+          // réplica do Leitor de Tela). A regra "o card pertence à faixa da
+          // réplica, nunca EM CIMA dela" já existia, mas só dentro do branch
+          // de âncora manual (guard local, logo acima) — os outros branches
+          // ancoram em specs irmãs, que podem estar em qualquer X, inclusive
+          // sobre a réplica quando a irmã herdou uma posição ruim. Aqui vale
+          // pra todo branch, que é o que esta normalização existe pra
+          // garantir. `_occupied` (anti-colisão abaixo) só enxerga cards de
+          // spec, nunca a réplica, então sem este passo nada impede a
+          // sobreposição.
+          const _clampOutOfAnchorX = (x) => {
+            if (x + cardW <= _anchorL || x >= _anchorR) return x;
+            return side === 'left' ? _anchorL - cardW - _SPEC_COL_GAP : _anchorR + _SPEC_COL_GAP;
+          };
+          targetX = _clampOutOfAnchorX(targetX);
+
           // Specs já desenhadas nesta MESMA tela (mesmo critério "mesma
           // faixa Y da réplica" do scan de _letterMap acima) — base tanto do
           // teto de Y logo abaixo quanto da anti-colisão no fim.
@@ -2092,8 +2127,12 @@ figma.ui.onmessage = async (msg) => {
               targetY = _nextY;
             } else {
               // Coluna cheia: próxima coluna à direita, de volta ao topo.
-              const _nextX = targetX + cardW + _SPEC_COL_GAP;
-              if (_nextX > _anchorR + _maxSpread) break;
+              // Reaplica o clamp da réplica (2026-09-29): a coluna seguinte
+              // pode cair sobre ela — `_occupied` só contém cards de spec,
+              // então o loop sozinho não enxerga essa colisão e pararia com
+              // o card em cima da réplica.
+              const _nextX = _clampOutOfAnchorX(targetX + cardW + _SPEC_COL_GAP);
+              if (_nextX > _anchorR + _maxSpread || _nextX === targetX) break;
               targetX = _nextX;
               targetY = _minY;
             }
@@ -2161,6 +2200,15 @@ figma.ui.onmessage = async (msg) => {
           groupNodes.push(endDot);
         }
       } else {
+        // Sem bounds calculável (node sem absoluteBoundingBox NEM
+        // absoluteRenderBounds — raro, mas real) — nem marcador nem
+        // conector são desenhados aqui, o card cai solto no centro do
+        // viewport. Antes desta correção (2026-09-29) esse caminho não
+        // avisava ninguém; agora o designer sabe que precisa reposicionar/
+        // revisar manualmente, em vez de só notar a ausência do marcador
+        // sem saber por quê.
+        console.error('[hac] create-unified-spec: node sem bounding box calculável — card criado sem marcador nem posicionamento por elemento.', JSON.stringify({ targetNodeId: node.id }));
+        figma.notify('Especificação criada sem marcador/posicionamento (não foi possível calcular os limites do elemento). Revise manualmente.', { error: true, timeout: 6000 });
         figma.currentPage.appendChild(specCard);
         _absCardX = Math.round(figma.viewport.center.x);
         _absCardY = Math.round(figma.viewport.center.y);

@@ -1254,9 +1254,12 @@ function openA11yModal(category, options) {
   // Componente) aparecem em "Elementos e Imagens" (ver
   // _renderA11yElementoMobileFields). O fluxo manual "+ Nova spec"
   // (chooseA11yType) já resolve isto lendo getA11yProjectOrigin() antes de
-  // chamar este modal; default 'web' aqui cobre só o caso raro de a origem
-  // do projeto ainda não estar definida.
-  const a11yOrigin = (options && options.a11yOrigin) || 'web';
+  // chamar este modal. Fallback intermediário pra getA11yProjectOrigin()
+  // (2026-09-29, mesmo raciocínio de _resolveA11yFormPresetFromItem) —
+  // nunca cair direto em 'web' quando quem chamou não passou options.a11yOrigin
+  // mas o projeto já tem origem declarada; só cai no hardcoded 'web' no caso
+  // raro de nem options nem o projeto terem origem definida ainda.
+  const a11yOrigin = (options && options.a11yOrigin) || getA11yProjectOrigin() || 'web';
   // Nome cru do component set DSC real (containingFrame, ex: "[dsc] Button")
   // já resolvido pelo scan que abriu este formulário via
   // openA11yFormFromUndocumented — mesmo raciocínio do a11yOrigin acima.
@@ -1486,7 +1489,7 @@ function switchA11yWizardCategory(newCategory) {
   if (newCategory === modal.dataset.category) return;
   const options = {
     pendingTargetNodeId: modal.dataset.pendingTargetNodeId || null,
-    a11yOrigin: modal.dataset.a11yOrigin || 'web',
+    a11yOrigin: modal.dataset.a11yOrigin || getA11yProjectOrigin() || 'web',
     dscComponentName: modal.dataset.dscComponentName || null,
     targetNodeName: document.getElementById('a11y-modal-target-node-name').textContent,
   };
@@ -4138,7 +4141,7 @@ function _finishA11ySpecConfirm() {
 
   const opts = {
     category: 'acessibilidade',
-    categoryLabel: getA11yCategoryLabel(category, (modal && modal.dataset.a11yOrigin) || 'web'),
+    categoryLabel: getA11yCategoryLabel(category, (modal && modal.dataset.a11yOrigin) || getA11yProjectOrigin() || 'web'),
     letter,
     color: meta.color,
     fillColor: meta.fill,
@@ -4160,10 +4163,13 @@ function _finishA11ySpecConfirm() {
     // Origem já resolvida por quem abriu o modal: Detecção Automática via
     // openA11yFormFromUndocumented, edição de uma spec existente via
     // editA11ySpec, ou o botão "+ Nova spec" via chooseA11yType (que lê
-    // getA11yProjectOrigin() — a origem já configurada do projeto). Default
-    // 'web' aqui cobre só o caso raro de modal.dataset.a11yOrigin não ter
-    // sido setado.
-    a11yOrigin: (modal && modal.dataset.a11yOrigin) || 'web',
+    // getA11yProjectOrigin() — a origem já configurada do projeto).
+    // Fallback intermediário pra getA11yProjectOrigin() (2026-09-29): se
+    // modal.dataset.a11yOrigin não tiver sido setado por qualquer motivo,
+    // usa a origem do projeto (fonte mais confiável disponível) antes de
+    // cair no hardcoded 'web' — nunca mandar uma spec pro backend como web
+    // por omissão dentro de um projeto declarado mobile.
+    a11yOrigin: (modal && modal.dataset.a11yOrigin) || getA11yProjectOrigin() || 'web',
     // Mesmo raciocínio do a11yOrigin acima: fluxo manual não passou pela
     // Detecção Automática, então não há componentKey resolvido pra apontar
     // uma lib DSC de origem. Explícito null (em vez de omitir o campo) pra
@@ -6615,10 +6621,21 @@ function _resolveA11yFormPresetFromItem(item, kind) {
   // componente DSC real (_resolveDscComponentA11yMatch, code.js). Em
   // "titulo"/"decorativo" (heurística de texto/ícone, sem componente real)
   // vem retropreenchida com a origin da Área Marcada
-  // (handleA11yPostAreaDetectionResult, acima) — nunca fica undefined depois
-  // do retropreenchimento, mas o fallback 'web' é mantido por segurança
-  // (ex: item avulso fora do fluxo de Detecção Automática por Área).
-  const a11yOrigin = match.origin || 'web';
+  // (handleA11yPostAreaDetectionResult, acima) — normalmente nunca fica
+  // undefined depois do retropreenchimento.
+  // BUG REAL CORRIGIDO (2026-09-29, print do usuário: spec "Elemento
+  // Decorativo" nasceu com marcador/dicionário DESKTOP num projeto 100%
+  // mobile): o fallback final aqui era 'web' fixo. Se o retropreenchimento
+  // não rodasse por qualquer motivo (ex: window._a11yPendingDetectionArea
+  // já zerado por closeA11yPostAreaDetectModal antes deste item específico
+  // ser aberto, ou item avulso fora do fluxo de Detecção Automática por
+  // Área), a spec nascia SEMPRE web, mesmo dentro de um projeto declarado
+  // mobile — o pior fallback possível, porque contradiz o dado mais
+  // confiável que o hac tem (getA11yProjectOrigin(), a origem única do
+  // projeto, escolhida explicitamente pelo designer). Agora o fallback
+  // intermediário é a origem do PROJETO — só cai em 'web' hardcoded no caso
+  // extremo de nem a origem do componente nem a do projeto existirem.
+  const a11yOrigin = match.origin || getA11yProjectOrigin() || 'web';
   // Nome real do component set DSC (ex: "[dsc] Button") — null nas
   // heurísticas de texto/ícone (titulo/decorativo/imagem não têm
   // componente DSC real por trás, ver _resolveTypographyA11yMatch/
