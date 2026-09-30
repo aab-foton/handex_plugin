@@ -99,6 +99,18 @@ jobs:
           node src/plugin/refs/fetch-component-properties.cjs --lib design-acessivel-mobile --deep-scan --reset
           node src/plugin/refs/build-a11y-constants.cjs
 
+      # Acrescentado 2026-09-30 — compara os tokens visuais do próprio hac
+      # (tailwind.config.cjs, telas, plugin.css) com a ref recém-buscada da
+      # lib "DSC | Fundamentos Visuais" (fetch-design-refs.cjs já a inclui pelo
+      # manifest). Só INFORMA: o resultado entra no corpo do PR para revisão
+      # humana, nunca bloqueia o refresh das refs — por isso
+      # continue-on-error e saída 0 (sem --strict). Se a lib mudar um token
+      # (ex.: nova versão de espaçamento ou cor), o desvio aparece aqui antes
+      # de virar inconsistência silenciosa na interface.
+      - name: Confere alinhamento visual do hac com a lib Fundamentos Visuais
+        continue-on-error: true
+        run: node src/plugin/refs/check-visual-foundations.cjs | tee /tmp/visual-check.txt
+
       - name: Verifica se algo mudou
         id: diff
         run: |
@@ -118,10 +130,28 @@ jobs:
           BRANCH="bot/dsc-refs-$(date -u +%Y%m%d-%H%M)"
           git checkout -b "$BRANCH"
           git add src/plugin/refs/
-          git commit -m "chore(dsc): atualiza refs DSC (4 libs + Design Acessível) e mapeamentos/constantes de a11y ($(date -u +%Y-%m-%d))"
+          git commit -m "chore(dsc): atualiza refs DSC (4 libs + Fundamentos Visuais + Design Acessível) e mapeamentos/constantes de a11y ($(date -u +%Y-%m-%d))"
           git push origin "$BRANCH"
+          {
+            echo 'Atualização automática das refs (`src/plugin/refs/`): as quatro libs DSC de produto (web-angular-react, super-app, super-dsc-web, dsc-android) com regeneração dos quatro mapeamentos DSC→a11y, a lib de tokens visuais `fundamentos-visuais`, e as duas libs Design Acessível (desktop + mobile) com regeneração das constantes de a11y derivadas (`_a11y-constants.generated.js`, `design-acessivel-mobile-wrapper.generated.json`) — todas buscadas via REST API do Figma. Revisar o diff e aprovar se OK.'
+            echo
+            echo '### Alinhamento visual do hac com a lib Fundamentos Visuais'
+            echo
+            if [ -s /tmp/visual-check.txt ]; then
+              echo "**Resultado:** $(tail -n 1 /tmp/visual-check.txt)"
+              echo
+              echo '<details><summary>Relatório completo</summary>'
+              echo
+              echo '```'
+              cat /tmp/visual-check.txt
+              echo '```'
+              echo '</details>'
+            else
+              echo 'O verificador não produziu saída neste run (ver o passo "Confere alinhamento visual" nos logs).'
+            fi
+          } > /tmp/pr-body.md
           gh pr create \
             --title "chore(dsc): atualização automática das refs DSC — $(date -u +%Y-%m-%d)" \
-            --body "Atualização automática das refs (\`src/plugin/refs/\`): as quatro libs DSC de produto (web-angular-react, super-app, super-dsc-web, dsc-android) com regeneração dos quatro mapeamentos DSC→a11y, e as duas libs Design Acessível (desktop + mobile) com regeneração das constantes de a11y derivadas (\`_a11y-constants.generated.js\`, \`design-acessivel-mobile-wrapper.generated.json\`) — todas buscadas via REST API do Figma. Revisar o diff e aprovar se OK." \
+            --body-file /tmp/pr-body.md \
             --base main \
             --head "$BRANCH"

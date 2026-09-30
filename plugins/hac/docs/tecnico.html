@@ -4386,9 +4386,19 @@ hr {
     override e <code>text-[Npx]</code>/<code>font-size</code> fora da escala.
     Saída informativa (código 0); <code>--strict</code> sai com 2 se houver
     desvio fora das exceções, que ficam em listas com motivo no próprio
-    script. Não está ligado a nenhum workflow de CI — ligá-lo exige
-    confirmação do usuário. Ao adicionar uma cor nova, rodar o script antes
-    de commitar.</p>
+    script. Ao adicionar uma cor nova, rodar o script antes de commitar.</p>
+
+    <p><strong>No CI (ligado em 2026-09-30, com autorização do usuário).</strong>
+    O workflow <code>refresh-dsc-refs.yml</code> roda o verificador logo depois
+    de regenerar as refs, com <code>continue-on-error</code> e sem
+    <code>--strict</code>: ele só informa e nunca bloqueia o refresh semanal.
+    O veredito e o relatório completo (recolhível) entram no corpo do PR que o
+    bot abre, na seção "Alinhamento visual do hac com a lib Fundamentos
+    Visuais". Assim, se a lib publicar uma mudança de token, o desvio aparece
+    para revisão humana antes de virar inconsistência na interface. Não há
+    workflow de PR com <code>--strict</code>: PRs abertos pelo bot com
+    <code>GITHUB_TOKEN</code> não disparam outros workflows, então ele não
+    protegeria nada.</p>
 
     <p><strong>Não tocado</strong>: layout, lógica, copy, Ordem de Tabulação,
     Swipe e o fluxo de spec do Leitor de Tela (além de valores de
