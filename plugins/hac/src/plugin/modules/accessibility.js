@@ -1161,7 +1161,7 @@ function _applyA11yManualMatchToPicker() {
     btn.classList.add('ring-2', 'ring-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
     const badge = document.createElement('span');
     badge.setAttribute('data-a11y-suggested-badge', 'true');
-    badge.className = 'ml-auto shrink-0 text-[9px] font-bold uppercase tracking-wider text-white bg-blue-600 rounded-full px-1.5 py-0.5';
+    badge.className = 'ml-auto shrink-0 text-[12px] font-bold uppercase tracking-wider text-white bg-blue-600 rounded-full px-1.5 py-0.5';
     badge.textContent = 'Sugerido';
     btn.appendChild(badge);
   }
@@ -4445,7 +4445,7 @@ function _a11ySpecItemHtml(spec, showCategoryChip) {
         ${props.map(p => {
           const isLink = p.key === 'linkComponente' && /^https?:\/\//.test(String(p.value || ''));
           const valueHtml = isLink
-            ? `<a href="${escapeHtml(p.value)}" target="_blank" rel="noopener noreferrer" title="Abrir componente no Figma" class="text-[10px] leading-snug font-semibold text-[#005ca9] dark:text-blue-300 text-right break-all min-w-0 underline hover:no-underline">${escapeHtml(String(p.value))}</a>`
+            ? `<a href="${escapeHtml(p.value)}" target="_blank" rel="noopener noreferrer" title="Abrir componente no Figma" class="text-[12px] leading-snug font-semibold text-[#005ca9] dark:text-blue-300 text-right break-all min-w-0 underline hover:no-underline">${escapeHtml(String(p.value))}</a>`
             : `<span class="text-dsc-label-tiny normal-case tracking-normal font-semibold text-slate-700 dark:text-white text-right break-all min-w-0">${escapeHtml(String(p.value))}</span>`;
           return `
           <div class="flex items-start justify-between gap-dsc-nano px-2 py-1 bg-white dark:bg-dark-surface rounded-dsc-small">
@@ -4865,7 +4865,7 @@ function _a11yWorkspaceTabSwipe(area) {
     return `
       <div class="space-y-2">
         <div class="flex flex-col items-center justify-center py-8 text-center">
-          <i data-lucide="smartphone" class="w-8 h-8 text-slate-200 dark:text-slate-700 mb-2" style="opacity:0.5" aria-hidden="true"></i>
+          <i data-lucide="smartphone" class="w-8 h-8 text-slate-200 dark:text-dark-line mb-2" style="opacity:0.5" aria-hidden="true"></i>
           <p class="text-dsc-label-tiny normal-case tracking-normal font-semibold text-slate-500 dark:text-dark-muted">Disponível apenas para projetos mobile</p>
           <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted mt-1 px-6">Trilha de Ordem de Leitura documenta a navegação por gesto de deslizar, exclusiva do leitor de tela mobile.</p>
         </div>
@@ -5373,7 +5373,7 @@ function _a11yAreaAccordionEl(area, areaSpecs) {
   const swipePointCount = swipePath && Array.isArray(swipePath.points) ? swipePath.points.length : 0;
 
   const statusPill = (icon, label, ok) => `
-    <span class="inline-flex items-center gap-dsc-quark text-dsc-label-tiny normal-case tracking-normal font-semibold" style="color:${ok ? '#16a34a' : '#94a3b8'}">
+    <span class="inline-flex items-center gap-dsc-quark text-dsc-label-tiny normal-case tracking-normal font-semibold" style="color:${ok ? '#179231' : '#64747a'}">
       <i data-lucide="${icon}" class="w-3 h-3 shrink-0"></i>${label}
     </span>
   `;
@@ -5457,8 +5457,8 @@ function _a11yAreaAccordionEl(area, areaSpecs) {
       ${categoryBreakdown ? `<div class="flex items-center gap-dsc-quark flex-wrap pl-[38px]">${categoryBreakdown}</div>` : ''}
 
       <div class="flex items-center gap-1.5 pl-[38px]">
-        <i data-lucide="file-output" class="w-3 h-3 shrink-0" style="color:${fichaInsertedCount > 0 ? '#005ca9' : '#94a3b8'}"></i>
-        <span class="text-dsc-label-tiny normal-case tracking-normal font-semibold" style="color:${fichaInsertedCount > 0 ? '#005ca9' : '#94a3b8'}">
+        <i data-lucide="file-output" class="w-3 h-3 shrink-0" style="color:${fichaInsertedCount > 0 ? '#005ca9' : '#64747a'}"></i>
+        <span class="text-dsc-label-tiny normal-case tracking-normal font-semibold" style="color:${fichaInsertedCount > 0 ? '#005ca9' : '#64747a'}">
           Handoff de Acessibilidade: ${fichaInsertedCount}/${fichaSectionKeys.length} seções inseridas
         </span>
       </div>
@@ -5640,9 +5640,9 @@ function renderA11yGroupedList() {
                contraste baixo pretendido pra um estado vazio. -->
           <i data-lucide="scan" class="w-16 h-16 text-slate-300 dark:text-slate-600" aria-hidden="true"></i>
         </div>
-        <p class="w-full text-[13px] font-bold text-slate-600 dark:text-white text-center px-4 mb-1">Nenhuma tela selecionada</p>
+        <p class="w-full text-[14px] font-bold text-slate-600 dark:text-white text-center px-4 mb-1">Nenhuma tela selecionada</p>
         <p class="w-full text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted text-center px-6 mb-4 max-w-[260px] mx-auto leading-relaxed">Selecione um frame no figma e clique no botão a seguir para iniciar as etapas de preenchimento do handoff.</p>
-        <button type="button" onclick="openA11yAreaModal()" class="flex items-center gap-dsc-nano h-11 px-6 rounded-dsc-large text-[13px] font-bold text-white bg-[#005ca9] hover:bg-blue-700 active:scale-[0.99] shadow-lg shadow-blue-500/20 transition-all">
+        <button type="button" onclick="openA11yAreaModal()" class="flex items-center gap-dsc-nano h-11 px-6 rounded-dsc-large text-[14px] font-bold text-white bg-[#005ca9] hover:bg-blue-700 active:scale-[0.99] shadow-lg shadow-blue-500/20 transition-all">
           <i data-lucide="scan" class="w-4 h-4 shrink-0" aria-hidden="true"></i>
           Selecionar Tela
         </button>
@@ -6016,10 +6016,10 @@ function renderA11yExistingDocumentationSurvey(msg) {
     // que o trabalho atual nasce em Section própria (decisão de produto:
     // "mostrar, mas criar seção própria" — nunca gera a expectativa de que
     // vai continuar dentro da Section do colega).
-    const accent = s.isOwn ? '#005ca9' : '#64748b';
+    const accent = s.isOwn ? '#005ca9' : '#64747a';
     const ownBadge = s.isOwn
-      ? `<span class="text-[10px] font-bold uppercase tracking-wide text-[#005ca9] dark:text-blue-300">Seu handoff</span>`
-      : `<span class="text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-dark-muted">Handoff de outro designer</span>`;
+      ? `<span class="text-[12px] font-bold uppercase tracking-wide text-[#005ca9] dark:text-blue-300">Seu handoff</span>`
+      : `<span class="text-[12px] font-bold uppercase tracking-wide text-slate-500 dark:text-dark-muted">Handoff de outro designer</span>`;
     const otherDesignerNote = s.isOwn ? '' : `
       <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-relaxed mt-1.5 italic">Seu trabalho continuará em uma Section própria — este handoff não será editado por você.</p>`;
 

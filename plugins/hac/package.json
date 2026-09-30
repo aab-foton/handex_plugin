@@ -1,11 +1,12 @@
 {
   "name": "hac",
   "private": true,
-  "version": "0.1.0-beta.63",
+  "version": "0.1.0-beta.64",
   "type": "commonjs",
   "scripts": {
     "lint": "tsc --noEmit && npm run lint:figma-api",
     "lint:figma-api": "node scripts/check-figma-api-usage.cjs",
+    "check:visual": "node src/plugin/refs/check-visual-foundations.cjs",
     "refs:fetch": "node src/plugin/refs/fetch-design-refs.cjs",
     "refs:a11y-mapping": "node src/plugin/refs/build-dsc-a11y-mapping.cjs",
     "refs:a11y-constants": "node src/plugin/refs/build-a11y-constants.cjs",

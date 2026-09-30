@@ -291,7 +291,7 @@
             <label for="a11y-el-tag-input" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1.5 ml-1">Tag</label>
             <input type="text" id="a11y-el-tag-input" maxlength="8" value="1" placeholder="1, 1.1..."
               oninput="validateA11yTagInput()"
-              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-1 py-2.5 text-[13px] text-center font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-blue-100 outline-none transition-all" />
+              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-1 py-2.5 text-[12px] text-center font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-blue-100 outline-none transition-all" />
           </div>
           <div id="a11y-el-label-wrap" class="flex-1 min-w-[10rem]">
             <!-- #a11y-el-label-wrap-heading (2026-09-23): escondido quando
@@ -342,7 +342,7 @@
                h-[2.375rem] + flex items-center centraliza o checkbox na
                MESMA altura do input da Tag ao lado — antes ele encostava no
                topo do campo. Os dois valores espelham o input real da Tag
-               (py-2.5 + text-[13px] = 2.375rem de altura). -->
+               (py-2.5 + text-[12px] = 2.375rem de altura). -->
           <div id="a11y-el-mobile-observacoes-inline-slot" class="hidden shrink-0 mt-[1.375rem] h-[2.375rem] flex items-center"></div>
         </div>
         <!-- Campo "Observações" (2026-09-22/23, pedido explícito do
@@ -588,7 +588,7 @@
             <label for="a11y-estrutura-tag-input" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1.5 ml-1">Tag</label>
             <input type="text" id="a11y-estrutura-tag-input" maxlength="8" value="A" placeholder="A, A1..."
               oninput="validateA11yTagInput(); updateA11yCharCounter(this)"
-              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-2 py-2.5 text-[13px] text-center font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-blue-100 outline-none transition-all uppercase" />
+              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-2 py-2.5 text-[12px] text-center font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-blue-100 outline-none transition-all uppercase" />
             <span id="a11y-estrutura-tag-input-counter" class="block text-center text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted mt-0.5">1/8</span>
           </div>
           <div class="col-span-3">
@@ -788,7 +788,7 @@
             <label for="a11y-informacoes-tag-input" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1.5 ml-1">Tag</label>
             <input type="text" id="a11y-informacoes-tag-input" maxlength="8" value="A" placeholder="A, A1..."
               oninput="validateA11yTagInput(); updateA11yCharCounter(this)"
-              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-2 py-2.5 text-[13px] text-center font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-blue-100 outline-none transition-all uppercase" />
+              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-2 py-2.5 text-[12px] text-center font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-blue-100 outline-none transition-all uppercase" />
             <span id="a11y-informacoes-tag-input-counter" class="block text-center text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted mt-0.5">1/8</span>
           </div>
           <div class="col-span-3">
@@ -1502,7 +1502,7 @@
   <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeModal('a11y-categories-help-modal')" aria-hidden="true"></div>
   <div class="relative z-10 w-full max-w-[440px] max-h-full min-h-0 flex flex-col rounded-dsc-large overflow-hidden shadow-dsc-elevation-2 bg-white dark:bg-dark-bg">
   <div class="p-dsc-smaller border-b border-gray-100 dark:border-dark-line flex items-center justify-between shrink-0">
-    <h3 id="a11y-help-modal-title" class="text-[#1E293B] dark:text-white font-bold text-[18px]">Entendendo as categorias</h3>
+    <h3 id="a11y-help-modal-title" class="text-[#22292e] dark:text-white font-bold text-[18px]">Entendendo as categorias</h3>
     <button onclick="closeModal('a11y-categories-help-modal')" title="Fechar" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-white">
       <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
     </button>
@@ -1537,7 +1537,7 @@
       <div id="a11y-categories-help-estrutura" class="flex gap-dsc-micro">
         <div class="a11y-cat-badge w-7 h-7 rounded-dsc-circ border-2 flex items-center justify-center shrink-0" data-a11y-cat="estrutura"></div>
         <div class="space-y-1">
-          <p class="text-[13px] font-bold text-slate-800 dark:text-white">Estrutura da Página</p>
+          <p class="text-[14px] font-bold text-slate-800 dark:text-white">Estrutura da Página</p>
           <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed">Utilizado para marcar elementos semânticos que estruturam o "esqueleto" de uma página, indicando as seções de conteúdo e para que servem, exemplos: &lt;header&gt;, &lt;main&gt;, &lt;footer&gt;, etc.</p>
         </div>
       </div>
@@ -1548,7 +1548,7 @@
           <!-- Texto atualizado em runtime por _applyA11yCategoriesHelpOriginFilter
                (accessibility.js) via getA11yCategoryLabel — mesma correção do
                picker acima. -->
-          <p id="a11y-categories-help-titulo-label" class="text-[13px] font-bold text-slate-800 dark:text-white">Nível de Título</p>
+          <p id="a11y-categories-help-titulo-label" class="text-[14px] font-bold text-slate-800 dark:text-white">Nível de Título</p>
           <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed" data-a11y-help-origin="web">Utilizado para estruturar os cabeçalhos da interface (H1-H6) logicamente. O H1 é o título principal (único por página), seguido por H2, H3 e assim por diante. Essa ordem permite que usuários de leitores de tela entendam o sumário do conteúdo.</p>
           <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed hidden" data-a11y-help-origin="mobile">Utilizado para estruturar os cabeçalhos da interface, permitindo que o leitor de tela navegue diretamente entre os tópicos que foram definidos como títulos de conteúdo.</p>
         </div>
@@ -1557,7 +1557,7 @@
       <div id="a11y-categories-help-elemento" class="flex gap-dsc-micro">
         <div class="a11y-cat-badge w-7 h-7 rounded-dsc-circ border-2 flex items-center justify-center text-dsc-label-tiny normal-case tracking-normal font-extrabold shrink-0" data-a11y-cat="elemento"></div>
         <div class="space-y-1">
-          <p class="text-[13px] font-bold text-slate-800 dark:text-white">Elementos Interativos e Imagens</p>
+          <p class="text-[14px] font-bold text-slate-800 dark:text-white">Elementos Interativos e Imagens</p>
           <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed">Utilizado para referenciar componentes no DSC Super App, garantir nome acessível aos elementos e descrever textos alternativos nas imagens.</p>
         </div>
       </div>
@@ -1565,7 +1565,7 @@
       <div id="a11y-categories-help-decorativo" class="flex gap-dsc-micro">
         <div class="a11y-cat-badge w-7 h-7 rounded-dsc-circ border-2 flex items-center justify-center shrink-0" data-a11y-cat="decorativo"></div>
         <div class="space-y-1">
-          <p class="text-[13px] font-bold text-slate-800 dark:text-white">Elementos Decorativos</p>
+          <p class="text-[14px] font-bold text-slate-800 dark:text-white">Elementos Decorativos</p>
           <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed">Utilizado para marcar os elementos que devem ser ignorados pelo leitor de tela, como por exemplo imagens que não passam conteúdo ou função, formas abstratas, divisores ou ícones decorativos.</p>
         </div>
       </div>
@@ -1573,7 +1573,7 @@
       <div id="a11y-categories-help-informacoes" class="flex gap-dsc-micro">
         <div class="a11y-cat-badge w-7 h-7 rounded-dsc-circ border-2 flex items-center justify-center shrink-0" data-a11y-cat="informacoes"></div>
         <div class="space-y-1">
-          <p class="text-[13px] font-bold text-slate-800 dark:text-white">Informações adicionais</p>
+          <p class="text-[14px] font-bold text-slate-800 dark:text-white">Informações adicionais</p>
           <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed">Caso queira contemplar algum elemento/componente que não se encaixa nas outras categorias, use esta pra descrever o item e apontar suas observações: é a única categoria com formato livre.</p>
         </div>
       </div>
@@ -1691,7 +1691,7 @@
     <div id="onboarding-modal-icon-wrap" class="w-9 h-9 rounded-dsc-medium flex items-center justify-center shrink-0">
       <i id="onboarding-modal-icon" class="w-4.5 h-4.5"></i>
     </div>
-    <h3 id="onboarding-modal-title" class="text-[#1E293B] dark:text-white font-bold text-[16px] flex-1 min-w-0"></h3>
+    <h3 id="onboarding-modal-title" class="text-[#22292e] dark:text-white font-bold text-[16px] flex-1 min-w-0"></h3>
     <button onclick="closeOnboarding()" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-white shrink-0">
       <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
     </button>
@@ -1798,7 +1798,7 @@
     </div>
     <div class="p-dsc-tiny border-t border-gray-100 dark:border-dark-line flex gap-dsc-nano shrink-0">
       <button id="a11y-confirm-modal-cancel-btn" onclick="_closeA11yConfirmModal()" title="Cancelar" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 bg-gray-100 hover:bg-gray-200 rounded-dsc-large transition-colors">Cancelar</button>
-      <button id="a11y-confirm-modal-confirm-btn" onclick="_confirmA11yConfirmModal()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#005ca9] hover:bg-[#005d91] rounded-dsc-large transition-colors shadow-lg shadow-blue-500/20">Confirmar</button>
+      <button id="a11y-confirm-modal-confirm-btn" onclick="_confirmA11yConfirmModal()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#005ca9] hover:bg-[#00437a] rounded-dsc-large transition-colors shadow-lg shadow-blue-500/20">Confirmar</button>
     </div>
   </div>
 </div>

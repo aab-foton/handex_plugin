@@ -269,7 +269,7 @@ function _renderOnboardingModal() {
     // Passo 1.
     body.innerHTML = `
       <div class="rounded-dsc-medium p-3.5" style="background-color:${tool.color}0d">
-        <p class="text-[13px] text-slate-700 dark:text-white leading-relaxed">${tool.purpose}</p>
+        <p class="text-[14px] text-slate-700 dark:text-white leading-relaxed">${tool.purpose}</p>
       </div>
     `;
     footer.innerHTML = `
@@ -286,11 +286,11 @@ function _renderOnboardingModal() {
     const isFirst = _onboardingCurrentStep === 0;
     body.innerHTML = `
       <div class="flex items-center justify-center gap-1.5 mb-4">
-        ${tool.steps.map((_, i) => `<span class="h-1.5 rounded-dsc-circ transition-all ${i === _onboardingCurrentStep ? 'w-6' : 'w-1.5'}" style="background-color:${i <= _onboardingCurrentStep ? tool.color : '#e2e8f0'}"></span>`).join('')}
+        ${tool.steps.map((_, i) => `<span class="h-1.5 rounded-dsc-circ transition-all ${i === _onboardingCurrentStep ? 'w-6' : 'w-1.5'}" style="background-color:${i <= _onboardingCurrentStep ? tool.color : '#d0e0e3'}"></span>`).join('')}
       </div>
       ${_onboardingMediaHTML(step)}
       <p class="text-dsc-label-tiny font-bold uppercase tracking-wider mb-2" style="color:${tool.color}">Passo ${_onboardingCurrentStep + 1} de ${tool.steps.length}</p>
-      <p class="text-[13px] text-slate-700 dark:text-white leading-relaxed">${step.text}</p>
+      <p class="text-[14px] text-slate-700 dark:text-white leading-relaxed">${step.text}</p>
       ${_onboardingReferenceHTML(tool.reference)}
     `;
     const showBack = !isFirst || !!tool.purpose;

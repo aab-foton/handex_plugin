@@ -4215,6 +4215,188 @@ hr {
     digitais". O hac trabalha com Super DSC Mobile e Web; confirmar qual das
     duas é a referência dele é pendência de produto.</p>
 
+    <h2 id="s8z">8z. Alinhamento visual à lib "DSC | Fundamentos Visuais" (2026-09-30, v0.1.0-beta.64)</h2>
+
+    <p>Pedido do usuário: "nosso plugin precisa estar completamente alinhado ao
+    que é exigido hoje por essa lib". Regra de precedência decidida por ele:
+    <strong>Fundamentos onde as duas libs concordam; nos pontos de divergência,
+    vale o que as libs do produto (Super DSC Web / Super App) definem.</strong>
+    Fonte dos valores: <code>refs/fundamentos-visuais.json</code> (seção 8y) —
+    nunca o que já estava no código.</p>
+
+    <p><strong>Ficou como estava, de propósito</strong> (divergências
+    Fundamentos × produto): sombras (<code>boxShadow</code>: o hac usa as
+    elevações do Super DSC), pesos de fonte (o config usa 500 nos
+    <code>dsc-label-*</code>; a lib de fundamentos não tem 500),
+    <code>letterSpacing</code>/<code>lineHeight</code> dos tokens
+    <code>dsc-label-*</code>/<code>dsc-body-*</code> e larguras de borda.</p>
+
+    <h3>O que foi alinhado</h3>
+    <ul>
+      <li><strong>Fonte</strong>: pilha única
+      <code>"CAIXA Std", "Inter", ui-sans-serif, system-ui, sans-serif</code>
+      em <code>fontFamily.sans</code> (<code>tailwind.config.cjs</code>) e nos
+      3 <code>font-family</code> de <code>plugin.css</code> (body e as duas
+      regras <code>!important</code>). CAIXA Std só renderiza se estiver
+      instalada na máquina; Inter (que o Figma fornece ao iframe) segue como
+      fallback.</li>
+      <li><strong>Espaçamento</strong>: escala completa — acrescentados
+      <code>dsc-larger</code> 56, <code>dsc-big</code> 64,
+      <code>dsc-bigger</code> 72, <code>dsc-huge</code> 80,
+      <code>dsc-giant</code> 120, <code>dsc-enormous</code> 160.
+      <strong>Raio</strong>: <code>dsc-quark</code> 2px. Nada removido
+      (<code>dsc-circ</code> fica: não há token equivalente na lib).</li>
+      <li><strong>Paletas</strong>: <code>slate</code>, <code>gray</code>,
+      <code>blue</code>, <code>amber</code>, <code>red</code>,
+      <code>green</code>, <code>emerald</code> e <code>orange</code> foram
+      sobrescritas em <code>theme.extend.colors</code> com valores REAIS da
+      lib (nenhum hex interpolado), de modo que as ~1.130 classes existentes
+      passam a renderizar cores do DSC <em>sem reescrever as telas</em>.
+      Degraus sem valor próprio na lib repetem o valor real mais próximo em
+      luminosidade (L* do Lab), exceto onde a regra de contraste abaixo
+      manda usar outro.</li>
+      <li><strong>Hex literais</strong> em <code>views/</code>,
+      <code>modules/</code> e <code>plugin.css</code>: 88 fora da lib → 0
+      fora das exceções (ver abaixo).</li>
+      <li><strong>Tamanhos de texto</strong>: <code>text-[13px]</code> (17) →
+      14px, exceto os 3 inputs "Tag" (12px); <code>text-[10px]</code> (3) e
+      <code>text-[9px]</code> (1) → 12px, o mínimo da lib.</li>
+    </ul>
+
+    <h3>Mapeamento degrau a degrau</h3>
+    <p>Cada célula é o hex real da lib. <code>slate</code> e <code>gray</code>
+    recebem a escala <em>grayscale</em>
+    (<code>color/*/neutral/*</code>); <code>blue</code> = <em>primary</em>
+    (<code>highlight</code>); <code>amber</code> = <em>attention</em>
+    (<code>warning</code>); <code>red</code> = <em>negative</em>
+    (<code>danger</code>); <code>green</code>/<code>emerald</code> =
+    <em>positive</em> (<code>success</code>); <code>orange</code> =
+    <em>secondary</em> (<code>accent</code>).</p>
+
+    <table>
+      <tr><th>Degrau</th><th>slate</th><th>gray</th><th>blue</th><th>amber</th><th>red</th><th>green / emerald</th><th>orange</th></tr>
+      <tr><td>50</td><td>#f7fafa</td><td>#f7fafa</td><td>#e5f2fc</td><td>#fff9e6</td><td>#fbebeb</td><td>#e7f4ea</td><td>#ffefd6</td></tr>
+      <tr><td>100</td><td>#ebf1f2</td><td>#ebf1f2</td><td>#e5f2fc</td><td>#fff9e6</td><td>#fbebeb</td><td>#e7f4ea</td><td>#ffefd6</td></tr>
+      <tr><td>200</td><td>#d0e0e3</td><td>#ebf1f2</td><td>#a0d2fc</td><td>#fee59b</td><td>#f0afaf</td><td>#e7f4ea</td><td>#ffd392</td></tr>
+      <tr><td>300</td><td>#d0e0e3</td><td>#d0e0e3</td><td>#a0d2fc</td><td>#fee59b</td><td>#f0afaf</td><td>#a2d3ad</td><td>#fdb548</td></tr>
+      <tr><td>400</td><td>#64747a</td><td>#64747a</td><td>#6dbafa</td><td>#fdd150</td><td>#f0afaf</td><td>#a2d3ad</td><td>#f39200</td></tr>
+      <tr><td>500</td><td>#64747a</td><td>#64747a</td><td>#005ca9</td><td>#ca9804</td><td>#d93636</td><td>#5cb26e</td><td>#d87b00</td></tr>
+      <tr><td>600</td><td>#404b52</td><td>#404b52</td><td>#00437a</td><td>#977203</td><td>#b22c2c</td><td>#179231</td><td>#d87b00</td></tr>
+      <tr><td>700</td><td>#404b52</td><td>#404b52</td><td>#00437a</td><td>#654c02</td><td>#b22c2c</td><td>#127527</td><td>#a65e00</td></tr>
+      <tr><td>800</td><td>#22292e</td><td>#22292e</td><td>#002747</td><td>#654c02</td><td>#8c2424</td><td>#0d581d</td><td>#663a00</td></tr>
+      <tr><td>900</td><td>#22292e</td><td>#22292e</td><td>#002747</td><td>#654c02</td><td>#8c2424</td><td>#0d581d</td><td>#663a00</td></tr>
+      <tr><td>950</td><td>#22292e</td><td>#22292e</td><td>#002747</td><td>#654c02</td><td>#8c2424</td><td>#0d581d</td><td>#663a00</td></tr>
+    </table>
+
+    <p>Consequência assumida: a lib tem menos degraus que o Tailwind, então
+    alguns degraus colapsam num mesmo valor (por exemplo
+    <code>slate-400</code> = <code>slate-500</code>, e <code>blue-800</code>
+    a <code>blue-950</code> = <code>#002747</code>). O tema escuro segue nos
+    tokens próprios <code>dark-*</code> (exceção, abaixo).</p>
+
+    <h3>Regra de contraste (inegociável)</h3>
+    <p>O hac é uma ferramenta de acessibilidade: para toda classe usada como
+    <strong>cor de texto</strong>, o valor novo não pode ter contraste WCAG
+    pior que o antigo sobre o fundo em que aparece (fórmula de luminância
+    relativa; fundos avaliados: branco e <code>light-bg</code> no claro,
+    <code>dark-surface</code>/<code>dark-bg</code> e o toast no escuro, mais os
+    fundos que coexistem na mesma classe). Quando o valor "mais próximo"
+    piorava, usou-se o próximo degrau mais escuro (claro) ou mais claro
+    (escuro). <strong>Exceção (refinamento de revisão):</strong> quando o
+    valor atual e o novo já passam de 7:1 (AAA), a troca pelo degrau mais
+    próximo da lib é aceita mesmo que o contraste caia — é o caso de
+    <code>text-slate-700</code> (10,35 → 8,95, fica em <code>#404b52</code>) e
+    <code>text-blue-700</code> (10,55 → 10,08, fica em <code>#00437a</code>).
+    Sem essa exceção, o 700 colapsava no degrau mais escuro e os hovers
+    <code>bg-blue-700</code> viravam quase pretos. Casos em que a regra atuou:</p>
+
+    <table>
+      <tr><th>Classe</th><th>Antes</th><th>Mais próximo (rejeitado)</th><th>Escolhido</th><th>Contraste</th></tr>
+      <tr><td><code>text-slate-400</code>, <code>text-gray-400</code></td><td>#94a3b8 / #9ca3af</td><td>#9eb2b8 (2,21)</td><td>#64747a</td><td>2,56 → 4,86 (branco)</td></tr>
+      <tr><td><code>text-amber-500</code></td><td>#f59e0b</td><td>#fcbe05 (1,68)</td><td>#ca9804</td><td>2,15 → 2,62</td></tr>
+      <tr><td><code>text-amber-600</code></td><td>#d97706</td><td>#ca9804 (2,62)</td><td>#977203</td><td>3,19 → 4,45</td></tr>
+      <tr><td><code>text-amber-700</code></td><td>#b45309</td><td>#977203 (4,45)</td><td>#654c02</td><td>5,02 → 8,11</td></tr>
+      <tr><td><code>text-red-600</code></td><td>#dc2626</td><td>#d93636 (4,63)</td><td>#b22c2c</td><td>4,83 → 6,38</td></tr>
+      <tr><td><code>text-emerald-600</code></td><td>#059669</td><td>#5cb26e (2,61)</td><td>#179231</td><td>3,77 → 4,04</td></tr>
+      <tr><td><code>dark:text-blue-400</code></td><td>#479de6</td><td>#2d8ad8 (4,00)</td><td>#6dbafa</td><td>5,04 → 7,00 (dark-surface)</td></tr>
+      <tr><td><code>dark:text-amber-300</code></td><td>#fcd34d</td><td>#fdd150 (10,04)</td><td>#fee59b</td><td>10,15 → 11,77</td></tr>
+      <tr><td><code>dark:text-amber-400</code></td><td>#fbbf24</td><td>#fcbe05 (8,71)</td><td>#fdd150</td><td>8,76 → 10,04</td></tr>
+      <tr><td><code>dark:text-red-400</code></td><td>#f87171</td><td>#e47272 (4,84)</td><td>#f0afaf</td><td>5,29 → 7,98</td></tr>
+      <tr><td><code>text-green-400</code> / <code>text-emerald-400</code> (escuro/toast)</td><td>#4ade80 / #34d399</td><td>#5cb26e (5,61)</td><td>#a2d3ad</td><td>8,40 / 7,61 → 8,68</td></tr>
+    </table>
+
+    <p>Os mesmos critérios valeram para hex de texto/fundo-de-texto fora do
+    config: <code>#94a3b8</code>→<code>#64747a</code> (muted em
+    <code>accessibility.js</code> e placeholder claro),
+    <code>#16a34a</code>→<code>#179231</code> (3,30 → 4,04),
+    <code>#334155</code> do texto de input →<code>#22292e</code>,
+    <code>#f8fafc</code> do texto de input escuro →<code>#ffffff</code>,
+    placeholder escuro <code>#64748b</code>→<code>#9eb2b8</code>; texto
+    branco sobre fundos: <code>#004d8d</code>→<code>#00437a</code> (8,58 →
+    10,08), hover <code>#004075</code>→<code>#002747</code>,
+    <code>#22c55e</code>→<code>#179231</code> (2,28 → 4,04),
+    <code>#935300</code>→<code>#663a00</code> (6,04 → 9,68),
+    <code>#DC2626</code>→<code>#b22c2c</code>.</p>
+
+    <p><strong>Único caso inevitável</strong>: não existe cinza mais escuro
+    que <code>#22292e</code> nem âmbar mais escuro que <code>#654c02</code> na
+    lib. <code>text-amber-950</code> (14,98) só era usado no selo "Em teste"
+    de <code>home.html</code>; a classe daquele único ponto virou
+    <code>text-slate-900</code> (=<code>#22292e</code>, 10,12 sobre
+    <code>#fdd150</code> vs 8,97 antes).</p>
+
+    <p><strong>Ícones decorativos</strong> (não são texto, não seguem a regra
+    estrita; deltas registrados): alças de arrastar
+    <code>text-gray-300</code> 1,47 → 1,36; ícone "scan" do estado vazio
+    <code>text-slate-300</code> 1,48 → 1,36 e no escuro
+    <code>dark:text-slate-600</code> 1,93 → 1,63; ícone de alerta do toast de
+    erro <code>text-red-500</code> sobre fundo escuro 3,89 → 3,16 (ainda
+    ≥ 3:1). O ícone "smartphone" do estado vazio no escuro trocou
+    <code>dark:text-slate-700</code> por <code>dark:text-dark-line</code>
+    (mesmo <code>#334155</code> de antes) para não sumir (1,41 → 1,01 pelo
+    mapeamento).</p>
+
+    <h3>Exceções mantidas</h3>
+    <ul>
+      <li><strong>Tema escuro <code>dark-*</code></strong>
+      (<code>#0f172a</code>, <code>#1e293b</code>, <code>#334155</code>,
+      <code>#f1f5f9</code>, <code>#b4c6d8</code>): tokens próprios do hac,
+      não do DSC — permanecem em <code>plugin.css</code> e nos tokens
+      <code>dark-*</code>. O mesmo vale para <code>light.*</code> do config
+      (sem uso nas telas).</li>
+      <li><strong>Cores de categoria de a11y</strong>
+      (<code>A11Y_CATEGORIES</code> e derivados, fills de fallback
+      <code>#E0F5FA</code>/<code>#EBF4FB</code>): sistema de cor semântico da
+      vertical, também usado no canvas — Regra de ouro 2, intocado.</li>
+      <li><strong>Canvas</strong> (<code>code.js</code>,
+      <code>backend/*.js</code>), arquivos <code>*.generated.*</code>,
+      <code>refs/*.json</code>: fora de escopo.</li>
+      <li><strong><code>rgba()</code> de sombras/bordas translúcidas</strong>
+      em <code>plugin.css</code>: não são hex e sombras não entram (decisão
+      Fundamentos × produto).</li>
+    </ul>
+
+    <h3>Script de verificação</h3>
+    <p><code>npm run check:visual</code>
+    (<code>refs/check-visual-foundations.cjs</code>) — sem rede, lê só
+    <code>fundamentos-visuais.json</code>. Confere (b) tokens
+    <code>dsc-*</code> de espaçamento/raio do config contra a lib, (c) que as
+    paletas sobrescritas só usam hex da lib e (d) varre views/modules/
+    <code>plugin.css</code>: hex fora da lib, paletas padrão do Tailwind sem
+    override e <code>text-[Npx]</code>/<code>font-size</code> fora da escala.
+    Saída informativa (código 0); <code>--strict</code> sai com 2 se houver
+    desvio fora das exceções, que ficam em listas com motivo no próprio
+    script. Não está ligado a nenhum workflow de CI — ligá-lo exige
+    confirmação do usuário. Ao adicionar uma cor nova, rodar o script antes
+    de commitar.</p>
+
+    <p><strong>Não tocado</strong>: layout, lógica, copy, Ordem de Tabulação,
+    Swipe e o fluxo de spec do Leitor de Tela (além de valores de
+    cor/tamanho em classes). Validação: <code>npm run bundle:ui</code>,
+    <code>bundle:code</code>, <code>export:plugin</code>,
+    <code>npx tsc --noEmit</code>, <code>npm run lint:figma-api</code>,
+    <code>node --check</code> nos .js tocados.</p>
+
     <h2 id="s9">9. Contrato de mensagens (UI ↔ backend)</h2>
 
     <p>Toda comunicação passa por <code>postMessage</code>/<code>window.onmessage</code> — o frontend

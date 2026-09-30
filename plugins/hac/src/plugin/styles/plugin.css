@@ -1,6 +1,6 @@
 body {
       margin: 0;
-      font-family: "Inter", sans-serif;
+      font-family: "CAIXA Std", "Inter", ui-sans-serif, system-ui, sans-serif;
       transition:
         background-color 0.3s ease,
         color 0.3s ease;
@@ -28,20 +28,20 @@ body {
     }
 
     ::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
+      background: #d0e0e3;
       border-radius: 3px;
     }
 
     ::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
+      background: #9eb2b8;
     }
 
     .dark ::-webkit-scrollbar-thumb {
-      background: #475569;
+      background: #404b52;
     }
 
     .dark ::-webkit-scrollbar-thumb:hover {
-      background: #64748b;
+      background: #64747a;
     }
 
     * {
@@ -55,12 +55,12 @@ body {
       display: inline-flex;
       align-items: center;
       padding: 6px 12px;
-      background: #F8FAFC;
-      border: 1px solid #F1F5F9;
+      background: #f7fafa;
+      border: 1px solid #ebf1f2;
       border-radius: 99px;
       font-size: 12px;
       font-weight: 600;
-      color: #64748b;
+      color: #64747a;
       cursor: pointer;
       transition: all 0.2s ease;
     }
@@ -68,12 +68,12 @@ body {
     .dark .checklist-pill {
       background: #1e293b;
       border-color: #334155;
-      color: #94a3b8;
+      color: #9eb2b8;
     }
 
     .checklist-pill:has(input:checked) {
-      background: #004d8d;
-      border-color: #004d8d;
+      background: #00437a;
+      border-color: #00437a;
       color: white;
       box-shadow: 0 4px 12px rgba(0, 77, 141, 0.2);
     }
@@ -84,25 +84,25 @@ body {
     }
 
     button.bg-\[\#005ca9\], button.bg-blue-600, button.bg-blue-500 {
-      background-color: #004d8d !important;
+      background-color: #00437a !important;
       color: #ffffff !important;
       font-weight: 700 !important;
       border: none !important;
       transition: background-color 0.2s ease !important;
     }
     button.bg-\[\#005ca9\]:hover, button.bg-blue-600:hover, button.bg-blue-500:hover {
-      background-color: #004075 !important;
+      background-color: #002747 !important;
     }
 
     button.bg-orange-500, button.bg-orange-600 {
-      background-color: #935300 !important;
+      background-color: #663a00 !important;
       color: #ffffff !important;
       font-weight: 700 !important;
       border: none !important;
       transition: background-color 0.2s ease !important;
     }
     button.bg-orange-500:hover, button.bg-orange-600:hover {
-      background-color: #5f3600 !important;
+      background-color: #663a00 !important;
     }
 
     /* Verde de sucesso/confirmação real (green-500 nativo do Tailwind,
@@ -112,38 +112,38 @@ body {
        adormecido idêntico ao já documentado e corrigido no Handex
        (design-system-handex.md, dívida técnica item 2). */
     button.bg-green-600, button.bg-green-500 {
-      background-color: #22c55e !important;
+      background-color: #179231 !important;
       color: #ffffff !important;
       font-weight: 700 !important;
       border: none !important;
       transition: background-color 0.2s ease !important;
     }
     button.bg-green-600:hover, button.bg-green-500:hover {
-      background-color: #16a34a !important;
+      background-color: #127527 !important;
     }
 
     button.border-\[\#005ca9\], button.border-blue-500 {
       background-color: #ffffff !important;
-      color: #004d8d !important;
-      border: 1.5px solid #004d8d !important;
+      color: #00437a !important;
+      border: 1.5px solid #00437a !important;
       font-weight: 700 !important;
       transition: all 0.2s ease !important;
     }
     button.border-\[\#005ca9\]:hover, button.border-blue-500:hover {
-      background-color: #f7fbfe !important;
+      background-color: #e5f2fc !important;
     }
 
     /* Dark mode support for primary buttons */
     .dark button.bg-\[\#005ca9\], .dark button.bg-blue-600, .dark button.bg-blue-500 {
-      background-color: #004d8d !important;
+      background-color: #00437a !important;
     }
     .dark button.bg-orange-500, .dark button.bg-orange-600 {
-      background-color: #935300 !important;
+      background-color: #663a00 !important;
     }
     .dark button.border-\[\#005ca9\], .dark button.border-blue-500 {
       background-color: #1e293b !important;
-      color: #8cc8fb !important;
-      border-color: #8cc8fb !important;
+      color: #a0d2fc !important;
+      border-color: #a0d2fc !important;
     }
 
     /* Enhanced focus states for accessibility */
@@ -151,11 +151,11 @@ body {
     input:focus-visible,
     select:focus-visible,
     textarea:focus-visible {
-      outline: 2px solid #004d8d;
+      outline: 2px solid #00437a;
       outline-offset: 2px;
     }
     .dark button:focus-visible {
-      outline-color: #8cc8fb;
+      outline-color: #a0d2fc;
     }
 
     /* Inline action button (sits in view header) — ícone + label sempre visíveis. */
@@ -189,7 +189,7 @@ body {
        este CSS é injetado depois do compilado do Tailwind, então .fab-inline vencia
        e o botão nunca sumia mesmo com a classe "hidden" aplicada. */
     .fab-inline.hidden { display: none; }
-    .dark .fab-inline { background: rgba(0,92,169,0.18); border-color: rgba(96,165,250,0.35); color: #60a5fa; }
+    .dark .fab-inline { background: rgba(0,92,169,0.18); border-color: rgba(96,165,250,0.35); color: #6dbafa; }
     .dark .fab-inline:hover { background: rgba(0,92,169,0.3); }
 
     /* Fab-inline sobre header secundário azul — branco sólido: é a ação de
@@ -215,7 +215,7 @@ body {
       border: 1px solid rgba(100, 116, 139, 0.4);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
-      color: rgb(71, 85, 105);
+      color: #404b52;
       box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.2);
       transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease, opacity 0.3s ease, translate 0.3s ease;
     }
@@ -229,7 +229,7 @@ body {
     .dark #btn-top {
       background: rgba(30, 41, 59, 0.55);
       border-color: rgba(148, 163, 184, 0.3);
-      color: rgb(226, 232, 240);
+      color: #ebf1f2;
     }
 
     /* Standardized FAB Styling */
@@ -333,7 +333,7 @@ body {
       left: 50%;
       transform: translateX(-50%);
       padding: 6px 10px;
-      background-color: #1e293b;
+      background-color: #22292e;
       color: #fff;
       font-size: 12px;
       border-radius: 6px;
@@ -347,7 +347,7 @@ body {
       transition: all 0.2s ease;
       z-index: 1000;
       box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-      border: 1px solid #334155;
+      border: 1px solid #404b52;
       pointer-events: none;
     }
 
@@ -359,7 +359,7 @@ body {
       transform: translateX(-50%);
       border-width: 5px;
       border-style: solid;
-      border-color: #1e293b transparent transparent transparent;
+      border-color: #22292e transparent transparent transparent;
       opacity: 0;
       visibility: hidden;
       transition: all 0.2s ease;
@@ -416,7 +416,7 @@ body {
     [data-tooltip].tooltip-bottom:after {
       bottom: auto;
       top: 110%;
-      border-color: transparent transparent #1e293b transparent;
+      border-color: transparent transparent #22292e transparent;
     }
     [data-tooltip].tooltip-bottom:hover:before {
       bottom: auto;
@@ -438,7 +438,7 @@ body {
       width: 14px;
       height: 14px;
       cursor: nwse-resize;
-      background: linear-gradient(135deg, transparent 50%, #94a3b8 50%);
+      background: linear-gradient(135deg, transparent 50%, #9eb2b8 50%);
       z-index: 10000;
       opacity: 0.5;
       transition: opacity 0.2s;
@@ -447,7 +447,7 @@ body {
       opacity: 1;
     }
     .dark #resize-handle {
-      background: linear-gradient(135deg, transparent 50%, #475569 50%);
+      background: linear-gradient(135deg, transparent 50%, #404b52 50%);
     }
 
     :root {
@@ -502,7 +502,7 @@ body {
     [id$="-card"],
     .view > section > div {
       border-radius: 16px !important; /* Premium 16px corner roundness */
-      border: 1px solid #f1f5f9 !important;
+      border: 1px solid #ebf1f2 !important;
       background-color: #ffffff !important;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02) !important;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -524,7 +524,7 @@ body {
     .bg-white.dark\:bg-dark-bg:hover,
     [id$="-card"]:hover {
       box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05) !important;
-      border-color: #e2e8f0 !important;
+      border-color: #d0e0e3 !important;
     }
 
     .dark .bg-white.dark\:bg-dark-surface:hover,
@@ -536,13 +536,13 @@ body {
 
     /* 2. Uniform Typography & Hierarchy */
     h1, h2, h3, .text-\[\#005ca9\], .text-slate-800 {
-      font-family: 'Inter', sans-serif !important;
+      font-family: "CAIXA Std", "Inter", ui-sans-serif, system-ui, sans-serif !important;
       letter-spacing: -0.01em !important;
     }
 
     /* Labels & Pills */
     label, .text-\[10px\], .text-\[11px\], .checklist-pill {
-      font-family: 'Inter', sans-serif !important;
+      font-family: "CAIXA Std", "Inter", ui-sans-serif, system-ui, sans-serif !important;
       font-weight: 700 !important;
       letter-spacing: 0.03em !important;
     }
@@ -550,11 +550,11 @@ body {
     /* 3. Uniform Inputs and Textareas */
     input[type="text"], input[type="search"], select, textarea {
       border-radius: 8px !important;
-      border: 1px solid #e2e8f0 !important;
-      background-color: #f8fafc !important;
+      border: 1px solid #d0e0e3 !important;
+      background-color: #f7fafa !important;
       padding: 8px 12px !important;
       font-size: 12px !important;
-      color: #334155 !important;
+      color: #22292e !important;
       font-weight: 500 !important; /* Keep input text at medium/regular weight */
       transition: all 0.2s ease !important;
     }
@@ -562,18 +562,18 @@ body {
     .dark input[type="text"], .dark input[type="search"], .dark select, .dark textarea {
       border-color: #1e293b !important;
       background-color: #0f172a !important;
-      color: #f8fafc !important;
+      color: #ffffff !important;
     }
 
     input[type="text"]:focus, input[type="search"]:focus, select:focus, textarea:focus {
-      border-color: #004d8d !important;
+      border-color: #00437a !important;
       background-color: #ffffff !important;
       box-shadow: 0 0 0 3px rgba(0, 77, 141, 0.15) !important;
       outline: none !important;
     }
 
     .dark input[type="text"]:focus, .dark input[type="search"]:focus, .dark select:focus, .dark textarea:focus {
-      border-color: #8cc8fb !important;
+      border-color: #a0d2fc !important;
       background-color: #0f172a !important;
       box-shadow: 0 0 0 3px rgba(140, 200, 251, 0.15) !important;
     }
@@ -594,7 +594,7 @@ body {
     select::placeholder,
     .token-search-input::placeholder {
       font-weight: 400 !important;
-      color: #94a3b8 !important; /* Slate-400 */
+      color: #64747a !important; /* grayscale 90 (antes slate-400 #94a3b8, contraste 2,56:1 -> 4,86:1) */
       opacity: 0.85 !important;
     }
     
@@ -603,7 +603,7 @@ body {
     .dark select::placeholder,
     .dark .token-search-input::placeholder {
       font-weight: 400 !important;
-      color: #64748b !important; /* Slate-500 */
+      color: #9eb2b8 !important; /* grayscale 70 (antes slate-500 #64748b; mais claro p/ nao piorar contraste no escuro) */
       opacity: 0.85 !important;
     }
 
@@ -670,7 +670,7 @@ body {
        Lucide "chevron-down" já usado em todo o resto do plugin (menus
        customizados, accordions) — não um ícone novo.
 
-       Cor do chevron: #64748b (slate-500), a mesma cor de texto secundário
+       Cor do chevron: #64747a (grayscale 90 do DSC; era slate-500 #64748b), a mesma cor de texto secundário
        já usada nos labels dos campos (text-slate-500) — depois de
        URL-encoded pra caber no data URI do CSS.
 
@@ -693,13 +693,13 @@ body {
       -moz-appearance: none;
       border-radius: 10px !important; /* rounded-dsc-medium, ver tailwind.config.cjs */
       padding-right: 2.25rem !important; /* respiro real entre o texto/valor e o chevron */
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2364747a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
       background-repeat: no-repeat;
       background-position: right 0.75rem center;
       background-size: 0.875rem;
     }
     .dark select.dsc-select {
-      /* Mesmo SVG, traço dark-muted (#94a3b8, slate-400) — cor real usada
+      /* Mesmo SVG, traço dark-muted (#9eb2b8, grayscale 70 do DSC; era slate-400 #94a3b8) — cor real usada
          em dark:text-dark-muted no resto do plugin. */
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%239eb2b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
     }

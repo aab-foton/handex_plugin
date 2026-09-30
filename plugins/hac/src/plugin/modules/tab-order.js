@@ -826,7 +826,7 @@ function _renderTabOrderPendingList() {
       <span class="text-gray-300 dark:text-dark-muted cursor-grab active:cursor-grabbing shrink-0" title="Arrastar para reordenar" aria-hidden="true">
         <i data-lucide="grip-vertical" class="w-3.5 h-3.5"></i>
       </span>
-      <div class="w-6 h-6 rounded-dsc-circ flex items-center justify-center text-dsc-label-tiny normal-case tracking-normal font-extrabold text-white shrink-0" style="background-color:${it.drawFailed ? '#DC2626' : '#005ca9'}">${listIndex + 1}</div>
+      <div class="w-6 h-6 rounded-dsc-circ flex items-center justify-center text-dsc-label-tiny normal-case tracking-normal font-extrabold text-white shrink-0" style="background-color:${it.drawFailed ? '#b22c2c' : '#005ca9'}">${listIndex + 1}</div>
       <p class="flex-1 min-w-0 text-dsc-label-tiny normal-case tracking-normal text-slate-700 dark:text-white truncate">${escapeHtml(it.nodeName || '')}</p>
       ${it.drawFailed ? '<i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-red-500 shrink-0" title="Selo não desenhado"></i>' : ''}
       <button type="button" title="Remover da lista" aria-label="Remover da lista"
