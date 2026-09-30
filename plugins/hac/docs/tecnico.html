@@ -4167,6 +4167,54 @@ hr {
     <code>npm run lint:figma-api</code> — todos limpos. Bump de versão
     <code>0.1.0-beta.59</code> → <code>0.1.0-beta.60</code> no mesmo commit.</p>
 
+    <h2 id="s8y">8y. Base de conhecimento da lib "DSC | Fundamentos Visuais" (2026-09-30)</h2>
+
+    <p>A lib de fundamentos é a fonte de verdade dos tokens visuais do DSC
+    (cores, tipografia, espaçamento, borda, opacidade, ícones, sombras). O
+    hac a conhece como qualquer outra lib do manifest, com uma ref própria em
+    <code>refs/fundamentos-visuais.json</code>; o Handex mantém a dele
+    separada, com o mesmo fileKey.</p>
+
+    <p><strong>Estrutura da ref.</strong> <code>designTokens.variables</code>
+    (coleção única "DSC": <code>color/…</code>, <code>spacing/…</code>,
+    <code>border/radius|width/…</code>, <code>font/size|weight|family/…</code>,
+    <code>icon/size/…</code>, <code>opacity/…</code>,
+    <code>shadow/blur|spread|x|y/…</code>) com valor resolvido pelo modo
+    padrão; <code>styleTokens.typography</code> e
+    <code>styleTokens.effects</code> com o campo <code>resolved</code>
+    (valores reais); <code>styleTokens.colors</code> (só os 12 gradientes,
+    com o HEX na descrição); <code>components</code> (ícones, ~10 mil).</p>
+
+    <p><strong>Escalas reais da lib</strong> (versão 2.6.0):</p>
+    <ul>
+      <li>Espaçamento: 0, 4, 8, 12, 16, 24, 32, 40, 48, 56, 64, 72, 80, 120,
+      160 (quark → enormous).</li>
+      <li>Raio: 0, 2, 4, 8, 12, 16, 24, pill 1000. Largura de borda: 0, 1,
+      2, 4, 8, 12.</li>
+      <li>Fonte <strong>CAIXA Std</strong>, pesos 400 (regular), 600
+      (semibold) e 700 (bold) — <em>não existe 500</em>. Tamanhos: 12, 14,
+      16, 18, 20, 24, 28, 32, 36, 40, 44, 52, 60. Altura de linha 140–150%.
+      Classes Text, Link e Caption usam a flag OpenType <code>SS01</code>
+      (letras minúsculas alternativas).</li>
+      <li>Ícones: 12, 16, 20, 24, 32, 40, 48. Opacidade: 8 a 64 em passos de
+      8; estado hover 8, focus 24, pressed/selected/dragged 16, disabled
+      64.</li>
+      <li>Sombras: 5 elevações M3, sempre duas sombras somadas (por exemplo,
+      elevação 1 = <code>0 1px 3px 1px rgba(0,0,0,.15)</code> +
+      <code>0 1px 2px rgba(0,0,0,.3)</code>).</li>
+    </ul>
+
+    <p><strong>Não afeta o runtime.</strong> <code>_getDscComponentKeyToFrameMap</code>
+    (<code>dsc-matching.js</code>) só considera libs da lista fixa
+    <code>ORIGIN_BY_SLUG</code>. <code>build-skeleton.cjs</code> embute
+    variáveis e estilos no <code>ui.html</code>, mas não as keys de ícones.</p>
+
+    <p><strong>Duas libs de fundamentos existem</strong> no ecossistema: esta
+    (DSC) e a do SDSC (Super DSC), que o arquivo de instruções da própria lib
+    descreve como "adaptação dos ingredientes da marca CAIXA para meios
+    digitais". O hac trabalha com Super DSC Mobile e Web; confirmar qual das
+    duas é a referência dele é pendência de produto.</p>
+
     <h2 id="s9">9. Contrato de mensagens (UI ↔ backend)</h2>
 
     <p>Toda comunicação passa por <code>postMessage</code>/<code>window.onmessage</code> — o frontend

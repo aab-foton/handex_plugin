@@ -93,7 +93,12 @@ for (const libMeta of manifest.libraries) {
     .filter(v => v.resolvedType === 'FLOAT' && v.value !== null && v.value !== undefined)
     .map(v => ({ key: v.key, name: clean(v.name), value: v.value, collection: clean(v.collection || '') }));
 
-  if (Array.isArray(lib.components)) {
+  // "fundamentos-visuais" (2026-09-30) é lib de TOKENS/ícones, não de componentes
+  // de interface: nenhum consumidor do hac usa suas ~10 mil keys em runtime
+  // (dsc-matching.js só lê libs da lista fixa ORIGIN_BY_SLUG, via
+  // componentsDetailed). Embarcá-las só incharia o ui.html — o dado completo
+  // continua em refs/fundamentos-visuais.json, fora do bundle.
+  if (Array.isArray(lib.components) && libMeta.slug !== 'fundamentos-visuais') {
     entry.componentKeys = lib.components
       .filter(c => c && c.key)
       .map(c => c.key);

@@ -22,6 +22,7 @@ Automática de a11y** (componente do canvas → categoria de acessibilidade).
 |---------|--------|-------------|----------|
 | `_manifest.json` | curado | sim | As 4 libs de componentes reais (ver nota acima) — fonte de `componentsDetailed` |
 | `{slug}.json` (ex. `web-angular-react.json`) | `fetch-design-refs.cjs` | sim | Meta + styles + components de cada lib do manifest (só keys/nomes) |
+| `fundamentos-visuais.json` | `fetch-design-refs.cjs` (manifest, `resolveStyles: true`) | sim | Base de conhecimento da lib **"DSC \| Fundamentos Visuais"** (fileKey `nbv8CUA2nbukjSkhK44kgQ`, v2.6.0): 248 variáveis resolvidas (cores, `spacing/`, `border/`, `font/`, `icon/`, `opacity/`, `shadow/`), 39 estilos de tipografia e 5 de efeito **com valores reais** (`resolved`), 12 gradientes e ~10 mil ícones. É a fonte de verdade dos tokens visuais do próprio hac. **Não** entra em `componentsDetailed` nem no matching de a11y; `build-skeleton.cjs` não embute as keys de ícones (ver `tecnico.html`, seção 8y) |
 | `_skeleton.json` | `build-skeleton.cjs` | sim | Bundle agregado embarcado em `ui.html` como `window.__HAC_REF_SKELETON__` |
 | `dsc-component-a11y-mapping*.json` | `build-dsc-a11y-mapping.cjs` | sim | Mapa `containingFrame → {shortName, confidence}` por lib — **essencial em runtime** (`_resolveDscComponentA11yMatch`, `code.js`) |
 | `design-acessivel-content.json` | curado manualmente (REST API) | sim | Conteúdo textual (Descrição/Observações/Notas de Código) das 5 categorias de a11y — cópia direta do Handex |
@@ -31,7 +32,10 @@ Automática de a11y** (componente do canvas → categoria de acessibilidade).
 
 > ⚠ Nada aqui contém **valores resolvidos** (hex, fontSize, etc.), com a
 > exceção documentada das variáveis (`variables/local`, já resolvidas em
-> hex/px pela própria REST API) e, a partir de 2026-09-08, dos frames de
+> hex/px pela própria REST API), dos estilos de tipografia e efeito da lib
+> `fundamentos-visuais` (a partir de 2026-09-30, opt-in `resolveStyles` no
+> manifest — as outras 4 libs seguem só com nome + descrição) e, a partir de
+> 2026-09-08, dos frames de
 > instrução (que são imagem por natureza — não há "valor não resolvido"
 > possível para um PNG). Os demais valores são resolvidos em runtime via
 > Plugin API dentro do Figma — esse é o desenho que mantém o pipeline

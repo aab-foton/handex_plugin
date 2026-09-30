@@ -3236,6 +3236,40 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
     <code>npx tsc --noEmit</code> e <code>npm run lint:figma-api</code> —
     todos limpos. Ver <a href="tecnico.html#s8x">tecnico.html, seção 8x</a>.</p>
 
+    <h2>2026-09-30 — Lib "DSC | Fundamentos Visuais" passa a ser conhecida pelo
+    hac (v0.1.0-beta.63)</h2>
+
+    <p>Pedido do usuário: "o HAC precisa ter conhecimento completo sobre essa
+    lib, assim como acontece no Handex". Até aqui o hac só tinha o azul
+    institucional, copiado da ref do Handex com degraus interpolados — nenhuma
+    ref própria, nenhum dado de tipografia, espaçamento, borda, opacidade ou
+    sombra.</p>
+
+    <h3>O que entrou</h3>
+    <ul>
+      <li>A lib (fileKey <code>nbv8CUA2nbukjSkhK44kgQ</code>, versão 2.6.0 do
+      changelog oficial) foi cadastrada em <code>refs/_manifest.json</code>.
+      <code>refs/fundamentos-visuais.json</code> traz 248 variáveis
+      (162 cores, 85 números, 1 texto), 39 estilos de tipografia, 12 de cor
+      (gradientes) e 5 de efeito.</li>
+      <li><code>fetch-design-refs.cjs</code> ganhou o opt-in
+      <code>resolveStyles</code> (só esta lib): resolve os valores reais dos
+      estilos — fonte, tamanho, peso, altura de linha, flags OpenType e as
+      sombras das 5 elevações M3. As outras 4 libs continuam idênticas.</li>
+      <li><code>build-skeleton.cjs</code> não embute as ~10 mil keys de ícones
+      desta lib no <code>ui.html</code> (nenhum consumidor as usa em runtime).
+      <code>ui.html</code> cresceu 34 KB (variáveis e estilos), e as keys de
+      componentes seguem em 12.243.</li>
+      <li>O refresh semanal do CI passa a incluir a lib sozinho, porque
+      <code>fetch-design-refs.cjs</code> é dirigido pelo manifest.</li>
+    </ul>
+
+    <p><strong>Sem efeito visual nem funcional</strong> nesta etapa: o
+    matching de a11y em runtime só lê libs da lista fixa
+    <code>ORIGIN_BY_SLUG</code> (<code>dsc-matching.js</code>), então a lib
+    nova não altera a Detecção Automática. Ver
+    <a href="tecnico.html#s8y">tecnico.html, seção 8y</a>.</p>
+
     <hr>
 
     <p><em>Entradas anteriores a 2026-08-24 pertencem ao histórico do plugin Handex

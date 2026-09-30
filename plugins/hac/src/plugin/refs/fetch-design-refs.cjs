@@ -88,6 +88,7 @@ async function fetchLibrary(libMeta) {
   };
 
   // 1. Styles
+  const styleNodeIds = []; // { cat, index, nodeId } — só usado com libMeta.resolveStyles
   try {
     const stylesResp = await figmaGet(`/v1/files/${libMeta.fileKey}/styles`);
     const styles = (stylesResp && stylesResp.meta && stylesResp.meta.styles) || [];
@@ -99,11 +100,72 @@ async function fetchLibrary(libMeta) {
         name: clean(s.name || ''),
         description: clean(s.description || '')
       });
+      styleNodeIds.push({ cat, index: out.styleTokens[cat].length - 1, nodeId: s.node_id });
     }
     console.log(`    styles: ${out.styleTokens.colors.length} colors · ${out.styleTokens.typography.length} typography · ${out.styleTokens.effects.length} effects`);
   } catch (e) {
     console.warn(`    ⚠  styles failed: ${e.message}`);
     out.meta.warnings.push(`styles fetch error: ${e.message}`);
+  }
+
+  // 1.5. Valores REAIS dos estilos de tipografia e efeito (opt-in por
+  // `resolveStyles: true` no manifest, 2026-09-30). Só a lib "Fundamentos
+  // Visuais" liga isto: é a fonte de verdade dos tokens visuais que o próprio
+  // hac precisa espelhar (fonte, tamanho, peso, altura de linha, elevações).
+  // Nas libs de componentes (as outras 4) o valor de estilo nunca foi
+  // necessário e resolvê-lo custaria centenas de chamadas — ficam como sempre
+  // foram (só nome + descrição). Nunca lança: falha vira warning e o estilo
+  // segue sem `resolved`.
+  if (libMeta.resolveStyles) {
+    try {
+      const targets = styleNodeIds.filter(t => t.cat === 'typography' || t.cat === 'effects');
+      const BATCH = 40;
+      let resolvedCount = 0;
+      for (let i = 0; i < targets.length; i += BATCH) {
+        const chunk = targets.slice(i, i + BATCH);
+        const resp = await figmaGet(`/v1/files/${libMeta.fileKey}/nodes?ids=${chunk.map(t => t.nodeId).join(',')}`);
+        const nodes = (resp && resp.nodes) || {};
+        for (const t of chunk) {
+          const doc = nodes[t.nodeId] && nodes[t.nodeId].document;
+          if (!doc) continue;
+          const entry = out.styleTokens[t.cat][t.index];
+          if (t.cat === 'typography' && doc.style) {
+            const st = doc.style;
+            entry.resolved = {
+              fontFamily: st.fontFamily || null,
+              fontWeight: st.fontWeight || null,
+              fontSize: st.fontSize || null,
+              lineHeightPx: st.lineHeightPx || null,
+              lineHeightUnit: st.lineHeightUnit || null,
+              letterSpacing: typeof st.letterSpacing === 'number' ? st.letterSpacing : null,
+              textCase: st.textCase || null,
+              textDecoration: st.textDecoration || null,
+              opentypeFlags: st.opentypeFlags || null
+            };
+            resolvedCount++;
+          } else if (t.cat === 'effects' && Array.isArray(doc.effects)) {
+            entry.resolved = {
+              effects: doc.effects.map(e => {
+                const c = e.color || {};
+                return {
+                  type: e.type,
+                  x: (e.offset && e.offset.x) || 0,
+                  y: (e.offset && e.offset.y) || 0,
+                  blur: e.radius || 0,
+                  spread: e.spread || 0,
+                  color: `rgba(${Math.round((c.r || 0) * 255)},${Math.round((c.g || 0) * 255)},${Math.round((c.b || 0) * 255)},${Math.round((c.a === undefined ? 1 : c.a) * 1000) / 1000})`
+                };
+              })
+            };
+            resolvedCount++;
+          }
+        }
+      }
+      console.log(`    styles resolvidos (valores reais): ${resolvedCount}/${targets.length}`);
+    } catch (e) {
+      console.warn(`    ⚠  resolveStyles failed: ${e.message.slice(0, 100)}`);
+      out.meta.warnings.push(`resolveStyles error: ${e.message.slice(0, 120)}`);
+    }
   }
 
   // 2. Variables with resolved values (COLOR → hex, FLOAT → number)
