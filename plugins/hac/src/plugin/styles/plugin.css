@@ -316,6 +316,16 @@ body {
       position: relative;
     }
 
+    /* data-tooltip="" não deve render nada (2026-09-30, print do usuário:
+       bolha escura vazia sob o botão "Finalizar"). O seletor [data-tooltip]
+       casa com valor vazio, então a bolha e a seta nasciam sem texto —
+       blindagem no CSS além de não emitir o atributo vazio na origem. */
+    [data-tooltip=""]:before,
+    [data-tooltip=""]:after {
+      content: none;
+      display: none;
+    }
+
     [data-tooltip]:before {
       content: attr(data-tooltip);
       position: absolute;

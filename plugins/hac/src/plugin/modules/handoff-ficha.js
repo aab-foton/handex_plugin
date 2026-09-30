@@ -613,9 +613,9 @@ function _fichaRenderProjectSummary() {
         <p class="text-dsc-label-tiny normal-case tracking-normal ${corDoTexto}">${completion.complete} de ${completion.total} tela${completion.total === 1 ? '' : 's'} com o checklist fechado</p>
       </div>
       <button type="button" onclick="_fichaOpenFinalizeModal()"
-        data-tooltip="${completion.isComplete ? '' : 'Todas as telas precisam ter o checklist fechado antes de finalizar'}"
+        ${completion.isComplete ? '' : 'data-tooltip="Todas as telas precisam ter o checklist fechado antes de finalizar"'}
         class="shrink-0 inline-flex items-center gap-dsc-quark h-8 px-dsc-nano rounded-dsc-circ text-dsc-label-tiny normal-case tracking-normal font-bold transition-all ${completion.isComplete
-          ? 'tooltip-bottom bg-[#005ca9] text-white hover:bg-blue-700 active:scale-95'
+          ? 'bg-[#005ca9] text-white hover:bg-blue-700 active:scale-95'
           : 'tooltip-bottom tooltip-left bg-gray-200 dark:bg-dark-line text-gray-400 dark:text-dark-muted cursor-not-allowed'}">
         <i data-lucide="flag" class="w-3.5 h-3.5"></i> Finalizar
       </button>
