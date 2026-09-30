@@ -180,11 +180,19 @@ module.exports = {
         'dsc-elevation-1': '0 1px 2px 0 rgba(0,0,0,0.04)',
         'dsc-elevation-2': '0 14px 28px 0 rgba(0,0,0,0.04)',
       },
-      // Família da lib (font/family/1 = CAIXA Std). Inter fica como fallback: é a
-      // fonte que o Figma fornece ao iframe quando CAIXA Std não está instalada.
+      // Roboto, NÃO CAIXA Std (corrigido em 2026-09-30). Nas libs do produto
+      // (Super DSC Web e Super App, com estilos de texto resolvidos em
+      // refs/super-dsc-web.json e super-app.json) a CAIXA Std só é usada em
+      // title/display (20px ou mais, pesos 400 e 600); label, body e link
+      // (12 a 18px, pesos 400/500/600/700, espaçamento de letras 0,1 a 0,5)
+      // são Roboto. Toda a interface do hac está nessa faixa (nenhum texto
+      // chega a 20px), e os tokens dsc-label-*/dsc-body-* abaixo são
+      // exatamente esses estilos Roboto — incluindo o peso 500, que a
+      // CAIXA Std não tem. Inter fica como fallback: é a fonte que o Figma
+      // fornece ao iframe quando Roboto não está instalada.
       // Mesma pilha em plugin.css (body + 2 regras !important) — manter idêntica.
       fontFamily: {
-        sans: ['"CAIXA Std"', '"Inter"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['"Roboto"', '"Inter"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       fontSize: {
         'dsc-label-tiny':     ['12px', { lineHeight: '16px', letterSpacing: '0.5px', fontWeight: '500' }],

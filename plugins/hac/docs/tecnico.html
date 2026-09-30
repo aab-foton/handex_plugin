@@ -4191,8 +4191,9 @@ hr {
       160 (quark → enormous).</li>
       <li>Raio: 0, 2, 4, 8, 12, 16, 24, pill 1000. Largura de borda: 0, 1,
       2, 4, 8, 12.</li>
-      <li>Fonte <strong>CAIXA Std</strong>, pesos 400 (regular), 600
-      (semibold) e 700 (bold) — <em>não existe 500</em>. Tamanhos: 12, 14,
+      <li>Fonte <strong>CAIXA Std</strong> em todos os estilos dos
+      Fundamentos, pesos 400 (regular), 600 (semibold) e 700 (bold) —
+      <em>não existe 500</em> (no SDSC o 500 existe, na Roboto). Tamanhos: 12, 14,
       16, 18, 20, 24, 28, 32, 36, 40, 44, 52, 60. Altura de linha 140–150%.
       Classes Text, Link e Caption usam a flag OpenType <code>SS01</code>
       (letras minúsculas alternativas).</li>
@@ -4209,11 +4210,31 @@ hr {
     <code>ORIGIN_BY_SLUG</code>. <code>build-skeleton.cjs</code> embute
     variáveis e estilos no <code>ui.html</code>, mas não as keys de ícones.</p>
 
-    <p><strong>Duas libs de fundamentos existem</strong> no ecossistema: esta
-    (DSC) e a do SDSC (Super DSC), que o arquivo de instruções da própria lib
-    descreve como "adaptação dos ingredientes da marca CAIXA para meios
-    digitais". O hac trabalha com Super DSC Mobile e Web; confirmar qual das
-    duas é a referência dele é pendência de produto.</p>
+    <p><strong>Duas famílias de fundamentos</strong> existem no ecossistema: os
+    desta lib (família DSC) e os da família SDSC (Super DSC). Os do SDSC
+    <em>não são um arquivo separado a cadastrar</em>: moram dentro das próprias
+    libs do produto que o hac já escaneia — coleção <code>dsc</code> em
+    <code>super-dsc-web.json</code> e <code>SuperApp Theme</code> em
+    <code>super-app.json</code> (confirmado pelo usuário em 2026-09-30). Desde
+    essa data o manifest liga <code>resolveStyles</code> nas duas, então a ref
+    delas também traz os valores reais de tipografia e sombra.</p>
+
+    <p><strong>Onde as duas famílias divergem</strong> (medido nas refs):</p>
+    <ul>
+      <li><em>Fonte.</em> Fundamentos DSC: CAIXA Std em todos os 39 estilos
+      (400/600/700). SDSC: <strong>Roboto</strong> em label, body, link e
+      títulos numéricos (26 de 36 estilos; pesos 400/500/600/700; espaçamento
+      de letras 0,1 a 0,5) e <strong>CAIXA Std só em title e display</strong>
+      (10 estilos, 20 a 36px, pesos 400 e 600). O peso 500 existe só na
+      Roboto.</li>
+      <li><em>Sombras.</em> Fundamentos: 5 elevações M3. SDSC: 2 elevações a 4%
+      (Super DSC Web) ou 3 (Super App).</li>
+      <li><em>Largura de borda.</em> Fundamentos: 1, 2, 4, 8, 12. SDSC: 0,5, 1,
+      2, 4.</li>
+      <li><em>Concordam:</em> espaçamento, raio, tamanho de ícone, os tamanhos
+      de fonte comuns e a paleta de marca (cinzas, azul, semânticas). Cores
+      só do SDSC são de gráficos, variantes de ícone e estados.</li>
+    </ul>
 
     <h2 id="s8z">8z. Alinhamento visual à lib "DSC | Fundamentos Visuais" (2026-09-30, v0.1.0-beta.64)</h2>
 
@@ -4234,12 +4255,16 @@ hr {
     <h3>O que foi alinhado</h3>
     <ul>
       <li><strong>Fonte</strong>: pilha única
-      <code>"CAIXA Std", "Inter", ui-sans-serif, system-ui, sans-serif</code>
+      <code>"Roboto", "Inter", ui-sans-serif, system-ui, sans-serif</code>
       em <code>fontFamily.sans</code> (<code>tailwind.config.cjs</code>) e nos
       3 <code>font-family</code> de <code>plugin.css</code> (body e as duas
-      regras <code>!important</code>). CAIXA Std só renderiza se estiver
-      instalada na máquina; Inter (que o Figma fornece ao iframe) segue como
-      fallback.</li>
+      regras <code>!important</code>). <strong>Corrigido em v0.1.0-beta.65:</strong>
+      a beta.64 usava CAIXA Std primeiro, por engano — nas libs do produto a
+      CAIXA Std só serve a title/display (20px ou mais) e a interface do hac
+      não tem nenhum texto assim; label e body são Roboto, e os tokens
+      <code>dsc-label-*</code>/<code>dsc-body-*</code> já eram esses estilos.
+      Roboto só renderiza se estiver instalada; Inter (que o Figma fornece ao
+      iframe) segue como fallback.</li>
       <li><strong>Espaçamento</strong>: escala completa — acrescentados
       <code>dsc-larger</code> 56, <code>dsc-big</code> 64,
       <code>dsc-bigger</code> 72, <code>dsc-huge</code> 80,

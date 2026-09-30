@@ -2,12 +2,12 @@
 // GERADO AUTOMATICAMENTE por build-a11y-constants.cjs — não editar à mão.
 // Fonte: refs/design-acessivel-properties.json (2026-09-30T13:57:57.953Z)
 //      + refs/design-acessivel-mobile-properties.json (2026-09-30T14:05:31.017Z)
-//      + refs/super-app.json (2026-09-30T13:55:06.261Z)
+//      + refs/super-app.json (2026-09-30T23:37:47.768Z)
 //      + refs/_manifest.json (fileKey da lib 'super-app')
 // Regenerar via: node src/plugin/refs/build-a11y-constants.cjs
 //            ou: npm run refs:a11y-constants
 //
-// Gerado em: 2026-09-30T18:25:16.051Z
+// Gerado em: 2026-09-30T23:42:36.584Z
 //
 // Consumido via alias em src/plugin/modules/accessibility.js:
 //   const A11Y_COMPONENT_PROPERTIES = A11Y_COMPONENT_PROPERTIES_GENERATED;
@@ -100,7 +100,6 @@ const A11Y_MOBILE_COMPONENT_LINK_NODE_IDS_GENERATED = {
   "Avatar Hero": "39694:12330",
   "Badge": "40651:4695",
   "Badge Notification": "16679:26782",
-  "Badge Text": "6791:5353",
   "Button": "6068:198",
   "Card": "6791:5569",
   "Card Alert": "6791:6531",

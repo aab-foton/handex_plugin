@@ -32,9 +32,12 @@ Automática de a11y** (componente do canvas → categoria de acessibilidade).
 
 > ⚠ Nada aqui contém **valores resolvidos** (hex, fontSize, etc.), com a
 > exceção documentada das variáveis (`variables/local`, já resolvidas em
-> hex/px pela própria REST API), dos estilos de tipografia e efeito da lib
-> `fundamentos-visuais` (a partir de 2026-09-30, opt-in `resolveStyles` no
-> manifest — as outras 4 libs seguem só com nome + descrição) e, a partir de
+> hex/px pela própria REST API), dos estilos de tipografia e efeito das libs
+> `fundamentos-visuais`, `super-dsc-web` e `super-app` (a partir de
+> 2026-09-30, opt-in `resolveStyles` no manifest — `web-angular-react` e
+> `dsc-android` seguem só com nome + descrição). As duas últimas guardam os
+> fundamentos da família SDSC (Super DSC), que não existem como arquivo
+> separado: vivem nas coleções `dsc` e `SuperApp Theme` dessas libs) e, a partir de
 > 2026-09-08, dos frames de
 > instrução (que são imagem por natureza — não há "valor não resolvido"
 > possível para um PNG). Os demais valores são resolvidos em runtime via

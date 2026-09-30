@@ -3312,6 +3312,43 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
     <code>backend/*</code>) e as cores de categoria de a11y. Ver
     <a href="tecnico.html#s8z">tecnico.html, seção 8z</a>.</p>
 
+    <h2>2026-09-30 — Fonte corrigida para Roboto e fundamentos do SDSC
+    conhecidos (v0.1.0-beta.65)</h2>
+
+    <p>O usuário esclareceu que os fundamentos do SDSC (Super DSC) não são um
+    arquivo separado: moram nas próprias libs do produto que o hac já
+    escaneia. Com os estilos dessas libs resolvidos, a v0.1.0-beta.64 se
+    mostrou errada num ponto.</p>
+
+    <h3>Correção</h3>
+    <ul>
+      <li><strong>Fonte.</strong> A beta.64 pôs "CAIXA Std" à frente da pilha,
+      com base em a variável <code>font/family/1</code> coincidir nas duas
+      famílias. Nos estilos de texto elas divergem: nas libs do produto a
+      CAIXA Std só é usada em title/display (20px ou mais); label, body e
+      link (12 a 18px) são <strong>Roboto</strong>, com pesos 400/500/600/700.
+      A interface do hac não tem nenhum texto de 20px ou mais, e os tokens
+      <code>dsc-label-*</code>/<code>dsc-body-*</code> já eram esses estilos
+      Roboto. A pilha passa a <code>"Roboto", "Inter", …</code>. Efeito: o
+      risco apontado na beta.64 — cerca de 99 textos de peso 500 caindo em
+      Regular por a CAIXA Std não ter 500 — deixa de existir.</li>
+    </ul>
+
+    <h3>Conhecimento</h3>
+    <ul>
+      <li><code>super-dsc-web</code> e <code>super-app</code> passam a ter
+      <code>resolveStyles</code> no manifest: suas refs guardam os valores
+      reais de 36/42 estilos de tipografia e 2/3 de sombra.</li>
+      <li>Essas libs receberam atualização da equipe de design desde o scan da
+      manhã: Super App +1 componente (variante "triple column" do Wheel Picker)
+      e +4 variáveis de estado (<code>highlight</code>/<code>neutral</code>
+      <code>hover3</code> e <code>pressed3</code>); Super DSC Web +5 variáveis
+      (as mesmas 4 mais <code>neutralBg4</code>). Nada removido ou alterado.</li>
+      <li>Mapeamentos DSC→a11y e skeleton regenerados.</li>
+    </ul>
+
+    <p>Ver <a href="tecnico.html#s8y">tecnico.html, seções 8y e 8z</a>.</p>
+
     <hr>
 
     <p><em>Entradas anteriores a 2026-08-24 pertencem ao histórico do plugin Handex
