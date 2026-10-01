@@ -2714,7 +2714,13 @@ figma.ui.onmessage = async (msg) => {
         // layoutPositioning — GROUP não tem essa propriedade porque nunca
         // precisa dela.
         const badgesGroup = _getOrCreateCloneOverlayGroup(tabOrderClone, 'hacTabOrderBadgesGroupForClone', '[Selos de Tabulação]', areaId);
-        _reparentIntoAreaGroup(group, badgesGroup);
+        // _reparentIntoAreaGroup engole as próprias exceções e devolve false
+        // (2026-10-01). Sem checar, o selo ficava SOLTO na página com a flag
+        // já marcada como sucesso e nenhum aviso — agora a falha cai no
+        // catch abaixo, que usa o fallback e avisa o designer.
+        if (!_reparentIntoAreaGroup(group, badgesGroup)) {
+          throw new Error('o selo não entrou no grupo de selos (appendChild falhou)');
+        }
         _reparentedIntoClone = true;
         await _ensureCloneWorkFrame(tabOrderClone, badgesGroup, 'Réplica de Trabalho — Ordem de Tabulação');
       } catch (e) {
@@ -2726,8 +2732,11 @@ figma.ui.onmessage = async (msg) => {
         // catch não deveria mais disparar no caminho normal — se disparar,
         // é sinal de outra causa nova, e o designer precisa saber que o
         // selo caiu num destino de fallback (Grupo da Área direto).
-        console.error('[hac] _createTabOrderBadge: reparenting pro grupo de selos falhou, caindo pro Grupo da Área.', e && e.message);
-        figma.notify('Não foi possível encaixar o selo na cópia da Ordem de Tabulação — ele foi colocado direto no grupo da tela.');
+        console.error('[hac] _createTabOrderBadge: reparenting pro grupo de selos falhou, caindo pro Grupo da Área.', e && e.message, e && e.stack);
+        // Motivo na própria mensagem (2026-10-01): sem ele, "por que caiu no
+        // fallback" só era descoberto abrindo o console do Figma.
+        const _motivo = (e && e.message ? String(e.message) : 'erro desconhecido').slice(0, 110);
+        figma.notify('Não foi possível encaixar o selo na cópia da Ordem de Tabulação (' + _motivo + ') — ele foi colocado direto no grupo da tela.', { timeout: 8000 });
       }
     }
     if (!_reparentedIntoClone) {

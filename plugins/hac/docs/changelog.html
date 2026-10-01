@@ -3349,6 +3349,26 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8y">tecnico.html, seções 8y e 8z</a>.</p>
 
+    <h2>2026-10-01 — Aviso "não foi possível encaixar o selo" passa a dizer o
+    motivo (v0.1.0-beta.67)</h2>
+
+    <p>Print do usuário: toast "Não foi possível encaixar o selo na cópia da
+    Ordem de Tabulação — ele foi colocado direto no grupo da tela", sem
+    nenhuma indicação da causa. A causa raiz <strong>não foi confirmada</strong>
+    nesta entrega: o <code>catch</code> de <code>_createTabOrderBadge</code>
+    cobre <code>_getOrCreateCloneOverlayGroup</code> (que pode lançar na busca,
+    no resgate de overlay legado, no <code>appendChild</code> do seed ou no
+    <code>figma.group</code>), e a mensagem não dizia qual.</p>
+    <ul>
+      <li>O toast agora inclui o motivo (<code>e.message</code>, até 110
+      caracteres) e o <code>console.error</code> passa a logar o stack.</li>
+      <li><code>_reparentIntoAreaGroup</code> devolve <code>true</code>/<code>false</code>
+      (os demais chamadores ignoram o retorno). Antes engolia a exceção e o
+      chamador marcava o selo como encaixado mesmo com ele solto na página,
+      sem aviso; agora essa falha cai no mesmo <code>catch</code>, usa o
+      fallback e avisa.</li>
+    </ul>
+
     <hr>
 
     <p><em>Entradas anteriores a 2026-08-24 pertencem ao histórico do plugin Handex

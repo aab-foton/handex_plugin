@@ -2621,6 +2621,10 @@ export function _removeCloneWorkFrame(clone) {
 // robusta contra qualquer profundidade/tipo de aninhamento. Best-effort,
 // mesmo espírito de _reparentIntoSection: organização é cosmética, o
 // artefato segue existindo se o reparenting falhar.
+// Devolve true se o node entrou no grupo, false se o appendChild falhou
+// (2026-10-01) — antes não devolvia nada, e o chamador de
+// _createTabOrderBadge marcava "encaixado" mesmo com o selo solto na página,
+// sem nenhum aviso. Os demais chamadores seguem ignorando o retorno.
 export function _reparentIntoAreaGroup(node, areaGroupNode) {
   try {
     const _beforeBB = node.absoluteBoundingBox;
@@ -2630,8 +2634,10 @@ export function _reparentIntoAreaGroup(node, areaGroupNode) {
       node.x = Math.round(node.x + (_beforeBB.x - _afterBB.x));
       node.y = Math.round(node.y + (_beforeBB.y - _afterBB.y));
     }
+    return true;
   } catch (e) {
     console.error('[hac] _reparentIntoAreaGroup: falhou, node ficou solto na página.', e && e.message);
+    return false;
   }
 }
 
