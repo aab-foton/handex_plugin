@@ -3743,6 +3743,260 @@ figma.ui.onmessage = async (msg) => {
       return found;
     }
 
+    // ── Fase 5b: personalização de instância DSC ────────────────────────────
+    // Referência = componente principal (variante atual) com os valores das
+    // propriedades de componente aplicados, o estado que o "Reset" do Figma
+    // restauraria. instance.overrides diz QUAIS campos de QUAIS sub-nós
+    // diferem desse estado; o valor atual vem da instância e o padrão, do nó
+    // equivalente no componente principal. Texto (characters), visibilidade e
+    // troca via propriedade INSTANCE_SWAP nunca contam.
+    const _CUST_FIELD_GROUPS = {
+      fills: ['fill'], fillStyleId: ['fill'],
+      strokes: ['stroke'], strokeStyleId: ['stroke'],
+      effects: ['effect'], effectStyleId: ['effect'],
+      cornerRadius: ['radius'], topLeftRadius: ['radius'], topRightRadius: ['radius'], bottomLeftRadius: ['radius'], bottomRightRadius: ['radius'],
+      strokeWeight: ['strokeWeight'], strokeTopWeight: ['strokeWeight'], strokeRightWeight: ['strokeWeight'], strokeBottomWeight: ['strokeWeight'], strokeLeftWeight: ['strokeWeight'],
+      itemSpacing: ['itemSpacing'], counterAxisSpacing: ['counterAxisSpacing'],
+      paddingTop: ['paddingTop'], paddingRight: ['paddingRight'], paddingBottom: ['paddingBottom'], paddingLeft: ['paddingLeft'],
+      width: ['width'], height: ['height'], size: ['width', 'height'],
+      textStyleId: ['typography'], fontSize: ['typography'], fontName: ['typography'], lineHeight: ['typography'], letterSpacing: ['typography'],
+      mainComponent: ['swap']
+    };
+    const _CUST_LABELS = {
+      fill: 'Cor (Fill)', stroke: 'Border Color', effect: 'Effect', radius: 'Radius', strokeWeight: 'Border Width',
+      itemSpacing: 'Gap', counterAxisSpacing: 'Gap (eixo cruzado)',
+      paddingTop: 'Padding Top', paddingRight: 'Padding Right', paddingBottom: 'Padding Bottom', paddingLeft: 'Padding Left',
+      width: 'Largura', height: 'Altura', typography: 'Tipografia', swap: 'Subcomponente trocado'
+    };
+    const _custVarNameCache = new Map();
+    const _custIndexCache = new Map();
+    let _custDiagLogged = false;
+    let _custNotEvalLogs = 0;
+
+    async function _custVarName(id) {
+      if (!id) return null;
+      if (_custVarNameCache.has(id)) return _custVarNameCache.get(id);
+      let name = null;
+      try { const v = await figma.variables.getVariableByIdAsync(id); name = v ? v.name : null; } catch (e) { name = null; }
+      _custVarNameCache.set(id, name);
+      return name;
+    }
+
+    async function _custStyleName(id) {
+      if (!id) return null;
+      try { const s = await figma.getStyleByIdAsync(id); return s ? s.name : null; } catch (e) { return null; }
+    }
+
+    function _custBoundId(node, field) {
+      const bv = node.boundVariables && node.boundVariables[field];
+      if (!bv) return '';
+      return (Array.isArray(bv) ? (bv[0] && bv[0].id) : bv.id) || '';
+    }
+
+    async function _custNum(node, field) {
+      const v = node[field];
+      if (typeof v !== 'number') return null;
+      const id = _custBoundId(node, field);
+      const vn = await _custVarName(id);
+      return { sig: v + '|' + id, text: `${Math.round(v * 100) / 100}px${vn ? ' (' + vn + ')' : ''}` };
+    }
+
+    async function _custMulti(node, fields) {
+      const parts = [];
+      for (const f of fields) {
+        const p = await _custNum(node, f);
+        if (!p) return null;
+        parts.push(p);
+      }
+      const allSame = parts.every(p => p.text === parts[0].text);
+      return { sig: parts.map(p => p.sig).join(','), text: allSame ? parts[0].text : parts.map(p => p.text).join(' / ') };
+    }
+
+    async function _custPaints(node, field, styleField) {
+      const arr = node[field];
+      if (!Array.isArray(arr)) return null;
+      const styleId = (styleField in node && typeof node[styleField] === 'string') ? node[styleField] : '';
+      const styleName = await _custStyleName(styleId);
+      const sig = ['style:' + styleId];
+      const texts = [];
+      for (const p of arr) {
+        if (p.visible === false) continue;
+        if (p.type === 'SOLID' && p.color) {
+          const hex = rgbToHex(p.color.r, p.color.g, p.color.b).toUpperCase();
+          const vid = (p.boundVariables && p.boundVariables.color && p.boundVariables.color.id) || '';
+          const vn = await _custVarName(vid);
+          const op = p.opacity !== undefined && p.opacity !== 1 ? ' @' + Math.round(p.opacity * 100) + '%' : '';
+          sig.push('S' + hex + op + '|' + vid);
+          texts.push((vn || styleName) ? `${vn || styleName} (${hex}${op})` : hex + op);
+        } else {
+          sig.push(p.type);
+          texts.push(p.type);
+        }
+      }
+      return { sig: sig.join(';'), text: texts.join(', ') || 'nenhum' };
+    }
+
+    async function _custEffects(node) {
+      if (!Array.isArray(node.effects)) return null;
+      const styleId = (typeof node.effectStyleId === 'string') ? node.effectStyleId : '';
+      const styleName = await _custStyleName(styleId);
+      const sig = ['style:' + styleId];
+      const texts = [];
+      for (const e of node.effects) {
+        if (e.visible === false) continue;
+        const bv = e.boundVariables || {};
+        const ids = Object.keys(bv).map(k => k + ':' + (bv[k] && bv[k].id)).join(',');
+        const off = e.offset ? `${e.offset.x},${e.offset.y}` : '';
+        sig.push([e.type, e.radius, e.spread, off, ids].join('|'));
+        texts.push(`${e.type}${typeof e.radius === 'number' ? ' ' + e.radius + 'px' : ''}`);
+      }
+      return { sig: sig.join(';'), text: (styleName ? styleName + ' — ' : '') + (texts.join(', ') || 'nenhum') };
+    }
+
+    async function _custTypography(node) {
+      if (node.type !== 'TEXT') return null;
+      const m = figma.mixed;
+      if (node.textStyleId === m || node.fontSize === m || node.fontName === m || node.lineHeight === m || node.letterSpacing === m) return null;
+      const styleId = typeof node.textStyleId === 'string' ? node.textStyleId : '';
+      const styleName = await _custStyleName(styleId);
+      const sizeId = _custBoundId(node, 'fontSize');
+      const vn = await _custVarName(sizeId);
+      const lh = node.lineHeight && node.lineHeight.unit !== 'AUTO' ? `${node.lineHeight.value}${node.lineHeight.unit === 'PERCENT' ? '%' : 'px'}` : 'auto';
+      const base = `${node.fontName.family} ${node.fontName.style} ${node.fontSize}px`;
+      const ls = node.letterSpacing ? `${node.letterSpacing.value}${node.letterSpacing.unit === 'PERCENT' ? '%' : 'px'}` : '0';
+      return {
+        sig: [styleId, base, lh, ls, sizeId].join('|'),
+        text: (styleName ? styleName + ' — ' : '') + base + (vn ? ' (' + vn + ')' : '')
+      };
+    }
+
+    async function _custSwap(node) {
+      if (node.type !== 'INSTANCE') return null;
+      if (node.componentPropertyReferences && node.componentPropertyReferences.mainComponent) return { ignore: true };
+      const mc = await node.getMainComponentAsync();
+      if (!mc) return null;
+      const label = (mc.parent && mc.parent.type === 'COMPONENT_SET') ? mc.parent.name : mc.name;
+      return { sig: mc.key || mc.id, text: label };
+    }
+
+    async function _custSnapshot(node, group) {
+      if (group === 'fill') return _custPaints(node, 'fills', 'fillStyleId');
+      if (group === 'stroke') return _custPaints(node, 'strokes', 'strokeStyleId');
+      if (group === 'effect') return _custEffects(node);
+      if (group === 'typography') return _custTypography(node);
+      if (group === 'swap') return _custSwap(node);
+      if (group === 'radius') {
+        const single = await _custNum(node, 'cornerRadius');
+        return single || _custMulti(node, ['topLeftRadius', 'topRightRadius', 'bottomRightRadius', 'bottomLeftRadius']);
+      }
+      if (group === 'strokeWeight') {
+        const single = await _custNum(node, 'strokeWeight');
+        return single || _custMulti(node, ['strokeTopWeight', 'strokeRightWeight', 'strokeBottomWeight', 'strokeLeftWeight']);
+      }
+      if (group === 'width' || group === 'height') {
+        const sizing = group === 'width' ? node.layoutSizingHorizontal : node.layoutSizingVertical;
+        if (sizing && sizing !== 'FIXED') return { ignore: true };
+        return _custNum(node, group);
+      }
+      return _custNum(node, group);
+    }
+
+    async function _custIdIndex(mainComp) {
+      if (_custIndexCache.has(mainComp.id)) return _custIndexCache.get(mainComp.id);
+      const index = new Map();
+      let budget = 6000;
+      const walk = (n) => {
+        index.set(n.id, n);
+        if (--budget <= 0 || !n.children) return;
+        for (const c of n.children) walk(c);
+      };
+      walk(mainComp);
+      _custIndexCache.set(mainComp.id, index);
+      return index;
+    }
+
+    // ids de sub-nós de instância: I<instância>;<id no principal>; níveis
+    // aninhados ficam como I<a>;<b>, e no principal o mesmo nó é "I<a>;<b>".
+    async function _custDefaultNode(inst, mainComp, id) {
+      if (id === inst.id) return mainComp;
+      const prefix = inst.id + ';';
+      if (!id.startsWith(prefix)) return null;
+      const segs = id.slice(prefix.length).split(';');
+      const key = segs.length === 1 ? segs[0] : 'I' + segs.join(';');
+      const index = await _custIdIndex(mainComp);
+      return index.get(key) || null;
+    }
+
+    async function _custEvalEntry(inst, mainComp, entry) {
+      const out = { items: [], unresolved: 0 };
+      const groups = new Set();
+      (entry.overriddenFields || []).forEach(f => { (_CUST_FIELD_GROUPS[f] || []).forEach(g => groups.add(g)); });
+      const actual = await figma.getNodeByIdAsync(entry.id);
+      if (!actual) { if (groups.size > 0) out.unresolved++; return out; }
+      if (actual.type === 'INSTANCE' && actual.id !== inst.id) groups.add('swap');
+      if (groups.size === 0) return out;
+      if (actual.id !== inst.id) {
+        let p = actual.parent;
+        while (p && p.id !== inst.id) {
+          if (p.type === 'INSTANCE' && await _libLinkOf(p)) return out;
+          p = p.parent;
+        }
+      }
+      const def = await _custDefaultNode(inst, mainComp, entry.id);
+      if (!def) { out.unresolved += groups.size; return out; }
+      for (const g of groups) {
+        const a = await _custSnapshot(actual, g);
+        const d = await _custSnapshot(def, g);
+        if (!a || !d) { out.unresolved++; continue; }
+        if (a.ignore || d.ignore) continue;
+        if (a.sig !== d.sig) out.items.push({ layer: actual.name, campo: _CUST_LABELS[g] || g, atual: a.text, padrao: d.text });
+      }
+      return out;
+    }
+
+    // Retorna { list, unresolved } ou null (não avaliável: nunca conforme
+    // nem âmbar falso).
+    async function _customizationsOf(inst, mainComp) {
+      let reason = null;
+      try {
+        if (!mainComp) { reason = 'sem componente principal'; return null; }
+        const ov = inst.overrides;
+        if (!Array.isArray(ov)) { reason = 'instance.overrides indisponível (' + typeof ov + ')'; return null; }
+        if (!_custDiagLogged) {
+          _custDiagLogged = true;
+          let defKeys = null;
+          try {
+            const setNode = mainComp.parent && mainComp.parent.type === 'COMPONENT_SET' ? mainComp.parent : mainComp;
+            defKeys = Object.keys(setNode.componentPropertyDefinitions || {});
+          } catch (e) { defKeys = 'erro: ' + (e && e.message); }
+          const fields = new Set();
+          ov.forEach(o => (o.overriddenFields || []).forEach(f => fields.add(f)));
+          console.log('[Handex 5b] sonda (1ª instância DSC do scan)', {
+            instancia: inst.name,
+            mainRemote: mainComp.remote === true,
+            mainParentType: mainComp.parent ? mainComp.parent.type : null,
+            definicoes: defKeys,
+            overrides: ov.length,
+            camposVistos: Array.from(fields),
+            idsExemplo: ov.slice(0, 3).map(o => o.id)
+          });
+        }
+        const list = [];
+        let unresolved = 0;
+        for (let i = 0; i < ov.length; i += 6) {
+          const results = await Promise.all(ov.slice(i, i + 6).map(e => _custEvalEntry(inst, mainComp, e).catch(err => { unresolved++; return { items: [], unresolved: 0 }; })));
+          results.forEach(r => { list.push(...r.items); unresolved += r.unresolved; });
+        }
+        if (list.length === 0 && unresolved > 0) { reason = unresolved + ' campo(s) sem leitura do padrão'; return null; }
+        return { list, unresolved };
+      } catch (err) {
+        reason = 'erro: ' + (err && err.message ? err.message : String(err));
+        return null;
+      } finally {
+        if (reason && _custNotEvalLogs < 3) { _custNotEvalLogs++; console.log('[Handex 5b] personalização não avaliada em "' + inst.name + '":', reason); }
+      }
+    }
+
     async function addElement(category, node, props) {
       // FILTRAGEM POR CATEGORIA (apenas se não for auditoria)
       if (allowedCategories && allowedCategories.length > 0) {
@@ -3840,6 +4094,23 @@ figma.ui.onmessage = async (msg) => {
           }
         }
       }
+      // Personalização (Fase 5b): só instância com vínculo próprio. Âmbar,
+      // nunca vermelho; desvio comprovado de token (vermelho) tem precedência.
+      let customizations = null;
+      let customizationsStatus = null;
+      if ((category === "components" || category === "icons") && _ownLibLink && node.type === "INSTANCE") {
+        const cust = await _customizationsOf(node, mainComp);
+        if (cust) {
+          customizations = cust.list;
+          customizationsStatus = 'evaluated';
+          if (customizations.length > 0 && dsElement === true) {
+            dsElement = "warning";
+            elementMatchedBy = 'customized';
+          }
+        } else {
+          customizationsStatus = 'not-evaluated';
+        }
+      }
       if (category === "frames") {
         // Frame é conforme se todos os seus tokens de estilo vêm do DSC.
         // Props sem checagem real contra a lib (isDS null: sizing, variantes) são ignoradas na conta.
@@ -3873,8 +4144,11 @@ figma.ui.onmessage = async (msg) => {
       // nenhum) são itens distintos: senão a 1ª ocorrência conforme esconderia
       // uma ocorrência personalizada homônima (ex: "Icon" dentro de um
       // componente DSC e "Icon" solto custom).
+      const _custSigKey = (customizations && customizations.length > 0)
+        ? '|c:' + customizations.map(c => `${c.layer}.${c.campo}=${c.atual}`).join(';')
+        : '';
       const _dedupKey = (category === "components" || category === "icons")
-        ? name + '|' + (_ownLibLink ? 'own' : _ancestorLink ? 'ancestor' : 'none')
+        ? name + '|' + (_ownLibLink ? 'own' : _ancestorLink ? 'ancestor' : 'none') + _custSigKey
         : name;
       const map = specs[category];
       if (!map.has(_dedupKey)) {
@@ -3901,6 +4175,8 @@ figma.ui.onmessage = async (msg) => {
           matchedTokenName: elementMatchedTokenName,
           isCustomComponent: isCustomComponent,
           legacyLib: legacyLib,
+          customizations: customizations,
+          customizationsStatus: customizationsStatus,
           isMarkedCustom: _prevItem ? !!_prevItem.isMarkedCustom : false,
           variants: variants,
           nodeId: node.id,
@@ -3921,6 +4197,8 @@ figma.ui.onmessage = async (msg) => {
           matchedTokenName: elementMatchedTokenName,
           isCustomComponent: isCustomComponent,
           legacyLib: legacyLib,
+          customizations: customizations,
+          customizationsStatus: customizationsStatus,
           variants: variants,
           properties: props
         });

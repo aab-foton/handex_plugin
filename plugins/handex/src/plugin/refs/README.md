@@ -15,6 +15,18 @@ Esta pasta contém os artefatos da DSC consumidos pela auditoria do plugin.
 > resolvidos em runtime via Plugin API dentro do Figma — esse é o desenho que
 > mantém o pipeline livre de tokens no cliente.
 
+## Definições de propriedades de componente (Fase 5a, 2026-10-01)
+
+Decisão: o skeleton **não** carrega `component_sets` nem `componentPropertyDefinitions`. A checagem de
+parâmetros do Escanear Tokens (Fase 5b) lê as definições **em runtime** pela Plugin API
+(`instance.getMainComponentAsync()` → `.parent` COMPONENT_SET → `componentPropertyDefinitions`,
+comparadas com `instance.componentProperties`), com cache por `componentKey` e concorrência limitada.
+O skeleton continua só identificando origem (`componentKeys`, `styleTokens`, `variableKeys`); formato inalterado
+(~1052 KB). Se a leitura em runtime falhar (pai nulo, sem definições), o parâmetro fica "não avaliado", nunca
+âmbar nem conforme. Se uma sonda real em Figma (primeiro passo da 5b) mostrar que o set pai de componente remoto
+não é legível, o plano B é trazer `/component_sets` + definições compactas (por set, `componentKey -> setId`)
+reaproveitando `plugins/hac/src/plugin/refs/fetch-component-properties.cjs`.
+
 ## Comandos locais
 
 ```bash

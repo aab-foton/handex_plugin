@@ -107,7 +107,10 @@
           nome: item.name,
           categoria: _CATEGORIA_LABELS[item.type] || item.type,
           personalizado: !!item.isMarkedCustom,
-          propriedades: (item.properties || []).map(p => ({ propriedade: p.label || p.type, valor: p.value }))
+          propriedades: (item.properties || []).map(p => ({ propriedade: p.label || p.type, valor: p.value })),
+          ...(Array.isArray(item.customizations) && item.customizations.length > 0
+            ? { personalizacoesDSC: item.customizations.map(c => ({ camada: c.layer, campo: c.campo, atual: c.atual, padraoDaLib: c.padrao })) }
+            : {})
         }));
       }
 
@@ -234,6 +237,10 @@
             t.itensEscaneados.forEach(item => {
               const props = item.propriedades.map(p => `${p.propriedade}: ${p.valor}`).join(' | ');
               lines.push(`    - [${item.categoria}]${item.personalizado ? ' [Personalizado]' : ''} ${item.nome}${props ? ` — ${props}` : ''}`);
+              if (item.personalizacoesDSC) {
+                lines.push(`      Personalizado em relação ao componente da lib (usar estes valores, não o padrão):`);
+                item.personalizacoesDSC.forEach(c => lines.push(`      - ${c.camada} · ${c.campo}: ${c.atual} (padrão da lib: ${c.padraoDaLib})`));
+              }
             });
           }
         });

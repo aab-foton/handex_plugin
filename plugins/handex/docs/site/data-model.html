@@ -536,12 +536,14 @@
   nodeId:              string,   // id do nó no canvas — chave de casamento entre scans
   isDS:                true | 'warning' | false,   // conformidade calculada (em properties[] também null = não avaliado contra a lib)
   score:               number | null,
-  matchedBy:           'key' | 'ancestor-key' | 'remote-unverified' | 'unverified-no-skeleton' | 'not-evaluated' | null,   // ancestor-key: vínculo herdado de ancestral (Fase 3); not-evaluated: só em properties[] (sizing/variantes). 'value'/'name'/'remote' foram removidos nas Fases 1 e 4
+  matchedBy:           'key' | 'ancestor-key' | 'customized' | 'remote-unverified' | 'unverified-no-skeleton' | 'not-evaluated' | null,   // ancestor-key: vínculo herdado de ancestral (Fase 3); not-evaluated: só em properties[] (sizing/variantes). 'value'/'name'/'remote' foram removidos nas Fases 1 e 4
   matchedIn:           string | null,   // nome da lib onde bateu o match
   matchedTier:         'priority' | 'legacy' | 'standalone' | null,   // tier da lib do match (Fase 4); só em properties[]
   matchedTokenName:    string | null,
   isCustomComponent:   boolean,  // CALCULADO pelo scan: sem vínculo comprovado com a lib
   legacyLib:           boolean,  // Fase 4: vínculo (próprio ou por ancestral) vem de lib de tier 'legacy' — conforme, mas "precisa migrar"
+  customizations:      { layer, campo, atual, padrao }[] | null,   // Fase 5b: o que difere do componente principal da lib (só INSTANCE com vínculo próprio, components/icons); [] = avaliado e sem diferença; null = não aplicável/não avaliado
+  customizationsStatus:'evaluated' | 'not-evaluated' | null,   // Fase 5b; not-evaluated = padrão da lib ilegível, nunca verde nem âmbar. Com customizations não vazio: isDS "warning" + matchedBy 'customized'
   isMarkedCustom:      boolean,  // DECLARADO pelo designer (toggle "Componente Personalizado"
                                  // no card do item, tela Escanear Tokens) — ver nota abaixo
   variants:            { name: string, value: string }[],

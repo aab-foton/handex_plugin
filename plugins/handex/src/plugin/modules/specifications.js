@@ -1349,6 +1349,8 @@
         (status === "warning" ?
           (item.isCustomComponent ?
             `<span class="flex items-center gap-1 text-amber-500 font-bold" title="Sem vínculo com componente publicado na lib DSC — verificar manualmente"><i data-lucide="help-circle" class="w-2.5 h-2.5"></i>COMPONENTE PERSONALIZADO</span>` :
+            (item.customizations && item.customizations.length > 0) ?
+            `<span class="flex items-center gap-1 text-amber-500 font-bold" title="Instância do DSC com valores diferentes do componente principal (o que o Reset do Figma restauraria)"><i data-lucide="sliders-horizontal" class="w-2.5 h-2.5"></i>PERSONALIZADO — FORA DO PADRÃO DA LIB</span>` :
             `<span class="flex items-center gap-1 text-amber-500 font-bold"><i data-lucide="help-circle" class="w-2.5 h-2.5"></i>NECESSITA REVISÃO</span>`) :
           `<span class="flex items-center gap-1 text-red-400 font-bold"><i data-lucide="alert-circle" class="w-2.5 h-2.5"></i>FORA DO PADRÃO</span>`)) : "";
 
@@ -1469,6 +1471,19 @@
 
       const appliedHtml = renderActivePropsList(appliedProps);
 
+      const _custList = Array.isArray(item.customizations) ? item.customizations : [];
+      const customizationsHtml = !isCurrentFrameAuditEnabled() ? '' : (_custList.length > 0
+        ? `<div class="mt-2 pt-2 border-t border-amber-200 dark:border-amber-900/40">
+            <p class="text-[8px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 mb-1">Personalizações (${_custList.length})</p>
+            ${_custList.map(c => `<div class="flex items-start gap-1.5 text-[9px] text-gray-600 dark:text-gray-300 mb-0.5" title="${escapeHtml(c.layer)}">
+              <i data-lucide="sliders-horizontal" class="w-3 h-3 text-amber-500 shrink-0 mt-px"></i>
+              <span class="min-w-0"><span class="text-gray-500 dark:text-gray-400">${escapeHtml(c.layer)} · </span>${escapeHtml(c.campo)}: <span class="font-bold text-slate-700 dark:text-gray-200">${escapeHtml(c.atual)}</span> <span class="text-gray-500 dark:text-gray-400">(padrão da lib: ${escapeHtml(c.padrao)})</span></span>
+            </div>`).join('')}
+          </div>`
+        : (item.customizationsStatus === 'not-evaluated'
+          ? `<p class="mt-2 text-[8px] text-gray-400 dark:text-gray-600" title="Não foi possível ler o padrão da lib para comparar. Veja o console do plugin (prefixo [Handex 5b])."><i data-lucide="minus" class="w-2.5 h-2.5 inline-block align-middle"></i> Personalização não avaliada</p>`
+          : ''));
+
       // Expanded section shows ONLY the inactive props (applied ones stay visible above)
       const inactiveHtml = inactiveCount > 0
         ? `<div id="${uid}-inactive" class="hidden">${renderInactivePropsList(inactiveProps)}</div>`
@@ -1505,6 +1520,7 @@
             <i data-lucide="locate" class="w-3 h-3 text-gray-400 dark:text-gray-600 group-hover:text-[#005ca9] dark:group-hover:text-blue-400 transition-colors shrink-0"></i>
           </div>
           ${appliedHtml}
+          ${customizationsHtml}
           ${inactiveHtml}
           ${toggleHtml}
           ${customToggleHtml}

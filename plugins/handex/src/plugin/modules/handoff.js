@@ -131,6 +131,14 @@ ${framesList.map(f => {
           c.items.slice(0, 10).map(it => (it.name || it.label || '—') + (it.legacyLib ? ' *(lib legada — precisa migrar)*' : '')).join(', ') +
           (c.items.length > 10 ? ` +${c.items.length - 10} mais` : '')
         ).join('\n');
+      const customized = cats.flatMap(c => c.items).filter(it => Array.isArray(it.customizations) && it.customizations.length > 0);
+      if (customized.length > 0) {
+        tokensMD += '\n\n#### Personalizações de componentes DSC\n' +
+          '*Valores diferentes do componente principal da lib (o que o Reset do Figma restauraria):*\n' +
+          customized.map(it => `- **${it.name}**\n` +
+            it.customizations.map(c => `  - ${c.layer} · ${c.campo}: ${c.atual} (padrão da lib: ${c.padrao})`).join('\n')
+          ).join('\n');
+      }
     } else {
       tokensMD = '\n- Tokens escaneados: nenhum encontrado';
     }
@@ -1838,6 +1846,8 @@ ${(handoffData.createdFlows || []).length === 0
                 badgeHTML = `<span class="inline-flex items-center gap-1 text-[#10b981] font-bold"><i data-lucide="check-circle" class="w-2.5 h-2.5"></i>EM CONFORMIDADE</span>${breakdownChips}`;
               } else if (status === "warning" && item.isCustomComponent) {
                 badgeHTML = `<span class="inline-flex items-center gap-1 text-amber-500 font-bold" title="Sem vínculo com componente publicado na lib DSC — verificar manualmente"><i data-lucide="help-circle" class="w-2.5 h-2.5"></i>COMPONENTE PERSONALIZADO</span>${breakdownChips}`;
+              } else if (status === "warning" && item.customizations && item.customizations.length > 0) {
+                badgeHTML = `<span class="inline-flex items-center gap-1 text-amber-500 font-bold" title="Instância do DSC com valores diferentes do componente principal da lib"><i data-lucide="sliders-horizontal" class="w-2.5 h-2.5"></i>PERSONALIZADO — FORA DO PADRÃO DA LIB</span>${breakdownChips}`;
               } else if (status === "warning") {
                 badgeHTML = `<span class="inline-flex items-center gap-1 text-amber-500 font-bold"><i data-lucide="help-circle" class="w-2.5 h-2.5"></i>NECESSITA REVISÃO</span>${breakdownChips}`;
               } else {
@@ -2000,6 +2010,18 @@ ${(handoffData.createdFlows || []).length === 0
                 + `</div>`;
             }
 
+            let customizationsHTML = "";
+            if (isAuditEnabled && Array.isArray(item.customizations) && item.customizations.length > 0) {
+              customizationsHTML = `
+                <div class="mt-3 pt-3 border-t border-amber-200 dark:border-amber-900/40">
+                  <p class="text-[9px] font-extrabold uppercase tracking-wider text-amber-600 dark:text-amber-400 mb-1.5">Personalizações (${item.customizations.length})</p>
+                  ${item.customizations.map(c => `
+                    <div class="text-[10px] text-slate-600 dark:text-slate-300 mb-1">
+                      <span class="text-slate-500 dark:text-slate-400">${escapeHtml(c.layer)} · </span>${escapeHtml(c.campo)}: <span class="font-bold text-slate-800 dark:text-white">${escapeHtml(c.atual)}</span> <span class="text-slate-500 dark:text-slate-400">(padrão da lib: ${escapeHtml(c.padrao)})</span>
+                    </div>`).join('')}
+                </div>`;
+            }
+
             return `
               <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-xl shadow-sm p-4 hover:shadow-md transition-all scanned-element-card text-left" data-element-name="${item.name.toLowerCase()}">
                 <div class="flex items-start gap-3 mb-2 text-left">
@@ -2015,6 +2037,7 @@ ${(handoffData.createdFlows || []).length === 0
                   ${figmaLinkHTML}
                 </div>
                 ${propertiesHTML}
+                ${customizationsHTML}
               </div>
             `;
           }).join('');
