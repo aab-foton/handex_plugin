@@ -76,7 +76,8 @@ workspace própria da área, com 4 tabs. Ver seção 8b,
 
 ### `a11ySpecs[]`
 Cada spec pertence a uma categoria (`a11yType`: `elemento` | `estrutura` |
-`titulo` | `decorativo` | `informacoes`) e a uma Área Marcada
+`titulo` | `decorativo`; `informacoes` só em dados legados — removida em
+2026-10-01, ver `tecnico.html` 8ab) e a uma Área Marcada
 (`a11yAreaId`). Campos principais: `id` (nodeId real do specGroup no
 canvas), `targetNodeId`, `letter`, `color`/`fillColor`, `properties[]`
 (`{key,label,value}`), `a11ySubtype` (chave crua da subvariante, usada
@@ -129,7 +130,7 @@ deve simular um arquivo novo por completo, incluindo perguntar a
 plataforma de novo). `currentUser` é preservado (é identidade/configuração
 de ambiente, não conteúdo do projeto).
 
-## 2. As 5 categorias de spec
+## 2. As 4 categorias de spec (+ 1 legada)
 
 | Categoria (`a11yType`) | Label | Tag manual? | Equivalente mobile real? |
 |---|---|---|---|
@@ -137,7 +138,7 @@ de ambiente, não conteúdo do projeto).
 | `estrutura` | Estrutura da Página | Sim | **Não** — sem landmark semântico na lib mobile |
 | `titulo` | Nível de Título | Não (usa nível como tag) | Sim — marcador único "H", sem hierarquia |
 | `decorativo` | Elemento Decorativo | Não (badge fixo) | Sim |
-| `informacoes` | Informações Adicionais | Sim | **Não** — categoria de formato livre, web-only |
+| `informacoes` (legada) | Informações Adicionais | — | **Removida em 2026-10-01** (web e mobile): specs salvas seguem listadas/removíveis, não editáveis |
 
 Regra geral confirmada nesta sessão e válida para qualquer trabalho
 futuro nessa área do código: **a origem (web/mobile) filtra tudo** — não
@@ -152,12 +153,12 @@ menção a Estrutura da Página ou Informações Adicionais no contexto mobile,
 o que bate com a tabela acima. `#a11y-category-picker-modal` (usado tanto
 por "+ Nova spec", via `_openA11yCategoryPickerModalNow`, quanto pela troca
 de categoria no wizard de revisão, via `openA11yWizardCategoryPickerModal`)
-agora esconde os botões `#a11y-category-btn-estrutura` e
-`#a11y-category-btn-informacoes` quando `getA11yProjectOrigin() === 'mobile'`
+agora esconde o botão `#a11y-category-btn-estrutura` (o de Informações
+Adicionais deixou de existir em 2026-10-01) quando `getA11yProjectOrigin() === 'mobile'`
 (`_applyA11yCategoryPickerOriginFilter()`, chamada nos dois pontos de
 abertura antes de `openModal`, sempre reavaliando o estado atual — nunca
 fica "preso" de uma renderização anterior). Origem `'web'` ou ainda não
-definida (`null`) continua mostrando as 5 normalmente.
+definida (`null`) continua mostrando as 4 normalmente.
 
 ### Diferenças reais web vs. mobile por categoria
 
@@ -186,7 +187,7 @@ Todo campo de texto livre do formulário tem `maxlength` + contador visível
 
 | Campo | Limite | Observação |
 |---|---|---|
-| TAG (`elemento`/`estrutura`/`informacoes`) | 8 | Regex `^[A-Z]\d*(\.\d+)*$` — formato composto tipo "A1.1" para sequências longas dentro de uma área; **não é 3 caracteres** apesar de a maioria das tags reais ter 1-2 na prática |
+| TAG (`elemento`/`estrutura`) | 8 | Regex `^[A-Z]\d*(\.\d+)*$` — formato composto tipo "A1.1" para sequências longas dentro de uma área; **não é 3 caracteres** apesar de a maioria das tags reais ter 1-2 na prática |
 | Label (accessibilityLabel) | 100 | Deve ser específico da função ("Buscar cartão"), não do tipo de componente |
 | Componente "Outro" (desktop) | 80 | |
 | Descrição (Estrutura/Informações, subtipo "Customizável") | 200 | Único ponto com edição livre nessas 2 categorias |
@@ -562,14 +563,16 @@ bate por nome na lib da plataforma errada agora corretamente vira
 ### Princípio: componente real sempre, procedural só como último recurso
 
 `_tryImportA11yComponent` lança exceção em qualquer ponto de incerteza; o
-chamador trata como "cai no card procedural" **só** para uma whitelist
-fixa de razões esperadas (`_A11Y_EXPECTED_FALLBACK_PREFIXES`):
-`a11y-elemento-outro-sem-componente-real`,
-`a11y-titulo-mobile-sem-variante-real` (não mais atingido — a key
-correta do wrapper mobile foi corrigida nesta sessão),
-`a11y-informacoes-customizavel-sem-variante-real`,
-`a11y-estrutura-variacao-sem-import-real`,
-`a11y-estrutura-marco-customizavel-sem-conteudo-catalogado`. Qualquer
+chamador trata como "cai no card procedural" **só** para uma lista fixa de
+razões esperadas, e **sempre com aviso** (`_A11Y_WARNED_FALLBACKS`,
+`onmessage.js`, desde 2026-10-01): `a11y-elemento-componente-fora-da-base`
+(componente sem opção na base), `a11y-estrutura-sem-variante-na-base`
+(Header/Footer/Customizável) e `a11y-web-set-falhou` (a base mudou e o
+`setProperties` não confirmou). As razões antigas (`a11y-elemento-outro-
+sem-componente-real`, `a11y-titulo-mobile-sem-variante-real`,
+`a11y-informacoes-customizavel-sem-variante-real`, `a11y-estrutura-variacao-
+sem-import-real`, `a11y-estrutura-marco-customizavel-sem-conteudo-catalogado`)
+saíram junto com o caminho do wrapper desktop antigo. Qualquer
 outra falha gera erro visível ao designer (nunca falha silenciosa).
 
 **Bug real corrigido em 2026-09-02**: a key usada para importar o wrapper

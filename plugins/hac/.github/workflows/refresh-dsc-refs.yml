@@ -111,6 +111,21 @@ jobs:
         continue-on-error: true
         run: node src/plugin/refs/check-visual-foundations.cjs | tee /tmp/visual-check.txt
 
+      # Acrescentado 2026-10-01 — audita TODA component key (hash de 40 hex)
+      # escrita no código (marcadores, selos, wrappers Box specs) via GET
+      # /v1/components/{key} e confere que resolve para o arquivo próprio
+      # "[HAC] Handoff Super DSC Mobile e Web" (HhriLSpKnCB2dHhyiU16iB).
+      # Uma key que aponta para a lib antiga (Wy0IhXRVZMSOOr8E609UqI) ou não
+      # resolve foi exatamente o defeito que passou 3 vezes despercebido.
+      # Só INFORMA (continue-on-error), igual ao passo visual acima: com
+      # --strict o script sai com 1 quando há desvio, o que deixa o passo
+      # vermelho na execução sem bloquear o PR de refresh.
+      - name: Audita keys de componente do código contra o arquivo próprio
+        continue-on-error: true
+        env:
+          FIGMA_TOKEN: ${{ secrets.FIGMA_TOKEN }}
+        run: node src/plugin/refs/check-lib-sources.cjs --strict | tee /tmp/lib-sources-check.txt
+
       - name: Verifica se algo mudou
         id: diff
         run: |

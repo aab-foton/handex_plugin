@@ -1,0 +1,1173 @@
+{
+  "_meta": {
+    "description": "Cobertura do reconhecimento web (exato normalizado + aliases aprovados) das 2 libs DSC web contra as opções da base web. NÃO ATIVADO: nada daqui é lido pelo plugin. \"sugestoes\" são similaridade de tokens (palpite) para aprovação humana — só entram em refs/web-component-aliases.json depois de aprovadas.",
+    "generatedAt": "2026-10-01T21:54:57.302Z",
+    "baseOptions": 61,
+    "aliasesAprovados": 0,
+    "regra": "exato = nome normalizado (minúsculas, sem acento, só [a-z0-9], sem prefixo [dsc]) igual ao de uma opção da base"
+  },
+  "libs": {
+    "web-angular-react": {
+      "label": "Web Angular & React (legada)",
+      "familiasTotal": 60,
+      "familiasDscPrefixadas": 51,
+      "bateramExatoTotal": 12,
+      "bateramExatoDsc": 12,
+      "bateramViaAlias": 0,
+      "semCorrespondenciaDsc": 39,
+      "exato": [
+        {
+          "familia": "[dsc] Tooltip",
+          "opcao": "Tooltip"
+        },
+        {
+          "familia": "[dsc] Card",
+          "opcao": "Card"
+        },
+        {
+          "familia": "[dsc] Button",
+          "opcao": "Button"
+        },
+        {
+          "familia": "[dsc] Checkbox",
+          "opcao": "Checkbox"
+        },
+        {
+          "familia": "[dsc] Switch",
+          "opcao": "Switch"
+        },
+        {
+          "familia": "[dsc] Tab",
+          "opcao": "Tab"
+        },
+        {
+          "familia": "[dsc] Paginator",
+          "opcao": "Paginator"
+        },
+        {
+          "familia": "[dsc] Table Cell",
+          "opcao": "Table / Cell"
+        },
+        {
+          "familia": "[dsc] Datepicker",
+          "opcao": "Date Picker"
+        },
+        {
+          "familia": "[dsc] Header",
+          "opcao": "Header"
+        },
+        {
+          "familia": "[dsc] Footer",
+          "opcao": "Footer"
+        },
+        {
+          "familia": "[dsc] Breadcrumb",
+          "opcao": "Breadcrumb"
+        }
+      ],
+      "viaAlias": [],
+      "semCorrespondencia": [
+        {
+          "familia": "[dsc] Classificação de Conteúdo",
+          "sugestoes": []
+        },
+        {
+          "familia": "[dsc] Logotipo",
+          "sugestoes": []
+        },
+        {
+          "familia": "[dsc] Table Footer",
+          "sugestoes": [
+            {
+              "option": "Footer",
+              "score": 0.5,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Table / Cell",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Progress Bar Determinate",
+          "sugestoes": [
+            {
+              "option": "Progress",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Progress List",
+              "score": 0.25,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Accordion",
+          "sugestoes": []
+        },
+        {
+          "familia": "[dsc] Horizontal Stepper",
+          "sugestoes": [
+            {
+              "option": "Stepper",
+              "score": 0.5,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Card Horizontal",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Progress Bar Indeterminate",
+          "sugestoes": [
+            {
+              "option": "Progress",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Progress List",
+              "score": 0.25,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Progress Spinner Indeterminate",
+          "sugestoes": [
+            {
+              "option": "Progress",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Spinner",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Dialog",
+          "sugestoes": []
+        },
+        {
+          "familia": "[dsc] Progress Spinner Determinate",
+          "sugestoes": [
+            {
+              "option": "Progress",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Spinner",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Radio Button",
+          "sugestoes": [
+            {
+              "option": "Button",
+              "score": 0.5,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Radio",
+              "score": 0.5,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Menu item",
+          "sugestoes": [
+            {
+              "option": "List Item",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Sidebar Menu",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Badge",
+          "sugestoes": [
+            {
+              "option": "Badge Notification",
+              "score": 0.5,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Badge Text",
+              "score": 0.5,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Vertical Stepper",
+          "sugestoes": [
+            {
+              "option": "Stepper",
+              "score": 0.5,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Card Vertical",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Alert",
+          "sugestoes": [
+            {
+              "option": "Card Alert",
+              "score": 0.5,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc-tc] Stepper Template",
+          "sugestoes": [
+            {
+              "option": "Stepper",
+              "score": 0.5,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Input Stepper",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Input File",
+          "sugestoes": [
+            {
+              "option": "File Upload",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Input / Chat",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Tab Group",
+          "sugestoes": [
+            {
+              "option": "Tab",
+              "score": 0.5,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Tag",
+          "sugestoes": []
+        },
+        {
+          "familia": "[dsc] Select with Chips",
+          "sugestoes": [
+            {
+              "option": "Input With Chips - Form",
+              "score": 0.4,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Account Select",
+              "score": 0.25,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Dropdown Select with Chips",
+          "sugestoes": [
+            {
+              "option": "Input With Chips - Form",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Account Select",
+              "score": 0.2,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Table Header",
+          "sugestoes": [
+            {
+              "option": "Table / Header Cell",
+              "score": 0.67,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Header",
+              "score": 0.5,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Input Textarea",
+          "sugestoes": [
+            {
+              "option": "Input / Chat",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Input Money",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Select",
+          "sugestoes": [
+            {
+              "option": "Account Select",
+              "score": 0.5,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Input / Select Field - Form",
+              "score": 0.25,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Input",
+          "sugestoes": [
+            {
+              "option": "Input / Chat",
+              "score": 0.5,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Input Money",
+              "score": 0.5,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Chips",
+          "sugestoes": [
+            {
+              "option": "Input With Chips - Form",
+              "score": 0.25,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Snackbar",
+          "sugestoes": []
+        },
+        {
+          "familia": "[dsc] Slider",
+          "sugestoes": [
+            {
+              "option": "Input Slider",
+              "score": 0.5,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Range Slider",
+          "sugestoes": [
+            {
+              "option": "Input Slider",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc-tc] Footer Template",
+          "sugestoes": [
+            {
+              "option": "Footer",
+              "score": 0.5,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Input with Chips",
+          "sugestoes": [
+            {
+              "option": "Input With Chips - Form",
+              "score": 0.75,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Input / Chat",
+              "score": 0.25,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Input Currency",
+          "sugestoes": [
+            {
+              "option": "Input / Chat",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Input Money",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc-tc] Accordion Template",
+          "sugestoes": []
+        },
+        {
+          "familia": "[dsc] Menu Lateral",
+          "sugestoes": [
+            {
+              "option": "Sidebar Menu",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Dropdown Menu List",
+              "score": 0.25,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Datepicker Calendar",
+          "sugestoes": []
+        },
+        {
+          "familia": "[dsc] Dropdown Input with Chips",
+          "sugestoes": [
+            {
+              "option": "Input With Chips - Form",
+              "score": 0.6,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Dropdown Combobox",
+              "score": 0.2,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Datepicker Range",
+          "sugestoes": []
+        },
+        {
+          "familia": "[dsc doc] Component Building",
+          "sugestoes": []
+        },
+        {
+          "familia": "[dsc] Timepicker",
+          "sugestoes": []
+        }
+      ]
+    },
+    "super-dsc-web": {
+      "label": "Super DSC | Web",
+      "familiasTotal": 1506,
+      "familiasDscPrefixadas": 94,
+      "bateramExatoTotal": 50,
+      "bateramExatoDsc": 49,
+      "bateramViaAlias": 0,
+      "semCorrespondenciaDsc": 45,
+      "exato": [
+        {
+          "familia": "[dsc] Paginator",
+          "opcao": "Paginator"
+        },
+        {
+          "familia": "[dsc] Account Select",
+          "opcao": "Account Select"
+        },
+        {
+          "familia": "[dsc] Popover",
+          "opcao": "Popover"
+        },
+        {
+          "familia": "[dsc] Card Widget",
+          "opcao": "Card Widget"
+        },
+        {
+          "familia": "[dsc] Badge Text",
+          "opcao": "Badge Text"
+        },
+        {
+          "familia": "[dsc] Sidebar Menu",
+          "opcao": "Sidebar Menu"
+        },
+        {
+          "familia": "[dsc] Input Chat",
+          "opcao": "Input / Chat"
+        },
+        {
+          "familia": "[dsc] Stepper",
+          "opcao": "Stepper"
+        },
+        {
+          "familia": "[dsc] Card Vertical",
+          "opcao": "Card Vertical"
+        },
+        {
+          "familia": "[dsc] Badge Notification",
+          "opcao": "Badge Notification"
+        },
+        {
+          "familia": "[dsc] Card Notification",
+          "opcao": "Card Notification"
+        },
+        {
+          "familia": "[dsc] Breadcrumb",
+          "opcao": "Breadcrumb"
+        },
+        {
+          "familia": "[dsc] Card Horizontal",
+          "opcao": "Card Horizontal"
+        },
+        {
+          "familia": "[dsc] Search Bar",
+          "opcao": "Searchbar"
+        },
+        {
+          "familia": "[dsc] Checkbox",
+          "opcao": "Checkbox"
+        },
+        {
+          "familia": "[dsc] Switch",
+          "opcao": "Switch"
+        },
+        {
+          "familia": "[dsc] List Item",
+          "opcao": "List Item"
+        },
+        {
+          "familia": "[dsc] Icon Button Text",
+          "opcao": "Icon Button Text"
+        },
+        {
+          "familia": "[dsc] Header",
+          "opcao": "Header"
+        },
+        {
+          "familia": "[dsc] Spinner",
+          "opcao": "Spinner"
+        },
+        {
+          "familia": "[dsc] Button",
+          "opcao": "Button"
+        },
+        {
+          "familia": "[dsc] Input Money",
+          "opcao": "Input Money"
+        },
+        {
+          "familia": "[dsc] Input Stepper",
+          "opcao": "Input Stepper"
+        },
+        {
+          "familia": "[dsc] Tile Button",
+          "opcao": "Tile Button"
+        },
+        {
+          "familia": "[dsc] Tooltip",
+          "opcao": "Tooltip"
+        },
+        {
+          "familia": "[dsc] Title Bar",
+          "opcao": "Title Bar"
+        },
+        {
+          "familia": "[dsc-tc] List Item",
+          "opcao": "List Item"
+        },
+        {
+          "familia": "[dsc] Card Alert",
+          "opcao": "Card Alert"
+        },
+        {
+          "familia": "[dsc] Toast",
+          "opcao": "Toast"
+        },
+        {
+          "familia": "[dsc] Table / Header Cell",
+          "opcao": "Table / Header Cell"
+        },
+        {
+          "familia": "[dsc] Radio",
+          "opcao": "Radio"
+        },
+        {
+          "familia": "[dsc-tc] Modal",
+          "opcao": "Modal"
+        },
+        {
+          "familia": "[dsc-tc] Card",
+          "opcao": "Card"
+        },
+        {
+          "familia": "[dsc-tc] Sidebar Menu",
+          "opcao": "Sidebar Menu"
+        },
+        {
+          "familia": "[dsc] Search Results",
+          "opcao": "Search Results"
+        },
+        {
+          "familia": "[dsc] Card",
+          "opcao": "Card"
+        },
+        {
+          "familia": "[dsc-tc] Drawer Panel",
+          "opcao": "Drawer Panel"
+        },
+        {
+          "familia": "[dsc] Drawer Panel",
+          "opcao": "Drawer Panel"
+        },
+        {
+          "familia": "[dsc] Batch Button",
+          "opcao": "Batch Button"
+        },
+        {
+          "familia": "[dsc] Input Slider",
+          "opcao": "Input Slider"
+        },
+        {
+          "familia": "[dsc] Input Pin",
+          "opcao": "Input Pin"
+        },
+        {
+          "familia": "[dsc] Progress List",
+          "opcao": "Progress List"
+        },
+        {
+          "familia": "[dsc] Overflow Controller",
+          "opcao": "Overflow Controller"
+        },
+        {
+          "familia": "[dsc] Icon Button",
+          "opcao": "Icon Button"
+        },
+        {
+          "familia": "[dsc] Footer",
+          "opcao": "Footer"
+        },
+        {
+          "familia": "[dsc] Modal",
+          "opcao": "Modal"
+        },
+        {
+          "familia": "[dsc] Segmented Button",
+          "opcao": "Segmented Button"
+        },
+        {
+          "familia": "[dsc] Avatar",
+          "opcao": "Avatar"
+        },
+        {
+          "familia": "[dsc] Chip",
+          "opcao": "Chip"
+        }
+      ],
+      "viaAlias": [],
+      "semCorrespondencia": [
+        {
+          "familia": "[dsc] Toolbar",
+          "sugestoes": []
+        },
+        {
+          "familia": "[dsc] Icon Container",
+          "sugestoes": [
+            {
+              "option": "Icon Button",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Icon Button Text",
+              "score": 0.25,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Sidebar Menu Item",
+          "sugestoes": [
+            {
+              "option": "Sidebar Menu",
+              "score": 0.67,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "List Item",
+              "score": 0.25,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Label Value Pair",
+          "sugestoes": []
+        },
+        {
+          "familia": "[dsc] Text",
+          "sugestoes": [
+            {
+              "option": "Badge Text",
+              "score": 0.5,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Icon Button Text",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] List Heading",
+          "sugestoes": [
+            {
+              "option": "List Item",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Progress List",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Skeleton Loading",
+          "sugestoes": [
+            {
+              "option": "Loading Animation",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Skeleton Load",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Date Field Form",
+          "sugestoes": [
+            {
+              "option": "Input / Date Field - Form",
+              "score": 0.75,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Input / Password Field - Form",
+              "score": 0.4,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Material Blur",
+          "sugestoes": []
+        },
+        {
+          "familia": "[dsc] Icon",
+          "sugestoes": [
+            {
+              "option": "Icon Button",
+              "score": 0.5,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Icon Button Text",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Logotipo",
+          "sugestoes": []
+        },
+        {
+          "familia": "[dsc] Device / Status Bar",
+          "sugestoes": [
+            {
+              "option": "Title Bar",
+              "score": 0.25,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] National Flags",
+          "sugestoes": []
+        },
+        {
+          "familia": "[dsc] Image Media",
+          "sugestoes": []
+        },
+        {
+          "familia": "[dsc] Social Programs Logos",
+          "sugestoes": []
+        },
+        {
+          "familia": "[dsc] Device / Keyboard",
+          "sugestoes": []
+        },
+        {
+          "familia": "[dsc] Device / Home Indicator",
+          "sugestoes": []
+        },
+        {
+          "familia": "[dsc] Value Section",
+          "sugestoes": []
+        },
+        {
+          "familia": "[dsc] Loading Box",
+          "sugestoes": [
+            {
+              "option": "Loading Animation",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Separator",
+          "sugestoes": []
+        },
+        {
+          "familia": "[dsc] Scroll",
+          "sugestoes": []
+        },
+        {
+          "familia": "[dsc] Banking Logos",
+          "sugestoes": []
+        },
+        {
+          "familia": "[dsc] Focus Indicator",
+          "sugestoes": []
+        },
+        {
+          "familia": "[dsc] Text Field Form",
+          "sugestoes": [
+            {
+              "option": "Input / Text Field - Form",
+              "score": 0.75,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Input / Date Field - Form",
+              "score": 0.4,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Text Area",
+          "sugestoes": [
+            {
+              "option": "Input / Text Area - Form",
+              "score": 0.5,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Badge Text",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Select Field Form",
+          "sugestoes": [
+            {
+              "option": "Input / Select Field - Form",
+              "score": 0.75,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Input / Date Field - Form",
+              "score": 0.4,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Table / Body Cell",
+          "sugestoes": [
+            {
+              "option": "Table / Cell",
+              "score": 0.67,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Table / Header Cell",
+              "score": 0.5,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Password Field Form",
+          "sugestoes": [
+            {
+              "option": "Input / Password Field - Form",
+              "score": 0.75,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Input / Date Field - Form",
+              "score": 0.4,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc-tc] card carousel",
+          "sugestoes": [
+            {
+              "option": "Card",
+              "score": 0.5,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Card Alert",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Page Controller",
+          "sugestoes": [
+            {
+              "option": "Overflow Controller",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Dropdown",
+          "sugestoes": [
+            {
+              "option": "Dropdown Combobox",
+              "score": 0.5,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Dropdown Menu List",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc-tc] State Message",
+          "sugestoes": []
+        },
+        {
+          "familia": "[dsc-ts] Screen Feedback",
+          "sugestoes": []
+        },
+        {
+          "familia": "[dsc] Toggle Button",
+          "sugestoes": [
+            {
+              "option": "Button",
+              "score": 0.5,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Batch Button",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Toggle Icon Button",
+          "sugestoes": [
+            {
+              "option": "Icon Button",
+              "score": 0.67,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Icon Button Text",
+              "score": 0.5,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Input with Chips ",
+          "sugestoes": [
+            {
+              "option": "Input With Chips - Form",
+              "score": 0.75,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Input / Chat",
+              "score": 0.25,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Table / Footer Cell",
+          "sugestoes": [
+            {
+              "option": "Table / Cell",
+              "score": 0.67,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Table / Header Cell",
+              "score": 0.5,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Progress List Item",
+          "sugestoes": [
+            {
+              "option": "List Item",
+              "score": 0.67,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Progress List",
+              "score": 0.67,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc-tc] Table Mobile",
+          "sugestoes": [
+            {
+              "option": "Table / Cell",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Table / Header Cell",
+              "score": 0.25,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc-tc] Table Desktop",
+          "sugestoes": [
+            {
+              "option": "Table / Cell",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Table / Header Cell",
+              "score": 0.25,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc-ts] Basic Layout",
+          "sugestoes": []
+        },
+        {
+          "familia": "[dsc-ts] Print Receipt - Comprovantes",
+          "sugestoes": []
+        },
+        {
+          "familia": "[dsc-ts] Print Receipt",
+          "sugestoes": []
+        },
+        {
+          "familia": "[dsc] Credit Card",
+          "sugestoes": [
+            {
+              "option": "Card",
+              "score": 0.5,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            },
+            {
+              "option": "Card Alert",
+              "score": 0.33,
+              "status": "SUGESTÃO NÃO APROVADA — não ativa"
+            }
+          ]
+        },
+        {
+          "familia": "[dsc] Floating Toolbar",
+          "sugestoes": []
+        }
+      ]
+    }
+  },
+  "opcoesDaBaseSemFamiliaCorrespondente": [
+    "Dropdown Combobox",
+    "Dropdown Menu List",
+    "File Upload",
+    "Input / Date Field - Form",
+    "Input / Password Field - Form",
+    "Input / Select Field - Form",
+    "Input / Text Area - Form",
+    "Input / Text Field - Form",
+    "Input With Chips - Form",
+    "Link",
+    "Loading Animation",
+    "Progress",
+    "Skeleton Load",
+    "Imagem"
+  ]
+}

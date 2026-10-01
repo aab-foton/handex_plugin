@@ -254,7 +254,7 @@ hr {
       <p>Sumário</p>
       <ol>
         <li><a href="#s1">Schema de dados (<code>hacData</code>)</a></li>
-        <li><a href="#s2">As 5 categorias de spec</a></li>
+        <li><a href="#s2">As 4 categorias de spec (+ 1 legada)</a></li>
         <li><a href="#s3">Origem do projeto (web/mobile)</a></li>
         <li><a href="#s4"><code>needsReview</code></a></li>
         <li><a href="#s5">Elementos e Imagens mobile — 3 sub-variantes</a></li>
@@ -305,7 +305,7 @@ hr {
     <pre><code>hacData = {
   _schemaVersion: 1,
   a11yAreas: [],         // Áreas Marcadas — card clicável, abre workspace própria (seção 8b)
-  a11ySpecs: [],         // Especificações de acessibilidade (5 categorias)
+  a11ySpecs: [],         // Especificações de acessibilidade (4 categorias + legada "informacoes")
   tabOrderItems: [],     // Ordem de Tabulação (por área, arquitetura de cópia de frame)
   a11ySwipePaths: [],    // Trilha de Swipe (por área, N pontos — ver seção 8d)
   currentUser: null,     // Usuário Figma identificado automaticamente (sem login)
@@ -343,7 +343,8 @@ hr {
 
     <h3><code>a11ySpecs[]</code></h3>
     <p>Cada spec pertence a uma categoria (<code>a11yType</code>: <code>elemento</code> | <code>estrutura</code> |
-    <code>titulo</code> | <code>decorativo</code> | <code>informacoes</code>) e a uma Área Marcada
+    <code>titulo</code> | <code>decorativo</code>; <code>informacoes</code> só em dados legados,
+    ver <a href="#s8ab">8ab</a>) e a uma Área Marcada
     (<code>a11yAreaId</code>). Campos principais: <code>id</code> (nodeId real do specGroup no
     canvas), <code>targetNodeId</code>, <code>letter</code>, <code>color</code>/<code>fillColor</code>, <code>properties[]</code>
     (<code>{key,label,value}</code>), <code>a11ySubtype</code> (chave crua da subvariante, usada
@@ -400,7 +401,7 @@ hr {
     <code>currentUser</code> é preservado (identidade/configuração de ambiente, não
     conteúdo do projeto).</p>
 
-    <h2 id="s2">2. As 5 categorias de spec</h2>
+    <h2 id="s2">2. As 4 categorias de spec (+ 1 legada)</h2>
 
     <table>
       <tr><th>Categoria (<code>a11yType</code>)</th><th>Label</th><th>Tag manual?</th><th>Equivalente mobile real?</th></tr>
@@ -408,7 +409,7 @@ hr {
       <tr><td><code>estrutura</code></td><td>Estrutura da Página</td><td>Sim</td><td>Marcador visual: <strong>não</strong> — sem landmark semântico na lib mobile (usa wrapper desktop). Nota de Código: <strong>sim</strong> (2026-09-09), ver seção 3</td></tr>
       <tr><td><code>titulo</code></td><td>Nível de Título</td><td>Não (usa nível como tag)</td><td>Sim — marcador único "H", sem hierarquia</td></tr>
       <tr><td><code>decorativo</code></td><td>Elemento Decorativo</td><td>Não (badge fixo)</td><td>Sim</td></tr>
-      <tr><td><code>informacoes</code></td><td>Informações Adicionais</td><td>Sim</td><td><strong>Não</strong> — formato livre, web-only</td></tr>
+      <tr><td><code>informacoes</code> <em>(legada)</em></td><td>Informações Adicionais</td><td>—</td><td><strong>Removida em 2026-10-01</strong> (web e mobile). Specs já salvas continuam listadas e removíveis, não editáveis — ver <a href="#s8ab">8ab</a></td></tr>
     </table>
 
     <p>Regra geral: <strong>a origem (web/mobile) filtra tudo</strong> — não só o marcador
@@ -422,13 +423,13 @@ hr {
     menção a Estrutura da Página ou Informações Adicionais no contexto mobile,
     o que bate com a tabela acima. <code>#a11y-category-picker-modal</code> (usado
     tanto por "+ Nova spec" quanto pela troca de categoria no wizard de
-    revisão) esconde os botões <code>#a11y-category-btn-estrutura</code> e
-    <code>#a11y-category-btn-informacoes</code> quando
+    revisão) esconde o botão <code>#a11y-category-btn-estrutura</code>
+    (o botão de Informações Adicionais deixou de existir em 2026-10-01) quando
     <code>getA11yProjectOrigin() === 'mobile'</code>
     (<code>_applyA11yCategoryPickerOriginFilter()</code>, chamada nos dois pontos de
     abertura antes de <code>openModal</code>, sempre reavaliando o estado atual).
     Origem <code>'web'</code> ou ainda não definida (<code>null</code>) continua mostrando as
-    5 normalmente.</p>
+    4 normalmente.</p>
 
     <h3>Diferenças reais web vs. mobile por categoria</h3>
 
@@ -466,7 +467,7 @@ hr {
 
     <table>
       <tr><th>Campo</th><th>Limite</th><th>Observação</th></tr>
-      <tr><td>TAG (<code>elemento</code>/<code>estrutura</code>/<code>informacoes</code>)</td><td>8</td><td>Regex <code>^[A-Z]\d*(\.\d+)*$</code> — formato tipo "A1.1" para sequências longas dentro de uma área</td></tr>
+      <tr><td>TAG (<code>elemento</code>/<code>estrutura</code>)</td><td>8</td><td>Regex <code>^[A-Z]\d*(\.\d+)*$</code> — formato tipo "A1.1" para sequências longas dentro de uma área</td></tr>
       <tr><td>Label (accessibilityLabel)</td><td>100</td><td>Deve ser específico da função, não do tipo de componente</td></tr>
       <tr><td>Componente "Outro" (desktop)</td><td>80</td><td></td></tr>
       <tr><td>Descrição (Estrutura/Informações, subtipo "Customizável")</td><td>200</td><td>Único ponto com edição livre nessas 2 categorias</td></tr>
@@ -3567,8 +3568,9 @@ hr {
     correspondente em <code>#a11y-category-picker-modal</code>) — nunca fecha
     o picker nem pré-clica em nada. Se o designer clicar na categoria
     sugerida, <code>chooseA11yType</code> repassa o preset
-    (<code>presetComponente</code>/<code>presetEstruturaTipo</code>/
-    <code>presetTituloNivel</code>, conforme a categoria) pra
+    (<code>presetEstruturaTipo</code>/<code>presetTituloNivel</code>,
+    conforme a categoria; em "elemento" o componente é sugerido pelo perfil de
+    plataforma a partir do nome DSC detectado, sem preset) pra
     <code>openA11yModal</code>; se clicar em outra categoria, o preset (que
     pertence só à categoria sugerida) é descartado — a sugestão nunca trava a
     decisão final.</p>
@@ -4484,6 +4486,195 @@ hr {
     Informações Adicionais, Swipe, Leitor de Tela, matching DSC,
     reparenting/overlay/clone. O caminho mobile mantém os mesmos componentes,
     keys e properties; só passou a ser compartilhado.</p>
+
+    <h2 id="s8ab">8ab. Web segue a base do arquivo próprio: Box specs web, fim de "Informações Adicionais" e perfis por plataforma (2026-10-01, v0.1.0-beta.69)</h2>
+
+    <p>Decisão de produto (rodada de 2026-10-01): a web passa a ser documentada
+    <strong>exatamente</strong> como está no arquivo
+    <code>[HAC] Handoff Super DSC Mobile e Web</code> (fileKey
+    <code>HhriLSpKnCB2dHhyiU16iB</code>), página <code>⚙️ | Componentes Specs base Web</code>.
+    "O plugin não inventa nada, só consulta, resgata e apresenta": o scan
+    reconhece um componente DSC web, o plugin procura o item correspondente na
+    base e o importa. Nenhum catálogo de componentes escrito à mão no código.
+    Esta seção cobre as Fases 3 e 4 (as Fases 1 e 2 — selos e canário — estão em
+    <a href="#s8aa">8aa</a>).</p>
+
+    <h3>Estrutura real da base web (confirmada por REST API em 2026-10-01)</h3>
+    <p>O set publicado <code>[hac web] Box specs leitor de tela</code> (node
+    <code>10330:4204</code>) espelha o mobile: property VARIANT
+    <code>Conector</code> com 4 variantes e, por dentro de cada uma, uma
+    instância <code>Conector</code> (o selo) + uma instância de <strong>conteúdo</strong>:</p>
+    <table>
+      <tr><th>Variante de <code>Conector</code></th><th>Instância de conteúdo</th><th>Properties que o plugin preenche</th></tr>
+      <tr><td>Elementos Interativos e Imagens</td><td><code>Elementos e imagens</code></td><td><code>Componente</code> (61 opções; <code>Imagem</code> exige <code>Variante=Texto Alternativo</code> junto) → instância base <code>.Componente</code>: <code>Leitor de Tela</code> (VARIANT), <code>Nome Acessível</code>/<code>Observações</code> (BOOLEAN + texto na sub-instância)</td></tr>
+      <tr><td>Títulos</td><td><code>Títulos</code></td><td><code>Nível</code> H1–H6 (Descrição/Observações de cada nível vêm fixas da lib)</td></tr>
+      <tr><td>Elementos Decorativos</td><td><code>Elementos decorativos</code></td><td><code>Observações</code> (BOOLEAN + texto)</td></tr>
+      <tr><td>Estrutura da Página</td><td><code>Estrutura da Página</code></td><td><code>Variação</code> (Marco de navegação · Título da Página · Idioma) → instância interna com <code>Tipo</code> (Nav/Main/Aside · Página/Parte); <code>Observações</code> só em Idioma</td></tr>
+    </table>
+    <p>Os conjuntos <code>.[hac web base]</code> têm key <code>null</code> (nomes com
+    ponto são ocultos na publicação) — como <code>.[hac mob base]</code> no
+    mobile. Não precisam estar publicados: importa-se a key da <em>variante</em>
+    publicada do wrapper e preenche-se a instância aninhada por
+    <code>setProperties</code>.</p>
+
+    <h3>Fase 3 — o que mudou</h3>
+    <ul>
+      <li><strong>Keys geradas, nada à mão.</strong>
+      <code>fetch-component-properties.cjs</code> ganhou dois campos aditivos nos
+      sets publicados das libs de a11y: <code>variantKeys</code> (key de cada
+      variante, de <code>GET /v1/files/:key/components</code>) e, nos "Box
+      specs", <code>wrapperVariants</code> (as instâncias de cada variante e
+      suas properties). <code>build-a11y-constants.cjs</code> resolve a variante
+      de cada categoria pelo <em>nome</em> da opção de <code>Conector</code>
+      (conferido contra as opções reais) e grava
+      <code>refs/design-acessivel-web-wrapper.generated.json</code>; gera também
+      as constantes <code>A11Y_WEB_*</code> da UI (opções de Componente, nodeIds
+      de deep-link da Super DSC | Web, sub-modos "Leitor de Tela", toggles reais,
+      opções de Estrutura). As funções que geravam as constantes do mobile foram
+      parametrizadas por set (<code>findElementosSet</code>, por nodeId — antes
+      achavam por shortName, que agora é ambíguo: há um set web e um mobile
+      "Elementos e imagens"); a saída mobile foi conferida byte a byte.</li>
+      <li><strong>Importação e preenchimento web</strong>
+      (<code>_tryImportA11yWebWrapperComponent</code>, <code>code.js</code>).
+      A <strong>ordem</strong> é: Componente (+ pares extras de variante, numa
+      só chamada) → reachar a instância base já trocada → "Leitor de Tela" →
+      toggles BOOLEAN (ligados só com texto, desligados explicitamente) → textos
+      das sub-instâncias. Cada <code>setProperties</code> é conferido por
+      leitura de volta. Não reaproveita <code>_fillA11yMobile*</code> porque
+      elas ajustam toggles no <code>.Button</code> padrão e só no fim trocam o
+      "Componente" (a troca descarta o que foi escrito) e nunca aplicam o
+      "Leitor de Tela" escolhido; o mobile é o gabarito e não foi alterado.
+      Reaproveitado do mobile: <code>_bestEffortSyncA11yBadgeLetter</code> (com
+      nomes de property candidatos ampliados só no web:
+      <code>Número</code>/<code>Nível</code>/<code>Letra</code>). Os helpers de
+      busca do web (<code>_findInstanceByPropNames</code>,
+      <code>_findInstanceByNormName</code>) são variantes tolerantes a
+      acento/espaço de <code>_findNestedInstanceWithAnyProp</code>/
+      <code>_findNestedInstanceByName</code> — mantidos à parte para não mudar
+      qual instância o mobile encontra; unificar fica para depois da revisão do
+      mobile (a lib publicou <code>" Observações#10634:2"</code> com espaço
+      sobrando em Spinner, que a busca exata não acha).</li>
+      <li><strong>Fonte do componente</strong> (lição de 2026-09-22 preservada):
+      escolha explícita do designer no formulário (<code>a11ySubtype.componente</code>,
+      uma opção real da base) &gt; componente <em>realmente detectado</em> no
+      canvas (<code>a11yDscComponentName</code>) reconhecido por casamento
+      exato/alias &gt; nada. "Personalizado" com detecção resolvida usa a
+      detecção (cenário do print do "Value Section"). Sem correspondência, o
+      card <strong>nunca</strong> nasce com o default publicado (<code>Account
+      Select</code>/<code>Button</code>): vira card genérico com aviso
+      (<code>figma.notify</code>).</li>
+      <li><strong>Reconhecimento por casamento EXATO.</strong> Nome normalizado
+      (minúsculas, sem acento, só <code>[a-z0-9]</code>, sem <code>[dsc…]</code>)
+      igual ao de uma opção da base, mais a tabela
+      <code>refs/web-component-aliases.json</code> (hoje vazia: cada alias exige
+      aprovação humana). Sem aproximação por substring/tokens (o mobile mantém a
+      dele). A função de normalização existe em 3 cópias idênticas
+      (<code>refs/web-recognition.cjs</code>, <code>backend/platform-profiles.js</code>,
+      <code>modules/accessibility.js</code>) porque os 3 sistemas de módulo não
+      compartilham arquivo. O relatório de cobertura e sugestões
+      (<code>refs/report-web-recognition.cjs</code> → <code>docs/web-recognition-report.json</code>)
+      <strong>não é lido pelo plugin</strong>.</li>
+      <li><strong>Formulário de "Elementos e Imagens" único para web e mobile</strong>,
+      dirigido pelo perfil de UI (<code>A11Y_UI_PROFILES</code>,
+      <code>accessibility.js</code>). O formulário web antigo (catálogo curado de
+      16 componentes, radio Componente/Imagem, preview de Descrição/Nota de
+      Código, variantes e toggles da lib antiga) foi removido; "Imagem" é uma
+      opção comum do dropdown. Estrutura da Página web só oferece o que a base
+      tem (Idioma Página/Parte, Marco Nav/Main/Aside, Título da Página;
+      <code>_applyA11yEstruturaWebLock</code>); Elemento Decorativo web trava o
+      subtipo (sem "Gerais"/"Imagem") e só expõe "Observações"; Nível de Título web
+      não tem toggles.</li>
+      <li><strong>"Informações Adicionais" deixou de existir</strong>: categoria,
+      botão do seletor, formulário, bloco do guia, as 9 últimas keys da lib
+      antiga e a categoria em <code>design-acessivel-content.json</code>.
+      <strong>Specs já salvas com <code>a11yType: 'informacoes'</code></strong>:
+      não foram apagadas nem migradas. <code>A11Y_LEGACY_CATEGORIES</code>
+      (só exibição) mantém a categoria nas listagens, contagens e na Ficha, com o
+      rótulo "Informações Adicionais (descontinuada)"; podem ser removidas, mas
+      "Editar" mostra um aviso (não há mais formulário). Os textos curados
+      (<code>A11Y_CONTENT.elemento.componentes</code>, <code>decorativo.gerais/imagem</code>)
+      e <code>design-acessivel-content.json</code> foram mantidos sem alteração
+      de texto e estão <em>sem consumidor</em> até o dono do produto decidir o
+      destino (a base não traz Descrição/Notas de Código por componente — o card
+      dela mostra Componente / Leitor de Tela / Observações).</li>
+      <li>O caminho do wrapper desktop antigo (<code>[a11y] Box specs LT</code>,
+      lib <code>Wy0IhXRVZMSOOr8E609UqI</code>) foi removido de
+      <code>_tryImportA11yComponent</code>, junto com
+      <code>_getA11yComponentToggleMap</code> e os imports de
+      <code>design-acessivel-content.json</code>/<code>design-acessivel-properties.json</code>
+      do backend.</li>
+    </ul>
+
+    <h3>Fase 4 — perfis por plataforma</h3>
+    <p><code>backend/platform-profiles.js</code> declara dois perfis,
+    <code>web</code> e <code>mobile</code>, cada um com: set de Box specs e keys
+    por categoria (geradas), categorias que a plataforma tem (web 4, mobile 3),
+    libs de reconhecimento (web: <code>web-angular-react</code> +
+    <code>super-dsc-web</code>; mobile: <code>super-app</code> +
+    <code>dsc-android</code>) com seus mapeamentos componente→categoria, opções
+    de <code>Componente</code>, keys dos marcadores (Agrupamento/Conectores) e dos
+    selos (Identificação da tela/Ordenação). Quem decidia por
+    <code>if (origin === 'mobile')</code> pergunta ao perfil
+    (<code>getPlatformProfile</code>): <code>_tryImportA11yAgrupamento</code>,
+    <code>_tryImportA11yConectorLinha</code>, <code>_tryImportA11yComponent</code>
+    (via <code>fillStrategy</code>) e <code>dsc-matching.js</code>
+    (<code>_getDscComponentKeyToFrameMap</code>/<code>_getDscFrameToA11yMap</code>).
+    <code>resolveBoxSpecsVariant</code> empresta o wrapper de outro perfil quando
+    a plataforma não publica a categoria: hoje <strong>mobile → web em
+    "Estrutura da Página"</strong> (alcançável via Top App Bar/Navigation Bar/Screen
+    Footer), a mesma decisão de produto que já valia para os marcadores —
+    substitui o caminho que usava a lib antiga.</p>
+
+    <h3>Garantia de que o mobile não mudou</h3>
+    <ul>
+      <li>Backend: o mesmo harness (mock de Figma) rodado sobre os bundles de
+      <code>HEAD</code> e da entrega — 12.100 keys de componente resolvem para o
+      mesmo <code>{containingFrame, a11yCategory, confidence, origin, sourceLib}</code>;
+      6 cenários de preenchimento do card mobile geram árvores idênticas;
+      108 combinações de marcador (origem × categoria × lado × modo) importam a
+      mesma key.</li>
+      <li>Constantes mobile geradas (<code>A11Y_MOBILE_*</code>) idênticas às de
+      antes (o scan novo foi aplicado só ao lado web — ver o aviso em
+      <code>design-acessivel-mobile-properties.json._meta.warnings</code>).</li>
+      <li>UI (jsdom, <code>ui.html</code> de <code>HEAD</code> × novo): 12
+      cenários mobile (elemento com/sem componente detectado, troca de
+      componente e de "Leitor de Tela", título, decorativo, estrutura com preset,
+      subtipos) produzem o mesmo DOM e o mesmo payload de
+      <code>create-unified-spec</code>.</li>
+    </ul>
+
+    <h3>Verificador de keys no CI</h3>
+    <p><code>refs/check-lib-sources.cjs</code> varre todos os literais de 40 hex do
+    código (<code>code.js</code>, <code>backend/*.js</code>, <code>modules/*.js</code>,
+    <code>views/*.html</code>, scripts de <code>refs/</code>, JSONs de wrapper e de
+    conteúdo) e confere em <code>GET /v1/components/{key}</code> que o
+    <code>file_key</code> é <code>HhriLSpKnCB2dHhyiU16iB</code>. Com
+    <code>--strict</code> sai 1 se alguma key estiver em outro arquivo ou não
+    resolver (lista <code>EXCEPTIONS</code>, vazia, exige motivo). É passo
+    informativo (<code>continue-on-error</code>) de
+    <code>refresh-dsc-refs.yml</code>, ao lado de <code>check:visual</code>. Ficou
+    separado de <code>check-visual-foundations.cjs</code> porque aquele é offline e
+    sem token; este precisa de rede e de <code>FIGMA_TOKEN</code>. Resultado:
+    <strong>antes</strong> 54 keys únicas (45 no arquivo próprio, 9 na lib antiga);
+    <strong>depois</strong> 49, todas no arquivo próprio, zero na lib antiga.</p>
+
+    <h3>Limites conhecidos (a decidir)</h3>
+    <ul>
+      <li>O scan novo trouxe mudanças reais na lib <em>mobile</em> (2 componentes
+      novos, sub-modos de "Leitor de Tela" renomeados, ex.: Default→Baseline). A
+      entrada mobile <code>10206:2177</code> foi preservada do scan de
+      2026-09-30 para não alterar o mobile nesta entrega; o próximo
+      <code>refresh-dsc-refs.yml</code> a atualiza por PR — e specs mobile salvas
+      com <code>leitorDeTela</code> antigo precisarão de decisão.</li>
+      <li><code>[dsc] Header</code>/<code>[dsc] Footer</code> detectados como
+      "estrutura" não têm variante em Estrutura da Página web (a base os tem como
+      <em>Elementos e imagens</em>: <code>Header</code>, <code>Footer</code>). O
+      preset é ignorado (o designer escolhe); a decisão é remapear ou não a
+      categoria de detecção web.</li>
+      <li>"Possíveis títulos sem token DSC" (texto com cara de título, sem token)
+      abria a categoria Informações Adicionais; passou a abrir Nível de Título /
+      Títulos (decisão a confirmar).</li>
+    </ul>
 
     <h2 id="s9">9. Contrato de mensagens (UI ↔ backend)</h2>
 
