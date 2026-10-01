@@ -5,7 +5,7 @@
 // tema claro/escuro), não dado de projeto -- persistida em localStorage,
 // nunca em handoffData/exportação.
 const HOME_CARD_ORDER_KEY = 'handexHomeCardOrder';
-const HOME_CARD_IDS_DEFAULT = ['dados-projeto', 'tokens', 'specs', 'measurement', 'flows', 'quick-spec'];
+const HOME_CARD_IDS_DEFAULT = ['dados-projeto', 'tokens', 'specs', 'quick-spec', 'measurement', 'flows'];
 
 let _homeDragSrcCard = null;
 

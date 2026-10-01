@@ -132,6 +132,29 @@
       </div>
     </div>
 
+    <!-- Anotar Specs Rápidas -- módulo isolado (ver quick-spec.js/quick-spec.html):
+         o essencial de um elemento para o dev sem DevMode (valores + token/
+         biblioteca), sem conformidade DSC, fora da Ficha. Sem badge de check (não há "documentação
+         salva" nesta ferramenta por design). -->
+    <div data-home-card-id="quick-spec" draggable="true"
+      class="home-card-draggable relative group/card"
+      ondragstart="_onHomeCardDragStart(event)" ondragover="_onHomeCardDragOver(event)"
+      ondrop="_onHomeCardDrop(event)" ondragend="_onHomeCardDragEnd(event)">
+      <button onclick="navigate('view-quick-spec')" aria-label="Anotar Specs Rápidas"
+        class="flex flex-col items-start justify-center gap-1.5 p-3 w-full h-full bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-100 dark:hover:bg-teal-900/40 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all focus:ring-2 focus:ring-teal-300/30 outline-none group text-left">
+        <div class="w-10 h-10 flex items-center justify-center bg-teal-50 dark:bg-teal-900/20 rounded-xl shrink-0">
+          <i data-lucide="zap" class="w-5 h-5 text-teal-600 dark:text-teal-400" aria-hidden="true"></i>
+        </div>
+        <div class="min-w-0">
+          <p class="font-extrabold text-[11px] tracking-tight text-slate-800 dark:text-white leading-tight">Anotar Specs Rápidas</p>
+          <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-0.5 leading-tight">O essencial para o dev sem DevMode, fora da Ficha</p>
+        </div>
+      </button>
+      <div class="home-card-grip absolute top-1.5 right-1.5 p-1 rounded-md text-slate-300 dark:text-slate-600 opacity-0 group-hover/card:opacity-100 cursor-grab active:cursor-grabbing transition-opacity" title="Arrastar para reorganizar" aria-hidden="true">
+        <i data-lucide="grip-vertical" class="w-3.5 h-3.5 pointer-events-none"></i>
+      </div>
+    </div>
+
     <!-- Medidas -->
     <div data-home-card-id="measurement" draggable="true"
       class="home-card-draggable relative group/card"
@@ -179,29 +202,6 @@
         </div>
         <span class="home-card-check-text hidden text-[9px] leading-tight font-bold text-left text-[#10b981] dark:text-emerald-400"></span>
       </div>
-      <div class="home-card-grip absolute top-1.5 right-1.5 p-1 rounded-md text-slate-300 dark:text-slate-600 opacity-0 group-hover/card:opacity-100 cursor-grab active:cursor-grabbing transition-opacity" title="Arrastar para reorganizar" aria-hidden="true">
-        <i data-lucide="grip-vertical" class="w-3.5 h-3.5 pointer-events-none"></i>
-      </div>
-    </div>
-
-    <!-- Anotar Specs Rápidas -- módulo isolado (ver quick-spec.js/quick-spec.html):
-         o essencial de um elemento para o dev sem DevMode (valores + token/
-         biblioteca), sem conformidade DSC, fora da Ficha. Sem badge de check (não há "documentação
-         salva" nesta ferramenta por design). -->
-    <div data-home-card-id="quick-spec" draggable="true"
-      class="home-card-draggable relative group/card"
-      ondragstart="_onHomeCardDragStart(event)" ondragover="_onHomeCardDragOver(event)"
-      ondrop="_onHomeCardDrop(event)" ondragend="_onHomeCardDragEnd(event)">
-      <button onclick="navigate('view-quick-spec')" aria-label="Anotar Specs Rápidas"
-        class="flex flex-col items-start justify-center gap-1.5 p-3 w-full h-full bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-100 dark:hover:bg-teal-900/40 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all focus:ring-2 focus:ring-teal-300/30 outline-none group text-left">
-        <div class="w-10 h-10 flex items-center justify-center bg-teal-50 dark:bg-teal-900/20 rounded-xl shrink-0">
-          <i data-lucide="zap" class="w-5 h-5 text-teal-600 dark:text-teal-400" aria-hidden="true"></i>
-        </div>
-        <div class="min-w-0">
-          <p class="font-extrabold text-[11px] tracking-tight text-slate-800 dark:text-white leading-tight">Anotar Specs Rápidas</p>
-          <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-0.5 leading-tight">O essencial para o dev sem DevMode, fora da Ficha</p>
-        </div>
-      </button>
       <div class="home-card-grip absolute top-1.5 right-1.5 p-1 rounded-md text-slate-300 dark:text-slate-600 opacity-0 group-hover/card:opacity-100 cursor-grab active:cursor-grabbing transition-opacity" title="Arrastar para reorganizar" aria-hidden="true">
         <i data-lucide="grip-vertical" class="w-3.5 h-3.5 pointer-events-none"></i>
       </div>

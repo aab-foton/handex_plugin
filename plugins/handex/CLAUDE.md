@@ -321,8 +321,8 @@ Header: [Logo | HANDEX vX]  [📋 Dados do Projeto]  [🔍− zoom out (oculto p
 
 Grid 2×3 (flex-1, preenche altura disponível):
   [Informações do Projeto]  [Escanear Tokens]
-  [Anotar Specs Detalhadas] [Anotar Medidas]
-  [Fluxos de Tela]          [Anotar Specs Rápidas]
+  [Anotar Specs Detalhadas] [Anotar Specs Rápidas]
+  [Anotar Medidas]          [Fluxos de Tela]
 
 Footer:
   [▶ Gerar Ficha de Handoff]
