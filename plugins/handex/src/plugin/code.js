@@ -3755,13 +3755,20 @@ figma.ui.onmessage = async (msg) => {
       strokes: ['stroke'], strokeStyleId: ['stroke'],
       effects: ['effect'], effectStyleId: ['effect'],
       cornerRadius: ['radius'], topLeftRadius: ['radius'], topRightRadius: ['radius'], bottomLeftRadius: ['radius'], bottomRightRadius: ['radius'],
-      strokeWeight: ['strokeWeight'], strokeTopWeight: ['strokeWeight'], strokeRightWeight: ['strokeWeight'], strokeBottomWeight: ['strokeWeight'], strokeLeftWeight: ['strokeWeight'],
+      strokeWeight: ['strokeWeight'], strokeTopWeight: ['strokeWeight'], strokeRightWeight: ['strokeWeight'], strokeBottomWeight: ['strokeWeight'], strokeLeftWeight: ['strokeWeight'], stokeTopWeight: ['strokeWeight'],
       itemSpacing: ['itemSpacing'], counterAxisSpacing: ['counterAxisSpacing'],
       paddingTop: ['paddingTop'], paddingRight: ['paddingRight'], paddingBottom: ['paddingBottom'], paddingLeft: ['paddingLeft'],
       width: ['width'], height: ['height'], size: ['width', 'height'],
       textStyleId: ['typography'], fontSize: ['typography'], fontName: ['typography'], lineHeight: ['typography'], letterSpacing: ['typography'],
       mainComponent: ['swap']
     };
+    // Campos que a regra de produto exclui de propósito: não geram log de "não mapeado".
+    const _CUST_IGNORED_FIELDS = new Set(['characters', 'styledTextSegments', 'visible', 'name', 'x', 'y', 'relativeTransform', 'rotation', 'componentProperties', 'componentPropertyReferences', 'componentPropertyDefinitions', 'pluginData', 'locked', 'reactions', 'opacity', 'blendMode', 'layoutPositioning', 'layoutGrow', 'layoutAlign', 'textAutoResize', 'textTruncation', 'maxLines', 'hyperlink', 'exportSettings', 'expanded', 'isExposedInstance', 'overrides', 'constraints', 'clipsContent', 'autoRename', 'description', 'mediaData']);
+    // Grupos sensíveis a troca de token: o Figma nem sempre lista o campo em
+    // overriddenFields quando só a variável vinculada muda, então são
+    // reavaliados em todo sub-nó com override.
+    const _CUST_IMPLICIT_GROUPS = ['radius', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'itemSpacing', 'counterAxisSpacing', 'strokeWeight'];
+    let _custUnmappedLogs = 0;
     const _CUST_LABELS = {
       fill: 'Cor (Fill)', stroke: 'Border Color', effect: 'Effect', radius: 'Radius', strokeWeight: 'Border Width',
       itemSpacing: 'Gap', counterAxisSpacing: 'Gap (eixo cruzado)',
@@ -3886,12 +3893,11 @@ figma.ui.onmessage = async (msg) => {
       if (group === 'typography') return _custTypography(node);
       if (group === 'swap') return _custSwap(node);
       if (group === 'radius') {
-        const single = await _custNum(node, 'cornerRadius');
-        return single || _custMulti(node, ['topLeftRadius', 'topRightRadius', 'bottomRightRadius', 'bottomLeftRadius']);
+        return _custMulti(node, ['topLeftRadius', 'topRightRadius', 'bottomRightRadius', 'bottomLeftRadius']);
       }
       if (group === 'strokeWeight') {
-        const single = await _custNum(node, 'strokeWeight');
-        return single || _custMulti(node, ['strokeTopWeight', 'strokeRightWeight', 'strokeBottomWeight', 'strokeLeftWeight']);
+        const sides = await _custMulti(node, ['strokeTopWeight', 'strokeRightWeight', 'strokeBottomWeight', 'strokeLeftWeight']);
+        return sides || _custNum(node, 'strokeWeight');
       }
       if (group === 'width' || group === 'height') {
         const sizing = group === 'width' ? node.layoutSizingHorizontal : node.layoutSizingVertical;
@@ -3930,9 +3936,17 @@ figma.ui.onmessage = async (msg) => {
     async function _custEvalEntry(inst, mainComp, entry) {
       const out = { items: [], unresolved: 0 };
       const groups = new Set();
-      (entry.overriddenFields || []).forEach(f => { (_CUST_FIELD_GROUPS[f] || []).forEach(g => groups.add(g)); });
+      const fieldsOf = entry.overriddenFields || [];
+      fieldsOf.forEach(f => {
+        if (_CUST_FIELD_GROUPS[f]) { _CUST_FIELD_GROUPS[f].forEach(g => groups.add(g)); }
+        else if (!_CUST_IGNORED_FIELDS.has(f) && _custUnmappedLogs < 3) { _custUnmappedLogs++; console.log('[Handex 5b] campo de override sem mapeamento:', f, 'id:', entry.id); }
+      });
       const actual = await figma.getNodeByIdAsync(entry.id);
       if (!actual) { if (groups.size > 0) out.unresolved++; return out; }
+      const implicit = new Set();
+      if (fieldsOf.length > 0) {
+        _CUST_IMPLICIT_GROUPS.forEach(g => { if (!groups.has(g)) { groups.add(g); implicit.add(g); } });
+      }
       if (actual.type === 'INSTANCE' && actual.id !== inst.id) groups.add('swap');
       if (groups.size === 0) return out;
       if (actual.id !== inst.id) {
@@ -3943,11 +3957,11 @@ figma.ui.onmessage = async (msg) => {
         }
       }
       const def = await _custDefaultNode(inst, mainComp, entry.id);
-      if (!def) { out.unresolved += groups.size; return out; }
+      if (!def) { out.unresolved += groups.size - implicit.size; return out; }
       for (const g of groups) {
         const a = await _custSnapshot(actual, g);
         const d = await _custSnapshot(def, g);
-        if (!a || !d) { out.unresolved++; continue; }
+        if (!a || !d) { if (!implicit.has(g)) out.unresolved++; continue; }
         if (a.ignore || d.ignore) continue;
         if (a.sig !== d.sig) out.items.push({ layer: actual.name, campo: _CUST_LABELS[g] || g, atual: a.text, padrao: d.text });
       }

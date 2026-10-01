@@ -2974,6 +2974,7 @@
         strokeRightWeight: ["strokeWeight"],
         strokeBottomWeight: ["strokeWeight"],
         strokeLeftWeight: ["strokeWeight"],
+        stokeTopWeight: ["strokeWeight"],
         itemSpacing: ["itemSpacing"],
         counterAxisSpacing: ["counterAxisSpacing"],
         paddingTop: ["paddingTop"],
@@ -2990,6 +2991,9 @@
         letterSpacing: ["typography"],
         mainComponent: ["swap"]
       };
+      const _CUST_IGNORED_FIELDS = /* @__PURE__ */ new Set(["characters", "styledTextSegments", "visible", "name", "x", "y", "relativeTransform", "rotation", "componentProperties", "componentPropertyReferences", "componentPropertyDefinitions", "pluginData", "locked", "reactions", "opacity", "blendMode", "layoutPositioning", "layoutGrow", "layoutAlign", "textAutoResize", "textTruncation", "maxLines", "hyperlink", "exportSettings", "expanded", "isExposedInstance", "overrides", "constraints", "clipsContent", "autoRename", "description", "mediaData"]);
+      const _CUST_IMPLICIT_GROUPS = ["radius", "paddingTop", "paddingRight", "paddingBottom", "paddingLeft", "itemSpacing", "counterAxisSpacing", "strokeWeight"];
+      let _custUnmappedLogs = 0;
       const _CUST_LABELS = {
         fill: "Cor (Fill)",
         stroke: "Border Color",
@@ -3120,12 +3124,11 @@
         if (group === "typography") return _custTypography(node);
         if (group === "swap") return _custSwap(node);
         if (group === "radius") {
-          const single = await _custNum(node, "cornerRadius");
-          return single || _custMulti(node, ["topLeftRadius", "topRightRadius", "bottomRightRadius", "bottomLeftRadius"]);
+          return _custMulti(node, ["topLeftRadius", "topRightRadius", "bottomRightRadius", "bottomLeftRadius"]);
         }
         if (group === "strokeWeight") {
-          const single = await _custNum(node, "strokeWeight");
-          return single || _custMulti(node, ["strokeTopWeight", "strokeRightWeight", "strokeBottomWeight", "strokeLeftWeight"]);
+          const sides = await _custMulti(node, ["strokeTopWeight", "strokeRightWeight", "strokeBottomWeight", "strokeLeftWeight"]);
+          return sides || _custNum(node, "strokeWeight");
         }
         if (group === "width" || group === "height") {
           const sizing = group === "width" ? node.layoutSizingHorizontal : node.layoutSizingVertical;
@@ -3159,13 +3162,28 @@
       async function _custEvalEntry(inst, mainComp, entry) {
         const out = { items: [], unresolved: 0 };
         const groups = /* @__PURE__ */ new Set();
-        (entry.overriddenFields || []).forEach((f) => {
-          (_CUST_FIELD_GROUPS[f] || []).forEach((g) => groups.add(g));
+        const fieldsOf = entry.overriddenFields || [];
+        fieldsOf.forEach((f) => {
+          if (_CUST_FIELD_GROUPS[f]) {
+            _CUST_FIELD_GROUPS[f].forEach((g) => groups.add(g));
+          } else if (!_CUST_IGNORED_FIELDS.has(f) && _custUnmappedLogs < 3) {
+            _custUnmappedLogs++;
+            console.log("[Handex 5b] campo de override sem mapeamento:", f, "id:", entry.id);
+          }
         });
         const actual = await figma.getNodeByIdAsync(entry.id);
         if (!actual) {
           if (groups.size > 0) out.unresolved++;
           return out;
+        }
+        const implicit = /* @__PURE__ */ new Set();
+        if (fieldsOf.length > 0) {
+          _CUST_IMPLICIT_GROUPS.forEach((g) => {
+            if (!groups.has(g)) {
+              groups.add(g);
+              implicit.add(g);
+            }
+          });
         }
         if (actual.type === "INSTANCE" && actual.id !== inst.id) groups.add("swap");
         if (groups.size === 0) return out;
@@ -3178,14 +3196,14 @@
         }
         const def = await _custDefaultNode(inst, mainComp, entry.id);
         if (!def) {
-          out.unresolved += groups.size;
+          out.unresolved += groups.size - implicit.size;
           return out;
         }
         for (const g of groups) {
           const a = await _custSnapshot(actual, g);
           const d = await _custSnapshot(def, g);
           if (!a || !d) {
-            out.unresolved++;
+            if (!implicit.has(g)) out.unresolved++;
             continue;
           }
           if (a.ignore || d.ignore) continue;
