@@ -1,5 +1,74 @@
 # CHANGELOG — HANDEX Plugin
 
+> **Lacuna de histórico:** entre a v6.20.5 e a v6.33.0 (versões 6.21.0 a 6.32.x) este arquivo não tem entradas detalhadas — o registro dessas versões está nos commits do repositório (`git log`). As entradas v6.34.0 e v6.33.0 abaixo cobrem apenas o que veio depois.
+
+---
+
+## v6.34.0 — 2026-10-01
+
+Ainda não publicada na Figma Community (a versão publicada é a 6.32.1). Mudanças das fases 2 a 5 de conformidade e a detecção de personalização ainda aguardam validação final no Figma.
+
+### Adicionado — Nomes de produto e critério "quando usar qual"
+"Anotar Specs" passou a se chamar **Anotar Specs Detalhadas** e "Spec Express" passou a se chamar **Anotar Specs Rápidas**. Os cards da home, o onboarding (com entrada própria para a Rápida), o guia "Como usar o plugin" e os empty-states agora explicam quando usar cada uma. Na home, Anotar Specs Rápidas abre ao lado das Detalhadas (linha 2); quem já reordenou os cards mantém a própria ordem.
+
+### Adicionado — Anotar Specs Rápidas: melhorias
+- Lê somente o elemento marcado (sem subárvore).
+- As propriedades ficam gravadas no card do canvas e voltam ao reabrir o plugin.
+- Linha guia em cotovelo, com desvio de cards vizinhos, entrada por cima/baixo em grade de várias colunas e separação de trechos sobrepostos; cor cinza semi-transparente.
+- "Converter em Spec Detalhada": substitui o card rápido pela spec formal.
+- Botão de ocultar também oculta o card no canvas; o foco vai ao card além do elemento.
+- Grade "Organizar cards" dimensionada ao total de cards.
+
+### Ajustado — Anotar Specs Rápidas
+- Tags reordenam ao excluir um item que ainda não tem card.
+- Botões "Inserir" ficam desabilitados quando não há mais nada a inserir.
+
+### Corrigido — Modo de captura preso
+O modo de captura das Specs Rápidas não fica mais preso: o canvas deixa de ficar travado com o plugin aberto.
+
+### Ajustado — Anotar Specs Detalhadas passa a ser superconjunto da Rápida
+Passa a incluir efeitos, sizing, componente e estilos, e mostra `token · valor` nas propriedades do card.
+
+### Corrigido — Ficha: card "User Interface"
+Antes nunca era atualizado. Agora é refeito em "Atualizar Tokens na Ficha": um card por item marcado, propriedades `token · valor` e composição interna (instâncias do DSC aparecem marcadas "reutilizar, não construir").
+
+### Ajustado — Ficha em coluna única
+O Briefing virou seção da coluna. A Ficha continua em coluna única de 1080px (para exportar em PDF e permitir Ficha navegável). O modal de relevância de frames agora diz "Tudo parece estar dentro do DSC".
+
+### Corrigido — "Nova Versão" da Ficha
+Passa a nascer à direita da Ficha mais recente; antes sobrepunha as anteriores a partir da 3ª versão.
+
+### Alterado — Conformidade: a lib DSC como única fonte (fases 1 a 5)
+1. O skeleton das libs é enviado ao backend sob demanda; atalho `remote` removido; código morto removido.
+2. Variantes e W/H Sizing deixam de mostrar check verde e passam a "não avaliado".
+3. Vínculo passa a ser por ancestral com chave na lib; a convenção `[dsc]` no nome deixa de valer.
+4. Fim da aprovação automática de borda 1px/0px e de fonte CAIXA sem token.
+5. **Detecção de personalização** de instância do DSC: o que o "Reset" do Figma desfaria (troca de token, gap, padding, raio, borda, tipografia, effect, largura/altura fixas, subcomponente trocado) vira âmbar com "padrão da lib". Texto, booleanos, variantes e visibilidade não contam. Correção posterior: passa a detectar também radius, padding e troca de token.
+
+O aviso "Lib legada — precisa migrar" existe, mas está **desligado por flag**.
+
+### Impacto para o usuário
+- Frames escaneados antes precisam ser **re-escaneados**.
+- Componentes podem mudar de cor: sizing deixa de contar como acerto; bordas 1px e texto CAIXA Std sem token deixam de passar; `[dsc]` no nome deixa de valer.
+- A detecção de personalização é nova e pode gerar mais itens âmbar.
+
+### Pendente (não entregue nesta versão)
+- Personalização nas Specs Detalhadas, nas Specs Rápidas e na Ficha do canvas.
+- Validação final das fases 2 a 5 e da personalização no Figma.
+
+---
+
+## v6.33.0 — 2026-09-29
+
+### Adicionado — Anotar Specs Rápidas (então chamada "Spec Express")
+Módulo novo para consulta rápida de propriedades de elementos: cada elemento marcado vira um card no canvas, ligado ao elemento por uma linha guia.
+
+### Corrigido — Foco de teclado do Figma
+O plugin prendia o foco de teclado do Figma quando o mouse estava fora da janela do plugin.
+
+### Ajustado — Botão Limpar da home
+Passa a considerar também os dados das Specs Rápidas.
+
 ---
 
 ## v6.20.5 — 2026-09-17

@@ -235,6 +235,51 @@
     <h1 id="release-notes-figma-community">Release notes — Figma Community</h1>
 <p>Texto pronto para colar no campo de descrição de cada publicação em Community → Manage → Publish new version. Mantido separado do <code>CHANGELOG.md</code> (que é técnico/interno) porque este é escrito para o usuário final do plugin, sem jargão de código.</p>
 <hr>
+<h2 id="version-preencher-v6340-2026-10-01">Version [preencher] — v6.34.0 (2026-10-01)</h2>
+<blockquote>
+<p>Próxima publicação. Cobre tudo desde a 6.32.1 (versão hoje na Community). Número da "Version" da Community: [preencher] na hora de publicar.</p>
+</blockquote>
+<h3 id="texto-curto-whats-new-v6340">Texto curto para o campo "What's new"</h3>
+<pre><code>Novo: Anotar Specs Rápidas - consulte as propriedades de um elemento e veja cada uma como card no canvas, ligado ao elemento por uma linha guia.
+"Anotar Specs" agora é Anotar Specs Detalhadas, e a home explica quando usar cada uma.
+Ficha: o card "User Interface" agora atualiza e mostra token e valor; "Nova Versão" nasce ao lado da Ficha mais recente.
+Conformidade com o Design System mais rigorosa: variantes e tamanhos viram "não avaliado" e alterações feitas em instâncias do DSC aparecem em âmbar.
+Correção: o plugin não prende mais o teclado do Figma.
+ATENÇÃO: re-escaneie os frames já escaneados.
+ATENÇÃO: algumas cores de conformidade vão mudar.
+ATENÇÃO: a detecção de personalização é nova e pode mostrar mais itens em âmbar.
+</code></pre>
+<h3 id="versao-detalhada-v6340">Versão detalhada</h3>
+<p><strong>Novidades</strong></p>
+<p><strong>Anotar Specs Rápidas</strong> Selecione elementos e consulte as propriedades deles na hora. Cada elemento vira um card no canvas, ligado a ele por uma linha guia. Lê só o elemento marcado, guarda as propriedades no próprio card (elas voltam ao reabrir o plugin) e permite converter o card em uma Spec Detalhada. Os cards podem ser ocultados no canvas e organizados em grade. As Specs Rápidas não entram na Ficha.</p>
+<p><strong>Duas ferramentas de spec, com nomes novos</strong> "Anotar Specs" agora se chama Anotar Specs Detalhadas, e "Spec Express" virou Anotar Specs Rápidas. Os cards da home, o guia e as telas vazias explicam quando usar cada uma. Na home, a Rápida abre ao lado da Detalhada; se você já reordenou os cards, a sua ordem é mantida.</p>
+<p><strong>Specs Detalhadas com mais informação</strong> Passam a incluir efeitos, tamanhos, componente e estilos, e o card mostra token e valor de cada propriedade.</p>
+<p><strong>Ficha de handoff</strong></p>
+<ul>
+<li>O card "User Interface" agora é refeito ao usar "Atualizar Tokens na Ficha" (antes nunca atualizava). Traz um card por item marcado, com token e valor, e a composição interna do componente; o que já é do DSC aparece como "reutilizar, não construir".</li>
+<li>O Briefing agora é uma seção da Ficha, que continua em coluna única.</li>
+<li>"Nova Versão" agora nasce à direita da Ficha mais recente (antes podia sobrepor as anteriores a partir da 3ª versão).</li>
+<li>O aviso de frames sem item personalizado agora diz "Tudo parece estar dentro do DSC".</li>
+</ul>
+<p><strong>Conformidade com o Design System</strong></p>
+<ul>
+<li>A biblioteca do DSC passa a ser a única fonte de verdade. Colocar "[dsc]" no nome da camada deixa de valer como vínculo.</li>
+<li>Variantes e largura/altura (sizing) deixam de mostrar check verde e passam a "não avaliado".</li>
+<li>Bordas de 1px e texto em CAIXA Std sem token deixam de ser aprovados automaticamente.</li>
+<li>Novo: detecção de personalização. Se uma instância do DSC foi alterada em relação ao padrão (token trocado, espaçamento, raio, borda, tipografia, efeito, tamanho fixo ou subcomponente trocado), ela aparece em âmbar com "padrão da lib". Texto, opções liga/desliga, variantes e visibilidade não contam como personalização.</li>
+</ul>
+<p><strong>Correções e melhorias</strong></p>
+<p><strong>Teclado do Figma preso</strong> O plugin podia prender o foco de teclado do Figma quando o mouse estava fora da janela dele. Corrigido.</p>
+<p><strong>Canvas travado no modo de captura</strong> Ao usar as Specs Rápidas, o canvas podia ficar travado com o plugin aberto. Corrigido.</p>
+<p><strong>Botão Limpar</strong> Agora considera também os dados das Specs Rápidas.</p>
+<p><strong>Antes de atualizar, leia</strong></p>
+<ol>
+<li><strong>Re-escaneie os frames.</strong> Frames escaneados antes desta versão foram avaliados com as regras antigas e precisam ser escaneados de novo.</li>
+<li><strong>Algumas cores de conformidade podem mudar.</strong> Tamanhos (sizing) deixam de contar como acerto, bordas de 1px e texto CAIXA Std sem token deixam de passar, e "[dsc]" no nome não vale mais.</li>
+<li><strong>A personalização é nova e pode gerar mais itens em âmbar.</strong> Isso é esperado: o plugin agora aponta o que foi alterado em relação ao padrão da biblioteca.</li>
+</ol>
+<p><strong>Ainda não incluído</strong> A indicação de personalização ainda não aparece nas Specs Detalhadas, nas Specs Rápidas nem na Ficha gerada no canvas.</p>
+<hr>
 <h2 id="version-preencher-v6120-2026-09-11">Version [preencher] — v6.12.0 (2026-09-11)</h2>
 <p><strong>Novidades</strong></p>
 <p><strong>Medidas, specs e fluxos organizados no canvas</strong> Todo conteúdo criado pelo Handex no canvas (medidas, especificações, fluxos de tela e a Ficha de handoff) agora fica organizado dentro de 4 áreas próprias na árvore de camadas do Figma — "Handex | Medidas", "Handex | Specs", "Handex | Fluxos" e "Handex | Ficha" — em vez de espalhado solto pela página. Nada muda de posição visual no canvas, é só mais fácil de encontrar e navegar.</p>

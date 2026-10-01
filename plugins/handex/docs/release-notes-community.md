@@ -4,6 +4,69 @@ Texto pronto para colar no campo de descrição de cada publicação em Communit
 
 ---
 
+## Version [preencher] — v6.34.0 (2026-10-01)
+
+> Próxima publicação. Cobre tudo desde a 6.32.1 (versão hoje na Community). Número da "Version" da Community: [preencher] na hora de publicar.
+
+### Texto curto para o campo "What's new"
+
+```
+Novo: Anotar Specs Rápidas - consulte as propriedades de um elemento e veja cada uma como card no canvas, ligado ao elemento por uma linha guia.
+"Anotar Specs" agora é Anotar Specs Detalhadas, e a home explica quando usar cada uma.
+Ficha: o card "User Interface" agora atualiza e mostra token e valor; "Nova Versão" nasce ao lado da Ficha mais recente.
+Conformidade com o Design System mais rigorosa: variantes e tamanhos viram "não avaliado" e alterações feitas em instâncias do DSC aparecem em âmbar.
+Correção: o plugin não prende mais o teclado do Figma.
+ATENÇÃO: re-escaneie os frames já escaneados.
+ATENÇÃO: algumas cores de conformidade vão mudar.
+ATENÇÃO: a detecção de personalização é nova e pode mostrar mais itens em âmbar.
+```
+
+### Versão detalhada
+
+**Novidades**
+
+**Anotar Specs Rápidas**
+Selecione elementos e consulte as propriedades deles na hora. Cada elemento vira um card no canvas, ligado a ele por uma linha guia. Lê só o elemento marcado, guarda as propriedades no próprio card (elas voltam ao reabrir o plugin) e permite converter o card em uma Spec Detalhada. Os cards podem ser ocultados no canvas e organizados em grade. As Specs Rápidas não entram na Ficha.
+
+**Duas ferramentas de spec, com nomes novos**
+"Anotar Specs" agora se chama Anotar Specs Detalhadas, e "Spec Express" virou Anotar Specs Rápidas. Os cards da home, o guia e as telas vazias explicam quando usar cada uma. Na home, a Rápida abre ao lado da Detalhada; se você já reordenou os cards, a sua ordem é mantida.
+
+**Specs Detalhadas com mais informação**
+Passam a incluir efeitos, tamanhos, componente e estilos, e o card mostra token e valor de cada propriedade.
+
+**Ficha de handoff**
+- O card "User Interface" agora é refeito ao usar "Atualizar Tokens na Ficha" (antes nunca atualizava). Traz um card por item marcado, com token e valor, e a composição interna do componente; o que já é do DSC aparece como "reutilizar, não construir".
+- O Briefing agora é uma seção da Ficha, que continua em coluna única.
+- "Nova Versão" agora nasce à direita da Ficha mais recente (antes podia sobrepor as anteriores a partir da 3ª versão).
+- O aviso de frames sem item personalizado agora diz "Tudo parece estar dentro do DSC".
+
+**Conformidade com o Design System**
+- A biblioteca do DSC passa a ser a única fonte de verdade. Colocar "[dsc]" no nome da camada deixa de valer como vínculo.
+- Variantes e largura/altura (sizing) deixam de mostrar check verde e passam a "não avaliado".
+- Bordas de 1px e texto em CAIXA Std sem token deixam de ser aprovados automaticamente.
+- Novo: detecção de personalização. Se uma instância do DSC foi alterada em relação ao padrão (token trocado, espaçamento, raio, borda, tipografia, efeito, tamanho fixo ou subcomponente trocado), ela aparece em âmbar com "padrão da lib". Texto, opções liga/desliga, variantes e visibilidade não contam como personalização.
+
+**Correções e melhorias**
+
+**Teclado do Figma preso**
+O plugin podia prender o foco de teclado do Figma quando o mouse estava fora da janela dele. Corrigido.
+
+**Canvas travado no modo de captura**
+Ao usar as Specs Rápidas, o canvas podia ficar travado com o plugin aberto. Corrigido.
+
+**Botão Limpar**
+Agora considera também os dados das Specs Rápidas.
+
+**Antes de atualizar, leia**
+1. **Re-escaneie os frames.** Frames escaneados antes desta versão foram avaliados com as regras antigas e precisam ser escaneados de novo.
+2. **Algumas cores de conformidade podem mudar.** Tamanhos (sizing) deixam de contar como acerto, bordas de 1px e texto CAIXA Std sem token deixam de passar, e "[dsc]" no nome não vale mais.
+3. **A personalização é nova e pode gerar mais itens em âmbar.** Isso é esperado: o plugin agora aponta o que foi alterado em relação ao padrão da biblioteca.
+
+**Ainda não incluído**
+A indicação de personalização ainda não aparece nas Specs Detalhadas, nas Specs Rápidas nem na Ficha gerada no canvas.
+
+---
+
 ## Version [preencher] — v6.8.0 (2026-08-28)
 
 **Novidades**
