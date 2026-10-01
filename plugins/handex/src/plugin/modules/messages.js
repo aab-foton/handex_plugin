@@ -276,7 +276,7 @@
 
       if (msg.type === 'canvas-content-deleted') {
         // Ação combinada "Apagar tudo" dispara este mesmo delete-canvas-content
-        // por baixo (com os 4 tipos marcados) e sinaliza via _isClearingEverything
+        // por baixo (com os 5 tipos marcados, incluindo quickspec) e sinaliza via _isClearingEverything
         // -- nesse caso quem termina o fluxo (fecha modal, limpa o registro do
         // plugin, mostra um toast único cobrindo os dois) é _finishClearEverything,
         // não este handler.
@@ -291,6 +291,7 @@
         if (c.spec) parts.push(`${c.spec} spec${c.spec > 1 ? 's' : ''}`);
         if (c.medida) parts.push(`${c.medida} medida${c.medida > 1 ? 's' : ''}`);
         if (c.fluxo) parts.push(`${c.fluxo} fluxo${c.fluxo > 1 ? 's' : ''}`);
+        if (c.quickspec) parts.push(`${c.quickspec} card${c.quickspec > 1 ? 's' : ''} de Specs Rápidas`);
         showToast(parts.length ? `${parts.join(', ')} removido(s) do canvas.` : 'Nenhum elemento correspondente encontrado no canvas.');
         return;
       }
@@ -358,6 +359,12 @@
         saveSpecsToStorage();
         if (window._toastSaved) _toastSaved();
         showToast('Especificação criada — arraste para posicionar e conclua o posicionamento.');
+        // Conversão Spec Express -> Spec Detalhada (ver quick-spec.js):
+        // criação confirmada com sucesso é o gatilho pra remover o card
+        // Express original do canvas -- cancelar o formulário no meio do
+        // caminho nunca chega até aqui, então o Express original permanece
+        // intacto nesse caso.
+        if (typeof _quickSpecFinishPendingConversion === 'function') _quickSpecFinishPendingConversion();
       }
 
       if (msg.type === "spec-locked") {
@@ -522,7 +529,7 @@
           if (!currentScannedProps || currentScannedProps.length === 0) {
             list.innerHTML = '<p class="text-[12px] text-orange-800 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 p-4 rounded-xl border border-orange-100 dark:border-orange-800/30 flex items-center gap-3"><i data-lucide="alert-triangle" class="w-5 h-5 shrink-0"></i> Nenhuma propriedade detectada no elemento selecionado.</p>';
           } else {
-            const iconMap = { height: 'maximize-2', width: 'maximize-2', radius: 'corner-up-right', direction: 'move', alignment: 'align-center', gap: 'space', padding: 'box', fill: 'palette', stroke: 'square', strokeWidth: 'hash', fontFamily: 'type', fontWeight: 'bold', fontSize: 'text-cursor-input' };
+            const iconMap = { height: 'maximize-2', width: 'maximize-2', radius: 'corner-up-right', direction: 'move', alignment: 'align-center', gap: 'space', padding: 'box', fill: 'palette', stroke: 'square', strokeWidth: 'hash', fontFamily: 'type', fontWeight: 'bold', fontSize: 'text-cursor-input', textStyle: 'type', component: 'component', sizingW: 'maximize-2', sizingH: 'maximize-2' };
             currentScannedProps.forEach(prop => {
               const id = 'prop-' + prop.key;
               const iconName = iconMap[prop.key] || (prop.key.startsWith('variant-') ? 'component' : 'settings');
@@ -538,7 +545,7 @@
                         <span class="text-[12px] font-bold text-slate-700 dark:text-white uppercase tracking-tight">${prop.label}</span>
                         ${tokenBadge}
                       </div>
-                      ${!prop.token ? `<span class="block text-[11px] text-slate-500 dark:text-dark-muted font-mono">${prop.value}</span>` : ''}
+                      ${prop.token !== prop.value ? `<span class="block text-[11px] text-slate-500 dark:text-dark-muted font-mono">${prop.value}</span>` : ''}
                     </div>
                   </div>
                   <input type="checkbox" id="${id}" value="${prop.key}" checked class="w-5 h-5 rounded-lg border-gray-200 text-[#005ca9] focus:ring-[#005ca9] transition-all cursor-pointer" />

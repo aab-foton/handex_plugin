@@ -64,9 +64,18 @@
 // esquece".
 let _quickSpecSessionResults = [];
 // Contador de tag sequencial (A, B, C... depois AA, AB...) -- por SESSÃO
-// inteira, não por captura. Nunca decrementado (mesmo se um card for
-// excluído da lista depois) para nunca reaproveitar uma tag já mostrada/
-// inserida no canvas nesta sessão.
+// inteira, não por captura. Exclusão INDIVIDUAL fecha o buraco deixado na
+// sequência (pedido do usuário, 2026-09-29: excluir "C" faz D virar C, E
+// virar D...), mas só entre itens AINDA SEM card no canvas -- ver
+// _quickSpecCloseTagGap, chamada por quickSpecRemoveElement. Tags de itens
+// já inseridos (insertedCardId) são intocáveis: o chip do card real
+// (chipText.characters) é gravado uma vez na criação e não existe canal pra
+// atualizá-lo depois, então renomear na lista sem tocar o card criaria
+// dessincronização visível (lista diz "C", card mostra "D"). O contador
+// nunca gera uma tag nova que colida com uma tag ainda em uso (fixa ou
+// reordenada) -- ver recálculo dentro de _quickSpecCloseTagGap. "Excluir
+// todos" (quickSpecRemoveAllElements) continua zerando o contador direto,
+// já que esvazia a lista inteira e não sobra nenhum item pra colidir.
 let _quickSpecTagCounter = 0;
 // Categorias escolhidas na modal de filtro, preservadas do momento da
 // confirmação até o "Concluir" da captura (o plugin fica colapsado nesse
@@ -74,13 +83,30 @@ let _quickSpecTagCounter = 0;
 let _quickSpecPendingCategories = null;
 
 function _quickSpecNextTag() {
-  let n = _quickSpecTagCounter++;
+  return _quickSpecTagFromIndex(_quickSpecTagCounter++);
+}
+
+// Converte um índice 0-based (mesma base numérica bijetiva usada por
+// _quickSpecNextTag) na tag correspondente -- extraída à parte pra permitir
+// recalcular tags de itens já existentes (ver _quickSpecCloseTagGap) sem
+// duplicar a lógica de geração.
+function _quickSpecTagFromIndex(n) {
   let tag = '';
   do {
     tag = String.fromCharCode(65 + (n % 26)) + tag;
     n = Math.floor(n / 26) - 1;
   } while (n >= 0);
   return tag;
+}
+
+// Inversa de _quickSpecTagFromIndex -- só usada para reordenar/renomear tags
+// existentes (ver _quickSpecCloseTagGap), nunca para gerar tag nova.
+function _quickSpecTagToIndex(tag) {
+  let n = -1;
+  for (let i = 0; i < tag.length; i++) {
+    n = (n + 1) * 26 + (tag.charCodeAt(i) - 65);
+  }
+  return n;
 }
 
 function _quickSpecToggleAllFilters() {
@@ -120,7 +146,26 @@ window._quickSpecConfirmFiltersAndScan = _quickSpecConfirmFiltersAndScan;
 // filtro, sai ao Cancelar/Concluir.
 window._quickSpecCaptureActive = false;
 
+// Rede de segurança contra o travamento recorrente "só consigo clicar no
+// plugin, não movo o canvas" (4ª correção do sintoma, 2026-09-30): a captura
+// muda estado GLOBAL (janela encolhida ~52px, headers escondidos, backend
+// espelhando seleção) e antes só 2 botões desfaziam isso (Cancelar/Concluir).
+// Qualquer outro caminho (erro JS no meio, navigate(), UI recarregada) deixava
+// a janela presa sem botão de voltar. Camadas: try/catch em Enter, saída
+// forçada em navigate() (core.js), reset no boot da UI (abaixo) e reset do
+// flag do backend no ui-ready (code.js).
 function _quickSpecCaptureEnter() {
+  try {
+    _quickSpecCaptureEnterUnsafe();
+  } catch (e) {
+    try { parent.postMessage({ pluginMessage: { type: 'stop-quick-spec-capture' } }, '*'); } catch (_) {}
+    _quickSpecPendingCategories = null;
+    _quickSpecCaptureExit();
+    showToast('Não foi possível iniciar a captura. Tente novamente.', 'error');
+  }
+}
+
+function _quickSpecCaptureEnterUnsafe() {
   window._quickSpecCaptureActive = true;
   // O <header> GLOBAL (#header-home, fixo no topo em TODAS as telas) e o
   // header LOCAL da própria view (.subheader-brand, com "Spec Express" +
@@ -155,7 +200,10 @@ function _quickSpecCaptureEnter() {
 
 function _quickSpecCaptureResizeToBar() {
   const bar = document.getElementById('quick-spec-capture-bar');
-  const FALLBACK_H = 52;
+  // 64 e não 52: se a barra ainda não estiver renderizada (measured 0), uma
+  // janela menor que a barra real (~50px + zoom da UI) cortaria Cancelar/
+  // Concluir e o designer ficaria sem saída.
+  const FALLBACK_H = 64;
   let h = FALLBACK_H;
   if (bar) {
     // getBoundingClientRect() já mede o resultado PÓS `zoom` CSS (--ui-scale,
@@ -204,6 +252,26 @@ function _quickSpecCaptureExit() {
   const h = isCollapsed ? MINI_H : FULL_H;
   parent.postMessage({ pluginMessage: { type: 'resize-ui', width: FULL_W, height: h } }, '*');
 }
+
+// Boot da UI: o estado de captura nunca sobrevive a uma UI recém-carregada.
+// Restaura só o que _quickSpecCaptureEnter esconde, sem resize (o backend já
+// devolve o tamanho da janela no ui-ready, ver code.js).
+function _quickSpecCaptureResetOnBoot() {
+  window._quickSpecCaptureActive = false;
+  const headerHome = document.getElementById('header-home');
+  const headerEl = headerHome ? headerHome.closest('header') : null;
+  const view = document.getElementById('view-quick-spec');
+  const localHeader = view ? view.querySelector('.subheader-brand') : null;
+  const scrollContainer = document.getElementById('quick-spec-scroll-container');
+  const bar = document.getElementById('quick-spec-capture-bar');
+  if (headerEl) headerEl.classList.remove('hidden');
+  if (headerHome) headerHome.classList.remove('hidden');
+  if (localHeader) localHeader.classList.remove('hidden');
+  if (scrollContainer) scrollContainer.classList.remove('hidden');
+  if (bar) { bar.classList.add('hidden'); bar.classList.remove('flex'); }
+  document.body.classList.remove('a11y-capture-mini-active');
+}
+window._quickSpecCaptureResetOnBoot = _quickSpecCaptureResetOnBoot;
 
 function _quickSpecCaptureUpdateCount(n) {
   const el = document.getElementById('quick-spec-capture-count');
@@ -286,11 +354,14 @@ window.quickSpecSyncFromCanvas = quickSpecSyncFromCanvas;
 // Chamado pelo dispatcher central ao receber 'quick-spec-canvas-cards-list'
 // -- mescla com a sessão em memória (nunca duplica: um card já rastreado
 // por insertedCardId continua com sua entrada completa, propriedades
-// incluídas). Cards do canvas sem entrada correspondente na sessão viram
-// entradas MÍNIMAS (properties: null sinaliza "recuperado do canvas, sem
-// propriedades" -- distinto de properties: [] que significaria "escaneado,
-// mas nada encontrado"), sem preview nem categorias, só o essencial pra
-// focar/ocultar/excluir.
+// incluídas). Cards do canvas sem entrada correspondente na sessão trazem
+// as propriedades reidratadas do pluginData do próprio card (2026-09-29 --
+// antes eram sempre null; ver _qsBuildElementCard/code.js). `properties`
+// ainda pode vir `null` para cards legados (criados antes dessa mudança,
+// sem a chave gravada) -- nesse caso a UI mostra "não disponível", mesmo
+// comportamento de antes. Em qualquer caso, quem decide se o item já tem
+// card no canvas (e portanto bloqueia inserir/converter de novo) é
+// `insertedCardId`, nunca `properties`.
 function handleQuickSpecCanvasCardsList(msg) {
   const canvasCards = msg.cards || [];
   const knownCardIds = new Set(_quickSpecSessionResults.map(el => el.insertedCardId).filter(Boolean));
@@ -303,7 +374,7 @@ function handleQuickSpecCanvasCardsList(msg) {
       nodeId: cc.sourceNodeId,
       name: cc.name,
       nodeType: cc.nodeType,
-      properties: null,
+      properties: cc.properties,
       hidden: false,
       insertedCardId: cc.cardId
     });
@@ -316,19 +387,36 @@ function handleQuickSpecCanvasCardsList(msg) {
     _quickSpecSessionResults.sort((a, b) => a.tag.localeCompare(b.tag, 'en', { numeric: true }));
     _quickSpecRenderList();
   }
+  // Botão "Limpar Dados" da Home já pode ter avaliado hasDocumentedContent()
+  // ANTES desta resposta chegar (a sincronização é assíncrona, dispara ao
+  // entrar nesta tela -- ver quickSpecSyncFromCanvas/navigate) -- recalcula
+  // pra não deixar o botão preso desabilitado com cards reais no canvas.
+  if (typeof updateHomeFooterButtonsState === 'function') updateHomeFooterButtonsState();
 }
 window.handleQuickSpecCanvasCardsList = handleQuickSpecCanvasCardsList;
 
 function _quickSpecUpdateEmptyState() {
   const empty = document.getElementById('quick-spec-empty');
   const toolbar = document.getElementById('quick-spec-toolbar');
+  const insertRow = document.getElementById('quick-spec-insert-row');
   const insertAll = document.getElementById('quick-spec-insert-all');
   const hasResults = _quickSpecSessionResults.length > 0;
   if (empty) empty.classList.toggle('hidden', hasResults);
   if (toolbar) toolbar.classList.toggle('hidden', !hasResults);
+  const countEl = document.getElementById('quick-spec-count');
+  if (countEl) countEl.textContent = _quickSpecSessionResults.length;
+  if (insertRow) {
+    insertRow.classList.toggle('hidden', !hasResults);
+    insertRow.classList.toggle('flex', hasResults);
+  }
+  // Desabilita o lote quando não sobra nenhum elemento visível ainda sem
+  // card no canvas -- "inserir todos" não teria nada de novo a fazer
+  // (pedido do usuário, 2026-09-29). `insertedCardId` é o critério de "já
+  // tem card", não `properties` (que agora pode vir preenchido mesmo em
+  // itens recuperados do canvas, ver handleQuickSpecCanvasCardsList).
   if (insertAll) {
-    insertAll.classList.toggle('hidden', !hasResults);
-    insertAll.classList.toggle('flex', hasResults);
+    const anyPending = _quickSpecSessionResults.some(el => !el.hidden && !el.insertedCardId);
+    insertAll.disabled = hasResults && !anyPending;
   }
 }
 
@@ -390,12 +478,49 @@ function _quickSpecMaybeDeleteCanvasCards(removedElements) {
   parent.postMessage({ pluginMessage: { type: 'quick-spec-delete-canvas-cards', cardIds } }, '*');
 }
 
+// Fecha o "buraco" deixado na sequência de tags depois de uma exclusão
+// individual (pedido do usuário, 2026-09-29: excluir "C" faz D virar C, E
+// virar D...). Só renomeia itens SEM card no canvas (!insertedCardId) -- um
+// item já inserido tem sua tag "impressa" fisicamente no chip do card
+// (chipText.characters, setado uma vez na criação em
+// _qsBuildElementCard/_qsBuildConnectorForCard, code.js) e não existe hoje
+// nenhum canal pra atualizar esse texto depois; renomear na lista sem tocar
+// o card criaria uma dessincronização visível (lista diz "C", card mostra
+// "D"). Tags de itens com card ficam fixas e reservam seu índice -- os
+// itens sem card preenchem, em ordem, os índices restantes (0, 1, 2...),
+// pulando os fixos, o que fecha buracos reais sem nunca colidir com uma tag
+// já gravada num card físico.
+function _quickSpecCloseTagGap() {
+  const fixedIndexes = new Set(
+    _quickSpecSessionResults.filter(el => el.insertedCardId).map(el => _quickSpecTagToIndex(el.tag))
+  );
+  const pending = _quickSpecSessionResults
+    .filter(el => !el.insertedCardId)
+    .sort((a, b) => _quickSpecTagToIndex(a.tag) - _quickSpecTagToIndex(b.tag));
+
+  let nextIndex = 0;
+  let maxIndexUsed = -1;
+  pending.forEach(el => {
+    while (fixedIndexes.has(nextIndex)) nextIndex++;
+    el.tag = _quickSpecTagFromIndex(nextIndex);
+    maxIndexUsed = Math.max(maxIndexUsed, nextIndex);
+    nextIndex++;
+  });
+
+  // O contador da próxima tag nova precisa continuar depois do maior índice
+  // realmente em uso agora (fixo ou reordenado) -- senão a próxima captura
+  // pode gerar uma tag que colide com uma já existente na lista/canvas.
+  fixedIndexes.forEach(i => { maxIndexUsed = Math.max(maxIndexUsed, i); });
+  _quickSpecTagCounter = maxIndexUsed + 1;
+}
+
 // Excluir um elemento da lista. Se ele já tiver card no canvas, pergunta se
 // o card também deve ser apagado (ver _quickSpecMaybeDeleteCanvasCards).
 function quickSpecRemoveElement(idx) {
   const removed = _quickSpecSessionResults[idx];
   if (!removed) return;
   _quickSpecSessionResults.splice(idx, 1);
+  _quickSpecCloseTagGap();
   _quickSpecRenderList();
   _quickSpecMaybeDeleteCanvasCards([removed]);
 }
@@ -411,6 +536,11 @@ function quickSpecRemoveAllElements() {
   if (!confirmed) return;
   const removed = _quickSpecSessionResults.slice();
   _quickSpecSessionResults = [];
+  // Diferente da exclusão individual (nunca reaproveita tag): esvaziar a
+  // lista inteira reinicia a sequência A/B/C -- não sobra nenhum item na UI
+  // que possa colidir com uma tag reaproveitada (pedido do usuário,
+  // 2026-09-29).
+  _quickSpecTagCounter = 0;
   _quickSpecRenderList();
   _quickSpecMaybeDeleteCanvasCards(removed);
 }
@@ -437,13 +567,17 @@ function _quickSpecRenderList() {
   _quickSpecUpdateEmptyState();
 
   list.innerHTML = _quickSpecSessionResults.map((el, idx) => {
-    // properties === null: entrada MÍNIMA recuperada do canvas (ver
-    // quickSpecSyncFromCanvas/handleQuickSpecCanvasCardsList) -- o card já
-    // existe no canvas, mas suas propriedades escaneadas se perderam num
-    // reload anterior. Sem accordion de propriedades nem "Inserir" (já está
-    // lá); só focar/ocultar/excluir continuam disponíveis.
-    const isCanvasOnly = el.properties === null;
-    const searchText = `${el.name} ${el.tag} ${isCanvasOnly ? '' : _quickSpecPropSearchText(el.properties)}`.toLowerCase();
+    // properties === null: card legado (criado antes de 2026-09-29, sem a
+    // chave de propriedades gravada no pluginData) -- não tem como mostrar
+    // texto de propriedades, só o aviso de "não disponível" (ver
+    // handleQuickSpecCanvasCardsList/code.js). Não confundir com "já tem
+    // card no canvas", que é sempre `insertedCardId` -- um item recuperado
+    // do canvas pode muito bem ter properties reidratadas (não é mais
+    // sempre null) e ainda assim já ter card, então continuar bloqueado
+    // pra inserir/converter de novo.
+    const hasNoPropertiesData = el.properties === null;
+    const alreadyOnCanvas = !!el.insertedCardId;
+    const searchText = `${el.name} ${el.tag} ${hasNoPropertiesData ? '' : _quickSpecPropSearchText(el.properties)}`.toLowerCase();
     // Hierarquia: quando existe token, ele vem PRIMEIRO e em destaque (é a
     // informação que o dev deve consumir -- itens vindos de lib já têm a
     // propriedade bem definida pelo token); o valor bruto vem logo abaixo,
@@ -451,7 +585,7 @@ function _quickSpecRenderList() {
     // principal (nada a destacar acima dele) -- pedido do usuário
     // (2026-09-25, com exemplo real de "[m3] Top app bar": token de cor
     // aparecia depois do hex bruto, precisava ser o oposto).
-    const propsHtml = isCanvasOnly
+    const propsHtml = hasNoPropertiesData
       ? `<p class="text-[10px] text-slate-400 dark:text-slate-500 italic leading-snug">Card recuperado do canvas -- propriedades não disponíveis nesta sessão (re-escaneie o elemento se precisar consultá-las de novo).</p>`
       : el.properties.map(p => {
         if (p.tokenName) {
@@ -504,11 +638,16 @@ function _quickSpecRenderList() {
             ${propsHtml}
           </div>
           <div class="p-3 space-y-2">
-            ${isCanvasOnly ? '' : `
+            ${alreadyOnCanvas ? '' : `
             <button onclick="quickSpecInsertCanvasCards(${idx})"
-              class="w-full py-2 bg-blue-500 hover:bg-blue-600 text-white text-[11px] font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5">
+              class="w-full py-2 bg-blue-500 hover:bg-blue-600 text-white text-[11px] font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-blue-500">
               <i data-lucide="download" class="w-3.5 h-3.5"></i>
               Inserir card no canvas
+            </button>
+            <button onclick="quickSpecConvertToDetailedSpec(${idx})"
+              class="w-full py-2 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line hover:bg-gray-50 dark:hover:bg-slate-800 text-[#005ca9] dark:text-blue-400 text-[11px] font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5">
+              <i data-lucide="file-plus-2" class="w-3.5 h-3.5"></i>
+              Converter em Spec Detalhada
             </button>`}
             <button onclick="quickSpecRemoveElement(${idx})"
               class="w-full py-2 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line hover:bg-gray-50 dark:hover:bg-slate-800 text-red-500 text-[11px] font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5">
@@ -670,18 +809,88 @@ function quickSpecInsertCanvasCards(idx) {
 }
 window.quickSpecInsertCanvasCards = quickSpecInsertCanvasCards;
 
+// Guarda qual elemento da sessão está em conversão -- só entre o clique em
+// "Converter em Spec Detalhada" e o desfecho do fluxo (spec-created ou
+// cancelamento). Casado pela TAG (igual handleQuickSpecCanvasResult), nunca
+// pelo índice puro: o índice muda se a lista for reordenada/filtrada
+// enquanto o modal de Spec Detalhada está aberto por cima.
+window._quickSpecPendingConversionTag = null;
+
+// Converte um item do Spec Express em Spec Detalhada -- abre o fluxo normal
+// de criação (openSpecFormModal, specifications.js) já com o elemento de
+// origem vinculado e as propriedades já escaneadas como ponto de partida da
+// nota. Reaproveita o fluxo inteiro (propriedades -> posição -> exceção)
+// sem duplicar nada dele; só o desfecho (spec-created, ver messages.js) é
+// que sabe completar a conversão removendo o card Express original.
+function quickSpecConvertToDetailedSpec(idx) {
+  const el = _quickSpecSessionResults[idx];
+  // Bloqueio é por já ter card no canvas (insertedCardId), não por
+  // properties -- desde 2026-09-29 um item recuperado do canvas pode ter
+  // properties reidratadas mesmo já tendo card; conversão continua
+  // indisponível nesse caso (mesmo comportamento de antes, ver
+  // _quickSpecRenderList/alreadyOnCanvas).
+  if (!el || el.insertedCardId) return;
+  if (typeof openSpecFormModal !== 'function') return;
+
+  // Fixa o elemento de origem ANTES de abrir o modal -- openSpecFormModal só
+  // dispara 'get-selection-id-for-spec' (que pegaria a seleção atual do
+  // canvas, não o elemento do Spec Express) quando este valor ainda está
+  // vazio.
+  window._pendingSpecTargetNodeId = el.nodeId;
+  window._quickSpecPendingConversionTag = el.tag;
+
+  openSpecFormModal();
+
+  // Nome do elemento já é conhecido (veio do próprio Spec Express) -- evita
+  // esperar a resposta assíncrona de 'get-node-name' só pra preencher o
+  // indicador de elemento vinculado nos 3 modais do fluxo.
+  if (typeof _onNodeNameForSpec === 'function') _onNodeNameForSpec(el.name);
+
+  const noteField = document.getElementById('ann-note');
+  if (noteField && el.properties && el.properties.length > 0) {
+    const propsText = el.properties.map(p => {
+      const valueLabel = p.tokenName ? `${p.tokenName}${p.libName ? ` (${p.libName})` : ''}` : String(p.value);
+      return `${p.label}: ${valueLabel}`;
+    }).join('\n');
+    noteField.value = propsText.slice(0, 500);
+    if (typeof _updateCharCount === 'function') _updateCharCount(noteField, 500);
+  }
+}
+window.quickSpecConvertToDetailedSpec = quickSpecConvertToDetailedSpec;
+
+// Chamado pelo handler de 'spec-created' (messages.js) quando havia uma
+// conversão pendente -- remove o card Express original do canvas (mesmo
+// caminho de exclusão já usado no botão "Excluir da lista", sem confirmação
+// window.confirm: a criação da Spec Detalhada JÁ é a confirmação explícita
+// do designer) e tira o item da lista da sessão.
+function _quickSpecFinishPendingConversion() {
+  const tag = window._quickSpecPendingConversionTag;
+  window._quickSpecPendingConversionTag = null;
+  if (!tag) return;
+  const idx = _quickSpecSessionResults.findIndex(e => e.tag === tag);
+  if (idx === -1) return;
+  const el = _quickSpecSessionResults[idx];
+  _quickSpecSessionResults.splice(idx, 1);
+  _quickSpecRenderList();
+  if (el.insertedCardId) {
+    parent.postMessage({ pluginMessage: { type: 'quick-spec-delete-canvas-cards', cardIds: [el.insertedCardId] } }, '*');
+  }
+}
+window._quickSpecFinishPendingConversion = _quickSpecFinishPendingConversion;
+
 // Insere todos os elementos NÃO ocultos da sessão de uma vez -- ação de
 // lote equivalente ao antigo "Inserir todos os cards no canvas" por frame,
-// agora aplicada à lista plana inteira. Itens "recuperados do canvas"
-// (properties === null, ver handleQuickSpecCanvasCardsList) já TÊM card no
-// canvas -- reinserir seria duplicar, e o botão "Inserir card no canvas" já
-// nem aparece pra eles individualmente (ver _quickSpecRenderList); o lote
-// precisa do mesmo filtro, senão manda properties/nodeId potencialmente
-// vazios pro backend.
+// agora aplicada à lista plana inteira. Itens que já têm card no canvas
+// (insertedCardId, ver handleQuickSpecCanvasCardsList) ficam de fora --
+// reinserir seria duplicar, e o botão "Inserir card no canvas" já nem
+// aparece pra eles individualmente (ver _quickSpecRenderList/
+// alreadyOnCanvas). Critério é só insertedCardId, não mais properties
+// (que desde 2026-09-29 pode vir preenchido mesmo em itens recuperados do
+// canvas).
 function quickSpecInsertAllCanvasCards() {
-  const visible = _quickSpecSessionResults.filter(el => !el.hidden && el.properties !== null);
+  const visible = _quickSpecSessionResults.filter(el => !el.hidden && !el.insertedCardId);
   if (visible.length === 0) {
-    showToast('Nenhum elemento visível para inserir.', 'error');
+    showToast('Nenhum elemento pendente de inserção.', 'error');
     return;
   }
   _quickSpecOpenLayoutModal(visible.map(el => ({ tag: el.tag, nodeId: el.nodeId, name: el.name, nodeType: el.nodeType, properties: el.properties })));

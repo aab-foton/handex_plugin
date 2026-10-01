@@ -9,7 +9,7 @@
         <h3 id="about-modal-title" class="flex items-center gap-2 text-[15px] font-extrabold text-slate-800 dark:text-white">
           <i data-lucide="package" class="w-4 h-4 text-[#005ca9]"></i> Sobre o Handex
         </h3>
-        <button onclick="closeModal('about-modal')" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-500 dark:text-dark-muted shrink-0">
+        <button onclick="closeModal('about-modal')" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-800 rounded-2xl transition-colors text-slate-500 dark:text-dark-muted shrink-0">
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
@@ -55,7 +55,7 @@
 
 <!-- MODAL GENÉRICA DE LOADING (2026-09-25) -- padrão único a ser reaproveitado
      por QUALQUER etapa do Handex que precise de feedback bloqueante de
-     progresso (ex: criação de cards do Spec Express), em vez de cada
+     progresso (ex: criação de cards de Specs Rápidas), em vez de cada
      feature nova inventar seu próprio loading inline. Modelada no mesmo
      padrão já usado no plugin irmão hac (overlay escurecido + blur, card
      central, ícone Lucide `loader-2` com `animate-spin` como spinner) e no
@@ -147,7 +147,7 @@
     <div class="bg-white dark:bg-dark-bg w-full max-w-[420px] max-h-[85vh] rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line overflow-hidden flex flex-col">
       <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-line flex items-center justify-between shrink-0">
         <h3 id="export-modal-title" class="text-[15px] font-extrabold text-slate-800 dark:text-white">Exportar</h3>
-        <button onclick="closeModal('export-modal')" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-500 dark:text-dark-muted shrink-0">
+        <button onclick="closeModal('export-modal')" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-800 rounded-2xl transition-colors text-slate-500 dark:text-dark-muted shrink-0">
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
@@ -180,7 +180,7 @@
            executeSelectedExports em design-data.js). Ficha em PDF é o
            primeiro item da lista e vem pré-marcado por ser a exportação
            mais comum do fluxo (Ficha pronta pra compartilhar). -->
-      <ul id="export-checklist" class="space-y-2">
+      <ul id="export-checklist" class="space-y-2" onchange="_updateExecuteExportsButtonState()">
 
         <li>
           <label class="flex items-center gap-3 px-4 py-3 bg-gray-50 dark:bg-dark-bg hover:bg-gray-100 dark:hover:bg-slate-800 border border-gray-200 dark:border-dark-line rounded-2xl transition-colors cursor-pointer">
@@ -256,8 +256,8 @@
       </div>
 
       <div class="px-5 py-4 border-t border-gray-100 dark:border-dark-line shrink-0">
-        <button onclick="executeSelectedExports()"
-          class="w-full flex items-center justify-center gap-2 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl text-[12px] font-bold transition-all shadow-sm">
+        <button id="btn-execute-selected-exports" onclick="executeSelectedExports()"
+          class="w-full flex items-center justify-center gap-2 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl text-[12px] font-bold transition-all shadow-sm disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-blue-500">
           <i data-lucide="download" class="w-4 h-4" aria-hidden="true"></i>
           Exportar selecionados
         </button>
@@ -272,7 +272,7 @@
           <h3 id="ai-context-extra-frames-title" class="text-[15px] font-extrabold text-slate-800 dark:text-white">Incluir mais frames no contexto?</h3>
           <p class="text-[11px] text-slate-500 dark:text-dark-muted mt-0.5">As telas já documentadas sempre entram. Marque outras telas completas do canvas para dar mais contexto visual ao Figma Make.</p>
         </div>
-        <button onclick="closeModal('ai-context-extra-frames-modal')" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-500 dark:text-dark-muted shrink-0">
+        <button onclick="closeModal('ai-context-extra-frames-modal')" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-800 rounded-2xl transition-colors text-slate-500 dark:text-dark-muted shrink-0">
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
@@ -305,7 +305,7 @@
           <h3 class="text-[15px] font-extrabold text-slate-800 dark:text-white">Versionar Ficha de Projeto</h3>
           <p class="text-[11px] text-slate-500 dark:text-dark-muted mt-0.5">Já existe uma ficha gerada. Escolha o tipo de atualização.</p>
         </div>
-        <button onclick="closeModal('versioning-modal')" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-500 dark:text-dark-muted">
+        <button onclick="closeModal('versioning-modal')" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-800 rounded-2xl transition-colors text-slate-500 dark:text-dark-muted">
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
@@ -534,8 +534,8 @@
           </p>
         </div>
         <div class="p-4 border-t border-gray-100 dark:border-dark-line flex justify-end gap-3">
-          <button onclick="closeModal('decision-modal')" class="px-4 py-2 text-[13px] font-bold text-slate-600 dark:text-dark-muted bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Cancelar</button>
-          <button onclick="confirmDecisionConnection()" class="px-6 py-2 bg-blue-500 text-white font-bold rounded-xl hover:bg-blue-600 transition-all shadow-md">Confirmar</button>
+          <button onclick="closeModal('decision-modal')" class="px-4 py-2 text-[13px] font-bold text-slate-600 dark:text-dark-muted bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Cancelar</button>
+          <button onclick="confirmDecisionConnection()" class="px-6 py-2 bg-blue-500 text-white font-bold rounded-2xl hover:bg-blue-600 transition-all shadow-md">Confirmar</button>
         </div>
       </div>
     </div>
@@ -700,7 +700,7 @@
           </div>
         </div>
         <div class="p-4 border-t border-gray-100 dark:border-dark-line flex justify-end">
-          <button onclick="closeHelpAndReturn()" class="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-xl transition-all">Entendi</button>
+          <button onclick="closeHelpAndReturn()" class="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-2xl transition-all">Entendi</button>
         </div>
       </div>
     </div>
@@ -766,8 +766,8 @@
           </div>
         </div>
         <div class="p-4 border-t border-gray-100 dark:border-dark-line flex justify-end gap-2 shrink-0">
-          <button onclick="closeBriefingQuestionModal()" class="px-4 py-2 text-slate-600 dark:text-dark-muted font-bold text-[12px] bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Cancelar</button>
-          <button onclick="confirmBriefingQuestionModal()" class="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-bold text-[12px] rounded-xl transition-all">Adicionar</button>
+          <button onclick="closeBriefingQuestionModal()" class="px-4 py-2 text-slate-600 dark:text-dark-muted font-bold text-[12px] bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Cancelar</button>
+          <button onclick="confirmBriefingQuestionModal()" class="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-bold text-[12px] rounded-2xl transition-all">Adicionar</button>
         </div>
       </div>
     </div>
@@ -795,7 +795,7 @@
     <div class="relative w-full max-w-[360px] max-h-full bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
       <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line shrink-0">
         <h3 id="spec-modal-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-2">
-          <i data-lucide="plus-circle" class="w-4 h-4 text-[#004d8d]" aria-hidden="true"></i> Criar Especificação/Nota
+          <i data-lucide="plus-circle" class="w-4 h-4 text-[#004d8d]" aria-hidden="true"></i> Criar Spec Detalhada
         </h3>
         <div class="flex items-center gap-1 shrink-0">
           <button onclick="openHelp('spec-form-modal')" title="Ajuda" aria-label="Ajuda" class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-[#005ca9] transition-colors">
@@ -1116,7 +1116,7 @@
       </div>
       <div class="p-4 border-t border-gray-100 dark:border-dark-line flex gap-2">
         <button onclick="backToSpecPositionFromException()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 dark:text-dark-muted bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line hover:bg-gray-50 dark:hover:bg-slate-800 rounded-2xl transition-colors">Voltar</button>
-        <button onclick="finalizeSpecCreation()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-blue-500 hover:bg-blue-600 rounded-2xl transition-colors shadow-lg shadow-blue-500/20">Criar Especificação</button>
+        <button onclick="finalizeSpecCreation()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-blue-500 hover:bg-blue-600 rounded-2xl transition-colors shadow-lg shadow-blue-500/20">Criar Spec Detalhada</button>
       </div>
     </div>
   </div>
@@ -1167,7 +1167,8 @@
       </div>
       <div class="p-4 border-t border-gray-100 dark:border-dark-line flex gap-2">
         <button onclick="closeMeasureModal()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 dark:text-dark-muted bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line hover:bg-gray-50 dark:hover:bg-slate-800 rounded-2xl transition-colors">Cancelar</button>
-        <button onclick="executeMeasurement()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-blue-500 hover:bg-blue-600 rounded-2xl transition-colors shadow-lg shadow-blue-500/20">Inserir</button>
+        <button id="btn-execute-measurement" onclick="executeMeasurement()" disabled title="Selecione ao menos um tipo de medida"
+          class="flex-1 py-2.5 text-[12px] font-bold text-white bg-blue-500 hover:bg-blue-600 rounded-2xl transition-colors shadow-lg shadow-blue-500/20 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-blue-500 disabled:shadow-none">Inserir</button>
       </div>
     </div>
   </div>
@@ -1434,7 +1435,7 @@
         <h3 class="text-[14px] font-extrabold text-slate-800 dark:text-white leading-tight">Dados importados!</h3>
         <p id="import-modal-subtitle" class="text-[11px] text-slate-500 dark:text-dark-muted mt-0.5 leading-tight">Versão importada com sucesso.</p>
       </div>
-      <button onclick="closeModal('import-apply-modal')" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400 dark:text-dark-muted shrink-0">
+      <button onclick="closeModal('import-apply-modal')" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-800 rounded-2xl transition-colors text-slate-400 dark:text-dark-muted shrink-0">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
     </div>
@@ -1523,11 +1524,11 @@
         <i data-lucide="check-circle-2" class="w-5 h-5 text-[#005ca9] dark:text-blue-400"></i>
       </div>
       <div>
-        <p id="frames-relevance-modal-title" class="text-[13px] font-bold text-slate-800 dark:text-white">Nada fora do DSC encontrado</p>
+        <p id="frames-relevance-modal-title" class="text-[13px] font-bold text-slate-800 dark:text-white">Tudo parece estar dentro do DSC</p>
       </div>
     </div>
     <p class="text-[11.5px] text-slate-600 dark:text-dark-muted leading-relaxed">
-      Dentre os itens escaneados, nenhum elemento parece estar fora do escopo do DSC. Deseja incluir a lista de frames mapeados no handoff mesmo assim?
+      Nenhum item foi marcado como personalizado e nenhum frame é Novo Componente. A Ficha pode seguir sem a lista de frames. Quer incluí-la mesmo assim?
     </p>
     <div class="flex flex-col gap-2">
       <button onclick="_resolveFramesRelevanceModal(true)"
@@ -1612,7 +1613,7 @@
         </label>
         <label class="flex items-center gap-2 text-[11px] text-slate-700 dark:text-white cursor-pointer">
           <input type="checkbox" id="clear-canvas-quickspec" onchange="updateClearCanvasButtonState()" class="w-4 h-4 rounded accent-red-500">
-          Spec Express
+          Specs Rápidas
         </label>
       </div>
 
@@ -1763,7 +1764,7 @@
         </div>
         <h3 class="text-[14px] font-extrabold text-slate-800 dark:text-white">Gerar Ficha de Handoff</h3>
       </div>
-      <button onclick="closeModal('handoff-inject-modal')" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400 dark:text-dark-muted">
+      <button onclick="closeModal('handoff-inject-modal')" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-800 rounded-2xl transition-colors text-slate-400 dark:text-dark-muted">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
     </div>
@@ -1882,7 +1883,7 @@
         </div>
         <h3 class="text-[14px] font-extrabold text-slate-800 dark:text-white">Editar Conexão</h3>
       </div>
-      <button onclick="closeEditFlowModal()" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400 dark:text-dark-muted">
+      <button onclick="closeEditFlowModal()" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-800 rounded-2xl transition-colors text-slate-400 dark:text-dark-muted">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
     </div>
@@ -1909,19 +1910,19 @@
       <div class="space-y-3">
         <label class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider px-1">Tipo da Conexão</label>
         <div class="grid grid-cols-2 gap-2">
-          <button type="button" onclick="_selectEditFlowType('line_solid')" id="edit-flow-type-line_solid" title="Conecta telas em sequência direta" class="edit-flow-type-card flex flex-col items-center gap-1 p-2.5 border-2 border-gray-100 dark:border-dark-line rounded-xl transition-all text-center">
+          <button type="button" onclick="_selectEditFlowType('line_solid')" id="edit-flow-type-line_solid" title="Conecta telas em sequência direta" class="edit-flow-type-card flex flex-col items-center gap-1 p-2.5 border-2 border-gray-100 dark:border-dark-line rounded-2xl transition-all text-center">
             <i data-lucide="arrow-right" class="w-4 h-4 text-slate-500 dark:text-dark-muted"></i>
             <span class="text-[9px] font-bold text-slate-700 dark:text-white uppercase tracking-wider">Sequência</span>
           </button>
-          <button type="button" onclick="_selectEditFlowType('line_dashed')" id="edit-flow-type-line_dashed" title="Indica uma troca assíncrona (ex: notificação, e-mail)" class="edit-flow-type-card flex flex-col items-center gap-1 p-2.5 border-2 border-gray-100 dark:border-dark-line rounded-xl transition-all text-center">
+          <button type="button" onclick="_selectEditFlowType('line_dashed')" id="edit-flow-type-line_dashed" title="Indica uma troca assíncrona (ex: notificação, e-mail)" class="edit-flow-type-card flex flex-col items-center gap-1 p-2.5 border-2 border-gray-100 dark:border-dark-line rounded-2xl transition-all text-center">
             <i data-lucide="move-right" class="w-4 h-4 text-slate-500 dark:text-dark-muted"></i>
             <span class="text-[9px] font-bold text-slate-700 dark:text-white uppercase tracking-wider">Mensagem</span>
           </button>
-          <button type="button" onclick="_selectEditFlowType('diamond')" id="edit-flow-type-diamond" title="Marca um ponto de decisão do usuário (ex: Sim/Não)" class="edit-flow-type-card flex flex-col items-center gap-1 p-2.5 border-2 border-gray-100 dark:border-dark-line rounded-xl transition-all text-center">
+          <button type="button" onclick="_selectEditFlowType('diamond')" id="edit-flow-type-diamond" title="Marca um ponto de decisão do usuário (ex: Sim/Não)" class="edit-flow-type-card flex flex-col items-center gap-1 p-2.5 border-2 border-gray-100 dark:border-dark-line rounded-2xl transition-all text-center">
             <div class="w-4 h-4 rotate-45 border-2 border-slate-400 dark:border-slate-500"></div>
             <span class="text-[9px] font-bold text-slate-700 dark:text-white uppercase tracking-wider">Decisão</span>
           </button>
-          <button type="button" onclick="_selectEditFlowType('diamond_dashed')" id="edit-flow-type-diamond_dashed" title="Marca uma decisão condicional/opcional" class="edit-flow-type-card flex flex-col items-center gap-1 p-2.5 border-2 border-gray-100 dark:border-dark-line rounded-xl transition-all text-center">
+          <button type="button" onclick="_selectEditFlowType('diamond_dashed')" id="edit-flow-type-diamond_dashed" title="Marca uma decisão condicional/opcional" class="edit-flow-type-card flex flex-col items-center gap-1 p-2.5 border-2 border-gray-100 dark:border-dark-line rounded-2xl transition-all text-center">
             <div class="w-4 h-4 rotate-45 border-2 border-dashed border-slate-400 dark:border-slate-500"></div>
             <span class="text-[9px] font-bold text-slate-700 dark:text-white uppercase">Decisão (Opc.)</span>
           </button>
@@ -1981,7 +1982,7 @@
         </div>
         <h3 class="text-[14px] font-extrabold text-slate-800 dark:text-white">Editar Linha da Spec</h3>
       </div>
-      <button onclick="closeEditSpecConnectorModal()" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-400 dark:text-dark-muted">
+      <button onclick="closeEditSpecConnectorModal()" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-800 rounded-2xl transition-colors text-slate-400 dark:text-dark-muted">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
     </div>

@@ -29,7 +29,7 @@ const ONBOARDING_TOOLS = {
     docUrl: 'https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=1-54',
     purpose: 'É o painel central do handoff: daqui você navega para cada ferramenta de documentação e, quando tudo estiver pronto, consolida o trabalho numa Ficha de Handoff única no canvas.',
     steps: [
-      { text: 'Os cards levam a cada ferramenta do handoff: <strong>Informações do Projeto</strong>, <strong>Escanear Tokens</strong>, <strong>Anotar Specs</strong>, <strong>Anotar Medidas</strong>, <strong>Fluxos de Tela</strong> e <strong>Spec Express</strong>.' },
+      { text: 'Os cards levam a cada ferramenta do handoff: <strong>Informações do Projeto</strong>, <strong>Escanear Tokens</strong>, <strong>Anotar Specs Detalhadas</strong>, <strong>Anotar Specs Rápidas</strong>, <strong>Anotar Medidas</strong> e <strong>Fluxos de Tela</strong>.' },
       { text: 'Você pode <strong>reorganizar os cards</strong> do jeito que preferir: passe o mouse sobre um card, segure a alcinha <strong>⠿</strong> que aparece no canto e arraste sobre outro card para trocar de lugar.' },
       { text: 'A ordem escolhida fica <strong>salva neste computador</strong> — é uma preferência pessoal sua, não é salva no projeto nem exportada junto com a ficha.' },
       { text: 'Quando terminar de documentar, use <strong>Gerar Ficha de Handoff</strong> no rodapé para consolidar tudo no canvas.' }
@@ -88,20 +88,22 @@ const ONBOARDING_TOOLS = {
   },
   specs: {
     view: 'view-specifications',
-    title: 'Anotar Specs',
+    title: 'Anotar Specs Detalhadas',
     icon: 'tag',
     color: '#4f46e5',
     format: 'stepper',
     docUrl: 'https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=117-431',
     purpose: 'Registra decisões técnicas específicas de um elemento — regra de negócio, comportamento, valor de token aplicado — que o scan automático não capta sozinho. É a camada de contexto que só o designer sabe explicar, ancorada visualmente no elemento certo do canvas.',
     steps: [
+      { text: '<strong>Quando usar esta e quando usar a outra:</strong> use <strong>Anotar Specs Detalhadas</strong> quando o dev precisa saber mais do que os valores — uma regra, um comportamento, uma exceção — ou quando a informação deve entrar na Ficha de Handoff. Se ele só precisa dos valores do elemento (cor, medidas, tipografia) e não tem acesso ao DevMode, use <strong>Anotar Specs Rápidas</strong>. A Detalhada traz tudo o que a Rápida traz, e mais.' },
       { text: '<strong>Selecione um elemento</strong> no canvas do Figma — pode ser um componente, texto, ícone ou qualquer elemento.' },
       { text: 'Clique no <strong>botão +</strong> no topo da view. O formulário abre com o elemento vinculado, mostrado em <strong>"Especificando: [nome]"</strong> no topo — essa referência fica fixa do início ao fim do fluxo.' },
       { text: 'Defina a <strong>Tag</strong> (referência do grupo, ex: A, B, A1) e a <strong>Categoria</strong> — Informação extra, Comportamento, Regra de Negócio ou Dados da API; a cor do grupo vem automaticamente da categoria. Adicione uma <strong>Nota personalizada</strong> (opcional), escolha se quer inserir linha de conexão no canvas e, em <strong>Propriedades</strong>, marque os atributos técnicos identificados no scan.' },
       { text: 'Ao avançar, você entra direto na etapa <strong>Posição no Canvas</strong>: o modal continua aberto e uma prévia tracejada já aparece no canvas — arraste-a até onde quiser e clique em <strong>Usar esta posição</strong>. O fluxo já segue direto para a próxima etapa (Cenário de Exceção). Não quer marcar? Clique em <strong>Pular</strong> e a spec nasce solta à direita do elemento.' },
       { text: 'Sem marcar posição, arraste o card pra onde quiser depois e use <strong>Travar especificação</strong> no menu "..." para concluir: a linha guia é recalculada automaticamente a partir de onde o card ficou. Mesma letra empilha verticalmente; letra diferente abre nova coluna.' },
       { text: 'No cabeçalho de cada grupo, você pode <strong>nomear o grupo</strong>, <strong>ocultar as linhas</strong> de conexão, <strong>ocultar o grupo</strong> inteiro, ou usar o menu "..." para travar/destravar e excluir o grupo todo.' },
-      { text: 'Para cenários alternativos, expanda uma spec e clique em <strong>+ Exceção</strong> — Erro, Sucesso, Alerta ou Confirmação.' }
+      { text: 'Para cenários alternativos, expanda uma spec e clique em <strong>+ Exceção</strong> — Erro, Sucesso, Alerta ou Confirmação.' },
+      { text: 'Já fez uma anotação em <strong>Anotar Specs Rápidas</strong> e quer detalhar? Expanda o item e clique em <strong>Converter em Spec Detalhada</strong> — o formulário abre com o elemento e as propriedades já preenchidos; ao concluir, o card da Spec Rápida é substituído pela Spec Detalhada no canvas.' }
     ],
     // Conteúdo migrado do popover "Tipo de especificação" (circle-help do
     // header e do modal de criação — ver spec-types-help-modal em
@@ -120,6 +122,22 @@ const ONBOARDING_TOOLS = {
         { icon: 'alert-triangle', text: '<strong>Cenário de Exceção</strong> não é uma categoria — é um registro à parte dentro da própria spec, com 4 subtipos: Sucesso, Erro, Alerta, Confirmação.' }
       ]
     }
+  },
+  quickSpec: {
+    view: 'view-quick-spec',
+    title: 'Anotar Specs Rápidas',
+    icon: 'zap',
+    color: '#0d9488',
+    format: 'stepper',
+    purpose: 'Reúne o essencial de um elemento para o dev que não tem acesso ao DevMode do Figma conseguir executar o trabalho: cor, espaçamento, tipografia, dimensões, raio, efeitos e componente, sempre com o valor real e, quando existir, o token e a biblioteca. É uma consulta pontual — não tem categoria, nota nem exceção, e não entra na Ficha de Handoff.',
+    steps: [
+      { text: '<strong>Quando usar esta e quando usar a outra:</strong> use <strong>Anotar Specs Rápidas</strong> para responder "quais são os valores deste elemento?". Se o dev também precisa saber o que implementar — uma regra, um comportamento, uma exceção — ou se a informação deve entrar na Ficha, use <strong>Anotar Specs Detalhadas</strong>. Começou rápida e ganhou importância? Expanda o item e clique em <strong>Converter em Spec Detalhada</strong>.' },
+      { text: 'Clique em <strong>Escanear</strong> e escolha quais propriedades quer buscar (cor, espaçamento, tipografia etc.).' },
+      { text: 'O plugin recolhe numa barra pequena. No canvas, <strong>segure Shift e clique</strong> em cada elemento que quer consultar — só o que você marcar com Shift entra. Depois clique em <strong>Concluir</strong>.' },
+      { text: 'Cada elemento vira um item da lista, com uma tag (A, B, C…). Expanda para ver os valores reais, com o token e a biblioteca quando existirem.' },
+      { text: 'Para deixar a consulta visível ao dev, use <strong>Inserir no canvas</strong>: cada elemento ganha um card ao lado, ligado a ele por uma linha guia.' },
+      { text: 'A lista some ao fechar o plugin, mas os cards já inseridos no canvas guardam os valores e voltam a aparecer ao reabrir a tela.' }
+    ]
   },
   medidas: {
     view: 'view-measurement',

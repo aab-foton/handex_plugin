@@ -1936,8 +1936,17 @@
       if (window._pendingSpecPosition) opts.pinnedPosition = window._pendingSpecPosition;
       if (window._pendingSpecTargetNodeId) opts.targetNodeId = window._pendingSpecTargetNodeId;
 
+      // closeSpecFormModal() limpa window._quickSpecPendingConversionTag
+      // (cancelamento de conversão) -- mas este é o caminho de SUCESSO, e o
+      // handler de 'spec-created' (messages.js) só roda depois, de forma
+      // assíncrona, quando essa marcação já teria sido apagada. Preserva o
+      // valor por fora da chamada e devolve em seguida, já que o envio real
+      // (postMessage) só acontece após o fechamento.
+      const _pendingConversionTag = window._quickSpecPendingConversionTag;
+
       closeSpecNewExceptionModal();
       closeSpecFormModal();
+      window._quickSpecPendingConversionTag = _pendingConversionTag;
       parent.postMessage({ pluginMessage: { type: 'create-unified-spec', opts } }, '*');
 
       window._pendingSpecOpts = null;
@@ -1968,7 +1977,7 @@
               <i data-lucide="file-text" class="w-16 h-16 text-slate-200 dark:text-slate-700" style="opacity:0.25"></i>
             </div>
             <p class="text-[12px] font-bold text-slate-600 dark:text-dark-muted text-center px-4 mb-1">Nenhuma especificação criada ainda</p>
-            <p class="text-[10px] text-slate-600 dark:text-dark-muted text-center px-6 mb-3">Selecione um elemento no canvas para começar.</p>
+            <p class="text-[10px] text-slate-600 dark:text-dark-muted text-center px-6 mb-3">Selecione um elemento no canvas para registrar decisões, regras e exceções. Só precisa dos valores? Use Anotar Specs Rápidas.</p>
             <button onclick="openSpecFormModal()" class="fab-inline" title="Criar especificação" aria-label="Criar especificação">
               <i data-lucide="plus" class="w-4 h-4 shrink-0"></i>
               <span>Nova spec</span>
@@ -3914,7 +3923,7 @@ function toggleLinkInput(show) {
 
       const modalTitle = document.querySelector('#spec-form-modal h3');
       if (modalTitle) {
-        modalTitle.innerHTML = '<i data-lucide="plus-circle" class="w-4 h-4 text-[#004d8d]"></i> Criar Especificação/Nota';
+        modalTitle.innerHTML = '<i data-lucide="plus-circle" class="w-4 h-4 text-[#004d8d]"></i> Criar Spec Detalhada';
       }
       const confirmBtn = document.getElementById('btn-spec-form-confirm');
       if (confirmBtn) {
@@ -3944,6 +3953,12 @@ function toggleLinkInput(show) {
       // o texto do botão a partir disso na próxima vez que essa etapa abrir.
       window._pendingSpecPosition = null;
       window._pendingSpecTargetNodeId = null;
+      // Cancelar uma conversão de Spec Express no meio do caminho (ver
+      // quickSpecConvertToDetailedSpec, quick-spec.js) não deve deixar essa
+      // marcação pendente pra próxima spec criada manualmente -- o Spec
+      // Express original só é removido do canvas quando finalizeSpecCreation
+      // de fato chega até o fim (evento spec-created), nunca aqui.
+      window._quickSpecPendingConversionTag = null;
     }
 
     // Chamada pelo handler de resposta (messages.js) com o id do elemento

@@ -209,7 +209,40 @@ Razão da regra: a conformidade não se aplica ao contêiner, mas ao que está d
 
 ---
 
-### 2.4 Anotar Specs
+### 2.4 Anotar Specs Detalhadas e Anotar Specs Rápidas
+
+O Handex tem **duas ferramentas de anotação de spec** na home, com propósitos diferentes. Nomenclatura (definida em 2026-09-30): **"Anotar Specs Detalhadas"** (antes só "Anotar Specs", ferramenta tradicional) e **"Anotar Specs Rápidas"** (antes "Spec Express", módulo novo). O termo "Spec Express" não é mais usado em texto de produto.
+
+**Princípio (decisão de produto, 2026-09-30):** o designer precisa conseguir distinguir quando usar cada uma — por isso o critério aparece dentro do plugin (cards da home, onboarding, "Como usar o plugin" e empty-state).
+- **Anotar Specs Rápidas** = o **essencial** para o dev que **não tem acesso ao DevMode do Figma** olhar e já conseguir executar o trabalho: valores reais do elemento (cor, espaçamento, tipografia, dimensões, raio, efeitos, componente), com o token e a biblioteca quando existem. Sem categoria, nota nem exceção; não entra na Ficha; é consulta pontual.
+- **Anotar Specs Detalhadas** = o **aprofundamento**. Superconjunto da Rápida: traz os mesmos valores (token + valor) e mais categoria, nota, link, cenários de exceção e posicionamento escolhido pelo designer, e entra na Ficha de Handoff como documentação formal.
+
+**Qual usar? Critério prático:**
+
+| Pergunta | Se a resposta é SIM |
+|---|---|
+| A informação precisa chegar ao dev dentro da Ficha de Handoff / Markdown / JSON exportado? | **Specs Detalhadas** |
+| Existe uma decisão do designer a registrar (comportamento, regra de negócio, dado da API, exceção)? | **Specs Detalhadas** |
+| O dev só precisa consultar valores de propriedade de um elemento (cor, tamanho, espaçamento, tipografia) e não tem acesso ao DevMode do Figma? | **Specs Rápidas** |
+| É consulta pontual, de rascunho, sem compromisso de virar documentação formal? | **Specs Rápidas** |
+
+Regra de bolso: **Rápida** responde "quais são os valores deste elemento?"; **Detalhada** responde "o que o dev precisa saber e implementar sobre este elemento?". Um elemento que começou como consulta rápida e passou a merecer documentação formal pode ser convertido (ver 2.4.2).
+
+**Comparativo:**
+
+| Aspecto | Anotar Specs Detalhadas | Anotar Specs Rápidas |
+|---|---|---|
+| Natureza | Spec formal e aprofundada, artefato entregue ao dev | Essencial para o dev sem DevMode: consulta pontual de valores, rascunho |
+| Persistência | `handoffData` — sobrevive a tudo, entra em export/import JSON | Lista da UI efêmera (reseta ao fechar o plugin); propriedades gravadas no próprio card do canvas (pluginData), recuperadas ao reabrir |
+| Conteúdo | Categoria (Informação Extra / Comportamento / Regra de Negócio / Dados da API), nota livre, link opcional, propriedades (token + valor, como na Rápida), cenários de exceção | Valores reais do elemento, com o token e a biblioteca de origem quando existem — sem categoria, nota nem exceção |
+| Conformidade DSC | Não avaliada pela spec em si (vive no scan de Escanear Tokens) | Não avaliada — achados brutos, sem veredito de conformidade |
+| Captura | Fluxo multi-etapa: dados básicos → propriedades → posicionamento manual no canvas (fantasma arrastável) → exceção | Em lote por Shift+clique; o plugin colapsa numa barrinha durante a seleção |
+| Visual no canvas | Azul de marca, GROUP + contour, letra/tag sequencial por frame | Cards num grid, ligados ao elemento por linha guia cinza semi-transparente |
+| Ficha de Handoff e Markdown | **Entra** | **Não entra** (decisão de produto) — nem nos contadores do handoff formal |
+| `_aiContext` (contexto para IA externa) | Entra como spec formal | Entra num bloco separado (`especificacoesRapidas`), marcado como achados brutos sem conformidade DSC avaliada |
+| Conversão | — | Botão "Converter em Spec Detalhada" no item da lista: o card rápido é substituído pela spec formal |
+
+#### 2.4.1 Anotar Specs Detalhadas — estrutura e regras
 
 **Estrutura de uma spec:**
 ```js
@@ -263,6 +296,24 @@ Razão da regra: a conformidade não se aplica ao contêiner, mas ao que está d
 - Specs são agrupadas por letra (A, B, C…) com conectores coloridos
 - Nome do grupo editável por letra
 - Visibilidade togglável por spec e por grupo
+
+#### 2.4.2 Anotar Specs Rápidas — regras
+
+Módulo isolado (`modules/quick-spec.js`, view `view-quick-spec`); nunca chama nem é chamado pela ferramenta de Specs Detalhadas nem pelo scan de tokens.
+
+**Fluxo:** Escanear → modal de filtro (categorias de propriedade a buscar, lista fixa) → plugin colapsa numa barra com contador + Cancelar/Concluir → designer marca elementos no canvas com **Shift+clique** (só o que foi marcado com Shift entra, evitando capturar cliques de passagem) → Concluir → propriedades são lidas e viram uma lista plana de accordions, 1 por elemento, com tag sequencial (A, B, C…) por sessão.
+
+**Regras:**
+- Lê **só o elemento marcado** com Shift+clique — nunca a subárvore (filhos e descendentes não entram; para consultar um filho, marque-o também).
+- Sem conformidade DSC avaliada, sem categoria, sem nota, sem exceção. O que aparece são valores brutos (e o token/biblioteca de origem quando existir) — não há veredito "conforme/fora do padrão".
+- A lista da UI é efêmera: não vai para `handoffData`, `localStorage` nem para export/import JSON. Cards já inseridos no canvas guardam as propriedades em pluginData e são recuperados ao reabrir o plugin/entrar na tela (`quick-spec-list-canvas-cards`). Cards legados (criados antes dessa gravação) voltam sem propriedades ("não disponível").
+- "Inserir no canvas" cria 1 card por elemento num grid (layout escolhido em modal), ligado ao elemento de origem por linha guia cinza semi-transparente.
+- "Ocultar" alterna a visibilidade na lista e, se o card já está no canvas, também do card e da linha guia.
+- Excluir individualmente fecha o buraco na sequência de tags, só entre itens ainda sem card no canvas; tags de itens já inseridos nunca são renumeradas.
+- **Não entra** na Ficha de Handoff, no Markdown exportado, nem nos contadores da home/Resumo. Não tem badge de check no card da home.
+- Entra no `_aiContext` num bloco próprio (`especificacoesRapidas`, só itens não ocultos), rotulado como achados brutos sem conformidade DSC avaliada.
+- "Converter em Spec Detalhada" abre o fluxo normal de Specs Detalhadas para o elemento; ao concluir, o card rápido é substituído pela spec formal.
+- "Limpar Dados"/limpar canvas tem opção própria para os cards de Specs Rápidas.
 
 ---
 
@@ -517,12 +568,12 @@ Mensagens exibidas como notificação nativa do Figma:
 
 ### 5.3 Hints visíveis na interface
 
-> **Nota (2026-09-17):** os cards de hint fixo que existiam em Anotar Specs/Anotar Medidas/Fluxos de Tela/Escanear Tokens foram **removidos** (v6.15.2/v6.16.1) por duplicarem a mesma explicação já coberta pelo empty-state e pelo onboarding contextual — ver CLAUDE.md ("Cards de hint fixo duplicavam o onboarding/empty-state"). A tabela abaixo documenta só o texto do **empty-state** de cada tela (que continua existindo), não um card separado.
+> **Nota (2026-09-17):** os cards de hint fixo que existiam em Anotar Specs Detalhadas/Anotar Medidas/Fluxos de Tela/Escanear Tokens foram **removidos** (v6.15.2/v6.16.1) por duplicarem a mesma explicação já coberta pelo empty-state e pelo onboarding contextual — ver CLAUDE.md ("Cards de hint fixo duplicavam o onboarding/empty-state"). A tabela abaixo documenta só o texto do **empty-state** de cada tela (que continua existindo), não um card separado.
 
 | Local | Texto |
 |---|---|
 | Escanear Tokens (estado vazio) | "Nenhum frame escaneado" / "Selecione um frame no canvas do Figma para começar." + botão **+ Escanear Frame** |
-| Anotar Specs (estado vazio) | "Nenhuma especificação criada ainda" / "Selecione um elemento no canvas para começar." + botão **+ Nova spec** |
+| Anotar Specs Detalhadas (estado vazio) | "Nenhuma especificação criada ainda" / "Selecione um elemento no canvas para começar." + botão **+ Nova spec** |
 | Anotar Medidas (estado vazio) | "Nenhuma medida criada ainda" / "Selecione elementos no canvas para começar." + botão **+ Inserir medida** |
 | Fluxos de Tela (estado vazio) | "Nenhum fluxo criado ainda" / "Selecione 2 ou mais elementos no canvas para começar." + botão **+ Conectar Frames** |
 | Tipo Decisão no modal de fluxo | "Dica: Use frases curtas para melhor legibilidade dentro do losango." |
@@ -562,10 +613,14 @@ HOME
  │       Marca conformidade DSC
  │       Marca se é Novo Componente
  │
- ├─► Anotar Specs
+ ├─► Anotar Specs Detalhadas
  │     Seleciona elemento no canvas → botão +
  │     Define: letra, categoria, nota, link, guia
  │     Adiciona propriedades técnicas e exceções
+ │
+ ├─► Anotar Specs Rápidas (fora do handoff formal)
+ │     Escanear → filtro → Shift+clique nos elementos → Concluir
+ │     Consulta de propriedades brutas; não entra na Ficha
  │
  ├─► Anotar Medidas
  │     Seleciona elemento(s) no canvas → botão +
@@ -585,10 +640,23 @@ HOME
 ### 6.2 Jornada Rápida — Apenas Specs
 
 ```
-HOME → Anotar Specs
+HOME → Anotar Specs Detalhadas
   Seleciona elemento → botão +
   Preenche letra e categoria
   Confirma → spec aparece no canvas e na lista
+```
+
+Para só **consultar** valores de propriedade (sem documentar formalmente), ver a jornada abaixo.
+
+### 6.2.1 Jornada Rápida — Consulta de Propriedades (Specs Rápidas)
+
+```
+HOME → Anotar Specs Rápidas
+  Escanear → escolhe categorias de propriedade
+  Plugin colapsa → Shift+clique em cada elemento no canvas → Concluir
+  Lista de elementos com propriedades brutas
+  Opcional: Inserir cards no canvas (grid + linha guia)
+  Opcional: Converter em Spec Detalhada (vira spec formal, entra na Ficha)
 ```
 
 ---
@@ -644,7 +712,7 @@ HOME → Gerar Ficha de Handoff (view-handoff-summary)
 ### 6.7 Jornada — Exceção em Spec
 
 ```
-Anotar Specs → expande uma spec → + Exceção
+Anotar Specs Detalhadas → expande uma spec → + Exceção
   Seleciona tipo (Erro / Sucesso / Confirmação / Alerta)
   Preenche título, âncora, observação
   Se obs preenchida e spec tem nodeId:

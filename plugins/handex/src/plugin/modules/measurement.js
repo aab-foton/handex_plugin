@@ -301,8 +301,13 @@
     }
 
     let currentMeasureTypes = [];
+    function _updateExecuteMeasurementButtonState() {
+      const btn = document.getElementById('btn-execute-measurement');
+      if (btn) btn.disabled = currentMeasureTypes.length === 0;
+    }
     function resetMeasureSelection() {
       currentMeasureTypes = [];
+      _updateExecuteMeasurementButtonState();
       document.querySelectorAll('.measure-btn').forEach(btn => {
         btn.classList.remove('border-[#005ca9]', 'bg-blue-50', 'dark:bg-blue-900/20', 'outline', 'outline-2', 'outline-offset-2', 'outline-[#005ca9]');
         btn.classList.add('border-gray-100', 'dark:border-dark-line', 'hover:bg-gray-50', 'dark:hover:bg-slate-700');
@@ -326,6 +331,7 @@
       } else {
         currentMeasureTypes.push(type);
       }
+      _updateExecuteMeasurementButtonState();
 
       document.querySelectorAll('.measure-btn').forEach(btn => {
         const btnType = btn.id.replace('btn-measure-', '');

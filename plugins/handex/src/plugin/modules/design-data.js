@@ -45,9 +45,11 @@
       allSpecs.forEach(s => {
         (s.properties || []).forEach(p => {
           if (!p.token) return;
-          const key = p.token;
-          if (!tokensUsados[key]) tokensUsados[key] = { token: key, label: p.label || p.key || '', ocorrencias: 0 };
-          tokensUsados[key].ocorrencias++;
+          // padding pode trazer vários tokens distintos numa string só ("a, b")
+          String(p.token).split(',').map(t => t.trim()).filter(Boolean).forEach(key => {
+            if (!tokensUsados[key]) tokensUsados[key] = { token: key, label: p.label || p.key || '', ocorrencias: 0 };
+            tokensUsados[key].ocorrencias++;
+          });
         });
       });
 
@@ -143,6 +145,29 @@
           }));
       });
 
+      // Spec Express (quick-spec.js) fica FORA de handoffData por design --
+      // achados brutos e pontuais que o designer clicou pra consultar, sem
+      // scan sistemático nem conformidade DSC avaliada (nunca confundir com
+      // itensEscaneados acima, que vem do scan de auditoria completo).
+      // _quickSpecSessionResults é variável global do módulo concatenado no
+      // mesmo ui.html -- leitura direta, mesmo padrão de qualquer outra
+      // referência cross-module neste arquivo. Ocultos (el.hidden) ficam de
+      // fora, mesmo critério de "fora de consideração" já usado no resto do
+      // módulo (quickSpecInsertAllCanvasCards, _quickSpecUpdateEmptyState).
+      const especificacoesRapidas = (typeof _quickSpecSessionResults !== 'undefined' ? _quickSpecSessionResults : [])
+        .filter(el => !el.hidden && el.properties != null)
+        .map(el => ({
+          tag: el.tag,
+          nome: el.name,
+          tipoNode: el.nodeType,
+          propriedades: el.properties.map(p => ({
+            propriedade: p.label,
+            valor: p.value,
+            token: p.tokenName || null,
+            biblioteca: p.libName || null
+          }))
+        }));
+
       return {
         _note: 'Material de apoio para uso como contexto/prompt em ferramentas externas de geração de design (ex: Figma Make) ao propor telas novas dentro deste mesmo projeto. Não é integração automática nem conhecimento institucional agregado.',
         briefing,
@@ -151,7 +176,11 @@
         cenariosExcecao,
         medidas,
         jornadas,
-        padroesCategorizacao
+        padroesCategorizacao,
+        especificacoesRapidas: especificacoesRapidas.length > 0 ? {
+          _note: 'Achados brutos e pontuais das Specs Rápidas -- propriedades reais sem conformidade DSC avaliada. Não confundir com telasDocumentadas.itensEscaneados (scan de auditoria completo).',
+          itens: especificacoesRapidas
+        } : null
       };
     }
 
@@ -203,6 +232,15 @@
               lines.push(`    - [${item.categoria}]${item.personalizado ? ' [Personalizado]' : ''} ${item.nome}${props ? ` — ${props}` : ''}`);
             });
           }
+        });
+      }
+
+      if (ctx.especificacoesRapidas) {
+        lines.push('', '## Consultas rápidas (Specs Rápidas) — achados pontuais sem conformidade DSC avaliada');
+        lines.push('(propriedades reais de elementos consultados pontualmente pelo designer, sem scan sistemático de frame — não confundir com "Telas já documentadas" acima)');
+        ctx.especificacoesRapidas.itens.forEach(item => {
+          const props = item.propriedades.map(p => `${p.propriedade}: ${p.valor}${p.token ? ` (token: ${p.token}${p.biblioteca ? `, ${p.biblioteca}` : ''})` : ''}`).join(' | ');
+          lines.push(`- [${item.tag}] ${item.nome} (${item.tipoNode})${props ? ` — ${props}` : ''}`);
         });
       }
 
@@ -405,6 +443,14 @@
       'handoff-json': { label: 'JSON', fn: () => exportHandoffData() },
       'ai-context': { label: 'Contexto + imagens pro Figma Make', fn: () => downloadAiContextPackage() }
     };
+
+    function _updateExecuteExportsButtonState() {
+      const btn = document.getElementById('btn-execute-selected-exports');
+      if (!btn) return;
+      const anyChecked = document.querySelectorAll('#export-checklist [data-export-key]:checked').length > 0;
+      btn.disabled = !anyChecked;
+    }
+    window._updateExecuteExportsButtonState = _updateExecuteExportsButtonState;
 
     async function executeSelectedExports() {
       const checked = Array.from(document.querySelectorAll('#export-checklist [data-export-key]:checked')).map(el => el.getAttribute('data-export-key'));
@@ -801,10 +847,18 @@
     }
 
     function hasDocumentedContent() {
+      // Spec Express fica fora de handoffData de propósito (módulo isolado,
+      // dado efêmero) -- mas ainda é conteúdo real que "Limpar Dados"
+      // também apaga (delete-canvas-content aceita quickspec:true), então
+      // precisa contar aqui pra não deixar o botão desabilitado com dezenas
+      // de itens escaneados/cards no canvas (2026-09-29, reportado pelo
+      // usuário).
+      const hasQuickSpec = typeof _quickSpecSessionResults !== 'undefined' && _quickSpecSessionResults.length > 0;
       return (handoffData.frames || []).some(_frameHasContent)
         || (handoffData.specs || []).length > 0
         || (handoffData.measurements || []).length > 0
-        || (handoffData.createdFlows || []).length > 0;
+        || (handoffData.createdFlows || []).length > 0
+        || hasQuickSpec;
     }
     window.hasDocumentedContent = hasDocumentedContent;
 
@@ -996,7 +1050,7 @@
       if (c.spec) parts.push(`${c.spec} spec${c.spec > 1 ? 's' : ''}`);
       if (c.medida) parts.push(`${c.medida} medida${c.medida > 1 ? 's' : ''}`);
       if (c.fluxo) parts.push(`${c.fluxo} fluxo${c.fluxo > 1 ? 's' : ''}`);
-      if (c.quickspec) parts.push(`${c.quickspec} card${c.quickspec > 1 ? 's' : ''} do Spec Express`);
+      if (c.quickspec) parts.push(`${c.quickspec} card${c.quickspec > 1 ? 's' : ''} de Specs Rápidas`);
       const canvasMsg = parts.length ? `, ${parts.join(', ')} removido(s) do canvas` : '';
       showToast(`Registro do plugin apagado${canvasMsg}.`);
     }

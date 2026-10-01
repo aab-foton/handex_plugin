@@ -266,10 +266,10 @@ function _briefingCardHTML(q, index) {
     <div class="flex items-start justify-between gap-3 mb-3">
       <span class="text-[#005ca9] font-bold text-[14px] shrink-0">#${index}</span>
       <div class="flex items-center gap-1 shrink-0">
-        <button onclick="editBriefingQuestion('${q.id}')" title="Editar pergunta" aria-label="Editar pergunta" class="p-1.5 text-gray-400 hover:text-[#005ca9] transition-colors rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/20">
+        <button onclick="editBriefingQuestion('${q.id}')" title="Editar pergunta" aria-label="Editar pergunta" class="p-1.5 text-gray-400 hover:text-[#005ca9] transition-colors rounded-2xl hover:bg-blue-50 dark:hover:bg-blue-900/20">
           <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
         </button>
-        <button onclick="removeBriefingQuestion('${q.id}')" title="Excluir pergunta" aria-label="Excluir pergunta" class="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded-md hover:bg-red-50 dark:hover:bg-red-900/20">
+        <button onclick="removeBriefingQuestion('${q.id}')" title="Excluir pergunta" aria-label="Excluir pergunta" class="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded-2xl hover:bg-red-50 dark:hover:bg-red-900/20">
           <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
         </button>
       </div>

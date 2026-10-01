@@ -14,12 +14,12 @@ Augusto Brasil, Designer sênior de UX da Fóton, atuando no projeto da CAIXA Ec
 
 Plugin Figma que automatiza o handoff de design. Permite ao designer:
 - Registrar frames e escanear tokens de UI contra o DSC
-- Anotar specs técnicas sobre elementos do canvas
+- Anotar specs técnicas sobre elementos do canvas — em duas ferramentas distintas: **Anotar Specs Detalhadas** (spec formal, entra na Ficha) e **Anotar Specs Rápidas** (consulta rápida de propriedades brutas, não entra na Ficha) — ver seção "Specs Detalhadas × Specs Rápidas" abaixo
 - Inserir medidas (padding, gap, width, height) no canvas
 - Mapear fluxos de tela
 - Gerar uma ficha técnica completa no canvas do Figma
 
-**Versão atual:** v6.33.0  
+**Versão atual:** v6.34.0  
 **Documentação:** `BUSINESS_RULES.md` (regras de negócio) · `CHANGELOG.md` (histórico)
 
 ---
@@ -147,6 +147,26 @@ git push origin main && git push gitlab main
 
 ---
 
+## Specs Detalhadas × Specs Rápidas (nomenclatura de produto, 2026-09-30)
+
+O Handex tem duas ferramentas de anotação de spec — **não confundir**. Nomes de produto: **"Anotar Specs Detalhadas"** (antes só "Anotar Specs"; `modules/specifications.js`, `view-specifications`) e **"Anotar Specs Rápidas"** (antes "Spec Express"; `modules/quick-spec.js`, `view-quick-spec`). O termo "Spec Express" saiu de todo texto visível ao usuário e da documentação; **nomes internos de código não mudam** (`quick-spec.js`, `view-quick-spec`, `_quickSpec*`, `handexQuickSpecTag`, `data-home-card-id="quick-spec"` etc.).
+
+**Critério de escolha:** Rápida responde "quais são os valores deste elemento?" (dev sem acesso ao DevMode do Figma, consulta pontual/rascunho); Detalhada responde "o que o dev precisa saber e implementar sobre este elemento?" (decisão do designer a registrar, precisa chegar à Ficha/Markdown/JSON).
+
+| | Specs Detalhadas | Specs Rápidas |
+|---|---|---|
+| Persistência | `handoffData`, sobrevive a tudo, entra em export/import | Lista da UI efêmera (reseta ao fechar); propriedades gravadas no card do canvas (pluginData), recuperadas ao reabrir |
+| Conteúdo | Categoria, nota, link, propriedades, exceções | Só propriedades brutas — sem categoria/nota/exceção, sem conformidade DSC avaliada |
+| Captura | Multi-etapa com posicionamento manual (fantasma arrastável) | Lote por Shift+clique; plugin colapsa numa barrinha |
+| Canvas | Azul de marca, GROUP + contour, tag por frame | Cards em grid, linha guia cinza semi-transparente |
+| Ficha / Markdown / contadores | Entra | **Não entra** (decisão de produto) |
+| `_aiContext` | Como spec formal | Bloco separado (`especificacoesRapidas`), marcado como achados brutos sem conformidade DSC avaliada |
+| Conversão | — | "Converter em Spec Detalhada" substitui o card rápido pela spec formal |
+
+Documentação completa: `BUSINESS_RULES.md` seção 2.4 e `docs/site/business-rules.html`.
+
+---
+
 ## Decisões de produto tomadas (não reverter sem alinhamento)
 
 | Decisão | Razão |
@@ -177,6 +197,7 @@ git push origin main && git push gitlab main
 | Accordions de "Como usar o plugin" (Informações do Projeto, Escanear Tokens, Anotar Specs, Anotar Medidas, Fluxos de Tela, Gerar Ficha) **perderam a lista numerada de passos** — sobra só o parágrafo de propósito + "Ver documentação completa". Botões "Passo a Passo" e "Tutoriais" do card "Documentação de Apoio" (Design System CAIXA) **removidos**, sobrou só "Toolkit DSC" | Decisão 2026-09-23: usuário achou a tela densa demais, principalmente porque agora existe link pra documentação completa — o passo-a-passo detalhado (5-8 itens por ferramenta) virou redundância dentro do próprio plugin. "Importar/Exportar" e "Limpar Dados" mantiveram a lista, por serem funcionalidade interna do plugin sem equivalente na documentação Figma |
 | Card de introdução do topo de "Como usar o plugin" **saiu da tela e virou onboarding** — ícone de ajuda (`circle-help`) no header azul abre o modal de onboarding (`openOnboarding('guide')`, entrada `guide` em `ONBOARDING_TOOLS`, `onboarding.js`), com o texto da intro como propósito, 3 passos curtos e o link "Ver documentação completa" | Decisão 2026-09-24, em duas rodadas: primeiro virou snackbar dispensável fixo no rodapé (mesmo visual de `#dados-projeto-snackbar`), mas o usuário notou que ele cobria o conteúdo da lista e propôs seguir o padrão já usado em todas as outras telas (ícone de ajuda no header → modal). Resultado: sem sobreposição, e a intro fica acessível a qualquer momento, não só até ser dispensada. Não foi criado banner "Primeira vez aqui?" pra esta tela — a intro deixa de aparecer sozinha na primeira visita; se isso fizer falta, o banner é o mecanismo existente pra resolver |
 | Parágrafo + link "Ver documentação completa" dentro de cada accordion **não vivem mais dentro de um card com fundo colorido** (`rounded-xl p-3 mb-3 bg-{cor}/5`) — ficam soltos direto no corpo do accordion, mesmo fundo branco do resto | Decisão 2026-09-23, mesma leva: "card dentro de outro card" (o accordion já é um card) ficava com aninhamento visual desnecessário. Texto e link continuam com a mesma cor de destaque por ferramenta, só sem o wrapper de fundo |
+| **Anotar Specs Rápidas** = o essencial para o dev **sem acesso ao DevMode** executar o trabalho (valores reais + token/biblioteca, sem categoria/nota/exceção, fora da Ficha); **Anotar Specs Detalhadas** = o aprofundamento e **superconjunto** da Rápida (mesmos valores + categoria, nota, link, exceções, posição escolhida, entra na Ficha). O designer precisa conseguir **distinguir** as duas dentro do plugin — critério exposto nos cards da home, onboarding (entrada `quickSpec` nova + passo "Quando usar" em `specs`), "Como usar o plugin" e empty-state da Rápida. Nomenclatura fixa: nunca "Spec Express" em texto de produto | Decisão 2026-09-30 (Augusto): o critério só existia em `BUSINESS_RULES.md` 2.4, mas o designer decide na home, sem ler documentação — sem orientação in-app, a escolha vira palpite e o dev sem DevMode recebe spec de menos (ou a Ficha recebe rascunho de mais). Regra de bolso: Rápida responde "quais são os valores deste elemento?"; Detalhada, "o que o dev precisa saber e implementar sobre ele?". Mudanças de comportamento da mesma leva: a Rápida passou a ler **só o elemento marcado** (sem subárvore) e a Detalhada passou a mostrar **token + valor** nas propriedades |
 
 ---
 
@@ -294,9 +315,9 @@ Aproveitada a mesma entrega para portar do `.md` normativo (v1.5) duas seções 
 Header: [Logo | HANDEX vX]  [📋 Dados do Projeto]  [🔍− zoom out (oculto por padrão)]  [🔍+ zoom in]  [☀/🌙 tema]  [⇱ minimizar]
 
 Grid 2×3 (flex-1, preenche altura disponível):
-  [Como usar o plugin]   [Informações do Projeto]
-  [Escanear Tokens]      [Anotar Specs]
-  [Anotar Medidas]       [Fluxos de Tela]
+  [Informações do Projeto]  [Escanear Tokens]
+  [Anotar Specs Detalhadas] [Anotar Medidas]
+  [Fluxos de Tela]          [Anotar Specs Rápidas]
 
 Footer:
   [▶ Gerar Ficha de Handoff]
@@ -305,7 +326,7 @@ Footer:
 
 "Gerar Ficha" não está mais no header global — hoje só é acionável de dentro de `view-dados-projeto` (`dados-projeto.html:314`) ou `view-handoff-summary` (`handoff-summary.html:146`), ambos chamando `openHandoffInjectModal()`.
 
-**Botão de ação header ↔ empty-state (v6.10.0):** as 4 telas com um botão de ação principal no header (Escanear Tokens "Escanear Frame" — renomeado de "Registrar Frame" em v6.20.5, ver "Bugs corrigidos relevantes", Anotar Specs "Nova spec", Anotar Medidas "Inserir medida", Fluxos de Tela "Conectar Frames") escondem esse botão do header enquanto a lista está vazia — nesse estado, o mesmo botão (mesmo `onclick`, visual `fab-inline` idêntico) aparece como CTA centralizado dentro do empty-state. Assim que o primeiro item é criado, o botão do header reaparece e o empty-state (com seu botão) desaparece. O link de texto sublinhado que antes duplicava a ação dentro da frase instrutiva do empty-state foi removido nas 4 telas — a frase agora só descreve a ação sem repetir o botão.
+**Botão de ação header ↔ empty-state (v6.10.0):** as 4 telas com um botão de ação principal no header (Escanear Tokens "Escanear Frame" — renomeado de "Registrar Frame" em v6.20.5, ver "Bugs corrigidos relevantes", Anotar Specs Detalhadas "Nova spec", Anotar Medidas "Inserir medida", Fluxos de Tela "Conectar Frames") escondem esse botão do header enquanto a lista está vazia — nesse estado, o mesmo botão (mesmo `onclick`, visual `fab-inline` idêntico) aparece como CTA centralizado dentro do empty-state. Assim que o primeiro item é criado, o botão do header reaparece e o empty-state (com seu botão) desaparece. O link de texto sublinhado que antes duplicava a ação dentro da frase instrutiva do empty-state foi removido nas 4 telas — a frase agora só descreve a ação sem repetir o botão.
 
 Implementação: **dois botões reais** (um `id` no header + hidden por padrão, um centralizado no empty-state), nunca reparenting de nó via JS — decisão deliberada porque em 3 das 4 telas (Specs, Medidas, Fluxos) o empty-state é gerado via `innerHTML = template` a cada render (não é HTML fixo), então o botão central "nasce e morre" junto do template; reparenting exigiria capturar a referência do nó do header antes de sobrescrever o container, quebrando o padrão simples já usado no projeto. Toggle de visibilidade do botão do header amarrado à mesma condição `hasItems`/`hasFrames` já usada para os outros elementos da tela (seção título, botões de exportar/ocultar todos etc.):
 - Tokens: `updateEmptyFramesState()` (`core.js`) — botão `#btn-frame-register-header`.

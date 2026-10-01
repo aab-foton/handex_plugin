@@ -212,7 +212,7 @@ Biblioteca exclusiva: **Lucide** (`data-lucide="nome"` no plugin, equivalente a 
 | `loader-2` | `import { Loader2 } from 'lucide-react'` | Spinner de carregamento (animação de rotação via CSS). |
 | `file-plus-2` | `import { FilePlus2 } from 'lucide-react'` | Criar novo documento/anexo. |
 | `check-circle` | `import { CheckCircle } from 'lucide-react'` | EM CONFORMIDADE — selo de auditoria DSC. |
-| `tag` | `import { Tag } from 'lucide-react'` | Card Anotar Specs na home; badge de tag de spec. |
+| `tag` | `import { Tag } from 'lucide-react'` | Card Anotar Specs Detalhadas na home; badge de tag de spec. |
 | `send` | `import { Send } from 'lucide-react'` | Gerar Ficha de Handoff — ícone alternativo em onboarding. |
 | `search` | `import { Search } from 'lucide-react'` | Campo de busca — filtro de specs/frames. |
 | `ruler` | `import { Ruler } from 'lucide-react'` | Card Anotar Medidas na home. |
@@ -237,7 +237,7 @@ Biblioteca exclusiva: **Lucide** (`data-lucide="nome"` no plugin, equivalente a 
 | `component` | `import { Component } from 'lucide-react'` | Referência de componente DSC vinculado a uma spec. |
 | `check-circle-2` | `import { CheckCircle2 } from 'lucide-react'` | Confirmação de sucesso — variante preenchida. |
 | `alert-circle` | `import { AlertCircle } from 'lucide-react'` | FORA DO PADRÃO — selo de auditoria DSC (desvio). |
-| `zap` | `import { Zap } from 'lucide-react'` | Comportamento — categoria de spec (reação do sistema). |
+| `zap` | `import { Zap } from 'lucide-react'` | Comportamento — categoria de spec (reação do sistema); ícone do card Anotar Specs Rápidas na home. |
 | `x-circle` | `import { XCircle } from 'lucide-react'` | Erro/falha — cenário de exceção tipo Erro. |
 | `shield-check` | `import { ShieldCheck } from 'lucide-react'` | Conformidade validada / selo de segurança. |
 | `scaling` | `import { Scaling } from 'lucide-react'` | Altura e Largura — tipo de medida (W×H). |

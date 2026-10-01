@@ -478,7 +478,7 @@
       b: parseInt(result[3], 16) / 255
     } : { r: 0.5, g: 0.5, b: 0.5 };
   }
-  var HANDEX_SECTION_NAMES = { medida: "Handex | Medidas", spec: "Handex | Specs", fluxo: "Handex | Fluxos", ficha: "Handex | Ficha", quickspec: "Handex | Spec Express" };
+  var HANDEX_SECTION_NAMES = { medida: "Handex | Medidas", spec: "Handex | Specs", fluxo: "Handex | Fluxos", ficha: "Handex | Ficha", quickspec: "Handex | Specs R\xE1pidas" };
   function _hdEnsureCategorySection(category) {
     const sectionName = HANDEX_SECTION_NAMES[category];
     if (!sectionName) return null;
@@ -900,10 +900,14 @@
     _hdSetFillAndHug(title);
     return section;
   }
-  function _hdReplaceSection(content, titleText, newSection) {
+  function _hdReplaceSection(content, titleText, newSection, afterTitle) {
     const _name = `[Se\xE7\xE3o] ${titleText}`;
     const existing = content.children.find((n) => n.type === "FRAME" && n.name === _name);
     let idx = content.children.length;
+    if (!existing && afterTitle) {
+      const _after = content.children.find((n) => n.type === "FRAME" && n.name === `[Se\xE7\xE3o] ${afterTitle}`);
+      if (_after) idx = content.children.indexOf(_after) + 1;
+    }
     if (existing) {
       idx = content.children.indexOf(existing);
       try {
@@ -1016,6 +1020,179 @@
     });
     return flowsSection;
   }
+  var _HD_UI_TOKENIZED_TYPES = ["color", "stroke", "spacing", "strokeWeight", "radius", "typography", "effect"];
+  function _hdFormatScanProp(p) {
+    const hasToken = _HD_UI_TOKENIZED_TYPES.includes(p.type) && !!(p.variableKey || p.styleKey || p.key);
+    let val = p.value != null ? String(p.value) : "";
+    if (p.type === "typography") val = typeof p.rawValue === "number" ? `${p.rawValue}px` : "";
+    if (hasToken) return val && val !== p.name ? `${p.name} \xB7 ${val}` : String(p.name);
+    if (p.type === "typography") return String(p.name || "");
+    return val || String(p.name || "");
+  }
+  function _hdAddUiPropRow(parent, label, text, hasToken, size) {
+    const row = _hdCreateFrame("HORIZONTAL", 0, 12);
+    row.name = `Prop/${label}`;
+    parent.appendChild(row);
+    _hdSetFillAndHug(row);
+    const lbl = _hdCreateText(String(label).toUpperCase(), size - 1 < 9 ? 9 : size - 1, "Medium", { r: 0.5, g: 0.5, b: 0.5 });
+    lbl.resize(150, lbl.height);
+    lbl.textAutoResize = "HEIGHT";
+    row.appendChild(lbl);
+    const valTxt = _hdCreateText(text, size, "Bold", hasToken ? hexToRgb2("#005ca9") : { r: 0.1, g: 0.1, b: 0.1 });
+    row.appendChild(valTxt);
+    valTxt.layoutGrow = 1;
+    valTxt.textAutoResize = "HEIGHT";
+  }
+  var _HD_UI_COMP_MAX_DEPTH = 4;
+  var _HD_UI_COMP_MAX_NODES = 40;
+  var _HD_UI_PRIMITIVE_TYPES = ["VECTOR", "BOOLEAN_OPERATION", "ELLIPSE", "RECTANGLE", "LINE", "STAR", "POLYGON"];
+  async function _hdCollectUiComposition(root) {
+    const out = [];
+    async function walk(n, depth) {
+      if (!n.children || depth > _HD_UI_COMP_MAX_DEPTH) return;
+      for (const c of n.children) {
+        if (out.length >= _HD_UI_COMP_MAX_NODES) return;
+        if (c.visible === false || _HD_UI_PRIMITIVE_TYPES.includes(c.type)) continue;
+        let dscLib = null;
+        if (c.type === "INSTANCE") {
+          try {
+            const main = await c.getMainComponentAsync();
+            if (main) dscLib = _qsFindLibForKey(main.key);
+          } catch (e) {
+          }
+        }
+        let props = [];
+        try {
+          props = (await _qsExtractNodeProperties(c, QUICK_SPEC_CATEGORIES)).filter((p) => p.label !== "Componente");
+        } catch (e) {
+        }
+        const text = c.type === "TEXT" && typeof c.characters === "string" ? c.characters.replace(/\s+/g, " ").trim().slice(0, 80) : "";
+        out.push({ name: c.name, type: c.type, depth, dscLib, props, text });
+        if (!dscLib) await walk(c, depth + 1);
+      }
+    }
+    await walk(root, 1);
+    return out;
+  }
+  async function _hdBuildUiItemCard(item, categoryTitle) {
+    const elCard = _hdCreateFrame("VERTICAL", 12, 8, { r: 1, g: 0.97, b: 0.91 });
+    elCard.name = `[Token] ${item.name}`;
+    elCard.cornerRadius = 12;
+    elCard.strokes = [{ type: "SOLID", color: { r: 0.96, g: 0.85, b: 0.6 } }];
+    elCard.strokeWeight = 1;
+    const head = _hdCreateFrame("HORIZONTAL", 0, 12);
+    head.counterAxisAlignItems = "CENTER";
+    elCard.appendChild(head);
+    _hdSetFillAndHug(head);
+    if (item.preview) {
+      try {
+        const imageHash = figma.createImage(item.preview).hash;
+        const rect = figma.createRectangle();
+        rect.resize(32, 32);
+        rect.fills = [{ type: "IMAGE", imageHash, scaleMode: "FIT" }];
+        rect.cornerRadius = 4;
+        head.appendChild(rect);
+      } catch (e) {
+      }
+    }
+    const textCol = _hdCreateFrame("VERTICAL", 0, 2);
+    head.appendChild(textCol);
+    _hdSetFillAndHug(textCol);
+    const iName = _hdCreateText(item.name, 13, "Bold", { r: 0.1, g: 0.15, b: 0.25 });
+    if (item.nodeId && figma.fileKey) {
+      try {
+        iName.hyperlink = {
+          type: "URL",
+          value: `https://www.figma.com/design/${figma.fileKey}?node-id=${encodeURIComponent(item.nodeId)}`
+        };
+        iName.textDecoration = "UNDERLINE";
+        iName.fills = [{ type: "SOLID", color: hexToRgb2("#005ca9") }];
+      } catch (e) {
+      }
+    }
+    textCol.appendChild(iName);
+    _hdSetFillAndHug(iName);
+    const warn = _hdCreateText(`${categoryTitle} \xB7 Componente personalizado \u2014 precisa ser constru\xEDdo`, 10, "Bold", { r: 0.7, g: 0.4, b: 0 });
+    textCol.appendChild(warn);
+    _hdSetFillAndHug(warn);
+    const props = (item.properties || []).filter((p) => p && p.label);
+    if (props.length > 0) {
+      const propsCol = _hdCreateFrame("VERTICAL", 0, 4);
+      propsCol.name = "Propriedades";
+      elCard.appendChild(propsCol);
+      _hdSetFillAndHug(propsCol);
+      props.forEach((p) => {
+        const hasToken = _HD_UI_TOKENIZED_TYPES.includes(p.type) && !!(p.variableKey || p.styleKey || p.key);
+        _hdAddUiPropRow(propsCol, p.label, _hdFormatScanProp(p), hasToken, 11);
+      });
+    }
+    const root = item.nodeId ? await figma.getNodeByIdAsync(item.nodeId) : null;
+    if (root && !root.removed) {
+      const comp = await _hdCollectUiComposition(root);
+      if (comp.length > 0) {
+        const compTitle = _hdCreateText("COMPOSI\xC7\xC3O INTERNA", 10, "Bold", { r: 0.7, g: 0.4, b: 0 });
+        elCard.appendChild(compTitle);
+        _hdSetFillAndHug(compTitle);
+        for (const c of comp) {
+          const cNode = _hdCreateFrame("VERTICAL", 0, 2);
+          cNode.name = `[Interno] ${c.name}`;
+          cNode.paddingLeft = (c.depth - 1) * 16;
+          elCard.appendChild(cNode);
+          _hdSetFillAndHug(cNode);
+          const cHead = _hdCreateText(`${c.name} \xB7 ${c.type}`, 11, "Bold", { r: 0.1, g: 0.15, b: 0.25 });
+          cNode.appendChild(cHead);
+          _hdSetFillAndHug(cHead);
+          if (c.dscLib) {
+            const dsc = _hdCreateText(`Componente do DSC (${c.dscLib}) \u2014 reutilizar, n\xE3o construir`, 10, "Bold", { r: 0.1, g: 0.5, b: 0.25 });
+            cNode.appendChild(dsc);
+            _hdSetFillAndHug(dsc);
+          }
+          if (c.text) _hdAddUiPropRow(cNode, "Texto", `"${c.text}"`, false, 10);
+          c.props.forEach((p) => _hdAddUiPropRow(cNode, p.label, p.tokenName && p.tokenName !== p.value ? `${p.tokenName} \xB7 ${p.value}` : p.tokenName || p.value, !!p.tokenName, 10));
+        }
+      }
+    }
+    return elCard;
+  }
+  async function _hdRebuildUiBoard(data) {
+    if (data.setup && data.setup.componentes === false) return null;
+    const _cats = [
+      { title: "Componentes", type: "components" },
+      { title: "\xCDcones", type: "icons" },
+      { title: "Tipografia", type: "typography" },
+      { title: "Vetores", type: "vectors" },
+      { title: "Frames e Layouts", type: "frames" }
+    ];
+    const _sources = (data.frames || []).filter((f) => f.specs).map((f) => ({ nome: f.nome || "Frame", specs: f.specs }));
+    if (_sources.length === 0 && data.step2 && data.step2.specs) _sources.push({ nome: "Sem frame vinculado", specs: data.step2.specs });
+    const groups = [];
+    _sources.forEach((src) => {
+      const cards = [];
+      _cats.forEach((cat) => {
+        (src.specs[cat.type] || []).filter((it) => it.isMarkedCustom === true).forEach((it) => cards.push({ item: it, cat: cat.title }));
+      });
+      if (cards.length > 0) groups.push({ nome: src.nome, cards });
+    });
+    if (groups.length === 0) return null;
+    const section = _hdBuildSectionShell("User Interface");
+    for (const g of groups) {
+      const col = _hdCreateFrame("VERTICAL", 0, 12);
+      col.name = `[Frame] ${g.nome}`;
+      section.appendChild(col);
+      _hdSetFillAndHug(col);
+      if (groups.length > 1) {
+        const t = _hdCreateText(g.nome, 13, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+        col.appendChild(t);
+        _hdSetFillAndHug(t);
+      }
+      for (const c of g.cards) {
+        const card = await _hdBuildUiItemCard(c.item, c.cat);
+        col.appendChild(card);
+        _hdSetFillAndHug(card);
+      }
+    }
+    return section;
+  }
   function rgbToHex(r, g, b) {
     const toHex = (c) => {
       const hex = Math.round(c * 255).toString(16);
@@ -1023,7 +1200,7 @@
     };
     return "#" + toHex(r) + toHex(g) + toHex(b);
   }
-  var PLUGIN_VERSION = true ? "6.33.0" : "dev";
+  var PLUGIN_VERSION = true ? "6.34.0" : "dev";
   var DSC_HANDOFF_SUMMARY_ENABLED = false;
   async function _writeSharedPluginData(data) {
     var _a, _b, _c, _d, _e, _f, _g;
@@ -1130,8 +1307,9 @@
       figma.ui.postMessage({ type: "flow-marker-moved", flow: result, removedOldId });
     }
   }
-  function _orthogonalElbowPoints(a, b, offset) {
+  function _orthogonalElbowPoints(a, b, offset, offsetB) {
     const OFFSET = typeof offset === "number" ? offset : 24;
+    const OFFSET_B = typeof offsetB === "number" ? offsetB : OFFSET;
     const dirOf = (side) => ({
       top: { x: 0, y: -1 },
       bottom: { x: 0, y: 1 },
@@ -1140,7 +1318,7 @@
     })[side];
     const dirA = dirOf(a.side), dirB = dirOf(b.side);
     const aPrime = { x: a.x + dirA.x * OFFSET, y: a.y + dirA.y * OFFSET };
-    const bPrime = { x: b.x + dirB.x * OFFSET, y: b.y + dirB.y * OFFSET };
+    const bPrime = { x: b.x + dirB.x * OFFSET_B, y: b.y + dirB.y * OFFSET_B };
     const points = [aPrime];
     const aVertical = dirA.x === 0;
     const bVertical = dirB.x === 0;
@@ -1461,6 +1639,12 @@
   figma.ui.onmessage = async (msg) => {
     var _a, _b, _c;
     if (msg.type === "ui-ready") {
+      if (_quickSpecCaptureModeActive) {
+        figma.ui.resize(480, 750);
+      }
+      _quickSpecCaptureModeActive = false;
+      _quickSpecCaptureSelection = [];
+      clearTimeout(_quickSpecCaptureCountDebounceTimer);
       const currentUser = figma.currentUser ? { id: figma.currentUser.id, name: figma.currentUser.name, photoUrl: figma.currentUser.photoUrl } : null;
       const theme = figma.ui.theme || "light";
       const sel = figma.currentPage.selection;
@@ -1732,7 +1916,7 @@
         if (wanted.spec && (node.name.startsWith("[Spec | ") || node.name.startsWith("[Spec]"))) return "spec";
         if (wanted.medida && node.name.startsWith("[Medida]")) return "medida";
         if (wanted.fluxo && node.name.startsWith("[Fluxo")) return "fluxo";
-        if (wanted.quickspec && node.name.startsWith("Spec Express")) return "quickspec";
+        if (wanted.quickspec && (node.name.startsWith("Spec R\xE1pida") || node.name.startsWith("Spec Express"))) return "quickspec";
         return null;
       };
       const counts = { ficha: 0, spec: 0, medida: 0, fluxo: 0, quickspec: 0 };
@@ -1874,6 +2058,14 @@
         if (msg.section === "tokens") {
           const framesSection = await _hdRebuildFramesSection(_frames, !!msg.includeAllFrames);
           _hdReplaceSection(content, "Frames Escaneados", framesSection);
+          existingFicha.children.filter((n) => n.type === "FRAME" && n.name.endsWith(" / Interface")).forEach((n) => {
+            try {
+              n.remove();
+            } catch (e) {
+            }
+          });
+          const uiSection = await _hdRebuildUiBoard(data);
+          _hdReplaceSection(content, "User Interface", uiSection, "Frames Escaneados");
         } else if (msg.section === "medidas" || msg.section === "specs") {
           const docVisualSection = await _hdRebuildDocumentacaoVisualSection(_frames);
           _hdReplaceSection(content, "Documenta\xE7\xE3o Visual", docVisualSection);
@@ -2268,6 +2460,11 @@
           content.appendChild(framesSection);
           _hdSetFillAndHug(framesSection);
         }
+        const uiSection = await _hdRebuildUiBoard(data);
+        if (uiSection) {
+          content.appendChild(uiSection);
+          _hdSetFillAndHug(uiSection);
+        }
         const docVisualSection = await _hdRebuildDocumentacaoVisualSection(_frames);
         if (docVisualSection) {
           content.appendChild(docVisualSection);
@@ -2308,123 +2505,6 @@
           });
           setFillAndHug(briefingSection);
           mainContainer.appendChild(card2);
-        }
-        if (!data.setup || data.setup.componentes !== false) {
-          let createSpecList = function(title, items, type) {
-            if (!items || items.length === 0) return null;
-            const customItems = items.filter((item) => item.isMarkedCustom === true);
-            if (customItems.length === 0) return null;
-            items = customItems;
-            const sec = createFrame("VERTICAL", 24, 16, { r: 1, g: 1, b: 1 });
-            sec.name = `[Scan] ${title}`;
-            sec.cornerRadius = 16;
-            sec.resize(280, 100);
-            sec.primaryAxisSizingMode = "AUTO";
-            sec.counterAxisSizingMode = "FIXED";
-            const titleNode = createText(title, 18, "Bold", hexToRgb2("#005ca9"));
-            sec.appendChild(titleNode);
-            setFillAndHug(titleNode);
-            const listContainer = createFrame("VERTICAL", 0, 12);
-            sec.appendChild(listContainer);
-            setFillAndHug(listContainer);
-            items.forEach((item) => {
-              const elCard = createFrame("HORIZONTAL", 12, 12, { r: 1, g: 0.97, b: 0.91 });
-              elCard.name = `[Token] ${item.name}`;
-              elCard.cornerRadius = 12;
-              elCard.strokes = [{ type: "SOLID", color: { r: 0.96, g: 0.85, b: 0.6 } }];
-              elCard.strokeWeight = 1;
-              elCard.counterAxisAlignItems = "CENTER";
-              listContainer.appendChild(elCard);
-              setFillAndHug(elCard);
-              if (item.preview) {
-                try {
-                  const imageHash = figma.createImage(item.preview).hash;
-                  const rect = figma.createRectangle();
-                  rect.resize(32, 32);
-                  rect.fills = [{ type: "IMAGE", imageHash, scaleMode: "FIT" }];
-                  rect.cornerRadius = 4;
-                  elCard.appendChild(rect);
-                } catch (e) {
-                }
-              }
-              const textCol = createFrame("VERTICAL", 0, 2);
-              textCol.layoutGrow = 1;
-              elCard.appendChild(textCol);
-              setFillAndHug(textCol);
-              const iName = createText(item.name, 13, "Bold", { r: 0.1, g: 0.15, b: 0.25 });
-              if (item.nodeId && figma.fileKey) {
-                try {
-                  iName.hyperlink = {
-                    type: "URL",
-                    value: `https://www.figma.com/design/${figma.fileKey}?node-id=${encodeURIComponent(item.nodeId)}`
-                  };
-                  iName.textDecoration = "UNDERLINE";
-                  iName.fills = [{ type: "SOLID", color: hexToRgb2("#005ca9") }];
-                } catch (e) {
-                }
-              }
-              textCol.appendChild(iName);
-              setFillAndHug(iName);
-              const warn = createText("Componente personalizado \u2014 precisa ser constru\xEDdo", 10, "Bold", { r: 0.7, g: 0.4, b: 0 });
-              textCol.appendChild(warn);
-              setFillAndHug(warn);
-            });
-            return sec;
-          };
-          const uiBoard = createFrame("VERTICAL", 32, 24, { r: 1, g: 1, b: 1 });
-          uiBoard.name = `${_handoffBase} / Interface`;
-          uiBoard.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
-          uiBoard.cornerRadius = 16;
-          uiBoard.primaryAxisSizingMode = "AUTO";
-          uiBoard.counterAxisSizingMode = "AUTO";
-          uiBoard.layoutAlign = "INHERIT";
-          const uiHeaderRow = createFrame("HORIZONTAL", 0, 12);
-          uiHeaderRow.counterAxisAlignItems = "CENTER";
-          setFillAndHug(uiHeaderRow);
-          uiBoard.appendChild(uiHeaderRow);
-          const uiTitle = createText("User Interface", 24, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
-          uiTitle.layoutGrow = 1;
-          uiHeaderRow.appendChild(uiTitle);
-          const _allFrameSpecs = (data.frames || []).map((f) => f.specs).filter(Boolean);
-          const _globalSpecs = data.step2 && data.step2.specs ? data.step2.specs : null;
-          const _specsSource = _allFrameSpecs.length > 0 ? _allFrameSpecs : _globalSpecs ? [_globalSpecs] : [];
-          const specsData = {
-            components: _specsSource.flatMap((s) => s.components || []),
-            icons: _specsSource.flatMap((s) => s.icons || []),
-            typography: _specsSource.flatMap((s) => s.typography || []),
-            frames: _specsSource.flatMap((s) => s.frames || []),
-            vectors: _specsSource.flatMap((s) => s.vectors || [])
-          };
-          const specsRow = figma.createFrame();
-          specsRow.name = "[Row] Colunas UI";
-          specsRow.layoutMode = "HORIZONTAL";
-          specsRow.itemSpacing = 24;
-          specsRow.paddingLeft = 0;
-          specsRow.paddingRight = 0;
-          specsRow.paddingTop = 0;
-          specsRow.paddingBottom = 0;
-          specsRow.fills = [];
-          specsRow.primaryAxisSizingMode = "AUTO";
-          specsRow.counterAxisSizingMode = "AUTO";
-          specsRow.counterAxisAlignItems = "MIN";
-          [
-            { title: "Componentes", items: specsData.components, type: "components" },
-            { title: "\xCDcones", items: specsData.icons, type: "icons" },
-            { title: "Tipografia", items: specsData.typography, type: "typography" },
-            { title: "Vetores", items: specsData.vectors, type: "vectors" },
-            { title: "Frames e Layouts", items: specsData.frames, type: "frames" }
-          ].forEach((cat) => {
-            const sec = createSpecList(cat.title, cat.items, cat.type);
-            if (sec) specsRow.appendChild(sec);
-          });
-          if (specsRow.children.length > 0) {
-            uiBoard.appendChild(specsRow);
-            setFillAndHug(specsRow);
-            mainContainer.appendChild(uiBoard);
-          } else {
-            specsRow.remove();
-            uiBoard.remove();
-          }
         }
         const selection = figma.currentPage.selection;
         if (selection.length > 0 && data.setup && (data.setup.espacamentos || data.setup.anatomia || data.setup.instancias)) {
@@ -3448,8 +3528,8 @@
         const pt = node.paddingTop || 0, pr = node.paddingRight || 0, pb = node.paddingBottom || 0, pl = node.paddingLeft || 0;
         if (pt + pr + pb + pl > 0) {
           const tT = await getVar("paddingTop"), tR = await getVar("paddingRight"), tB = await getVar("paddingBottom"), tL = await getVar("paddingLeft");
-          const vT = tT || `${pt}px`, vR = tR || `${pr}px`, vB = tB || `${pb}px`, vL = tL || `${pl}px`;
-          let val, token;
+          const vT = `${pt}px`, vR = `${pr}px`, vB = `${pb}px`, vL = `${pl}px`;
+          let val;
           if (vT === vR && vR === vB && vB === vL) {
             val = vT;
           } else if (vT === vB && vR === vL) {
@@ -3457,30 +3537,45 @@
           } else {
             val = `${vT} ${vR} ${vB} ${vL}`;
           }
-          token = tT || tR || tB || tL || null;
+          const tokens = [...new Set([tT, tR, tB, tL].filter(Boolean))];
+          const token = tokens.length > 0 ? tokens.join(", ") : null;
           properties.push({ key: "padding", label: "Padding", value: val, token });
         }
       }
+      const getStyleName = async (idProp) => {
+        const id = idProp in node ? node[idProp] : null;
+        if (typeof id !== "string" || !id) return null;
+        const style = await figma.getStyleByIdAsync(id);
+        return style ? style.name : null;
+      };
       if ("fills" in node && Array.isArray(node.fills) && node.fills.length > 0) {
-        const sf = node.fills.find((f) => f.type === "SOLID");
-        if (sf) {
-          const token = await getPaintVar(sf);
+        const fillStyleName = await getStyleName("fillStyleId");
+        const solids = node.fills.filter((f) => f.type === "SOLID" && f.visible !== false);
+        for (let i = 0; i < solids.length; i++) {
+          const sf = solids[i];
+          const token = await getPaintVar(sf) || fillStyleName;
           const hexFill = rgbToHex(sf.color.r, sf.color.g, sf.color.b).toUpperCase();
-          properties.push({ key: "fill", label: "Preenchimento", value: token || hexFill, token });
+          properties.push({ key: i === 0 ? "fill" : `fill-${i + 1}`, label: i === 0 ? "Preenchimento" : `Preenchimento ${i + 1}`, value: hexFill, token });
         }
       }
       if ("strokes" in node && Array.isArray(node.strokes) && node.strokes.length > 0) {
+        const strokeStyleName = await getStyleName("strokeStyleId");
         const ss = node.strokes.find((s) => s.type === "SOLID");
         if (ss) {
-          const token = await getPaintVar(ss);
+          const token = await getPaintVar(ss) || strokeStyleName;
           const hexStroke = rgbToHex(ss.color.r, ss.color.g, ss.color.b).toUpperCase();
-          properties.push({ key: "stroke", label: "Contorno", value: token || hexStroke, token });
+          properties.push({ key: "stroke", label: "Contorno", value: hexStroke, token });
         }
         if (node.strokeWeight !== figma.mixed && node.strokeWeight > 0) {
-          properties.push({ key: "strokeWidth", label: "Espessura de borda", value: node.strokeWeight + "px" });
+          const token = await getVar("strokeWeight");
+          properties.push({ key: "strokeWidth", label: "Espessura de borda", value: node.strokeWeight + "px", token });
         }
       }
       if (node.type === "TEXT") {
+        const textStyleName = node.textStyleId !== figma.mixed ? await getStyleName("textStyleId") : null;
+        if (textStyleName) {
+          properties.push({ key: "textStyle", label: "Text Style", value: textStyleName, token: textStyleName });
+        }
         if (node.fontName !== figma.mixed) {
           properties.push({ key: "fontFamily", label: "Fam\xEDlia", value: node.fontName.family });
           properties.push({ key: "fontWeight", label: "Peso", value: node.fontName.style });
@@ -3488,6 +3583,19 @@
         if (node.fontSize !== figma.mixed) {
           const token = await getVar("fontSize");
           properties.push({ key: "fontSize", label: "Tamanho da fonte", value: node.fontSize + "px", token });
+        }
+      }
+      const qsProps = await _qsExtractNodeProperties(node, ["effect", "dimensions", "component"]);
+      let effectIdx = 0;
+      for (const qp of qsProps) {
+        if (qp.label.startsWith("Effect")) {
+          properties.push({ key: `effect-${effectIdx++}`, label: qp.label, value: qp.value, token: qp.tokenName });
+        } else if (qp.label === "W Sizing") {
+          properties.push({ key: "sizingW", label: "Sizing Largura", value: qp.value });
+        } else if (qp.label === "H Sizing") {
+          properties.push({ key: "sizingH", label: "Sizing Altura", value: qp.value });
+        } else if (qp.label === "Componente") {
+          properties.push({ key: "component", label: "Componente", value: qp.libName ? `${qp.value} (${qp.libName})` : qp.value });
         }
       }
       if (node.type === "INSTANCE" && await node.getMainComponentAsync()) {
@@ -3765,7 +3873,8 @@
             pVal.fontName = { family: "Inter", style: "Bold" };
             pVal.fontSize = 11;
             pVal.fills = [{ type: "SOLID", color: p.token ? themeColor : { r: 0.1, g: 0.1, b: 0.1 } }];
-            pVal.characters = p.token || String(p.value);
+            const _pValStr = String(p.value);
+            pVal.characters = p.token && p.token !== _pValStr ? `${p.token} \xB7 ${_pValStr}` : p.token || _pValStr;
             pVal.textAutoResize = "HEIGHT";
             row.appendChild(pLabel);
             row.appendChild(pVal);
@@ -5448,7 +5557,7 @@
         const GRID_GAP = 48;
         const cardWidth = cards.length > 0 ? Math.max(...cards.map((c) => c.width)) : 280;
         const wrapper = figma.createFrame();
-        wrapper.name = "Spec Express \u2014 Cards";
+        wrapper.name = "Specs R\xE1pidas \u2014 Cards";
         wrapper.layoutMode = "HORIZONTAL";
         wrapper.layoutWrap = "WRAP";
         wrapper.itemSpacing = GRID_GAP;
@@ -5483,11 +5592,12 @@
         const _qsAllCardBounds = cards.map((c) => c.absoluteBoundingBox);
         const markers = [];
         const markerParts = [];
+        const _qsUsedSegments = [];
         for (let i = 0; i < cards.length; i++) {
           const item = items[i];
           const node = item.nodeId ? await figma.getNodeByIdAsync(item.nodeId) : null;
           const obstacles = _qsAllCardBounds.filter((b, j) => j !== i && b);
-          const built = _qsBuildConnectorForCard(cards[i], node, item.tag, obstacles);
+          const built = _qsBuildConnectorForCard(cards[i], node, item.tag, obstacles, columns, _qsUsedSegments);
           if (built) {
             markers.push(built.marker);
             markerParts.push(...built.parts);
@@ -5505,7 +5615,7 @@
         figma.currentPage.selection = [wrapper, ...markers];
         figma.viewport.scrollAndZoomIntoView([wrapper, ...markers]);
         figma.ui.postMessage({ type: "quick-spec-canvas-result", count: cards.length, created: createdMap });
-        figma.notify(cards.length > 1 ? `${cards.length} cards do Spec Express inseridos no canvas \u2713` : "Card do Spec Express inserido no canvas \u2713");
+        figma.notify(cards.length > 1 ? `${cards.length} cards de Specs R\xE1pidas inseridos no canvas \u2713` : "Card de Spec R\xE1pida inserido no canvas \u2713");
       } catch (err) {
         const errMsg = err && err.message ? err.message : String(err);
         console.error("Erro ao inserir card do Spec Express:", errMsg);
@@ -5522,12 +5632,14 @@
           wrapper.children.forEach((card) => {
             const tag = card.getPluginData("handexQuickSpecTag");
             if (!tag) return;
+            const rawProperties = card.getPluginData("handexQuickSpecProperties");
             cards.push({
               cardId: card.id,
               tag,
               name: card.getPluginData("handexQuickSpecName") || card.name,
               nodeType: card.getPluginData("handexQuickSpecNodeType") || "",
-              sourceNodeId: card.getPluginData("handexQuickSpecSourceId") || null
+              sourceNodeId: card.getPluginData("handexQuickSpecSourceId") || null,
+              properties: rawProperties ? JSON.parse(rawProperties) : null
             });
           });
         });
@@ -5792,29 +5904,22 @@
   async function _qsExtractRaw(rootNode, categories) {
     const cats = Array.isArray(categories) && categories.length > 0 ? categories : QUICK_SPEC_CATEGORIES;
     const elements = [];
-    async function walk(n, depth) {
-      if ((depth || 0) > 8) return;
-      if (n.visible === false) return;
-      try {
-        const props = await _qsExtractNodeProperties(n, cats);
-        if (props.length > 0) {
-          elements.push({ nodeId: n.id, name: n.name, nodeType: n.type, properties: props });
-        }
-      } catch (e) {
-        console.error("Spec Express: erro ao ler n\xF3", n.name, e && e.message);
+    if (rootNode.visible === false) return elements;
+    try {
+      const props = await _qsExtractNodeProperties(rootNode, cats);
+      if (props.length > 0) {
+        elements.push({ nodeId: rootNode.id, name: rootNode.name, nodeType: rootNode.type, properties: props });
       }
-      if ("children" in n && n.children) {
-        for (const child of n.children) await walk(child, (depth || 0) + 1);
-      }
+    } catch (e) {
+      console.error("Spec Express: erro ao ler n\xF3", rootNode.name, e && e.message);
     }
-    await walk(rootNode, 0);
     return elements;
   }
   async function _qsBuildElementCard(item, node) {
     await figma.loadFontAsync({ family: "Inter", style: "Regular" });
     await figma.loadFontAsync({ family: "Inter", style: "Bold" });
     const card = _hdCreateFrame("VERTICAL", 16, 10, { r: 1, g: 1, b: 1 });
-    card.name = "Spec Express " + item.tag + " | " + item.name;
+    card.name = "Spec R\xE1pida " + item.tag + " | " + item.name;
     card.strokes = [{ type: "SOLID", color: { r: 0.88, g: 0.9, b: 0.93 } }];
     card.strokeWeight = 1;
     card.cornerRadius = 12;
@@ -5824,6 +5929,7 @@
     card.setPluginData("handexQuickSpecName", item.name);
     card.setPluginData("handexQuickSpecNodeType", item.nodeType || "");
     if (node) card.setPluginData("handexQuickSpecSourceId", node.id);
+    card.setPluginData("handexQuickSpecProperties", JSON.stringify(item.properties || []));
     const headerRow = _hdCreateFrame("HORIZONTAL", 0, 8, null);
     headerRow.layoutAlign = "STRETCH";
     headerRow.counterAxisAlignItems = "CENTER";
@@ -5944,7 +6050,80 @@
     }
     return [startPt, ...waypoints, endPt];
   }
-  function _qsBuildConnectorForCard(card, node, tag, obstacleBounds) {
+  function _qsCountOverlaps(pathPoints, usedSegments) {
+    const TOL = 2;
+    let count = 0;
+    for (let i = 0; i < pathPoints.length - 1; i++) {
+      const a = pathPoints[i], b = pathPoints[i + 1];
+      const horiz = Math.abs(a.y - b.y) < 0.01 && Math.abs(a.x - b.x) > 0.01;
+      const vert = Math.abs(a.x - b.x) < 0.01 && Math.abs(a.y - b.y) > 0.01;
+      if (!horiz && !vert) continue;
+      for (const s of usedSegments) {
+        if (s.horiz !== horiz) continue;
+        const fixedA = horiz ? a.y : a.x;
+        if (Math.abs(fixedA - s.fixed) >= TOL) continue;
+        const lo = horiz ? Math.min(a.x, b.x) : Math.min(a.y, b.y);
+        const hi = horiz ? Math.max(a.x, b.x) : Math.max(a.y, b.y);
+        if (Math.min(hi, s.hi) - Math.max(lo, s.lo) > 1) {
+          count++;
+          break;
+        }
+      }
+    }
+    return count;
+  }
+  function _qsRecordSegments(pathPoints, usedSegments) {
+    for (let i = 0; i < pathPoints.length - 1; i++) {
+      const a = pathPoints[i], b = pathPoints[i + 1];
+      if (Math.abs(a.y - b.y) < 0.01 && Math.abs(a.x - b.x) > 0.01) {
+        usedSegments.push({ horiz: true, fixed: a.y, lo: Math.min(a.x, b.x), hi: Math.max(a.x, b.x) });
+      } else if (Math.abs(a.x - b.x) < 0.01 && Math.abs(a.y - b.y) > 0.01) {
+        usedSegments.push({ horiz: false, fixed: a.x, lo: Math.min(a.y, b.y), hi: Math.max(a.y, b.y) });
+      }
+    }
+  }
+  function _qsSeparateFromUsedLines(pathPoints, usedSegments, obstacleBounds) {
+    const STEP = 8, MAX_TRIES = 8;
+    const obstacles = obstacleBounds || [];
+    let path = pathPoints;
+    for (let i = 1; i < path.length - 2; i++) {
+      const a = path[i], b = path[i + 1];
+      const horiz = Math.abs(a.y - b.y) < 0.01;
+      const vert = Math.abs(a.x - b.x) < 0.01;
+      if (horiz === vert) continue;
+      const prev = path[i - 1], next = path[i + 2];
+      const prevPerp = horiz ? Math.abs(prev.x - a.x) < 0.01 : Math.abs(prev.y - a.y) < 0.01;
+      const nextPerp = horiz ? Math.abs(next.x - b.x) < 0.01 : Math.abs(next.y - b.y) < 0.01;
+      if (!prevPerp || !nextPerp) continue;
+      const baseOverlaps = _qsCountOverlaps(path, usedSegments);
+      if (baseOverlaps === 0) break;
+      const baseHits = _qsPathObstacles(path, obstacles).length;
+      const sign = (v) => v > 0 ? 1 : v < 0 ? -1 : 0;
+      const prevDir = sign(horiz ? a.y - prev.y : a.x - prev.x);
+      const nextDir = sign(horiz ? next.y - b.y : next.x - b.x);
+      let best = null;
+      for (let t = 1; t <= MAX_TRIES; t++) {
+        const d = (t % 2 === 1 ? 1 : -1) * STEP * Math.ceil(t / 2);
+        const na = horiz ? { x: a.x, y: a.y + d } : { x: a.x + d, y: a.y };
+        const nb = horiz ? { x: b.x, y: b.y + d } : { x: b.x + d, y: b.y };
+        const newPrevDir = sign(horiz ? na.y - prev.y : na.x - prev.x);
+        const newNextDir = sign(horiz ? next.y - nb.y : next.x - nb.x);
+        if (newPrevDir !== prevDir || newNextDir !== nextDir) continue;
+        const candidate = path.slice();
+        candidate[i] = na;
+        candidate[i + 1] = nb;
+        if (_qsPathObstacles(candidate, obstacles).length > baseHits) continue;
+        const ov = _qsCountOverlaps(candidate, usedSegments);
+        if (ov < baseOverlaps) {
+          best = candidate;
+          break;
+        }
+      }
+      if (best) path = best;
+    }
+    return path;
+  }
+  function _qsBuildConnectorForCard(card, node, tag, obstacleBounds, gridColumns, usedSegments) {
     if (!node) return null;
     const bounds = node.absoluteBoundingBox || node.absoluteRenderBounds;
     if (!bounds) return null;
@@ -5988,37 +6167,49 @@
     const elCx = bounds.x + bounds.width / 2, elCy = bounds.y + bounds.height / 2;
     const cardCx = cardBounds.x + cardBounds.width / 2, cardCy = cardBounds.y + cardBounds.height / 2;
     const dx = cardCx - elCx, dy = cardCy - elCy;
-    const side = Math.abs(dx) >= Math.abs(dy) ? dx >= 0 ? "right" : "left" : dy >= 0 ? "bottom" : "top";
+    const sourceSide = Math.abs(dx) >= Math.abs(dy) ? dx >= 0 ? "right" : "left" : dy >= 0 ? "bottom" : "top";
+    const OPPOSITE_SIDE = { right: "left", left: "right", bottom: "top", top: "bottom" };
+    const cardSide = gridColumns > 1 ? cardCy >= elCy ? "top" : "bottom" : OPPOSITE_SIDE[sourceSide];
     let startPt, endPt;
-    if (side === "right") {
+    if (sourceSide === "right") {
       startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
-      endPt = { x: cardBounds.x, y: cardBounds.y + cardBounds.height / 2 };
-    } else if (side === "left") {
+    } else if (sourceSide === "left") {
       startPt = { x: bounds.x, y: bounds.y + bounds.height / 2 };
-      endPt = { x: cardBounds.x + cardBounds.width, y: cardBounds.y + cardBounds.height / 2 };
-    } else if (side === "bottom") {
+    } else if (sourceSide === "bottom") {
       startPt = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height };
-      endPt = { x: cardBounds.x + cardBounds.width / 2, y: cardBounds.y };
     } else {
       startPt = { x: bounds.x + bounds.width / 2, y: bounds.y };
+    }
+    if (cardSide === "left") {
+      endPt = { x: cardBounds.x, y: cardBounds.y + cardBounds.height / 2 };
+    } else if (cardSide === "right") {
+      endPt = { x: cardBounds.x + cardBounds.width, y: cardBounds.y + cardBounds.height / 2 };
+    } else if (cardSide === "top") {
+      endPt = { x: cardBounds.x + cardBounds.width / 2, y: cardBounds.y };
+    } else {
       endPt = { x: cardBounds.x + cardBounds.width / 2, y: cardBounds.y + cardBounds.height };
     }
-    const OPPOSITE_SIDE = { right: "left", left: "right", bottom: "top", top: "bottom" };
     const QS_ELBOW_OFFSET = 40;
+    const QS_ELBOW_OFFSET_CARD = 16;
     let qsPathPoints = [
       startPt,
       ..._orthogonalElbowPoints(
-        { x: startPt.x, y: startPt.y, side },
-        { x: endPt.x, y: endPt.y, side: OPPOSITE_SIDE[side] },
-        QS_ELBOW_OFFSET
+        { x: startPt.x, y: startPt.y, side: sourceSide },
+        { x: endPt.x, y: endPt.y, side: cardSide },
+        QS_ELBOW_OFFSET,
+        QS_ELBOW_OFFSET_CARD
       ),
       endPt
     ];
     if (obstacleBounds && obstacleBounds.length > 0) {
       const hitRects = _qsPathObstacles(qsPathPoints, obstacleBounds);
       if (hitRects.length > 0) {
-        qsPathPoints = _qsDetourAroundObstacles(startPt, endPt, side, OPPOSITE_SIDE[side], hitRects);
+        qsPathPoints = _qsDetourAroundObstacles(startPt, endPt, sourceSide, cardSide, hitRects);
       }
+    }
+    if (usedSegments) {
+      qsPathPoints = _qsSeparateFromUsedLines(qsPathPoints, usedSegments, obstacleBounds);
+      _qsRecordSegments(qsPathPoints, usedSegments);
     }
     const qsSegs = qsPathPoints.map((p) => `${p.x} ${p.y}`).join(" L ");
     const connectorPath = `M ${qsSegs}`;

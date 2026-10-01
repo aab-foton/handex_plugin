@@ -24,7 +24,8 @@ Plugin Figma da Fóton, desenvolvido por Augusto Brasil. Automatiza o processo d
 | **Informações do Projeto** | Título, versão, status, objetivo, equipe e contexto de negócio (briefing, regras, links de documentação) |
 | **Escanear Tokens** | Escaneia frames registrados e extrai propriedades por categoria: Componentes, Ícones, Tipografia. Frames-container e vetores são filtrados automaticamente |
 | **Conformidade DSC** | Compara propriedades escaneadas contra tokens das bibliotecas do DSC. Designer declara conformidade por frame (Check Designs + Sem desvios) |
-| **Anotar Specs** | Anota especificações técnicas sobre elementos do canvas com categoria, cor semântica, tag (letra), propriedades, link e exceções |
+| **Anotar Specs Detalhadas** | Spec formal sobre elementos do canvas, entregue ao dev: categoria, cor semântica, tag (letra), propriedades, link e exceções. Entra na Ficha de Handoff, no Markdown e no JSON exportados |
+| **Anotar Specs Rápidas** | Consulta rápida de propriedades brutas de vários elementos (captura em lote por Shift+clique), pensada para dev sem acesso ao DevMode do Figma. Sem categoria, nota ou exceção; não entra na Ficha. Pode ser convertida em Spec Detalhada. **Quando usar qual:** Rápida responde "quais são os valores deste elemento?", Detalhada responde "o que o dev precisa saber e implementar sobre ele?" (ver `BUSINESS_RULES.md`, seção 2.4) |
 | **Anotar Medidas** | Insere anotações de dimensão (gap, padding, width, height) diretamente sobre os elementos selecionados no canvas |
 | **Fluxos de Tela** | Mapeia conexões entre frames com tipos de fluxo (sequencial, decisão, paralelo, início/fim) |
 | **Gerar Ficha** | Gera ficha técnica completa no canvas com governança, equipe, briefing, tokens escaneados, specs anotadas, medidas e fluxos |
@@ -153,7 +154,7 @@ plugins/handex/
         ├── views/             # Fragmentos HTML do frontend
         │   ├── home.html          # Tela inicial — 6 cards de ferramentas
         │   ├── handoff.html       # Hub por frame (scan + medidas + specs + conformidade)
-        │   ├── specifications.html # Anotar Specs
+        │   ├── specifications.html # Anotar Specs Detalhadas
         │   ├── flows.html         # Fluxos de Tela
         │   ├── measurement.html   # Anotar Medidas
         │   ├── guide.html         # Guia de uso com accordions por ferramenta

@@ -1702,15 +1702,22 @@ let _persistentFocusToken = 0;
 // foco de teclado pra si: sem isso, Espaço/atalhos do Figma param de
 // funcionar no canvas enquanto o plugin está aberto.
 let _pointerInsidePlugin = false;
-document.addEventListener('mouseenter', () => { _pointerInsidePlugin = true; });
-document.addEventListener('mousemove', () => { _pointerInsidePlugin = true; }, { passive: true });
-document.addEventListener('mouseleave', () => {
+function _releasePluginFocus() {
   _pointerInsidePlugin = false;
   _persistentFocusToken++;
   const active = document.activeElement;
   if (active && active !== document.body && typeof active.blur === 'function') active.blur();
   try { window.parent.focus(); } catch (e) {}
-});
+}
+document.addEventListener('mouseenter', () => { _pointerInsidePlugin = true; });
+document.addEventListener('mousemove', () => { _pointerInsidePlugin = true; }, { passive: true });
+document.addEventListener('mouseleave', _releasePluginFocus);
+// mouseleave no document sozinho não é confiável em todo navegador/SO --
+// pode não disparar quando o mouse sai rápido pela borda da janela. blur da
+// própria window do iframe (o usuário clicou/focou fora, no canvas ou em
+// outra janela) é um segundo sinal independente do movimento do ponteiro,
+// cobre exatamente esse caso residual.
+window.addEventListener('blur', _releasePluginFocus);
 
 function _persistentFocus(target, attempts = 15, intervalMs = 200) {
   if (!target) return;
@@ -1966,6 +1973,12 @@ function updateHomeCardsCheckState() {
 }
 
 function navigate(viewId) {
+  // Trocar de tela durante a captura do Spec Express deixava a janela presa
+  // em ~52px sem botão de voltar; cancela a captura (restaura janela/headers
+  // e desliga o modo no backend) antes de qualquer troca de view.
+  if (window._quickSpecCaptureActive && viewId !== 'view-quick-spec' && typeof _quickSpecCaptureCancel === 'function') {
+    _quickSpecCaptureCancel();
+  }
   // focusNode() (usado pelo ícone de foco em specs/medidas/fluxos) cria um
   // [HighlightStroke] persistente no canvas que só some com um clique
   // explícito subsequente — sem isso, o highlight ficava "preso" ao
@@ -2730,6 +2743,7 @@ function restoreUIFromState() {
 // _refreshIcons quando terminar) já cobrem o ícone chegar depois.
 window.addEventListener('DOMContentLoaded', () => {
   try { _refreshIcons(); } catch(e) {}
+  if (typeof _quickSpecCaptureResetOnBoot === 'function') _quickSpecCaptureResetOnBoot();
   parent.postMessage({ pluginMessage: { type: 'ui-ready' } }, '*');
   if (typeof initResizable === 'function') initResizable();
   if (handoffData && handoffData.uiScale) setUiScale(handoffData.uiScale);

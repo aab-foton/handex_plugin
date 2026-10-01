@@ -656,7 +656,7 @@
 <p><strong>Fonte de verdade para posicionamento:</strong> canvas (leitura via <code>absoluteBoundingBox</code>). <strong>Fonte de verdade para dados:</strong> localStorage (leitura via <code>getFrame</code>, <code>handoffData</code>).</p>
 <hr>
 <h3 id="61-insercao-incremental-por-subsecao-2026-09-15">6.1 Inserção incremental por subseção (2026-09-15)</h3>
-<p>Além do fluxo global "Gerar Ficha" (<code>create-handoff</code>, sempre remove e reconstrói a Ficha inteira), cada uma das 4 telas (Escanear Tokens, Anotar Specs, Anotar Medidas, Fluxos de Tela) tem um botão próprio <strong>"Inserir [X] na Ficha"</strong> (<code>insertSectionInFicha()</code>, <code>modules/handoff.js</code>) que sincroniza <strong>só a subseção correspondente</strong> no canvas, preservando as demais como estavam:</p>
+<p>Além do fluxo global "Gerar Ficha" (<code>create-handoff</code>, sempre remove e reconstrói a Ficha inteira), cada uma das 4 telas (Escanear Tokens, Anotar Specs Detalhadas, Anotar Medidas, Fluxos de Tela) tem um botão próprio <strong>"Inserir [X] na Ficha"</strong> (<code>insertSectionInFicha()</code>, <code>modules/handoff.js</code>) que sincroniza <strong>só a subseção correspondente</strong> no canvas, preservando as demais como estavam:</p>
 <pre><code>Botão "Inserir Tokens na Ficha"    → insert-ficha-section { section: 'tokens'  } → [Seção] Frames Escaneados
 Botão "Inserir Specs na Ficha"     → insert-ficha-section { section: 'specs'   } → [Seção] Especificações
 Botão "Inserir Medidas na Ficha"   → insert-ficha-section { section: 'medidas' } → [Seção] Medidas

@@ -28,7 +28,7 @@ Isso importa porque o público do Handex não é só dev: **PO, QA, outros desig
 
 ## Por que não é substituição
 
-A `AnnotationProperty` do Figma é uma **enumeração fechada** de propriedades de design do próprio nó (`width`, `height`, `fills`, `strokes`, `effects`, `fontSize`, `padding`, `cornerRadius` etc.) — não aceita pares arbitrários `nome/token/valor` definidos pelo designer. O que o Handex chama de "Propriedades" numa spec (`nome da propriedade` + `token do Design System` + `valor aplicado`, ver `guide.html` "Anotar Specs", passo 5) **não tem equivalente nativo**. Além disso:
+A `AnnotationProperty` do Figma é uma **enumeração fechada** de propriedades de design do próprio nó (`width`, `height`, `fills`, `strokes`, `effects`, `fontSize`, `padding`, `cornerRadius` etc.) — não aceita pares arbitrários `nome/token/valor` definidos pelo designer. O que o Handex chama de "Propriedades" numa spec (`nome da propriedade` + `token do Design System` + `valor aplicado`, ver `guide.html` "Anotar Specs Detalhadas", passo 5) **não tem equivalente nativo**. Além disso:
 
 | Recurso da spec Handex | Equivalente nativo | Veredito |
 |---|---|---|

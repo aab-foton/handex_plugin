@@ -292,7 +292,7 @@ function hexToRgb(hex) {
 // categoria aparece. Nunca redimensiona a Section pra "abraçar" os filhos
 // automaticamente -- ela só existe pra dar um agrupamento visível na árvore
 // de camadas, o layout dos itens dentro continua exatamente como já era.
-const HANDEX_SECTION_NAMES = { medida: 'Handex | Medidas', spec: 'Handex | Specs', fluxo: 'Handex | Fluxos', ficha: 'Handex | Ficha', quickspec: 'Handex | Spec Express' };
+const HANDEX_SECTION_NAMES = { medida: 'Handex | Medidas', spec: 'Handex | Specs', fluxo: 'Handex | Fluxos', ficha: 'Handex | Ficha', quickspec: 'Handex | Specs Rápidas' };
 function _hdEnsureCategorySection(category) {
   const sectionName = HANDEX_SECTION_NAMES[category];
   if (!sectionName) return null;
@@ -836,10 +836,14 @@ function _hdBuildSectionShell(titleText) {
 // índice, ou anexa ao final se a subseção ainda não existir (ela nasce
 // vazia hoje, ex: projeto nunca teve medidas). Se `newSection` for null
 // (subseção ficou sem conteúdo), só remove a existente, sem recriar.
-function _hdReplaceSection(content, titleText, newSection) {
+function _hdReplaceSection(content, titleText, newSection, afterTitle) {
   const _name = `[Seção] ${titleText}`;
   const existing = content.children.find(n => n.type === 'FRAME' && n.name === _name);
   let idx = content.children.length;
+  if (!existing && afterTitle) {
+    const _after = content.children.find(n => n.type === 'FRAME' && n.name === `[Seção] ${afterTitle}`);
+    if (_after) idx = content.children.indexOf(_after) + 1;
+  }
   if (existing) {
     idx = content.children.indexOf(existing);
     try { existing.remove(); } catch (e) {}
@@ -1015,6 +1019,216 @@ function _hdRebuildFlowsSection(flows) {
     _hdSetFillAndHug(fRow);
   });
   return flowsSection;
+}
+
+// CARD 3 -- USER INTERFACE: itens do scan declarados manualmente como
+// "Componente Personalizado" (item.isMarkedCustom), com todas as propriedades
+// já capturadas pelo scan (item.properties). Vive DENTRO de "Handex | Content"
+// como seção "[Seção] User Interface" (mesma largura útil em cascata das
+// demais, empilhada na vertical) -- antes era irmão da Ficha Técnica dentro
+// do mainContainer HORIZONTAL de largura fixa e ficava esmagado numa faixa
+// estreita. Retorna a seção solta, ou null se nada a mostrar.
+const _HD_UI_TOKENIZED_TYPES = ["color", "stroke", "spacing", "strokeWeight", "radius", "typography", "effect"];
+
+// token · valor quando há token real (mesmo formato do card da Spec
+// Detalhada). No scan, `name` já vem como o nome do token (variável/estilo)
+// ou, sem token, repete o próprio valor -- por isso o token só é considerado
+// quando há variableKey/styleKey/key.
+function _hdFormatScanProp(p) {
+  const hasToken = _HD_UI_TOKENIZED_TYPES.includes(p.type) && !!(p.variableKey || p.styleKey || p.key);
+  let val = p.value != null ? String(p.value) : "";
+  if (p.type === "typography") val = typeof p.rawValue === "number" ? `${p.rawValue}px` : "";
+  if (hasToken) return val && val !== p.name ? `${p.name} · ${val}` : String(p.name);
+  if (p.type === "typography") return String(p.name || "");
+  return val || String(p.name || "");
+}
+
+// Linha "RÓTULO  valor" usada no card User Interface (item e elementos internos).
+function _hdAddUiPropRow(parent, label, text, hasToken, size) {
+  const row = _hdCreateFrame("HORIZONTAL", 0, 12);
+  row.name = `Prop/${label}`;
+  parent.appendChild(row);
+  _hdSetFillAndHug(row);
+
+  const lbl = _hdCreateText(String(label).toUpperCase(), size - 1 < 9 ? 9 : size - 1, "Medium", { r: 0.5, g: 0.5, b: 0.5 });
+  lbl.resize(150, lbl.height);
+  lbl.textAutoResize = "HEIGHT";
+  row.appendChild(lbl);
+
+  const valTxt = _hdCreateText(text, size, "Bold", hasToken ? hexToRgb("#005ca9") : { r: 0.1, g: 0.1, b: 0.1 });
+  row.appendChild(valTxt);
+  valTxt.layoutGrow = 1;
+  valTxt.textAutoResize = "HEIGHT";
+}
+
+// Composição interna de um item marcado: lê os descendentes direto do canvas
+// (o scan guarda itens planos e deduplicados por nome, sem hierarquia, então
+// não dá pra reconstruir "o que existe dentro" a partir dele). Só roda para
+// itens marcados (poucos), com teto de profundidade e de nós por item para
+// não travar o documento. Mesmo critério do scan: ignora invisíveis e
+// vetores/shapes primitivos. Instância com vínculo real no skeleton é folha
+// ("reutilizar, não construir") -- o interior dela é da lib.
+const _HD_UI_COMP_MAX_DEPTH = 4;
+const _HD_UI_COMP_MAX_NODES = 40;
+const _HD_UI_PRIMITIVE_TYPES = ["VECTOR", "BOOLEAN_OPERATION", "ELLIPSE", "RECTANGLE", "LINE", "STAR", "POLYGON"];
+async function _hdCollectUiComposition(root) {
+  const out = [];
+  async function walk(n, depth) {
+    if (!n.children || depth > _HD_UI_COMP_MAX_DEPTH) return;
+    for (const c of n.children) {
+      if (out.length >= _HD_UI_COMP_MAX_NODES) return;
+      if (c.visible === false || _HD_UI_PRIMITIVE_TYPES.includes(c.type)) continue;
+      let dscLib = null;
+      if (c.type === "INSTANCE") {
+        try {
+          const main = await c.getMainComponentAsync();
+          if (main) dscLib = _qsFindLibForKey(main.key);
+        } catch (e) {}
+      }
+      let props = [];
+      try {
+        props = (await _qsExtractNodeProperties(c, QUICK_SPEC_CATEGORIES)).filter(p => p.label !== "Componente");
+      } catch (e) {}
+      const text = c.type === "TEXT" && typeof c.characters === "string" ? c.characters.replace(/\s+/g, " ").trim().slice(0, 80) : "";
+      out.push({ name: c.name, type: c.type, depth, dscLib, props, text });
+      if (!dscLib) await walk(c, depth + 1);
+    }
+  }
+  await walk(root, 1);
+  return out;
+}
+
+async function _hdBuildUiItemCard(item, categoryTitle) {
+  const elCard = _hdCreateFrame("VERTICAL", 12, 8, { r: 1, g: 0.97, b: 0.91 });
+  elCard.name = `[Token] ${item.name}`;
+  elCard.cornerRadius = 12;
+  elCard.strokes = [{ type: "SOLID", color: { r: 0.96, g: 0.85, b: 0.6 } }];
+  elCard.strokeWeight = 1;
+
+  const head = _hdCreateFrame("HORIZONTAL", 0, 12);
+  head.counterAxisAlignItems = "CENTER";
+  elCard.appendChild(head);
+  _hdSetFillAndHug(head);
+
+  // createRectangle só é chamado após obter o hash para evitar rect órfão
+  // na raiz da página caso createImage lance exceção.
+  if (item.preview) {
+    try {
+      const imageHash = figma.createImage(item.preview).hash;
+      const rect = figma.createRectangle();
+      rect.resize(32, 32);
+      rect.fills = [{ type: "IMAGE", imageHash, scaleMode: "FIT" }];
+      rect.cornerRadius = 4;
+      head.appendChild(rect);
+    } catch (e) {}
+  }
+
+  const textCol = _hdCreateFrame("VERTICAL", 0, 2);
+  head.appendChild(textCol);
+  _hdSetFillAndHug(textCol);
+
+  const iName = _hdCreateText(item.name, 13, "Bold", { r: 0.1, g: 0.15, b: 0.25 });
+  if (item.nodeId && figma.fileKey) {
+    try {
+      iName.hyperlink = {
+        type: "URL",
+        value: `https://www.figma.com/design/${figma.fileKey}?node-id=${encodeURIComponent(item.nodeId)}`
+      };
+      iName.textDecoration = "UNDERLINE";
+      iName.fills = [{ type: "SOLID", color: hexToRgb("#005ca9") }];
+    } catch (e) {}
+  }
+  textCol.appendChild(iName);
+  _hdSetFillAndHug(iName);
+
+  const warn = _hdCreateText(`${categoryTitle} · Componente personalizado — precisa ser construído`, 10, "Bold", { r: 0.7, g: 0.4, b: 0 });
+  textCol.appendChild(warn);
+  _hdSetFillAndHug(warn);
+
+  const props = (item.properties || []).filter(p => p && p.label);
+  if (props.length > 0) {
+    const propsCol = _hdCreateFrame("VERTICAL", 0, 4);
+    propsCol.name = "Propriedades";
+    elCard.appendChild(propsCol);
+    _hdSetFillAndHug(propsCol);
+    props.forEach(p => {
+      const hasToken = _HD_UI_TOKENIZED_TYPES.includes(p.type) && !!(p.variableKey || p.styleKey || p.key);
+      _hdAddUiPropRow(propsCol, p.label, _hdFormatScanProp(p), hasToken, 11);
+    });
+  }
+
+  const root = item.nodeId ? await figma.getNodeByIdAsync(item.nodeId) : null;
+  if (root && !root.removed) {
+    const comp = await _hdCollectUiComposition(root);
+    if (comp.length > 0) {
+      const compTitle = _hdCreateText("COMPOSIÇÃO INTERNA", 10, "Bold", { r: 0.7, g: 0.4, b: 0 });
+      elCard.appendChild(compTitle);
+      _hdSetFillAndHug(compTitle);
+      for (const c of comp) {
+        const cNode = _hdCreateFrame("VERTICAL", 0, 2);
+        cNode.name = `[Interno] ${c.name}`;
+        cNode.paddingLeft = (c.depth - 1) * 16;
+        elCard.appendChild(cNode);
+        _hdSetFillAndHug(cNode);
+
+        const cHead = _hdCreateText(`${c.name} · ${c.type}`, 11, "Bold", { r: 0.1, g: 0.15, b: 0.25 });
+        cNode.appendChild(cHead);
+        _hdSetFillAndHug(cHead);
+
+        if (c.dscLib) {
+          const dsc = _hdCreateText(`Componente do DSC (${c.dscLib}) — reutilizar, não construir`, 10, "Bold", { r: 0.1, g: 0.5, b: 0.25 });
+          cNode.appendChild(dsc);
+          _hdSetFillAndHug(dsc);
+        }
+        if (c.text) _hdAddUiPropRow(cNode, "Texto", `"${c.text}"`, false, 10);
+        c.props.forEach(p => _hdAddUiPropRow(cNode, p.label, p.tokenName && p.tokenName !== p.value ? `${p.tokenName} · ${p.value}` : (p.tokenName || p.value), !!p.tokenName, 10));
+      }
+    }
+  }
+  return elCard;
+}
+
+async function _hdRebuildUiBoard(data) {
+  if (data.setup && data.setup.componentes === false) return null;
+
+  const _cats = [
+    { title: "Componentes", type: "components" },
+    { title: "Ícones", type: "icons" },
+    { title: "Tipografia", type: "typography" },
+    { title: "Vetores", type: "vectors" },
+    { title: "Frames e Layouts", type: "frames" },
+  ];
+  const _sources = (data.frames || []).filter(f => f.specs).map(f => ({ nome: f.nome || 'Frame', specs: f.specs }));
+  if (_sources.length === 0 && data.step2 && data.step2.specs) _sources.push({ nome: 'Sem frame vinculado', specs: data.step2.specs });
+
+  const groups = [];
+  _sources.forEach(src => {
+    const cards = [];
+    _cats.forEach(cat => {
+      (src.specs[cat.type] || []).filter(it => it.isMarkedCustom === true).forEach(it => cards.push({ item: it, cat: cat.title }));
+    });
+    if (cards.length > 0) groups.push({ nome: src.nome, cards });
+  });
+  if (groups.length === 0) return null;
+
+  const section = _hdBuildSectionShell("User Interface");
+  for (const g of groups) {
+    const col = _hdCreateFrame("VERTICAL", 0, 12);
+    col.name = `[Frame] ${g.nome}`;
+    section.appendChild(col);
+    _hdSetFillAndHug(col);
+    if (groups.length > 1) {
+      const t = _hdCreateText(g.nome, 13, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
+      col.appendChild(t);
+      _hdSetFillAndHug(t);
+    }
+    for (const c of g.cards) {
+      const card = await _hdBuildUiItemCard(c.item, c.cat);
+      col.appendChild(card);
+      _hdSetFillAndHug(card);
+    }
+  }
+  return section;
 }
 
 function rgbToHex(r, g, b) {
@@ -1203,20 +1417,30 @@ async function _moveFlowEndpointMarker(targetNode, isStart, nextFlowNumber) {
 // os segmentos A→A' e B'→B já retos nas direções certas. Depois conecta
 // A'→B' com 0 dobras (se já alinhados), 1 dobra (se eixos perpendiculares)
 // ou 2 dobras (se eixos paralelos, evitando cruzar os próprios elementos).
-function _orthogonalElbowPoints(a, b, offset) {
+function _orthogonalElbowPoints(a, b, offset, offsetB) {
   // `offset` opcional (default 24, comportamento original intocado) --
   // parametrizado em 2026-09-29 só pra permitir que o Spec Express
   // (_qsBuildConnectorForCard) peça um afastamento maior antes da dobra
   // final, sem alterar as especificações tradicionais nem os conectores de
   // Fluxos de Tela, que continuam chamando sem esse argumento.
+  // `offsetB` opcional (default = mesmo valor de `offset`) -- adicionado
+  // 2026-09-29 pra resolver bug real reportado com print: no grid do Spec
+  // Express, o offset de aproximação em B (o card) competia pelo mesmo
+  // espaço físico do GRID_GAP entre colunas (48px) -- com offset=40 em
+  // ambas as pontas, sobravam só 48-40=8px de folga entre a coluna de
+  // trânsito do cotovelo e o card vizinho na mesma linha, imperceptível
+  // ("linha colada na lateral"). Offsets assimétricos permitem manter o
+  // respiro desejado do lado do elemento de origem (sem essa restrição de
+  // grid dele) e um valor menor, compatível com o gap real, do lado do card.
   const OFFSET = typeof offset === 'number' ? offset : 24;
+  const OFFSET_B = typeof offsetB === 'number' ? offsetB : OFFSET;
   const dirOf = (side) => ({
     top: { x: 0, y: -1 }, bottom: { x: 0, y: 1 },
     left: { x: -1, y: 0 }, right: { x: 1, y: 0 }
   })[side];
   const dirA = dirOf(a.side), dirB = dirOf(b.side);
   const aPrime = { x: a.x + dirA.x * OFFSET, y: a.y + dirA.y * OFFSET };
-  const bPrime = { x: b.x + dirB.x * OFFSET, y: b.y + dirB.y * OFFSET };
+  const bPrime = { x: b.x + dirB.x * OFFSET_B, y: b.y + dirB.y * OFFSET_B };
 
   const points = [aPrime];
   const aVertical = dirA.x === 0;
@@ -1590,6 +1814,15 @@ async function _buildFlowConnection(nodeA, nodeB, msg) {
 
 figma.ui.onmessage = async (msg) => {
   if (msg.type === 'ui-ready') {
+    // UI (re)conectando: qualquer captura do Spec Express anterior morreu com
+    // a UI antiga. Se o modo estava ligado, a janela pode ter ficado encolhida
+    // na altura da barra (sem botão de voltar) -- devolve o tamanho normal.
+    if (_quickSpecCaptureModeActive) {
+      figma.ui.resize(480, 750);
+    }
+    _quickSpecCaptureModeActive = false;
+    _quickSpecCaptureSelection = [];
+    clearTimeout(_quickSpecCaptureCountDebounceTimer);
     const currentUser = figma.currentUser
       ? { id: figma.currentUser.id, name: figma.currentUser.name, photoUrl: figma.currentUser.photoUrl }
       : null;
@@ -1877,7 +2110,7 @@ figma.ui.onmessage = async (msg) => {
       if (wanted.spec && (node.name.startsWith('[Spec | ') || node.name.startsWith('[Spec]'))) return 'spec';
       if (wanted.medida && node.name.startsWith('[Medida]')) return 'medida';
       if (wanted.fluxo && node.name.startsWith('[Fluxo')) return 'fluxo';
-      if (wanted.quickspec && node.name.startsWith('Spec Express')) return 'quickspec';
+      if (wanted.quickspec && (node.name.startsWith('Spec Rápida') || node.name.startsWith('Spec Express'))) return 'quickspec';
       return null;
     };
 
@@ -2050,6 +2283,13 @@ figma.ui.onmessage = async (msg) => {
       if (msg.section === 'tokens') {
         const framesSection = await _hdRebuildFramesSection(_frames, !!msg.includeAllFrames);
         _hdReplaceSection(content, "Frames Escaneados", framesSection);
+
+        // Formato antigo: card solto como irmão da Ficha Técnica no mainContainer.
+        existingFicha.children
+          .filter(n => n.type === 'FRAME' && n.name.endsWith(' / Interface'))
+          .forEach(n => { try { n.remove(); } catch (e) {} });
+        const uiSection = await _hdRebuildUiBoard(data);
+        _hdReplaceSection(content, "User Interface", uiSection, "Frames Escaneados");
       } else if (msg.section === 'medidas' || msg.section === 'specs') {
         // Specs e Medidas compartilham a mesma seção "Documentação Visual"
         // (1 bloco por frame, com os dois pares lado a lado) -- qualquer um
@@ -2580,6 +2820,11 @@ figma.ui.onmessage = async (msg) => {
       const framesSection = await _hdRebuildFramesSection(_frames, !!msg.includeAllFrames);
       if (framesSection) { content.appendChild(framesSection); _hdSetFillAndHug(framesSection); }
 
+      // "User Interface" fica dentro do content (largura útil da cascata,
+      // empilhado), logo após Frames Escaneados.
+      const uiSection = await _hdRebuildUiBoard(data);
+      if (uiSection) { content.appendChild(uiSection); _hdSetFillAndHug(uiSection); }
+
       // "Documentação Visual" substitui as antigas seções "Medidas" e
       // "Especificações" (agregadas, texto puro, sem nenhuma referência à
       // tela real) -- 1 bloco por frame, com snapshot amplo (specs/medidas
@@ -2627,156 +2872,6 @@ figma.ui.onmessage = async (msg) => {
         });
         setFillAndHug(briefingSection);
         mainContainer.appendChild(card2);
-      }
-
-      // CARD 3 — USER INTERFACE
-      if (!data.setup || data.setup.componentes !== false) {
-        const uiBoard = createFrame("VERTICAL", 32, 24, { r: 1, g: 1, b: 1 });
-        uiBoard.name = `${_handoffBase} / Interface`;
-        uiBoard.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
-        uiBoard.cornerRadius = 16;
-        uiBoard.primaryAxisSizingMode = "AUTO";   // Hug height
-        uiBoard.counterAxisSizingMode = "AUTO";   // Hug width — se expande para todas as colunas
-        uiBoard.layoutAlign = "INHERIT"; // Don't stretch height in horizontal parent
-
-        // Header row: título à esquerda + legenda de status à direita
-        const uiHeaderRow = createFrame("HORIZONTAL", 0, 12);
-        uiHeaderRow.counterAxisAlignItems = "CENTER";
-        setFillAndHug(uiHeaderRow);
-        uiBoard.appendChild(uiHeaderRow);
-
-        const uiTitle = createText("User Interface", 24, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
-        uiTitle.layoutGrow = 1;
-        uiHeaderRow.appendChild(uiTitle);
-
-
-        // Helper para specs list (Colunas Verticais). Mostra só itens
-        // declarados manualmente pelo designer como "Componente Personalizado"
-        // (item.isMarkedCustom, toggle no card do item na tela Escanear
-        // Tokens) -- não mais qualquer item com vínculo DSC. Componentes
-        // conformes ou pendentes de revisão não entram: o dev usa o
-        // componente pronto da lib nesses casos, a lib já é a documentação;
-        // "Necessita revisão" é trabalho do designer, não informação de
-        // construção pro dev. Card é mínimo (nome + aviso) -- quem precisar
-        // de mais detalhe cria uma Spec (já tem snapshot visual próprio).
-        function createSpecList(title, items, type) {
-          if (!items || items.length === 0) return null;
-          const customItems = items.filter(item => item.isMarkedCustom === true);
-          if (customItems.length === 0) return null;
-          items = customItems;
-
-          const sec = createFrame("VERTICAL", 24, 16, { r: 1, g: 1, b: 1 });
-          sec.name = `[Scan] ${title}`;
-          sec.cornerRadius = 16;
-          sec.resize(280, 100);
-          sec.primaryAxisSizingMode = "AUTO";  // Hug height
-          sec.counterAxisSizingMode = "FIXED"; // Base width 280
-
-          const titleNode = createText(title, 18, "Bold", hexToRgb("#005ca9"));
-          sec.appendChild(titleNode);
-          setFillAndHug(titleNode);
-
-          const listContainer = createFrame("VERTICAL", 0, 12);
-          sec.appendChild(listContainer);
-          setFillAndHug(listContainer);
-
-          items.forEach(item => {
-            const elCard = createFrame("HORIZONTAL", 12, 12, { r: 1, g: 0.97, b: 0.91 });
-            elCard.name = `[Token] ${item.name}`;
-            elCard.cornerRadius = 12;
-            elCard.strokes = [{ type: "SOLID", color: { r: 0.96, g: 0.85, b: 0.6 } }];
-            elCard.strokeWeight = 1;
-            elCard.counterAxisAlignItems = "CENTER";
-
-            listContainer.appendChild(elCard);
-            setFillAndHug(elCard);
-
-            // Preview if exists — createRectangle só é chamado após obter o hash
-            // para evitar que um rect órfão fique solto na raiz da página caso
-            // createImage lance exceção.
-            if (item.preview) {
-              try {
-                const imageHash = figma.createImage(item.preview).hash;
-                const rect = figma.createRectangle();
-                rect.resize(32, 32);
-                rect.fills = [{ type: "IMAGE", imageHash, scaleMode: "FIT" }];
-                rect.cornerRadius = 4;
-                elCard.appendChild(rect);
-              } catch(e) {}
-            }
-
-            const textCol = createFrame("VERTICAL", 0, 2);
-            textCol.layoutGrow = 1;
-            elCard.appendChild(textCol);
-            setFillAndHug(textCol);
-
-            const iName = createText(item.name, 13, "Bold", { r: 0.1, g: 0.15, b: 0.25 });
-            if (item.nodeId && figma.fileKey) {
-              try {
-                iName.hyperlink = {
-                  type: "URL",
-                  value: `https://www.figma.com/design/${figma.fileKey}?node-id=${encodeURIComponent(item.nodeId)}`
-                };
-                iName.textDecoration = "UNDERLINE";
-                iName.fills = [{ type: "SOLID", color: hexToRgb("#005ca9") }];
-              } catch(e) {}
-            }
-            textCol.appendChild(iName);
-            setFillAndHug(iName);
-
-            const warn = createText("Componente personalizado — precisa ser construído", 10, "Bold", { r: 0.7, g: 0.4, b: 0 });
-            textCol.appendChild(warn);
-            setFillAndHug(warn);
-          });
-
-          return sec;
-        }
-
-        // Agrega specs de todos os frames + fallback para global
-        const _allFrameSpecs = (data.frames || []).map(f => f.specs).filter(Boolean);
-        const _globalSpecs = data.step2 && data.step2.specs ? data.step2.specs : null;
-        const _specsSource = _allFrameSpecs.length > 0 ? _allFrameSpecs : (_globalSpecs ? [_globalSpecs] : []);
-        const specsData = {
-          components: _specsSource.flatMap(s => s.components || []),
-          icons:      _specsSource.flatMap(s => s.icons      || []),
-          typography: _specsSource.flatMap(s => s.typography || []),
-          frames:     _specsSource.flatMap(s => s.frames     || []),
-          vectors:    _specsSource.flatMap(s => s.vectors    || []),
-        };
-
-        const specsRow = figma.createFrame();
-        specsRow.name = '[Row] Colunas UI';
-        specsRow.layoutMode = "HORIZONTAL";
-        specsRow.itemSpacing = 24;
-        specsRow.paddingLeft = 0;
-        specsRow.paddingRight = 0;
-        specsRow.paddingTop = 0;
-        specsRow.paddingBottom = 0;
-        specsRow.fills = [];
-        specsRow.primaryAxisSizingMode = "AUTO";
-        specsRow.counterAxisSizingMode = "AUTO";
-        specsRow.counterAxisAlignItems = "MIN";
-
-        // Uma coluna por categoria, lado a lado
-        [
-          { title: "Componentes",     items: specsData.components, type: "components" },
-          { title: "Ícones",          items: specsData.icons,      type: "icons"      },
-          { title: "Tipografia",      items: specsData.typography, type: "typography" },
-          { title: "Vetores",         items: specsData.vectors,    type: "vectors"    },
-          { title: "Frames e Layouts",items: specsData.frames,     type: "frames"     },
-        ].forEach(cat => {
-          const sec = createSpecList(cat.title, cat.items, cat.type);
-          if (sec) specsRow.appendChild(sec);
-        });
-
-        if (specsRow.children.length > 0) {
-          uiBoard.appendChild(specsRow);
-          setFillAndHug(specsRow);
-          mainContainer.appendChild(uiBoard);
-        } else {
-          specsRow.remove();
-          uiBoard.remove();
-        }
       }
 
       // 3. ANATOMIA / MEDIDAS
@@ -4122,44 +4217,58 @@ figma.ui.onmessage = async (msg) => {
       const pt = node.paddingTop || 0, pr = node.paddingRight || 0, pb = node.paddingBottom || 0, pl = node.paddingLeft || 0;
       if (pt + pr + pb + pl > 0) {
         const tT = await getVar("paddingTop"), tR = await getVar("paddingRight"), tB = await getVar("paddingBottom"), tL = await getVar("paddingLeft");
-        const vT = tT || `${pt}px`, vR = tR || `${pr}px`, vB = tB || `${pb}px`, vL = tL || `${pl}px`;
-        let val, token;
+        const vT = `${pt}px`, vR = `${pr}px`, vB = `${pb}px`, vL = `${pl}px`;
+        let val;
         if (vT === vR && vR === vB && vB === vL) {
-          val = vT;                           // todos iguais — mostra 1
+          val = vT;
         } else if (vT === vB && vR === vL) {
-          val = `${vT} ${vR}`;               // simétrico V H
+          val = `${vT} ${vR}`;
         } else {
-          val = `${vT} ${vR} ${vB} ${vL}`;  // formato completo T R B L
+          val = `${vT} ${vR} ${vB} ${vL}`;
         }
-        // token: usa o primeiro token encontrado como referência
-        token = tT || tR || tB || tL || null;
+        const tokens = [...new Set([tT, tR, tB, tL].filter(Boolean))];
+        const token = tokens.length > 0 ? tokens.join(", ") : null;
         properties.push({ key: "padding", label: "Padding", value: val, token });
       }
     }
 
     // 4. Colors & Strokes
+    const getStyleName = async (idProp) => {
+      const id = idProp in node ? node[idProp] : null;
+      if (typeof id !== "string" || !id) return null;
+      const style = await figma.getStyleByIdAsync(id);
+      return style ? style.name : null;
+    };
     if ("fills" in node && Array.isArray(node.fills) && node.fills.length > 0) {
-      const sf = node.fills.find(f => f.type === "SOLID");
-      if (sf) {
-        const token = await getPaintVar(sf);
+      const fillStyleName = await getStyleName("fillStyleId");
+      const solids = node.fills.filter(f => f.type === "SOLID" && f.visible !== false);
+      for (let i = 0; i < solids.length; i++) {
+        const sf = solids[i];
+        const token = (await getPaintVar(sf)) || fillStyleName;
         const hexFill = rgbToHex(sf.color.r, sf.color.g, sf.color.b).toUpperCase();
-        properties.push({ key: "fill", label: "Preenchimento", value: token || hexFill, token });
+        properties.push({ key: i === 0 ? "fill" : `fill-${i + 1}`, label: i === 0 ? "Preenchimento" : `Preenchimento ${i + 1}`, value: hexFill, token });
       }
     }
     if ("strokes" in node && Array.isArray(node.strokes) && node.strokes.length > 0) {
+      const strokeStyleName = await getStyleName("strokeStyleId");
       const ss = node.strokes.find(s => s.type === "SOLID");
       if (ss) {
-        const token = await getPaintVar(ss);
+        const token = (await getPaintVar(ss)) || strokeStyleName;
         const hexStroke = rgbToHex(ss.color.r, ss.color.g, ss.color.b).toUpperCase();
-        properties.push({ key: "stroke", label: "Contorno", value: token || hexStroke, token });
+        properties.push({ key: "stroke", label: "Contorno", value: hexStroke, token });
       }
       if (node.strokeWeight !== figma.mixed && node.strokeWeight > 0) {
-        properties.push({ key: "strokeWidth", label: "Espessura de borda", value: node.strokeWeight + "px" });
+        const token = await getVar("strokeWeight");
+        properties.push({ key: "strokeWidth", label: "Espessura de borda", value: node.strokeWeight + "px", token });
       }
     }
 
     // 5. Typography
     if (node.type === "TEXT") {
+      const textStyleName = node.textStyleId !== figma.mixed ? await getStyleName("textStyleId") : null;
+      if (textStyleName) {
+        properties.push({ key: "textStyle", label: "Text Style", value: textStyleName, token: textStyleName });
+      }
       if (node.fontName !== figma.mixed) {
         properties.push({ key: "fontFamily", label: "Família", value: node.fontName.family });
         properties.push({ key: "fontWeight", label: "Peso", value: node.fontName.style });
@@ -4167,6 +4276,22 @@ figma.ui.onmessage = async (msg) => {
       if (node.fontSize !== figma.mixed) {
         const token = await getVar("fontSize");
         properties.push({ key: "fontSize", label: "Tamanho da fonte", value: node.fontSize + "px", token });
+      }
+    }
+
+    // Efeitos, sizing e componente reaproveitam a extração da Spec Rápida
+    // para a Detalhada ser superconjunto dela.
+    const qsProps = await _qsExtractNodeProperties(node, ['effect', 'dimensions', 'component']);
+    let effectIdx = 0;
+    for (const qp of qsProps) {
+      if (qp.label.startsWith("Effect")) {
+        properties.push({ key: `effect-${effectIdx++}`, label: qp.label, value: qp.value, token: qp.tokenName });
+      } else if (qp.label === "W Sizing") {
+        properties.push({ key: "sizingW", label: "Sizing Largura", value: qp.value });
+      } else if (qp.label === "H Sizing") {
+        properties.push({ key: "sizingH", label: "Sizing Altura", value: qp.value });
+      } else if (qp.label === "Componente") {
+        properties.push({ key: "component", label: "Componente", value: qp.libName ? `${qp.value} (${qp.libName})` : qp.value });
       }
     }
 
@@ -4524,7 +4649,8 @@ figma.ui.onmessage = async (msg) => {
           pVal.fontName = { family: "Inter", style: "Bold" };
           pVal.fontSize = 11;
           pVal.fills = [{ type: "SOLID", color: p.token ? themeColor : { r: 0.1, g: 0.1, b: 0.1 } }];
-          pVal.characters = p.token || String(p.value);
+          const _pValStr = String(p.value);
+          pVal.characters = p.token && p.token !== _pValStr ? `${p.token} · ${_pValStr}` : (p.token || _pValStr);
           pVal.textAutoResize = "HEIGHT";
 
           row.appendChild(pLabel);
@@ -6567,10 +6693,8 @@ figma.ui.onmessage = async (msg) => {
       return;
     }
     try {
-      // Um elemento acumulado pode ser descendente de outro (ex: designer
-      // clicou no ícone e depois no frame que o contém) -- _qsExtractRaw já
-      // faz o walk em árvore a partir de cada raiz, então dedupe por nodeId
-      // do RESULTADO final evita o mesmo elemento aparecer 2x na lista.
+      // _qsExtractRaw lê só o próprio nó marcado; o dedupe por nodeId
+      // protege contra o mesmo id acumulado 2x na seleção.
       const seenIds = new Set();
       const elements = [];
       for (const acc of accumulated) {
@@ -6683,7 +6807,7 @@ figma.ui.onmessage = async (msg) => {
       const GRID_GAP = 48;
       const cardWidth = cards.length > 0 ? Math.max(...cards.map(c => c.width)) : 280;
       const wrapper = figma.createFrame();
-      wrapper.name = "Spec Express — Cards";
+      wrapper.name = "Specs Rápidas — Cards";
       wrapper.layoutMode = "HORIZONTAL";
       wrapper.layoutWrap = "WRAP";
       wrapper.itemSpacing = GRID_GAP;
@@ -6742,11 +6866,12 @@ figma.ui.onmessage = async (msg) => {
 
       const markers = [];
       const markerParts = [];
+      const _qsUsedSegments = [];
       for (let i = 0; i < cards.length; i++) {
         const item = items[i];
         const node = item.nodeId ? await figma.getNodeByIdAsync(item.nodeId) : null;
         const obstacles = _qsAllCardBounds.filter((b, j) => j !== i && b);
-        const built = _qsBuildConnectorForCard(cards[i], node, item.tag, obstacles);
+        const built = _qsBuildConnectorForCard(cards[i], node, item.tag, obstacles, columns, _qsUsedSegments);
         if (built) { markers.push(built.marker); markerParts.push(...built.parts); }
       }
 
@@ -6770,7 +6895,7 @@ figma.ui.onmessage = async (msg) => {
       figma.currentPage.selection = [wrapper, ...markers];
       figma.viewport.scrollAndZoomIntoView([wrapper, ...markers]);
       figma.ui.postMessage({ type: "quick-spec-canvas-result", count: cards.length, created: createdMap });
-      figma.notify(cards.length > 1 ? `${cards.length} cards do Spec Express inseridos no canvas ✓` : "Card do Spec Express inserido no canvas ✓");
+      figma.notify(cards.length > 1 ? `${cards.length} cards de Specs Rápidas inseridos no canvas ✓` : "Card de Spec Rápida inserido no canvas ✓");
     } catch (err) {
       const errMsg = err && err.message ? err.message : String(err);
       console.error("Erro ao inserir card do Spec Express:", errMsg);
@@ -6786,11 +6911,15 @@ figma.ui.onmessage = async (msg) => {
   // deliberadamente efêmera (decisão de produto), mas isso deixava órfão
   // qualquer card já inserido antes de um reload: sem saber que ele existe,
   // o designer não tinha como excluí-lo (nem a lista, nem o card) pela UI.
-  // Devolve só o ESSENCIAL gravado por pluginData em cada card (tag, nome,
-  // tipo, sourceId, o próprio cardId) -- nunca as PROPRIEDADES escaneadas
-  // (cor, spacing etc.), que exigiriam re-ler cada elemento de origem; a UI
-  // monta entradas "mínimas" a partir disso, focáveis/excluíveis mas sem
-  // accordion de propriedades (ver _quickSpecMergeCanvasCards).
+  // Devolve o ESSENCIAL gravado por pluginData em cada card (tag, nome,
+  // tipo, sourceId, o próprio cardId) e, desde 2026-09-29, também as
+  // PROPRIEDADES escaneadas (cor, spacing etc.), gravadas em
+  // 'handexQuickSpecProperties' por _qsBuildElementCard -- não é mais
+  // preciso re-ler cada elemento de origem. Cards legados (criados antes
+  // dessa mudança) nunca tiveram essa chave gravada: `properties` volta
+  // `null` nesse caso, mesmo comportamento de antes ("não disponível" na
+  // UI); array vazio é resultado legítimo (nó sem props na categoria
+  // filtrada) e é distinto de `null` -- a UI já sabe diferenciar os dois.
   if (msg.type === "quick-spec-list-canvas-cards") {
     const cards = [];
     const quickSpecSection = figma.currentPage.children.find(n => n.type === 'SECTION' && n.getPluginData('handexCategorySection') === 'quickspec');
@@ -6800,12 +6929,14 @@ figma.ui.onmessage = async (msg) => {
         wrapper.children.forEach(card => {
           const tag = card.getPluginData('handexQuickSpecTag');
           if (!tag) return;
+          const rawProperties = card.getPluginData('handexQuickSpecProperties');
           cards.push({
             cardId: card.id,
             tag,
             name: card.getPluginData('handexQuickSpecName') || card.name,
             nodeType: card.getPluginData('handexQuickSpecNodeType') || '',
-            sourceNodeId: card.getPluginData('handexQuickSpecSourceId') || null
+            sourceNodeId: card.getPluginData('handexQuickSpecSourceId') || null,
+            properties: rawProperties ? JSON.parse(rawProperties) : null
           });
         });
       });
@@ -6992,8 +7123,8 @@ function _qsFindLibForKey(key) {
 const QUICK_SPEC_CATEGORIES = ['dimensions', 'spacing', 'fill', 'border', 'radius', 'effect', 'typography', 'component'];
 
 // Extrai as propriedades brutas de UM nó, filtradas pelas categorias
-// marcadas na modal -- sem auditoria, sem filtro de vetores/frames (aqui o
-// designer quer ver TUDO que existe dentro do frame, diferente do scan de
+// marcadas na modal -- sem auditoria, sem filtro de vetores/frames (o
+// elemento marcado pelo designer é sempre lido, diferente do scan de
 // tokens que filtra shapes primitivas e containers puros por não
 // representarem conformidade DS). Cada prop devolve { label, value,
 // tokenName, tokenKey, libName } -- libName só é preenchido quando tokenKey
@@ -7145,31 +7276,24 @@ async function _qsExtractNodeProperties(n, categories) {
   return props;
 }
 
-// Percorre a árvore do frame selecionado (profundidade máxima 8, mesmo
-// limite do scan de tokens) e devolve UMA lista plana: um item por nó com
-// pelo menos 1 propriedade extraída. Não agrupa por categoria (component/
-// icon/typography) -- é consulta rápida, não catalogação. `categories` vem
-// da modal de filtro (quick-spec-filters-modal) -- nunca vazio (frontend
-// garante ao menos 1 categoria marcada antes de disparar o scan).
+// Extrai só o PRÓPRIO nó marcado (sem descer na subárvore -- decisão de
+// produto: a Rápida entrega o essencial do elemento marcado; quem quer os
+// filhos marca os filhos também, e o aprofundamento vive na Detalhada).
+// Devolve lista com 0 ou 1 item. `categories` vem da modal de filtro
+// (quick-spec-filters-modal) -- nunca vazio (frontend garante ao menos 1
+// categoria marcada antes de disparar o scan).
 async function _qsExtractRaw(rootNode, categories) {
   const cats = (Array.isArray(categories) && categories.length > 0) ? categories : QUICK_SPEC_CATEGORIES;
   const elements = [];
-  async function walk(n, depth) {
-    if ((depth || 0) > 8) return;
-    if (n.visible === false) return;
-    try {
-      const props = await _qsExtractNodeProperties(n, cats);
-      if (props.length > 0) {
-        elements.push({ nodeId: n.id, name: n.name, nodeType: n.type, properties: props });
-      }
-    } catch (e) {
-      console.error("Spec Express: erro ao ler nó", n.name, e && e.message);
+  if (rootNode.visible === false) return elements;
+  try {
+    const props = await _qsExtractNodeProperties(rootNode, cats);
+    if (props.length > 0) {
+      elements.push({ nodeId: rootNode.id, name: rootNode.name, nodeType: rootNode.type, properties: props });
     }
-    if ('children' in n && n.children) {
-      for (const child of n.children) await walk(child, (depth || 0) + 1);
-    }
+  } catch (e) {
+    console.error("Spec Express: erro ao ler nó", rootNode.name, e && e.message);
   }
-  await walk(rootNode, 0);
   return elements;
 }
 
@@ -7193,7 +7317,7 @@ async function _qsBuildElementCard(item, node) {
   await figma.loadFontAsync({ family: "Inter", style: "Bold" });
 
   const card = _hdCreateFrame("VERTICAL", 16, 10, { r: 1, g: 1, b: 1 });
-  card.name = "Spec Express " + item.tag + " | " + item.name;
+  card.name = "Spec Rápida " + item.tag + " | " + item.name;
   card.strokes = [{ type: "SOLID", color: { r: 0.88, g: 0.9, b: 0.93 } }];
   card.strokeWeight = 1;
   card.cornerRadius = 12;
@@ -7203,6 +7327,7 @@ async function _qsBuildElementCard(item, node) {
   card.setPluginData('handexQuickSpecName', item.name);
   card.setPluginData('handexQuickSpecNodeType', item.nodeType || '');
   if (node) card.setPluginData('handexQuickSpecSourceId', node.id);
+  card.setPluginData('handexQuickSpecProperties', JSON.stringify(item.properties || []));
 
   // Header: tag em destaque (badge) + nome/tipo do elemento
   const headerRow = _hdCreateFrame("HORIZONTAL", 0, 8, null);
@@ -7373,10 +7498,14 @@ function _qsPathObstacles(pathPoints, obstacles) {
 // o cotovelo original em direção ao ponto de entrada do destino. Mantém
 // SEMPRE ângulos de 90° -- nunca diagonal.
 function _qsDetourAroundObstacles(startPt, endPt, side, oppositeSide, obstacles) {
-  // 40px -- alinhado ao QS_ELBOW_OFFSET do cotovelo sem desvio
-  // (_qsBuildConnectorForCard, 2026-09-29) por consistência visual entre os
-  // dois caminhos possíveis da mesma linha guia. Era 24px (pedido anterior
-  // do Augusto: "com 16px o desvio ainda vinha grudado no card").
+  // 40px -- valor de segurança pro caso de colisão REAL com card vizinho no
+  // meio do caminho (raro; a maioria das linhas nunca aciona este desvio).
+  // Era 16px (pedido anterior do Augusto: "com 16px o desvio ainda vinha
+  // grudado no card"). Não confundir com QS_ELBOW_OFFSET_CARD (16px, ver
+  // _qsBuildConnectorForCard) -- aquele é o offset de aproximação final no
+  // ponto de entrada do card, medido contra o GRID_GAP (48px) do grid;
+  // este é a margem de desvio ao redor de um obstáculo já detectado no
+  // meio do trajeto, sem essa mesma restrição de espaço.
   const MARGIN = 40;
   const union = obstacles.reduce((acc, r) => ({
     x: Math.min(acc.x, r.x), y: Math.min(acc.y, r.y),
@@ -7411,7 +7540,86 @@ function _qsDetourAroundObstacles(startPt, endPt, side, oppositeSide, obstacles)
   return [startPt, ...waypoints, endPt];
 }
 
-function _qsBuildConnectorForCard(card, node, tag, obstacleBounds) {
+// Conta trechos do path que correm colineares SOBRE trechos já usados por
+// outras linhas do lote (mesmo eixo, dentro de 2px, com interseção de
+// comprimento > 1px). Cruzamento perpendicular não conta de propósito.
+function _qsCountOverlaps(pathPoints, usedSegments) {
+  const TOL = 2;
+  let count = 0;
+  for (let i = 0; i < pathPoints.length - 1; i++) {
+    const a = pathPoints[i], b = pathPoints[i + 1];
+    const horiz = Math.abs(a.y - b.y) < 0.01 && Math.abs(a.x - b.x) > 0.01;
+    const vert = Math.abs(a.x - b.x) < 0.01 && Math.abs(a.y - b.y) > 0.01;
+    if (!horiz && !vert) continue;
+    for (const s of usedSegments) {
+      if (s.horiz !== horiz) continue;
+      const fixedA = horiz ? a.y : a.x;
+      if (Math.abs(fixedA - s.fixed) >= TOL) continue;
+      const lo = horiz ? Math.min(a.x, b.x) : Math.min(a.y, b.y);
+      const hi = horiz ? Math.max(a.x, b.x) : Math.max(a.y, b.y);
+      if (Math.min(hi, s.hi) - Math.max(lo, s.lo) > 1) { count++; break; }
+    }
+  }
+  return count;
+}
+
+function _qsRecordSegments(pathPoints, usedSegments) {
+  for (let i = 0; i < pathPoints.length - 1; i++) {
+    const a = pathPoints[i], b = pathPoints[i + 1];
+    if (Math.abs(a.y - b.y) < 0.01 && Math.abs(a.x - b.x) > 0.01) {
+      usedSegments.push({ horiz: true, fixed: a.y, lo: Math.min(a.x, b.x), hi: Math.max(a.x, b.x) });
+    } else if (Math.abs(a.x - b.x) < 0.01 && Math.abs(a.y - b.y) > 0.01) {
+      usedSegments.push({ horiz: false, fixed: a.x, lo: Math.min(a.y, b.y), hi: Math.max(a.y, b.y) });
+    }
+  }
+}
+
+// Desloca, no eixo perpendicular, os trechos INTERMEDIÁRIOS do path (nunca o
+// primeiro/último, que carregam startPt/endPt e os dots) que sobrepõem linhas
+// já desenhadas. Só desloca segmento cujos dois vizinhos são perpendiculares
+// a ele (senão a dobra viraria diagonal) e cujos vizinhos mantêm o sentido
+// original (senão o stub de saída/entrada inverteria). Prioridade: nunca
+// introduzir colisão com card -- candidato que aumenta colisões é descartado.
+function _qsSeparateFromUsedLines(pathPoints, usedSegments, obstacleBounds) {
+  const STEP = 8, MAX_TRIES = 8;
+  const obstacles = obstacleBounds || [];
+  let path = pathPoints;
+  for (let i = 1; i < path.length - 2; i++) {
+    const a = path[i], b = path[i + 1];
+    const horiz = Math.abs(a.y - b.y) < 0.01;
+    const vert = Math.abs(a.x - b.x) < 0.01;
+    if (horiz === vert) continue;
+    const prev = path[i - 1], next = path[i + 2];
+    const prevPerp = horiz ? Math.abs(prev.x - a.x) < 0.01 : Math.abs(prev.y - a.y) < 0.01;
+    const nextPerp = horiz ? Math.abs(next.x - b.x) < 0.01 : Math.abs(next.y - b.y) < 0.01;
+    if (!prevPerp || !nextPerp) continue;
+    const baseOverlaps = _qsCountOverlaps(path, usedSegments);
+    if (baseOverlaps === 0) break;
+    const baseHits = _qsPathObstacles(path, obstacles).length;
+    const sign = (v) => (v > 0 ? 1 : v < 0 ? -1 : 0);
+    const prevDir = sign(horiz ? a.y - prev.y : a.x - prev.x);
+    const nextDir = sign(horiz ? next.y - b.y : next.x - b.x);
+    let best = null;
+    for (let t = 1; t <= MAX_TRIES; t++) {
+      const d = (t % 2 === 1 ? 1 : -1) * STEP * Math.ceil(t / 2);
+      const na = horiz ? { x: a.x, y: a.y + d } : { x: a.x + d, y: a.y };
+      const nb = horiz ? { x: b.x, y: b.y + d } : { x: b.x + d, y: b.y };
+      const newPrevDir = sign(horiz ? na.y - prev.y : na.x - prev.x);
+      const newNextDir = sign(horiz ? next.y - nb.y : next.x - nb.x);
+      if (newPrevDir !== prevDir || newNextDir !== nextDir) continue;
+      const candidate = path.slice();
+      candidate[i] = na;
+      candidate[i + 1] = nb;
+      if (_qsPathObstacles(candidate, obstacles).length > baseHits) continue;
+      const ov = _qsCountOverlaps(candidate, usedSegments);
+      if (ov < baseOverlaps) { best = candidate; break; }
+    }
+    if (best) path = best;
+  }
+  return path;
+}
+
+function _qsBuildConnectorForCard(card, node, tag, obstacleBounds, gridColumns, usedSegments) {
   if (!node) return null;
   const bounds = node.absoluteBoundingBox || node.absoluteRenderBounds;
   if (!bounds) return null;
@@ -7477,20 +7685,59 @@ function _qsBuildConnectorForCard(card, node, tag, obstacleBounds) {
   const elCx = bounds.x + bounds.width / 2, elCy = bounds.y + bounds.height / 2;
   const cardCx = cardBounds.x + cardBounds.width / 2, cardCy = cardBounds.y + cardBounds.height / 2;
   const dx = cardCx - elCx, dy = cardCy - elCy;
-  const side = Math.abs(dx) >= Math.abs(dy) ? (dx >= 0 ? 'right' : 'left') : (dy >= 0 ? 'bottom' : 'top');
+  const sourceSide = Math.abs(dx) >= Math.abs(dy) ? (dx >= 0 ? 'right' : 'left') : (dy >= 0 ? 'bottom' : 'top');
+  const OPPOSITE_SIDE = { right: 'left', left: 'right', bottom: 'top', top: 'bottom' };
+
+  // Lado de ENTRADA no card -- não necessariamente o oposto de `sourceSide`
+  // (2026-09-29, segunda rodada de correção: aumentar offset não resolveu,
+  // print novo confirmou linha ainda colada em "Header content"/"Vector").
+  // Causa raiz real: o wrapper nasce inteiro à direita do frame de origem
+  // (anchorX = frame.x + frame.width + 60, ver quick-spec-insert-canvas) --
+  // pra QUALQUER card do grid, a distância X até o elemento (que fica
+  // dentro do frame, sempre longe do grid inteiro) tende a dominar sobre a
+  // distância Y (a diferença de altura entre o elemento e aquela linha
+  // específica do grid, tipicamente pequena) -- `sourceSide`/`side`
+  // resolvia 'left'/'right' pra praticamente TODO card do lote, mesmo os
+  // que não estão na primeira linha do grid. Com entrada horizontal
+  // dominante, a linha atravessa o corredor ESTREITO entre colunas
+  // (largura fixa = GRID_GAP, compartilhado por várias linhas do lote
+  // simultaneamente) -- nenhum valor de offset resolve isso, porque o
+  // problema é de ROTA (todo mundo espremido no mesmo corredor vertical
+  // apertado), não de distância antes da dobra.
+  // Quando o grid tem mais de 1 coluna, força entrada vertical (top/bottom)
+  // no card -- ignora `dx` de propósito só pra essa decisão específica
+  // (compara só elCy vs cardCy): dá à linha o corredor HORIZONTAL entre
+  // linhas do grid (altura = GRID_GAP, mas sem concorrência de colunas
+  // vizinhas tentando entrar no mesmo espaço). `_orthogonalElbowPoints` já
+  // suporta lados de entrada/saída independentes (não precisam ser opostos
+  // -- o ramo "eixos perpendiculares" cobre exatamente esse caso com 1
+  // dobra); com 1 coluna o grid é uma pilha vertical pura e o comportamento
+  // original (entrada sempre oposta à saída) é mantido, já que ali nunca
+  // houve o sintoma reportado. Trade-off aceito: um card exatamente na
+  // mesma linha do elemento (cardCy ~= elCy) também entra por cima/baixo em
+  // vez de lateral direto -- 1 dobra a mais nesse caso pontual, mas nunca
+  // reintroduz o corredor apertado entre colunas que causava o bug.
+  const cardSide = (gridColumns > 1)
+    ? (cardCy >= elCy ? 'top' : 'bottom')
+    : OPPOSITE_SIDE[sourceSide];
 
   let startPt, endPt;
-  if (side === 'right') {
+  if (sourceSide === 'right') {
     startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
-    endPt = { x: cardBounds.x, y: cardBounds.y + cardBounds.height / 2 };
-  } else if (side === 'left') {
+  } else if (sourceSide === 'left') {
     startPt = { x: bounds.x, y: bounds.y + bounds.height / 2 };
-    endPt = { x: cardBounds.x + cardBounds.width, y: cardBounds.y + cardBounds.height / 2 };
-  } else if (side === 'bottom') {
+  } else if (sourceSide === 'bottom') {
     startPt = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height };
-    endPt = { x: cardBounds.x + cardBounds.width / 2, y: cardBounds.y };
   } else {
     startPt = { x: bounds.x + bounds.width / 2, y: bounds.y };
+  }
+  if (cardSide === 'left') {
+    endPt = { x: cardBounds.x, y: cardBounds.y + cardBounds.height / 2 };
+  } else if (cardSide === 'right') {
+    endPt = { x: cardBounds.x + cardBounds.width, y: cardBounds.y + cardBounds.height / 2 };
+  } else if (cardSide === 'top') {
+    endPt = { x: cardBounds.x + cardBounds.width / 2, y: cardBounds.y };
+  } else {
     endPt = { x: cardBounds.x + cardBounds.width / 2, y: cardBounds.y + cardBounds.height };
   }
 
@@ -7500,25 +7747,38 @@ function _qsBuildConnectorForCard(card, node, tag, obstacleBounds) {
   // curva ainda cruzava por cima do CARD de destino, que não entrava na
   // conta do cálculo. Cotovelo/aresta reta com _orthogonalElbowPoints
   // (mesma função das specs tradicionais, ver createHandoffSpec) desvia de
-  // verdade, sem ambiguidade -- sempre sai reto na direção de `side` e
-  // entra reto no card pelo lado oposto.
-  const OPPOSITE_SIDE = { right: 'left', left: 'right', bottom: 'top', top: 'bottom' };
-  // Offset maior SÓ no Spec Express (2026-09-29, print real do usuário:
-  // comparando dois cards do mesmo lote, o caso "bom" tinha um respiro
-  // visível antes da dobra final, o "ruim" aparecia colado/abraçando a
-  // lateral do card -- causa raiz é o mesmo OFFSET=24 de
-  // _orthogonalElbowPoints ficando visualmente pequeno demais em layouts
-  // mais compactos deste módulo). Isolado por parâmetro (default 24
-  // preservado para specs tradicionais e Fluxos de Tela, que nunca tiveram
-  // esse problema reportado) -- não mexer no valor default da função
-  // compartilhada.
+  // verdade, sem ambiguidade -- sempre sai reto na direção de `sourceSide` e
+  // entra reto no card pelo lado calculado em `cardSide`.
+  // Offset maior SÓ no Spec Express do lado do ELEMENTO DE ORIGEM
+  // (2026-09-29, print real do usuário: comparando dois cards do mesmo
+  // lote, o caso "bom" tinha um respiro visível antes da dobra final, o
+  // "ruim" aparecia colado/abraçando a lateral do card). Isolado por
+  // parâmetro (default 24 preservado para specs tradicionais e Fluxos de
+  // Tela, que nunca tiveram esse problema reportado).
+  //
+  // Investigação de rodada seguinte (mesmo dia, 3 prints novos: linhas
+  // ainda coladas em "user info"/"user content"/"info"/"name") apontou a
+  // causa raiz real: QS_ELBOW_OFFSET=40 tinha sido aplicado nas DUAS pontas
+  // (ver `_orthogonalElbowPoints`), mas só o lado do elemento de origem
+  // tem espaço livre de sobra pra esse respiro -- o lado do CARD compete
+  // pelo mesmo espaço físico do GRID_GAP do grid (48px, ver wrapper.
+  // itemSpacing/counterAxisSpacing acima). Com offset=40 nos dois lados, a
+  // coluna de trânsito do cotovelo final fica a só GRID_GAP-40=8px da
+  // borda do card vizinho na mesma linha -- abaixo do detour por obstáculo
+  // (que só age em colisão real, não em proximidade) e visualmente
+  // imperceptível como respiro. QS_ELBOW_OFFSET_CARD=16 garante
+  // GRID_GAP-16=32px de folga real (mesma margem de 16px já usada no
+  // contour do elemento de origem, ver acima) sem tocar no respiro do lado
+  // do elemento, que nunca teve essa restrição de grid.
   const QS_ELBOW_OFFSET = 40;
+  const QS_ELBOW_OFFSET_CARD = 16;
   let qsPathPoints = [
     startPt,
     ..._orthogonalElbowPoints(
-      { x: startPt.x, y: startPt.y, side },
-      { x: endPt.x, y: endPt.y, side: OPPOSITE_SIDE[side] },
-      QS_ELBOW_OFFSET
+      { x: startPt.x, y: startPt.y, side: sourceSide },
+      { x: endPt.x, y: endPt.y, side: cardSide },
+      QS_ELBOW_OFFSET,
+      QS_ELBOW_OFFSET_CARD
     ),
     endPt
   ];
@@ -7531,12 +7791,20 @@ function _qsBuildConnectorForCard(card, node, tag, obstacleBounds) {
   // aconteceria por um obstáculo fora da união detectada na 1ª -- caso
   // extremo não esperado no cenário real de grid regular, mas a checagem
   // final abaixo é honesta: se ainda colidir, mantém o path desviado mesmo
-  // assim, é sempre melhor que o direto).
+  // assim, é sempre melhor que o direto). `_qsDetourAroundObstacles` só usa
+  // `side` pra decidir a ORIENTAÇÃO do desvio (vertical se a saída for
+  // lateral) -- `sourceSide` continua correto pra essa decisão mesmo com
+  // `cardSide` independente.
   if (obstacleBounds && obstacleBounds.length > 0) {
     const hitRects = _qsPathObstacles(qsPathPoints, obstacleBounds);
     if (hitRects.length > 0) {
-      qsPathPoints = _qsDetourAroundObstacles(startPt, endPt, side, OPPOSITE_SIDE[side], hitRects);
+      qsPathPoints = _qsDetourAroundObstacles(startPt, endPt, sourceSide, cardSide, hitRects);
     }
+  }
+
+  if (usedSegments) {
+    qsPathPoints = _qsSeparateFromUsedLines(qsPathPoints, usedSegments, obstacleBounds);
+    _qsRecordSegments(qsPathPoints, usedSegments);
   }
 
   const qsSegs = qsPathPoints.map(p => `${p.x} ${p.y}`).join(' L ');
