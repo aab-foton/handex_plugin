@@ -206,6 +206,7 @@ Razão da regra: a conformidade não se aplica ao contêiner, mas ao que está d
 - Tipografia: `styleKey != null` + fonte CAIXAstd → `isDS: true`
 - Componente com prefixo `[dsc]` no nome → `isDS: true` (fallback sem chave no skeleton)
 - Chave da instância presente em `componentKeys[]` do skeleton → `isDS: true` (match exato)
+- W/H Sizing e variantes/propriedades de instância → `isDS: null` + `matchedBy: "not-evaluated"` (não checados contra a lib até a Fase 5): mostram o valor com traço neutro, sem selo verde, e não entram na agregação de conformidade do componente/frame
 
 ---
 

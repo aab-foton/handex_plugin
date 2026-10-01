@@ -1391,7 +1391,8 @@
         let html = `<div class="mt-2 space-y-1 border-t border-gray-100 dark:border-dark-line pt-2">`;
         props.forEach(p => {
           const pStatus = isCurrentFrameAuditEnabled() ?
-            (p.isDS === true ? `<span class="text-[#10b981] shrink-0"><i data-lucide="check" class="w-3 h-3"></i></span>` :
+            (p.isDS === null ? `<span class="text-gray-300 dark:text-gray-600 shrink-0" title="Não avaliado contra a biblioteca"><i data-lucide="minus" class="w-3 h-3 pointer-events-none"></i></span>` :
+            p.isDS === true ? `<span class="text-[#10b981] shrink-0"><i data-lucide="check" class="w-3 h-3"></i></span>` :
              (p.isDS === "warning" ? `<span class="text-amber-500 shrink-0" title="${p.matchedBy === 'remote-unverified' ? 'Token de uma biblioteca publicada que não está nas libs do DSC cadastradas no Handex. Confira se é um token DSC ou atualize as referências.' : p.matchedBy === 'unverified-no-skeleton' ? 'Não verificado: as referências do DSC não estavam carregadas neste scan. Escaneie de novo.' : 'Necessita revisão'}"><i data-lucide="alert-triangle" class="w-3 h-3 pointer-events-none"></i></span>` :
               `<span class="text-red-400 shrink-0"><i data-lucide="x" class="w-3 h-3"></i></span>`)) : "";
 

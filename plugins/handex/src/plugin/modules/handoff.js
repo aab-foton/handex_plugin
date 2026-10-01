@@ -1905,7 +1905,7 @@ ${(handoffData.createdFlows || []).length === 0
               ];
 
               const sortByStatus = (a, b) => {
-                const rank = (x) => x.isDS === true ? 2 : x.isDS === "warning" ? 1 : 0;
+                const rank = (x) => x.isDS === null ? 3 : x.isDS === true ? 2 : x.isDS === "warning" ? 1 : 0;
                 return rank(a) - rank(b);
               };
 
@@ -1922,7 +1922,9 @@ ${(handoffData.createdFlows || []).length === 0
               const renderProp = (p) => {
                 let pStatusHTML = "";
                 if (isAuditEnabled) {
-                  if (p.isDS === true) {
+                  if (p.isDS === null) {
+                    pStatusHTML = `<span class="text-slate-300 dark:text-slate-600 shrink-0" title="Não avaliado contra a biblioteca"><i data-lucide="minus" class="w-3.5 h-3.5"></i></span>`;
+                  } else if (p.isDS === true) {
                     pStatusHTML = `<span class="text-[#10b981] shrink-0" title="Em conformidade"><i data-lucide="check" class="w-3.5 h-3.5"></i></span>`;
                   } else if (p.isDS === "warning") {
                     pStatusHTML = `<span class="text-amber-500 shrink-0" title="Necessita revisão"><i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i></span>`;

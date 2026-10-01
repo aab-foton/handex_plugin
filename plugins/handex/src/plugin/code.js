@@ -3680,8 +3680,8 @@ figma.ui.onmessage = async (msg) => {
         else if (parent.layoutMode === "HORIZONTAL" && n.layoutAlign === "STRETCH") hMode = "Fill Container";
         else if (n.layoutMode && ((n.layoutMode === "VERTICAL" && n.primaryAxisSizingMode === "AUTO") || (n.layoutMode === "HORIZONTAL" && n.counterAxisSizingMode === "AUTO"))) hMode = "Hug Contents";
 
-        props.push({ type: "layout", name: wMode, value: wMode, isDS: true, score: null, matchedBy: "intrinsic", matchedIn: null, label: "W Sizing" });
-        props.push({ type: "layout", name: hMode, value: hMode, isDS: true, score: null, matchedBy: "intrinsic", matchedIn: null, label: "H Sizing" });
+        props.push({ type: "layout", name: wMode, value: wMode, isDS: null, score: null, matchedBy: "not-evaluated", matchedIn: null, label: "W Sizing" });
+        props.push({ type: "layout", name: hMode, value: hMode, isDS: null, score: null, matchedBy: "not-evaluated", matchedIn: null, label: "H Sizing" });
       }
 
       // VARIANTS (For Instances)
@@ -3690,8 +3690,7 @@ figma.ui.onmessage = async (msg) => {
           // Format name: remove #... suffix if present
           const cleanName = propName.split("#")[0];
           const val = String(propObj.value);
-          // Variants are usually part of DS by definition if the component is [dsc]
-          props.push({ type: "variant", name: cleanName, value: val, isDS: true, score: null, matchedBy: "intrinsic", matchedIn: null, label: `Prop: ${cleanName}` });
+          props.push({ type: "variant", name: cleanName, value: val, isDS: null, score: null, matchedBy: "not-evaluated", matchedIn: null, label: `Prop: ${cleanName}` });
         });
       }
 
@@ -3831,7 +3830,7 @@ figma.ui.onmessage = async (msg) => {
           // padrão, e o vínculo sozinho não cobre isso. Mesma agregação usada
           // em "frames": todas as props OK = conforme; alguma OK = requer
           // revisão; nenhuma OK = fora do padrão.
-          const _auditableProps = props.filter(p => p.isDS !== undefined && p.type !== 'variant');
+          const _auditableProps = props.filter(p => p.isDS === true || p.isDS === 'warning' || p.isDS === false);
           if (_auditableProps.length > 0) {
             const _allOk = _auditableProps.every(p => p.isDS === true);
             const _anyOk = _auditableProps.some(p => p.isDS === true);
@@ -3841,8 +3840,8 @@ figma.ui.onmessage = async (msg) => {
       }
       if (category === "frames") {
         // Frame é conforme se todos os seus tokens de estilo vêm do DSC.
-        // Props sem isDS definido (variantes, etc.) são ignoradas na conta.
-        const _auditableProps = props.filter(p => p.isDS !== undefined && p.type !== 'variant');
+        // Props sem checagem real contra a lib (isDS null: sizing, variantes) são ignoradas na conta.
+        const _auditableProps = props.filter(p => p.isDS === true || p.isDS === 'warning' || p.isDS === false);
         if (_auditableProps.length === 0) {
           dsElement = true; // sem props auditáveis — sem desvio declarável
         } else {

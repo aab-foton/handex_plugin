@@ -50,7 +50,7 @@ let activeFrameId = null; // frame em foco para operações de modal
 // ── Conformidade automática por item/propriedade (batimento contra o DSC) ──
 // Complementa a declaração humana por frame (checkDone/semDesvios/observacoes,
 // ver specifications.js) -- não a substitui. Cada item/propriedade já chega
-// do scan (code.js) com isDS calculado (true/"warning"/false); aqui só
+// do scan (code.js) com isDS calculado (true/"warning"/false, ou null = não avaliado contra a lib: sizing e variantes); aqui só
 // agregamos esse dado para exibição. isDS é uma FOTO do momento do scan --
 // não recalcula sozinho se o elemento mudar no Figma depois; precisa rodar
 // "Atualizar escaneamento" de novo para refletir edições (ver
@@ -66,8 +66,10 @@ function computeItemAuditStatus(item) {
 
 function getItemAuditBreakdown(item) {
   const props = (item && item.properties) || [];
-  const out = { total: props.length, ok: 0, warning: 0, error: 0 };
+  const out = { total: 0, ok: 0, warning: 0, error: 0, notEvaluated: 0 };
   props.forEach(p => {
+    if (p.isDS === null) { out.notEvaluated++; return; }
+    out.total++;
     if (p.isDS === true) out.ok++;
     else if (p.isDS === 'warning') out.warning++;
     else out.error++;

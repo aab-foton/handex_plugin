@@ -2890,14 +2890,14 @@
           if (parent.layoutMode === "VERTICAL" && n.layoutGrow === 1) hMode = "Fill Container";
           else if (parent.layoutMode === "HORIZONTAL" && n.layoutAlign === "STRETCH") hMode = "Fill Container";
           else if (n.layoutMode && (n.layoutMode === "VERTICAL" && n.primaryAxisSizingMode === "AUTO" || n.layoutMode === "HORIZONTAL" && n.counterAxisSizingMode === "AUTO")) hMode = "Hug Contents";
-          props.push({ type: "layout", name: wMode, value: wMode, isDS: true, score: null, matchedBy: "intrinsic", matchedIn: null, label: "W Sizing" });
-          props.push({ type: "layout", name: hMode, value: hMode, isDS: true, score: null, matchedBy: "intrinsic", matchedIn: null, label: "H Sizing" });
+          props.push({ type: "layout", name: wMode, value: wMode, isDS: null, score: null, matchedBy: "not-evaluated", matchedIn: null, label: "W Sizing" });
+          props.push({ type: "layout", name: hMode, value: hMode, isDS: null, score: null, matchedBy: "not-evaluated", matchedIn: null, label: "H Sizing" });
         }
         if (n.type === "INSTANCE" && n.componentProperties) {
           Object.entries(n.componentProperties).forEach(([propName, propObj]) => {
             const cleanName = propName.split("#")[0];
             const val = String(propObj.value);
-            props.push({ type: "variant", name: cleanName, value: val, isDS: true, score: null, matchedBy: "intrinsic", matchedIn: null, label: `Prop: ${cleanName}` });
+            props.push({ type: "variant", name: cleanName, value: val, isDS: null, score: null, matchedBy: "not-evaluated", matchedIn: null, label: `Prop: ${cleanName}` });
           });
         }
         return props;
@@ -2969,7 +2969,7 @@
             dsElement = "warning";
             isCustomComponent = true;
           } else {
-            const _auditableProps = props.filter((p) => p.isDS !== void 0 && p.type !== "variant");
+            const _auditableProps = props.filter((p) => p.isDS === true || p.isDS === "warning" || p.isDS === false);
             if (_auditableProps.length > 0) {
               const _allOk = _auditableProps.every((p) => p.isDS === true);
               const _anyOk = _auditableProps.some((p) => p.isDS === true);
@@ -2978,7 +2978,7 @@
           }
         }
         if (category === "frames") {
-          const _auditableProps = props.filter((p) => p.isDS !== void 0 && p.type !== "variant");
+          const _auditableProps = props.filter((p) => p.isDS === true || p.isDS === "warning" || p.isDS === false);
           if (_auditableProps.length === 0) {
             dsElement = true;
           } else {

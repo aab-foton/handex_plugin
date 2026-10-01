@@ -534,9 +534,9 @@
   nodeType:            string,   // node.type do Figma (INSTANCE, TEXT, etc.)
   componentKey:        string | null,
   nodeId:              string,   // id do nó no canvas — chave de casamento entre scans
-  isDS:                true | 'warning' | false,   // conformidade calculada
+  isDS:                true | 'warning' | false,   // conformidade calculada (em properties[] também null = não avaliado contra a lib)
   score:               number | null,
-  matchedBy:           'key' | 'value' | 'name' | 'remote' | 'intrinsic' | null,
+  matchedBy:           'key' | 'value' | 'name' | 'remote' | 'not-evaluated' | null,   // not-evaluated: só em properties[] (sizing/variantes)
   matchedIn:           string | null,   // nome da lib onde bateu o match
   matchedTokenName:    string | null,
   isCustomComponent:   boolean,  // CALCULADO pelo scan: sem vínculo comprovado com a lib
