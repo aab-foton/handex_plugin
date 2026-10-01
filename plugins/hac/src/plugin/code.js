@@ -1393,8 +1393,8 @@ const A11Y_AGRUPAMENTO_KEYS = {
 //     "informacoes" segue SEM key publicada.
 //   [hac] Identificação da tela (ex-"Número da tela"): 5 componentes (4
 //     direções + desativado), paridade completa com
-//     A11Y_ITEM_NUMBER_KEYS_DESKTOP — apenas re-chaveado, sem mudança de
-//     variantes.
+//     "[a11y] Item Number" da lib antiga — apenas re-chaveado, sem mudança
+//     de variantes (hoje A11Y_IDENTIFICACAO_TELA_KEYS, usado também pela web).
 //
 // FALLBACK (decisão de produto, não questionar sem alinhamento): quando uma
 // categoria/orientação não existir no dicionário mobile (typeKeys
@@ -1477,15 +1477,15 @@ const A11Y_CONECTOR_LINHA_KEYS_MOBILE = {
   // desktop (A11Y_CONECTOR_LINHA_KEYS.informacoes, lib antiga).
 };
 
-// "[hac] Identificação da tela" (ex-"[a11y mob] Número da tela", mesmos
-// node_ids, apenas re-chaveado na migração 2026-09-17) — usado SÓ pro selo
-// de ÁREA MARCADA (ver handler create-a11y-area). Desenha um Connector
-// visual (traço) por direção, igual "[a11y] Item Number" no desktop —
-// confirmado via REST API (children da variante incluem um RECTANGLE
-// "Connector" em toda direção exceto "desativado"). Item de tabulação
-// mobile usa A11Y_TAB_ORDER_ITEM_KEY_MOBILE (abaixo), componente diferente
-// e sem conector.
-export const A11Y_ITEM_NUMBER_KEYS_MOBILE = {
+// "[hac] Identificação da tela" (arquivo próprio "[HAC] Handoff Super DSC
+// Mobile e Web", fileKey HhriLSpKnCB2dHhyiU16iB) — FONTE ÚNICA, web e mobile,
+// do selo de ÁREA/tela com conector: create-a11y-area, update-a11y-area-conector
+// e o selo "Número da tela" do bloco Frame Principal da Ficha. Desenha um
+// Connector visual (traço) por direção (RECTANGLE "Connector" em toda
+// direção exceto "desativado"). Substitui as 4 cópias antigas de "[a11y] Item
+// Number" (lib "Design Acessível" desktop, fileKey Wy0IhXRVZMSOOr8E609UqI),
+// que deixou de ser usada (2026-10-01, v0.1.0-beta.68).
+export const A11Y_IDENTIFICACAO_TELA_KEYS = {
   superior:   '30bc07a9462265a9c69b28f2389c25578fec3a75',
   inferior:   'bcaca4f76c4fc4f045706fee17d00432f0e1ed5b',
   esquerda:   'ad35c5a35f919c325fac63197f72d80988a99599',
@@ -1493,35 +1493,20 @@ export const A11Y_ITEM_NUMBER_KEYS_MOBILE = {
   desativado: '64dd33125f08835d3561647ebf1a21bd0221b3f1',
 };
 
-// "[hac] Ordenação" (variante tamanho=pequeno, mesmo node_id 5222:4269 da
-// lib antiga, apenas re-chaveado na migração 2026-09-17) — selo de ITEM
-// dentro da Ordem de Tabulação no mobile. Confirmado via REST API (fileKey
-// HhriLSpKnCB2dHhyiU16iB): só tem properties "tamanho" (grande/pequeno) e
-// "número" — SEM variante de direção/conector, porque a posição do selo já
-// é resolvida por x/y absoluto em _createTabOrderBadge (a lib não desenha
-// conector pra esse caso, diferente de "Identificação da tela"). Não tem
-// equivalente separado no desktop — lá "[a11y] Item Number" é o único
-// componente e é reaproveitado também pro selo de Área (mesmas keys de
-// A11Y_AREA_CONECTOR_KEYS), assimetria real entre as duas libs.
-export const A11Y_TAB_ORDER_ITEM_KEY_MOBILE = '860c9f70d42c05f23e00c8414df16911d3292cab';
-
-// "[a11y] Item Number" desktop — MESMA key já usada hoje em 2 lugares do
-// closure figma.ui.onmessage (create-a11y-area, como A11Y_AREA_CONECTOR_KEYS;
-// e o handler de Ordem de Tabulação, como A11Y_ITEM_NUMBER_KEYS — ambas já
-// eram literalmente os mesmos 5 valores, duplicados por estarem presas em
-// closures diferentes). Promovida aqui pro escopo de módulo (2026-09-10)
-// especificamente para o selo de Número da tela do bloco "Frame Principal"
-// da Ficha (_buildFichaFramePrincipalSection), que vive fora de qualquer um
-// dos dois closures — mesma key/componente real, não uma via de importação
-// nova. Se algum dia as 3 constantes forem unificadas numa só, esta é a
-// candidata natural a virar a fonte única.
-const A11Y_ITEM_NUMBER_KEYS_DESKTOP = {
-  superior:   'ff43b15ac0c078b35219984bf035c4c0f0089cf1',
-  inferior:   'b355a26c5a89aea074effe28ca6767b08e4a7f99',
-  esquerda:   'f9cd4394c0bfc48ae86d3028e836877887d23fcd',
-  direita:    '08ac04391034777646eec9395c6d221189ee6d46',
-  desativado: '71719f112ec0135b16df0deb6584fbc44af3aff2',
+// rawKeys das properties de "[hac] Identificação da tela" (confirmadas em
+// refs/design-acessivel-mobile-properties.json, node 13:479).
+export const A11Y_IDENTIFICACAO_TELA_PROPS = {
+  number: 'número#1478:0',
+  showLabel: 'mostrar label#733:0',
+  label: 'label#733:6',
 };
+
+// "[hac] Ordenação" (variante tamanho=pequeno, node 5222:4269) — selo de ITEM
+// dentro da Ordem de Tabulação, web e mobile. Confirmado via REST API: só tem
+// properties "tamanho" (grande/pequeno) e "número" (rawKey "número#5265:3") —
+// SEM variante de direção/conector nem label, porque a posição do selo já é
+// resolvida por x/y absoluto em _createTabOrderBadge.
+export const A11Y_ORDENACAO_ITEM_KEY = '860c9f70d42c05f23e00c8414df16911d3292cab';
 
 const _A11Y_SIDE_TO_ORIENTACAO = { left: 'esquerda', right: 'direita', top: 'superior', bottom: 'inferior' };
 
@@ -4644,7 +4629,7 @@ function _removeEmptyFichaHandoffFrames(itensFrame) {
 // explicitamente pelo usuário como funcionalidade NOVA, não só reorganização
 // de estrutura existente): nome do frame + selo real de "Número da tela"
 // (mesma key/lógica já usada hoje em create-a11y-area, ver
-// A11Y_ITEM_NUMBER_KEYS_DESKTOP/A11Y_ITEM_NUMBER_KEYS_MOBILE acima) +
+// A11Y_IDENTIFICACAO_TELA_KEYS acima) +
 // snapshot (imagem) da tela ORIGINAL da área — não um clone de trabalho
 // novo. Reaproveita _snapshotCloneIntoFichaSection tal como está: a função
 // só usa exportAsync/absoluteBoundingBox/id/name, propriedades de qualquer
@@ -4727,11 +4712,8 @@ async function _buildFichaFramePrincipalSection(itensFrame, area) {
   }
 
   if (!badge) {
-    const usingMobileKeys = area.a11yOrigin === 'mobile' && A11Y_ITEM_NUMBER_KEYS_MOBILE.desativado;
-    const badgeKey = usingMobileKeys ? A11Y_ITEM_NUMBER_KEYS_MOBILE.desativado : A11Y_ITEM_NUMBER_KEYS_DESKTOP.desativado;
-    const propKeys = usingMobileKeys
-      ? { number: 'número#1478:0', showLabel: 'mostrar label#733:0', label: 'label#733:6' }
-      : { number: 'number#1478:0', showLabel: 'show label#733:0', label: 'label#733:6' };
+    const badgeKey = A11Y_IDENTIFICACAO_TELA_KEYS.desativado;
+    const propKeys = A11Y_IDENTIFICACAO_TELA_PROPS;
     try {
       const comp = await figma.importComponentByKeyAsync(badgeKey);
       badge = comp.createInstance();

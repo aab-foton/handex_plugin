@@ -37,10 +37,11 @@
 import FICHA_INSTRUCTION_CONTENT from '../refs/ficha-instruction-content.json';
 
 import {
-  A11Y_ITEM_NUMBER_KEYS_MOBILE,
+  A11Y_IDENTIFICACAO_TELA_KEYS,
+  A11Y_IDENTIFICACAO_TELA_PROPS,
+  A11Y_ORDENACAO_ITEM_KEY,
   A11Y_SECTION_NAME,
   A11Y_SWIPE_FLOW_SECTION_NAME,
-  A11Y_TAB_ORDER_ITEM_KEY_MOBILE,
   FICHA_SECTION_ORDER,
   HAC_DATA_LEGACY_KEY,
   PLUGIN_VERSION,
@@ -782,7 +783,7 @@ figma.ui.onmessage = async (msg) => {
   if (msg.type === 'resolve-a11y-focus-node') {
     // area.targetNodeId (Frame Principal) vem do FRONTEND (msg.targetNodeId
     // — backend não tem acesso a hacData/a11yAreas[], ver comentário acima
-    // sobre A11Y_ITEM_NUMBER_KEYS/a11yOrigin) — usado como fallback quando
+    // sobre a11yOrigin) — usado como fallback quando
     // a réplica de trabalho da etapa ainda não existe (primeira vez que a
     // etapa é aberta pra esta área).
     let nodeId = msg.targetNodeId || null;
@@ -914,16 +915,10 @@ figma.ui.onmessage = async (msg) => {
   // projeto já documentado antes, não um botão manual) vai reaproveitar.
 
   // ── "Marcar Área" ──────────────────────────────────────────────────────
-  // Cria um selo numerado usando o componente REAL "[a11y] Conectores"
-  // (mesma family do modo Linha das specs), na variante escolhida pelo
-  // designer (msg.conector: superior/inferior/esquerda/direita/desativado).
-  const A11Y_AREA_CONECTOR_KEYS = {
-    superior:   'ff43b15ac0c078b35219984bf035c4c0f0089cf1',
-    inferior:   'b355a26c5a89aea074effe28ca6767b08e4a7f99',
-    esquerda:   'f9cd4394c0bfc48ae86d3028e836877887d23fcd',
-    direita:    '08ac04391034777646eec9395c6d221189ee6d46',
-    desativado: '71719f112ec0135b16df0deb6584fbc44af3aff2',
-  };
+  // Cria um selo numerado usando o componente REAL "[hac] Identificação da
+  // tela" (A11Y_IDENTIFICACAO_TELA_KEYS, arquivo próprio — web e mobile
+  // idênticos), na variante escolhida pelo designer (msg.conector:
+  // superior/inferior/esquerda/direita/desativado).
   if (msg.type === "create-a11y-area") {
     (async () => {
       const node = await _getSceneNodeById(msg.targetNodeId);
@@ -940,19 +935,11 @@ figma.ui.onmessage = async (msg) => {
       }
       try { await figma.loadFontAsync({ family: "Inter", style: "Bold" }); } catch (e) { }
 
-      const _conector = A11Y_AREA_CONECTOR_KEYS[msg.conector] ? msg.conector : 'superior';
-      // Origem Web/Mobile perguntada no frontend (confirmA11yArea) — não vem
-      // de area.origin (não existe mais como estado persistido), só decide
-      // o componente deste badge. Mesmo fallback mobile→desktop de
-      // _createTabOrderBadge/_tryImportA11yAgrupamento: se a direção não
-      // existir no dicionário mobile, cai pro desktop.
-      const usingMobileKeys = msg.origin === 'mobile' && A11Y_ITEM_NUMBER_KEYS_MOBILE[_conector];
-      const _conectorKey = usingMobileKeys ? A11Y_ITEM_NUMBER_KEYS_MOBILE[_conector] : A11Y_AREA_CONECTOR_KEYS[_conector];
-      // rawKeys divergem entre as duas libs — ver mesmo comentário em
-      // _createTabOrderBadge (só "label#733:6" coincide).
-      const propKeys = usingMobileKeys
-        ? { number: 'número#1478:0', showLabel: 'mostrar label#733:0', label: 'label#733:6' }
-        : { number: 'number#1478:0', showLabel: 'show label#733:0', label: 'label#733:6' };
+      const _conector = A11Y_IDENTIFICACAO_TELA_KEYS[msg.conector] ? msg.conector : 'superior';
+      // Web e mobile usam o MESMO componente "[hac] Identificação da tela"
+      // (msg.origin não decide mais a key do selo de Área).
+      const _conectorKey = A11Y_IDENTIFICACAO_TELA_KEYS[_conector];
+      const propKeys = A11Y_IDENTIFICACAO_TELA_PROPS;
       let badge = null;
       let usedRealComponent = true;
       try {
@@ -1115,19 +1102,9 @@ figma.ui.onmessage = async (msg) => {
       }
       try { await figma.loadFontAsync({ family: "Inter", style: "Bold" }); } catch (e) { }
 
-      const _AREA_CONECTOR_KEYS = {
-        superior:   'ff43b15ac0c078b35219984bf035c4c0f0089cf1',
-        inferior:   'b355a26c5a89aea074effe28ca6767b08e4a7f99',
-        esquerda:   'f9cd4394c0bfc48ae86d3028e836877887d23fcd',
-        direita:    '08ac04391034777646eec9395c6d221189ee6d46',
-        desativado: '71719f112ec0135b16df0deb6584fbc44af3aff2',
-      };
-      const _conector = _AREA_CONECTOR_KEYS[msg.conector] ? msg.conector : 'superior';
-      const usingMobileKeys = msg.origin === 'mobile' && A11Y_ITEM_NUMBER_KEYS_MOBILE[_conector];
-      const _conectorKey = usingMobileKeys ? A11Y_ITEM_NUMBER_KEYS_MOBILE[_conector] : _AREA_CONECTOR_KEYS[_conector];
-      const propKeys = usingMobileKeys
-        ? { number: 'número#1478:0', showLabel: 'mostrar label#733:0', label: 'label#733:6' }
-        : { number: 'number#1478:0', showLabel: 'show label#733:0', label: 'label#733:6' };
+      const _conector = A11Y_IDENTIFICACAO_TELA_KEYS[msg.conector] ? msg.conector : 'superior';
+      const _conectorKey = A11Y_IDENTIFICACAO_TELA_KEYS[_conector];
+      const propKeys = A11Y_IDENTIFICACAO_TELA_PROPS;
 
       const bb = node.absoluteBoundingBox;
       const _A11Y_AREA_GAP = 24;
@@ -2408,14 +2385,6 @@ figma.ui.onmessage = async (msg) => {
   }
 
   // ── Ordem de Tabulação ───────────────────────────────────────────────
-  const A11Y_ITEM_NUMBER_KEYS = {
-    superior:   'ff43b15ac0c078b35219984bf035c4c0f0089cf1',
-    inferior:   'b355a26c5a89aea074effe28ca6767b08e4a7f99',
-    esquerda:   'f9cd4394c0bfc48ae86d3028e836877887d23fcd',
-    direita:    '08ac04391034777646eec9395c6d221189ee6d46',
-    desativado: '71719f112ec0135b16df0deb6584fbc44af3aff2',
-  };
-
   // Origem (web/mobile) da Ordem de Tabulação é decidida por ÁREA MARCADA,
   // não por spec individual — diferente das specs de categoria (elemento/
   // titulo/etc.), uma Área não tem "categoria" própria, é só um agrupamento
@@ -2423,8 +2392,9 @@ figma.ui.onmessage = async (msg) => {
   // vive só no frontend); o frontend resolve a origem da área uma única vez
   // por sessão de revisão e manda pronta em msg.a11yOrigin em cada chamada
   // de draw-tab-order-badge — ver accessibility.js
-  // (_tabOrderDrawPendingBadge) e A11Y_ITEM_NUMBER_KEYS_MOBILE (topo do
-  // arquivo).
+  // (_tabOrderDrawPendingBadge). A origem não decide mais o componente do
+  // selo de item (A11Y_ORDENACAO_ITEM_KEY serve web e mobile); segue sendo
+  // propagada por compatibilidade de contrato.
 
   if (msg.type === "start-tab-order-mode") {
     _tabOrderModeActive = true;
@@ -2564,36 +2534,22 @@ figma.ui.onmessage = async (msg) => {
   async function _createTabOrderBadge(node, number, label, conector, areaId, reparentToSection, origin, tabOrderClone, sectionName) {
     const _conectorOptions = ['desativado', 'inferior', 'superior', 'esquerda', 'direita'];
     const _conector = _conectorOptions.includes(conector) ? conector : 'direita';
-    const hasLabel = !!label;
 
-    // Mobile: "[a11y mob] Ordenação" (tamanho=pequeno) — sem conector
-    // desenhado e sem property de direção (confirmado via REST API), então
-    // _conector só decide o POSICIONAMENTO x/y abaixo, nunca a variante do
-    // componente. Desktop mantém "[a11y] Item Number", que desenha o
-    // conector/traço por direção (mesmo componente reaproveitado pro selo
-    // de Área — não há equivalente "sem conector" na lib desktop).
-    const usingMobile = origin === 'mobile';
-
+    // "[hac] Ordenação" (tamanho=pequeno), web e mobile — sem conector
+    // desenhado, sem label e sem property de direção (confirmado via REST
+    // API), então `conector` só decide o POSICIONAMENTO x/y abaixo, nunca a
+    // variante do componente. `label` e `origin` não são mais usados
+    // (draw-tab-order-badge passa sempre label ''; _buildFichaTabulacaoSection
+    // passa item.label, que deixa de ser desenhado no selo).
     let badge = null;
     let usedRealComponent = true;
     try {
-      if (usingMobile) {
-        const comp = await figma.importComponentByKeyAsync(A11Y_TAB_ORDER_ITEM_KEY_MOBILE);
-        badge = comp.createInstance();
-        badge.setProperties({ 'número#5265:3': String(number) });
-      } else {
-        const comp = await figma.importComponentByKeyAsync(A11Y_ITEM_NUMBER_KEYS[_conector]);
-        badge = comp.createInstance();
-        badge.setProperties({
-          'number#1478:0': String(number),
-          'show label#733:0': hasLabel,
-          'label#733:6': label || 'Label',
-        });
-      }
+      const comp = await figma.importComponentByKeyAsync(A11Y_ORDENACAO_ITEM_KEY);
+      badge = comp.createInstance();
+      badge.setProperties({ 'número#5265:3': String(number) });
     } catch (e) {
       // Nunca deveria cair aqui com as keys atuais (confirmadas via REST API
-      // contra os component sets reais "[a11y] Item Number"/"[a11y mob]
-      // Ordenação") — mas se a lib "Design Acessível" não estiver
+      // contra o component set real "[hac] Ordenação") — mas se a lib não estiver
       // disponível como team library no arquivo (ex.: nunca habilitada,
       // removida), importComponentByKeyAsync falha e caímos aqui. Loga a
       // causa real em vez de engolir silenciosamente — sem isso, "por que
@@ -4261,7 +4217,7 @@ figma.ui.onmessage = async (msg) => {
   // vinculação em vez de deixar o import de fato falhar na hora de criar a spec.
   if (msg.type === "check-a11y-library") {
     (async () => {
-      const A11Y_LIBRARY_CANARY_KEY = 'f1bf785a343f191cff72e702d68a27a3a97f0ee9';
+      const A11Y_LIBRARY_CANARY_KEY = A11Y_ORDENACAO_ITEM_KEY;
       let linked = false;
       try {
         await figma.importComponentByKeyAsync(A11Y_LIBRARY_CANARY_KEY);

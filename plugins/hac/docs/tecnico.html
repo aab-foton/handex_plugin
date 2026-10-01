@@ -4432,6 +4432,59 @@ hr {
     <code>npx tsc --noEmit</code>, <code>npm run lint:figma-api</code>,
     <code>node --check</code> nos .js tocados.</p>
 
+    <h2 id="s8aa">8aa. Selos web migrados para o arquivo próprio; 4 constantes do Item Number viram uma (2026-10-01, v0.1.0-beta.68)</h2>
+
+    <p><strong>Assimetria que existia.</strong> O selo numerado era importado de
+    dois lugares conforme a origem: mobile do arquivo próprio
+    (<code>[HAC] Handoff Super DSC Mobile e Web</code>, fileKey
+    <code>HhriLSpKnCB2dHhyiU16iB</code>) e web da lib antiga "Design Acessível"
+    desktop (fileKey <code>Wy0IhXRVZMSOOr8E609UqI</code>,
+    <code>[a11y] Item Number</code>). As mesmas 5 keys da lib antiga estavam
+    copiadas em 4 constantes (<code>A11Y_AREA_CONECTOR_KEYS</code> e
+    <code>_AREA_CONECTOR_KEYS</code> em <code>onmessage.js</code>,
+    <code>A11Y_ITEM_NUMBER_KEYS</code> no closure de Tabulação,
+    <code>A11Y_ITEM_NUMBER_KEYS_DESKTOP</code> em <code>code.js</code>), e cada
+    ponto de uso trazia um ramo <code>usingMobileKeys</code> com rawKeys de
+    property diferentes (<code>number#1478:0</code> contra
+    <code>número#1478:0</code>).</p>
+
+    <p><strong>Estado atual.</strong> Em <code>code.js</code>:</p>
+    <ul>
+      <li><code>A11Y_IDENTIFICACAO_TELA_KEYS</code>: 5 keys de
+      <code>[hac] Identificação da tela</code> (superior/inferior/esquerda/direita/desativado).
+      Usada por <code>create-a11y-area</code>, <code>update-a11y-area-conector</code>
+      e pelo selo "Número da tela" do Frame Principal da Ficha, em web e
+      mobile. As properties vêm de <code>A11Y_IDENTIFICACAO_TELA_PROPS</code>
+      (<code>número#1478:0</code>, <code>mostrar label#733:0</code>,
+      <code>label#733:6</code>), conferidas em
+      <code>refs/design-acessivel-mobile-properties.json</code>.</li>
+      <li><code>A11Y_ORDENACAO_ITEM_KEY</code>: <code>[hac] Ordenação</code>
+      tamanho=pequeno, selo de item da Ordem de Tabulação em web e mobile
+      (<code>_createTabOrderBadge</code>; só a property <code>número#5265:3</code>).
+      Também é o canário de <code>check-a11y-library</code>.</li>
+    </ul>
+    <p>Os parâmetros <code>label</code> e <code>origin</code> de
+    <code>_createTabOrderBadge</code> continuam na assinatura mas não afetam
+    mais o componente; <code>conector</code> só decide o posicionamento x/y. O
+    selo de Área segue recebendo <code>msg.origin</code>, que já não escolhe a
+    key.</p>
+
+    <p><strong>Auditoria de keys.</strong> Das 57 keys de componente literais em
+    <code>code.js</code>, <code>backend/*.js</code> e <code>modules/*.js</code>,
+    42 resolviam para o arquivo próprio e 15 para a lib antiga. Depois: 42 do
+    arquivo próprio e 9 da lib antiga, todas de "Informações Adicionais"
+    (<code>A11Y_AGRUPAMENTO_KEYS.informacoes</code> e
+    <code>A11Y_CONECTOR_LINHA_KEYS.informacoes</code>), que sai na fase
+    seguinte junto com as Box specs web. Os node_ids internos dos dois arquivos
+    são idênticos (o arquivo próprio nasceu de uma cópia), então só a key prova
+    a origem: confirmar com <code>GET /v1/components/{key}</code>
+    (<code>meta.file_key</code>).</p>
+
+    <p><strong>Não tocado</strong>: Box specs, Agrupamento, Conectores (Linha),
+    Informações Adicionais, Swipe, Leitor de Tela, matching DSC,
+    reparenting/overlay/clone. O caminho mobile mantém os mesmos componentes,
+    keys e properties; só passou a ser compartilhado.</p>
+
     <h2 id="s9">9. Contrato de mensagens (UI ↔ backend)</h2>
 
     <p>Toda comunicação passa por <code>postMessage</code>/<code>window.onmessage</code> — o frontend

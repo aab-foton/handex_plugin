@@ -5780,7 +5780,7 @@ window.setA11yProjectOrigin = setA11yProjectOrigin;
 // ── Lib específica do projeto (2026-09-04) ──────────────────────────────
 // projectOrigin (web/mobile) continua sendo a fonte de verdade pra TODA a
 // lógica binária já madura do plugin (formulário mobile/desktop, seleção
-// de componente de selo A11Y_ITEM_NUMBER_KEYS/_MOBILE, filtro de
+// de componente de selo A11Y_IDENTIFICACAO_TELA_KEYS, filtro de
 // categorias) — nada disso muda. projectLib é um campo MAIS granular,
 // adicionado por cima: qual das 3 libs de produto escolhíveis
 // (web-angular-react legado, super-dsc-web novo, super-app mobile) o
@@ -8056,9 +8056,9 @@ function _nextA11yAreaNumber() {
 }
 
 // A origem web/mobile também é necessária aqui, na criação da própria
-// Área — o selo de número da Área (A11Y_AREA_CONECTOR_KEYS no backend)
-// precisa saber se importa o componente desktop ou mobile da lib Design
-// Acessível. Usa ensureA11yProjectOriginThen (ver bloco "Origem do
+// Área — a origem segue sendo perguntada/propagada, embora o selo de
+// número da Área (A11Y_IDENTIFICACAO_TELA_KEYS no backend, desde
+// 2026-10-01) seja o mesmo componente para web e mobile. Usa ensureA11yProjectOriginThen (ver bloco "Origem do
 // projeto" acima): se hacData.projectOrigin já foi respondido nesta
 // sessão do arquivo, segue direto sem perguntar de novo — decisão de
 // produto de 2026-09-02, que substitui a pergunta independente por área
