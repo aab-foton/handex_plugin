@@ -87,7 +87,7 @@
         return _CATEGORIAS
           .flatMap(cat => (f.specs && f.specs[cat]) || [])
           .filter(item => item.componentKey && item.matchedIn && item.matchedBy !== 'ancestor-key')
-          .map(item => ({ nome: item.name, biblioteca: item.matchedIn, componentKey: item.componentKey }));
+          .map(item => ({ nome: item.name, biblioteca: item.matchedIn, componentKey: item.componentKey, ...(item.legacyLib ? { libLegada: true } : {}) }));
       }
 
       // Lista detalhada de itens do scan por frame -- nome, categoria,
@@ -219,10 +219,14 @@
           lines.push(`- ${t.nome}${flags ? ` (${flags})` : ''} — ${t.qtdSpecs} spec(s), ${t.qtdMedidas} medida(s)`);
           if (t.componentesDSC.length > 0) {
             const _porLib = {};
-            t.componentesDSC.forEach(c => { (_porLib[c.biblioteca] = _porLib[c.biblioteca] || []).push(c.nome); });
+            const _legadas = new Set();
+            t.componentesDSC.forEach(c => {
+              (_porLib[c.biblioteca] = _porLib[c.biblioteca] || []).push(c.nome);
+              if (c.libLegada) _legadas.add(c.biblioteca);
+            });
             lines.push(`    Componentes DSC reais (reutilizar, não recriar):`);
             Object.entries(_porLib).forEach(([lib, nomes]) => {
-              lines.push(`    - [${lib}] ${[...new Set(nomes)].join(', ')}`);
+              lines.push(`    - [${lib}] ${[...new Set(nomes)].join(', ')}${_legadas.has(lib) ? ' (lib legada: existe versão equivalente nas libs Super DSC — preferir a versão nova ao reconstruir)' : ''}`);
             });
           }
           if (t.itensEscaneados.length > 0) {

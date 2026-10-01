@@ -15,7 +15,7 @@ export const AUDIT_SCORE = {
 };
 
 function emptyResult() {
-  return { score: AUDIT_SCORE.NONE, matchedBy: null, matchedIn: null, matchedTokenName: null };
+  return { score: AUDIT_SCORE.NONE, matchedBy: null, matchedIn: null, matchedTokenName: null, matchedTier: null };
 }
 
 // Score-based audit (só por chave, nunca por valor ou nome):
@@ -48,17 +48,19 @@ function _libNameOf(ref) {
 
 function _buildKeyIndex(referenceList) {
   const index = new Map();
+  let tier = null;
   const add = (key, libName, tokenName, tierRank) => {
     if (!key) return;
     const existing = index.get(key);
     if (!existing || tierRank > existing.tierRank) {
-      index.set(key, { matchedIn: libName, matchedTokenName: tokenName || null, tierRank });
+      index.set(key, { matchedIn: libName, matchedTokenName: tokenName || null, tierRank, tier });
     }
   };
   for (const ref of referenceList) {
     if (!ref) continue;
     const libName = _libNameOf(ref);
     const tierRank = _TIER_RANK[ref.tier] || _TIER_RANK.legacy;
+    tier = ref.tier || 'legacy';
     if (ref.designTokens && Array.isArray(ref.designTokens.variables)) {
       ref.designTokens.variables.forEach(t => { add(t.key, libName, t.name, tierRank); add(t.$key, libName, t.name, tierRank); });
     }
@@ -96,7 +98,7 @@ export function auditProperty(name, value, type, figmaKey, referenceTokensInput)
   if (figmaKey) {
     const hit = _keyIndexFor(referenceTokensInput, referenceList).get(figmaKey);
     if (hit) {
-      return { score: AUDIT_SCORE.EXACT, matchedBy: "key", matchedIn: hit.matchedIn, matchedTokenName: hit.matchedTokenName };
+      return { score: AUDIT_SCORE.EXACT, matchedBy: "key", matchedIn: hit.matchedIn, matchedTokenName: hit.matchedTokenName, matchedTier: hit.tier };
     }
   }
 

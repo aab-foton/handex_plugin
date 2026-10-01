@@ -1352,6 +1352,10 @@
             `<span class="flex items-center gap-1 text-amber-500 font-bold"><i data-lucide="help-circle" class="w-2.5 h-2.5"></i>NECESSITA REVISÃO</span>`) :
           `<span class="flex items-center gap-1 text-red-400 font-bold"><i data-lucide="alert-circle" class="w-2.5 h-2.5"></i>FORA DO PADRÃO</span>`)) : "";
 
+      const legacyBadge = (item.legacyLib && isCurrentFrameAuditEnabled())
+        ? `<span class="pointer-events-auto flex items-center gap-1 mt-0.5 text-slate-600 dark:text-slate-300 font-bold" title="Este componente vem de uma lib legada do DSC (Fundamentos Visuais ou Web Angular e React). Existe versão nas libs Super — vale migrar."><i data-lucide="library" class="w-2.5 h-2.5"></i>LIB LEGADA — PRECISA MIGRAR</span>`
+        : "";
+
       // Declaração manual do designer, distinta de isCustomComponent (calculado
       // pelo scan por ausência de vínculo comprovado) -- controla se este item
       // entra ou não na Ficha final (ver createSpecList em code.js). Precisa de
@@ -1495,6 +1499,7 @@
               <p class="text-[10px] font-bold text-slate-700 dark:text-white truncate group-hover:text-[#005ca9] transition-colors">${item.name}</p>
               <div class="text-[9px] uppercase tracking-wider font-medium">
                 ${dsStatus}
+                ${legacyBadge}
               </div>
             </div>
             <i data-lucide="locate" class="w-3 h-3 text-gray-400 dark:text-gray-600 group-hover:text-[#005ca9] dark:group-hover:text-blue-400 transition-colors shrink-0"></i>

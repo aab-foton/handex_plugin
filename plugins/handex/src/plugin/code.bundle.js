@@ -35,7 +35,7 @@
     NONE: 0
   };
   function emptyResult() {
-    return { score: AUDIT_SCORE.NONE, matchedBy: null, matchedIn: null, matchedTokenName: null };
+    return { score: AUDIT_SCORE.NONE, matchedBy: null, matchedIn: null, matchedTokenName: null, matchedTier: null };
   }
   var _TIER_RANK = { priority: 2, legacy: 1, standalone: 1 };
   var _keyIndexCache = /* @__PURE__ */ new WeakMap();
@@ -44,17 +44,19 @@
   }
   function _buildKeyIndex(referenceList) {
     const index = /* @__PURE__ */ new Map();
+    let tier = null;
     const add = (key, libName, tokenName, tierRank) => {
       if (!key) return;
       const existing = index.get(key);
       if (!existing || tierRank > existing.tierRank) {
-        index.set(key, { matchedIn: libName, matchedTokenName: tokenName || null, tierRank });
+        index.set(key, { matchedIn: libName, matchedTokenName: tokenName || null, tierRank, tier });
       }
     };
     for (const ref of referenceList) {
       if (!ref) continue;
       const libName = _libNameOf(ref);
       const tierRank = _TIER_RANK[ref.tier] || _TIER_RANK.legacy;
+      tier = ref.tier || "legacy";
       if (ref.designTokens && Array.isArray(ref.designTokens.variables)) {
         ref.designTokens.variables.forEach((t) => {
           add(t.key, libName, t.name, tierRank);
@@ -86,7 +88,7 @@
     if (figmaKey) {
       const hit = _keyIndexFor(referenceTokensInput, referenceList).get(figmaKey);
       if (hit) {
-        return { score: AUDIT_SCORE.EXACT, matchedBy: "key", matchedIn: hit.matchedIn, matchedTokenName: hit.matchedTokenName };
+        return { score: AUDIT_SCORE.EXACT, matchedBy: "key", matchedIn: hit.matchedIn, matchedTokenName: hit.matchedTokenName, matchedTier: hit.tier };
       }
     }
     return emptyResult();
@@ -378,7 +380,7 @@
         elementsWrap.appendChild(elementsLabel);
         _hdSetFillAndHug(elementsLabel);
         _allItems.forEach((item) => {
-          const itemText = _hdCreateText(`${item.name || "Elemento"} \u2014 ${item._cat}`, 12, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
+          const itemText = _hdCreateText(`${item.name || "Elemento"} \u2014 ${item._cat}${item.legacyLib ? " \xB7 lib legada, precisa migrar" : ""}`, 12, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
           elementsWrap.appendChild(itemText);
           _hdSetFillAndHug(itemText);
         });
@@ -838,10 +840,14 @@
         if (out.length >= _HD_UI_COMP_MAX_NODES) return;
         if (c.visible === false || _HD_UI_PRIMITIVE_TYPES.includes(c.type)) continue;
         let dscLib = null;
+        let dscLegacy = false;
         if (c.type === "INSTANCE") {
           try {
             const main = await c.getMainComponentAsync();
-            if (main) dscLib = _qsFindLibForKey(main.key);
+            if (main) {
+              dscLib = _qsFindLibForKey(main.key);
+              dscLegacy = !!dscLib && _qsIsLegacyLibName(dscLib);
+            }
           } catch (e) {
           }
         }
@@ -851,7 +857,7 @@
         } catch (e) {
         }
         const text = c.type === "TEXT" && typeof c.characters === "string" ? c.characters.replace(/\s+/g, " ").trim().slice(0, 80) : "";
-        out.push({ name: c.name, type: c.type, depth, dscLib, props, text });
+        out.push({ name: c.name, type: c.type, depth, dscLib, dscLegacy, props, text });
         if (!dscLib) await walk(c, depth + 1);
       }
     }
@@ -927,7 +933,7 @@
           cNode.appendChild(cHead);
           _hdSetFillAndHug(cHead);
           if (c.dscLib) {
-            const dsc = _hdCreateText(`Componente do DSC (${c.dscLib}) \u2014 reutilizar, n\xE3o construir`, 10, "Bold", { r: 0.1, g: 0.5, b: 0.25 });
+            const dsc = _hdCreateText(`Componente do DSC (${c.dscLib}) \u2014 reutilizar, n\xE3o construir${c.dscLegacy ? " \xB7 lib legada, precisa migrar" : ""}`, 10, "Bold", { r: 0.1, g: 0.5, b: 0.25 });
             cNode.appendChild(dsc);
             _hdSetFillAndHug(dsc);
           }
@@ -2685,7 +2691,8 @@
           score: null,
           matchedBy: result.matchedBy,
           matchedIn: result.matchedIn,
-          matchedTokenName: result.matchedTokenName
+          matchedTokenName: result.matchedTokenName,
+          matchedTier: result.matchedTier
         };
       }, rgbToHex2 = function(r, g, b) {
         const toHex = (c) => {
@@ -2829,9 +2836,7 @@
             const val = `${n.strokeWeight}px`;
             const name = vInfo && vInfo.name || val;
             const propKey = vInfo ? vInfo.key : null;
-            const whitelisted = val === "1px" || val === "0px";
-            const auditFields = whitelisted ? { isDS: true, score: null, matchedBy: "value", matchedIn: null } : audit("borders", val, propKey, name);
-            props.push(__spreadValues({ type: "strokeWeight", name, value: val, rawValue: n.strokeWeight, key: propKey, variableKey: propKey, label: "Border Width" }, auditFields));
+            props.push(__spreadValues({ type: "strokeWeight", name, value: val, rawValue: n.strokeWeight, key: propKey, variableKey: propKey, label: "Border Width" }, audit("borders", val, propKey, name, vInfo && vInfo.remote)));
             if (visibleStroke.type === "SOLID") {
               const hex = rgbToHex2(visibleStroke.color.r, visibleStroke.color.g, visibleStroke.color.b).toUpperCase();
               let styleName = null;
@@ -2919,7 +2924,7 @@
         let result = null;
         if (key) {
           const a = auditProperty(n.name, n.name, "components", key, referenceTokens);
-          if (a.score >= AUDIT_SCORE.EXACT) result = { lib: a.matchedIn || null, name: n.name };
+          if (a.score >= AUDIT_SCORE.EXACT) result = { lib: a.matchedIn || null, tier: a.matchedTier || null, name: n.name };
         }
         _libLinkCache.set(n.id, result);
         return result;
@@ -2979,8 +2984,10 @@
         let elementMatchedIn = null;
         let elementMatchedTokenName = null;
         let isCustomComponent = false;
+        let legacyLib = false;
         if (category === "components" || category === "icons") {
           const a = audit(category, name, componentKey, name);
+          legacyLib = _ownLibLink ? a.matchedTier === "legacy" : false;
           dsElement = a.isDS;
           elementScore = a.score;
           elementMatchedBy = a.matchedBy;
@@ -2992,6 +2999,7 @@
             elementMatchedBy = "ancestor-key";
             elementMatchedIn = _ancestorLink.lib;
             elementMatchedTokenName = null;
+            legacyLib = _ancestorLink.tier === "legacy";
           }
           if (!_ownLibLink && !_ancestorLink) {
             dsElement = "warning";
@@ -3023,10 +3031,6 @@
             elementMatchedBy = _typoProp.matchedBy || null;
             elementMatchedIn = _typoProp.matchedIn || null;
             elementMatchedTokenName = _typoProp.matchedTokenName || null;
-            if (dsElement === false && _typoProp.styleKey) {
-              const _family = node.fontName && node.fontName !== figma.mixed ? node.fontName.family : "";
-              if (/caixa/i.test(_family)) dsElement = true;
-            }
           }
         }
         const variants = props.filter((p) => p.type === "variant").map((p) => ({ name: p.name, value: p.value }));
@@ -3046,6 +3050,7 @@
             matchedIn: elementMatchedIn,
             matchedTokenName: elementMatchedTokenName,
             isCustomComponent,
+            legacyLib,
             isMarkedCustom: _prevItem ? !!_prevItem.isMarkedCustom : false,
             variants,
             nodeId: node.id,
@@ -3065,6 +3070,7 @@
             matchedIn: elementMatchedIn,
             matchedTokenName: elementMatchedTokenName,
             isCustomComponent,
+            legacyLib,
             variants,
             properties: props
           });
@@ -5570,6 +5576,11 @@
       }
     }
     return found ? found.name : null;
+  }
+  function _qsIsLegacyLibName(libName) {
+    if (!libName || !_refSkeletonCache) return false;
+    const libs = Array.isArray(_refSkeletonCache) ? _refSkeletonCache : [_refSkeletonCache];
+    return libs.some((lib) => lib && lib.name === libName && lib.tier === "legacy");
   }
   var QUICK_SPEC_CATEGORIES = ["dimensions", "spacing", "fill", "border", "radius", "effect", "typography", "component"];
   async function _qsExtractNodeProperties(n, categories) {

@@ -503,10 +503,12 @@ Versão atual: `_schemaVersion: 3`
   nodeId:              string,   // id do nó no canvas — chave de casamento entre scans
   isDS:                true | 'warning' | false,   // conformidade calculada
   score:               number | null,
-  matchedBy:           'key' | 'value' | 'name' | 'remote' | 'intrinsic' | null,
+  matchedBy:           'key' | 'ancestor-key' | 'remote-unverified' | 'unverified-no-skeleton' | 'not-evaluated' | null,   // ancestor-key: vínculo herdado de ancestral (Fase 3); not-evaluated: só em properties[] (sizing/variantes). 'value'/'name'/'remote' foram removidos nas Fases 1 e 4
   matchedIn:           string | null,   // nome da lib onde bateu o match
+  matchedTier:         'priority' | 'legacy' | 'standalone' | null,   // tier da lib do match (Fase 4); só em properties[]
   matchedTokenName:    string | null,
   isCustomComponent:   boolean,  // CALCULADO pelo scan: sem vínculo comprovado com a lib
+  legacyLib:           boolean,  // Fase 4: vínculo (próprio ou por ancestral) vem de lib de tier 'legacy' — conforme, mas "precisa migrar"
   isMarkedCustom:      boolean,  // DECLARADO pelo designer (toggle "Componente Personalizado"
                                  // no card do item, tela Escanear Tokens) — ver nota abaixo
   variants:            { name: string, value: string }[],

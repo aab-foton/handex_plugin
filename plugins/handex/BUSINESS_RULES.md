@@ -200,10 +200,12 @@ Razão da regra: a conformidade não se aplica ao contêiner, mas ao que está d
 - Ao desmarcar `semDesvios`, `ressalvas` é limpo
 
 **Detecção de conformidade (scan):**
-- `variable.remote = true` → token de variável de biblioteca publicada → `isDS: true`
-- `style.remote = true` → estilo (cor, tipografia, efeito) de biblioteca publicada → `isDS: true`
-- `mainComponent.remote = true` → instância de biblioteca publicada → `isDS: true`
-- Tipografia: `styleKey != null` + fonte CAIXAstd → `isDS: true`
+- Conformidade é decidida **só pela chave** (`variableKey`/`styleKey`/`componentKey`) contra o skeleton das libs DSC — nunca pela flag `remote`. `remote = true` significa apenas "vem de alguma biblioteca publicada", não "é do DSC" (v6.8.3; atalho `remote` fechado na v6.32.0 e na Fase 1, 2026-09-30)
+- Token/estilo remoto **sem** chave no skeleton → `isDS: "warning"` (`matchedBy: "remote-unverified"`, lib publicada fora do DSC cadastrado); sem skeleton disponível → `isDS: "warning"` (`matchedBy: "unverified-no-skeleton"`), nunca conforme
+- Componente: vínculo = `componentKey` próprio no skeleton **ou** ancestral com chave no skeleton (`matchedBy: "ancestor-key"`, Fase 3); sem vínculo → `"warning"` + "Componente Personalizado", nunca vermelho
+- Tipografia: **sem atalho por família de fonte** (Fase 4, 2026-09-30) — a regex `/caixa/i` que aprovava estilo de texto fora do skeleton foi removida (a fonte vigente do DSC é Roboto); conformidade só pela chave do estilo/variável no skeleton, igual às demais propriedades
+- **Espessura de borda (Border Width) sem whitelist** (Fase 4): `1px`/`0px` deixaram de ser sempre conformes (`matchedBy: "value"`); passam pela checagem normal por chave. O DSC tem tokens de espessura em 3 libs (Fundamentos Visuais `border/width/none|hairline|thin|thick|heavy|strong`; Super DSC | Web e DSC | Super App `dsc/border/width/*`), então borda sem token é tratada como qualquer outra propriedade sem token
+- **Lib legada — precisa migrar** (Fase 4, decisão 2026-09-30): componente cujo vínculo (próprio ou por ancestral) vem de lib de tier `legacy` (Fundamentos Visuais, Web Angular & React) continua **conforme**, mas recebe `legacyLib: true` e o aviso "LIB LEGADA — PRECISA MIGRAR" (card do scan, Ficha no canvas, Ficha HTML, Markdown e `_aiContext.componentesDSC[].libLegada`). Não altera `isDS` nem a agregação. Re-escanear frames existentes: bordas de 1px sem token e textos em CAIXA Std sem token podem mudar de cor
 - Nome de camada **nunca** decide vínculo (a convenção `[dsc]` foi removida na Fase 3, 2026-09-30)
 - Nó dentro de uma instância/componente cuja chave está no skeleton é **parte dele** (herança por ancestral, `matchedBy: "ancestor-key"`, `matchedIn` = nome real da lib do ancestral): tratado como vinculado; frames internos a ele não entram como item; fica de fora do `componentesDSC` do `_aiContext`
 - Sem chave própria nem ancestral com chave → "componente personalizado" (âmbar), nunca vermelho

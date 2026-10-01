@@ -457,7 +457,7 @@ async function _hdBuildFrameCard(f, fi) {
       elementsWrap.appendChild(elementsLabel);
       _hdSetFillAndHug(elementsLabel);
       _allItems.forEach(item => {
-        const itemText = _hdCreateText(`${item.name || 'Elemento'} — ${item._cat}`, 12, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
+        const itemText = _hdCreateText(`${item.name || 'Elemento'} — ${item._cat}${item.legacyLib ? ' · lib legada, precisa migrar' : ''}`, 12, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
         elementsWrap.appendChild(itemText);
         _hdSetFillAndHug(itemText);
       });
@@ -1082,10 +1082,11 @@ async function _hdCollectUiComposition(root) {
       if (out.length >= _HD_UI_COMP_MAX_NODES) return;
       if (c.visible === false || _HD_UI_PRIMITIVE_TYPES.includes(c.type)) continue;
       let dscLib = null;
+      let dscLegacy = false;
       if (c.type === "INSTANCE") {
         try {
           const main = await c.getMainComponentAsync();
-          if (main) dscLib = _qsFindLibForKey(main.key);
+          if (main) { dscLib = _qsFindLibForKey(main.key); dscLegacy = !!dscLib && _qsIsLegacyLibName(dscLib); }
         } catch (e) {}
       }
       let props = [];
@@ -1093,7 +1094,7 @@ async function _hdCollectUiComposition(root) {
         props = (await _qsExtractNodeProperties(c, QUICK_SPEC_CATEGORIES)).filter(p => p.label !== "Componente");
       } catch (e) {}
       const text = c.type === "TEXT" && typeof c.characters === "string" ? c.characters.replace(/\s+/g, " ").trim().slice(0, 80) : "";
-      out.push({ name: c.name, type: c.type, depth, dscLib, props, text });
+      out.push({ name: c.name, type: c.type, depth, dscLib, dscLegacy, props, text });
       if (!dscLib) await walk(c, depth + 1);
     }
   }
@@ -1179,7 +1180,7 @@ async function _hdBuildUiItemCard(item, categoryTitle) {
         _hdSetFillAndHug(cHead);
 
         if (c.dscLib) {
-          const dsc = _hdCreateText(`Componente do DSC (${c.dscLib}) — reutilizar, não construir`, 10, "Bold", { r: 0.1, g: 0.5, b: 0.25 });
+          const dsc = _hdCreateText(`Componente do DSC (${c.dscLib}) — reutilizar, não construir${c.dscLegacy ? ' · lib legada, precisa migrar' : ''}`, 10, "Bold", { r: 0.1, g: 0.5, b: 0.25 });
           cNode.appendChild(dsc);
           _hdSetFillAndHug(dsc);
         }
@@ -3472,7 +3473,8 @@ figma.ui.onmessage = async (msg) => {
         score: null,
         matchedBy: result.matchedBy,
         matchedIn: result.matchedIn,
-        matchedTokenName: result.matchedTokenName
+        matchedTokenName: result.matchedTokenName,
+        matchedTier: result.matchedTier
       };
     }
 
@@ -3604,13 +3606,7 @@ figma.ui.onmessage = async (msg) => {
           const name = (vInfo && vInfo.name) || val;
           const propKey = vInfo ? vInfo.key : null;
 
-          // Whitelist 1px and 0px border width: treat as exact match.
-          const whitelisted = (val === "1px" || val === "0px");
-          const auditFields = whitelisted
-            ? { isDS: true, score: null, matchedBy: "value", matchedIn: null }
-            : audit("borders", val, propKey, name);
-
-          props.push({ type: "strokeWeight", name, value: val, rawValue: n.strokeWeight, key: propKey, variableKey: propKey, label: "Border Width", ...auditFields });
+          props.push({ type: "strokeWeight", name, value: val, rawValue: n.strokeWeight, key: propKey, variableKey: propKey, label: "Border Width", ...audit("borders", val, propKey, name, vInfo && vInfo.remote) });
 
           if (visibleStroke.type === "SOLID") {
             const hex = rgbToHex(visibleStroke.color.r, visibleStroke.color.g, visibleStroke.color.b).toUpperCase();
@@ -3716,7 +3712,7 @@ figma.ui.onmessage = async (msg) => {
       let result = null;
       if (key) {
         const a = auditProperty(n.name, n.name, "components", key, referenceTokens);
-        if (a.score >= AUDIT_SCORE.EXACT) result = { lib: a.matchedIn || null, name: n.name };
+        if (a.score >= AUDIT_SCORE.EXACT) result = { lib: a.matchedIn || null, tier: a.matchedTier || null, name: n.name };
       }
       _libLinkCache.set(n.id, result);
       return result;
@@ -3800,8 +3796,10 @@ figma.ui.onmessage = async (msg) => {
       let elementMatchedIn = null;
       let elementMatchedTokenName = null;
       let isCustomComponent = false;
+      let legacyLib = false;
       if (category === "components" || category === "icons") {
         const a = audit(category, name, componentKey, name);
+        legacyLib = _ownLibLink ? a.matchedTier === 'legacy' : false;
         dsElement = a.isDS;
         elementScore = a.score;
         elementMatchedBy = a.matchedBy;
@@ -3817,6 +3815,7 @@ figma.ui.onmessage = async (msg) => {
           elementMatchedBy = 'ancestor-key';
           elementMatchedIn = _ancestorLink.lib;
           elementMatchedTokenName = null;
+          legacyLib = _ancestorLink.tier === 'legacy';
         }
         // Sem vínculo (nem próprio, nem por ancestral) é sempre COMPONENTE
         // PERSONALIZADO (âmbar), nunca FORA DO PADRÃO (vermelho): ausência de
@@ -3861,11 +3860,6 @@ figma.ui.onmessage = async (msg) => {
           elementMatchedBy = _typoProp.matchedBy || null;
           elementMatchedIn = _typoProp.matchedIn || null;
           elementMatchedTokenName = _typoProp.matchedTokenName || null;
-          // Token de estilo aplicado + fonte CAIXAstd = tipografia conforme ao DSC
-          if (dsElement === false && _typoProp.styleKey) {
-            const _family = (node.fontName && node.fontName !== figma.mixed) ? node.fontName.family : '';
-            if (/caixa/i.test(_family)) dsElement = true;
-          }
         }
       }
 
@@ -3906,6 +3900,7 @@ figma.ui.onmessage = async (msg) => {
           matchedIn: elementMatchedIn,
           matchedTokenName: elementMatchedTokenName,
           isCustomComponent: isCustomComponent,
+          legacyLib: legacyLib,
           isMarkedCustom: _prevItem ? !!_prevItem.isMarkedCustom : false,
           variants: variants,
           nodeId: node.id,
@@ -3925,6 +3920,7 @@ figma.ui.onmessage = async (msg) => {
           matchedIn: elementMatchedIn,
           matchedTokenName: elementMatchedTokenName,
           isCustomComponent: isCustomComponent,
+          legacyLib: legacyLib,
           variants: variants,
           properties: props
         });
@@ -7114,6 +7110,12 @@ function _qsFindLibForKey(key) {
     }
   }
   return found ? found.name : null;
+}
+
+function _qsIsLegacyLibName(libName) {
+  if (!libName || !_refSkeletonCache) return false;
+  const libs = Array.isArray(_refSkeletonCache) ? _refSkeletonCache : [_refSkeletonCache];
+  return libs.some(lib => lib && lib.name === libName && lib.tier === 'legacy');
 }
 
 // Categorias fixas oferecidas na modal de filtro (quick-spec-filters-modal,
