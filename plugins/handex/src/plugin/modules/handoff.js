@@ -275,7 +275,7 @@ ${(handoffData.createdFlows || []).length === 0
     window._continueCreateHandoffAfterVersionCheck = _continueCreateHandoffAfterVersionCheck;
 
     function _sendCreateHandoff(includeAllFrames = false) {
-      parent.postMessage({ pluginMessage: { type: 'create-handoff', data: handoffData, includeAllFrames } }, '*');
+      parent.postMessage({ pluginMessage: _withRefSkeleton({ type: 'create-handoff', data: handoffData, includeAllFrames }) }, '*');
       showHandoffLoading();
     }
     window._sendCreateHandoff = _sendCreateHandoff;
@@ -471,7 +471,7 @@ ${(handoffData.createdFlows || []).length === 0
       const versionType = selected ? selected.value : 'minor';
 
       if (typeof closeModal === 'function') closeModal('versioning-modal');
-      parent.postMessage({ pluginMessage: { type: 'create-handoff', data: handoffData, versionType } }, '*');
+      parent.postMessage({ pluginMessage: _withRefSkeleton({ type: 'create-handoff', data: handoffData, versionType }) }, '*');
       showHandoffLoading();
     }
     window.confirmHandoffVersion = confirmHandoffVersion;
@@ -635,12 +635,12 @@ ${(handoffData.createdFlows || []).length === 0
         _refreshIcons();
       }
 
-      parent.postMessage({ pluginMessage: {
+      parent.postMessage({ pluginMessage: _withRefSkeleton({
         type: 'insert-ficha-section',
         section: _FICHA_SECTION_BACKEND_KEY[sectionKey] || sectionKey,
         data: handoffData,
         includeAllFrames
-      } }, '*');
+      }) }, '*');
     }
     window._sendInsertFichaSection = _sendInsertFichaSection;
 

@@ -34,10 +34,6 @@
     SOFT: 0.5,
     NONE: 0
   };
-  var AUDIT_THRESHOLDS = {
-    OURO: 0.98,
-    AJUSTE: 0.11
-  };
   function emptyResult() {
     return { score: AUDIT_SCORE.NONE, matchedBy: null, matchedIn: null, matchedTokenName: null };
   }
@@ -65,12 +61,6 @@
           add(t.$key, libName, t.name, tierRank);
         });
       }
-      if (ref.variables && typeof ref.variables === "object") {
-        for (const group in ref.variables) {
-          const list = ref.variables[group];
-          if (Array.isArray(list)) list.forEach((t) => add(t.key, libName, t.name, tierRank));
-        }
-      }
       if (Array.isArray(ref.variableKeys)) ref.variableKeys.forEach((v) => add(v.key, libName, v.name, tierRank));
       if (ref.styleTokens) {
         for (const styleType in ref.styleTokens) {
@@ -90,7 +80,7 @@
     if (cacheKey) _keyIndexCache.set(cacheKey, index);
     return index;
   }
-  function auditProperty(name, value, type, figmaKey, referenceTokensInput, isAudit) {
+  function auditProperty(name, value, type, figmaKey, referenceTokensInput) {
     if (!referenceTokensInput) return emptyResult();
     const referenceList = Array.isArray(referenceTokensInput) ? referenceTokensInput : [referenceTokensInput];
     if (figmaKey) {
@@ -99,220 +89,7 @@
         return { score: AUDIT_SCORE.EXACT, matchedBy: "key", matchedIn: hit.matchedIn, matchedTokenName: hit.matchedTokenName };
       }
     }
-    if (!isAudit || !name) return emptyResult();
-    const lowerName = String(name).toLowerCase();
-    const targetValue = String(value || "").toLowerCase();
-    let best = emptyResult();
-    const considerSofterMatch = (libName) => {
-      if (best.score < AUDIT_SCORE.SOFT) {
-        best = { score: AUDIT_SCORE.SOFT, matchedBy: null, matchedIn: libName, matchedTokenName: null };
-      }
-    };
-    for (const referenceTokens of referenceList) {
-      if (!referenceTokens) continue;
-      const libName = referenceTokens.meta && referenceTokens.meta.libraryName || referenceTokens.libraryName || referenceTokens.name || null;
-      const categoryList = referenceTokens[type] || referenceTokens[type.replace(/s$/, "")] || null;
-      const softMatchList = (list) => {
-        if (!Array.isArray(list)) return null;
-        for (const ref of list) {
-          const rName = (typeof ref === "string" ? ref : ref.name || ref.label || "").toLowerCase();
-          const rValue = (typeof ref === "string" ? "" : ref.value || ref.hex || ref.token || "").toLowerCase();
-          const rRaw = typeof ref === "object" && ref && ref.rawValue !== void 0 ? String(ref.rawValue).toLowerCase() : "";
-          const refTokenName = typeof ref === "object" && ref ? ref.name || null : null;
-          if (rValue && targetValue && (rValue === targetValue || targetValue === rValue || targetValue.includes(rValue) || rValue.includes(targetValue))) {
-            return { kind: "value", tokenName: refTokenName };
-          }
-          if (rRaw && targetValue && targetValue.replace(/px$/, "") === rRaw) {
-            return { kind: "value", tokenName: refTokenName };
-          }
-          if (rName && (rName === lowerName || lowerName.includes(rName) || rName.includes(lowerName))) {
-            return { kind: "name", tokenName: refTokenName };
-          }
-          if (type === "typography" && targetValue.includes("px") && rValue) {
-            const sizeMatch = targetValue.match(/\((\d+(\.\d+)?)px\)/);
-            if (sizeMatch && (rValue.includes(sizeMatch[1] + "px") || rName.includes(sizeMatch[1]))) {
-              if (targetValue.includes("caixa std")) return { kind: "name", tokenName: refTokenName };
-            }
-          }
-        }
-        return null;
-      };
-      const direct = softMatchList(categoryList);
-      if (direct) {
-        if (best.score < AUDIT_SCORE.SOFT) best = { score: AUDIT_SCORE.SOFT, matchedBy: direct.kind, matchedIn: libName, matchedTokenName: direct.tokenName };
-        continue;
-      }
-      let globalHit = null;
-      for (const cat in referenceTokens) {
-        const hit = softMatchList(referenceTokens[cat]);
-        if (hit) {
-          globalHit = hit;
-          break;
-        }
-      }
-      if (globalHit) {
-        if (best.score < AUDIT_SCORE.SOFT) best = { score: AUDIT_SCORE.SOFT, matchedBy: globalHit.kind, matchedIn: libName, matchedTokenName: globalHit.tokenName };
-        continue;
-      }
-      if (type === "typography" && lowerName.includes("caixa std")) {
-        considerSofterMatch(libName);
-        continue;
-      }
-      if (lowerName.includes("/") || lowerName.includes("shadow") || lowerName.includes("[") || lowerName.includes("]")) {
-        considerSofterMatch(libName);
-      }
-    }
-    return best;
-  }
-  function suggestClosestMatch(type, value, referenceTokensInput) {
-    if (!value || !referenceTokensInput) return null;
-    const referenceList = Array.isArray(referenceTokensInput) ? referenceTokensInput : [referenceTokensInput];
-    const hexMatch = String(value).match(/#([0-9a-f]{6})/i);
-    if (hexMatch && (type === "colors" || type === "color" || type === "stroke")) {
-      const target = hexToRgb(hexMatch[1]);
-      let best = null;
-      for (const ref of referenceList) {
-        const libName = ref.meta && ref.meta.libraryName || ref.libraryName || ref.name || null;
-        const styleList = ref.styleTokens && ref.styleTokens.colors || [];
-        for (const item of styleList) {
-          if (!item.value) continue;
-          const h = item.value.match(/#([0-9a-f]{6})/i);
-          if (!h) continue;
-          const rgb = hexToRgb(h[1]);
-          const d = Math.sqrt((target.r - rgb.r) ** 2 + (target.g - rgb.g) ** 2 + (target.b - rgb.b) ** 2);
-          if (!best || d < best.distance) {
-            best = {
-              tokenName: item.name,
-              value: item.value,
-              library: libName,
-              distance: d,
-              kind: "style",
-              styleKey: item.key || null,
-              variableKey: null
-            };
-          }
-        }
-        const vars = ref.designTokens && ref.designTokens.variables || [];
-        for (const v of vars) {
-          if (!v.value || v.resolvedType !== "COLOR") continue;
-          const h = v.value.match(/#([0-9a-f]{6})/i);
-          if (!h) continue;
-          const rgb = hexToRgb(h[1]);
-          const d = Math.sqrt((target.r - rgb.r) ** 2 + (target.g - rgb.g) ** 2 + (target.b - rgb.b) ** 2);
-          if (!best || d < best.distance) {
-            best = {
-              tokenName: v.name,
-              value: v.value,
-              library: libName,
-              distance: d,
-              kind: "variable",
-              styleKey: null,
-              variableKey: v.key || null
-            };
-          }
-        }
-      }
-      if (best && best.distance < 80) {
-        best.similarity = Math.max(0, Math.round((1 - best.distance / 441) * 100));
-        return best;
-      }
-      return null;
-    }
-    if (type === "typography") {
-      let best = null;
-      for (const ref of referenceList) {
-        const libName = ref.meta && ref.meta.libraryName || ref.libraryName || ref.name || null;
-        const list = ref.styleTokens && ref.styleTokens.typography || [];
-        for (const item of list) {
-          if (!item.key) continue;
-          if (item.name && item.name === value) {
-            return {
-              tokenName: item.name,
-              value: item.value || item.name,
-              library: libName,
-              distance: 0,
-              kind: "style",
-              styleKey: item.key,
-              variableKey: null,
-              similarity: 100
-            };
-          }
-          if (!best) best = {
-            tokenName: item.name,
-            value: item.value || item.name,
-            library: libName,
-            distance: 999,
-            kind: "style",
-            styleKey: item.key,
-            variableKey: null
-          };
-        }
-      }
-      if (best) {
-        best.similarity = 0;
-        return best;
-      }
-      return null;
-    }
-    const numMatch = String(value).match(/(-?\d+(?:\.\d+)?)\s*px?/);
-    if (numMatch) {
-      const target = parseFloat(numMatch[1]);
-      let best = null;
-      for (const ref of referenceList) {
-        const libName = ref.meta && ref.meta.libraryName || ref.libraryName || ref.name || null;
-        const candidates = collectNumericCandidates(ref, type);
-        for (const c of candidates) {
-          const d = Math.abs(target - c.value);
-          if (!best || d < best.distance) {
-            best = {
-              tokenName: c.name,
-              value: c.value + "px",
-              library: libName,
-              distance: d,
-              kind: "numeric",
-              styleKey: c.styleKey || null,
-              variableKey: c.variableKey || null
-            };
-          }
-        }
-      }
-      if (best && best.distance <= Math.max(4, target * 0.25)) {
-        best.similarity = Math.max(0, Math.round((1 - best.distance / Math.max(target, 1)) * 100));
-        return best;
-      }
-      return null;
-    }
-    return null;
-  }
-  function collectNumericCandidates(ref, type) {
-    const out = [];
-    if (type === "typography" || type === "fontSize") {
-      const list = ref.styleTokens && ref.styleTokens.typography || [];
-      for (const item of list) {
-        if (typeof item.fontSize === "number") {
-          out.push({ name: item.name, value: item.fontSize });
-        }
-      }
-    }
-    const variables = ref.designTokens && ref.designTokens.variables || [];
-    for (const v of variables) {
-      if (typeof v.value === "number") out.push({ name: v.name, value: v.value, variableKey: v.key || null });
-    }
-    for (const cat of ["spacing", "borders", "radii"]) {
-      const list = ref[cat];
-      if (Array.isArray(list)) {
-        for (const it of list) {
-          const num = typeof it === "number" ? it : it && typeof it.value === "number" ? it.value : it && typeof it.rawValue === "number" ? it.rawValue : null;
-          if (num !== null) out.push({ name: it && it.name || String(num), value: num });
-        }
-      }
-    }
-    return out;
-  }
-  function hexToRgb(hex) {
-    const m = hex.match(/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
-    if (!m) return { r: 0, g: 0, b: 0 };
-    return { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) };
+    return emptyResult();
   }
 
   // src/plugin/code.js
@@ -470,7 +247,7 @@
     }
     container.insertChild(insertIndex, specGroup);
   }
-  function hexToRgb2(hex) {
+  function hexToRgb(hex) {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? {
       r: parseInt(result[1], 16) / 255,
@@ -720,7 +497,7 @@
     for (const letter of letterOrder) {
       if (groupVisible[letter] === false) continue;
       const groupSpecs = specsByLetter[letter];
-      const groupColor = ((_a = groupSpecs[0]) == null ? void 0 : _a.color) ? hexToRgb2(groupSpecs[0].color) : { r: 0.38, g: 0.35, b: 0.75 };
+      const groupColor = ((_a = groupSpecs[0]) == null ? void 0 : _a.color) ? hexToRgb(groupSpecs[0].color) : { r: 0.38, g: 0.35, b: 0.75 };
       const groupNameText = groupNames[letter] || "";
       const gBox = _hdCreateFrame("VERTICAL", 0, 6);
       gBox.name = `[Grupo/${letter}] ${groupNameText || letter}`;
@@ -757,8 +534,8 @@
       _hdSetFillAndHug(gSpecs);
       for (const s of groupSpecs) {
         const catLabel = s.type || s.categoryLabel || s.category || "Geral";
-        const sc = s.color ? hexToRgb2(s.color) : { r: 0.38, g: 0.35, b: 0.75 };
-        const scBg = s.fillColor ? hexToRgb2(s.fillColor) : { r: 1 - (1 - sc.r) * 0.12, g: 1 - (1 - sc.g) * 0.12, b: 1 - (1 - sc.b) * 0.12 };
+        const sc = s.color ? hexToRgb(s.color) : { r: 0.38, g: 0.35, b: 0.75 };
+        const scBg = s.fillColor ? hexToRgb(s.fillColor) : { r: 1 - (1 - sc.r) * 0.12, g: 1 - (1 - sc.g) * 0.12, b: 1 - (1 - sc.b) * 0.12 };
         const sRow = _hdCreateFrame("VERTICAL", 10, 8, { r: 0.97, g: 0.97, b: 1 });
         sRow.name = `[Spec/${s.letter || "A"}] ${s.name || s.label || "Spec"}`;
         sRow.cornerRadius = 8;
@@ -807,7 +584,7 @@
             pKey.layoutGrow = 1;
             pRow.appendChild(pKey);
             if (prop.token) {
-              const tBadge = _hdCreateText(prop.token, 8, "Medium", hexToRgb2("#005ca9"));
+              const tBadge = _hdCreateText(prop.token, 8, "Medium", hexToRgb("#005ca9"));
               _hdSetFillAndHug(tBadge);
               pRow.appendChild(tBadge);
             }
@@ -895,7 +672,7 @@
     section.cornerRadius = 8;
     section.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
     section.strokeWeight = 1;
-    const title = _hdCreateText(titleText, 16, "Bold", hexToRgb2("#005ca9"));
+    const title = _hdCreateText(titleText, 16, "Bold", hexToRgb("#005ca9"));
     section.appendChild(title);
     _hdSetFillAndHug(title);
     return section;
@@ -905,8 +682,14 @@
     const existing = content.children.find((n) => n.type === "FRAME" && n.name === _name);
     let idx = content.children.length;
     if (!existing && afterTitle) {
-      const _after = content.children.find((n) => n.type === "FRAME" && n.name === `[Se\xE7\xE3o] ${afterTitle}`);
-      if (_after) idx = content.children.indexOf(_after) + 1;
+      const _candidates = Array.isArray(afterTitle) ? afterTitle : [afterTitle];
+      for (const t of _candidates) {
+        const _after = content.children.find((n) => n.type === "FRAME" && n.name === `[Se\xE7\xE3o] ${t}`);
+        if (_after) {
+          idx = content.children.indexOf(_after) + 1;
+          break;
+        }
+      }
     }
     if (existing) {
       idx = content.children.indexOf(existing);
@@ -1020,6 +803,7 @@
     });
     return flowsSection;
   }
+  var _HD_UI_COLUMN_PREFIX = "[User Interface] ";
   var _HD_UI_TOKENIZED_TYPES = ["color", "stroke", "spacing", "strokeWeight", "radius", "typography", "effect"];
   function _hdFormatScanProp(p) {
     const hasToken = _HD_UI_TOKENIZED_TYPES.includes(p.type) && !!(p.variableKey || p.styleKey || p.key);
@@ -1038,7 +822,7 @@
     lbl.resize(150, lbl.height);
     lbl.textAutoResize = "HEIGHT";
     row.appendChild(lbl);
-    const valTxt = _hdCreateText(text, size, "Bold", hasToken ? hexToRgb2("#005ca9") : { r: 0.1, g: 0.1, b: 0.1 });
+    const valTxt = _hdCreateText(text, size, "Bold", hasToken ? hexToRgb("#005ca9") : { r: 0.1, g: 0.1, b: 0.1 });
     row.appendChild(valTxt);
     valTxt.layoutGrow = 1;
     valTxt.textAutoResize = "HEIGHT";
@@ -1106,7 +890,7 @@
           value: `https://www.figma.com/design/${figma.fileKey}?node-id=${encodeURIComponent(item.nodeId)}`
         };
         iName.textDecoration = "UNDERLINE";
-        iName.fills = [{ type: "SOLID", color: hexToRgb2("#005ca9") }];
+        iName.fills = [{ type: "SOLID", color: hexToRgb("#005ca9") }];
       } catch (e) {
       }
     }
@@ -1176,22 +960,41 @@
     if (groups.length === 0) return null;
     const section = _hdBuildSectionShell("User Interface");
     for (const g of groups) {
-      const col = _hdCreateFrame("VERTICAL", 0, 12);
-      col.name = `[Frame] ${g.nome}`;
-      section.appendChild(col);
-      _hdSetFillAndHug(col);
       if (groups.length > 1) {
         const t = _hdCreateText(g.nome, 13, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
-        col.appendChild(t);
+        section.appendChild(t);
         _hdSetFillAndHug(t);
       }
       for (const c of g.cards) {
         const card = await _hdBuildUiItemCard(c.item, c.cat);
-        col.appendChild(card);
+        section.appendChild(card);
         _hdSetFillAndHug(card);
       }
     }
     return section;
+  }
+  function _hdRemoveUiColumns(ficha) {
+    ficha.children.filter((n) => n.type === "FRAME" && (n.name.startsWith(_HD_UI_COLUMN_PREFIX) || n.name.endsWith(" / Interface"))).forEach((n) => {
+      try {
+        n.remove();
+      } catch (e) {
+      }
+    });
+  }
+  var _HD_FICHA_SECTION_ORDER = [
+    "Informa\xE7\xF5es B\xE1sicas",
+    "Equipe e Respons\xE1veis",
+    "Briefing Estrat\xE9gico",
+    "Regras de Neg\xF3cio e HUs",
+    "Cen\xE1rios de Exce\xE7\xE3o",
+    "Docs e Anexos",
+    "Frames Escaneados",
+    "User Interface",
+    "Documenta\xE7\xE3o Visual",
+    "Fluxos de Tela"
+  ];
+  function _hdPrecedingSectionTitles(titleText) {
+    return _HD_FICHA_SECTION_ORDER.slice(0, _HD_FICHA_SECTION_ORDER.indexOf(titleText)).reverse();
   }
   function rgbToHex(r, g, b) {
     const toHex = (c) => {
@@ -1638,6 +1441,7 @@
   }
   figma.ui.onmessage = async (msg) => {
     var _a, _b, _c;
+    if (msg.referenceTokens) _refSkeletonCache = msg.referenceTokens;
     if (msg.type === "ui-ready") {
       if (_quickSpecCaptureModeActive) {
         figma.ui.resize(480, 750);
@@ -1668,7 +1472,8 @@
           theme,
           projectName,
           savedState: savedState || null,
-          onboardingSeen: onboardingSeen || null
+          onboardingSeen: onboardingSeen || null,
+          hasRefSkeleton: !!_refSkeletonCache
         });
       } catch (err) {
         console.error("Initialization error (continuing without saved state):", err);
@@ -1679,7 +1484,8 @@
           theme,
           projectName,
           savedState: null,
-          onboardingSeen: null
+          onboardingSeen: null,
+          hasRefSkeleton: !!_refSkeletonCache
         });
       }
       return;
@@ -2057,15 +1863,10 @@
         const _frames = data.frames || [];
         if (msg.section === "tokens") {
           const framesSection = await _hdRebuildFramesSection(_frames, !!msg.includeAllFrames);
-          _hdReplaceSection(content, "Frames Escaneados", framesSection);
-          existingFicha.children.filter((n) => n.type === "FRAME" && n.name.endsWith(" / Interface")).forEach((n) => {
-            try {
-              n.remove();
-            } catch (e) {
-            }
-          });
+          _hdReplaceSection(content, "Frames Escaneados", framesSection, _hdPrecedingSectionTitles("Frames Escaneados"));
+          _hdRemoveUiColumns(existingFicha);
           const uiSection = await _hdRebuildUiBoard(data);
-          _hdReplaceSection(content, "User Interface", uiSection, "Frames Escaneados");
+          _hdReplaceSection(content, "User Interface", uiSection, _hdPrecedingSectionTitles("User Interface"));
         } else if (msg.section === "medidas" || msg.section === "specs") {
           const docVisualSection = await _hdRebuildDocumentacaoVisualSection(_frames);
           _hdReplaceSection(content, "Documenta\xE7\xE3o Visual", docVisualSection);
@@ -2181,7 +1982,7 @@
           section.cornerRadius = 8;
           section.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
           section.strokeWeight = 1;
-          const title = createText(titleText, 16, "Bold", hexToRgb2("#005ca9"));
+          const title = createText(titleText, 16, "Bold", hexToRgb("#005ca9"));
           section.appendChild(title);
           setFillAndHug(title);
           return section;
@@ -2195,7 +1996,7 @@
           const lbl = createText(label, 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 });
           row.appendChild(lbl);
           setFillAndHug(lbl);
-          const val = createText(value || "-", 14, "Regular", isLink ? hexToRgb2("#005ca9") : { r: 0.12, g: 0.16, b: 0.23 });
+          const val = createText(value || "-", 14, "Regular", isLink ? hexToRgb("#005ca9") : { r: 0.12, g: 0.16, b: 0.23 });
           row.appendChild(val);
           setFillAndHug(val);
           if (isLink && value) {
@@ -2255,12 +2056,11 @@
         const _ts = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, "0")}-${String(_now.getDate()).padStart(2, "0")} ${String(_now.getHours()).padStart(2, "0")}:${String(_now.getMinutes()).padStart(2, "0")}`;
         const _versaoLabel = (((_c = data.step1) == null ? void 0 : _c.versao) || "").trim();
         const _containerName = `${_handoffBase} | ${_ts}${_versaoLabel ? " | " + _versaoLabel : ""}`;
-        const mainContainer = createFrame("HORIZONTAL", 64, 48, hexToRgb2("#004d8d"));
+        const mainContainer = createFrame("VERTICAL", 64, 48, hexToRgb("#004d8d"));
         mainContainer.name = _containerName;
-        mainContainer.counterAxisAlignItems = "MIN";
         mainContainer.resize(1080, 100);
-        mainContainer.primaryAxisSizingMode = "FIXED";
-        mainContainer.counterAxisSizingMode = "AUTO";
+        mainContainer.counterAxisSizingMode = "FIXED";
+        mainContainer.primaryAxisSizingMode = "AUTO";
         const fichaTecnica = createFrame("VERTICAL", 0, 0, { r: 1, g: 1, b: 1 });
         fichaTecnica.name = `${_handoffBase} | ${_ts} / Ficha de Projeto`;
         fichaTecnica.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
@@ -2345,13 +2145,13 @@
             roleTag.cornerRadius = 999;
             roleTag.strokes = [{ type: "SOLID", color: { r: 0.7, g: 0.82, b: 0.96 } }];
             roleTag.strokeWeight = 1;
-            roleTag.appendChild(createText(m.papel || "Membro", 9, "Medium", hexToRgb2("#005ca9")));
+            roleTag.appendChild(createText(m.papel || "Membro", 9, "Medium", hexToRgb("#005ca9")));
             mRow.appendChild(roleTag);
             const nameText = createText(m.nome || "", 12, "Medium");
             nameText.layoutGrow = 1;
             mRow.appendChild(nameText);
             if (m.email) {
-              const contactLink = createText("Contato", 11, "Bold", hexToRgb2("#005ca9"));
+              const contactLink = createText("Contato", 11, "Bold", hexToRgb("#005ca9"));
               contactLink.textDecoration = "UNDERLINE";
               contactLink.hyperlink = { type: "URL", value: "mailto:" + m.email };
               mRow.appendChild(contactLink);
@@ -2359,6 +2159,21 @@
           });
         }
         const _briefingQs = data.step2 && data.step2.briefingQuestions ? data.step2.briefingQuestions.filter((q) => q.answer && q.answer.trim()) : [];
+        if (_briefingQs.length > 0) {
+          const briefingSection = createSection(content, "Briefing Estrat\xE9gico");
+          _briefingQs.forEach((q, idx) => {
+            const qRow = createFrame("VERTICAL", 0, 4);
+            qRow.name = `[Briefing] Pergunta ${idx + 1}`;
+            briefingSection.appendChild(qRow);
+            setFillAndHug(qRow);
+            const qText = createText(`${idx + 1}. ${q.question || ""}`, 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 });
+            qRow.appendChild(qText);
+            setFillAndHug(qText);
+            const aText = createText(q.answer, 13, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
+            qRow.appendChild(aText);
+            setFillAndHug(aText);
+          });
+        }
         const _regras = data.step2 && data.step2.regras ? data.step2.regras : [];
         if (_regras.length > 0) {
           const rulesSection = createSection(content, "Regras de Neg\xF3cio e HUs");
@@ -2372,7 +2187,7 @@
             rRow.appendChild(rTitle);
             setFillAndHug(rTitle);
             if (r.link && r.link !== "#") {
-              const lText = createText("Acesse o link da HU", 11, "Bold", hexToRgb2("#005ca9"));
+              const lText = createText("Acesse o link da HU", 11, "Bold", hexToRgb("#005ca9"));
               lText.textDecoration = "UNDERLINE";
               lText.hyperlink = { type: "URL", value: r.link };
               rRow.appendChild(lText);
@@ -2401,7 +2216,7 @@
             "Erro": { r: 0.9, g: 0.2, b: 0.2 },
             "Alerta": { r: 0.93, g: 0.62, b: 0.09 },
             "Sucesso": { r: 0.13, g: 0.63, b: 0.31 },
-            "Confirma\xE7\xE3o": hexToRgb2("#005ca9")
+            "Confirma\xE7\xE3o": hexToRgb("#005ca9")
           };
           _allExcecoes.forEach((e) => {
             const eRow = createFrame("HORIZONTAL", 12, 12, { r: 0.98, g: 0.98, b: 0.99 });
@@ -2445,7 +2260,7 @@
               const dLabel = createText(item.label, 12, "Bold");
               dLabel.layoutGrow = 1;
               dRow.appendChild(dLabel);
-              const dLink = createText("Acesse o link", 11, "Bold", hexToRgb2("#005ca9"));
+              const dLink = createText("Acesse o link", 11, "Bold", hexToRgb("#005ca9"));
               dLink.textDecoration = "UNDERLINE";
               dLink.hyperlink = { type: "URL", value: docData.link };
               dRow.appendChild(dLink);
@@ -2477,35 +2292,6 @@
         }
         fichaTecnica.appendChild(content);
         mainContainer.appendChild(fichaTecnica);
-        if (_briefingQs.length > 0) {
-          const card2 = createFrame("VERTICAL", 0, 0, { r: 1, g: 1, b: 1 });
-          card2.name = `${_handoffBase} | ${_ts} / Briefing`;
-          card2.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
-          card2.resize(440, 100);
-          card2.counterAxisSizingMode = "FIXED";
-          card2.primaryAxisSizingMode = "AUTO";
-          card2.cornerRadius = 16;
-          const bContent = createFrame("VERTICAL", 24, 16, { r: 1, g: 1, b: 1 });
-          card2.appendChild(bContent);
-          setFillAndHug(bContent);
-          const briefingSection = createSection(bContent, "Briefing Estrat\xE9gico");
-          _briefingQs.forEach((q, idx) => {
-            const qRow = createFrame("VERTICAL", 0, 4);
-            qRow.name = `[Briefing] Pergunta ${idx + 1}`;
-            briefingSection.appendChild(qRow);
-            setFillAndHug(qRow);
-            const qText = createText(`${idx + 1}. ${q.question || ""}`, 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 });
-            qRow.appendChild(qText);
-            setFillAndHug(qText);
-            const aText = createText(q.answer, 13, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
-            aText.textAutoResize = "HEIGHT";
-            aText.resize(392, 20);
-            qRow.appendChild(aText);
-            setFillAndHug(aText);
-          });
-          setFillAndHug(briefingSection);
-          mainContainer.appendChild(card2);
-        }
         const selection = figma.currentPage.selection;
         if (selection.length > 0 && data.setup && (data.setup.espacamentos || data.setup.anatomia || data.setup.instancias)) {
           for (const node of selection) {
@@ -2517,7 +2303,6 @@
             specsBoard.resize(800, 100);
             specsBoard.counterAxisSizingMode = "FIXED";
             specsBoard.primaryAxisSizingMode = "AUTO";
-            specsBoard.layoutAlign = "INHERIT";
             const specsTitle = createText("Design Specs: " + node.name, 24, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
             specsBoard.appendChild(specsTitle);
             setFillAndHug(specsTitle);
@@ -2579,7 +2364,7 @@
           auditBoard.resize(800, 100);
           auditBoard.counterAxisSizingMode = "FIXED";
           auditBoard.primaryAxisSizingMode = "AUTO";
-          const auditTitle = createText("Relat\xF3rio de Auditoria", 24, "Bold", hexToRgb2("#005ca9"));
+          const auditTitle = createText("Relat\xF3rio de Auditoria", 24, "Bold", hexToRgb("#005ca9"));
           auditBoard.appendChild(auditTitle);
           setFillAndHug(auditTitle);
           const summaryText = createText(`Ader\xEAncia ao Design System: ${data.auditSummary.adoption}%`, 18, "Bold", data.auditSummary.adoption > 90 ? { r: 0, g: 0.5, b: 0 } : { r: 0.8, g: 0, b: 0 });
@@ -2610,6 +2395,7 @@
             }
           }
           mainContainer.appendChild(auditBoard);
+          auditBoard.layoutAlign = "STRETCH";
         }
         mainContainer.locked = false;
         mainContainer.setPluginData("handexCategory", "ficha");
@@ -2618,7 +2404,8 @@
         const _fichaGap = 200;
         if (_fichaBasePos) {
           if (_isNewVersion) {
-            mainContainer.x = Math.round(_fichaBasePos.x + (_existingFicha ? _existingFicha.width : mainContainer.width) + _fichaGap);
+            const _prevBB = _existingFicha ? _existingFicha.absoluteBoundingBox : null;
+            mainContainer.x = Math.round(_prevBB ? _prevBB.x + _prevBB.width + _fichaGap : _fichaBasePos.x + mainContainer.width + _fichaGap);
             mainContainer.y = Math.round(_fichaBasePos.y);
           } else {
             mainContainer.x = Math.round(_fichaBasePos.x);
@@ -2881,29 +2668,24 @@
     }
     if (msg.type === "scan-frame") {
       let audit = function(propType, propValue, propKey, propName, isRemote, altKey) {
-        let result = auditProperty(propName, propValue, propType, propKey, referenceTokens, isAudit);
+        let result = auditProperty(propName, propValue, propType, propKey, referenceTokens);
         if (result.score < AUDIT_SCORE.EXACT && altKey && altKey !== propKey) {
-          const alt = auditProperty(propName, propValue, propType, altKey, referenceTokens, isAudit);
+          const alt = auditProperty(propName, propValue, propType, altKey, referenceTokens);
           if (alt.score > result.score) result = alt;
         }
         if (result.score < AUDIT_SCORE.EXACT && isRemote) {
           if (!referenceTokens) {
-            return { isDS: true, score: isAudit ? AUDIT_SCORE.EXACT : null, matchedBy: "remote", matchedIn: null, matchedTokenName: null, closestMatch: null };
+            return { isDS: "warning", score: null, matchedBy: "unverified-no-skeleton", matchedIn: null, matchedTokenName: null };
           }
-          return { isDS: "warning", score: isAudit ? AUDIT_SCORE.SOFT : null, matchedBy: "remote-unverified", matchedIn: null, matchedTokenName: null, closestMatch: null };
+          return { isDS: "warning", score: null, matchedBy: "remote-unverified", matchedIn: null, matchedTokenName: null };
         }
         const isDS = result.score >= AUDIT_SCORE.EXACT ? true : result.score >= AUDIT_SCORE.SOFT ? "warning" : false;
-        let closestMatch = null;
-        if (isAudit && result.score < AUDIT_THRESHOLDS.AJUSTE) {
-          closestMatch = suggestClosestMatch(propType, propValue, referenceTokens);
-        }
         return {
           isDS,
-          score: isAudit ? result.score : null,
+          score: null,
           matchedBy: result.matchedBy,
           matchedIn: result.matchedIn,
-          matchedTokenName: result.matchedTokenName,
-          closestMatch
+          matchedTokenName: result.matchedTokenName
         };
       }, rgbToHex2 = function(r, g, b) {
         const toHex = (c) => {
@@ -2937,15 +2719,17 @@
       };
       const frameJson = frameJsonTemplate();
       const selectedLibSlugs = Array.isArray(msg.selectedLibSlugs) && msg.selectedLibSlugs.length > 0 ? msg.selectedLibSlugs : null;
-      if (msg.referenceTokens) _refSkeletonCache = msg.referenceTokens;
-      const rawReferenceTokens = msg.referenceTokens || _refSkeletonCache || null;
+      const rawReferenceTokens = _refSkeletonCache || null;
       const referenceTokens = (() => {
         if (!rawReferenceTokens || !selectedLibSlugs) return rawReferenceTokens;
         const list = Array.isArray(rawReferenceTokens) ? rawReferenceTokens : [rawReferenceTokens];
         const filtered = list.filter((lib) => lib && lib.slug && selectedLibSlugs.includes(lib.slug));
-        return filtered.length > 0 ? filtered : rawReferenceTokens;
+        if (filtered.length === 0) {
+          console.warn("[Handex] Nenhuma das libs selecionadas existe no skeleton (" + selectedLibSlugs.join(", ") + "); auditando contra todas as libs.");
+          return rawReferenceTokens;
+        }
+        return filtered;
       })();
-      const isAudit = msg.isAudit || false;
       const allowedCategories = msg.categories || null;
       async function getVar(n, p) {
         if (!n.boundVariables) return null;
@@ -3046,7 +2830,7 @@
             const name = vInfo && vInfo.name || val;
             const propKey = vInfo ? vInfo.key : null;
             const whitelisted = val === "1px" || val === "0px";
-            const auditFields = whitelisted ? { isDS: true, score: isAudit ? AUDIT_SCORE.EXACT : null, matchedBy: "value", matchedIn: null } : audit("borders", val, propKey, name);
+            const auditFields = whitelisted ? { isDS: true, score: null, matchedBy: "value", matchedIn: null } : audit("borders", val, propKey, name);
             props.push(__spreadValues({ type: "strokeWeight", name, value: val, rawValue: n.strokeWeight, key: propKey, variableKey: propKey, label: "Border Width" }, auditFields));
             if (visibleStroke.type === "SOLID") {
               const hex = rgbToHex2(visibleStroke.color.r, visibleStroke.color.g, visibleStroke.color.b).toUpperCase();
@@ -3106,20 +2890,20 @@
           if (parent.layoutMode === "VERTICAL" && n.layoutGrow === 1) hMode = "Fill Container";
           else if (parent.layoutMode === "HORIZONTAL" && n.layoutAlign === "STRETCH") hMode = "Fill Container";
           else if (n.layoutMode && (n.layoutMode === "VERTICAL" && n.primaryAxisSizingMode === "AUTO" || n.layoutMode === "HORIZONTAL" && n.counterAxisSizingMode === "AUTO")) hMode = "Hug Contents";
-          props.push({ type: "layout", name: wMode, value: wMode, isDS: true, score: isAudit ? AUDIT_SCORE.EXACT : null, matchedBy: "intrinsic", matchedIn: null, label: "W Sizing" });
-          props.push({ type: "layout", name: hMode, value: hMode, isDS: true, score: isAudit ? AUDIT_SCORE.EXACT : null, matchedBy: "intrinsic", matchedIn: null, label: "H Sizing" });
+          props.push({ type: "layout", name: wMode, value: wMode, isDS: true, score: null, matchedBy: "intrinsic", matchedIn: null, label: "W Sizing" });
+          props.push({ type: "layout", name: hMode, value: hMode, isDS: true, score: null, matchedBy: "intrinsic", matchedIn: null, label: "H Sizing" });
         }
         if (n.type === "INSTANCE" && n.componentProperties) {
           Object.entries(n.componentProperties).forEach(([propName, propObj]) => {
             const cleanName = propName.split("#")[0];
             const val = String(propObj.value);
-            props.push({ type: "variant", name: cleanName, value: val, isDS: true, score: isAudit ? AUDIT_SCORE.EXACT : null, matchedBy: "intrinsic", matchedIn: null, label: `Prop: ${cleanName}` });
+            props.push({ type: "variant", name: cleanName, value: val, isDS: true, score: null, matchedBy: "intrinsic", matchedIn: null, label: `Prop: ${cleanName}` });
           });
         }
         return props;
       }
       async function addElement(category, node, props) {
-        if (!isAudit && allowedCategories && allowedCategories.length > 0) {
+        if (allowedCategories && allowedCategories.length > 0) {
           let isAllowed = false;
           if (category === "frames" && allowedCategories.includes("containers")) isAllowed = true;
           else if (category === "vectors" && allowedCategories.includes("shapes")) isAllowed = true;
@@ -3139,7 +2923,7 @@
         }
         const _nodeHasRealLibLink = (n, key) => {
           if (!key) return /^\[dsc\]/i.test(n.name);
-          const a = auditProperty(n.name, n.name, "components", key, referenceTokens, isAudit);
+          const a = auditProperty(n.name, n.name, "components", key, referenceTokens);
           return a.score >= AUDIT_SCORE.EXACT || /^\[dsc\]/i.test(n.name);
         };
         const _ownLibLink = node.type === "INSTANCE" || node.type === "COMPONENT" || node.type === "COMPONENT_SET" ? _nodeHasRealLibLink(node, componentKey) : false;
@@ -3622,7 +3406,7 @@
         anchorNode = msg.targetNodeId ? await figma.getNodeByIdAsync(msg.targetNodeId) : null;
       }
       const bounds = anchorNode && (anchorNode.absoluteBoundingBox || anchorNode.absoluteRenderBounds);
-      const themeColor = hexToRgb2(msg.color || "#004d8d");
+      const themeColor = hexToRgb(msg.color || "#004d8d");
       const estimatedHeight = 64 + (msg.hasCategory ? 20 : 0) + (msg.hasNote ? 32 : 0);
       const ghost = figma.createFrame();
       ghost.name = "[Handex] Pr\xE9via de Posi\xE7\xE3o";
@@ -3754,8 +3538,8 @@
           await figma.loadFontAsync({ family: "Inter", style: "Bold" });
         } catch (e) {
         }
-        const themeColor = hexToRgb2(opts.color || "#004d8d");
-        const themeFill = hexToRgb2(opts.fillColor || opts.color || "#EBF4FB");
+        const themeColor = hexToRgb(opts.color || "#004d8d");
+        const themeFill = hexToRgb(opts.fillColor || opts.color || "#EBF4FB");
         const _specSide = opts.guideSide || "right";
         const _tagRadius = 8;
         const _layerTag = "Spec";
@@ -3946,7 +3730,7 @@
           const linkTxt = figma.createText();
           linkTxt.fontName = { family: "Inter", style: "Regular" };
           linkTxt.fontSize = 11;
-          linkTxt.fills = [{ type: "SOLID", color: hexToRgb2("#005ca9") }];
+          linkTxt.fills = [{ type: "SOLID", color: hexToRgb("#005ca9") }];
           linkTxt.characters = opts.link;
           linkTxt.textDecoration = "UNDERLINE";
           linkTxt.hyperlink = { type: "URL", value: opts.link };
@@ -4389,7 +4173,7 @@
         const ctrlX = midX + px * offset, ctrlY = midY + py * offset;
         connectorPath = `M ${startPt.x} ${startPt.y} Q ${ctrlX} ${ctrlY} ${endPt.x} ${endPt.y}`;
       }
-      const themeColor = hexToRgb2(msg2.color || "#004d8d");
+      const themeColor = hexToRgb(msg2.color || "#004d8d");
       const oldLineNodes = specGroup.findChildren((n) => n.name === "Conector" || n.name === "DotInicio" || n.name === "DotFim");
       oldLineNodes.forEach((n) => n.remove());
       const connector = figma.createVector();

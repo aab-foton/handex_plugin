@@ -322,23 +322,32 @@
 <h3 id="41-container-principal">4.1 Container principal</h3>
 <pre><code>Handex | Ficha de Projeto | {titulo} | {YYYY-MM-DD HH:mm}</code></pre>
 <p><strong>Largura fixa em cascata (v6.23.0, 2026-09-17) — altura sempre Hug em todos os níveis:</strong></p>
-<pre><code>mainContainer (Section externa)   1080px  (padding 64px cada lado)
-  └── fichaTecnica (conteúdo)      952px  (1080 − 64×2)
+<pre><code>mainContainer 1080px fixa (vertical, altura Hug, padding 64px)
+  └── fichaTecnica 952px fixa (1080 − padding 64×2)
         └── content                904px  (952 − padding 24×2)
               └── block (por frame, "Documentação Visual")  872px de área útil (904 − padding 16×2)
                     ├── snapshot: largura = proporção real do frame, teto 872px (nunca corta, reduz proporcionalmente se maior)
                     └── card de detalhe (specs/medidas): até 450px, alinhado à esquerda</code></pre>
-<p>Decisão de produto: layout vertical (empilhado, largura única) preferido a uma proposta anterior de colunas lado a lado — melhor pra exportar em PDF e se adequar a uma visão de protótipo navegável. Largura fixa garante consistência visual entre fichas de projetos diferentes.</p>
+<p>Decisão de 2026-09-30: coluna única vertical — nada fica ao lado da coluna principal (uma tentativa de colunas lado a lado foi revertida). O layout vertical (empilhado, largura única) é o que permite exportar em PDF e ter uma Ficha navegável (protótipo); a largura fixa garante consistência visual entre fichas de projetos diferentes.</p>
 <p><strong>Filhos diretos (cards):</strong></p>
-<pre><code>Handex | Ficha de Projeto | {titulo} | {ts}        (FRAME horizontal)
-  ├── {base} / Ficha de Projeto                    ← card 1: dados + specs + fluxos
-  ├── {base} / Briefing                            ← card 2: perguntas estratégicas
-  └── {base} / Interface                           ← card 3: tokens e componentes DSC</code></pre>
+<pre><code>Handex | Ficha de Projeto | {titulo} | {ts}        (FRAME vertical)
+  └── {base} / Ficha de Projeto                    ← coluna única: todas as seções, empilhadas
+        └── Handex | Content
+              ├── [Seção] Informações Básicas
+              ├── [Seção] Equipe e Responsáveis
+              ├── [Seção] Briefing Estratégico      (se houver respostas)
+              ├── [Seção] Regras de Negócio e HUs
+              ├── [Seção] Cenários de Exceção
+              ├── [Seção] Docs e Anexos
+              ├── [Seção] Frames Escaneados
+              ├── [Seção] User Interface            (1 card por item marcado, empilhados)
+              ├── [Seção] Documentação Visual
+              └── [Seção] Fluxos de Tela</code></pre>
 <p><strong>Exportação em PDF (v6.28.0, 2026-09-18):</strong> botão "Baixar Ficha em PDF" (tela de Resumo) exporta este container principal via <code>node.exportAsync({ format: 'PDF' })</code> — PDF nativo da Plugin API, fidelidade visual total (cores, cards, snapshots), diferente do PDF de texto puro já embutido no <code>.zip</code> completo (<code>exportHandoff</code>, que converte o Markdown via jsPDF). Handler <code>export-ficha-pdf</code> (<code>code.js</code>) localiza a Ficha do projeto atual com <code>_hdFindExistingFicha</code> — exige que ela já exista no canvas.</p>
 <hr>
 <h3 id="42-secoes-internas">4.2 Seções internas</h3>
 <p>Nome real gravado pelo código (<code>_hdCreateSection</code>/<code>_hdBuildSectionShell</code>, <code>code.js</code>): <strong><code>[Seção] {titulo}</code></strong> — sem meta-tipo no nome (documentação anterior indicava <code>[Seção | {tipo}] {titulo}</code>, desatualizada em relação ao código; corrigido em 2026-09-15). A busca por subseção (usada pelo handler <code>insert-ficha-section</code>, ver 6.1) é feita pelo título literal, não por um tipo separado.</p>
-<div class="table-wrap"><table><thead><tr><th><code>{titulo}</code> usado hoje</th><th>Conteúdo</th></tr></thead><tbody><tr><td><code>Informações Básicas</code></td><td>Informações básicas do projeto</td></tr><tr><td><code>Equipe e Responsáveis</code></td><td>Membros da equipe</td></tr><tr><td><code>Regras de Negócio e HUs</code></td><td>Regras de negócio e HUs</td></tr><tr><td><code>Cenários de Exceção</code></td><td>Cenários de exceção</td></tr><tr><td><code>Documentação</code></td><td>Links de documentação</td></tr><tr><td><code>Frames Escaneados</code></td><td>Só frames com pelo menos 1 item marcado <code>isMarkedCustom</code> (<code>_hdFrameHasCustomItem</code>, ver 6.1) — renomeada de "Frames Documentados" e filtrada em 2026-09-17, antes listava todos os frames sem filtro</td></tr><tr><td><code>Documentação Visual</code></td><td>1 bloco por frame documentado com specs/medidas — snapshot amplo + card de detalhe (substituiu as antigas "Medidas"/"Especificações" agregadas em 2026-09-17, ver seção 4.6)</td></tr><tr><td><code>Fluxos de Tela</code></td><td>Fluxos de tela</td></tr><tr><td><code>Briefing Estratégico</code></td><td>Briefing estratégico (card 2, fora de <code>content</code>)</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th><code>{titulo}</code> usado hoje</th><th>Conteúdo</th></tr></thead><tbody><tr><td><code>Informações Básicas</code></td><td>Informações básicas do projeto</td></tr><tr><td><code>Equipe e Responsáveis</code></td><td>Membros da equipe</td></tr><tr><td><code>Regras de Negócio e HUs</code></td><td>Regras de negócio e HUs</td></tr><tr><td><code>Cenários de Exceção</code></td><td>Cenários de exceção</td></tr><tr><td><code>Documentação</code></td><td>Links de documentação</td></tr><tr><td><code>Frames Escaneados</code></td><td>Só frames com pelo menos 1 item marcado <code>isMarkedCustom</code> (<code>_hdFrameHasCustomItem</code>, ver 6.1) — renomeada de "Frames Documentados" e filtrada em 2026-09-17, antes listava todos os frames sem filtro</td></tr><tr><td><code>Documentação Visual</code></td><td>1 bloco por frame documentado com specs/medidas — snapshot amplo + card de detalhe (substituiu as antigas "Medidas"/"Especificações" agregadas em 2026-09-17, ver seção 4.6)</td></tr><tr><td><code>User Interface</code></td><td>1 card por item marcado como "Componente Personalizado" (<code>isMarkedCustom</code>), empilhados, logo após Frames Escaneados</td></tr><tr><td><code>Fluxos de Tela</code></td><td>Fluxos de tela</td></tr><tr><td><code>Briefing Estratégico</code></td><td>Briefing estratégico (entre Equipe e Regras, dentro de <code>content</code>)</td></tr></tbody></table></div>
 <hr>
 <h3 id="43-campos-de-dados">4.3 Campos de dados</h3>
 <pre><code>[Campo | {chave}] {rotulo}</code></pre>

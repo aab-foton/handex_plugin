@@ -305,7 +305,7 @@ function _quickSpecCaptureFinish() {
   // precisar de granularidade "X de Y".
   showLoadingModal('Lendo propriedades dos elementos...', { title: 'Processando', icon: 'loader-2' });
   parent.postMessage({
-    pluginMessage: { type: 'quick-spec-capture-finish', categories: _quickSpecPendingCategories }
+    pluginMessage: _withRefSkeleton({ type: 'quick-spec-capture-finish', categories: _quickSpecPendingCategories })
   }, '*');
   _quickSpecPendingCategories = null;
 }

@@ -2733,6 +2733,20 @@ function restoreUIFromState() {
   try { _refreshIcons(); } catch(e) {}
 }
 
+// Skeleton das libs DSC (~1,1MB) vai pro backend sob demanda, anexado à
+// primeira mensagem da sessão que depende dele (scan, Spec Rápida, Detalhada,
+// Ficha) -- nunca no boot, pra não pesar o handshake ui-ready. Viaja DENTRO
+// da mensagem da operação: o backend guarda antes do handler rodar, sem
+// depender de ordem entre mensagens. O backend informa no init-plugin se já
+// tem a cópia (hasRefSkeleton), então UI e backend nunca divergem.
+function _withRefSkeleton(pluginMessage) {
+  if (!window._handexRefSkeletonSent && window.__HANDEX_REF_SKELETON__) {
+    pluginMessage.referenceTokens = window.__HANDEX_REF_SKELETON__.libraries;
+    window._handexRefSkeletonSent = true;
+  }
+  return pluginMessage;
+}
+
 // ── Initialization ─────────────────────────────────────────────────────
 // DOMContentLoaded (não window.onload de propósito): onload só dispara depois
 // que TODO recurso externo termina, incluindo o script defer do Lucide via

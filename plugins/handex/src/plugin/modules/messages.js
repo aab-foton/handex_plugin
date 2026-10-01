@@ -23,6 +23,7 @@
       if (!msg) return;
       
       if (msg.type === 'init-plugin') {
+        window._handexRefSkeletonSent = !!msg.hasRefSkeleton;
         applyFigmaTheme(msg.theme);
         const aboutVersion = document.getElementById('about-modal-version');
         if (aboutVersion) aboutVersion.textContent = 'v' + msg.version;

@@ -5,6 +5,7 @@
 // only the data needed by the runtime audit:
 //   - library metadata (slug, name, fileKey)
 //   - style keys + names + types (no descriptions → no U+2028)
+//   - variable keys + names (no resolved values)
 //   - component keys (flat string array per lib)
 //
 // The skeleton is embedded into ui.html by build.cjs as
@@ -62,7 +63,6 @@ for (const libMeta of manifest.libraries) {
     // foi declarada).
     tier: libMeta.tier || 'legacy',
     styleTokens: { colors: [], typography: [], effects: [] },
-    variables: { colors: [], numbers: [] },
     componentKeys: []
   };
 
@@ -76,25 +76,14 @@ for (const libMeta of manifest.libraries) {
     }
   }
 
-  // Variables with resolved values
   const vars = (lib.designTokens && Array.isArray(lib.designTokens.variables))
     ? lib.designTokens.variables : [];
 
-  entry.variables.colors = vars
-    .filter(v => v.resolvedType === 'COLOR' && v.value)
-    .map(v => ({ key: v.key, name: clean(v.name), value: v.value, collection: clean(v.collection || '') }));
-
-  entry.variables.numbers = vars
-    .filter(v => v.resolvedType === 'FLOAT' && v.value !== null && v.value !== undefined)
-    .map(v => ({ key: v.key, name: clean(v.name), value: v.value, collection: clean(v.collection || '') }));
-
-  // Chave de TODA variável publicada pela lib, de qualquer tipo e com ou sem
-  // valor resolvido -- só pra provar vínculo (audit.js). As listas acima
-  // descartam STRING/BOOLEAN e apelidos sem valor próprio (ex: tokens
-  // semânticos de spacing/radius que apontam pra outro token), porque servem
-  // pra sugerir valor, não pra checar origem. Medido em 2026-09-24: ~370
-  // variáveis publicadas ficavam fora (121 só na Super DSC | Web), e um nó
-  // vinculado a qualquer uma delas seria reportado como "não é do DSC".
+  // Chave de TODA variável publicada pela lib, de qualquer tipo -- só pra
+  // provar vínculo (audit.js). Nunca grava valor resolvido (hex/px): a lib é
+  // a fonte, o skeleton só identifica origem. Os campos `variables.colors/
+  // numbers` (com .value) foram removidos em 2026-09-30 -- só alimentavam
+  // sugestão de token por valor, código morto.
   entry.variableKeys = vars
     .filter(v => v && v.key)
     .map(v => ({ key: v.key, name: clean(v.name || '') }));
@@ -114,12 +103,9 @@ fs.writeFileSync(OUT, json, 'utf8');
 const sizeKB = (json.length / 1024).toFixed(1);
 const totalStyles     = skeleton.libraries.reduce((a, l) => a + l.styleTokens.colors.length + l.styleTokens.typography.length + l.styleTokens.effects.length, 0);
 const totalComponents = skeleton.libraries.reduce((a, l) => a + l.componentKeys.length, 0);
-const totalVarColors  = skeleton.libraries.reduce((a, l) => a + l.variables.colors.length, 0);
-const totalVarNumbers = skeleton.libraries.reduce((a, l) => a + l.variables.numbers.length, 0);
+const totalVariables  = skeleton.libraries.reduce((a, l) => a + l.variableKeys.length, 0);
 
 console.log(`✅ _skeleton.json (${sizeKB} KB)`);
 console.log(`   ${skeleton.libraries.length} libraries`);
 console.log(`   ${totalStyles} styles • ${totalComponents} component keys`);
-if (totalVarColors || totalVarNumbers) {
-  console.log(`   ${totalVarColors} color variables • ${totalVarNumbers} number variables`);
-}
+console.log(`   ${totalVariables} variable keys`);

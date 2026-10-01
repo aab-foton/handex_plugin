@@ -1,4 +1,4 @@
-﻿import { auditProperty, AUDIT_SCORE, AUDIT_THRESHOLDS, frameJsonTemplate, suggestClosestMatch } from './audit.js';
+﻿import { auditProperty, AUDIT_SCORE, frameJsonTemplate } from './audit.js';
 
 figma.showUI(__html__, { width: 480, height: 750 });
 
@@ -25,7 +25,8 @@ try {
 } catch (e) {}
 
 let activeHighlightNode = null;
-// Skeleton das libs DSC recebido do frontend no 1º scan-frame da sessão.
+// Skeleton das libs DSC. A UI anexa em `referenceTokens` na primeira mensagem
+// da sessão que depende dele (ver _withRefSkeleton, core.js); aqui só guarda.
 let _refSkeletonCache = null;
 // Incrementado a cada chamada de highlight-node -- o handler é async
 // (await getNodeByIdAsync) e o Figma não serializa mensagens, então focos
@@ -841,8 +842,11 @@ function _hdReplaceSection(content, titleText, newSection, afterTitle) {
   const existing = content.children.find(n => n.type === 'FRAME' && n.name === _name);
   let idx = content.children.length;
   if (!existing && afterTitle) {
-    const _after = content.children.find(n => n.type === 'FRAME' && n.name === `[Seção] ${afterTitle}`);
-    if (_after) idx = content.children.indexOf(_after) + 1;
+    const _candidates = Array.isArray(afterTitle) ? afterTitle : [afterTitle];
+    for (const t of _candidates) {
+      const _after = content.children.find(n => n.type === 'FRAME' && n.name === `[Seção] ${t}`);
+      if (_after) { idx = content.children.indexOf(_after) + 1; break; }
+    }
   }
   if (existing) {
     idx = content.children.indexOf(existing);
@@ -1023,11 +1027,10 @@ function _hdRebuildFlowsSection(flows) {
 
 // CARD 3 -- USER INTERFACE: itens do scan declarados manualmente como
 // "Componente Personalizado" (item.isMarkedCustom), com todas as propriedades
-// já capturadas pelo scan (item.properties). Vive DENTRO de "Handex | Content"
-// como seção "[Seção] User Interface" (mesma largura útil em cascata das
-// demais, empilhada na vertical) -- antes era irmão da Ficha Técnica dentro
-// do mainContainer HORIZONTAL de largura fixa e ficava esmagado numa faixa
-// estreita. Retorna a seção solta, ou null se nada a mostrar.
+// já capturadas pelo scan (item.properties). Seção "User Interface" na coluna
+// única da Ficha (dentro de Handex | Content, logo após Frames Escaneados),
+// com um card empilhado por item. Retorna a seção (null se nada a mostrar).
+const _HD_UI_COLUMN_PREFIX = "[User Interface] ";
 const _HD_UI_TOKENIZED_TYPES = ["color", "stroke", "spacing", "strokeWeight", "radius", "typography", "effect"];
 
 // token · valor quando há token real (mesmo formato do card da Spec
@@ -1210,25 +1213,38 @@ async function _hdRebuildUiBoard(data) {
     if (cards.length > 0) groups.push({ nome: src.nome, cards });
   });
   if (groups.length === 0) return null;
-
   const section = _hdBuildSectionShell("User Interface");
   for (const g of groups) {
-    const col = _hdCreateFrame("VERTICAL", 0, 12);
-    col.name = `[Frame] ${g.nome}`;
-    section.appendChild(col);
-    _hdSetFillAndHug(col);
     if (groups.length > 1) {
       const t = _hdCreateText(g.nome, 13, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
-      col.appendChild(t);
+      section.appendChild(t);
       _hdSetFillAndHug(t);
     }
     for (const c of g.cards) {
       const card = await _hdBuildUiItemCard(c.item, c.cat);
-      col.appendChild(card);
+      section.appendChild(card);
       _hdSetFillAndHug(card);
     }
   }
   return section;
+}
+
+// Remove os formatos antigos do card User Interface (colunas ao lado da
+// Ficha, nomeadas "[User Interface] ..." ou soltas " / Interface"); a seção
+// atual dentro de `content` é substituída por _hdReplaceSection.
+function _hdRemoveUiColumns(ficha) {
+  ficha.children
+    .filter(n => n.type === 'FRAME' && (n.name.startsWith(_HD_UI_COLUMN_PREFIX) || n.name.endsWith(' / Interface')))
+    .forEach(n => { try { n.remove(); } catch (e) {} });
+}
+
+const _HD_FICHA_SECTION_ORDER = [
+  "Informações Básicas", "Equipe e Responsáveis", "Briefing Estratégico",
+  "Regras de Negócio e HUs", "Cenários de Exceção", "Docs e Anexos",
+  "Frames Escaneados", "User Interface", "Documentação Visual", "Fluxos de Tela"
+];
+function _hdPrecedingSectionTitles(titleText) {
+  return _HD_FICHA_SECTION_ORDER.slice(0, _HD_FICHA_SECTION_ORDER.indexOf(titleText)).reverse();
 }
 
 function rgbToHex(r, g, b) {
@@ -1813,6 +1829,9 @@ async function _buildFlowConnection(nodeA, nodeB, msg) {
 }
 
 figma.ui.onmessage = async (msg) => {
+  // Antes de qualquer await: garante o cache pronto pro handler desta mesma
+  // mensagem (scan, Spec Rápida, Ficha) e pras seguintes.
+  if (msg.referenceTokens) _refSkeletonCache = msg.referenceTokens;
   if (msg.type === 'ui-ready') {
     // UI (re)conectando: qualquer captura do Spec Express anterior morreu com
     // a UI antiga. Se o modo estava ligado, a janela pode ter ficado encolhida
@@ -1856,7 +1875,8 @@ figma.ui.onmessage = async (msg) => {
         theme,
         projectName,
         savedState: savedState || null,
-        onboardingSeen: onboardingSeen || null
+        onboardingSeen: onboardingSeen || null,
+        hasRefSkeleton: !!_refSkeletonCache
       });
     } catch (err) {
       console.error("Initialization error (continuing without saved state):", err);
@@ -1867,7 +1887,8 @@ figma.ui.onmessage = async (msg) => {
         theme,
         projectName,
         savedState: null,
-        onboardingSeen: null
+        onboardingSeen: null,
+        hasRefSkeleton: !!_refSkeletonCache
       });
     }
     return;
@@ -2282,14 +2303,11 @@ figma.ui.onmessage = async (msg) => {
 
       if (msg.section === 'tokens') {
         const framesSection = await _hdRebuildFramesSection(_frames, !!msg.includeAllFrames);
-        _hdReplaceSection(content, "Frames Escaneados", framesSection);
+        _hdReplaceSection(content, "Frames Escaneados", framesSection, _hdPrecedingSectionTitles("Frames Escaneados"));
 
-        // Formato antigo: card solto como irmão da Ficha Técnica no mainContainer.
-        existingFicha.children
-          .filter(n => n.type === 'FRAME' && n.name.endsWith(' / Interface'))
-          .forEach(n => { try { n.remove(); } catch (e) {} });
+        _hdRemoveUiColumns(existingFicha);
         const uiSection = await _hdRebuildUiBoard(data);
-        _hdReplaceSection(content, "User Interface", uiSection, "Frames Escaneados");
+        _hdReplaceSection(content, "User Interface", uiSection, _hdPrecedingSectionTitles("User Interface"));
       } else if (msg.section === 'medidas' || msg.section === 'specs') {
         // Specs e Medidas compartilham a mesma seção "Documentação Visual"
         // (1 bloco por frame, com os dois pares lado a lado) -- qualquer um
@@ -2556,16 +2574,14 @@ figma.ui.onmessage = async (msg) => {
       const _containerName = `${_handoffBase} | ${_ts}${_versaoLabel ? ' | ' + _versaoLabel : ''}`;
 
       // MAIN CONTAINER
-      // Layout fixo em largura (decisão de produto 2026-09-17): 1080px
-      // externo, 952px de conteúdo (1080 - padding 64*2) -- pensado pra
-      // exportar em PDF e se adequar a uma visão de protótipo navegável.
-      // Altura sempre Hug em todos os níveis (nunca fixa).
-      const mainContainer = createFrame("HORIZONTAL", 64, 48, hexToRgb("#004d8d"));
+      // Coluna única vertical de largura fixa (1080 → 952 → 904 → 872),
+      // altura Hug -- decisão 2026-09-17, reafirmada em 2026-09-30 (PDF e
+      // Ficha navegável não toleram colunas lado a lado).
+      const mainContainer = createFrame("VERTICAL", 64, 48, hexToRgb("#004d8d"));
       mainContainer.name = _containerName;
-      mainContainer.counterAxisAlignItems = "MIN"; // Top align
       mainContainer.resize(1080, 100);
-      mainContainer.primaryAxisSizingMode = "FIXED"; // Base width 1080
-      mainContainer.counterAxisSizingMode = "AUTO";  // Hug height
+      mainContainer.counterAxisSizingMode = "FIXED";
+      mainContainer.primaryAxisSizingMode = "AUTO";
 
       // 1. FICHA TÉCNICA
       const fichaTecnica = createFrame("VERTICAL", 0, 0, { r: 1, g: 1, b: 1 });
@@ -2686,10 +2702,27 @@ figma.ui.onmessage = async (msg) => {
         });
       }
 
-      // 1.3 BRIEFING ESTRATÉGICO — coletado aqui, mas gerado no card2 separado
+      // 1.3 BRIEFING ESTRATÉGICO (só se houver respostas)
       const _briefingQs = (data.step2 && data.step2.briefingQuestions)
         ? data.step2.briefingQuestions.filter(q => q.answer && q.answer.trim())
         : [];
+      if (_briefingQs.length > 0) {
+        const briefingSection = createSection(content, "Briefing Estratégico");
+        _briefingQs.forEach((q, idx) => {
+          const qRow = createFrame("VERTICAL", 0, 4);
+          qRow.name = `[Briefing] Pergunta ${idx + 1}`;
+          briefingSection.appendChild(qRow);
+          setFillAndHug(qRow);
+
+          const qText = createText(`${idx + 1}. ${q.question || ''}`, 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 });
+          qRow.appendChild(qText);
+          setFillAndHug(qText);
+
+          const aText = createText(q.answer, 13, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
+          qRow.appendChild(aText);
+          setFillAndHug(aText);
+        });
+      }
 
       // 1.4 REGRAS DE NEGÓCIO E HUs
       const _regras = (data.step2 && data.step2.regras) ? data.step2.regras : [];
@@ -2820,8 +2853,6 @@ figma.ui.onmessage = async (msg) => {
       const framesSection = await _hdRebuildFramesSection(_frames, !!msg.includeAllFrames);
       if (framesSection) { content.appendChild(framesSection); _hdSetFillAndHug(framesSection); }
 
-      // "User Interface" fica dentro do content (largura útil da cascata,
-      // empilhado), logo após Frames Escaneados.
       const uiSection = await _hdRebuildUiBoard(data);
       if (uiSection) { content.appendChild(uiSection); _hdSetFillAndHug(uiSection); }
 
@@ -2839,41 +2870,6 @@ figma.ui.onmessage = async (msg) => {
       fichaTecnica.appendChild(content);
       mainContainer.appendChild(fichaTecnica);
 
-      // CARD 2 — BRIEFING ESTRATÉGICO (card separado, só criado se houver respostas)
-      if (_briefingQs.length > 0) {
-        const card2 = createFrame("VERTICAL", 0, 0, { r: 1, g: 1, b: 1 });
-        card2.name = `${_handoffBase} | ${_ts} / Briefing`;
-        card2.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
-        card2.resize(440, 100);
-        card2.counterAxisSizingMode = "FIXED";
-        card2.primaryAxisSizingMode = "AUTO";
-        card2.cornerRadius = 16;
-
-        const bContent = createFrame("VERTICAL", 24, 16, { r: 1, g: 1, b: 1 });
-        card2.appendChild(bContent);
-        setFillAndHug(bContent);
-
-        const briefingSection = createSection(bContent, "Briefing Estratégico");
-        _briefingQs.forEach((q, idx) => {
-          const qRow = createFrame("VERTICAL", 0, 4);
-          qRow.name = `[Briefing] Pergunta ${idx + 1}`;
-          briefingSection.appendChild(qRow);
-          setFillAndHug(qRow);
-
-          const qText = createText(`${idx + 1}. ${q.question || ''}`, 12, "Bold", { r: 0.39, g: 0.45, b: 0.55 });
-          qRow.appendChild(qText);
-          setFillAndHug(qText);
-
-          const aText = createText(q.answer, 13, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
-          aText.textAutoResize = "HEIGHT";
-          aText.resize(392, 20);
-          qRow.appendChild(aText);
-          setFillAndHug(aText);
-        });
-        setFillAndHug(briefingSection);
-        mainContainer.appendChild(card2);
-      }
-
       // 3. ANATOMIA / MEDIDAS
       const selection = figma.currentPage.selection;
       if (selection.length > 0 && data.setup && (data.setup.espacamentos || data.setup.anatomia || data.setup.instancias)) {
@@ -2887,7 +2883,6 @@ figma.ui.onmessage = async (msg) => {
           specsBoard.resize(800, 100);
           specsBoard.counterAxisSizingMode = "FIXED"; // Base width 800
           specsBoard.primaryAxisSizingMode = "AUTO";  // Hug height
-          specsBoard.layoutAlign = "INHERIT";         // Don't stretch height in horizontal parent
 
           const specsTitle = createText("Design Specs: " + node.name, 24, "Bold", { r: 0.12, g: 0.16, b: 0.23 });
           specsBoard.appendChild(specsTitle);
@@ -2997,6 +2992,7 @@ figma.ui.onmessage = async (msg) => {
         }
 
         mainContainer.appendChild(auditBoard);
+        auditBoard.layoutAlign = "STRETCH";
       }
 
       // Append ao canvas primeiro para que as dimensões AUTO sejam calculadas pelo Figma
@@ -3016,7 +3012,8 @@ figma.ui.onmessage = async (msg) => {
         // anterior); "Atualização"/primeira geração pós-confirmação usa
         // exatamente a posição salva.
         if (_isNewVersion) {
-          mainContainer.x = Math.round(_fichaBasePos.x + (_existingFicha ? _existingFicha.width : mainContainer.width) + _fichaGap);
+          const _prevBB = _existingFicha ? _existingFicha.absoluteBoundingBox : null;
+          mainContainer.x = Math.round(_prevBB ? _prevBB.x + _prevBB.width + _fichaGap : _fichaBasePos.x + mainContainer.width + _fichaGap);
           mainContainer.y = Math.round(_fichaBasePos.y);
         } else {
           mainContainer.x = Math.round(_fichaBasePos.x);
@@ -3417,20 +3414,22 @@ figma.ui.onmessage = async (msg) => {
     const frameJson = frameJsonTemplate();
 
     const selectedLibSlugs = Array.isArray(msg.selectedLibSlugs) && msg.selectedLibSlugs.length > 0 ? msg.selectedLibSlugs : null;
-    // O frontend manda o skeleton das libs DSC só no primeiro scan da sessão
-    // (1MB de clone por mensagem); daí em diante reaproveita a cópia daqui.
+    // O skeleton já está em _refSkeletonCache (guardado no topo do onmessage).
     // Mesmo objeto entre scans = índice de chaves de auditProperty (audit.js)
-    // construído uma vez só. UI e backend reiniciam juntos, então o cache
-    // nunca fica órfão.
-    if (msg.referenceTokens) _refSkeletonCache = msg.referenceTokens;
-    const rawReferenceTokens = msg.referenceTokens || _refSkeletonCache || null;
+    // construído uma vez só.
+    const rawReferenceTokens = _refSkeletonCache || null;
     const referenceTokens = (() => {
       if (!rawReferenceTokens || !selectedLibSlugs) return rawReferenceTokens;
       const list = Array.isArray(rawReferenceTokens) ? rawReferenceTokens : [rawReferenceTokens];
       const filtered = list.filter(lib => lib && lib.slug && selectedLibSlugs.includes(lib.slug));
-      return filtered.length > 0 ? filtered : rawReferenceTokens;
+      if (filtered.length === 0) {
+        // Mantém o fallback (travar o scan seria pior), mas não em silêncio:
+        // slug salvo que já não existe no skeleton embarcado.
+        console.warn('[Handex] Nenhuma das libs selecionadas existe no skeleton (' + selectedLibSlugs.join(', ') + '); auditando contra todas as libs.');
+        return rawReferenceTokens;
+      }
+      return filtered;
     })();
-    const isAudit = msg.isAudit || false;
     const allowedCategories = msg.categories || null; // Array of strings or null
 
     // Wraps auditProperty + derives the legacy isDS flag (true | "warning" | false).
@@ -3447,34 +3446,33 @@ figma.ui.onmessage = async (msg) => {
     // skeleton é o snapshot dela) é a única prova: bateu a chave = conforme;
     // remoto sem match = "warning" (necessita revisão -- pode ser lib fora do
     // DSC ou skeleton desatualizado), nunca false (vermelho é desvio
-    // comprovado, não desconhecimento). Sem skeleton disponível não há como
-    // verificar, e aí o atalho antigo continua valendo.
+    // comprovado, não desconhecimento). Sem skeleton disponível também é
+    // "warning" (não verificado), nunca aprovado.
     function audit(propType, propValue, propKey, propName, isRemote, altKey) {
-      let result = auditProperty(propName, propValue, propType, propKey, referenceTokens, isAudit);
+      let result = auditProperty(propName, propValue, propType, propKey, referenceTokens);
       if (result.score < AUDIT_SCORE.EXACT && altKey && altKey !== propKey) {
-        const alt = auditProperty(propName, propValue, propType, altKey, referenceTokens, isAudit);
+        const alt = auditProperty(propName, propValue, propType, altKey, referenceTokens);
         if (alt.score > result.score) result = alt;
       }
       if (result.score < AUDIT_SCORE.EXACT && isRemote) {
+        // Sem skeleton não há como provar origem: "não verificado" (âmbar), nunca
+        // "conforme". A UI manda o skeleton antes de toda operação que o usa
+        // (_withRefSkeleton, core.js), então este ramo só ocorre se o
+        // skeleton embarcado estiver ausente.
         if (!referenceTokens) {
-          return { isDS: true, score: isAudit ? AUDIT_SCORE.EXACT : null, matchedBy: 'remote', matchedIn: null, matchedTokenName: null, closestMatch: null };
+          return { isDS: "warning", score: null, matchedBy: 'unverified-no-skeleton', matchedIn: null, matchedTokenName: null };
         }
-        return { isDS: "warning", score: isAudit ? AUDIT_SCORE.SOFT : null, matchedBy: 'remote-unverified', matchedIn: null, matchedTokenName: null, closestMatch: null };
+        return { isDS: "warning", score: null, matchedBy: 'remote-unverified', matchedIn: null, matchedTokenName: null };
       }
       const isDS = result.score >= AUDIT_SCORE.EXACT ? true
                  : result.score >= AUDIT_SCORE.SOFT ? "warning"
                  : false;
-      let closestMatch = null;
-      if (isAudit && result.score < AUDIT_THRESHOLDS.AJUSTE) {
-        closestMatch = suggestClosestMatch(propType, propValue, referenceTokens);
-      }
       return {
         isDS,
-        score: isAudit ? result.score : null,
+        score: null,
         matchedBy: result.matchedBy,
         matchedIn: result.matchedIn,
-        matchedTokenName: result.matchedTokenName,
-        closestMatch
+        matchedTokenName: result.matchedTokenName
       };
     }
 
@@ -3609,7 +3607,7 @@ figma.ui.onmessage = async (msg) => {
           // Whitelist 1px and 0px border width: treat as exact match.
           const whitelisted = (val === "1px" || val === "0px");
           const auditFields = whitelisted
-            ? { isDS: true, score: isAudit ? AUDIT_SCORE.EXACT : null, matchedBy: "value", matchedIn: null }
+            ? { isDS: true, score: null, matchedBy: "value", matchedIn: null }
             : audit("borders", val, propKey, name);
 
           props.push({ type: "strokeWeight", name, value: val, rawValue: n.strokeWeight, key: propKey, variableKey: propKey, label: "Border Width", ...auditFields });
@@ -3682,8 +3680,8 @@ figma.ui.onmessage = async (msg) => {
         else if (parent.layoutMode === "HORIZONTAL" && n.layoutAlign === "STRETCH") hMode = "Fill Container";
         else if (n.layoutMode && ((n.layoutMode === "VERTICAL" && n.primaryAxisSizingMode === "AUTO") || (n.layoutMode === "HORIZONTAL" && n.counterAxisSizingMode === "AUTO"))) hMode = "Hug Contents";
 
-        props.push({ type: "layout", name: wMode, value: wMode, isDS: true, score: isAudit ? AUDIT_SCORE.EXACT : null, matchedBy: "intrinsic", matchedIn: null, label: "W Sizing" });
-        props.push({ type: "layout", name: hMode, value: hMode, isDS: true, score: isAudit ? AUDIT_SCORE.EXACT : null, matchedBy: "intrinsic", matchedIn: null, label: "H Sizing" });
+        props.push({ type: "layout", name: wMode, value: wMode, isDS: true, score: null, matchedBy: "intrinsic", matchedIn: null, label: "W Sizing" });
+        props.push({ type: "layout", name: hMode, value: hMode, isDS: true, score: null, matchedBy: "intrinsic", matchedIn: null, label: "H Sizing" });
       }
 
       // VARIANTS (For Instances)
@@ -3693,7 +3691,7 @@ figma.ui.onmessage = async (msg) => {
           const cleanName = propName.split("#")[0];
           const val = String(propObj.value);
           // Variants are usually part of DS by definition if the component is [dsc]
-          props.push({ type: "variant", name: cleanName, value: val, isDS: true, score: isAudit ? AUDIT_SCORE.EXACT : null, matchedBy: "intrinsic", matchedIn: null, label: `Prop: ${cleanName}` });
+          props.push({ type: "variant", name: cleanName, value: val, isDS: true, score: null, matchedBy: "intrinsic", matchedIn: null, label: `Prop: ${cleanName}` });
         });
       }
 
@@ -3702,7 +3700,7 @@ figma.ui.onmessage = async (msg) => {
 
     async function addElement(category, node, props) {
       // FILTRAGEM POR CATEGORIA (apenas se não for auditoria)
-      if (!isAudit && allowedCategories && allowedCategories.length > 0) {
+      if (allowedCategories && allowedCategories.length > 0) {
         let isAllowed = false;
         if (category === "frames" && allowedCategories.includes("containers")) isAllowed = true;
         else if (category === "vectors" && allowedCategories.includes("shapes")) isAllowed = true;
@@ -3735,7 +3733,7 @@ figma.ui.onmessage = async (msg) => {
       // prova que vem de algum arquivo publicado, não necessariamente do DSC).
       const _nodeHasRealLibLink = (n, key) => {
         if (!key) return /^\[dsc\]/i.test(n.name);
-        const a = auditProperty(n.name, n.name, "components", key, referenceTokens, isAudit);
+        const a = auditProperty(n.name, n.name, "components", key, referenceTokens);
         return a.score >= AUDIT_SCORE.EXACT || /^\[dsc\]/i.test(n.name);
       };
       const _ownLibLink = (node.type === "INSTANCE" || node.type === "COMPONENT" || node.type === "COMPONENT_SET")
@@ -3815,7 +3813,7 @@ figma.ui.onmessage = async (msg) => {
         // cobria a transição true -> "warning", assumindo implicitamente que
         // audit() teria achado ALGUM match antes; quando ele já devolve false
         // de cara (key fora do skeleton + nome sem [dsc] + soft-match
-        // desligado no scan normal, isAudit false), não havia nada a rebaixar
+        // desligado), não havia nada a rebaixar
         // e o item caía em vermelho. Achado real 2026-09-24: "Ação 2", sub-
         // componente interno de ".[dsc] Header Actions" (vínculo DSC válido no
         // painel do Figma), aparecia FORA DO PADRÃO com TODAS as propriedades
@@ -7083,7 +7081,7 @@ async function _qsGetEffectVar(effect, field) {
 
 // Acha qual lib DSC publicou uma key (componentKey, key de variável ou de
 // estilo) -- usa o mesmo skeleton já reconectado ao scan normal
-// (_refSkeletonCache, populado no primeiro scan-frame da sessão). PURA
+// (_refSkeletonCache, populado sob demanda pela UI via _withRefSkeleton). PURA
 // IDENTIFICAÇÃO DE ORIGEM, nunca julgamento: não existe aqui o conceito de
 // "conforme"/"fora do padrão" -- só "essa key está publicada nesta lib" ou
 // "não foi encontrada em nenhuma lib cadastrada" (pode ser variável local do
