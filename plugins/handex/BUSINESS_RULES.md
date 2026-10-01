@@ -204,7 +204,9 @@ Razão da regra: a conformidade não se aplica ao contêiner, mas ao que está d
 - `style.remote = true` → estilo (cor, tipografia, efeito) de biblioteca publicada → `isDS: true`
 - `mainComponent.remote = true` → instância de biblioteca publicada → `isDS: true`
 - Tipografia: `styleKey != null` + fonte CAIXAstd → `isDS: true`
-- Componente com prefixo `[dsc]` no nome → `isDS: true` (fallback sem chave no skeleton)
+- Nome de camada **nunca** decide vínculo (a convenção `[dsc]` foi removida na Fase 3, 2026-09-30)
+- Nó dentro de uma instância/componente cuja chave está no skeleton é **parte dele** (herança por ancestral, `matchedBy: "ancestor-key"`, `matchedIn` = nome real da lib do ancestral): tratado como vinculado; frames internos a ele não entram como item; fica de fora do `componentesDSC` do `_aiContext`
+- Sem chave própria nem ancestral com chave → "componente personalizado" (âmbar), nunca vermelho
 - Chave da instância presente em `componentKeys[]` do skeleton → `isDS: true` (match exato)
 - W/H Sizing e variantes/propriedades de instância → `isDS: null` + `matchedBy: "not-evaluated"` (não checados contra a lib até a Fase 5): mostram o valor com traço neutro, sem selo verde, e não entram na agregação de conformidade do componente/frame
 

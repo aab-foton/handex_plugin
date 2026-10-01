@@ -517,7 +517,7 @@ Versão atual: `_schemaVersion: 3`
 **`isCustomComponent` vs. `isMarkedCustom` — não confundir:**
 - `isCustomComponent` é **calculado automaticamente** pelo scan — proxy
   de "não achei vínculo comprovado com a lib DSC" (nem `componentKey` no
-  skeleton, nem convenção `[dsc]` no nome). Mede vínculo TÉCNICO, não
+  skeleton, nem ancestral com `componentKey` no skeleton). Mede vínculo TÉCNICO, não
   equivalência estrutural — um item pode ter `isCustomComponent: true`
   por simples limitação de detecção, sem ser genuinamente um componente
   novo.

@@ -3697,6 +3697,56 @@ figma.ui.onmessage = async (msg) => {
       return props;
     }
 
+    const _isLibNodeType = (t) => t === 'INSTANCE' || t === 'COMPONENT' || t === 'COMPONENT_SET';
+    const _libLinkCache = new Map();
+    const _ancestorLinkCache = new Map();
+    const _keyedDescendantCache = new Map();
+
+    async function _nodeKey(n) {
+      if (n.type === 'INSTANCE') {
+        const m = await n.getMainComponentAsync();
+        return m ? m.key : null;
+      }
+      return n.key || null;
+    }
+
+    async function _libLinkOf(n, knownKey) {
+      if (_libLinkCache.has(n.id)) return _libLinkCache.get(n.id);
+      const key = knownKey !== undefined ? knownKey : await _nodeKey(n);
+      let result = null;
+      if (key) {
+        const a = auditProperty(n.name, n.name, "components", key, referenceTokens);
+        if (a.score >= AUDIT_SCORE.EXACT) result = { lib: a.matchedIn || null, name: n.name };
+      }
+      _libLinkCache.set(n.id, result);
+      return result;
+    }
+
+    // Sobe pelos pais até achar um com componentKey no skeleton; memorizado
+    // por nó, então irmãos compartilham o resultado do trecho já percorrido.
+    async function _libAncestorOf(n) {
+      const p = n.parent;
+      if (!p || p.type === 'PAGE' || p.type === 'DOCUMENT') return null;
+      if (_ancestorLinkCache.has(p.id)) return _ancestorLinkCache.get(p.id);
+      let result = null;
+      if (_isLibNodeType(p.type)) result = await _libLinkOf(p);
+      if (!result) result = await _libAncestorOf(p);
+      _ancestorLinkCache.set(p.id, result);
+      return result;
+    }
+
+    async function _hasKeyedDescendant(n) {
+      if (_keyedDescendantCache.has(n.id)) return _keyedDescendantCache.get(n.id);
+      let found = false;
+      if (n.children) {
+        for (const c of n.children) {
+          if ((_isLibNodeType(c.type) && await _libLinkOf(c)) || await _hasKeyedDescendant(c)) { found = true; break; }
+        }
+      }
+      _keyedDescendantCache.set(n.id, found);
+      return found;
+    }
+
     async function addElement(category, node, props) {
       // FILTRAGEM POR CATEGORIA (apenas se não for auditoria)
       if (allowedCategories && allowedCategories.length > 0) {
@@ -3725,52 +3775,23 @@ figma.ui.onmessage = async (msg) => {
         componentKey = node.key;
       }
 
-      // Vínculo real com o DSC: o componentKey do próprio nó bate no skeleton
-      // (matchedBy "key") ou segue a convenção [dsc] no nome -- NUNCA por
-      // convenção de nome sozinha (nome é texto livre, editável por qualquer
-      // designer, não é sinal confiável) e NUNCA por mainComponent.remote (só
-      // prova que vem de algum arquivo publicado, não necessariamente do DSC).
-      const _nodeHasRealLibLink = (n, key) => {
-        if (!key) return /^\[dsc\]/i.test(n.name);
-        const a = auditProperty(n.name, n.name, "components", key, referenceTokens);
-        return a.score >= AUDIT_SCORE.EXACT || /^\[dsc\]/i.test(n.name);
-      };
+      // Vínculo real com o DSC é estrutural, nunca por nome: (1) o componentKey
+      // do próprio nó bate no skeleton, ou (2) o nó está DENTRO de uma
+      // instância/componente cujo componentKey bate (é parte dele). Nome de
+      // camada é texto livre e nunca decide; mainComponent.remote só prova que
+      // vem de alguma lib publicada, não do DSC.
       const _ownLibLink = (node.type === "INSTANCE" || node.type === "COMPONENT" || node.type === "COMPONENT_SET")
-        ? _nodeHasRealLibLink(node, componentKey)
-        : false;
+        ? await _libLinkOf(node, componentKey)
+        : null;
+      const _ancestorLink = _ownLibLink ? null : await _libAncestorOf(node);
 
-      // Containers "puros": um nó SEM vínculo real próprio com o DSC (frame de
-      // layout, ou instância/componente de composição interna sem componentKey
-      // reconhecido no skeleton, ex: wrapper "base" da própria lib) não é
-      // auditado isoladamente se tiver algum descendente COM vínculo real --
-      // nesse caso é estrutura interna, não uma peça independente da
-      // biblioteca. O componentKey de um sub-componente estrutural nunca bate
-      // no skeleton (não é publicado sozinho), então sem este filtro ele é
-      // marcado "fora do padrão" mesmo estando 100% dentro de uma árvore DSC
-      // válida -- achados reais em 2026-09: ".[dsc] Menu Hamburger Header" >
-      // "Icon" > "Icon color" > "menu" INSTANCE; e ".[base] Menu background" >
-      // "Logo" > ".[base] Menu logo" > "[dsc] Slot". A checagem usa o
-      // componentKey real do descendente contra o skeleton -- nunca o nome
-      // dele (nome é convenção subjetiva, não dado confiável).
-      const _hasRealDSDescendant = async (n) => {
-        if (!n.children) return false;
-        for (const c of n.children) {
-          if (c.type === 'INSTANCE' || c.type === 'COMPONENT' || c.type === 'COMPONENT_SET') {
-            let cKey = null;
-            if (c.type === 'INSTANCE') {
-              const cMain = await c.getMainComponentAsync();
-              if (cMain) cKey = cMain.key;
-            } else {
-              cKey = c.key;
-            }
-            if (_nodeHasRealLibLink(c, cKey)) return true;
-          }
-          if (await _hasRealDSDescendant(c)) return true;
-        }
-        return false;
-      };
-      if (!_ownLibLink && (category === "frames" || category === "components" || category === "icons")) {
-        if (await _hasRealDSDescendant(node)) return;
+      // Nó sem vínculo próprio nem ancestral com chave: não é auditado
+      // isoladamente se tiver descendente com chave no skeleton (wrapper
+      // interno/layout, a conformidade vive no descendente). Frames dentro de
+      // um ancestral DSC são só estrutura do componente e também não entram.
+      if (!_ownLibLink && category === "frames" && _ancestorLink) return;
+      if (!_ownLibLink && !_ancestorLink && (category === "frames" || category === "components" || category === "icons")) {
+        if (await _hasKeyedDescendant(node)) return;
       }
 
       let dsElement = false;
@@ -3786,41 +3807,23 @@ figma.ui.onmessage = async (msg) => {
         elementMatchedBy = a.matchedBy;
         elementMatchedIn = a.matchedIn;
         elementMatchedTokenName = a.matchedTokenName;
-        // Convenção [dsc] no nome confirma conformidade (fallback quando chave
-        // não está no skeleton) -- sem isso, elementMatchedIn ficava null
-        // mesmo com dsElement true, e qualquer consumidor que dependa de
-        // matchedIn pra saber "de qual lib veio" (ex: _aiContext.componentesDSC,
-        // design-data.js) descartava esse item silenciosamente mesmo sendo
-        // genuinamente conforme ao DSC segundo esta mesma auditoria.
-        if (dsElement !== true && /^\[dsc\]/i.test(name)) {
+        // Sub-componente interno de um componente DSC (ancestral com chave no
+        // skeleton): parte dele, herda o nome REAL da lib do ancestral. A
+        // chave própria nunca bate (não é publicado sozinho) -- achado
+        // 2026-09-24: "Ação 2" dentro de ".[dsc] Header Actions".
+        if (!_ownLibLink && _ancestorLink) {
           dsElement = true;
-          if (!elementMatchedBy) elementMatchedBy = 'name-convention';
-          if (!elementMatchedIn) elementMatchedIn = 'DSC (convenção de nome)';
+          elementScore = null;
+          elementMatchedBy = 'ancestor-key';
+          elementMatchedIn = _ancestorLink.lib;
+          elementMatchedTokenName = null;
         }
-        // NUNCA usar mainComponent.remote como prova de vínculo com o DSC:
-        // "remoto" só significa "vem de algum arquivo publicado como lib no
-        // Figma" -- pode ser a lib pessoal do designer, um protótipo em outro
-        // arquivo, qualquer coisa. Vínculo real com o DSC (_ownLibLink, calculado
-        // acima) é só: o componentKey bate no skeleton (matchedBy "key") ou a
-        // convenção [dsc] no nome. Sem isso, mesmo sendo instância "remota" de
-        // algum arquivo, é um componente PERSONALIZADO -- ex.: "NavBar"
-        // reutilizada de outro projeto de design via biblioteca própria, sem
-        // existir como componente oficial do DSC.
-        // Incondicional de propósito: "sem vínculo real com o DSC" é sempre
-        // COMPONENTE PERSONALIZADO (âmbar), nunca FORA DO PADRÃO (vermelho) --
-        // independente do que audit() devolveu antes. A versão anterior só
-        // cobria a transição true -> "warning", assumindo implicitamente que
-        // audit() teria achado ALGUM match antes; quando ele já devolve false
-        // de cara (key fora do skeleton + nome sem [dsc] + soft-match
-        // desligado), não havia nada a rebaixar
-        // e o item caía em vermelho. Achado real 2026-09-24: "Ação 2", sub-
-        // componente interno de ".[dsc] Header Actions" (vínculo DSC válido no
-        // painel do Figma), aparecia FORA DO PADRÃO com TODAS as propriedades
-        // conformes (checks verdes) -- contradição visível pro designer.
-        // Sub-componente estrutural nunca é publicado sozinho na lib, então
-        // seu componentKey jamais bate no skeleton: ausência de vínculo aqui
-        // significa "não dá pra afirmar nada", não "está errado".
-        if (!_ownLibLink) {
+        // Sem vínculo (nem próprio, nem por ancestral) é sempre COMPONENTE
+        // PERSONALIZADO (âmbar), nunca FORA DO PADRÃO (vermelho): ausência de
+        // vínculo significa "não dá pra afirmar nada", não "está errado".
+        // mainComponent.remote nunca prova vínculo com o DSC (ex: "NavBar" de
+        // outra lib publicada).
+        if (!_ownLibLink && !_ancestorLink) {
           dsElement = "warning";
           isCustomComponent = true;
         } else {
@@ -3872,8 +3875,15 @@ figma.ui.onmessage = async (msg) => {
         .filter(p => p.type === "variant")
         .map(p => ({ name: p.name, value: p.value }));
 
+      // Mesmo nome de camada com vínculo diferente (próprio / por ancestral /
+      // nenhum) são itens distintos: senão a 1ª ocorrência conforme esconderia
+      // uma ocorrência personalizada homônima (ex: "Icon" dentro de um
+      // componente DSC e "Icon" solto custom).
+      const _dedupKey = (category === "components" || category === "icons")
+        ? name + '|' + (_ownLibLink ? 'own' : _ancestorLink ? 'ancestor' : 'none')
+        : name;
       const map = specs[category];
-      if (!map.has(name)) {
+      if (!map.has(_dedupKey)) {
         // isMarkedCustom é declaração manual do designer ("Componente
         // Personalizado" no card do item, tela Escanear Tokens) -- itens
         // são recriados do zero a cada scan (este bloco só roda na
@@ -3902,7 +3912,7 @@ figma.ui.onmessage = async (msg) => {
           layers: new Set([name]),
           properties: props
         };
-        map.set(name, itemObj);
+        map.set(_dedupKey, itemObj);
         frameJson.elements[category].push({
           name: name,
           type: category,
@@ -3919,7 +3929,7 @@ figma.ui.onmessage = async (msg) => {
           properties: props
         });
       } else {
-        const item = map.get(name);
+        const item = map.get(_dedupKey);
         item.layers.add(name);
       }
     }

@@ -86,7 +86,7 @@
       function _dscComponentsOfFrame(f) {
         return _CATEGORIAS
           .flatMap(cat => (f.specs && f.specs[cat]) || [])
-          .filter(item => item.componentKey && item.matchedIn)
+          .filter(item => item.componentKey && item.matchedIn && item.matchedBy !== 'ancestor-key')
           .map(item => ({ nome: item.name, biblioteca: item.matchedIn, componentKey: item.componentKey }));
       }
 

@@ -6,7 +6,7 @@ Handler `scan-frame`, `code.js:1940-2350`.
 
 - Classifica nós em 5 categorias: `components`, `icons`, `typography`, `frames`, `vectors` (code.js:1960-1966).
 - Heurística de detecção de ícone: nome contém "icon"/"ic-" OU instância ≤32×32px sem "button" no nome (code.js:2327-2328).
-- Auditoria de conformidade por duas vias: (a) `isRemote` — variável/estilo/componente vinculado a uma lib publicada, conforme direto sem checar skeleton; (b) consulta ao skeleton DSC via `referenceTokens`. Fallback por prefixo `[dsc]` no nome do nó, e tipografia com fonte contendo "caixa" força conforme mesmo sem match exato de score.
+- Auditoria de conformidade por duas vias: (a) `isRemote` — variável/estilo/componente vinculado a uma lib publicada, conforme direto sem checar skeleton; (b) consulta ao skeleton DSC via `referenceTokens`. (Fallback por prefixo `[dsc]` removido na Fase 3; vale herança por ancestral com chave no skeleton.) Tipografia com fonte contendo "caixa" força conforme mesmo sem match exato de score.
 - 5 libs DSC indexadas (`_manifest.json`): Fundamentos Visuais (248 variáveis, 12 cores, 39 tipografias, 10333 componentes), Web Angular & React (1839 componentes), Super Gerenciador (4422), Super App (4266), Design Acessível (293).
 
 ## Regras de filtragem (decisão de produto, não bug)

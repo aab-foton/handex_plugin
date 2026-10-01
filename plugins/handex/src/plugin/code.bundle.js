@@ -2902,6 +2902,52 @@
         }
         return props;
       }
+      const _isLibNodeType = (t) => t === "INSTANCE" || t === "COMPONENT" || t === "COMPONENT_SET";
+      const _libLinkCache = /* @__PURE__ */ new Map();
+      const _ancestorLinkCache = /* @__PURE__ */ new Map();
+      const _keyedDescendantCache = /* @__PURE__ */ new Map();
+      async function _nodeKey(n) {
+        if (n.type === "INSTANCE") {
+          const m = await n.getMainComponentAsync();
+          return m ? m.key : null;
+        }
+        return n.key || null;
+      }
+      async function _libLinkOf(n, knownKey) {
+        if (_libLinkCache.has(n.id)) return _libLinkCache.get(n.id);
+        const key = knownKey !== void 0 ? knownKey : await _nodeKey(n);
+        let result = null;
+        if (key) {
+          const a = auditProperty(n.name, n.name, "components", key, referenceTokens);
+          if (a.score >= AUDIT_SCORE.EXACT) result = { lib: a.matchedIn || null, name: n.name };
+        }
+        _libLinkCache.set(n.id, result);
+        return result;
+      }
+      async function _libAncestorOf(n) {
+        const p = n.parent;
+        if (!p || p.type === "PAGE" || p.type === "DOCUMENT") return null;
+        if (_ancestorLinkCache.has(p.id)) return _ancestorLinkCache.get(p.id);
+        let result = null;
+        if (_isLibNodeType(p.type)) result = await _libLinkOf(p);
+        if (!result) result = await _libAncestorOf(p);
+        _ancestorLinkCache.set(p.id, result);
+        return result;
+      }
+      async function _hasKeyedDescendant(n) {
+        if (_keyedDescendantCache.has(n.id)) return _keyedDescendantCache.get(n.id);
+        let found = false;
+        if (n.children) {
+          for (const c of n.children) {
+            if (_isLibNodeType(c.type) && await _libLinkOf(c) || await _hasKeyedDescendant(c)) {
+              found = true;
+              break;
+            }
+          }
+        }
+        _keyedDescendantCache.set(n.id, found);
+        return found;
+      }
       async function addElement(category, node, props) {
         if (allowedCategories && allowedCategories.length > 0) {
           let isAllowed = false;
@@ -2921,31 +2967,11 @@
         } else if (node.type === "COMPONENT" || node.type === "COMPONENT_SET") {
           componentKey = node.key;
         }
-        const _nodeHasRealLibLink = (n, key) => {
-          if (!key) return /^\[dsc\]/i.test(n.name);
-          const a = auditProperty(n.name, n.name, "components", key, referenceTokens);
-          return a.score >= AUDIT_SCORE.EXACT || /^\[dsc\]/i.test(n.name);
-        };
-        const _ownLibLink = node.type === "INSTANCE" || node.type === "COMPONENT" || node.type === "COMPONENT_SET" ? _nodeHasRealLibLink(node, componentKey) : false;
-        const _hasRealDSDescendant = async (n) => {
-          if (!n.children) return false;
-          for (const c of n.children) {
-            if (c.type === "INSTANCE" || c.type === "COMPONENT" || c.type === "COMPONENT_SET") {
-              let cKey = null;
-              if (c.type === "INSTANCE") {
-                const cMain = await c.getMainComponentAsync();
-                if (cMain) cKey = cMain.key;
-              } else {
-                cKey = c.key;
-              }
-              if (_nodeHasRealLibLink(c, cKey)) return true;
-            }
-            if (await _hasRealDSDescendant(c)) return true;
-          }
-          return false;
-        };
-        if (!_ownLibLink && (category === "frames" || category === "components" || category === "icons")) {
-          if (await _hasRealDSDescendant(node)) return;
+        const _ownLibLink = node.type === "INSTANCE" || node.type === "COMPONENT" || node.type === "COMPONENT_SET" ? await _libLinkOf(node, componentKey) : null;
+        const _ancestorLink = _ownLibLink ? null : await _libAncestorOf(node);
+        if (!_ownLibLink && category === "frames" && _ancestorLink) return;
+        if (!_ownLibLink && !_ancestorLink && (category === "frames" || category === "components" || category === "icons")) {
+          if (await _hasKeyedDescendant(node)) return;
         }
         let dsElement = false;
         let elementScore = null;
@@ -2960,12 +2986,14 @@
           elementMatchedBy = a.matchedBy;
           elementMatchedIn = a.matchedIn;
           elementMatchedTokenName = a.matchedTokenName;
-          if (dsElement !== true && /^\[dsc\]/i.test(name)) {
+          if (!_ownLibLink && _ancestorLink) {
             dsElement = true;
-            if (!elementMatchedBy) elementMatchedBy = "name-convention";
-            if (!elementMatchedIn) elementMatchedIn = "DSC (conven\xE7\xE3o de nome)";
+            elementScore = null;
+            elementMatchedBy = "ancestor-key";
+            elementMatchedIn = _ancestorLink.lib;
+            elementMatchedTokenName = null;
           }
-          if (!_ownLibLink) {
+          if (!_ownLibLink && !_ancestorLink) {
             dsElement = "warning";
             isCustomComponent = true;
           } else {
@@ -3002,8 +3030,9 @@
           }
         }
         const variants = props.filter((p) => p.type === "variant").map((p) => ({ name: p.name, value: p.value }));
+        const _dedupKey = category === "components" || category === "icons" ? name + "|" + (_ownLibLink ? "own" : _ancestorLink ? "ancestor" : "none") : name;
         const map = specs[category];
-        if (!map.has(name)) {
+        if (!map.has(_dedupKey)) {
           const _prevItem = (msg.previousSpecs && msg.previousSpecs[category] || []).find((p) => p.nodeId === node.id);
           const itemObj = {
             name,
@@ -3023,7 +3052,7 @@
             layers: /* @__PURE__ */ new Set([name]),
             properties: props
           };
-          map.set(name, itemObj);
+          map.set(_dedupKey, itemObj);
           frameJson.elements[category].push({
             name,
             type: category,
@@ -3040,7 +3069,7 @@
             properties: props
           });
         } else {
-          const item = map.get(name);
+          const item = map.get(_dedupKey);
           item.layers.add(name);
         }
       }
