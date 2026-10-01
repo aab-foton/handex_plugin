@@ -3,6 +3,7 @@
     "description": "Conteúdo real extraído do arquivo Figma da biblioteca 'Design Acessível' (fileKey Wy0IhXRVZMSOOr8E609UqI) via REST API — não é gerado por fetch-design-refs.cjs porque esse script só pega name/key/description do endpoint /components (achatado, sem árvore de nós). Este arquivo cobre o conteúdo INTERNO dos componentes completos ('[a11y] Box specs LT', seção 'Specs - Estrutura [Handoff]') e dos catálogos de sub-variantes usados dentro deles. Extraído em 2026-07-23. Se a lib for reestruturada no Figma, os node-ids/keys abaixo podem quebrar — revalidar via REST API antes de confiar cegamente.",
     "fileKey": "Wy0IhXRVZMSOOr8E609UqI",
     "extractedAt": "2026-07-23",
+    "alteracaoWeb20261001": "Fase 3 do plano \"web segue o arquivo próprio\": removidos (a) as 5 wrapperComponentKey — keys da lib ANTIGA Wy0IhXRVZMSOOr8E609UqI — e (b) a categoria \"informacoes\", que deixou de existir. NENHUM texto de Descrição/Observações/Notas de Código foi alterado ou apagado. Este arquivo não é mais importado pelo backend (a web agora usa o wrapper \"[hac web] Box specs leitor de tela\" do arquivo próprio; os textos de cada componente vêm da própria base) — fica como registro do conteúdo autoral, sem consumidor, até o dono do produto decidir o destino.",
     "portedTohac": "2026-08-24 — cópia direta de src/plugin/refs/design-acessivel-content.json do Handex Beta, sem transformação. Conteúdo textual (Descrição/Observações/Notas de Código) das 5 categorias de a11y, usado pelo formulário e pelo card de detalhamento no canvas."
   },
   "categories": {
@@ -10,7 +11,6 @@
       "label": "Elementos interativos e imagens",
       "color": "#FCBE05",
       "badge": "letter-manual",
-      "wrapperComponentKey": "f1bf785a343f191cff72e702d68a27a3a97f0ee9",
       "wrapperNodeId": "31:545",
       "note": "O wrapper contém uma instance filha (property 'componente') do component set [NÃO UTILIZAR][a11y base] em 'Specs - Componentes, ícones e imagens[Handoff]' (node 51:1282). Trocar o tipo de componente documentado = nestedInstance.setProperties({componente: '<valor>'}).",
       "componentes": {
@@ -36,7 +36,6 @@
       "label": "Estrutura da página",
       "color": "#EF765E",
       "badge": "letter-manual + ícone de estrela",
-      "wrapperComponentKey": "4caf7476f773df94921ebfb0f264789adaff5958",
       "wrapperNodeId": "31:547",
       "note": "Mais aninhado: o wrapper referencia um combo com property 'variacao' (idiomas / marco de navegacao / titulo da pagina); 'marco de navegacao' por sua vez tem outro nível com property 'tipo' (header/nav/main/aside/footer/customizável).",
       "subtipos": {
@@ -63,7 +62,6 @@
       "label": "Nível de título",
       "color": "#AFCA0B",
       "badge": "H1-H6 (não sequencial, um selo fixo por nível escolhido)",
-      "wrapperComponentKey": "777297433b69f67325878b4398ed510b379b8bac",
       "wrapperNodeId": "31:551",
       "note": "O wrapper contém uma instance filha (property 'nivel': h1..h6) do component set [NÃO UTILIZAR][a11y base] 'niveis de titulo'. Mobile (React Native) não distingue níveis — usa só 'H' fixo, sem swap de property; Web usa H1-H6 reais com este catálogo.",
       "niveis": {
@@ -84,25 +82,11 @@
       "label": "Elemento decorativo",
       "color": "#D93636",
       "badge": "ícone vetor (não é letra)",
-      "wrapperComponentKey": "9ee625ccf363ab5cd28bb89d443aeb1c6317a869",
       "wrapperNodeId": "31:553",
       "note": "Dois sub-conjuntos: 'ED gerais' (variacao=gerais) e 'ED imagem' (variacao=imagem) — praticamente a mesma Descrição, Notas de Código diferentes.",
       "subtipos": {
         "gerais":           { "descricao": "Não deve ser anunciado pelo Leitor de Tela.", "observacoes": "Insira seu texto da observação.", "notasCodigo": "Insira seu texto com as anotações necessárias para o pessoal de desenvolvimento." },
         "imagem":           { "descricao": "Não deve ser anunciado pelo Leitor de Tela.", "observacoes": "Insira seu texto da observação.", "notasCodigo": "Em HTML utilize o atributo alt=\"\" com o valor vazio." }
-      }
-    },
-    "informacoes": {
-      "label": "Informações adicionais",
-      "color": "#F39200",
-      "badge": "letter-manual",
-      "wrapperComponentKey": "80b43b74348e2db8cd1f28dda241cac7ed220b2f",
-      "wrapperNodeId": "31:555",
-      "note": "Sem 'Notas de Código' — só Descrição + Observações.",
-      "subtipos": {
-        "handoffs":       { "descricao": "Especificado no handoff: [insira aqui o link ou nome do handoff].", "observacoes": "Insira seu texto da observação." },
-        "conteudo extra": { "descricao": "Saiba mais em: [insira aqui o link ou nome do conteúdo].", "observacoes": "Insira seu texto da observação." },
-        "customizavel":   { "descricao": "Insira seu texto da descrição.", "observacoes": "Insira seu texto da observação." }
       }
     }
   }

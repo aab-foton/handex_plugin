@@ -1,0 +1,164 @@
+{
+  "_meta": {
+    "description": "GERADO AUTOMATICAMENTE por build-a11y-constants.cjs — não editar à mão. Component set \"[hac web] Box specs leitor de tela\" (fileKey HhriLSpKnCB2dHhyiU16iB). componentKeyByA11yType traz a key IMPORTÁVEL de cada VARIANTE filha (elemento/titulo/decorativo/estrutura), lida de variantKeys/wrapperVariants do scan — nenhuma key escrita à mão. A web não tem \"Informações Adicionais\".",
+    "source": "refs/design-acessivel-mobile-properties.json (variantKeys/wrapperVariants, gravados por fetch-component-properties.cjs) + refs/web-component-aliases.json",
+    "generatedAt": "2026-10-01T22:31:13.186Z"
+  },
+  "wrapper": {
+    "setNodeId": "10330:4204",
+    "setName": "[hac web] Box specs leitor de tela",
+    "componentKeyByA11yType": {
+      "elemento": "8406b0ecfe7e38a3174198953ba13bf3a52630af",
+      "titulo": "62d3431afd26807e9ce5ff4f6ba48835d793f481",
+      "decorativo": "032c77f3a9a16fcd4ae4896c37e444202ecedf84",
+      "estrutura": "393eccad3c607c49c1b30ac350e0bcb94f1b833e"
+    },
+    "contentInstanceByA11yType": {
+      "elemento": {
+        "name": "Elementos e imagens",
+        "properties": [
+          {
+            "name": "Variante",
+            "type": "VARIANT",
+            "value": "Componente"
+          },
+          {
+            "name": "Componente",
+            "type": "VARIANT",
+            "value": "Button"
+          }
+        ]
+      },
+      "titulo": {
+        "name": "Títulos",
+        "properties": [
+          {
+            "name": "Nível",
+            "type": "VARIANT",
+            "value": "H1"
+          }
+        ]
+      },
+      "decorativo": {
+        "name": "Elementos decorativos",
+        "properties": [
+          {
+            "name": "Observações",
+            "type": "BOOLEAN",
+            "value": true
+          }
+        ]
+      },
+      "estrutura": {
+        "name": "Estrutura da Página",
+        "properties": [
+          {
+            "name": "Variação",
+            "type": "VARIANT",
+            "value": "Marco de navegação"
+          }
+        ]
+      }
+    }
+  },
+  "componentOptions": [
+    "Account Select",
+    "Avatar",
+    "Badge Notification",
+    "Badge Text",
+    "Batch Button",
+    "Breadcrumb",
+    "Button",
+    "Card",
+    "Card Alert",
+    "Card Notification",
+    "Card Horizontal",
+    "Card Vertical",
+    "Card Widget",
+    "Checkbox",
+    "Chip",
+    "Date Picker",
+    "Drawer Panel",
+    "Dropdown Combobox",
+    "Dropdown Menu List",
+    "File Upload",
+    "Footer",
+    "Header",
+    "Icon Button",
+    "Icon Button Text",
+    "Input / Chat",
+    "Input / Date Field - Form",
+    "Input / Password Field - Form",
+    "Input / Select Field - Form",
+    "Input / Text Area - Form",
+    "Input / Text Field - Form",
+    "Input Money",
+    "Input Pin",
+    "Input Slider",
+    "Input Stepper",
+    "Input With Chips - Form",
+    "Link",
+    "List Item",
+    "Loading Animation",
+    "Modal",
+    "Overflow Controller",
+    "Paginator",
+    "Popover",
+    "Progress",
+    "Progress List",
+    "Radio",
+    "Searchbar",
+    "Search Results",
+    "Segmented Button",
+    "Sidebar Menu",
+    "Skeleton Load",
+    "Spinner",
+    "Stepper",
+    "Switch",
+    "Tab",
+    "Table / Cell",
+    "Table / Header Cell",
+    "Tile Button",
+    "Title Bar",
+    "Toast",
+    "Tooltip",
+    "Imagem"
+  ],
+  "componentExtraVariantProps": {
+    "Imagem": {
+      "Variante": "Texto Alternativo"
+    }
+  },
+  "componentAliases": {},
+  "estrutura": {
+    "variacoes": [
+      "Marco de navegação",
+      "Título da Página",
+      "Idioma"
+    ],
+    "marcoTipos": [
+      "Nav",
+      "Main",
+      "Aside"
+    ],
+    "idiomaTipos": [
+      "Página",
+      "Parte"
+    ],
+    "togglesByVariacao": {
+      "Marco de navegação": [],
+      "Título da Página": [],
+      "Idioma": [
+        "Observações"
+      ]
+    }
+  },
+  "tituloNiveis": [
+    "H1",
+    "H2",
+    "H3",
+    "H4",
+    "H5",
+    "H6"
+  ]
+}

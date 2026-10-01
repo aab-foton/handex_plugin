@@ -36,10 +36,15 @@
 // declarações `import`.
 import FICHA_INSTRUCTION_CONTENT from '../refs/ficha-instruction-content.json';
 
+// Keys dos selos (Identificação da tela / Ordenação) — declaradas nos perfis
+// por plataforma desde 2026-10-01 (antes eram `export const` de code.js).
 import {
   A11Y_IDENTIFICACAO_TELA_KEYS,
   A11Y_IDENTIFICACAO_TELA_PROPS,
   A11Y_ORDENACAO_ITEM_KEY,
+} from './platform-profiles.js';
+
+import {
   A11Y_SECTION_NAME,
   A11Y_SWIPE_FLOW_SECTION_NAME,
   FICHA_SECTION_ORDER,
@@ -1386,19 +1391,39 @@ figma.ui.onmessage = async (msg) => {
         _a11yImportFailReason = e && e.message ? e.message : String(e);
       }
 
-      // Fallbacks ESPERADOS: variação sem componente real catalogado — não é
-      // erro de biblioteca, cai no card procedural normalmente.
-      const _A11Y_EXPECTED_FALLBACK_PREFIXES = [
-        'a11y-elemento-outro-sem-componente-real',
-        'a11y-titulo-mobile-sem-variante-real',
-        'a11y-informacoes-customizavel-sem-variante-real',
-        'a11y-estrutura-variacao-sem-import-real',
-        'a11y-estrutura-marco-customizavel-sem-conteudo-catalogado',
+      // Fallbacks AVISADOS (2026-10-01): a spec ainda é criada, como card
+      // genérico (procedural), mas o designer é AVISADO do motivo — nunca um
+      // card "real" com o componente/nível errado e nunca uma troca silenciosa
+      // (um fallback mudo foi o que escondeu o bug de 2026-09-22, "Value
+      // Section" virando "Button"). Cada prefixo vem de _tryImportA11yComponent
+      // (code.js). Qualquer outro motivo continua abortando com erro visível.
+      const _A11Y_WARNED_FALLBACKS = [
+        {
+          prefix: 'a11y-elemento-componente-fora-da-base',
+          message: (detail) => 'O componente "' + detail + '" não consta na base de acessibilidade. A especificação foi criada como card genérico.',
+        },
+        {
+          prefix: 'a11y-estrutura-sem-variante-na-base',
+          message: () => 'Essa variação de Estrutura da Página não existe na base de acessibilidade. A especificação foi criada como card genérico.',
+        },
+        {
+          prefix: 'a11y-web-set-falhou',
+          message: () => 'A base de acessibilidade mudou e o card não pôde ser preenchido com segurança. A especificação foi criada como card genérico.',
+        },
       ];
-      const _isExpectedFallback = _a11yImportFailReason && _A11Y_EXPECTED_FALLBACK_PREFIXES.some(p => _a11yImportFailReason.startsWith(p));
-      if (_a11yImportFailReason && !_isExpectedFallback) {
+      const _warnedFallback = _a11yImportFailReason
+        ? _A11Y_WARNED_FALLBACKS.find(f => _a11yImportFailReason.startsWith(f.prefix))
+        : null;
+      if (_a11yImportFailReason && !_warnedFallback) {
         figma.notify('Não foi possível criar a especificação de acessibilidade. (' + _a11yImportFailReason + ')', { error: true });
         return;
+      }
+      // Texto do aviso final (disparado mais abaixo, depois de a spec existir).
+      let _warnedFallbackMessage = null;
+      if (_warnedFallback) {
+        const _detail = _a11yImportFailReason.indexOf(': ') >= 0 ? _a11yImportFailReason.slice(_a11yImportFailReason.indexOf(': ') + 2) : '';
+        console.error('[hac] create-unified-spec: fallback para card genérico —', _a11yImportFailReason);
+        _warnedFallbackMessage = _warnedFallback.message(_detail);
       }
 
       if (!specCard) {
@@ -2353,8 +2378,8 @@ figma.ui.onmessage = async (msg) => {
         // acima. Nunca deixa a spec sumir por causa disso; só avisa que falta
         // revisar o destaque visual manualmente.
         figma.notify(`Especificação criada sem o marcador visual (contorno/conector) — não foi possível importá-lo (${_markerImportFailReason}). Revise o destaque manualmente.`, { error: true, timeout: 6000 });
-      } else if (_isExpectedFallback) {
-        figma.notify(`Especificação criada com card desenhado (sem componente real catalogado para esta variação: ${_a11yImportFailReason}). Arraste para posicionar.`);
+      } else if (_warnedFallbackMessage) {
+        figma.notify(_warnedFallbackMessage + ' Arraste para posicionar.', { timeout: 6000 });
       } else if (!opts.silent) {
         figma.notify("Especificação de acessibilidade criada.");
       }

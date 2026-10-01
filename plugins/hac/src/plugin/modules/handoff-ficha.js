@@ -180,7 +180,8 @@ function _fichaBuildSpecFields(spec) {
 // opts.fillColor já usado por create-unified-spec) porque A11Y_CATEGORIES
 // só existe no frontend.
 function _fichaBuildSpecPayload(spec) {
-  const meta = A11Y_CATEGORIES[spec.a11yType] || { label: 'Acessibilidade', color: '#005ca9', fill: '#EBF4FB' };
+  // getA11yCategoryMeta: inclui categorias DESCONTINUADAS ainda presentes em dados salvos (hoje "informacoes"), só exibição.
+  const meta = getA11yCategoryMeta(spec.a11yType) || { label: 'Acessibilidade', color: '#005ca9', fill: '#EBF4FB' };
   // categoryLabel por ORIGEM DA SPEC (spec.a11yOrigin), não meta.label cru —
   // a Ficha é o documento final consumido pelo dev; uma spec 'titulo' criada
   // em contexto mobile precisa chegar lá como "Títulos", nunca "Nível de

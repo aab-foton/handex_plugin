@@ -1,13 +1,13 @@
 // ============================================================
 // GERADO AUTOMATICAMENTE por build-a11y-constants.cjs — não editar à mão.
 // Fonte: refs/design-acessivel-properties.json (2026-09-30T13:57:57.953Z)
-//      + refs/design-acessivel-mobile-properties.json (2026-09-30T14:05:31.017Z)
+//      + refs/design-acessivel-mobile-properties.json (2026-10-01T21:51:24.291Z)
 //      + refs/super-app.json (2026-09-30T23:37:47.768Z)
 //      + refs/_manifest.json (fileKey da lib 'super-app')
 // Regenerar via: node src/plugin/refs/build-a11y-constants.cjs
 //            ou: npm run refs:a11y-constants
 //
-// Gerado em: 2026-10-01T19:01:06.135Z
+// Gerado em: 2026-10-01T22:31:13.182Z
 //
 // Consumido via alias em src/plugin/modules/accessibility.js:
 //   const A11Y_COMPONENT_PROPERTIES = A11Y_COMPONENT_PROPERTIES_GENERATED;
@@ -18,6 +18,11 @@
 //   const A11Y_MOBILE_COMPONENT_TOGGLES = A11Y_MOBILE_COMPONENT_TOGGLES_GENERATED;
 //   const A11Y_SUPER_APP_FILE_KEY = A11Y_SUPER_APP_FILE_KEY_GENERATED;
 //   const A11Y_SUPER_APP_FILE_NAME = A11Y_SUPER_APP_FILE_NAME_GENERATED;
+//   (perfil web, 2026-10-01) A11Y_WEB_* — mesmo desenho dos A11Y_MOBILE_*,
+//   mais A11Y_WEB_ESTRUTURA/A11Y_WEB_FIXED_TOGGLES/A11Y_WEB_COMPONENT_ALIASES,
+//   consumidos por A11Y_UI_PROFILES (accessibility.js). Os pares extras de
+//   variante (ex.: Imagem) e os níveis H1-H6 só o BACKEND consome — vão em
+//   design-acessivel-web-wrapper.generated.json, não aqui.
 // Concatenado por build.cjs no bundle final (ui.html) ANTES de
 // accessibility.js — não editar este arquivo à mão.
 // ============================================================
@@ -1382,3 +1387,1560 @@ const A11Y_MOBILE_COMPONENT_TOGGLES_GENERATED = {
 
 const A11Y_SUPER_APP_FILE_KEY_GENERATED = "epCGtlKQxedDxQVlK3lNcN";
 const A11Y_SUPER_APP_FILE_NAME_GENERATED = "DSC-Super-App";
+
+// ── Perfil WEB (2026-10-01) — fonte: set ".[hac web base]  Elementos e imagens" + sets base de Estrutura/Títulos
+const A11Y_WEB_LINK_COMPONENT_OPTIONS_GENERATED = [
+  "Account Select",
+  "Avatar",
+  "Badge Notification",
+  "Badge Text",
+  "Batch Button",
+  "Breadcrumb",
+  "Button",
+  "Card",
+  "Card Alert",
+  "Card Notification",
+  "Card Horizontal",
+  "Card Vertical",
+  "Card Widget",
+  "Checkbox",
+  "Chip",
+  "Date Picker",
+  "Drawer Panel",
+  "Dropdown Combobox",
+  "Dropdown Menu List",
+  "File Upload",
+  "Footer",
+  "Header",
+  "Icon Button",
+  "Icon Button Text",
+  "Input / Chat",
+  "Input / Date Field - Form",
+  "Input / Password Field - Form",
+  "Input / Select Field - Form",
+  "Input / Text Area - Form",
+  "Input / Text Field - Form",
+  "Input Money",
+  "Input Pin",
+  "Input Slider",
+  "Input Stepper",
+  "Input With Chips - Form",
+  "Link",
+  "List Item",
+  "Loading Animation",
+  "Modal",
+  "Overflow Controller",
+  "Paginator",
+  "Popover",
+  "Progress",
+  "Progress List",
+  "Radio",
+  "Searchbar",
+  "Search Results",
+  "Segmented Button",
+  "Sidebar Menu",
+  "Skeleton Load",
+  "Spinner",
+  "Stepper",
+  "Switch",
+  "Tab",
+  "Table / Cell",
+  "Table / Header Cell",
+  "Tile Button",
+  "Title Bar",
+  "Toast",
+  "Tooltip",
+  "Imagem"
+];
+
+const A11Y_WEB_COMPONENT_LINK_NODE_IDS_GENERATED = {
+  "Account Select": "21916:2707",
+  "Avatar": "6092:2496",
+  "Badge Notification": "16679:26782",
+  "Badge Text": "6791:5353",
+  "Batch Button": "35643:4592",
+  "Breadcrumb": "19738:1217",
+  "Button": "6068:198",
+  "Card": "26303:4747",
+  "Card Alert": "6791:6531",
+  "Card Notification": "7732:2499",
+  "Card Horizontal": "22436:4539",
+  "Card Vertical": "22532:574",
+  "Card Widget": "19051:9030",
+  "Checkbox": "6104:23727",
+  "Chip": "36586:4314",
+  "Drawer Panel": "32784:20694",
+  "Footer": "19973:13281",
+  "Header": "21918:15091",
+  "Icon Button": "7296:13338",
+  "Icon Button Text": "6791:11812",
+  "Input / Chat": "23109:460",
+  "Input Money": "7537:871",
+  "Input Pin": "9208:4462",
+  "Input Slider": "30829:3508",
+  "Input Stepper": "8193:4840",
+  "List Item": "24701:12064",
+  "Modal": "25148:1709",
+  "Overflow Controller": "28712:77468",
+  "Paginator": "29251:15835",
+  "Popover": "6092:1875",
+  "Progress List": "35667:3427",
+  "Radio": "6104:24152",
+  "Searchbar": "11934:5702",
+  "Search Results": "30709:29966",
+  "Segmented Button": "7970:1776",
+  "Sidebar Menu": "19243:2543",
+  "Spinner": "6115:2994",
+  "Stepper": "19576:4772",
+  "Switch": "6115:3093",
+  "Table / Header Cell": "20684:28128",
+  "Tile Button": "20715:2219",
+  "Title Bar": "19469:33130",
+  "Toast": "6088:782",
+  "Tooltip": "6090:1345"
+};
+
+const A11Y_WEB_COMPONENTS_WITH_NOME_ACESSIVEL_GENERATED = [
+  "Account Select",
+  "Avatar",
+  "Breadcrumb",
+  "Button",
+  "Checkbox",
+  "Icon Button",
+  "Overflow Controller",
+  "Radio",
+  "Stepper",
+  "Switch",
+  "Link"
+];
+
+const A11Y_WEB_SCREEN_READER_VARIANTS_GENERATED = {
+  "Account Select": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Without Expansion",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "With Badge",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Collapsed Baseline",
+        "hasNomeAcessivel": true,
+        "activeToggles": [
+          "Nome Acessível",
+          "Observações"
+        ]
+      },
+      {
+        "name": "Collapsed Without Expansion",
+        "hasNomeAcessivel": true,
+        "activeToggles": [
+          "Nome Acessível",
+          "Observações"
+        ]
+      },
+      {
+        "name": "Collapsed With Badge",
+        "hasNomeAcessivel": true,
+        "activeToggles": [
+          "Nome Acessível",
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Avatar": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Interactive",
+        "hasNomeAcessivel": true,
+        "activeToggles": [
+          "Nome Acessível",
+          "Observações"
+        ]
+      },
+      {
+        "name": "Interactive With Expansion",
+        "hasNomeAcessivel": true,
+        "activeToggles": [
+          "Nome Acessível",
+          "Observações"
+        ]
+      },
+      {
+        "name": "With Badge",
+        "hasNomeAcessivel": true,
+        "activeToggles": [
+          "Nome Acessível"
+        ]
+      }
+    ]
+  },
+  "Badge Notification": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Standard (1 to 999)",
+        "hasNomeAcessivel": false,
+        "activeToggles": []
+      },
+      {
+        "name": "Standard (999+)",
+        "hasNomeAcessivel": false,
+        "activeToggles": []
+      },
+      {
+        "name": "Small",
+        "hasNomeAcessivel": false,
+        "activeToggles": []
+      }
+    ]
+  },
+  "Badge Text": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Individual",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Trigger Attached",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Breadcrumb": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Landmark",
+        "hasNomeAcessivel": true,
+        "activeToggles": [
+          "Nome Acessível",
+          "Observações"
+        ]
+      },
+      {
+        "name": "Home",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Links",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Truncate Button",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Batch Button": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false,
+        "activeToggles": []
+      },
+      {
+        "name": "Drag Activated",
+        "hasNomeAcessivel": false,
+        "activeToggles": []
+      }
+    ]
+  },
+  "Button": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "With Expansion",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Disabled",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Label in Name",
+        "hasNomeAcessivel": true,
+        "activeToggles": [
+          "Nome Acessível",
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Card": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Default",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Button",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Expanded",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Other Actions",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Card Horizontal": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Interactive",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Card Vertical": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "100% Interactive",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Card Widget": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Interactive",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Checkbox": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Only Checkbox",
+        "hasNomeAcessivel": true,
+        "activeToggles": [
+          "Nome Acessível",
+          "Observações"
+        ]
+      },
+      {
+        "name": "Checkbox With Label",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Group",
+        "hasNomeAcessivel": true,
+        "activeToggles": [
+          "Nome Acessível",
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Chip": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Basic",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Multiselect",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Select Only",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Removable",
+        "hasNomeAcessivel": false,
+        "activeToggles": []
+      },
+      {
+        "name": "Leitor de Tela5",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Leitor de Tela6",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Date Picker": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Range Selected",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Month",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Year",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Dropdown Combobox": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Removable",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "No Results",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "File Upload": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Dropzone",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Card File Success",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Card Error",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Card Loading",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Icon Button": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Padrão",
+        "hasNomeAcessivel": true,
+        "activeToggles": [
+          "Nome Acessível",
+          "Observações"
+        ]
+      },
+      {
+        "name": "With Badge",
+        "hasNomeAcessivel": true,
+        "activeToggles": [
+          "Nome Acessível",
+          "Observações"
+        ]
+      },
+      {
+        "name": "With Expansion",
+        "hasNomeAcessivel": true,
+        "activeToggles": [
+          "Nome Acessível",
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Input / Chat": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Filled",
+        "hasNomeAcessivel": false,
+        "activeToggles": []
+      },
+      {
+        "name": "Audio",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Input / Date Field - Form": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Required",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Error",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Read Only",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Input / Password Field - Form": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Required",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Error",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Read Only",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Disabled",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Input / Select Field - Form": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Select Only",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Required",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Editable (Autocomplete)",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Disabled",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Input / Text Area - Form": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Required",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Error",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Read Only",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Disabled",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Input / Text Field - Form": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Typing With Suggestion",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Required",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Error",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Read Only",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Disabled",
+        "hasNomeAcessivel": false,
+        "activeToggles": []
+      }
+    ]
+  },
+  "Input Money": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Feedback",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Read Only",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Disabled",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Input Pin": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Numeric",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Token",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Alphanumeric",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Error",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Input Slider": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "With Field",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Input Stepper": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Min",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Max",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Field",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Input With Chips - Form": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Filled",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Collapsed / Dropdown",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "List Item": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Group List Structure",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Icon Button / Text Button",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Checkbox",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Switch",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Expandable",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Badge Notification",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Badge Text",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Navigation",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Overflow Controller": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Left",
+        "hasNomeAcessivel": true,
+        "activeToggles": [
+          "Nome Acessível",
+          "Observações"
+        ]
+      },
+      {
+        "name": "Right",
+        "hasNomeAcessivel": true,
+        "activeToggles": [
+          "Nome Acessível",
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Progress": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "With Labels",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Radio": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Only Radio",
+        "hasNomeAcessivel": true,
+        "activeToggles": [
+          "Nome Acessível",
+          "Observações"
+        ]
+      },
+      {
+        "name": "Radio With Label",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Radio Group",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Search Results": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Standard",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Suggestions",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Segmented Button": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Radios",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Radio Group",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Sidebar Menu": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline with Buttons",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Item / Button Collapsed",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Submenu With Internal Links",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Submenu With External Links",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Compact",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Stepper": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Editable",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Completed",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Inactive",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Required / Danger",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Only Step",
+        "hasNomeAcessivel": true,
+        "activeToggles": [
+          "Nome Acessível",
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Switch": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": true,
+        "activeToggles": [
+          "Nome Acessível",
+          "Observações"
+        ]
+      },
+      {
+        "name": "Bullet With Label",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Table / Header Cell": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Table Header",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Button Sorted + Icon Tooltip",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Checkbox",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Table / Cell": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Table Cell",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Actions",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Tab": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Tabgroup",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Tab",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Link": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": true,
+        "activeToggles": [
+          "Nome Acessível",
+          "Observações"
+        ]
+      },
+      {
+        "name": "Nova Janela",
+        "hasNomeAcessivel": true,
+        "activeToggles": [
+          "Nome Acessível",
+          "Observações"
+        ]
+      },
+      {
+        "name": "Enviar E-mail",
+        "hasNomeAcessivel": true,
+        "activeToggles": [
+          "Nome Acessível",
+          "Observações"
+        ]
+      }
+    ]
+  }
+};
+
+const A11Y_WEB_COMPONENT_TOGGLES_GENERATED = {
+  "Account Select": [
+    "Observações",
+    "Nome Acessível"
+  ],
+  "Avatar": [
+    "Nome Acessível",
+    "Observações"
+  ],
+  "Badge Notification": [],
+  "Badge Text": [
+    "Observações"
+  ],
+  "Breadcrumb": [
+    "Nome Acessível",
+    "Observações"
+  ],
+  "Batch Button": [],
+  "Button": [
+    "Observações",
+    "Nome Acessível"
+  ],
+  "Card": [
+    "Observações"
+  ],
+  "Card Alert": [
+    "Observações"
+  ],
+  "Card Horizontal": [
+    "Observações"
+  ],
+  "Card Notification": [
+    "Observações"
+  ],
+  "Card Vertical": [
+    "Observações"
+  ],
+  "Card Widget": [
+    "Observações"
+  ],
+  "Checkbox": [
+    "Nome Acessível",
+    "Observações"
+  ],
+  "Chip": [
+    "Observações"
+  ],
+  "Date Picker": [
+    "Observações"
+  ],
+  "Drawer Panel": [
+    "Observações"
+  ],
+  "Dropdown Combobox": [
+    "Observações"
+  ],
+  "Dropdown Menu List": [
+    "Observações"
+  ],
+  "File Upload": [
+    "Observações"
+  ],
+  "Footer": [
+    "Observações"
+  ],
+  "Header": [
+    "Observações"
+  ],
+  "Icon Button": [
+    "Nome Acessível",
+    "Observações"
+  ],
+  "Icon Button Text": [
+    "Observações"
+  ],
+  "Input / Chat": [
+    "Observações"
+  ],
+  "Input / Date Field - Form": [
+    "Observações"
+  ],
+  "Input / Password Field - Form": [
+    "Observações"
+  ],
+  "Input / Select Field - Form": [
+    "Observações"
+  ],
+  "Input / Text Area - Form": [
+    "Observações"
+  ],
+  "Input / Text Field - Form": [
+    "Observações"
+  ],
+  "Input Money": [
+    "Observações"
+  ],
+  "Input Pin": [
+    "Observações"
+  ],
+  "Input Slider": [
+    "Observações"
+  ],
+  "Input Stepper": [
+    "Observações"
+  ],
+  "Input With Chips - Form": [
+    "Observações"
+  ],
+  "List Item": [
+    "Observações"
+  ],
+  "Modal": [
+    "Observações"
+  ],
+  "Overflow Controller": [
+    "Nome Acessível",
+    "Observações"
+  ],
+  "Paginator": [
+    "Observações"
+  ],
+  "Popover": [
+    "Observações"
+  ],
+  "Progress": [
+    "Observações"
+  ],
+  "Progress List": [
+    "Observações"
+  ],
+  "Radio": [
+    "Nome Acessível",
+    "Observações"
+  ],
+  "Searchbar": [
+    "Observações"
+  ],
+  "Search Results": [
+    "Observações"
+  ],
+  "Segmented Button": [
+    "Observações"
+  ],
+  "Sidebar Menu": [
+    "Observações"
+  ],
+  "Skeleton Load": [
+    "Observações"
+  ],
+  "Spinner": [
+    "Observações"
+  ],
+  "Stepper": [
+    "Observações",
+    "Nome Acessível"
+  ],
+  "Switch": [
+    "Nome Acessível",
+    "Observações"
+  ],
+  "Table / Header Cell": [
+    "Observações"
+  ],
+  "Table / Cell": [
+    "Observações"
+  ],
+  "Tab": [
+    "Observações"
+  ],
+  "Title Bar": [
+    "Observações"
+  ],
+  "Toast": [
+    "Observações"
+  ],
+  "Tooltip": [
+    "Observações"
+  ],
+  "Imagem": [
+    "Observações"
+  ],
+  "Link": [
+    "Nome Acessível",
+    "Observações"
+  ]
+};
+
+const A11Y_WEB_COMPONENT_ALIASES_GENERATED = {};
+
+const A11Y_WEB_ESTRUTURA_GENERATED = {
+  "variacoes": [
+    "Marco de navegação",
+    "Título da Página",
+    "Idioma"
+  ],
+  "marcoTipos": [
+    "Nav",
+    "Main",
+    "Aside"
+  ],
+  "idiomaTipos": [
+    "Página",
+    "Parte"
+  ],
+  "togglesByVariacao": {
+    "Marco de navegação": [],
+    "Título da Página": [],
+    "Idioma": [
+      "Observações"
+    ]
+  }
+};
+
+const A11Y_WEB_FIXED_TOGGLES_GENERATED = {
+  "elemento": [],
+  "titulo": [],
+  "decorativo": [
+    "Observações"
+  ],
+  "estrutura": []
+};
+
+const A11Y_WEB_FILE_KEY_GENERATED = "erkqbRKIbaFWbkHe51BeiZ";
+const A11Y_WEB_FILE_NAME_GENERATED = "Super-DSC-Web";

@@ -52,6 +52,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { normalizeRecognitionName, loadWebAliases } = require('./web-recognition.cjs');
 
 const REFS_DIR = __dirname;
 const DESKTOP_SRC = path.join(REFS_DIR, 'design-acessivel-properties.json');
@@ -67,6 +68,12 @@ const OUT = path.join(REFS_DIR, '_a11y-constants.generated.js');
 // dentro de um único <script> não-module em ui.html (ver build.cjs) — um
 // `export {}` ali quebraria o bundle do frontend.
 const MOBILE_WRAPPER_OUT = path.join(REFS_DIR, 'design-acessivel-mobile-wrapper.generated.json');
+// Perfil WEB (2026-10-01): mesmo desenho do wrapper mobile, mas as keys das
+// variantes vêm TODAS do dado extraído (variantKeys/wrapperVariants de
+// design-acessivel-mobile-properties.json, gravados por
+// fetch-component-properties.cjs) — nenhuma key escrita à mão neste arquivo.
+const WEB_WRAPPER_OUT = path.join(REFS_DIR, 'design-acessivel-web-wrapper.generated.json');
+const SUPER_DSC_WEB_SRC = path.join(REFS_DIR, 'super-dsc-web.json');
 
 function readJSON(abs, label) {
   if (!fs.existsSync(abs)) {
@@ -74,6 +81,29 @@ function readJSON(abs, label) {
     return null;
   }
   return JSON.parse(fs.readFileSync(abs, 'utf8'));
+}
+
+// ── Seleção do component set base ".[hac mob|web base] Elementos e imagens" ─
+// A lib "[HAC] Handoff Super DSC Mobile e Web" tem DOIS sets com o mesmo
+// shortName "Elementos e imagens" (um mobile, um web): achar por shortName
+// dependia da ORDEM do array devolvido pela API. Agora a escolha é por nodeId
+// (estável) com fallback por nome completo (regex por plataforma).
+const MOBILE_ELEMENTOS_SET = { nodeId: '10206:2177', fullNameRe: /^\.?\[hac mob base\]\s*elementos e imagens$/i };
+const WEB_ELEMENTOS_SET = { nodeId: '10658:3627', fullNameRe: /^\.?\[hac web base\]\s*elementos e imagens$/i };
+
+function findElementosSet(json, spec) {
+  if (!json || !Array.isArray(json.components)) return null;
+  return json.components.find(c => c.nodeId === spec.nodeId)
+    || json.components.find(c => spec.fullNameRe.test(String(c.fullName || '')))
+    || null;
+}
+
+// Perfil WEB: a lib publicou nomes de property com espaço sobrando (ex.:
+// " Observações#10634:2" em Spinner) — o formulário compara por igualdade
+// exata, então o nome sujo escondia o campo. Só o perfil web normaliza
+// (trim); o mobile mantém a saída byte a byte (opts.trimNames ausente).
+function toggleNameNormalizer(opts) {
+  return (opts && opts.trimNames) ? (n => String(n).trim()) : (n => n);
 }
 
 // ── A11Y_COMPONENT_PROPERTIES ───────────────────────────────────────────
@@ -201,14 +231,12 @@ function buildMobileWrapper(mobileJSON) {
 // o designer escolha uma opção de exceção. Ver
 // hac_lib_design_acessivel_publicada_migracao_2026_09_15 (memória do
 // projeto) para o histórico completo da migração.
-function buildMobileLinkOptions(mobileJSON) {
-  if (!mobileJSON || !Array.isArray(mobileJSON.components)) return [];
+function buildLinkOptions(json, setSpec, label) {
+  if (!json || !Array.isArray(json.components)) return [];
 
-  const elementosComponentSet = mobileJSON.components.find(
-    c => c.shortName === 'Elementos e imagens'
-  );
+  const elementosComponentSet = findElementosSet(json, setSpec);
   if (!elementosComponentSet) {
-    console.warn('⚠  component set "Elementos e imagens" não encontrado no JSON mobile — A11Y_MOBILE_LINK_COMPONENT_OPTIONS ficará vazio');
+    console.warn(`⚠  component set "Elementos e imagens" (${label}) não encontrado no JSON — opções de componente ficarão vazias`);
     return [];
   }
 
@@ -216,7 +244,7 @@ function buildMobileLinkOptions(mobileJSON) {
     p => p.type === 'VARIANT' && p.name === 'Componente'
   );
   if (!componenteProp) {
-    console.warn('⚠  property VARIANT "Componente" não encontrada em "Elementos e imagens" — A11Y_MOBILE_LINK_COMPONENT_OPTIONS ficará vazio');
+    console.warn(`⚠  property VARIANT "Componente" não encontrada em "Elementos e imagens" (${label}) — opções de componente ficarão vazias`);
     return [];
   }
 
@@ -281,13 +309,13 @@ function buildMobileLinkOptions(mobileJSON) {
 // a precedência do consumidor mudar — dado sobrando é inofensivo, dado
 // faltando vira bug silencioso. Não "otimizar" isso sem antes mudar o
 // consumidor.
-function buildMobileComponentsWithNomeAcessivel(mobileJSON) {
-  if (!mobileJSON || !Array.isArray(mobileJSON.components)) return [];
+function buildComponentsWithNomeAcessivel(json, setSpec, opts) {
+  if (!json || !Array.isArray(json.components)) return [];
+  const nm = toggleNameNormalizer(opts);
 
-  const elementosSet = mobileJSON.components.find(c => c.nodeId === '10206:2177')
-    || mobileJSON.components.find(c => /^\.?\[hac mob base\]\s*elementos e imagens$/i.test(c.fullName || ''));
+  const elementosSet = findElementosSet(json, setSpec);
   if (!elementosSet || !Array.isArray(elementosSet.perVariantProperties)) {
-    console.warn('⚠  perVariantProperties de ".[hac mob base] Elementos e imagens" não encontrado no JSON mobile — A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL ficará vazio (rode fetch-component-properties.cjs --lib design-acessivel-mobile --deep-scan)');
+    console.warn(`⚠  perVariantProperties de "Elementos e imagens" (${(opts && opts.label) || '?'}) não encontrado no JSON — resultado de COMPONENTS_WITH_NOME_ACESSIVEL ficará vazio (rode fetch-component-properties.cjs --lib design-acessivel-mobile --deep-scan)`);
     return [];
   }
 
@@ -296,10 +324,10 @@ function buildMobileComponentsWithNomeAcessivel(mobileJSON) {
     let hasNomeAcessivel;
     if (variant.screenReaderVariants && Array.isArray(variant.screenReaderVariants.variants)) {
       hasNomeAcessivel = variant.screenReaderVariants.variants.some(
-        (sv) => Array.isArray(sv.activeToggles) && sv.activeToggles.includes('Nome Acessível')
+        (sv) => Array.isArray(sv.activeToggles) && sv.activeToggles.map(nm).includes('Nome Acessível')
       );
     } else {
-      hasNomeAcessivel = (variant.toggles || []).some((t) => t.name === 'Nome Acessível');
+      hasNomeAcessivel = (variant.toggles || []).some((t) => nm(t.name) === 'Nome Acessível');
     }
     if (!hasNomeAcessivel) continue;
     // variantName vem como "Variante=Componente, Componente=Product Card" —
@@ -352,13 +380,13 @@ function buildMobileComponentsWithNomeAcessivel(mobileJSON) {
 // sub-variante "Show Filters" não tem "Observações" em activeToggles
 // (confirmado via REST API, 1/109 sub-variantes reais), diferente de todas
 // as outras sub-variantes do catálogo, que têm.
-function buildMobileScreenReaderVariants(mobileJSON) {
-  if (!mobileJSON || !Array.isArray(mobileJSON.components)) return {};
+function buildScreenReaderVariants(json, setSpec, opts) {
+  if (!json || !Array.isArray(json.components)) return {};
+  const nm = toggleNameNormalizer(opts);
 
-  const elementosSet = mobileJSON.components.find(c => c.nodeId === '10206:2177')
-    || mobileJSON.components.find(c => /^\.?\[hac mob base\]\s*elementos e imagens$/i.test(c.fullName || ''));
+  const elementosSet = findElementosSet(json, setSpec);
   if (!elementosSet || !Array.isArray(elementosSet.perVariantProperties)) {
-    console.warn('⚠  perVariantProperties de ".[hac mob base] Elementos e imagens" não encontrado no JSON mobile — A11Y_MOBILE_SCREEN_READER_VARIANTS ficará vazio (rode fetch-component-properties.cjs --lib design-acessivel-mobile --deep-scan)');
+    console.warn(`⚠  perVariantProperties de "Elementos e imagens" (${(opts && opts.label) || '?'}) não encontrado no JSON — resultado de SCREEN_READER_VARIANTS ficará vazio (rode fetch-component-properties.cjs --lib design-acessivel-mobile --deep-scan)`);
     return {};
   }
 
@@ -377,7 +405,7 @@ function buildMobileScreenReaderVariants(mobileJSON) {
     const prefixRe = new RegExp('^' + String(srv.subModeProperty || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '=');
     const variants = srv.variants.map(sv => {
       const name = String(sv.variantName || '').replace(prefixRe, '').trim() || sv.variantName;
-      const activeToggles = Array.isArray(sv.activeToggles) ? sv.activeToggles.slice() : [];
+      const activeToggles = Array.isArray(sv.activeToggles) ? sv.activeToggles.map(nm) : [];
       const hasNomeAcessivel = activeToggles.includes('Nome Acessível');
       return { name, hasNomeAcessivel, activeToggles };
     });
@@ -399,13 +427,13 @@ function buildMobileScreenReaderVariants(mobileJSON) {
 // resumo "união de todas as sub-variantes", útil como fallback defensivo
 // (ex. sub-variante ainda não escolhida) mas nunca a fonte primária nesse
 // caso. 100% derivado de perVariantProperties — nunca lista hardcoded.
-function buildMobileComponentToggles(mobileJSON) {
-  if (!mobileJSON || !Array.isArray(mobileJSON.components)) return {};
+function buildComponentToggles(json, setSpec, opts) {
+  if (!json || !Array.isArray(json.components)) return {};
+  const nm = toggleNameNormalizer(opts);
 
-  const elementosSet = mobileJSON.components.find(c => c.nodeId === '10206:2177')
-    || mobileJSON.components.find(c => /^\.?\[hac mob base\]\s*elementos e imagens$/i.test(c.fullName || ''));
+  const elementosSet = findElementosSet(json, setSpec);
   if (!elementosSet || !Array.isArray(elementosSet.perVariantProperties)) {
-    console.warn('⚠  perVariantProperties de ".[hac mob base] Elementos e imagens" não encontrado no JSON mobile — A11Y_MOBILE_COMPONENT_TOGGLES ficará vazio (rode fetch-component-properties.cjs --lib design-acessivel-mobile --deep-scan)');
+    console.warn(`⚠  perVariantProperties de "Elementos e imagens" (${(opts && opts.label) || '?'}) não encontrado no JSON — resultado de COMPONENT_TOGGLES ficará vazio (rode fetch-component-properties.cjs --lib design-acessivel-mobile --deep-scan)`);
     return {};
   }
 
@@ -418,10 +446,10 @@ function buildMobileComponentToggles(mobileJSON) {
     const names = new Set();
     if (variant.screenReaderVariants && Array.isArray(variant.screenReaderVariants.variants)) {
       variant.screenReaderVariants.variants.forEach(sv => {
-        (sv.activeToggles || []).forEach(name => names.add(name));
+        (sv.activeToggles || []).forEach(name => names.add(nm(name)));
       });
     } else {
-      (variant.toggles || []).forEach(t => { if (t && t.name) names.add(t.name); });
+      (variant.toggles || []).forEach(t => { if (t && t.name) names.add(nm(t.name)); });
     }
     result[componentName] = Array.from(names);
   }
@@ -438,34 +466,163 @@ function buildMobileComponentToggles(mobileJSON) {
 // pra achar a CATEGORIA de a11y mais provável entre só 16 opções amplas;
 // aqui precisamos do componente EXATO, senão o link gerado apontaria pro
 // componente errado).
-function buildMobileComponentLinkNodeIds(superAppJSON, mobileLinkOptions) {
-  if (!superAppJSON || !Array.isArray(superAppJSON.components)) return {};
-  if (!Array.isArray(mobileLinkOptions) || mobileLinkOptions.length === 0) return {};
+function buildComponentLinkNodeIds(libJSON, linkOptions, normalize) {
+  if (!libJSON || !Array.isArray(libJSON.components)) return {};
+  if (!Array.isArray(linkOptions) || linkOptions.length === 0) return {};
 
   const stripDscPrefix = (name) => String(name || '').replace(/^\[dsc\]\s*/i, '').trim();
+  const norm = normalize || ((n) => String(n || '').trim().toLowerCase());
 
-  // Nome curto (sem prefixo [dsc]) em minúsculas -> nodeId do component set.
+  // Nome curto (sem prefixo [dsc]) normalizado -> nodeId do component set.
   // Um único nodeId por nome real distinto (confirmado: 70 containingFrame
   // [dsc] distintos em super-app.json, sem colisão de nome após strip).
   const shortNameToNodeId = new Map();
-  for (const c of superAppJSON.components) {
+  for (const c of libJSON.components) {
     const frame = c.containingFrame || '';
     if (!/^\[dsc\]/i.test(frame)) continue;
     if (!c.containingFrameNodeId) continue;
     const short = stripDscPrefix(frame);
-    const key = short.toLowerCase();
+    const key = norm(short);
     if (!shortNameToNodeId.has(key)) {
       shortNameToNodeId.set(key, { name: short, nodeId: c.containingFrameNodeId });
     }
   }
 
   const result = {};
-  for (const optionName of mobileLinkOptions) {
-    const key = String(optionName || '').trim().toLowerCase();
-    const match = shortNameToNodeId.get(key);
+  for (const optionName of linkOptions) {
+    const match = shortNameToNodeId.get(norm(optionName));
     if (match) result[optionName] = match.nodeId;
   }
   return result;
+}
+
+// ── PERFIL WEB — wrapper "[hac web] Box specs leitor de tela" ────────────────
+// Espelha o mobile (set "[hac mob] Box specs leitor de tela", property VARIANT
+// "Conector"), com UMA categoria a mais (Estrutura da Página) e SEM
+// "Informações Adicionais" (decisão de produto 2026-10-01: a web segue
+// exatamente o arquivo próprio). A key de cada variante é resolvida pelo NOME
+// da opção de "Conector" em wrapperVariants — o NOME da opção por categoria é
+// o único dado declarado aqui, e é CONFERIDO contra variantOptions reais da
+// property (se a lib renomear, o build avisa em vez de apontar pra variante
+// errada).
+const WEB_WRAPPER_CONECTOR_OPTION_BY_A11Y_TYPE = {
+  elemento: 'Elementos Interativos e Imagens',
+  titulo: 'Títulos',
+  decorativo: 'Elementos Decorativos',
+  estrutura: 'Estrutura da Página',
+};
+
+// Component sets base de cada sub-bloco do perfil web, usados só para ler
+// OPÇÕES reais (Nível H1-H6, Variação, Tipo...). Achados por nodeId estável
+// com fallback por nome completo.
+const WEB_BASE_SETS = {
+  titulos: { nodeId: '10740:4663', fullNameRe: /^\.?\[hac web base\]\s*t[ií]tulos$/i },
+  idiomas: { nodeId: '10740:4664', fullNameRe: /^\.?\[hac web base\]\s*idiomas$/i },
+  marco: { nodeId: '10740:4680', fullNameRe: /^\.?\[hac web base\]\s*marco de navega[cç][aã]o$/i },
+  estrutura: { nodeId: '10745:5011', fullNameRe: /^\.?\[hac web base\]\s*estrutura da p[aá]gina$/i },
+};
+
+function variantOptionsOf(setEntry, propName) {
+  const p = setEntry && (setEntry.properties || []).find(x => x.type === 'VARIANT' && x.name === propName);
+  return p && Array.isArray(p.variantOptions) ? p.variantOptions.slice() : [];
+}
+
+function buildWebWrapper(json) {
+  if (!json || !Array.isArray(json.components)) return null;
+  const wrapperSet = json.components.find(
+    c => c.shortName === 'Box specs leitor de tela' && /^\.?\[hac web\]/i.test(c.fullName || '')
+  );
+  if (!wrapperSet || !wrapperSet.key) {
+    console.warn('⚠  component set web "Box specs leitor de tela" (ou sua key) não encontrado no JSON — wrapper web ficará nulo');
+    return null;
+  }
+  if (!Array.isArray(wrapperSet.wrapperVariants) || wrapperSet.wrapperVariants.length === 0) {
+    console.warn('⚠  wrapperVariants ausente em "[hac web] Box specs leitor de tela" — rode fetch-component-properties.cjs --lib design-acessivel-mobile --deep-scan --reset (versão com variantKeys/wrapperVariants); wrapper web ficará nulo');
+    return null;
+  }
+  const conectorOptions = variantOptionsOf(wrapperSet, 'Conector');
+
+  const componentKeyByA11yType = {};
+  const contentInstanceByA11yType = {};
+  const missing = [];
+  for (const [a11yType, optionName] of Object.entries(WEB_WRAPPER_CONECTOR_OPTION_BY_A11Y_TYPE)) {
+    const variant = wrapperSet.wrapperVariants.find(v => v.name === `Conector=${optionName}`);
+    if (!conectorOptions.includes(optionName) || !variant || !variant.key) {
+      missing.push(`${a11yType} ("${optionName}")`);
+      continue;
+    }
+    componentKeyByA11yType[a11yType] = variant.key;
+    // Instância de CONTEÚDO = a que não é o "Conector" (selo). É nela que o
+    // runtime preenche Componente/Nível/Variação/Observações.
+    const content = variant.instances.find(i => i.name !== 'Conector');
+    contentInstanceByA11yType[a11yType] = content ? {
+      name: content.name,
+      properties: content.properties.map(p => ({ name: String(p.name).trim(), type: p.type, value: p.value })),
+    } : null;
+  }
+  if (missing.length) {
+    console.warn(`⚠  variantes do wrapper web sem key/opção real na lib: ${missing.join(', ')} — wrapper web ficará nulo`);
+    return null;
+  }
+  return {
+    setNodeId: wrapperSet.nodeId,
+    setName: wrapperSet.fullName,
+    componentKeyByA11yType,
+    contentInstanceByA11yType,
+  };
+}
+
+// Para cada variante de "Estrutura da Página" (Variação), quais BOOLEANs a
+// instância aninhada expõe (só "Idioma" tem — Observações). Vem de
+// perVariantProperties do set ".[hac web base] Estrutura da Página".
+function buildWebEstrutura(json) {
+  const set = findElementosSet(json, WEB_BASE_SETS.estrutura);
+  const idiomas = findElementosSet(json, WEB_BASE_SETS.idiomas);
+  const marco = findElementosSet(json, WEB_BASE_SETS.marco);
+  if (!set || !idiomas || !marco) {
+    console.warn('⚠  sets web de Estrutura da Página (Estrutura/Idiomas/Marco de navegação) não encontrados — A11Y_WEB_ESTRUTURA ficará vazio');
+    return { variacoes: [], marcoTipos: [], idiomaTipos: [], togglesByVariacao: {} };
+  }
+  const variacoes = variantOptionsOf(set, 'Variação');
+  const togglesByVariacao = {};
+  variacoes.forEach(v => { togglesByVariacao[v] = []; });
+  for (const pv of (set.perVariantProperties || [])) {
+    const m = /Varia[cç][aã]o=(.+)$/.exec(pv.variantName || '');
+    if (!m) continue;
+    togglesByVariacao[m[1].trim()] = (pv.properties || []).filter(p => p.type === 'BOOLEAN').map(p => String(p.name).trim());
+  }
+  return {
+    variacoes,
+    marcoTipos: variantOptionsOf(marco, 'Tipo'),
+    idiomaTipos: variantOptionsOf(idiomas, 'Tipo'),
+    togglesByVariacao,
+  };
+}
+
+// Pares "Prop=Valor" do variantName de cada opção de Componente que NÃO são o
+// próprio "Componente" nem o valor DEFAULT da property — precisam ir JUNTO no
+// mesmo setProperties, senão a combinação não existe na lib. Caso real: opção
+// "Imagem" só existe com Variante="Texto Alternativo" (a combinação Variante=
+// Componente + Componente=Imagem não existe — mesmo defeito já corrigido na
+// lib antiga em 2026-09-17).
+function buildComponentExtraVariantProps(json, setSpec) {
+  const set = findElementosSet(json, setSpec);
+  if (!set) return {};
+  const defaults = {};
+  (set.properties || []).filter(p => p.type === 'VARIANT').forEach(p => { defaults[p.name] = p.defaultValue; });
+  const out = {};
+  for (const pv of (set.perVariantProperties || [])) {
+    const pairs = String(pv.variantName || '').split(',').map(x => x.trim()).filter(Boolean).map(x => {
+      const i = x.indexOf('=');
+      return [x.slice(0, i).trim(), x.slice(i + 1).trim()];
+    });
+    const comp = pairs.find(([k]) => k === 'Componente');
+    if (!comp) continue;
+    const extra = {};
+    pairs.forEach(([k, v]) => { if (k !== 'Componente' && v !== defaults[k]) extra[k] = v; });
+    if (Object.keys(extra).length) out[comp[1]] = extra;
+  }
+  return out;
 }
 
 // ── Geração ──────────────────────────────────────────────────────────────
@@ -476,11 +633,39 @@ const manifestJSON = readJSON(MANIFEST_SRC, '_manifest.json');
 
 const componentProperties = buildComponentProperties(desktopJSON);
 const mobileWrapper = buildMobileWrapper(mobileJSON);
-const mobileLinkOptions = buildMobileLinkOptions(mobileJSON);
-const mobileComponentLinkNodeIds = buildMobileComponentLinkNodeIds(superAppJSON, mobileLinkOptions);
-const mobileComponentsWithNomeAcessivel = buildMobileComponentsWithNomeAcessivel(mobileJSON);
-const mobileScreenReaderVariants = buildMobileScreenReaderVariants(mobileJSON);
-const mobileComponentToggles = buildMobileComponentToggles(mobileJSON);
+const mobileLinkOptions = buildLinkOptions(mobileJSON, MOBILE_ELEMENTOS_SET, 'mobile');
+const mobileComponentLinkNodeIds = buildComponentLinkNodeIds(superAppJSON, mobileLinkOptions);
+const mobileOpts = { label: 'mobile' };
+const mobileComponentsWithNomeAcessivel = buildComponentsWithNomeAcessivel(mobileJSON, MOBILE_ELEMENTOS_SET, mobileOpts);
+const mobileScreenReaderVariants = buildScreenReaderVariants(mobileJSON, MOBILE_ELEMENTOS_SET, mobileOpts);
+const mobileComponentToggles = buildComponentToggles(mobileJSON, MOBILE_ELEMENTOS_SET, mobileOpts);
+
+// ── Perfil web ────────────────────────────────────────────────────────────
+const superDscWebJSON = readJSON(SUPER_DSC_WEB_SRC, 'super-dsc-web.json');
+const webOpts = { label: 'web', trimNames: true };
+const webWrapper = buildWebWrapper(mobileJSON);
+const webLinkOptions = buildLinkOptions(mobileJSON, WEB_ELEMENTOS_SET, 'web');
+// Deep-link: só a Super DSC | Web publica containingFrameNodeId (a lib legada
+// "Web Angular & React" não tem) — o nome casa pela mesma normalização usada
+// no reconhecimento (exato sobre [a-z0-9]).
+const webComponentLinkNodeIds = buildComponentLinkNodeIds(superDscWebJSON, webLinkOptions, normalizeRecognitionName);
+const webComponentsWithNomeAcessivel = buildComponentsWithNomeAcessivel(mobileJSON, WEB_ELEMENTOS_SET, webOpts);
+const webScreenReaderVariants = buildScreenReaderVariants(mobileJSON, WEB_ELEMENTOS_SET, webOpts);
+const webComponentToggles = buildComponentToggles(mobileJSON, WEB_ELEMENTOS_SET, webOpts);
+const webComponentExtraVariantProps = buildComponentExtraVariantProps(mobileJSON, WEB_ELEMENTOS_SET);
+const webEstrutura = buildWebEstrutura(mobileJSON);
+const webTituloNiveis = variantOptionsOf(findElementosSet(mobileJSON, WEB_BASE_SETS.titulos), 'Nível');
+const webAliasesLoaded = loadWebAliases(webLinkOptions);
+webAliasesLoaded.rejected.forEach(r => console.warn(`⚠  alias web "${r.scanned}" -> "${r.target}" aponta para uma opção que NÃO existe na base web — ignorado`));
+const webAliases = webAliasesLoaded.accepted;
+// BOOLEANs reais por categoria, lidos da instância de CONTEÚDO do wrapper
+// (decorativo: Observações; titulo: nenhum; estrutura: por Variação, acima).
+const webFixedToggles = {};
+if (webWrapper) {
+  for (const [t, inst] of Object.entries(webWrapper.contentInstanceByA11yType)) {
+    webFixedToggles[t] = inst ? inst.properties.filter(p => p.type === 'BOOLEAN').map(p => p.name) : [];
+  }
+}
 
 const superAppLibMeta = manifestJSON && Array.isArray(manifestJSON.libraries)
   ? manifestJSON.libraries.find(l => l.slug === 'super-app')
@@ -495,6 +680,12 @@ const slugifyFileName = (name) => String(name || '')
   .replace(/[^a-zA-Z0-9]+/g, '-')
   .replace(/^-+|-+$/g, '');
 const superAppFileName = slugifyFileName((superAppLibMeta && superAppLibMeta.name) || 'DSC Super App') || 'DSC-Super-App';
+
+const superDscWebLibMeta = manifestJSON && Array.isArray(manifestJSON.libraries)
+  ? manifestJSON.libraries.find(l => l.slug === 'super-dsc-web')
+  : null;
+const superDscWebFileKey = (superDscWebLibMeta && superDscWebLibMeta.fileKey) || '';
+const superDscWebFileName = slugifyFileName((superDscWebLibMeta && superDscWebLibMeta.name) || 'Super DSC Web') || 'Super-DSC-Web';
 
 const header = `// ============================================================
 // GERADO AUTOMATICAMENTE por build-a11y-constants.cjs — não editar à mão.
@@ -516,6 +707,11 @@ const header = `// ============================================================
 //   const A11Y_MOBILE_COMPONENT_TOGGLES = A11Y_MOBILE_COMPONENT_TOGGLES_GENERATED;
 //   const A11Y_SUPER_APP_FILE_KEY = A11Y_SUPER_APP_FILE_KEY_GENERATED;
 //   const A11Y_SUPER_APP_FILE_NAME = A11Y_SUPER_APP_FILE_NAME_GENERATED;
+//   (perfil web, 2026-10-01) A11Y_WEB_* — mesmo desenho dos A11Y_MOBILE_*,
+//   mais A11Y_WEB_ESTRUTURA/A11Y_WEB_FIXED_TOGGLES/A11Y_WEB_COMPONENT_ALIASES,
+//   consumidos por A11Y_UI_PROFILES (accessibility.js). Os pares extras de
+//   variante (ex.: Imagem) e os níveis H1-H6 só o BACKEND consome — vão em
+//   design-acessivel-web-wrapper.generated.json, não aqui.
 // Concatenado por build.cjs no bundle final (ui.html) ANTES de
 // accessibility.js — não editar este arquivo à mão.
 // ============================================================
@@ -530,7 +726,18 @@ const body =
   `const A11Y_MOBILE_SCREEN_READER_VARIANTS_GENERATED = ${JSON.stringify(mobileScreenReaderVariants, null, 2)};\n\n` +
   `const A11Y_MOBILE_COMPONENT_TOGGLES_GENERATED = ${JSON.stringify(mobileComponentToggles, null, 2)};\n\n` +
   `const A11Y_SUPER_APP_FILE_KEY_GENERATED = ${JSON.stringify(superAppFileKey)};\n` +
-  `const A11Y_SUPER_APP_FILE_NAME_GENERATED = ${JSON.stringify(superAppFileName)};\n`;
+  `const A11Y_SUPER_APP_FILE_NAME_GENERATED = ${JSON.stringify(superAppFileName)};\n\n` +
+  `// ── Perfil WEB (2026-10-01) — fonte: set ".[hac web base]  Elementos e imagens" + sets base de Estrutura/Títulos\n` +
+  `const A11Y_WEB_LINK_COMPONENT_OPTIONS_GENERATED = ${JSON.stringify(webLinkOptions, null, 2)};\n\n` +
+  `const A11Y_WEB_COMPONENT_LINK_NODE_IDS_GENERATED = ${JSON.stringify(webComponentLinkNodeIds, null, 2)};\n\n` +
+  `const A11Y_WEB_COMPONENTS_WITH_NOME_ACESSIVEL_GENERATED = ${JSON.stringify(webComponentsWithNomeAcessivel, null, 2)};\n\n` +
+  `const A11Y_WEB_SCREEN_READER_VARIANTS_GENERATED = ${JSON.stringify(webScreenReaderVariants, null, 2)};\n\n` +
+  `const A11Y_WEB_COMPONENT_TOGGLES_GENERATED = ${JSON.stringify(webComponentToggles, null, 2)};\n\n` +
+  `const A11Y_WEB_COMPONENT_ALIASES_GENERATED = ${JSON.stringify(webAliases, null, 2)};\n\n` +
+  `const A11Y_WEB_ESTRUTURA_GENERATED = ${JSON.stringify(webEstrutura, null, 2)};\n\n` +
+  `const A11Y_WEB_FIXED_TOGGLES_GENERATED = ${JSON.stringify(webFixedToggles, null, 2)};\n\n` +
+  `const A11Y_WEB_FILE_KEY_GENERATED = ${JSON.stringify(superDscWebFileKey)};\n` +
+  `const A11Y_WEB_FILE_NAME_GENERATED = ${JSON.stringify(superDscWebFileName)};\n`;
 
 fs.writeFileSync(OUT, header + body, 'utf8');
 
@@ -551,6 +758,27 @@ fs.writeFileSync(MOBILE_WRAPPER_OUT, JSON.stringify({
     generatedAt: new Date().toISOString(),
   },
   wrapper: mobileWrapper,
+  // Aditivo (2026-10-01): opções reais de "Componente" do perfil mobile, para
+  // o perfil de plataforma (backend/platform-profiles.js) declarar as duas
+  // plataformas de forma simétrica. O preenchimento mobile NÃO as consulta
+  // (comportamento mobile intocado).
+  componentOptions: mobileLinkOptions,
+}, null, 2), 'utf8');
+
+// design-acessivel-web-wrapper.generated.json — equivalente web. NULO (campo
+// "wrapper") quando o scan ainda não trouxe variantKeys/wrapperVariants.
+fs.writeFileSync(WEB_WRAPPER_OUT, JSON.stringify({
+  _meta: {
+    description: 'GERADO AUTOMATICAMENTE por build-a11y-constants.cjs — não editar à mão. Component set "[hac web] Box specs leitor de tela" (fileKey HhriLSpKnCB2dHhyiU16iB). componentKeyByA11yType traz a key IMPORTÁVEL de cada VARIANTE filha (elemento/titulo/decorativo/estrutura), lida de variantKeys/wrapperVariants do scan — nenhuma key escrita à mão. A web não tem "Informações Adicionais".',
+    source: 'refs/design-acessivel-mobile-properties.json (variantKeys/wrapperVariants, gravados por fetch-component-properties.cjs) + refs/web-component-aliases.json',
+    generatedAt: new Date().toISOString(),
+  },
+  wrapper: webWrapper,
+  componentOptions: webLinkOptions,
+  componentExtraVariantProps: webComponentExtraVariantProps,
+  componentAliases: webAliases,
+  estrutura: webEstrutura,
+  tituloNiveis: webTituloNiveis,
 }, null, 2), 'utf8');
 
 console.log(`✅ _a11y-constants.generated.js`);
@@ -560,5 +788,8 @@ console.log(`   A11Y_MOBILE_COMPONENT_LINK_NODE_IDS_GENERATED: ${Object.keys(mob
 console.log(`   A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL_GENERATED: ${mobileComponentsWithNomeAcessivel.length} componentes com property real`);
 console.log(`   A11Y_MOBILE_SCREEN_READER_VARIANTS_GENERATED: ${Object.keys(mobileScreenReaderVariants).length} componentes com sub-variantes de Leitor de Tela`);
 console.log(`   A11Y_MOBILE_COMPONENT_TOGGLES_GENERATED: ${Object.keys(mobileComponentToggles).length} componentes mapeados`);
+console.log(`   [web] LINK_COMPONENT_OPTIONS: ${webLinkOptions.length} opções | LINK_NODE_IDS: ${Object.keys(webComponentLinkNodeIds).length} | COM_NOME_ACESSIVEL: ${webComponentsWithNomeAcessivel.length} | SCREEN_READER_VARIANTS: ${Object.keys(webScreenReaderVariants).length} | TOGGLES: ${Object.keys(webComponentToggles).length} | EXTRA_VARIANT_PROPS: ${Object.keys(webComponentExtraVariantProps).length} | ALIASES: ${Object.keys(webAliases).length}`);
+console.log(`✅ design-acessivel-web-wrapper.generated.json`);
+console.log(`   wrapper web: ${webWrapper ? 'resolvido (' + Object.keys(webWrapper.componentKeyByA11yType).length + ' keys de variante)' : 'NULO — ver warnings acima'}`);
 console.log(`✅ design-acessivel-mobile-wrapper.generated.json`);
 console.log(`   wrapper: ${mobileWrapper ? 'resolvido (' + Object.keys(mobileWrapper.componentKeyByA11yType).length + ' keys de variante)' : 'NULO — ver warnings acima'}`);

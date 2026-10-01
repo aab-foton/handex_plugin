@@ -1,0 +1,9 @@
+{
+  "_meta": {
+    "description": "Tabela de ALIASES do reconhecimento de componentes DSC web (libs 'web-angular-react' e 'super-dsc-web') contra as opções da base web 'Componente' do arquivo próprio [HAC] Handoff Super DSC Mobile e Web (set '.[hac web base]  Elementos e imagens', node 10658:3627).",
+    "regra": "O plugin NÃO inventa. O reconhecimento web é casamento EXATO sobre o nome normalizado (minúsculas, sem acento, só [a-z0-9], sem o prefixo '[dsc]'). Esta tabela só cobre o que a normalização não resolve (ex.: nomes que a lib legada grafa diferente). CADA ALIAS PRECISA DE APROVAÇÃO HUMANA ANTES DE ENTRAR AQUI — nunca preencher por palpite ou por similaridade. As sugestões ainda não aprovadas ficam no relatório docs/web-recognition-report.json (gerado por refs/report-web-recognition.cjs), que NÃO é lido pelo plugin.",
+    "formato": "{ \"aliases\": { \"<nome como aparece na lib DSC, com ou sem [dsc]>\": \"<opção EXATA de 'Componente' da base web>\" } } — a chave é normalizada pelo build; o valor precisa existir em A11Y_WEB_LINK_COMPONENT_OPTIONS (senão build-a11y-constants.cjs ignora e avisa).",
+    "consumidores": "refs/build-a11y-constants.cjs (valida e gera A11Y_WEB_COMPONENT_ALIASES_GENERATED + design-acessivel-web-wrapper.generated.json), usados pelo formulário (accessibility.js) e pelo backend (backend/platform-profiles.js)."
+  },
+  "aliases": {}
+}

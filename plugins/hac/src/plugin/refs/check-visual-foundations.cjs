@@ -173,8 +173,11 @@ const arquivos = [
 const hexCategorias = new Set();
 try {
   const src = fs.readFileSync(ARQ_CATEGORIAS, 'utf8');
-  const ini = src.indexOf('const A11Y_CATEGORIES = {');
-  if (ini >= 0) {
+  // Os dois blocos de cor de categoria: as VIGENTES e as LEGADAS (só exibição,
+  // ex.: "informacoes", removida em 2026-10-01 mas ainda presente em dados salvos).
+  for (const marcador of ['const A11Y_CATEGORIES = {', 'const A11Y_LEGACY_CATEGORIES = {']) {
+    const ini = src.indexOf(marcador);
+    if (ini < 0) continue;
     const fim = src.indexOf('\n};', ini);
     for (const m of src.slice(ini, fim).matchAll(/#[0-9a-fA-F]{6}\b/g)) hexCategorias.add(normHex(m[0]));
   }

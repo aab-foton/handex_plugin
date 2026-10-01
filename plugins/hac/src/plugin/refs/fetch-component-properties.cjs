@@ -463,6 +463,79 @@ function resolveScreenReaderVariants(nestedComponentId, parentSetIndex) {
 }
 
 // ------------------------------------------------------------
+// Chaves PUBLICADAS das variantes de cada component set (2026-10-01).
+//
+// O GET /nodes devolve a árvore de um component set mas NÃO a `key` de cada
+// variante filha — e figma.importComponentByKeyAsync só aceita a key de uma
+// VARIANTE (COMPONENT individual), nunca a do COMPONENT_SET. Quem expõe a key
+// de cada variante é GET /v1/files/:key/components (containing_frame.
+// containingComponentSet.nodeId aponta o set pai). Este índice é a única fonte
+// das keys dos wrappers "[hac mob|web] Box specs leitor de tela" — nada de
+// key escrita à mão. Só rodado para as libs de a11y (prefixRe definido): nas
+// libs de produção seriam milhares de componentes sem utilidade aqui.
+//
+// Falha NÃO aborta a extração (mesmo espírito de nunca regredir dado já
+// obtido): sem o índice, os campos aditivos variantKeys/wrapperVariants
+// simplesmente não são gravados e build-a11y-constants.cjs avisa.
+// ------------------------------------------------------------
+async function fetchPublishedVariantKeyIndex(fileKey) {
+  const index = new Map(); // setNodeId -> [{ nodeId, name, key }]
+  let cursor = null;
+  do {
+    const qs = cursor ? `?cursor=${encodeURIComponent(cursor)}` : '';
+    const resp = await figmaGet(`/v1/files/${fileKey}/components${qs}`);
+    const page = (resp && resp.meta && resp.meta.components) || [];
+    for (const c of page) {
+      const frame = c.containing_frame || {};
+      const setNodeId = (frame.containingComponentSet && frame.containingComponentSet.nodeId)
+        || (frame.containingStateGroup && frame.containingStateGroup.nodeId)
+        || null;
+      if (!setNodeId || !c.key) continue;
+      if (!index.has(setNodeId)) index.set(setNodeId, []);
+      index.get(setNodeId).push({ nodeId: c.node_id, name: clean(c.name || ''), key: c.key });
+    }
+    cursor = resp && resp.meta && resp.meta.cursor && resp.meta.cursor.after;
+    if (cursor) await sleep(DELAY_MS);
+  } while (cursor);
+  return index;
+}
+
+// Camada "wrapper com 2+ INSTANCEs por variante" (2026-10-01). Só roda para
+// component sets cujo nome casa WRAPPER_VARIANT_SET_RE (os "Box specs leitor
+// de tela" — o card de spec que o hac instancia e preenche). Para cada
+// variante filha registra as INSTANCEs diretas (nome + componentId + props
+// ATUAIS: rawKey/type/value) e a key publicada da variante. É o que o
+// extractPerVariantProperties não cobre (ele exige exatamente 1 INSTANCE).
+// Dados aqui são só leitura: o runtime acha as properties por NOME (sem o
+// sufixo "#id"), nunca por rawKey.
+const WRAPPER_VARIANT_SET_RE = /box specs/i;
+
+function extractWrapperVariants(setDoc, setFullName, publishedVariants) {
+  if (!WRAPPER_VARIANT_SET_RE.test(setFullName || '')) return [];
+  const keyByNodeId = new Map((publishedVariants || []).map((v) => [v.nodeId, v.key]));
+  const out = [];
+  for (const variant of (Array.isArray(setDoc.children) ? setDoc.children : [])) {
+    if (!variant || variant.type !== 'COMPONENT') continue;
+    const instanceKids = (variant.children || []).filter((k) => k && k.type === 'INSTANCE');
+    if (instanceKids.length === 0) continue;
+    out.push({
+      nodeId: variant.id || null,
+      name: clean(variant.name || ''),
+      key: keyByNodeId.get(variant.id) || null,
+      instances: instanceKids.map((inst) => ({
+        name: clean(inst.name || ''),
+        componentId: inst.componentId || null,
+        properties: Object.entries(inst.componentProperties || {}).map(([rawKey, p]) => {
+          const { name, syncId } = splitPropKey(rawKey);
+          return { rawKey: clean(rawKey), name: clean(name), syncId, type: (p && p.type) || null, value: p && p.value !== undefined ? p.value : null };
+        })
+      }))
+    });
+  }
+  return out;
+}
+
+// ------------------------------------------------------------
 // Resolução da lib alvo: junta libs de produção do manifest com as
 // libs de a11y declaradas localmente, garantindo slug único.
 // ------------------------------------------------------------
@@ -626,6 +699,18 @@ async function extractLibrary(libMeta) {
     }
   }
 
+  // Índice de keys publicadas por variante (só libs de a11y — ver comentário em
+  // fetchPublishedVariantKeyIndex). Falha aqui é aviso, não erro fatal.
+  let variantKeyIndex = null;
+  if (prefixRe) {
+    try {
+      variantKeyIndex = await fetchPublishedVariantKeyIndex(fileKey);
+      console.log(`    índice de keys de variantes publicadas (/components): ${variantKeyIndex.size} component set(s) com variantes publicadas`);
+    } catch (e) {
+      console.warn(`    ⚠  não foi possível ler /components (${e.message.slice(0, 120)}) — variantKeys/wrapperVariants ficarão ausentes`);
+    }
+  }
+
   if (discovered.length === 0) {
     console.error(`    ⛔  Nenhum component set encontrado${prefixRe ? ' com o prefixo esperado' : ''} — lib pode ter sido reestruturada, ou prefixRe desatualizado.`);
     return { ok: false, slug };
@@ -698,6 +783,8 @@ async function extractLibrary(libMeta) {
         const variants = properties.filter((p) => p.type === 'VARIANT');
         const instanceSwaps = properties.filter((p) => p.type === 'INSTANCE_SWAP');
         const perVariantProperties = extractPerVariantProperties(doc, parentSetIndex);
+        const publishedVariantsForSet = (variantKeyIndex && set.key && variantKeyIndex.get(set.nodeId)) || [];
+        const wrapperVariantsForSet = extractWrapperVariants(doc, set.fullName, publishedVariantsForSet);
 
         checkpoint.resolved[set.nodeId] = {
           nodeId: set.nodeId,
@@ -717,7 +804,12 @@ async function extractLibrary(libMeta) {
           // ~285 component sets que declaram tudo normalmente no nível do
           // set. Não remover nem tornar obrigatório: consumidores existentes
           // do JSON continuam lendo só `properties`/`propertiesByType`.
-          perVariantProperties
+          perVariantProperties,
+          // Aditivos (2026-10-01) — presentes só para sets PUBLICADOS de libs
+          // de a11y: keys de cada variante (index via /components) e, para os
+          // "Box specs", a árvore de INSTANCEs por variante. Ver schema abaixo.
+          ...(publishedVariantsForSet.length ? { variantKeys: publishedVariantsForSet } : {}),
+          ...(wrapperVariantsForSet.length ? { wrapperVariants: wrapperVariantsForSet } : {})
         };
         // remove de failedNodeIds se uma tentativa anterior tinha falhado
         checkpoint.failedNodeIds = checkpoint.failedNodeIds.filter((id) => id !== set.nodeId);
@@ -790,6 +882,8 @@ async function extractLibrary(libMeta) {
         'components[].propertiesByType': 'mesmos dados de properties, separados por type e reduzidos a nomes',
         'components[].perVariantProperties': 'array — presente só quando o set segue o padrão "instância aninhada por variante" (wrapper com property VARIANT tipo "Componente" + 1 INSTANCE filha por variante carregando as componentProperties reais, ex: ".[hac mob/web base] Elementos e imagens"). Cada item: {variantName, variantId, nestedInstanceName, nestedInstanceId, nestedComponentId, properties[], toggles[], screenReaderVariants?}. properties[].value é o valor ATUAL da instância (não uma definição/default, já que instâncias não têm componentPropertyDefinitions). toggles é o mesmo dado filtrado a BOOLEAN com {name, value:boolean}, atalho para UI — CUIDADO: toggles[].value reflete só o default herdado do SET, não se a property tem uso real na sub-variante atualmente configurada (ver screenReaderVariants). Ausente/[] nos demais sets — não é um campo obrigatório do schema.',
         'components[].perVariantProperties[].screenReaderVariants': 'presente só quando --deep-scan está ativo E o nestedComponentId é filho de um SEGUNDO component set oculto com uma property VARIANT de sub-modo (achado real 2026-09-17: ex. ".Button" com "Leitor de Tela"={Baseline,Disabled,Loading}, ".Icon Button" com "Propriedade 1"={Padrão,Variante 2,Variante 3}). componentPropertyDefinitions desse SET-neto é herdado igualmente por TODAS as sub-variantes (por isso toggles[] acima não diferencia) — mas o BINDING REAL de visibilidade de cada property no desenho (componentPropertyReferences) varia por sub-variante e só é resolvível aqui. Schema: {setName, setId, subModeProperty, variants: [{variantName, variantId, activeToggles: string[]}]}. activeToggles lista só os nomes BOOLEAN que têm de fato um nó do desenho vinculado (visible) àquela property NAQUELA sub-variante específica — ex.: Switch tem Nome Acessível na definição do SET mas activeToggles vem [] em Baseline E em Disabled (falso-positivo real do toggles[] acima, já confirmado); Button só tem "Nome Acessível" em activeToggles da sub-variante Loading, não em Baseline/Disabled.',
+        'components[].variantKeys': 'array — aditivo (2026-10-01), presente só em component sets PUBLICADOS das libs de a11y: [{nodeId, name, key}] com a key IMPORTÁVEL (figma.importComponentByKeyAsync) de cada variante, lida de GET /v1/files/:key/components.',
+        'components[].wrapperVariants': 'array — aditivo (2026-10-01), presente só nos sets "Box specs leitor de tela": por variante filha {nodeId, name, key, instances:[{name, componentId, properties:[{rawKey,name,syncId,type,value}]}]} — árvore de INSTANCEs diretas (Conector + conteúdo) com os valores ATUAIS das properties.',
         warnings: 'lista de avisos não fatais — JSON pode estar parcial se não vazio (ver counts.failed)'
       },
       warnings

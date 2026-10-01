@@ -14,18 +14,23 @@
 // frames-com-filhos-DS filtrados do scan, etc.).
 // ============================================================
 
-import A11Y_CONTENT from './refs/design-acessivel-content.json';
-// Bug real corrigido (2026-09-16): este import apontava para
-// design-acessivel-component-properties.json, um snapshot de 2026-08-19
-// gerado por fetch-a11y-component-properties.cjs (script do Handex Beta,
-// nunca portado pro hac — só o dado ficou, órfão). O pipeline vigente e
-// reexecutável (refs/fetch-component-properties.cjs) escreve em
-// design-acessivel-properties.json, que ninguém em runtime lia — rodar o
-// scan atualizado nunca teria efeito real no plugin. Schema idêntico
-// (mesmos 25 component sets, mesmas chaves + campo `source` novo),
-// confirmado por comparação direta antes da troca.
-import A11Y_COMPONENT_PROPERTIES_RAW from './refs/design-acessivel-properties.json';
-import A11Y_MOBILE_WRAPPER_RAW from './refs/design-acessivel-mobile-wrapper.generated.json';
+// Perfis por plataforma (2026-10-01, Fase 4): keys dos wrappers "Box specs
+// leitor de tela" (web e mobile, GERADAS pelo scan), marcadores, selos e libs
+// de reconhecimento — tudo que difere por plataforma vive em
+// backend/platform-profiles.js. Antes: imports de design-acessivel-content.json
+// (conteúdo + wrapperComponentKey da lib ANTIGA Wy0IhXRVZMSOOr8E609UqI),
+// design-acessivel-properties.json (properties da lib antiga) e
+// design-acessivel-mobile-wrapper.generated.json — o caminho do wrapper
+// desktop antigo foi removido por completo (a web agora usa o arquivo próprio
+// "[HAC] Handoff Super DSC Mobile e Web", como o mobile).
+import {
+  A11Y_IDENTIFICACAO_TELA_KEYS,
+  A11Y_IDENTIFICACAO_TELA_PROPS,
+  getPlatformProfile,
+  resolveBoxSpecsVariant,
+  resolveComponentOption,
+  normalizeRecognitionName,
+} from './backend/platform-profiles.js';
 // FICHA_INSTRUCTION_CONTENT (import de JSON) foi junto pro onmessage.js
 // (2026-09-14) — só era usado dentro do dispatcher (_buildFichaInstructionOnlyLegendColumn/
 // _buildFichaLegendColumn), nunca em code.js diretamente. Bug real
@@ -418,37 +423,6 @@ function _compareSpecTags(tagA, tagB) {
 // Aplicação de componentes reais da lib "Design Acessível"
 // ============================================================
 
-const _A11Y_SELECT_TO_SHORTNAME = { imagem: 'texto alternativo para imagens' };
-
-function _normalizeA11yToggleName(rawName) {
-  const s = String(rawName || '')
-    .normalize('NFD').replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .trim();
-  if (s === 'nome acesivel' || s === 'nome acessivel') return 'nomeAcessivel';
-  if (s === 'observacao' || s === 'observacoes') return 'observacoes';
-  if (s === 'notas' || s === 'notas de codigo') return 'notas';
-  return null;
-}
-
-// Property definitions (com syncId real) do component set "[a11y base]"
-// correspondente ao componente/subtipo escolhido no formulário — usado pelas
-// 5 categorias. Retorna null se o componente/subtipo não estiver catalogado
-// (fallback gracioso: nenhum toggle extra é aplicado).
-function _getA11yComponentToggleMap(selectValue) {
-  const shortName = _A11Y_SELECT_TO_SHORTNAME[selectValue] || selectValue;
-  const entry = A11Y_COMPONENT_PROPERTIES_RAW.components.find(c => c.shortName === shortName);
-  if (!entry) return null;
-  const map = {};
-  entry.properties.forEach(p => {
-    if (p.type !== 'BOOLEAN') return;
-    const canonical = _normalizeA11yToggleName(p.name);
-    if (!canonical || map[canonical]) return;
-    map[canonical] = { rawKey: p.rawKey, name: p.name, syncId: p.syncId };
-  });
-  return map;
-}
-
 // Procura, em profundidade, a primeira INSTANCE descendente (inclusive a
 // própria raiz) que tenha uma componentProperty cujo nome (sem o sufixo
 // "#id") bata com um dos candidatos, na ordem dada. Se o nome real divergir
@@ -546,11 +520,14 @@ export function _findMainTextContent(root) {
 // Conector sempre se chama "Number" (nunca bate a regex antiga por nome),
 // com defaultValue "A"/"A"/"A"/"H1" — por isso a 1ª spec sempre "parecia
 // certa" e as seguintes ficavam presas nesse default.
-function _bestEffortSyncA11yBadgeLetter(root, letter) {
+function _bestEffortSyncA11yBadgeLetter(root, letter, propNameCandidates) {
   try {
     // 1) Caminho real: instância "Conector" com property TEXT própria
     // (letter/heading) — mesmo padrão de _tryImportA11yAgrupamento.
-    const found = _findNestedInstanceWithAnyProp(root, ['letter', 'heading']);
+    // propNameCandidates (2026-10-01): o perfil web amplia a lista com os
+    // nomes reais da lib nova ("Número"/"Nível"/"Letra"); o mobile segue sem
+    // passar nada e usa o par original ['letter', 'heading'] (inalterado).
+    const found = _findNestedInstanceWithAnyProp(root, propNameCandidates || ['letter', 'heading']);
     if (found) {
       try {
         found.instance.setProperties({ [found.key]: letter });
@@ -585,8 +562,8 @@ function _bestEffortSyncA11yBadgeLetter(root, letter) {
 // 2026-09-02, "Could not find a published component with the key..."), e
 // por isso não há mais setProperties de "Conector" aqui: a variante já vem
 // fixada por ter importado a key certa.
-// Chamado só por _tryImportA11yComponent quando opts.a11yOrigin === 'mobile'
-// e a categoria é uma das 3 cobertas. Lança em qualquer ponto de incerteza —
+// Chamado só por _tryImportA11yComponent quando o perfil que serve o wrapper
+// tem fillStrategy 'mobile-original' (origem mobile) e a categoria é uma das 3 cobertas. Lança em qualquer ponto de incerteza —
 // o chamador de _tryImportA11yComponent já trata isso como "não deu, volta
 // pro card procedural" (mesmo contrato do caminho desktop).
 //
@@ -939,574 +916,314 @@ async function _fillA11yMobileDecorativoFields(wrapperInstance, opts) {
   }
 }
 
-// Tenta reaproveitar o componente REAL da lib "Design Acessível" em vez de
-// desenhar o card do zero. Lança (throw) em qualquer ponto de incerteza —
-// quem chama trata a exceção como "não deu, volta pro card procedural" (ver
-// create-unified-spec). "Estrutura da página" tem dois níveis de instância
-// aninhada (variacao → tipo/idioma). "titulo da pagina" não tem segundo
-// nível (conteúdo fixo); variação "customizavel" (nível 1) e "customizavel"
-// dentro de marco de navegação não têm conteúdo catalogado — caem no
-// fallback procedural.
-// EXCEÇÃO a essa regra: "elemento" isOutro (componente DSC real detectado,
-// mas sem categoria de a11y catalogada) NÃO lança — usa o wrapper real com a
-// property "componente" no valor DEFAULT da instância aninhada (não
-// corresponde ao componente real detectado), documentando o restante via
-// texto em Observações. O badge "Verificar" já avisa que precisa de revisão manual.
-export async function _tryImportA11yComponent(opts) {
-  const type = opts.a11yType;
+// ── Perfil WEB: wrapper "[hac web] Box specs leitor de tela" ──────────────────
+// (2026-10-01) A web deixou de usar o wrapper da lib ANTIGA ("[a11y] Box specs
+// LT", fileKey Wy0IhXRVZMSOOr8E609UqI) e passou a importar a variante certa do
+// set "[hac web] Box specs leitor de tela" do arquivo próprio ("[HAC] Handoff
+// Super DSC Mobile e Web", fileKey HhriLSpKnCB2dHhyiU16iB) — MESMO desenho do
+// mobile: wrapper = instância "Conector" (selo) + instância de CONTEÚDO
+// ("Elementos e imagens" / "Títulos" / "Elementos decorativos" / "Estrutura da
+// Página"), e quem escolhe o que o card mostra são as VARIANT properties
+// dessa instância de conteúdo. Estrutura confirmada via REST API em
+// 2026-10-01 (variantes 10330:4211/4208/4205 e 10757:5871).
+//
+// POR QUE NÃO REUSA _fillA11yMobile* TAL COMO ESTÃO (e o que foi preservado):
+// as funções mobile ajustam toggles/textos no `.Button` padrão e só NO FIM
+// trocam "Componente" — a troca de variante substitui a instância base por
+// outra (um `.Checkbox`, um `.Card`...) e o que foi escrito antes some; e o
+// sub-modo "Leitor de Tela" escolhido no formulário nunca é aplicado ao card.
+// O mobile é o gabarito e NÃO foi alterado; no web a ORDEM correta é
+//   1) Componente (+ pares extras de variante, ex. Imagem) numa única chamada;
+//   2) reachar a instância base JÁ trocada;
+//   3) Leitor de Tela (VARIANT da instância base);
+//   4) toggles BOOLEAN (ligados só com texto; desligados explicitamente — o
+//      default publicado é `true`, ver bug de 2026-09-17 no wrapper antigo);
+//   5) textos das sub-instâncias ("Nome Acessível"/"Observações") via a
+//      property "Texto".
+// Preservado do mobile: (a) a fonte do componente é o escolhido no formulário
+// OU o REALMENTE detectado no canvas (opts.a11yDscComponentName) — nunca só o
+// dropdown, que pode estar vazio (bug de 2026-09-22, "Value Section" virando
+// "Button"); (b) nunca deixar o default publicado ("Button"/"Account Select")
+// passar por componente real — se o set falhar ou a opção não existir na base,
+// a criação cai no card genérico COM AVISO (nunca um card com o componente
+// errado); (c) toda property é achada por NOME (sem o sufixo "#id"), nunca por
+// rawKey.
 
-  // Origem mobile, categoria coberta pelo wrapper mobile REAL ("[a11y mob]
-  // Box specs leitor de tela") — desvia por completo do wrapper desktop.
-  // "estrutura" e "informacoes" não têm equivalente mobile publicado
-  // conhecido (ver design-acessivel-mobile-wrapper.generated.json._meta) e
-  // caem no `else` abaixo, que mantém o comportamento desktop de sempre —
-  // mesmo raciocínio para origem 'web'. Ver _tryImportA11yMobileWrapper.
-  const MOBILE_WRAPPER_COVERED_TYPES = new Set(['elemento', 'titulo', 'decorativo']);
-  if (
-    opts.a11yOrigin === 'mobile' &&
-    MOBILE_WRAPPER_COVERED_TYPES.has(type) &&
-    A11Y_MOBILE_WRAPPER_RAW && A11Y_MOBILE_WRAPPER_RAW.wrapper
-  ) {
-    return await _tryImportA11yMobileWrapperComponent(opts, A11Y_MOBILE_WRAPPER_RAW.wrapper);
+// Nome de property comparável: sem acento, minúsculas, sem espaços nas pontas
+// (a lib publicou " Observações#10634:2" com espaço sobrando em "Spinner").
+function _normPropName(name) {
+  return String(name || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+}
+
+// Primeira INSTANCE (inclusive a própria raiz) com uma componentProperty cujo
+// nome (sem "#id", normalizado) bata com algum dos candidatos. Igual a
+// _findNestedInstanceWithAnyProp, só que tolerante a acento/espaço.
+function _findInstanceByPropNames(root, names) {
+  const wanted = names.map(_normPropName);
+  const visit = (node) => {
+    if (node.type === 'INSTANCE' && node.componentProperties) {
+      for (const w of wanted) {
+        const key = Object.keys(node.componentProperties).find(k => _normPropName(k.split('#')[0]) === w);
+        if (key) return { instance: node, key };
+      }
+    }
+    if ('children' in node) {
+      for (const child of node.children) {
+        const found = visit(child);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+  return visit(root);
+}
+
+// INSTANCE descendente cujo nome de camada bata (normalizado) — para achar a
+// instância de CONTEÚDO do wrapper ("Títulos", "Elementos decorativos"...) sem
+// confundir com a instância "Conector", que também expõe "Nível"/"Letra".
+function _findInstanceByNormName(root, instanceName) {
+  const wanted = _normPropName(instanceName);
+  const visit = (node, isRoot) => {
+    if (!isRoot && node.type === 'INSTANCE' && _normPropName(node.name) === wanted) return node;
+    if ('children' in node) {
+      for (const child of node.children) {
+        const found = visit(child, false);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+  return visit(root, true);
+}
+
+// Chave real (com "#id") de uma property da instância, por nome.
+function _instancePropKey(instance, name) {
+  const wanted = _normPropName(name);
+  return Object.keys(instance.componentProperties || {}).find(k => _normPropName(k.split('#')[0]) === wanted) || null;
+}
+
+// setProperties + conferência: lê de volta e confere. Para VARIANT, valor
+// divergente significa que a combinação não existe na lib (o Figma pode aceitar
+// e cair numa variante vizinha). Lança com `reason` se não confirmar.
+function _setAndVerifyVariants(instance, wanted, reason) {
+  const resolved = {};
+  for (const [name, value] of Object.entries(wanted)) {
+    const key = _instancePropKey(instance, name);
+    if (!key) throw new Error(`${reason}: property "${name}" inexistente na instância "${instance.name}"`);
+    resolved[key] = value;
   }
+  try {
+    instance.setProperties(resolved);
+  } catch (e) {
+    throw new Error(`${reason}: ${e && e.message ? e.message : e}`);
+  }
+  for (const [key, value] of Object.entries(resolved)) {
+    const actual = instance.componentProperties[key] && instance.componentProperties[key].value;
+    if (actual !== value) throw new Error(`${reason}: "${key}" ficou "${actual}" em vez de "${value}"`);
+  }
+}
 
-  const catData = A11Y_CONTENT.categories[type];
-  if (!catData || !catData.wrapperComponentKey) throw new Error('a11y-sem-wrapper-key: ' + type);
+// Liga/desliga o BOOLEAN `boolName` da instância base e, quando ligado com
+// texto, escreve o texto na property "Texto" da sub-instância de mesmo nome.
+// Sem texto: DESLIGA (o default publicado é true e deixaria o placeholder da
+// lib visível, como se o designer tivesse documentado algo). Property
+// inexistente é no-op (a lib é quem decide quais campos o componente tem).
+function _applyWebBooleanTextField(baseInstance, boolName, text) {
+  const boolKey = _instancePropKey(baseInstance, boolName);
+  if (!boolKey) return;
+  try { baseInstance.setProperties({ [boolKey]: !!text }); } catch (e) { return; }
+  if (!text) return;
+  const sub = _findInstanceByNormName(baseInstance, boolName);
+  if (!sub || !sub.componentProperties) return;
+  const textoKey = Object.keys(sub.componentProperties).find(k => _normPropName(k.split('#')[0]) === 'texto');
+  if (!textoKey) return;
+  try { sub.setProperties({ [textoKey]: text }); } catch (e) { /* best-effort — o toggle já está ligado */ }
+}
 
+function _webGetProp(opts, key) {
+  const p = (opts.properties || []).find(x => x && x.key === key);
+  return p ? p.value : '';
+}
+
+// Preenche o card WEB de "Elementos e Imagens". Lança Error com prefixo
+// 'a11y-elemento-componente-fora-da-base' (componente sem opção na base —
+// fallback AVISADO) ou 'a11y-web-set-falhou' (a lib mudou — fallback
+// AVISADO). Ordem e motivos: ver bloco de comentário acima.
+async function _fillA11yWebElementoFields(instance, opts, profile) {
   const sub = opts.a11ySubtype || {};
-  let defaultEntry = null;
-  let propCandidates = null;
-  let propValue = null;
-  // Quando true, pula por completo o passo de achar a instância aninhada de
-  // "componente" e chamar setProperties nela (não existe componente real
-  // catalogado pra ajustar). O wrapper ainda é importado e instanciado
-  // normalmente — a instância aninhada interna fica no valor DEFAULT dela.
-  let skipNestedComponentProp = false;
+  // Fonte do componente: escolha explícita do designer no formulário (sub.
+  // componente, já uma opção real da base) > componente REALMENTE detectado no
+  // canvas, reconhecido por casamento exato/alias > nada. "Personalizado"
+  // (sub.componente nulo) com detecção resolvida usa a detecção — é o cenário
+  // do print de 2026-09-22 (dropdown vazio/"Personalizado").
+  const chosen = resolveComponentOption(profile, sub.componente);
+  const detected = resolveComponentOption(profile, opts.a11yDscComponentName);
+  const resolved = chosen || detected;
+  if (!resolved) {
+    throw new Error('a11y-elemento-componente-fora-da-base: ' + (sub.componente || opts.a11yDscComponentName || '(sem componente)'));
+  }
 
-  if (type === 'elemento') {
-    if (sub.isOutro) {
-      skipNestedComponentProp = true;
-      defaultEntry = null;
+  const content = _findInstanceByPropNames(instance, ['Componente']);
+  if (!content) throw new Error('a11y-web-set-falhou: instância de conteúdo com "Componente" não encontrada no wrapper');
+  const extra = profile.componentExtraVariantProps[resolved.option] || {};
+  // Componente + pares extras (ex.: Imagem exige Variante="Texto Alternativo")
+  // na MESMA chamada — a combinação isolada não existe na lib.
+  _setAndVerifyVariants(content.instance, Object.assign({ Componente: resolved.option }, extra), 'a11y-web-set-falhou');
+
+  // A instância base foi substituída pela do componente escolhido — reachar.
+  const base = _findInstanceByPropNames(content.instance, ['Leitor de Tela', 'Nome Acessível', 'Observações']);
+  if (!base) return; // componente "folha" sem properties (ex.: Tile Button) — nada mais a preencher
+
+  const leitor = _webGetProp(opts, 'leitorDeTela');
+  if (leitor && _instancePropKey(base.instance, 'Leitor de Tela')) {
+    _setAndVerifyVariants(base.instance, { 'Leitor de Tela': leitor }, 'a11y-web-set-falhou');
+  }
+
+  _applyWebBooleanTextField(base.instance, 'Nome Acessível', _webGetProp(opts, 'label'));
+  _applyWebBooleanTextField(base.instance, 'Observações', _webGetProp(opts, 'observacoes'));
+}
+
+// Título web: o nível (H1-H6) é VARIANT "Nível" da instância "Títulos"; a
+// Descrição/Observações de cada nível vêm da própria lib (texto fixo por
+// nível, sem toggle) — nada a escrever. Hierarquia LÓGICA do conteúdo, nunca
+// inferida por tamanho de fonte (W3C WAI).
+function _fillA11yWebTituloFields(instance, opts, profile, wrapper) {
+  const sub = opts.a11ySubtype || {};
+  const nivel = String(sub.nivel || '').toUpperCase();
+  const niveis = (profile.blockOptions && profile.blockOptions.tituloNiveis) || [];
+  if (!niveis.includes(nivel)) throw new Error('a11y-web-set-falhou: nível de título fora da base: ' + (sub.nivel || '(vazio)'));
+  const contentName = wrapper.contentInstanceByA11yType.titulo && wrapper.contentInstanceByA11yType.titulo.name;
+  const content = contentName ? _findInstanceByNormName(instance, contentName) : null;
+  if (!content) throw new Error('a11y-web-set-falhou: instância "' + contentName + '" não encontrada no wrapper');
+  _setAndVerifyVariants(content, { 'Nível': nivel }, 'a11y-web-set-falhou');
+}
+
+// Elemento decorativo web: só existe o toggle "Observações" (Descrição fixa
+// "Não deve ser anunciado pelo Leitor de Tela." vem da lib). Não há mais
+// "Gerais"/"Imagem" na base.
+function _fillA11yWebDecorativoFields(instance, opts, wrapper) {
+  const contentName = wrapper.contentInstanceByA11yType.decorativo && wrapper.contentInstanceByA11yType.decorativo.name;
+  const content = contentName ? _findInstanceByNormName(instance, contentName) : null;
+  if (!content) throw new Error('a11y-web-set-falhou: instância "' + contentName + '" não encontrada no wrapper');
+  _applyWebBooleanTextField(content, 'Observações', _webGetProp(opts, 'observacoes'));
+}
+
+// Valores internos do formulário de Estrutura (a11ySubtype) -> opção da base.
+// O formulário guarda ids próprios ('idiomas', 'marco de navegacao', 'da
+// pagina'...); a base usa os rótulos da lib ('Idioma', 'Marco de navegação',
+// 'Página'). A tabela só TRADUZ — cada destino é conferido contra as opções
+// REAIS (profile.blockOptions.estrutura) e, se a lib renomear, a criação cai
+// no card genérico avisado em vez de apontar a variante errada.
+const _WEB_ESTRUTURA_VARIACAO_BY_FORM = { 'idiomas': 'Idioma', 'marco de navegacao': 'Marco de navegação', 'titulo da pagina': 'Título da Página' };
+const _WEB_ESTRUTURA_IDIOMA_TIPO_BY_FORM = { 'da pagina': 'Página', 'das partes': 'Parte' };
+
+function _fillA11yWebEstruturaFields(instance, opts, profile, wrapper) {
+  const sub = opts.a11ySubtype || {};
+  const est = profile.blockOptions && profile.blockOptions.estrutura;
+  const variacao = _WEB_ESTRUTURA_VARIACAO_BY_FORM[sub.variacao];
+  if (!est || !variacao || !est.variacoes.includes(variacao)) {
+    throw new Error('a11y-estrutura-sem-variante-na-base: ' + (sub.variacao || '(vazio)'));
+  }
+  // Marco de navegação só tem Nav/Main/Aside na base; "header"/"footer"/
+  // "customizável" do formulário antigo NÃO existem como variante.
+  let tipo = null;
+  if (variacao === 'Marco de navegação') {
+    tipo = est.marcoTipos.find(t => normalizeRecognitionName(t) === normalizeRecognitionName(sub.tipo)) || null;
+    if (!tipo) throw new Error('a11y-estrutura-sem-variante-na-base: marco de navegação "' + (sub.tipo || '(vazio)') + '"');
+  } else if (variacao === 'Idioma') {
+    tipo = _WEB_ESTRUTURA_IDIOMA_TIPO_BY_FORM[sub.idioma] || null;
+    if (!tipo || !est.idiomaTipos.includes(tipo)) throw new Error('a11y-estrutura-sem-variante-na-base: idioma "' + (sub.idioma || '(vazio)') + '"');
+  }
+
+  const contentName = wrapper.contentInstanceByA11yType.estrutura && wrapper.contentInstanceByA11yType.estrutura.name;
+  const content = contentName ? _findInstanceByNormName(instance, contentName) : null;
+  if (!content) throw new Error('a11y-web-set-falhou: instância "' + contentName + '" não encontrada no wrapper');
+  _setAndVerifyVariants(content, { 'Variação': variacao }, 'a11y-web-set-falhou');
+
+  if (tipo) {
+    // A instância interna (Marco de navegação / Idiomas) só existe depois da
+    // troca de Variação — reachar.
+    const inner = _findInstanceByPropNames(content, ['Tipo']);
+    if (!inner) throw new Error('a11y-web-set-falhou: instância com "Tipo" não encontrada em "' + variacao + '"');
+    _setAndVerifyVariants(inner.instance, { Tipo: tipo }, 'a11y-web-set-falhou');
+    if (variacao === 'Idioma') {
+      _applyWebBooleanTextField(inner.instance, 'Observações', _webGetProp(opts, 'observacoes'));
+    }
+  }
+}
+
+// Importa e preenche o wrapper WEB da categoria — ver bloco de comentário
+// acima. Chamado por _tryImportA11yComponent quando o perfil que SERVE o
+// wrapper é o web (spec web, ou spec mobile de uma categoria que o mobile não
+// publica, hoje "estrutura").
+async function _tryImportA11yWebWrapperComponent(opts, servedBy, componentKey) {
+  const type = opts.a11yType;
+  const wrapper = servedBy.boxSpecs.wrapper;
+  const variantComponent = await figma.importComponentByKeyAsync(componentKey);
+  const instance = variantComponent.createInstance();
+
+  try {
+    if (type === 'elemento') {
+      await _fillA11yWebElementoFields(instance, opts, servedBy);
+    } else if (type === 'titulo') {
+      _fillA11yWebTituloFields(instance, opts, servedBy, wrapper);
+    } else if (type === 'decorativo') {
+      _fillA11yWebDecorativoFields(instance, opts, wrapper);
+    } else if (type === 'estrutura') {
+      _fillA11yWebEstruturaFields(instance, opts, servedBy, wrapper);
     } else {
-      if (!sub.componente) throw new Error('a11y-elemento-outro-sem-componente-real');
-      defaultEntry = catData.componentes[sub.componente];
-      if (!defaultEntry) throw new Error('a11y-elemento-componente-desconhecido: ' + sub.componente);
-      propCandidates = ['componente'];
-      propValue = sub.componente;
+      throw new Error('a11y-web-set-falhou: categoria sem preenchimento: ' + type);
     }
-  } else if (type === 'titulo') {
-    if (sub.nivel === 'mobile') throw new Error('a11y-titulo-mobile-sem-variante-real');
-    defaultEntry = catData.niveis && catData.niveis[sub.nivel];
-    if (!defaultEntry) throw new Error('a11y-titulo-nivel-desconhecido: ' + sub.nivel);
-    propCandidates = ['nivel'];
-    propValue = sub.nivel;
-  } else if (type === 'decorativo') {
-    defaultEntry = catData.subtipos && catData.subtipos[sub.tipo];
-    if (!defaultEntry) throw new Error('a11y-decorativo-subtipo-desconhecido: ' + sub.tipo);
-    propCandidates = ['variacao', 'tipo'];
-    propValue = sub.tipo;
-  } else if (type === 'informacoes') {
-    if (sub.subtipo === 'customizavel') throw new Error('a11y-informacoes-customizavel-sem-variante-real');
-    defaultEntry = catData.subtipos && catData.subtipos[sub.subtipo];
-    if (!defaultEntry) throw new Error('a11y-informacoes-subtipo-desconhecido: ' + sub.subtipo);
-    propCandidates = ['tipo', 'subtipo', 'variacao'];
-    propValue = sub.subtipo;
-  } else if (type === 'estrutura') {
-    if (sub.variacao !== 'idiomas' && sub.variacao !== 'marco de navegacao' && sub.variacao !== 'titulo da pagina') {
-      throw new Error('a11y-estrutura-variacao-sem-import-real: ' + sub.variacao);
-    }
-    propCandidates = ['variacao'];
-    propValue = sub.variacao;
-    if (sub.variacao === 'idiomas') {
-      defaultEntry = catData.subtipos.idiomas && catData.subtipos.idiomas[sub.idioma];
-      if (!defaultEntry) throw new Error('a11y-estrutura-idioma-desconhecido: ' + sub.idioma);
-    } else if (sub.variacao === 'marco de navegacao') {
-      if (sub.tipo === 'customizavel') throw new Error('a11y-estrutura-marco-customizavel-sem-conteudo-catalogado');
-      defaultEntry = catData.subtipos['marco de navegacao'] && catData.subtipos['marco de navegacao'][sub.tipo];
-      if (!defaultEntry) throw new Error('a11y-estrutura-marco-desconhecido: ' + sub.tipo);
-    } else {
-      defaultEntry = catData.subtipos['titulo da pagina'];
-    }
-  } else {
-    throw new Error('a11y-tipo-sem-import-real: ' + type);
+  } catch (e) {
+    // Nunca devolver um card com o componente/nível errado: descarta a
+    // instância e propaga o motivo (o chamador decide o fallback e AVISA).
+    try { instance.remove(); } catch (e2) { /* já descartada */ }
+    throw e;
   }
 
-  const wrapperComponent = await figma.importComponentByKeyAsync(catData.wrapperComponentKey);
-  const instance = wrapperComponent.createInstance();
-
-  let found;
-  if (skipNestedComponentProp) {
-    found = { instance, key: null };
-  } else {
-    found = _findNestedInstanceWithAnyProp(instance, propCandidates);
-    if (!found) {
-      instance.remove();
-      throw new Error('a11y-instancia-aninhada-nao-encontrada: prop~=' + propCandidates.join('|'));
-    }
-
-    // Bug real corrigido (2026-09-17): o component set base "[NÃO
-    // UTILIZAR][a11y base] componentes/icones/imagens" (nodeId 31:902,
-    // confirmado via REST API) tem DUAS dimensões de VARIANT no mesmo nível —
-    // "variante" (componente | texto alternativo para imagens) e
-    // "componente" (15 opções reais, SEM "imagem" — "imagem" só existe como
-    // combinação de variante="texto alternativo para imagens"). Das 16
-    // variantes publicadas, a única com componente="imagem" é
-    // variante="texto alternativo para imagens" — setar só
-    // {componente:'imagem'} mantendo variante no default ("componente") não
-    // corresponde a nenhuma variante real publicada. Precisa setar as duas
-    // properties JUNTAS na mesma chamada de setProperties.
-    const extraProps = (type === 'elemento' && !sub.isOutro && sub.componente === 'imagem')
-      ? { variante: 'texto alternativo para imagens' }
-      : null;
-    try {
-      found.instance.setProperties(extraProps ? { [found.key]: propValue, ...extraProps } : { [found.key]: propValue });
-    } catch (e) {
-      instance.remove();
-      throw new Error('a11y-set-properties-falhou: ' + (e && e.message ? e.message : e));
-    }
-  }
-
-  // Categoria "elemento": trocar "componente" no wrapper (found.instance)
-  // revela um SEGUNDO nível de instância aninhada (ex: instância "Button",
-  // "Accordion"...) — é nela, não no wrapper, que vivem a property "tipo"
-  // (variante secundária) e os 3 toggles booleanos (nome acessivel/observacoes/notas).
-  let _elementoNestedFound = null;
-  if (type === 'elemento') {
-    _elementoNestedFound = _findNestedInstanceWithAnyProp(found.instance, ['tipo', 'nome acessivel', 'observacoes', 'notas']);
-    if (_elementoNestedFound) {
-      found = _elementoNestedFound;
-    }
-
-    if (sub.tipo && _elementoNestedFound) {
-      const tipoKey = Object.keys(found.instance.componentProperties || {}).find(
-        k => k.split('#')[0].toLowerCase() === 'tipo'
-      );
-      if (tipoKey) {
-        try { found.instance.setProperties({ [tipoKey]: sub.tipo }); } catch (e) { /* best-effort */ }
-      }
-    }
-  }
-
-  // Estrutura da página tem um SEGUNDO nível de instância aninhada dentro do
-  // primeiro (variacao) — "idiomas" e "marco de navegacao" abrem um
-  // sub-componente próprio com a property "tipo" (idioma ou marco
-  // específico); "titulo da pagina" não tem esse segundo nível.
-  let _estruturaNestedFound = null;
-  if (type === 'estrutura' && sub.variacao !== 'titulo da pagina') {
-    const nestedValue = sub.variacao === 'idiomas' ? sub.idioma : sub.tipo;
-    const nestedFound = _findNestedInstanceWithAnyProp(found.instance, ['tipo']);
-    if (!nestedFound) {
-      instance.remove();
-      throw new Error('a11y-estrutura-instancia-tipo-nao-encontrada');
-    }
-    try {
-      nestedFound.instance.setProperties({ [nestedFound.key]: nestedValue });
-    } catch (e) {
-      instance.remove();
-      throw new Error('a11y-estrutura-set-tipo-falhou: ' + (e && e.message ? e.message : e));
-    }
-    _estruturaNestedFound = nestedFound;
-  }
-
-  // Elemento Decorativo tem um TERCEIRO nível de instância aninhada — o
-  // wrapper (found, prop "variacao") revela uma instância "Elementos
-  // decorativos" (nível 2, já é 'found' aqui) cujo filho direto "Content"
-  // (nível 3) é quem tem observacoes/notas/tipo de verdade.
-  let _decorativoNestedFound = null;
-  if (type === 'decorativo') {
-    _decorativoNestedFound = _findNestedInstanceWithAnyProp(found.instance, ['notas', 'observacoes']) || found;
-  }
-
-  // Tag manual de Estrutura — o "Conector" (selo/estrela visível no elemento)
-  // tem sua própria property "letter#..." num nível irmão de "Elementos
-  // estruturais", fora da árvore de variacao/tipo.
-  if (type === 'estrutura' && opts.letter) {
-    const letterFound = _findNestedInstanceWithAnyProp(instance, ['letter']);
-    if (letterFound) {
-      try { letterFound.instance.setProperties({ [letterFound.key]: opts.letter }); } catch (e) { /* best-effort */ }
-    }
-  }
-
-  // Campos dinâmicos Nome Acessível/Observações/Notas de Código — nas 5
-  // categorias, só os que o componente/subtipo ESCOLHIDO realmente tem no
-  // catálogo (ver _getA11yComponentToggleMap) e que o designer ligou +
-  // preencheu no formulário. Cada um precisa de dois passos: (1) ativar o
-  // toggle de verdade na instância aninhada via setProperties (usa o syncId
-  // exato do catálogo), pra revelar o bloco de conteúdo; (2) achar o TEXT
-  // node revelado por valor-padrão atual e escrever o texto digitado. Nenhuma
-  // etapa lança — falha em um toggle não derruba a spec inteira.
-  //
-  // shortName do catálogo e a instância aninhada onde a property BOOLEAN de
-  // fato mora variam por categoria:
-  //   elemento    → shortName = sub.componente (ou 'texto alternativo para
-  //                 imagens' se 'imagem'); instância = _elementoNestedFound
-  //   titulo      → shortName 'niveis de titulo'; instância = found (nível 1)
-  //   informacoes → shortName 'informações adicionais'; instância = found
-  //   decorativo  → shortName 'ED gerais'/'ED imagem' conforme sub.tipo;
-  //                 instância = _decorativoNestedFound (3º nível "Content")
-  //   estrutura   → shortName 'EE idiomas'/'EE marco de navegacao' conforme
-  //                 sub.variacao; instância = _estruturaNestedFound (nulo em
-  //                 "titulo da pagina", sem toggle catalogado)
-  const _dynamicToggleKeys = new Set(['nomeAcessivel', 'observacoes', 'notas']);
-  let _toggleShortName = null;
-  let _toggleTargetInstance = null;
-  if (type === 'elemento' && !sub.isOutro && sub.componente) {
-    _toggleShortName = sub.componente;
-    _toggleTargetInstance = found.instance;
-  } else if (type === 'titulo') {
-    _toggleShortName = 'niveis de titulo';
-    _toggleTargetInstance = found.instance;
-  } else if (type === 'informacoes') {
-    _toggleShortName = 'informações adicionais';
-    _toggleTargetInstance = found.instance;
-  } else if (type === 'decorativo' && _decorativoNestedFound) {
-    _toggleShortName = sub.tipo === 'imagem' ? 'ED imagem' : 'ED gerais';
-    _toggleTargetInstance = _decorativoNestedFound.instance;
-  } else if (type === 'estrutura' && _estruturaNestedFound) {
-    _toggleShortName = sub.variacao === 'idiomas' ? 'EE idiomas' : sub.variacao === 'marco de navegacao' ? 'EE marco de navegacao' : null;
-    _toggleTargetInstance = _estruturaNestedFound.instance;
-  }
-
-  if (_toggleShortName && _toggleTargetInstance) {
-    const toggleMap = _getA11yComponentToggleMap(_toggleShortName);
-    if (toggleMap) {
-      // Bug real corrigido (2026-09-17): os componentes BOOLEAN publicados na
-      // lib "Design Acessível" (ex.: 'notas'/'observacoes' de "ED gerais"/"ED
-      // imagem"/"niveis de titulo") têm defaultValue=true na própria lib
-      // (confirmado via REST API) — ou seja, toda INSTANCE nova já nasce com
-      // esses campos LIGADOS e mostrando o texto placeholder da lib, mesmo
-      // sem nenhuma ação do designer. Antes desta correção, o loop só
-      // chamava setProperties(...: true) para os toggles presentes em
-      // opts.properties (os que o designer marcou no formulário) e nunca
-      // desligava os demais — então, para categorias cujo formulário está
-      // simplificado (Título/Elemento Decorativo, ver updateA11yTituloFields/
-      // updateA11yDecorativoFields, 2026-09-17: accordion "Campos do
-      // componente" sempre oculto pra specs novas), opts.properties nunca
-      // contém 'observacoes'/'notas', e a instância ficava com esses campos
-      // sempre visíveis e com texto genérico não solicitado — mais visível
-      // em Elemento Decorativo por serem 2 campos redundantes (Observações +
-      // Notas de Código) somados ao card fixo de Descrição/Nota de Código já
-      // exibido. Agora itera por TODA key do catálogo (toggleMap), não só as
-      // presentes em opts.properties: liga quando o designer marcou (com
-      // texto), desliga explicitamente (false) caso contrário — replica o
-      // mesmo padrão já usado corretamente no wrapper MOBILE
-      // (_fillA11yMobileElementosEImagensFields e afins, setProperties com
-      // !!texto) que nunca teve esse defeito.
-      for (const key of Object.keys(toggleMap)) {
-        if (!_dynamicToggleKeys.has(key)) continue;
-        const toggleDef = toggleMap[key];
-        const p = (opts.properties || []).find(prop => prop && prop.key === key && prop.value);
-        try {
-          _toggleTargetInstance.setProperties({ [toggleDef.rawKey]: !!p });
-        } catch (e) { continue; } // toggle não ativou/desativou — não adianta procurar o texto
-        if (!p) continue; // desligado: fica no texto padrão do componente, nunca reescrito
-        const defaultText = key === 'observacoes' ? defaultEntry.observacoes
-          : key === 'notas' ? defaultEntry.notasCodigo
-          : key === 'nomeAcessivel' ? defaultEntry.nomeAcessivel
-          : null;
-        if (!defaultText) continue;
-        const fieldNode = _findTextNodeByCurrentValue(instance, defaultText);
-        if (fieldNode) {
-          try {
-            await figma.loadFontAsync(fieldNode.fontName);
-            fieldNode.characters = p.value;
-          } catch (e) { /* best-effort — campo fica com o texto padrão do componente */ }
-        }
-      }
-    }
-  }
-
-  // O componente real (wrapper DESKTOP, único importado aqui hoje — não há
-  // wrapper mobile "[a11y mob] Box specs leitor de tela" cadastrado em
-  // A11Y_CONTENT ainda) só tem campos de Descrição/Observações/Notas de
-  // Código (mais Nome Acessível, quando o componente tem) — não tem onde
-  // encaixar Componente/Variante/Label/accessibilityHint/Link do Componente
-  // separadamente. Injeta o que sobrar (exceto Descrição/Notas/os 3 toggles
-  // dinâmicos já tratados acima) dentro do campo Observações, uma linha por
-  // propriedade — cobre também specs de origem mobile (opts.a11yOrigin),
-  // porque _tryImportA11yComponent hoje não distingue origem ao importar.
-  const _infoLines = (opts.properties || [])
-    .filter(p => p && p.value && p.key !== 'descricao' && p.key !== 'notaCodigo' && !_dynamicToggleKeys.has(p.key))
-    .map(p => `${p.label}: ${p.value}`)
-    .join('\n');
-  // Caso isOutro não tem defaultEntry (não há componente real escolhido),
-  // então não existe texto-padrão catalogado para achar o TEXT node de
-  // Observações por valor atual. Fallback best-effort por NOME DE CAMADA — se
-  // não achar, a spec real ainda é criada, só sem o texto sincronizado.
-  if (_infoLines && skipNestedComponentProp) {
-    try {
-      const obsNode = instance.findOne
-        ? instance.findOne(n => n.type === 'TEXT' && /observ/i.test(n.name))
-        : null;
-      if (obsNode && obsNode.type === 'TEXT' && obsNode.fontName !== figma.mixed) {
-        await figma.loadFontAsync(obsNode.fontName);
-        obsNode.characters = _infoLines;
-      }
-    } catch (e) { /* best-effort — nunca bloqueia a criação da spec */ }
-  } else if (_infoLines && defaultEntry && defaultEntry.observacoes) {
-    const obsNode = _findTextNodeByCurrentValue(instance, defaultEntry.observacoes);
-    if (obsNode) {
-      try {
-        await figma.loadFontAsync(obsNode.fontName);
-        obsNode.characters = _infoLines;
-      } catch (e) { /* não bloqueia — observação fica com o texto padrão do componente */ }
-    }
-  }
-
-  // Tag manual (A, B, A1... ou H1, H2, H3... em Título) — sincroniza o selo
-  // do componente importado com o nível/letra escolhido no formulário.
-  if ((type === 'elemento' || type === 'informacoes' || type === 'titulo') && opts.letter) {
-    _bestEffortSyncA11yBadgeLetter(instance, opts.letter);
+  // Selo do Conector (letra/número/nível). Mesmo helper do mobile; só amplia
+  // os nomes de property candidatos (a lib nova expõe "Número"/"Nível"/
+  // "Letra", não "letter"/"heading"). "decorativo" não tem letra.
+  if ((type === 'elemento' || type === 'titulo' || type === 'estrutura') && opts.letter) {
+    _bestEffortSyncA11yBadgeLetter(instance, opts.letter, ['letter', 'heading', 'Número', 'Nível', 'Letra']);
   }
 
   return instance;
+}
+
+// Importa o card real de uma spec: a variante certa do "Box specs leitor de
+// tela" do PERFIL da origem (web: 4 categorias; mobile: 3, e "estrutura"
+// emprestada do web) e o preenche. Lança (throw) em qualquer ponto de
+// incerteza — quem chama (create-unified-spec) trata a exceção: motivos
+// "esperados" caem no card genérico COM aviso; o resto aborta com erro
+// visível. Nunca devolve um card com valor padrão da lib passando por real.
+export async function _tryImportA11yComponent(opts) {
+  const type = opts.a11yType;
+  const profile = getPlatformProfile(opts.a11yOrigin);
+  const variant = resolveBoxSpecsVariant(profile, type);
+  if (!variant) throw new Error('a11y-sem-wrapper-no-perfil: ' + profile.origin + '/' + type);
+
+  // Perfil que serve o wrapper decide a rotina de preenchimento. Mobile,
+  // categoria publicada pelo mobile: caminho ORIGINAL, sem alteração.
+  if (variant.servedBy.boxSpecs.fillStrategy === 'mobile-original') {
+    return await _tryImportA11yMobileWrapperComponent(opts, variant.servedBy.boxSpecs.wrapper);
+  }
+  return await _tryImportA11yWebWrapperComponent(opts, variant.servedBy, variant.key);
 }
 
 // ============================================================
 // Marcadores visuais — Agrupamento (contorno/moldura) e Conector linha
 // ============================================================
 
-// Keys publicadas do component set "[hac] Agrupamento" — o selo/marcador
-// PEQUENO (badge + moldura, ~40×40) que a vertical usa pra indicar QUAL
-// elemento a spec documenta, com uma "orientação" que já embute a direção do
-// conector. É o modo "Área" do formulário (drawMode === 'contorno', default).
-//
-// BUG REAL CORRIGIDO (2026-09-18): até esta correção, TODAS as keys aqui
-// vinham da lib DESKTOP ANTIGA ("Design Acessível | Desktop Web", fileKey
-// Wy0IhXRVZMSOOr8E609UqI) — confirmado que o usuário via, no painel de
-// propriedades do Figma, o componente sendo puxado dessa lib errada em vez
-// da lib oficial "[HAC] Handoff Super DSC Mobile e Web" (fileKey
-// HhriLSpKnCB2dHhyiU16iB). A migração de 2026-09-17 só trocou
-// A11Y_AGRUPAMENTO_KEYS_MOBILE (abaixo) — este dicionário "desktop" (usado
-// sempre que a11yOrigin==='web', e também como fallback quando a origem é
-// mobile mas a categoria/orientação não existe no dicionário mobile) tinha
-// ficado esquecido apontando pra lib antiga. Corrigido re-obtendo as 4
-// categorias abaixo via GET /v1/files/HhriLSpKnCB2dHhyiU16iB/components —
-// são os MESMOS valores já usados em A11Y_AGRUPAMENTO_KEYS_MOBILE (a lib
-// nova não separa web/mobile neste component set, um único "[hac]
-// Agrupamento" serve as duas plataformas). "informacoes" segue apontando
-// pra lib antiga: confirmado via API que a lib nova não tem NENHUMA
-// variante "informações"/"informacoes" publicada (lacuna real, não erro de
-// mapeamento) — mantido como único fallback restante pra essa categoria.
-const A11Y_AGRUPAMENTO_KEYS = {
-  elemento: {
-    direita:  'ea54a0cca62bc6d8abee539efe989a18b1e322a7',
-    esquerda: '2165d66fcd65d977bc2cdcd86c26d68a07e65eaf',
-    superior: '83a72d71793cde67cb11c38df56e8f9bd1cb2acf',
-    inferior: '97c0d6479a58b03397515b664e3d3de64b594706',
-  },
-  decorativo: {
-    direita:  '1f552b66bc48721b9be3160b02ac6a4762af0086',
-    esquerda: '143e04b04c302c1be1b0fe081bb3bf43d0a5a004',
-    superior: '73f5b3d53cd673a4846b60e251e0108805644951',
-    inferior: 'edb2b2b5aaabb8649461ceee62307c0d27134982',
-  },
-  // "Estrutura da Página" — na lib nova é o mesmo node visual que antes
-  // (lib antiga) se chamava "estrutura"; ver achado da migração 2026-09-17
-  // acima em A11Y_AGRUPAMENTO_KEYS_MOBILE sobre a variante antiga ter sido
-  // RENOMEADA para "títulos". Estas 4 keys são a variante "Estrutura da
-  // Página" NOVA, criada do zero na lib nova (node_ids 10766:210/218/226/
-  // 234), confirmada via API — não confundir com "titulo" abaixo.
-  estrutura: {
-    direita:  '7b57c21d29e28b96a4b9d040cd77602a583783ac',
-    esquerda: 'b16123a85a77b6f39b134d689e9ba18f966cc949',
-    superior: '2bf9e00f39fb195a017a6697177a325121576073',
-    inferior: '7c9dca5e5312553824b84dfbb602097468be0bc4',
-  },
-  titulo: {
-    direita:  'ed17abfec856f9ca286f6bb4b828319af73f9851',
-    esquerda: 'e30f1468b18340bcce7e6937c9f655c2ebffc372',
-    superior: '517ba6be813cc42c1d296a5e3c7161137aad4488',
-    inferior: '2a317e3e61483a5fc0de41424ce82273f4c53a25',
-  },
-  // SEM key publicada na lib nova (confirmado via API, 2026-09-18) — segue
-  // na lib antiga (Wy0IhXRVZMSOOr8E609UqI) até a lib nova publicar esta
-  // categoria. Único ponto remanescente deste dicionário fora da lib
-  // oficial — documentar/revisar quando a lib for republicada.
-  informacoes: {
-    direita:  '42eafe50b7b07e5cdacbbc1845c05af877768337',
-    esquerda: 'b1155ae94b549e7de188458b1289b8ba476af73d',
-    superior: '060a2f17dff2dc489fcb1620404eda5269b5e182',
-    inferior: 'faa943c3ccdec90b2fb06e6e58aaaa9ba0cbb867',
-  },
-};
-
-// ── Integração com a lib mobile "[hac]" (migrada em 2026-09-17) ────────────
-// Segunda lib DSC ("DSC | Super App", mobile/React Native) mapeada para a11y
-// — ver dsc-component-a11y-mapping-mobile.json e REF_SKELETON.libraries
-// (slug 'super-app'). A Detecção Automática agora reconhece sozinha se um
-// componente do canvas é web ou mobile via a componentKey (única por lib de
-// origem — nunca colide entre libs), sem o designer escolher manualmente
-// (ver _resolveDscComponentA11yMatch acima, campo `origin`).
-//
-// MIGRAÇÃO 2026-09-17: o arquivo "[a11y mob]" antigo (fileKey
-// 3zdtN13YvPlCGPdXeL0Y2i) foi republicado como "[HAC] Handoff Super DSC
-// Mobile e Web" (fileKey HhriLSpKnCB2dHhyiU16iB, nomes de component set
-// "[hac] Agrupamento"/"[hac] Conectores"/"[hac] Identificação da
-// tela"/"[hac] Ordenação"). Confirmado via REST API que os node_ids
-// internos de cada variante são IDÊNTICOS entre os dois arquivos — mas as
-// component keys publicadas mudaram todas. Todas as keys abaixo foram
-// re-obtidas via GET /v1/files/HhriLSpKnCB2dHhyiU16iB/components usando o
-// node_id como ponte de correspondência (não o nome — ver ressalva abaixo).
-//
-// ACHADO REAL durante a migração — variantes de "orientação"/"conector"
-// RENOMEADAS, não apenas re-chaveadas: os 4 node_ids que na lib antiga
-// eram rotulados "tipo=estrutura da página" (Agrupamento: 1:196, 301:437,
-// 1:201, 301:442) foram RENOMEADOS na lib nova para "tipo=títulos" — o
-// mesmo componente visual passou a representar outra categoria. Isso NÃO É
-// uma simples troca de key: usar essas 4 keys para "estrutura" seria
-// semanticamente errado agora (a variante real virou "títulos"). A lib
-// nova tem uma variante "Estrutura da Página" DE VERDADE, criada do zero
-// em node_ids novos (Agrupamento: 10766:210/218/226/234; Conectores:
-// 10768:280/283/287/291/295).
-//
-// ATUALIZAÇÃO 2026-09-18: em 2026-09-17 esses node_ids novos ainda não
-// apareciam no endpoint /components (lib editada mas não republicada). Na
-// investigação de hoje (bug do badge puxando a lib antiga — ver
-// A11Y_AGRUPAMENTO_KEYS/A11Y_CONECTOR_LINHA_KEYS acima), nova consulta via
-// GET /v1/files/HhriLSpKnCB2dHhyiU16iB/components confirmou que a lib FOI
-// republicada nesse meio-tempo: "Estrutura da Página" (Agrupamento e
-// Conectores, 4/5 variantes) agora aparece publicada com key real. Essas
-// keys foram promovidas para os dicionários "desktop"
-// (A11Y_AGRUPAMENTO_KEYS/A11Y_CONECTOR_LINHA_KEYS) — como este component
-// set não distingue web/mobile na lib nova (um único "[hac] Agrupamento"/
-// "[hac] Conectores" serve as duas plataformas), a MESMA key também é
-// usada aqui no dicionário mobile por completude (evita depender do
-// fallback desktop pra um caso que já tem key mobile-compatível real).
-// "informacoes" segue como a única lacuna real confirmada (nenhuma
-// variante publicada em nenhuma das duas plataformas).
-//
-// Também identificado (cosmético, fora de escopo): o texto de
-// variantOptions do component set "[hac] Conectores" tem um typo de
-// duplicação em "Elementos interativos e Imagensinterativos e imagens"
-// (property "tipo", só no rótulo do dropdown de variante) — não afeta qual
-// key corresponde a qual variante (confirmado por node_id), não corrigido
-// aqui por não ser problema do hac.
-//
-// Cobertura atual (após a atualização de 2026-09-18):
-//
-//   [hac] Agrupamento: 4 categorias com key publicada (elemento/
-//     decorativo/titulo/estrutura) × 4 orientações. "informacoes" segue
-//     SEM key publicada (única lacuna real restante).
-//   [hac] Conectores: 4 categorias com key publicada (elemento/titulo/
-//     decorativo/estrutura) × 5 direções (incluindo "desativado").
-//     "informacoes" segue SEM key publicada.
-//   [hac] Identificação da tela (ex-"Número da tela"): 5 componentes (4
-//     direções + desativado), paridade completa com
-//     "[a11y] Item Number" da lib antiga — apenas re-chaveado, sem mudança
-//     de variantes (hoje A11Y_IDENTIFICACAO_TELA_KEYS, usado também pela web).
-//
-// FALLBACK (decisão de produto, não questionar sem alinhamento): quando uma
-// categoria/orientação não existir no dicionário mobile (typeKeys
-// undefined, ou key da orientação específica undefined), cai pro
-// dicionário DESKTOP equivalente ANTES de lançar erro — nunca quebra a
-// criação da spec. Implementado em _tryImportA11yAgrupamento/
-// _tryImportA11yConectorLinha logo abaixo. Na prática hoje só "informacoes"
-// aciona esse fallback (nas duas plataformas, pra ambos os modos) — as
-// outras 4 categorias têm key própria completa nos dois dicionários.
-const A11Y_AGRUPAMENTO_KEYS_MOBILE = {
-  elemento: {
-    esquerda: '2165d66fcd65d977bc2cdcd86c26d68a07e65eaf',
-    direita:  'ea54a0cca62bc6d8abee539efe989a18b1e322a7',
-    superior: '83a72d71793cde67cb11c38df56e8f9bd1cb2acf',
-    inferior: '97c0d6479a58b03397515b664e3d3de64b594706',
-  },
-  decorativo: {
-    esquerda: '143e04b04c302c1be1b0fe081bb3bf43d0a5a004',
-    direita:  '1f552b66bc48721b9be3160b02ac6a4762af0086',
-    superior: '73f5b3d53cd673a4846b60e251e0108805644951',
-    inferior: 'edb2b2b5aaabb8649461ceee62307c0d27134982',
-  },
-  // titulo: mesmos 4 node_ids que antes eram "estrutura da página" na lib
-  // antiga (1:196/301:437/1:201/301:442) — RENOMEADOS para "títulos" na lib
-  // nova (ver achado acima).
-  titulo: {
-    esquerda: 'e30f1468b18340bcce7e6937c9f655c2ebffc372',
-    direita:  'ed17abfec856f9ca286f6bb4b828319af73f9851',
-    superior: '517ba6be813cc42c1d296a5e3c7161137aad4488',
-    inferior: '2a317e3e61483a5fc0de41424ce82273f4c53a25',
-  },
-  // "Estrutura da Página" nova — promovida em 2026-09-18 (ver ATUALIZAÇÃO
-  // acima), mesmas keys de A11Y_AGRUPAMENTO_KEYS.estrutura.
-  estrutura: {
-    esquerda: 'b16123a85a77b6f39b134d689e9ba18f966cc949',
-    direita:  '7b57c21d29e28b96a4b9d040cd77602a583783ac',
-    superior: '2bf9e00f39fb195a017a6697177a325121576073',
-    inferior: '7c9dca5e5312553824b84dfbb602097468be0bc4',
-  },
-  // informacoes: SEM key publicada ainda em nenhuma plataforma — typeKeys
-  // undefined, _tryImportA11yAgrupamento cai no dicionário desktop
-  // (A11Y_AGRUPAMENTO_KEYS.informacoes, lib antiga).
-};
-
-const A11Y_CONECTOR_LINHA_KEYS_MOBILE = {
-  elemento: {
-    esquerda: '711ff70084002beb5484985790d313785826b041',
-    direita:  '48c0a893abb2859bf28fe660db2ef5a8ed998389',
-    superior: 'd103d6403ab8f289c44499cf931de5d08e1c80a2',
-    inferior: '406b93c17f12ce592b2854a126b67e23c87a97e4',
-    desativado: '5506fa7159f82aa6984493ed9e8ef60372c3dd72',
-  },
-  titulo: {
-    esquerda: '3bda769bd18a3bcb0dedb3691deaa9548644a3dd',
-    direita:  '19fa60fe8f30a98e26eff0d2d1c75e973a87dfca',
-    superior: 'bbea0b89885808fb9af379a23573b2f9360f6b88',
-    inferior: 'ef9578ce7fd51d26cdccc22fbc862bdd716050ce',
-    desativado: '938d4f64c6272528b49c22da2cb03cf54c1ddeff',
-  },
-  decorativo: {
-    esquerda: '3bae568e0f46c702d1a34c9d1d7545352f0af488',
-    direita:  '7f737bd2821b3360c3a77a256c68a1aa2b43baa0',
-    superior: '79fae2a5d1438938ff3072d3e677196f78c471f8',
-    inferior: 'b054d91b10030c6aded2df65a801a425e1c1843f',
-    desativado: '7e1c5465b4c1ff00dfb05baaa6bd7aaa2a508829',
-  },
-  // "Estrutura da Página" nova — promovida em 2026-09-18 (lib republicada
-  // com estas 5 variantes desde a migração de 2026-09-17, ver ATUALIZAÇÃO
-  // em A11Y_AGRUPAMENTO_KEYS_MOBILE acima), mesmas keys de
-  // A11Y_CONECTOR_LINHA_KEYS.estrutura.
-  estrutura: {
-    esquerda: '26fa2e6f7f6a16f35054f29cd12de90bbf190ba0',
-    direita:  '9b9aa1cfd2bb4327be1d72bfb125b326b90bc62e',
-    superior: '9ab20cfc07ba0de6fe15754d53804d491ab728bf',
-    inferior: '575e5b4fe3d2be90721a46cad9e30473503684fa',
-    desativado: 'afedf7e06bde8d754bae4309a121b5760723bb96',
-  },
-  // informacoes: SEM key publicada ainda em nenhuma plataforma —
-  // typeKeys undefined, _tryImportA11yConectorLinha cai no dicionário
-  // desktop (A11Y_CONECTOR_LINHA_KEYS.informacoes, lib antiga).
-};
-
-// "[hac] Identificação da tela" (arquivo próprio "[HAC] Handoff Super DSC
-// Mobile e Web", fileKey HhriLSpKnCB2dHhyiU16iB) — FONTE ÚNICA, web e mobile,
-// do selo de ÁREA/tela com conector: create-a11y-area, update-a11y-area-conector
-// e o selo "Número da tela" do bloco Frame Principal da Ficha. Desenha um
-// Connector visual (traço) por direção (RECTANGLE "Connector" em toda
-// direção exceto "desativado"). Substitui as 4 cópias antigas de "[a11y] Item
-// Number" (lib "Design Acessível" desktop, fileKey Wy0IhXRVZMSOOr8E609UqI),
-// que deixou de ser usada (2026-10-01, v0.1.0-beta.68).
-export const A11Y_IDENTIFICACAO_TELA_KEYS = {
-  superior:   '30bc07a9462265a9c69b28f2389c25578fec3a75',
-  inferior:   'bcaca4f76c4fc4f045706fee17d00432f0e1ed5b',
-  esquerda:   'ad35c5a35f919c325fac63197f72d80988a99599',
-  direita:    'c1827f24908f990a0983b0519c2800c302d9f113',
-  desativado: '64dd33125f08835d3561647ebf1a21bd0221b3f1',
-};
-
-// rawKeys das properties de "[hac] Identificação da tela" (confirmadas em
-// refs/design-acessivel-mobile-properties.json, node 13:479).
-export const A11Y_IDENTIFICACAO_TELA_PROPS = {
-  number: 'número#1478:0',
-  showLabel: 'mostrar label#733:0',
-  label: 'label#733:6',
-};
-
-// "[hac] Ordenação" (variante tamanho=pequeno, node 5222:4269) — selo de ITEM
-// dentro da Ordem de Tabulação, web e mobile. Confirmado via REST API: só tem
-// properties "tamanho" (grande/pequeno) e "número" (rawKey "número#5265:3") —
-// SEM variante de direção/conector nem label, porque a posição do selo já é
-// resolvida por x/y absoluto em _createTabOrderBadge.
-export const A11Y_ORDENACAO_ITEM_KEY = '860c9f70d42c05f23e00c8414df16911d3292cab';
+// As keys dos marcadores (Agrupamento = modo Contorno; Conectores = modo Linha),
+// dos selos (Identificação da tela, Ordenação) e dos wrappers "Box specs
+// leitor de tela" vivem agora em backend/platform-profiles.js (2026-10-01),
+// declaradas por plataforma. O histórico das correções de key — migração da
+// lib DESKTOP ANTIGA (Wy0IhXRVZMSOOr8E609UqI) para a oficial
+// (HhriLSpKnCB2dHhyiU16iB) em 2026-09-17/18, "títulos" vs "estrutura da
+// página" renomeados na lib nova, "Estrutura da Página" publicada, e a saída
+// das últimas 9 keys antigas ("Informações Adicionais") — está registrado lá.
+// Aqui ficam só as funções que importam e preenchem esses componentes.
 
 const _A11Y_SIDE_TO_ORIENTACAO = { left: 'esquerda', right: 'direita', top: 'superior', bottom: 'inferior' };
 
@@ -1518,14 +1235,15 @@ const _A11Y_SIDE_TO_ORIENTACAO = { left: 'esquerda', right: 'direita', top: 'sup
 // mesmo tamanho real do componente publicado, sem exceção arbitrária).
 const A11Y_MARKER_SIZE = 24;
 
-// Tenta importar o marcador real (ver A11Y_AGRUPAMENTO_KEYS[_MOBILE]) em vez
-// de desenhar o contorno tracejado + chip procedural. Lança em qualquer ponto
-// de incerteza — quem chama trata a exceção como "cai no marcador desenhado".
-// opts.a11yOrigin ('web'|'mobile', propagado desde a criação da spec no
-// frontend) escolhe o dicionário mobile quando disponível; se a categoria ou
-// a orientação específica não existir nele (lacuna real da lib mobile — ver
-// comentário acima de A11Y_AGRUPAMENTO_KEYS_MOBILE), cai pro dicionário
-// desktop equivalente ANTES de lançar erro.
+// Tenta importar o marcador real (perfil.markers.agrupamentoKeys, ver
+// backend/platform-profiles.js) em vez de desenhar o contorno tracejado + chip
+// procedural. Lança em qualquer ponto de incerteza — quem chama trata a
+// exceção como "cai no marcador desenhado". opts.a11yOrigin ('web'|'mobile',
+// propagado desde a criação da spec no frontend) escolhe o perfil. Desde
+// 2026-10-01 os dois perfis têm as 4 categorias completas (a lib nova não
+// separa web/mobile nestes sets e "Informações Adicionais" deixou de existir),
+// então não há mais o fallback mobile→desktop que existia aqui — o resultado
+// é idêntico para toda combinação alcançável.
 // Property TEXT correta (raw key completa "nome#syncId") do selo numérico/
 // alfabético por categoria, dentro da instância aninhada "ordem" de cada
 // variante do component set "[hac] Agrupamento" (fileKey
@@ -1541,22 +1259,20 @@ const A11Y_MARKER_SIZE = 24;
 // uma versão anterior/nunca publicada da lib. `setProperties` com essa key
 // sempre lançava (silenciado pelo catch "best-effort"), então o selo NUNCA
 // era escrito via property — o valor exibido era sempre o default gravado
-// na própria variante ("1" para elemento/informacoes, "A" para estrutura,
+// na própria variante ("1" para elemento, "A" para estrutura,
 // "H" para titulo), fazendo a 1ª spec de cada área/categoria "parecer
 // certa" por coincidência (a sugestão de tag também começa em "1"/"A"/"H")
 // e todas as specs seguintes mostrarem o mesmo valor default, nunca o
 // número/letra real atribuído no plugin.
 const A11Y_AGRUPAMENTO_LETTER_PROP_KEY = {
   elemento: 'Número#10766:0',
-  informacoes: 'Número#10766:0',
   estrutura: 'Letra#10766:2',
   titulo: 'Nível#10766:1',
 };
 
 export async function _tryImportA11yAgrupamento(opts) {
   const orientacao = _A11Y_SIDE_TO_ORIENTACAO[opts.guideSide || 'right'];
-  const mobileTypeKeys = opts.a11yOrigin === 'mobile' ? A11Y_AGRUPAMENTO_KEYS_MOBILE[opts.a11yType] : null;
-  const typeKeys = (mobileTypeKeys && mobileTypeKeys[orientacao]) ? mobileTypeKeys : A11Y_AGRUPAMENTO_KEYS[opts.a11yType];
+  const typeKeys = getPlatformProfile(opts.a11yOrigin).markers.agrupamentoKeys[opts.a11yType];
   if (!typeKeys) throw new Error('a11y-agrupamento-tipo-desconhecido: ' + opts.a11yType);
   const key = typeKeys[orientacao];
   if (!key) throw new Error('a11y-agrupamento-orientacao-desconhecida: ' + orientacao);
@@ -1597,77 +1313,11 @@ export async function _tryImportA11yAgrupamento(opts) {
   return instance;
 }
 
-// Keys publicadas do component set "[hac] Conectores" — frame "Conectores
-// [Handoff]" do arquivo da lib. Direção "desativado" catalogada mas ainda
-// não usada por _tryImportA11yConectorLinha — o modo Linha sempre nasce com
-// uma direção real.
-//
-// BUG REAL CORRIGIDO (2026-09-18): mesmo bug de A11Y_AGRUPAMENTO_KEYS acima
-// — este dicionário inteiro (25 keys) vinha da lib DESKTOP ANTIGA
-// (Wy0IhXRVZMSOOr8E609UqI, componente "[a11y] Conectores"), não da lib
-// oficial nova (HhriLSpKnCB2dHhyiU16iB). Foi este dicionário especificamente
-// que o usuário flagrou no painel de propriedades do Figma — o badge da
-// categoria "Elementos e Imagens" no card de instrução "Como fazer as
-// especificações para Leitor de Tela" (_buildFichaLegendColumn, via
-// _tryImportA11yConectorLinha) estava puxando o componente errado sempre
-// que a11yOrigin==='web' (e também como fallback de qualquer categoria/
-// direção ausente no dicionário mobile). Corrigido re-obtendo as 4
-// categorias abaixo via GET /v1/files/HhriLSpKnCB2dHhyiU16iB/components —
-// são os MESMOS valores já usados em A11Y_CONECTOR_LINHA_KEYS_MOBILE (este
-// component set não separa web/mobile na lib nova). "informacoes" segue na
-// lib antiga: confirmado via API que a lib nova não publicou nenhuma
-// variante "informações" (mesma lacuna real de A11Y_AGRUPAMENTO_KEYS).
-const A11Y_CONECTOR_LINHA_KEYS = {
-  elemento: {
-    esquerda: '711ff70084002beb5484985790d313785826b041',
-    direita:  '48c0a893abb2859bf28fe660db2ef5a8ed998389',
-    superior: 'd103d6403ab8f289c44499cf931de5d08e1c80a2',
-    inferior: '406b93c17f12ce592b2854a126b67e23c87a97e4',
-    desativado: '5506fa7159f82aa6984493ed9e8ef60372c3dd72',
-  },
-  // "Estrutura da Página" nova (ver nota equivalente em
-  // A11Y_AGRUPAMENTO_KEYS) — node_ids 10768:280/283/287/291/295.
-  estrutura: {
-    esquerda: '26fa2e6f7f6a16f35054f29cd12de90bbf190ba0',
-    direita:  '9b9aa1cfd2bb4327be1d72bfb125b326b90bc62e',
-    superior: '9ab20cfc07ba0de6fe15754d53804d491ab728bf',
-    inferior: '575e5b4fe3d2be90721a46cad9e30473503684fa',
-    desativado: 'afedf7e06bde8d754bae4309a121b5760723bb96',
-  },
-  titulo: {
-    esquerda: '3bda769bd18a3bcb0dedb3691deaa9548644a3dd',
-    direita:  '19fa60fe8f30a98e26eff0d2d1c75e973a87dfca',
-    superior: 'bbea0b89885808fb9af379a23573b2f9360f6b88',
-    inferior: 'ef9578ce7fd51d26cdccc22fbc862bdd716050ce',
-    desativado: '938d4f64c6272528b49c22da2cb03cf54c1ddeff',
-  },
-  decorativo: {
-    esquerda: '3bae568e0f46c702d1a34c9d1d7545352f0af488',
-    direita:  '7f737bd2821b3360c3a77a256c68a1aa2b43baa0',
-    superior: '79fae2a5d1438938ff3072d3e677196f78c471f8',
-    inferior: 'b054d91b10030c6aded2df65a801a425e1c1843f',
-    desativado: '7e1c5465b4c1ff00dfb05baaa6bd7aaa2a508829',
-  },
-  // SEM key publicada na lib nova (confirmado via API, 2026-09-18) — segue
-  // na lib antiga (Wy0IhXRVZMSOOr8E609UqI) até a lib nova publicar esta
-  // categoria.
-  informacoes: {
-    esquerda: 'edb9fed9e58a7bf279d8804014f8755ffc4e711d',
-    direita:  'ceff0c518ef33fc326eec74af0320255a6ba53a8',
-    superior: 'f8dcedebd882a13e26659b1a614adf16166b996d',
-    inferior: 'c2ef79c032a76ffefcb0a8b3123bf91ff2c8a221',
-    desativado: 'cef964a1a1bfa7ea3d0e4d24d005d3a669ca56b2',
-  },
-};
-
-// Tenta importar o conector-linha real (ver A11Y_CONECTOR_LINHA_KEYS[_MOBILE])
-// em vez de desenhar o vetor procedural (linha tracejada + dots). Lança em
-// qualquer ponto de incerteza — quem chama trata a exceção como "cai no vetor
-// desenhado". Mesmo fallback mobile→desktop de _tryImportA11yAgrupamento: a
-// lib mobile só cobre "elementos e imagens"/"títulos"/"decorativo" no modo
-// Linha (falta estrutura/informacoes) — se a categoria ou a orientação
-// específica não existir no dicionário mobile, cai pro desktop ANTES de
-// lançar erro.
+// Tenta importar o conector-linha real (perfil.markers.conectorLinhaKeys, ver
+// backend/platform-profiles.js) em vez de desenhar o vetor procedural (linha
+// tracejada + dots). Lança em qualquer ponto de incerteza — quem chama trata
+// a exceção como "cai no vetor desenhado". Mesma observação de
+// _tryImportA11yAgrupamento: os dois perfis têm as 4 categorias × 5 direções.
 export async function _tryImportA11yConectorLinha(opts) {
   // `opts.orientacao` (2026-09-18) tem prioridade sobre guideSide — usado
   // pelo badge de passo da Ficha (_buildFichaLegendColumn), que não é um
@@ -1676,8 +1326,7 @@ export async function _tryImportA11yConectorLinha(opts) {
   // inferior". guideSide continua resolvendo os demais chamadores (Assets,
   // marcador de Área), que sempre representam um lado real.
   const orientacao = opts.orientacao || _A11Y_SIDE_TO_ORIENTACAO[opts.guideSide || 'right'];
-  const mobileTypeKeys = opts.a11yOrigin === 'mobile' ? A11Y_CONECTOR_LINHA_KEYS_MOBILE[opts.a11yType] : null;
-  const typeKeys = (mobileTypeKeys && mobileTypeKeys[orientacao]) ? mobileTypeKeys : A11Y_CONECTOR_LINHA_KEYS[opts.a11yType];
+  const typeKeys = getPlatformProfile(opts.a11yOrigin).markers.conectorLinhaKeys[opts.a11yType];
   if (!typeKeys) throw new Error('a11y-conector-linha-tipo-desconhecido: ' + opts.a11yType);
   const key = typeKeys[orientacao];
   if (!key) throw new Error('a11y-conector-linha-orientacao-desconhecida: ' + orientacao);

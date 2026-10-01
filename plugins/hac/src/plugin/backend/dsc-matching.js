@@ -19,11 +19,13 @@
 // racional completo da extração e a ordem das próximas camadas.
 // ============================================================
 
-import DSC_A11Y_MAPPING from '../refs/dsc-component-a11y-mapping.json';
-import DSC_A11Y_MAPPING_MOBILE from '../refs/dsc-component-a11y-mapping-mobile.json';
-import DSC_A11Y_MAPPING_SUPERDSCWEB from '../refs/dsc-component-a11y-mapping-superdscweb.json';
-import DSC_A11Y_MAPPING_ANDROID from '../refs/dsc-component-a11y-mapping-android.json';
 import REF_SKELETON from '../refs/_skeleton.json';
+// Libs de reconhecimento por plataforma (slug -> origin/sourceLib) e os 4
+// mapeamentos componente -> categoria de a11y agora vêm dos PERFIS
+// (platform-profiles.js, 2026-10-01) — antes eram 4 imports + 2 tabelas
+// fixas aqui. A ordem de leitura é a mesma de sempre (ver comentários nas
+// funções abaixo), então o resultado do matching é idêntico.
+import { PLATFORM_PROFILES, getPlatformProfile } from './platform-profiles.js';
 
 // ============================================================
 // Matching DSC → categoria de a11y
@@ -71,13 +73,16 @@ export function _getDscComponentKeyToFrameMap() {
   if (_dscComponentKeyToFrameMap) return _dscComponentKeyToFrameMap;
   _dscComponentKeyToFrameMap = new Map();
   const libs = (REF_SKELETON && Array.isArray(REF_SKELETON.libraries)) ? REF_SKELETON.libraries : [];
-  const ORIGIN_BY_SLUG = { 'web-angular-react': 'web', 'super-app': 'mobile', 'super-dsc-web': 'web', 'dsc-android': 'mobile' };
-  const SOURCE_LIB_BY_SLUG = {
-    'web-angular-react': { id: 'web-angular-react', label: 'DSC Legado' },
-    'super-dsc-web': { id: 'super-dsc-web', label: 'Super DSC | Web' },
-    'super-app': { id: 'super-app', label: 'DSC | Super App' },
-    'dsc-android': { id: 'dsc-android', label: 'DSC | Android' }
-  };
+  /** @type {Record<string, 'web'|'mobile'>} */
+  const ORIGIN_BY_SLUG = {};
+  /** @type {Record<string, { id: string, label: string }>} */
+  const SOURCE_LIB_BY_SLUG = {};
+  Object.values(PLATFORM_PROFILES).forEach(profile => {
+    profile.recognitionLibs.forEach(lib => {
+      ORIGIN_BY_SLUG[lib.slug] = profile.origin;
+      SOURCE_LIB_BY_SLUG[lib.slug] = lib.sourceLib;
+    });
+  });
   libs.forEach(lib => {
     const origin = lib && ORIGIN_BY_SLUG[lib.slug];
     if (!origin || !Array.isArray(lib.componentsDetailed)) return;
@@ -113,8 +118,8 @@ export function _getDscComponentKeyToFrameMap() {
 // atravessar a fronteira web/mobile. A ORIGEM (de qual componentKey→
 // containingFrame o match veio, resolvida em _getDscComponentKeyToFrameMap)
 // decide qual dos dois mapas consultar.
-let _dscFrameToA11yMapWeb = null;
-let _dscFrameToA11yMapMobile = null;
+/** @type {Record<string, Map<string, { shortName: string, confidence: string }>>} */
+const _dscFrameToA11yMapByOrigin = {};
 function _buildDscFrameToA11yMap(buckets) {
   const map = new Map();
   buckets.forEach(bucket => {
@@ -131,22 +136,18 @@ function _buildDscFrameToA11yMap(buckets) {
   return map;
 }
 function _getDscFrameToA11yMap(origin) {
-  if (origin === 'mobile') {
-    if (!_dscFrameToA11yMapMobile) {
-      _dscFrameToA11yMapMobile = _buildDscFrameToA11yMap([
-        DSC_A11Y_MAPPING_MOBILE.altaConfianca, DSC_A11Y_MAPPING_MOBILE.baixaConfianca,
-        DSC_A11Y_MAPPING_ANDROID.altaConfianca, DSC_A11Y_MAPPING_ANDROID.baixaConfianca
-      ]);
-    }
-    return _dscFrameToA11yMapMobile;
+  // Buckets lidos na ordem declarada em cada perfil (web: legada, depois Super
+  // DSC | Web; mobile: Super App, depois Android) — a 1ª ocorrência de um
+  // containingFrame vence (ver _buildDscFrameToA11yMap), então a ordem é parte
+  // do contrato. Origem ausente/desconhecida cai no perfil web (mesmo default
+  // de antes).
+  const profile = getPlatformProfile(origin);
+  if (!_dscFrameToA11yMapByOrigin[profile.origin]) {
+    _dscFrameToA11yMapByOrigin[profile.origin] = _buildDscFrameToA11yMap(
+      profile.recognitionLibs.flatMap(lib => [lib.mapping.altaConfianca, lib.mapping.baixaConfianca])
+    );
   }
-  if (!_dscFrameToA11yMapWeb) {
-    _dscFrameToA11yMapWeb = _buildDscFrameToA11yMap([
-      DSC_A11Y_MAPPING.altaConfianca, DSC_A11Y_MAPPING.baixaConfianca,
-      DSC_A11Y_MAPPING_SUPERDSCWEB.altaConfianca, DSC_A11Y_MAPPING_SUPERDSCWEB.baixaConfianca
-    ]);
-  }
-  return _dscFrameToA11yMapWeb;
+  return _dscFrameToA11yMapByOrigin[profile.origin];
 }
 
 // Retorna { containingFrame, a11yCategory, confidence, origin, sourceLib }

@@ -59,10 +59,6 @@
           class="w-full flex items-center gap-2.5 px-dsc-micro py-2.5 rounded-dsc-medium text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-[#005ca9] transition-colors text-left">
           <span class="a11y-cat-badge-picker shrink-0 flex" data-a11y-cat="decorativo" aria-hidden="true"></span> Elemento Decorativo
         </button>
-        <button type="button" id="a11y-category-btn-informacoes" onclick="chooseA11yType('informacoes')"
-          class="w-full flex items-center gap-2.5 px-dsc-micro py-2.5 rounded-dsc-medium text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-[#005ca9] transition-colors text-left">
-          <span class="a11y-cat-badge-picker shrink-0 flex" data-a11y-cat="informacoes" aria-hidden="true"></span> Informações Adicionais
-        </button>
     </div>
   </div>
 
@@ -102,7 +98,7 @@
 })();
 </script>
 
-<!-- MODAL: ESPECIFICAÇÃO DE ACESSIBILIDADE (formulário das 5 categorias) -->
+<!-- MODAL: ESPECIFICAÇÃO DE ACESSIBILIDADE (formulário das categorias) -->
 <!-- Controlado por modules/accessibility.js: openA11yModal, closeA11yModal, confirmA11ySpec -->
 <div id="a11y-spec-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-modal-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-dsc-tiny">
   <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeA11yModal()" aria-hidden="true"></div>
@@ -164,7 +160,7 @@
     <div class="flex-1 p-5 overflow-y-auto min-h-0" onscroll="handleScroll(this)">
       <div class="max-w-sm mx-auto">
       <!-- Dados já capturados pelo plugin sobre o nó selecionado no canvas —
-           read-only, comuns às 5 categorias (não fazem parte do payload da
+           read-only, comuns a todas as categorias (não fazem parte do payload da
            spec, só contexto pro designer durante o preenchimento). Populados
            em prefillA11yComponentName (modules/accessibility.js). -->
       <div class="mb-4 space-y-1">
@@ -205,52 +201,18 @@
         </div>
       </div>
       <!-- Elementos e Imagens -->
-      <!-- 2026-09-17 (reestruturação completa pedida pelo usuário, ordem
-           explícita): 1) Tag; 2) Componente ou Imagem; 3) dropdown
-           condicional (Componente do DSC OU campo de Imagem); 4)
-           Propriedades do elemento selecionado (toggles reais, condicionais
-           ao componente); 5/6) Modo de marcação/Lado da guia, no bloco comum
-           mais abaixo neste arquivo, inalterados.
-           Achado real via REST API (fileKey Wy0IhXRVZMSOOr8E609UqI, nodeId
-           31:902 "[NÃO UTILIZAR][a11y base] componentes/icones/imagens",
-           parent do componentId 31:903 de fato instanciado dentro do wrapper
-           "[a11y] Box specs LT"): a árvore publicada já tem DUAS properties
-           de verdade neste nível — "variante" (2 opções reais:
-           "componente" | "texto alternativo para imagens") e "componente"
-           (15 opções, sem "imagem" — essa entrou como opção da property
-           "variante", não do catálogo de componentes). O <select> antigo
-           tratava "imagem" como só mais um item plano dentro do mesmo
-           dropdown de 16 — o novo bloco `a11y-el-variante` replica a
-           property real "variante" (2 opções), e o dropdown de componente
-           (`a11y-el-componente-select`) ficou só com os 15 itens reais do
-           catálogo (sem a opção "Imagem", que agora vive só no seletor
-           acima) + "Outro". Bug real corrigido junto no backend
-           (_tryImportA11yComponent, code.js): antes disso, escolher "Imagem"
-           setava só `componente: 'imagem'` sem setar `variante`, uma
-           combinação que não existe entre as 16 variantes reais publicadas.
-           DECISÕES CONSERVADORAS A CONFIRMAR COM O USUÁRIO (não há dado real
-           que resolva sozinho a ambiguidade, então nada foi removido):
-           - "Link"/"Texto Alternativo" (as 2 opções que sumiram da leitura
-             do pedido) pertencem exclusivamente ao bloco MOBILE
-             (a11y-el-mobile-variant, mais abaixo, propriedade REAL diferente
-             do wrapper "[a11y mob] Box specs leitor de tela" — 3 opções
-             mutuamente exclusivas, sem relação estrutural com a property
-             "variante" deste bloco desktop). Não foram tocadas: continuam
-             exatamente como estavam, escondidas por padrão pra specs novas
-             (decisão de 2026-09-17 anterior), restauradas em edição pra
-             specs antigas. Se a intenção real do usuário for fundir/portar
-             esse conceito pro desktop, isso é uma mudança de escopo maior
-             (não há property real "Link" nem "Texto Alternativo" solta no
-             wrapper desktop) — não implementado sem confirmação explícita.
-           - Não existe hoje, em lugar nenhum do plugin, um catálogo de
-             "assets"/imagens do DSC — "Imagem" continua sendo só mais um
-             shortName do catálogo de componentes (`texto alternativo para
-             imagens`, já mapeado em _A11Y_SELECT_TO_SHORTNAME), não uma
-             estrutura nova. O "campo específico de imagens" pedido no item 3
-             é, portanto, o mesmo preview/toggles já usados pros outros 15
-             componentes (_renderA11yElementoVariants/_renderA11yElementoToggles
-             já resolvem isso via _getA11yComponentToggles('imagem') — nenhuma
-             segunda fonte de verdade foi criada). -->
+      <!-- 2026-10-01: formulário ÚNICO para web e mobile, dirigido pelo catálogo
+           REAL da base da plataforma (set ".[hac web|mob base]  Elementos e
+           imagens" do arquivo "[HAC] Handoff Super DSC Mobile e Web") via
+           _a11yUiProfile (accessibility.js): "Componente do DSC" (opções reais),
+           "Leitor de Tela" (sub-modo, condicional), Nome Acessível/Observações
+           (só quando o componente tem a property) e "Link ou nome do
+           componente". O formulário web antigo — catálogo curado de 16
+           componentes, radio Componente/Imagem, preview de Descrição/Nota de
+           Código, variantes secundárias e toggles da lib "Design Acessível"
+           ANTIGA — foi removido junto com ela; "Imagem" é hoje uma opção comum
+           do dropdown. O histórico das decisões anteriores sobre o formulário
+           desktop está no git log (modals.html, antes de 2026-10-01). -->
       <div id="a11y-fields-elemento" class="hidden space-y-4">
         <!-- #a11y-el-mobile-toggles-wrap — PRIMEIRO campo do formulário
              (2026-09-23, revisão no mesmo dia, 3 pedidos em sequência: 1)
@@ -376,131 +338,6 @@
           <span class="block text-right text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted mt-0.5">0/1000</span>
         </div>
 
-        <!-- 2) Componente ou Imagem — property REAL "variante" do component
-             set base (2 opções, confirmadas via REST API). Escondido por
-             completo em specs mobile (bloco desktop inteiro, ver
-             _toggleA11yElementoDesktopBlock). -->
-        <div id="a11y-el-desktop-variante-wrap">
-          <label class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1.5 ml-1">Tipo de elemento</label>
-          <div class="grid grid-cols-2 gap-dsc-nano">
-            <label class="relative flex items-center gap-dsc-nano p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#005ca9] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
-              <input type="radio" name="a11y-el-variante" value="componente" checked onchange="updateA11yElementoVariante()" class="w-3.5 h-3.5 text-blue-600 focus:ring-blue-500" />
-              <i data-lucide="component" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#005ca9] shrink-0"></i>
-              <span class="text-dsc-label-tiny normal-case tracking-normal font-bold text-gray-600 dark:text-dark-muted group-has-[:checked]:text-[#005ca9]">Componente</span>
-            </label>
-            <label class="relative flex items-center gap-dsc-nano p-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all has-[:checked]:border-[#005ca9] has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/30 group">
-              <input type="radio" name="a11y-el-variante" value="imagem" onchange="updateA11yElementoVariante()" class="w-3.5 h-3.5 text-blue-600 focus:ring-blue-500" />
-              <i data-lucide="image" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#005ca9] shrink-0"></i>
-              <span class="text-dsc-label-tiny normal-case tracking-normal font-bold text-gray-600 dark:text-dark-muted group-has-[:checked]:text-[#005ca9]">Imagem</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- 3) Dropdown condicional: Componente do DSC (só quando "variante"
-             = componente) — 15 itens reais do catálogo + "Outro". "Imagem"
-             saiu desta lista (virou a opção acima). -->
-        <div id="a11y-el-desktop-componente-col" class="relative">
-          <label for="a11y-el-componente-trigger" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1.5 ml-1">Componente do DSC</label>
-          <button type="button" id="a11y-el-componente-trigger" onclick="toggleA11yComponenteMenu(event)"
-            aria-haspopup="listbox" aria-expanded="false"
-            class="w-full flex items-center justify-between gap-dsc-nano bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all">
-            <span id="a11y-el-componente-trigger-label">Accordion</span>
-            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 shrink-0" aria-hidden="true"></i>
-          </button>
-          <!-- select nativo mantido escondido só como fonte de valor pra JS (updateA11yElementoFields/confirmA11ySpec já leem .value daqui) — a abertura visual é o menu customizado abaixo, porque um <select> nativo decide sozinho (sem controle via CSS) se abre pra cima ou pra baixo, e dentro da modal costumava abrir pra cima. -->
-          <select id="a11y-el-componente-select" onchange="updateA11yElementoFields()" class="hidden" tabindex="-1" aria-hidden="true">
-            <option value="accordion">Accordion</option>
-            <option value="breadcrumb">Breadcrumb</option>
-            <option value="button">Button</option>
-            <option value="checkbox">Checkbox</option>
-            <option value="dialog">Dialog</option>
-            <option value="inputs">Inputs</option>
-            <option value="link">Link</option>
-            <option value="listas">Listas</option>
-            <option value="paginator">Paginator</option>
-            <option value="radio button">Radio Button</option>
-            <option value="snackbar">Snackbar</option>
-            <option value="stepper">Stepper</option>
-            <option value="switch">Switch</option>
-            <option value="table">Table</option>
-            <option value="tab group">Tab Group</option>
-            <option value="outro">Outro (fora do catálogo)</option>
-          </select>
-          <div id="a11y-el-componente-menu" role="listbox" class="hidden absolute left-0 right-0 top-full mt-1 z-50 max-h-56 overflow-y-auto bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-dsc-medium shadow-xl p-1">
-            <button type="button" role="option" onclick="selectA11yComponente('accordion','Accordion')" class="a11y-componente-option w-full text-left px-dsc-micro py-dsc-nano rounded-dsc-small text-[12px] text-slate-700 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20">Accordion</button>
-            <button type="button" role="option" onclick="selectA11yComponente('breadcrumb','Breadcrumb')" class="a11y-componente-option w-full text-left px-dsc-micro py-dsc-nano rounded-dsc-small text-[12px] text-slate-700 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20">Breadcrumb</button>
-            <button type="button" role="option" onclick="selectA11yComponente('button','Button')" class="a11y-componente-option w-full text-left px-dsc-micro py-dsc-nano rounded-dsc-small text-[12px] text-slate-700 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20">Button</button>
-            <button type="button" role="option" onclick="selectA11yComponente('checkbox','Checkbox')" class="a11y-componente-option w-full text-left px-dsc-micro py-dsc-nano rounded-dsc-small text-[12px] text-slate-700 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20">Checkbox</button>
-            <button type="button" role="option" onclick="selectA11yComponente('dialog','Dialog')" class="a11y-componente-option w-full text-left px-dsc-micro py-dsc-nano rounded-dsc-small text-[12px] text-slate-700 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20">Dialog</button>
-            <button type="button" role="option" onclick="selectA11yComponente('inputs','Inputs')" class="a11y-componente-option w-full text-left px-dsc-micro py-dsc-nano rounded-dsc-small text-[12px] text-slate-700 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20">Inputs</button>
-            <button type="button" role="option" onclick="selectA11yComponente('link','Link')" class="a11y-componente-option w-full text-left px-dsc-micro py-dsc-nano rounded-dsc-small text-[12px] text-slate-700 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20">Link</button>
-            <button type="button" role="option" onclick="selectA11yComponente('listas','Listas')" class="a11y-componente-option w-full text-left px-dsc-micro py-dsc-nano rounded-dsc-small text-[12px] text-slate-700 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20">Listas</button>
-            <button type="button" role="option" onclick="selectA11yComponente('paginator','Paginator')" class="a11y-componente-option w-full text-left px-dsc-micro py-dsc-nano rounded-dsc-small text-[12px] text-slate-700 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20">Paginator</button>
-            <button type="button" role="option" onclick="selectA11yComponente('radio button','Radio Button')" class="a11y-componente-option w-full text-left px-dsc-micro py-dsc-nano rounded-dsc-small text-[12px] text-slate-700 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20">Radio Button</button>
-            <button type="button" role="option" onclick="selectA11yComponente('snackbar','Snackbar')" class="a11y-componente-option w-full text-left px-dsc-micro py-dsc-nano rounded-dsc-small text-[12px] text-slate-700 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20">Snackbar</button>
-            <button type="button" role="option" onclick="selectA11yComponente('stepper','Stepper')" class="a11y-componente-option w-full text-left px-dsc-micro py-dsc-nano rounded-dsc-small text-[12px] text-slate-700 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20">Stepper</button>
-            <button type="button" role="option" onclick="selectA11yComponente('switch','Switch')" class="a11y-componente-option w-full text-left px-dsc-micro py-dsc-nano rounded-dsc-small text-[12px] text-slate-700 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20">Switch</button>
-            <button type="button" role="option" onclick="selectA11yComponente('table','Table')" class="a11y-componente-option w-full text-left px-dsc-micro py-dsc-nano rounded-dsc-small text-[12px] text-slate-700 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20">Table</button>
-            <button type="button" role="option" onclick="selectA11yComponente('tab group','Tab Group')" class="a11y-componente-option w-full text-left px-dsc-micro py-dsc-nano rounded-dsc-small text-[12px] text-slate-700 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20">Tab Group</button>
-            <button type="button" role="option" onclick="selectA11yComponente('outro','Outro (fora do catálogo)')" class="a11y-componente-option w-full text-left px-dsc-micro py-dsc-nano rounded-dsc-small text-[12px] text-slate-700 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20 border-t border-gray-100 dark:border-dark-line mt-1 pt-2">Outro (fora do catálogo)</button>
-          </div>
-        </div>
-        <!-- Campo específico de Imagem (só quando "variante" = imagem) — não
-             existe um catálogo de "assets"/imagens à parte no plugin hoje;
-             este bloco só identifica visualmente que a spec documenta um
-             texto alternativo de imagem, mas o shortName real consultado
-             pra Descrição/Nota de Código/toggles continua sendo o mesmo
-             'imagem' de sempre (ver updateA11yElementoVariante). -->
-        <div id="a11y-el-imagem-info-wrap" class="hidden p-3 bg-gray-50 dark:bg-dark-bg rounded-dsc-medium border border-gray-200 dark:border-dark-line flex items-center gap-dsc-nano">
-          <i data-lucide="image" class="w-4 h-4 text-slate-400 dark:text-dark-muted shrink-0" aria-hidden="true"></i>
-          <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-snug">Documentando o texto alternativo de uma imagem — preencha o Label acima com o texto alternativo real da imagem.</p>
-        </div>
-        <!-- Bloco desktop (16 categorias): "Outro", preview de Descrição/Nota
-             de Código, variantes secundárias e toggles do catálogo — tudo
-             escondido junto quando a origem é mobile, ver
-             _toggleA11yElementoDesktopBlock em accessibility.js. -->
-        <div id="a11y-el-desktop-block" class="space-y-4">
-          <div id="a11y-el-componente-outro-wrap" class="hidden">
-            <div class="flex items-center justify-between mb-1.5 ml-1">
-              <label for="a11y-el-componente-outro" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal">Nome do componente</label>
-              <span id="a11y-el-componente-outro-counter" class="text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted shrink-0">0/80</span>
-            </div>
-            <input type="text" id="a11y-el-componente-outro" maxlength="80" placeholder="Ex: Botão primário"
-              oninput="updateA11yCharCounter(this)"
-              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all" />
-          </div>
-          <div id="a11y-el-preview" class="p-3 bg-gray-50 dark:bg-dark-bg rounded-dsc-medium border border-gray-200 dark:border-dark-line space-y-2.5">
-            <div>
-              <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1">Descrição</p>
-              <p id="a11y-el-preview-descricao" class="text-[12px] text-slate-700 dark:text-white leading-snug"></p>
-            </div>
-            <div id="a11y-el-preview-nota-wrap">
-              <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1">Nota de Código</p>
-              <p id="a11y-el-preview-nota" class="text-[12px] font-mono text-slate-700 dark:text-white leading-snug"></p>
-            </div>
-          </div>
-        </div>
-        <!-- Variante secundária real do componente (ex: Button → "tipo":
-             default/desabilitado/de icone...) — não confundir com o
-             <select> de "Componente" (nível 1, controla qual dos 15
-             componentes é usado, ou 'imagem' via a11y-el-variante). Só
-             aparece se o componente ESCOLHIDO tiver essa property catalogada
-             na lib. Também faz parte do bloco desktop — escondida junto em
-             specs mobile. -->
-        <div id="a11y-el-variants-wrap" class="hidden space-y-2.5">
-          <div id="a11y-el-variants-list" class="space-y-3"></div>
-        </div>
-        <!-- 4) Propriedades do elemento selecionado — toggles reais que só
-             aparecem se o componente/imagem ESCOLHIDO tiver aquela property
-             na lib (vínculo real via _getA11yComponentToggles, mesmo
-             mecanismo usado pela Detecção Automática/gate de seleção
-             manual). Ex.: "Icon Button" real tem "Nome Acessível"; um
-             componente sem essa property real não mostra o campo. Também
-             faz parte do bloco desktop — escondida junto em specs mobile. -->
-        <div id="a11y-el-toggles-wrap" class="hidden space-y-2.5">
-          <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal ml-1">Propriedades do elemento selecionado</p>
-          <div id="a11y-el-toggles-list" class="space-y-2"></div>
-        </div>
         <!-- Sub-variante mobile ("Variante" real do component set
              ".[a11y mob base] Elementos e imagens"). Property real tem 3
              opções ("componente"/"link"/"texto alternativo"), mas o pedido
@@ -760,7 +597,7 @@
           </div>
           <!-- Nota de Código não existe na lib mobile (nem HTML nem RN) —
                este wrapper some no formulário mobile (ver
-               A11Y_CONTENT.decorativo.mobile/updateA11yDecorativoFields). -->
+               A11Y_CONTENT.decorativo.base/updateA11yDecorativoFields). -->
           <div id="a11y-fixed-nota-dec-wrap">
             <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1">Nota de Código</p>
             <p id="a11y-fixed-nota-dec" class="text-[12px] font-mono text-slate-700 dark:text-white leading-snug"></p>
@@ -778,45 +615,6 @@
         <div id="a11y-decorativo-toggles-wrap" class="hidden space-y-2.5">
           <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal ml-1">Campos do componente</p>
           <div id="a11y-decorativo-toggles-list" class="space-y-2"></div>
-        </div>
-      </div>
-
-      <!-- Informações Adicionais -->
-      <div id="a11y-fields-informacoes" class="hidden space-y-4">
-        <div class="grid grid-cols-4 gap-dsc-micro">
-          <div class="col-span-1">
-            <label for="a11y-informacoes-tag-input" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1.5 ml-1">Tag</label>
-            <input type="text" id="a11y-informacoes-tag-input" maxlength="8" value="A" placeholder="A, A1..."
-              oninput="validateA11yTagInput(); updateA11yCharCounter(this)"
-              class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-2 py-2.5 text-[12px] text-center font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-blue-100 outline-none transition-all uppercase" />
-            <span id="a11y-informacoes-tag-input-counter" class="block text-center text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted mt-0.5">1/8</span>
-          </div>
-          <div class="col-span-3">
-            <label for="a11y-informacoes-subtipo-select" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1.5 ml-1">Subtipo</label>
-            <select id="a11y-informacoes-subtipo-select" onchange="updateA11yInformacoesFields()"
-              class="dsc-select w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all">
-              <option value="handoffs">Handoffs</option>
-              <option value="conteudo extra">Conteúdo extra</option>
-              <option value="customizavel">Customizável</option>
-            </select>
-          </div>
-        </div>
-        <p id="a11y-informacoes-tag-error" class="hidden text-dsc-label-tiny normal-case tracking-normal text-red-500 -mt-2.5 ml-1">Formato: A, B, A1, A2, A1.1, A1.2...</p>
-        <div>
-          <div class="flex items-center justify-between mb-1.5 ml-1">
-            <label for="a11y-informacoes-descricao" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal">Descrição</label>
-            <span id="a11y-informacoes-descricao-counter" class="hidden text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted shrink-0">0/200</span>
-          </div>
-          <input type="text" id="a11y-informacoes-descricao" readonly maxlength="200"
-            oninput="updateA11yCharCounter(this)"
-            class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all" />
-        </div>
-        <!-- Campo dinâmico real do set "informações adicionais" (só
-             "Observações") — some no subtipo "Customizável" (sem
-             componente real catalogado). -->
-        <div id="a11y-informacoes-toggles-wrap" class="hidden space-y-2.5">
-          <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal ml-1">Campos do componente</p>
-          <div id="a11y-informacoes-toggles-list" class="space-y-2"></div>
         </div>
       </div>
 
@@ -1526,9 +1324,9 @@
       <!-- Cada bloco de categoria abaixo carrega um id
            (a11y-categories-help-<categoria>) filtrável por
            _applyA11yCategoriesHelpOriginFilter (accessibility.js) — mobile
-           esconde "Estrutura da Página" e "Informações Adicionais" (mesmas
-           2 categorias já sem equivalente na lib "Design Acessível | Super
-           App", já escondidas no seletor de Nova Spec). Textos transcritos
+           esconde "Estrutura da Página" (categoria sem equivalente na lib
+           mobile, já escondida no seletor de Nova Spec). "Informações
+           Adicionais" foi removida em 2026-10-01. Textos transcritos
            dos prints reais da modal "Especificações para Leitores de Tela"
            (2026-09-16): só "Nível de Título" tem parágrafo diferente por
            origem (data-a11y-help-origin) — "Elementos e Imagens" e
@@ -1570,17 +1368,9 @@
         </div>
       </div>
 
-      <div id="a11y-categories-help-informacoes" class="flex gap-dsc-micro">
-        <div class="a11y-cat-badge w-7 h-7 rounded-dsc-circ border-2 flex items-center justify-center shrink-0" data-a11y-cat="informacoes"></div>
-        <div class="space-y-1">
-          <p class="text-[14px] font-bold text-slate-800 dark:text-white">Informações adicionais</p>
-          <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed">Caso queira contemplar algum elemento/componente que não se encaixa nas outras categorias, use esta pra descrever o item e apontar suas observações: é a única categoria com formato livre.</p>
-        </div>
-      </div>
-
       <!-- Blocos de referência adicional, em accordion (2026-09-08,
            pedido do usuário: eram parágrafos soltos sempre visíveis,
-           competindo por espaço com as 5 categorias acima — movidos pra
+           competindo por espaço com as categorias acima — movidos pra
            accordion recolhido, mesmo padrão já usado em
            a11y-batch-summary-groups-block/a11y-token-review-block
            (toggleAccordion, core.js). "Quando usar cada categoria"
@@ -1611,7 +1401,7 @@
             <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-500 transition-transform shrink-0" style="transform:rotate(0deg)"></i>
           </button>
           <div class="accordion-content hidden px-dsc-micro pb-3 pt-2 space-y-2">
-            <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Selecionar Tela</strong> (selo azul numerado) é o pré-requisito: identifica uma seção ou bloco da tela e agrupa, na listagem lateral, todas as especificações criadas dentro dela. Cada uma das 5 categorias acima é uma <strong>Especificação</strong>, sempre criada dentro de uma tela já selecionada.</p>
+            <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Selecionar Tela</strong> (selo azul numerado) é o pré-requisito: identifica uma seção ou bloco da tela e agrupa, na listagem lateral, todas as especificações criadas dentro dela. Cada uma das categorias acima é uma <strong>Especificação</strong>, sempre criada dentro de uma tela já selecionada.</p>
             <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-relaxed"><strong>Contorno</strong> (padrão) envolve o elemento inteiro com uma moldura, com o selo embutido num dos cantos. <strong>Linha</strong> liga um ponto do elemento ao card de detalhamento com um traço, sem contornar a tela, útil quando o elemento é pequeno ou está muito próximo de outros. Os dois são desenhados sobre uma cópia de trabalho do elemento, nunca sobre o frame original do seu design: o original nunca é alterado.</p>
           </div>
         </div>
