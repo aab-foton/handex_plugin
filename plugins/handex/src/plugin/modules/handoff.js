@@ -128,7 +128,7 @@ ${framesList.map(f => {
     if (cats.length > 0) {
       tokensMD = '\n\n#### Tokens Escaneados\n' +
         cats.map(c => `- **${c.label}** (${c.items.length}): ` +
-          c.items.slice(0, 10).map(it => (it.name || it.label || '—') + (it.legacyLib ? ' *(lib legada — precisa migrar)*' : '')).join(', ') +
+          c.items.slice(0, 10).map(it => (it.name || it.label || '—') + (window._handexLegacyLibHint && it.legacyLib ? ' *(lib legada — precisa migrar)*' : '')).join(', ') +
           (c.items.length > 10 ? ` +${c.items.length - 10} mais` : '')
         ).join('\n');
       const customized = cats.flatMap(c => c.items).filter(it => Array.isArray(it.customizations) && it.customizations.length > 0);
@@ -1895,7 +1895,7 @@ ${(handoffData.createdFlows || []).length === 0
               libOriginHTML = `
                 <span class="inline-flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[9px] font-bold text-blue-600 dark:text-blue-400 mt-0.5">
                   <span class="inline-flex items-center gap-1"><i data-lucide="library" class="w-2.5 h-2.5"></i>${item.matchedIn}${item.matchedTokenName && item.matchedTokenName !== item.name ? ` · ${item.matchedTokenName}` : ''}</span>
-                  ${item.legacyLib ? `<span class="inline-flex items-center gap-1 text-slate-600 dark:text-slate-300" title="Lib legada do DSC — existe versão nas libs Super"><i data-lucide="library" class="w-2.5 h-2.5"></i>Lib legada — precisa migrar</span>` : ''}
+                  ${window._handexLegacyLibHint && item.legacyLib ? `<span class="inline-flex items-center gap-1 text-slate-600 dark:text-slate-300" title="Lib legada do DSC — existe versão nas libs Super"><i data-lucide="library" class="w-2.5 h-2.5"></i>Lib legada — precisa migrar</span>` : ''}
                   ${codeImport ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded font-mono text-[9px]" title="Importe deste pacote no código"><i data-lucide="code-2" class="w-2.5 h-2.5"></i>${codeImport}</span>` : ''}
                   ${docsHref ? `<a href="${docsHref}" target="_blank" class="inline-flex items-center gap-0.5 text-[9px] text-slate-500 hover:text-blue-500 transition-colors"><i data-lucide="book-open" class="w-2.5 h-2.5"></i>docs</a>` : ''}
                 </span>

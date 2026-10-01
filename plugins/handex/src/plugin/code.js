@@ -457,7 +457,7 @@ async function _hdBuildFrameCard(f, fi) {
       elementsWrap.appendChild(elementsLabel);
       _hdSetFillAndHug(elementsLabel);
       _allItems.forEach(item => {
-        const itemText = _hdCreateText(`${item.name || 'Elemento'} — ${item._cat}${item.legacyLib ? ' · lib legada, precisa migrar' : ''}`, 12, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
+        const itemText = _hdCreateText(`${item.name || 'Elemento'} — ${item._cat}${LEGACY_LIB_MIGRATION_HINT_ENABLED && item.legacyLib ? ' · lib legada, precisa migrar' : ''}`, 12, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
         elementsWrap.appendChild(itemText);
         _hdSetFillAndHug(itemText);
       });
@@ -1180,7 +1180,7 @@ async function _hdBuildUiItemCard(item, categoryTitle) {
         _hdSetFillAndHug(cHead);
 
         if (c.dscLib) {
-          const dsc = _hdCreateText(`Componente do DSC (${c.dscLib}) — reutilizar, não construir${c.dscLegacy ? ' · lib legada, precisa migrar' : ''}`, 10, "Bold", { r: 0.1, g: 0.5, b: 0.25 });
+          const dsc = _hdCreateText(`Componente do DSC (${c.dscLib}) — reutilizar, não construir${LEGACY_LIB_MIGRATION_HINT_ENABLED && c.dscLegacy ? ' · lib legada, precisa migrar' : ''}`, 10, "Bold", { r: 0.1, g: 0.5, b: 0.25 });
           cNode.appendChild(dsc);
           _hdSetFillAndHug(dsc);
         }
@@ -1281,6 +1281,12 @@ const PLUGIN_VERSION = (typeof __HANDEX_VERSION__ !== 'undefined') ? __HANDEX_VE
 // partir do bundle. Ver memória "handex_hac_handoff_oculto" para o
 // histórico completo dessa checagem.
 const DSC_HANDOFF_SUMMARY_ENABLED = false;
+
+// Aviso "Lib legada — precisa migrar" (Fase 4). Desligado em 2026-10-01: a Super DSC | Web
+// ainda não foi adotada nos projetos (só a Super App existe de fato), então pedir migração
+// não faz sentido. Os dados (legacyLib/matchedTier/libLegada) continuam sendo calculados;
+// religar = trocar para true. A UI recebe o valor no init-plugin (legacyLibHintEnabled).
+const LEGACY_LIB_MIGRATION_HINT_ENABLED = false;
 
 // â”€â”€ Shared Plugin Data (MCP / REST API readable) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Usa setSharedPluginData (namespace 'handex') para que agentes externos
@@ -1877,7 +1883,8 @@ figma.ui.onmessage = async (msg) => {
         projectName,
         savedState: savedState || null,
         onboardingSeen: onboardingSeen || null,
-        hasRefSkeleton: !!_refSkeletonCache
+        hasRefSkeleton: !!_refSkeletonCache,
+        legacyLibHintEnabled: LEGACY_LIB_MIGRATION_HINT_ENABLED
       });
     } catch (err) {
       console.error("Initialization error (continuing without saved state):", err);
@@ -1889,7 +1896,8 @@ figma.ui.onmessage = async (msg) => {
         projectName,
         savedState: null,
         onboardingSeen: null,
-        hasRefSkeleton: !!_refSkeletonCache
+        hasRefSkeleton: !!_refSkeletonCache,
+        legacyLibHintEnabled: LEGACY_LIB_MIGRATION_HINT_ENABLED
       });
     }
     return;

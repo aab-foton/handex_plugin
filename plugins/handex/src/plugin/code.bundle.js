@@ -380,7 +380,7 @@
         elementsWrap.appendChild(elementsLabel);
         _hdSetFillAndHug(elementsLabel);
         _allItems.forEach((item) => {
-          const itemText = _hdCreateText(`${item.name || "Elemento"} \u2014 ${item._cat}${item.legacyLib ? " \xB7 lib legada, precisa migrar" : ""}`, 12, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
+          const itemText = _hdCreateText(`${item.name || "Elemento"} \u2014 ${item._cat}${LEGACY_LIB_MIGRATION_HINT_ENABLED && item.legacyLib ? " \xB7 lib legada, precisa migrar" : ""}`, 12, "Regular", { r: 0.12, g: 0.16, b: 0.23 });
           elementsWrap.appendChild(itemText);
           _hdSetFillAndHug(itemText);
         });
@@ -933,7 +933,7 @@
           cNode.appendChild(cHead);
           _hdSetFillAndHug(cHead);
           if (c.dscLib) {
-            const dsc = _hdCreateText(`Componente do DSC (${c.dscLib}) \u2014 reutilizar, n\xE3o construir${c.dscLegacy ? " \xB7 lib legada, precisa migrar" : ""}`, 10, "Bold", { r: 0.1, g: 0.5, b: 0.25 });
+            const dsc = _hdCreateText(`Componente do DSC (${c.dscLib}) \u2014 reutilizar, n\xE3o construir${LEGACY_LIB_MIGRATION_HINT_ENABLED && c.dscLegacy ? " \xB7 lib legada, precisa migrar" : ""}`, 10, "Bold", { r: 0.1, g: 0.5, b: 0.25 });
             cNode.appendChild(dsc);
             _hdSetFillAndHug(dsc);
           }
@@ -1011,6 +1011,7 @@
   }
   var PLUGIN_VERSION = true ? "6.34.0" : "dev";
   var DSC_HANDOFF_SUMMARY_ENABLED = false;
+  var LEGACY_LIB_MIGRATION_HINT_ENABLED = false;
   async function _writeSharedPluginData(data) {
     var _a, _b, _c, _d, _e, _f, _g;
     const NS = "handex";
@@ -1479,7 +1480,8 @@
           projectName,
           savedState: savedState || null,
           onboardingSeen: onboardingSeen || null,
-          hasRefSkeleton: !!_refSkeletonCache
+          hasRefSkeleton: !!_refSkeletonCache,
+          legacyLibHintEnabled: LEGACY_LIB_MIGRATION_HINT_ENABLED
         });
       } catch (err) {
         console.error("Initialization error (continuing without saved state):", err);
@@ -1491,7 +1493,8 @@
           projectName,
           savedState: null,
           onboardingSeen: null,
-          hasRefSkeleton: !!_refSkeletonCache
+          hasRefSkeleton: !!_refSkeletonCache,
+          legacyLibHintEnabled: LEGACY_LIB_MIGRATION_HINT_ENABLED
         });
       }
       return;

@@ -87,7 +87,7 @@
         return _CATEGORIAS
           .flatMap(cat => (f.specs && f.specs[cat]) || [])
           .filter(item => item.componentKey && item.matchedIn && item.matchedBy !== 'ancestor-key')
-          .map(item => ({ nome: item.name, biblioteca: item.matchedIn, componentKey: item.componentKey, ...(item.legacyLib ? { libLegada: true } : {}) }));
+          .map(item => ({ nome: item.name, biblioteca: item.matchedIn, componentKey: item.componentKey, ...(window._handexLegacyLibHint && item.legacyLib ? { libLegada: true } : {}) }));
       }
 
       // Lista detalhada de itens do scan por frame -- nome, categoria,

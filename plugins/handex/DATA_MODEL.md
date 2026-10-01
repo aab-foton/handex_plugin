@@ -508,7 +508,7 @@ Versão atual: `_schemaVersion: 3`
   matchedTier:         'priority' | 'legacy' | 'standalone' | null,   // tier da lib do match (Fase 4); só em properties[]
   matchedTokenName:    string | null,
   isCustomComponent:   boolean,  // CALCULADO pelo scan: sem vínculo comprovado com a lib
-  legacyLib:           boolean,  // Fase 4: vínculo (próprio ou por ancestral) vem de lib de tier 'legacy' — conforme, mas "precisa migrar"
+  legacyLib:           boolean,  // Fase 4: vínculo (próprio ou por ancestral) vem de lib de tier 'legacy' — conforme, mas "precisa migrar". Calculado e gravado sempre; exibição/exportação DESLIGADA por flag (LEGACY_LIB_MIGRATION_HINT_ENABLED, 2026-10-01)
   customizations:      { layer, campo, atual, padrao }[] | null,   // Fase 5b: o que difere do componente principal da lib (só INSTANCE com vínculo próprio, components/icons); [] = avaliado e sem diferença; null = não aplicável/não avaliado
   customizationsStatus:'evaluated' | 'not-evaluated' | null,   // Fase 5b; not-evaluated = padrão da lib ilegível, nunca verde nem âmbar. Com customizations não vazio: isDS "warning" + matchedBy 'customized'
   isMarkedCustom:      boolean,  // DECLARADO pelo designer (toggle "Componente Personalizado"

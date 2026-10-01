@@ -24,6 +24,7 @@
       
       if (msg.type === 'init-plugin') {
         window._handexRefSkeletonSent = !!msg.hasRefSkeleton;
+        window._handexLegacyLibHint = !!msg.legacyLibHintEnabled;
         applyFigmaTheme(msg.theme);
         const aboutVersion = document.getElementById('about-modal-version');
         if (aboutVersion) aboutVersion.textContent = 'v' + msg.version;

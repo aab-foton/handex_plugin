@@ -247,7 +247,7 @@ Biblioteca exclusiva: **Lucide** (`data-lucide="nome"` no plugin, equivalente a 
 | `message-square-plus` | `import { MessageSquarePlus } from 'lucide-react'` | Exportar Briefing Estratégico. |
 | `lock` | `import { Lock } from 'lucide-react'` | Bloquear spec/grupo — travar posição no canvas. |
 | `locate` | `import { Locate } from 'lucide-react'` | Focar elemento no canvas. |
-| `library` | `import { Library } from 'lucide-react'` | Referência de biblioteca DSC; também o indicador "LIB LEGADA — PRECISA MIGRAR" (Fase 4, 2026-09-30): texto 9px bold `slate-600` (dark `slate-300`), neutro de propósito — conforme, só um aviso, nem verde nem âmbar nem vermelho —, aparece sob o selo de conformidade no card do scan quando `item.legacyLib` e a auditoria do frame está ativa. |
+| `library` | `import { Library } from 'lucide-react'` | Referência de biblioteca DSC; também o indicador "LIB LEGADA — PRECISA MIGRAR" (Fase 4, 2026-09-30): texto 9px bold `slate-600` (dark `slate-300`), neutro de propósito — conforme, só um aviso, nem verde nem âmbar nem vermelho —, aparece sob o selo de conformidade no card do scan quando `item.legacyLib` e a auditoria do frame está ativa. **Desligado por flag (`LEGACY_LIB_MIGRATION_HINT_ENABLED = false`, 2026-10-01)** — badge não é renderizado; religar trocando a flag para `true`. |
 | `crosshair` | `import { Crosshair } from 'lucide-react'` | Ancoragem/mira — mini-mapa de conexão de fluxo. |
 | `chevron-right` | `import { ChevronRight } from 'lucide-react'` | Navegação — trilha de token (cor, primária, 500). |
 | `zoom-out` | `import { ZoomOut } from 'lucide-react'` | Diminuir escala da interface do plugin. |
