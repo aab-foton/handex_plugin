@@ -340,7 +340,7 @@
               ├── [Seção] Cenários de Exceção
               ├── [Seção] Docs e Anexos
               ├── [Seção] Frames Escaneados
-              ├── [Seção] User Interface            (1 card por item marcado, empilhados)
+              ├── [Seção] User Interface            (1 card por item marcado, empilhados; conteúdo lido do canvas no momento da geração, nenhum campo novo em handoffData)
               ├── [Seção] Documentação Visual
               └── [Seção] Fluxos de Tela</code></pre>
 <p><strong>Exportação em PDF (v6.28.0, 2026-09-18):</strong> botão "Baixar Ficha em PDF" (tela de Resumo) exporta este container principal via <code>node.exportAsync({ format: 'PDF' })</code> — PDF nativo da Plugin API, fidelidade visual total (cores, cards, snapshots), diferente do PDF de texto puro já embutido no <code>.zip</code> completo (<code>exportHandoff</code>, que converte o Markdown via jsPDF). Handler <code>export-ficha-pdf</code> (<code>code.js</code>) localiza a Ficha do projeto atual com <code>_hdFindExistingFicha</code> — exige que ela já exista no canvas.</p>

@@ -589,6 +589,18 @@
 <li><strong>Dots de conformidade por propriedade foram removidos</strong> — a acurácia de conformidade é responsabilidade do designer e não é informação acionável para o dev</li>
 <li>O badge de status do componente (DSC / AJUSTE / FORA) permanece visível no header do card do elemento, mas apenas quando a auditoria está ativa (<code>data.isAudit = true</code>)</li>
 </ul>
+<p><strong>Card User Interface — redesenho &quot;dev de UI&quot; (2026-10-01):</strong> o card deixou de listar <code>item.properties</code> (foto do scan) e passou a <strong>ler o nó marcado direto do canvas</strong> (só <code>isMarkedCustom</code>, sem <code>findAll</code>; tetos: profundidade 4, 40 nós, 12 imagens por geração; cada leitura protegida — falha omite o grupo). Grupos fixos, vazios omitidos, na ordem &quot;O que é? → Como se organiza? → Como se parece? → O que muda? → De que é feito?&quot;:</p>
+<ol>
+<li>Cabeçalho (nome com link, categoria, &quot;precisa ser construído&quot;) e <strong>imagem de referência</strong> do item (PNG proporcional, máx. 848×420, nunca corta).</li>
+<li><strong>Resumo:</strong> tipo, &quot;Baseado em&quot; (família + lib, do skeleton/Plugin API), tamanho, descrição/links de documentação do componente.</li>
+<li><strong>Diferenças em relação à lib</strong> (destaque; só instância DSC com <code>customizationsStatus</code>): camada, campo, valor atual e padrão da lib. Dado do scan (Fase 5b) — re-escanear para atualizar.</li>
+<li><strong>Layout</strong> (direção, distribuição, alinhamento, espaços, espaço interno agrupado &quot;16px nos 4 lados&quot;, dimensionamento Fixa/Ajusta/Preenche, limites mín./máx., posição absoluta, overflow, rotação), <strong>Aparência</strong> (todos os fills/strokes incl. gradiente/imagem, espessura/posição/estilo da borda, raio por canto, sombras completas, desfoque, opacidade, mistura) e <strong>Texto</strong> (estilo/fonte/tamanho/altura de linha/letras/alinhamento/decoração/caixa/truncamento/cor). Onde há token: <code>token · valor</code>.</li>
+<li><strong>Estados e variantes</strong> (só COMPONENT/COMPONENT_SET), <strong>Interações</strong> de protótipo em linguagem simples, <strong>Composição interna</strong> (mesmo formato por filho; instância DSC = &quot;reutilizar, não construir&quot;) e <strong>Configuração do componente</strong> no fim, em linha única (só o que está ligado ou fora do padrão; slots de troca mostram o NOME do componente, nunca ids).</li>
+</ol>
+<ul>
+<li>Texto de exemplo (<code>characters</code>) <strong>não</strong> entra: é conteúdo, não especificação.</li>
+<li><code>_qsExtractNodeProperties</code> (Spec Rápida) não foi alterada — o card tem leitor próprio (<code>_hdUi*</code>, <code>code.js</code>).</li>
+</ul>
 <hr>
 <h3 id="29-limpar-todos-os-dados">2.9 Limpar Todos os Dados</h3>
 <p><strong>Botão:</strong> ícone <code>trash-2</code> ao lado do botão "Importar JSON" na home.</p>

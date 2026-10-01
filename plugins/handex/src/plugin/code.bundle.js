@@ -832,63 +832,543 @@
   var _HD_UI_COMP_MAX_DEPTH = 4;
   var _HD_UI_COMP_MAX_NODES = 40;
   var _HD_UI_PRIMITIVE_TYPES = ["VECTOR", "BOOLEAN_OPERATION", "ELLIPSE", "RECTANGLE", "LINE", "STAR", "POLYGON"];
+  var _HD_UI_IMG_MAX_W = 848;
+  var _HD_UI_IMG_MAX_H = 420;
+  var _HD_UI_IMG_MAX_CARDS = 12;
+  var _HD_UI_MAX_LINES = 25;
+  var _HD_UI_VARIANT_SCAN_MAX = 60;
+  var _hdUiImageCount = 0;
+  var _hdUiVarCache = /* @__PURE__ */ new Map();
+  var _HD_UI_TYPE_PT = {
+    FRAME: "Frame",
+    GROUP: "Grupo",
+    INSTANCE: "Inst\xE2ncia de componente",
+    COMPONENT: "Componente",
+    COMPONENT_SET: "Conjunto de variantes",
+    TEXT: "Texto",
+    SECTION: "Se\xE7\xE3o"
+  };
+  var _HD_UI_ALIGN_MAIN = { MIN: "In\xEDcio", CENTER: "Centro", MAX: "Fim", SPACE_BETWEEN: "Espa\xE7o entre itens" };
+  var _HD_UI_ALIGN_CROSS = { MIN: "In\xEDcio", CENTER: "Centro", MAX: "Fim", BASELINE: "Linha de base" };
+  var _HD_UI_SIZING = { FIXED: "Fixa", HUG: "Ajusta ao conte\xFAdo", FILL: "Preenche o espa\xE7o" };
+  var _HD_UI_CONSTRAINT_H = { MIN: "esquerda", MAX: "direita", CENTER: "centro", STRETCH: "esticar", SCALE: "proporcional" };
+  var _HD_UI_CONSTRAINT_V = { MIN: "topo", MAX: "base", CENTER: "centro", STRETCH: "esticar", SCALE: "proporcional" };
+  var _HD_UI_TRIGGER_PT = {
+    ON_CLICK: "Ao clicar",
+    ON_HOVER: "Ao passar o mouse",
+    ON_PRESS: "Ao pressionar",
+    ON_DRAG: "Ao arrastar",
+    AFTER_TIMEOUT: "Ap\xF3s um tempo",
+    MOUSE_ENTER: "Ao entrar com o mouse",
+    MOUSE_LEAVE: "Ao sair com o mouse",
+    MOUSE_UP: "Ao soltar o clique",
+    MOUSE_DOWN: "Ao pressionar o clique",
+    ON_KEY_DOWN: "Ao pressionar tecla",
+    ON_MEDIA_HIT: "Ao atingir ponto da m\xEDdia",
+    ON_MEDIA_END: "Ao fim da m\xEDdia"
+  };
+  var _HD_UI_NAV_PT = {
+    NAVIGATE: "Navegar para",
+    OVERLAY: "Abrir overlay",
+    SWAP: "Trocar overlay por",
+    SCROLL_TO: "Rolar at\xE9",
+    CHANGE_TO: "Mudar para a variante"
+  };
+  var _HD_UI_TRANSITION_PT = {
+    DISSOLVE: "Dissolver",
+    SMART_ANIMATE: "Smart animate",
+    MOVE_IN: "Entrar deslizando",
+    MOVE_OUT: "Sair deslizando",
+    PUSH: "Empurrar",
+    SLIDE_IN: "Deslizar para dentro",
+    SLIDE_OUT: "Deslizar para fora",
+    SCROLL_ANIMATE: "Anima\xE7\xE3o de rolagem"
+  };
+  async function _hdUiSafe(fn, fallback) {
+    try {
+      return await fn();
+    } catch (e) {
+      return fallback;
+    }
+  }
+  function _hdUiRow(label, text, token) {
+    return { label, text: String(text), token: !!token };
+  }
+  function _hdUiPx(v) {
+    return `${Math.round(v * 100) / 100}px`;
+  }
+  function _hdUiTok(tok, val) {
+    return tok && tok !== val ? `${tok} \xB7 ${val}` : val;
+  }
+  function _hdUiHexA(c) {
+    const hex = rgbToHex(c.r, c.g, c.b).toUpperCase();
+    return typeof c.a === "number" && c.a < 1 ? `${hex} \xB7 ${Math.round(c.a * 100)}%` : hex;
+  }
+  function _hdUiCleanProp(name) {
+    return String(name).split("#")[0];
+  }
+  async function _hdUiVarName(id) {
+    if (!id) return null;
+    if (_hdUiVarCache.has(id)) return _hdUiVarCache.get(id);
+    let name = null;
+    try {
+      const v = await figma.variables.getVariableByIdAsync(id);
+      name = v ? v.name : null;
+    } catch (e) {
+    }
+    _hdUiVarCache.set(id, name);
+    return name;
+  }
+  async function _hdUiBound(n, field) {
+    const b = n.boundVariables && n.boundVariables[field];
+    const id = Array.isArray(b) ? b[0] && b[0].id : b && b.id;
+    return _hdUiVarName(id);
+  }
+  async function _hdUiStyleName(id) {
+    if (!id || typeof id !== "string") return null;
+    try {
+      const s = await figma.getStyleByIdAsync(id);
+      return s ? s.name : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  async function _hdUiDescribePaint(f, styleName) {
+    if (f.type === "SOLID" && f.color) {
+      const op = typeof f.opacity === "number" && f.opacity < 1 ? ` \xB7 ${Math.round(f.opacity * 100)}%` : "";
+      const vName = await _hdUiVarName(f.boundVariables && f.boundVariables.color && f.boundVariables.color.id);
+      const tok = vName || styleName;
+      return { text: _hdUiTok(tok, rgbToHex(f.color.r, f.color.g, f.color.b).toUpperCase() + op), tok };
+    }
+    if (typeof f.type === "string" && f.type.startsWith("GRADIENT_")) {
+      const kind = { GRADIENT_LINEAR: "linear", GRADIENT_RADIAL: "radial", GRADIENT_ANGULAR: "angular", GRADIENT_DIAMOND: "diamante" }[f.type] || "";
+      const stops = (f.gradientStops || []).slice(0, 4).map((s) => `${_hdUiHexA(s.color)} ${Math.round(s.position * 100)}%`).join(" \u2192 ");
+      return { text: _hdUiTok(styleName, `Gradiente ${kind}: ${stops}`), tok: styleName };
+    }
+    if (f.type === "IMAGE") return { text: `Imagem (modo ${String(f.scaleMode || "").toLowerCase()})`, tok: null };
+    return { text: String(f.type), tok: null };
+  }
+  async function _hdUiPaintRows(arr, baseLabel, styleName) {
+    const vis = (arr || []).filter((f) => f && f.visible !== false);
+    const rows = [];
+    for (const [i, f] of vis.entries()) {
+      const d = await _hdUiDescribePaint(f, styleName);
+      rows.push(_hdUiRow(vis.length > 1 ? `${baseLabel} ${i + 1}` : baseLabel, d.text, d.tok));
+    }
+    return rows;
+  }
+  async function _hdUiLayoutRows(n, compact) {
+    const rows = [];
+    if ("layoutMode" in n) {
+      if (n.layoutMode === "NONE") {
+        if (!compact && n.children && n.children.length > 0) rows.push(_hdUiRow("Dire\xE7\xE3o", "Sem auto layout (posicionamento livre)"));
+      } else if (n.layoutMode === "GRID") {
+        rows.push(_hdUiRow("Dire\xE7\xE3o", "Grade (grid)"));
+      } else {
+        const wrap = "layoutWrap" in n && n.layoutWrap === "WRAP";
+        rows.push(_hdUiRow("Dire\xE7\xE3o", (n.layoutMode === "HORIZONTAL" ? "Horizontal" : "Vertical") + (wrap ? " \xB7 com quebra de linha" : "")));
+        rows.push(_hdUiRow("Distribui\xE7\xE3o", _HD_UI_ALIGN_MAIN[n.primaryAxisAlignItems] || String(n.primaryAxisAlignItems)));
+        rows.push(_hdUiRow("Alinhamento", _HD_UI_ALIGN_CROSS[n.counterAxisAlignItems] || String(n.counterAxisAlignItems)));
+        if (n.primaryAxisAlignItems !== "SPACE_BETWEEN" && typeof n.itemSpacing === "number" && n.itemSpacing > 0) {
+          const tok = await _hdUiBound(n, "itemSpacing");
+          rows.push(_hdUiRow("Espa\xE7o entre itens", _hdUiTok(tok, _hdUiPx(n.itemSpacing)), tok));
+        }
+        if (wrap && typeof n.counterAxisSpacing === "number" && n.counterAxisSpacing > 0) {
+          const tok = await _hdUiBound(n, "counterAxisSpacing");
+          rows.push(_hdUiRow("Espa\xE7o entre linhas", _hdUiTok(tok, _hdUiPx(n.counterAxisSpacing)), tok));
+        }
+        const sides = [];
+        for (const p of ["paddingTop", "paddingRight", "paddingBottom", "paddingLeft"]) {
+          const v = typeof n[p] === "number" ? n[p] : 0;
+          const tok = await _hdUiBound(n, p);
+          sides.push({ v, tok, text: _hdUiTok(tok, _hdUiPx(v)) });
+        }
+        if (sides.some((s) => s.v > 0)) {
+          const [t, r, b, l] = sides.map((s) => s.text);
+          let text;
+          if (t === r && r === b && b === l) text = `${t} nos 4 lados`;
+          else if (t === b && l === r) text = `Vertical ${t}
+Horizontal ${l}`;
+          else text = `Superior ${t}
+Direito ${r}
+Inferior ${b}
+Esquerdo ${l}`;
+          rows.push(_hdUiRow("Espa\xE7o interno", text, sides.some((s) => s.tok)));
+        }
+      }
+    }
+    try {
+      const sh = n.layoutSizingHorizontal, sv = n.layoutSizingVertical;
+      if (sh && sv && (!compact || sh !== "FIXED" || sv !== "FIXED")) {
+        rows.push(_hdUiRow("Dimensionamento", `Largura: ${_HD_UI_SIZING[sh] || sh}
+Altura: ${_HD_UI_SIZING[sv] || sv}`));
+      }
+    } catch (e) {
+    }
+    const lim = [];
+    const mm = (lo, hi, nome) => {
+      const p = [];
+      if (typeof lo === "number") p.push(`m\xEDn. ${_hdUiPx(lo)}`);
+      if (typeof hi === "number") p.push(`m\xE1x. ${_hdUiPx(hi)}`);
+      if (p.length) lim.push(`${nome} ${p.join(" \xB7 ")}`);
+    };
+    mm(n.minWidth, n.maxWidth, "Largura");
+    mm(n.minHeight, n.maxHeight, "Altura");
+    if (lim.length) rows.push(_hdUiRow("Limites", lim.join("\n")));
+    if (n.layoutPositioning === "ABSOLUTE") {
+      const c = n.constraints;
+      const anc = c ? ` \xB7 ancorado: ${_HD_UI_CONSTRAINT_H[c.horizontal] || c.horizontal} / ${_HD_UI_CONSTRAINT_V[c.vertical] || c.vertical}` : "";
+      rows.push(_hdUiRow("Posi\xE7\xE3o", `Absoluta dentro do auto layout${anc}`));
+    }
+    if (!compact && "clipsContent" in n && n.clipsContent && n.children && n.children.length > 0) {
+      rows.push(_hdUiRow("Conte\xFAdo excedente", "Cortado (overflow hidden)"));
+    }
+    if (typeof n.rotation === "number" && Math.round(n.rotation) !== 0) {
+      rows.push(_hdUiRow("Rota\xE7\xE3o", `${Math.round(n.rotation * 100) / 100}\xB0`));
+    }
+    return rows;
+  }
+  async function _hdUiAppearanceRows(n) {
+    const rows = [];
+    if (n.type !== "TEXT" && "fills" in n) {
+      if (n.fills === figma.mixed) rows.push(_hdUiRow("Preenchimento", "Misto"));
+      else if (Array.isArray(n.fills)) {
+        const styleName = await _hdUiStyleName("fillStyleId" in n ? n.fillStyleId : null);
+        rows.push(...await _hdUiPaintRows(n.fills, "Preenchimento", styleName));
+      }
+    }
+    if ("strokes" in n && Array.isArray(n.strokes) && n.strokes.some((s) => s.visible !== false)) {
+      const sw = n.strokeWeight;
+      if (!(typeof sw === "number" && sw <= 0)) {
+        const styleName = await _hdUiStyleName("strokeStyleId" in n ? n.strokeStyleId : null);
+        rows.push(...await _hdUiPaintRows(n.strokes, "Borda", styleName));
+        if (typeof sw === "number") {
+          const tok = await _hdUiBound(n, "strokeWeight");
+          rows.push(_hdUiRow("Espessura da borda", _hdUiTok(tok, _hdUiPx(sw)), tok));
+        } else if (sw === figma.mixed) {
+          const s = [["Superior", n.strokeTopWeight], ["Direita", n.strokeRightWeight], ["Inferior", n.strokeBottomWeight], ["Esquerda", n.strokeLeftWeight]];
+          rows.push(_hdUiRow("Espessura da borda", s.map(([k, v]) => `${k} ${typeof v === "number" ? _hdUiPx(v) : "?"}`).join("\n")));
+        }
+        if (n.strokeAlign) rows.push(_hdUiRow("Posi\xE7\xE3o da borda", { INSIDE: "Interna", OUTSIDE: "Externa", CENTER: "Centralizada" }[n.strokeAlign] || n.strokeAlign));
+        if (Array.isArray(n.dashPattern) && n.dashPattern.length > 0) rows.push(_hdUiRow("Estilo da borda", `Tracejada (${n.dashPattern.join(", ")})`));
+      }
+    }
+    if ("cornerRadius" in n) {
+      const smooth = typeof n.cornerSmoothing === "number" && n.cornerSmoothing > 0 ? ` \xB7 suaviza\xE7\xE3o ${Math.round(n.cornerSmoothing * 100)}%` : "";
+      if (typeof n.cornerRadius === "number" && n.cornerRadius > 0) {
+        const tok = await _hdUiBound(n, "topLeftRadius");
+        rows.push(_hdUiRow("Raio dos cantos", _hdUiTok(tok, _hdUiPx(n.cornerRadius)) + smooth, tok));
+      } else if (n.cornerRadius === figma.mixed) {
+        const cs = [["Sup. esq.", "topLeftRadius"], ["Sup. dir.", "topRightRadius"], ["Inf. dir.", "bottomRightRadius"], ["Inf. esq.", "bottomLeftRadius"]];
+        const parts = [];
+        let anyTok = false;
+        for (const [k, f] of cs) {
+          const tok = await _hdUiBound(n, f);
+          if (tok) anyTok = true;
+          parts.push(`${k} ${_hdUiTok(tok, _hdUiPx(n[f] || 0))}`);
+        }
+        rows.push(_hdUiRow("Raio dos cantos", parts.join("\n") + smooth, anyTok));
+      }
+    }
+    if ("effects" in n && Array.isArray(n.effects)) {
+      const vis = n.effects.filter((e) => e.visible !== false);
+      const styleName = vis.length ? await _hdUiStyleName("effectStyleId" in n ? n.effectStyleId : null) : null;
+      for (const [i, e] of vis.entries()) {
+        const vName = await _hdUiVarName(e.boundVariables && e.boundVariables.radius && e.boundVariables.radius.id);
+        const tok = styleName || vName;
+        if (e.type === "DROP_SHADOW" || e.type === "INNER_SHADOW") {
+          const kind = e.type === "DROP_SHADOW" ? "Externa" : "Interna";
+          const off = e.offset || { x: 0, y: 0 };
+          const val = `${kind} \xB7 X ${_hdUiPx(off.x)} \xB7 Y ${_hdUiPx(off.y)} \xB7 desfoque ${_hdUiPx(e.radius || 0)} \xB7 expans\xE3o ${_hdUiPx(e.spread || 0)} \xB7 ${_hdUiHexA(e.color || { r: 0, g: 0, b: 0, a: 1 })}`;
+          rows.push(_hdUiRow(vis.length > 1 ? `Sombra ${i + 1}` : "Sombra", _hdUiTok(tok, val), tok));
+        } else if (e.type === "LAYER_BLUR" || e.type === "BACKGROUND_BLUR") {
+          const val = `${e.type === "LAYER_BLUR" ? "De camada" : "De fundo"} \xB7 ${_hdUiPx(e.radius || 0)}`;
+          rows.push(_hdUiRow(vis.length > 1 ? `Desfoque ${i + 1}` : "Desfoque", _hdUiTok(tok, val), tok));
+        }
+      }
+    }
+    if (typeof n.opacity === "number" && n.opacity < 1) rows.push(_hdUiRow("Opacidade", `${Math.round(n.opacity * 100)}%`));
+    if (n.blendMode && n.blendMode !== "NORMAL" && n.blendMode !== "PASS_THROUGH") {
+      rows.push(_hdUiRow("Mistura", String(n.blendMode).toLowerCase().replace(/_/g, " ")));
+    }
+    return rows;
+  }
+  async function _hdUiTextRows(n) {
+    if (n.type !== "TEXT") return [];
+    const rows = [];
+    const m = figma.mixed;
+    const styleName = await _hdUiStyleName(n.textStyleId !== m ? n.textStyleId : null);
+    const sizeTok = await _hdUiBound(n, "fontSize");
+    const font = n.fontName !== m && n.fontName ? `${n.fontName.family} ${n.fontName.style}` : "V\xE1rias fontes";
+    const size = typeof n.fontSize === "number" ? _hdUiPx(n.fontSize) : "v\xE1rios tamanhos";
+    let lh = null;
+    if (n.lineHeight !== m && n.lineHeight) {
+      lh = n.lineHeight.unit === "AUTO" ? "autom\xE1tica" : n.lineHeight.unit === "PERCENT" ? `${Math.round(n.lineHeight.value * 10) / 10}%` : _hdUiPx(n.lineHeight.value);
+    }
+    let ls = null;
+    if (n.letterSpacing !== m && n.letterSpacing && n.letterSpacing.value !== 0) {
+      ls = n.letterSpacing.unit === "PERCENT" ? `${Math.round(n.letterSpacing.value * 100) / 100}%` : _hdUiPx(n.letterSpacing.value);
+    }
+    if (styleName) {
+      rows.push(_hdUiRow("Estilo de texto", `${styleName} \xB7 ${font} ${size}${lh ? ` / ${lh}` : ""}${ls ? ` \xB7 letras ${ls}` : ""}`, true));
+    } else {
+      rows.push(_hdUiRow("Fonte", font));
+      rows.push(_hdUiRow("Tamanho", _hdUiTok(sizeTok, size), sizeTok));
+      if (lh) rows.push(_hdUiRow("Altura de linha", lh));
+      if (ls) rows.push(_hdUiRow("Espa\xE7o entre letras", ls));
+    }
+    if (n.textAlignHorizontal) rows.push(_hdUiRow("Alinhamento do texto", { LEFT: "Esquerda", CENTER: "Centralizado", RIGHT: "Direita", JUSTIFIED: "Justificado" }[n.textAlignHorizontal] || n.textAlignHorizontal));
+    if (n.textAlignVertical && n.textAlignVertical !== "TOP") rows.push(_hdUiRow("Alinhamento vertical", { CENTER: "Centro", BOTTOM: "Base" }[n.textAlignVertical] || n.textAlignVertical));
+    if (n.textDecoration && n.textDecoration !== m && n.textDecoration !== "NONE") rows.push(_hdUiRow("Decora\xE7\xE3o", n.textDecoration === "UNDERLINE" ? "Sublinhado" : "Tachado"));
+    if (n.textCase && n.textCase !== m && n.textCase !== "ORIGINAL") {
+      rows.push(_hdUiRow("Caixa", { UPPER: "Mai\xFAsculas", LOWER: "Min\xFAsculas", TITLE: "T\xEDtulo", SMALL_CAPS: "Versalete", SMALL_CAPS_FORCED: "Versalete" }[n.textCase] || n.textCase));
+    }
+    if (n.textTruncation === "ENDING") {
+      rows.push(_hdUiRow("Truncamento", `Retic\xEAncias no fim${typeof n.maxLines === "number" ? ` \xB7 m\xE1x. ${n.maxLines} linha(s)` : ""}`));
+    }
+    if (n.fills === m) rows.push(_hdUiRow("Cor do texto", "Mista"));
+    else if (Array.isArray(n.fills)) rows.push(...await _hdUiPaintRows(n.fills, "Cor do texto", await _hdUiStyleName(n.fillStyleId)));
+    return rows;
+  }
+  async function _hdUiResolveName(id) {
+    if (!id || typeof id !== "string") return null;
+    try {
+      const t = await figma.getNodeByIdAsync(id);
+      return t ? t.name : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  async function _hdUiDefsOf(comp) {
+    if (!comp) return null;
+    try {
+      const holder = comp.parent && comp.parent.type === "COMPONENT_SET" ? comp.parent : comp;
+      return { defs: holder.componentPropertyDefinitions || null, set: holder.type === "COMPONENT_SET" ? holder : null };
+    } catch (e) {
+      return null;
+    }
+  }
+  async function _hdUiConfigItems(inst, mainComp) {
+    const out = [];
+    const cp = inst.componentProperties;
+    if (!cp) return out;
+    const info = await _hdUiSafe(() => _hdUiDefsOf(mainComp), null);
+    const defs = info && info.defs;
+    for (const [k, p] of Object.entries(cp)) {
+      const name = _hdUiCleanProp(k);
+      const def = defs && defs[k];
+      if (p.type === "VARIANT") {
+        if (!def || def.defaultValue !== p.value) out.push(`${name}: ${p.value}`);
+      } else if (p.type === "BOOLEAN") {
+        if (p.value === true) out.push(name);
+        else if (def && def.defaultValue === true) out.push(`${name}: desligado`);
+      } else if (p.type === "INSTANCE_SWAP") {
+        const nm = await _hdUiResolveName(p.value);
+        if (nm) out.push(`${name}: ${nm}`);
+      }
+    }
+    return out;
+  }
+  async function _hdUiVariantRows(root) {
+    const rows = [];
+    let holder = root;
+    if (root.type === "COMPONENT" && root.parent && root.parent.type === "COMPONENT_SET") holder = root.parent;
+    const defs = holder.componentPropertyDefinitions;
+    if (!defs) return rows;
+    if (holder.type === "COMPONENT_SET") {
+      rows.push(_hdUiRow("Combina\xE7\xF5es", `${holder.children.length} variante(s) no conjunto "${holder.name}"`));
+      if (root.type === "COMPONENT" && root.variantProperties) {
+        rows.push(_hdUiRow("Esta variante", Object.entries(root.variantProperties).map(([k, v]) => `${k}=${v}`).join(" \xB7 ")));
+      }
+    }
+    for (const [k, d] of Object.entries(defs).slice(0, _HD_UI_MAX_LINES)) {
+      const name = _hdUiCleanProp(k);
+      if (d.type === "VARIANT") {
+        rows.push(_hdUiRow(name, `${(d.variantOptions || []).join(" | ")}
+padr\xE3o: ${d.defaultValue}`));
+      } else if (d.type === "BOOLEAN") {
+        rows.push(_hdUiRow(name, `Liga/desliga \xB7 padr\xE3o: ${d.defaultValue ? "ligado" : "desligado"}`));
+      } else if (d.type === "TEXT") {
+        rows.push(_hdUiRow(name, "Texto edit\xE1vel"));
+      } else if (d.type === "INSTANCE_SWAP") {
+        const nm = await _hdUiResolveName(d.defaultValue);
+        rows.push(_hdUiRow(name, `Slot de componente${nm ? ` \xB7 padr\xE3o: ${nm}` : ""}`));
+      }
+    }
+    return rows;
+  }
+  async function _hdUiReactionLines(node, owner) {
+    const rs = node.reactions;
+    if (!Array.isArray(rs) || rs.length === 0) return [];
+    const out = [];
+    for (const r of rs) {
+      const trig = r.trigger && _HD_UI_TRIGGER_PT[r.trigger.type] || (r.trigger ? r.trigger.type : "Gatilho");
+      const actions = r.actions && r.actions.length ? r.actions : r.action ? [r.action] : [];
+      for (const a of actions) {
+        let act;
+        if (a.type === "NODE") {
+          const dest = a.destinationId ? await _hdUiResolveName(a.destinationId) : null;
+          act = `${_HD_UI_NAV_PT[a.navigation] || "Ir para"} ${dest ? `"${dest}"` : "(sem destino)"}`;
+          if (a.transition && a.transition.type) {
+            const tr = _HD_UI_TRANSITION_PT[a.transition.type] || a.transition.type;
+            const dur = typeof a.transition.duration === "number" ? ` ${Math.round(a.transition.duration)}ms` : "";
+            const eas = a.transition.easing && a.transition.easing.type ? ` ${String(a.transition.easing.type).toLowerCase().replace(/_/g, " ")}` : "";
+            act += ` (${tr}${dur}${eas})`;
+          }
+        } else if (a.type === "BACK") act = "Voltar";
+        else if (a.type === "CLOSE") act = "Fechar overlay";
+        else if (a.type === "URL") act = `Abrir URL ${a.url || ""}`;
+        else if (a.type === "SET_VARIABLE") act = "Definir vari\xE1vel";
+        else if (a.type === "SET_VARIABLE_MODE") act = "Trocar modo de vari\xE1vel";
+        else if (a.type === "CONDITIONAL") act = "A\xE7\xE3o condicional";
+        else act = String(a.type);
+        out.push({ owner, text: `${trig} \u2192 ${act}` });
+      }
+    }
+    return out;
+  }
+  async function _hdUiReferenceImage(root) {
+    if (!("exportAsync" in root) || _hdUiImageCount >= _HD_UI_IMG_MAX_CARDS) return null;
+    const w = root.width, h = root.height;
+    if (!(w > 0 && h > 0)) return null;
+    let dw = w, dh = h;
+    if (w < 120 && h < 120) {
+      dw = w * 2;
+      dh = h * 2;
+    }
+    const s = Math.min(1, _HD_UI_IMG_MAX_W / dw, _HD_UI_IMG_MAX_H / dh);
+    dw *= s;
+    dh *= s;
+    let px = Math.min(2400, Math.max(1, Math.round(dw * 2)));
+    if (px * (h / w) > 4096) px = Math.max(1, Math.floor(4096 * (w / h)));
+    const bytes = await root.exportAsync({ format: "PNG", constraint: { type: "WIDTH", value: px } });
+    _hdUiImageCount++;
+    const hash = figma.createImage(bytes).hash;
+    const holder = _hdCreateFrame("VERTICAL", 12, 0, { r: 0.97, g: 0.98, b: 0.99 });
+    holder.name = "Imagem de refer\xEAncia";
+    holder.cornerRadius = 8;
+    holder.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.92, b: 0.95 } }];
+    holder.strokeWeight = 1;
+    holder.counterAxisAlignItems = "CENTER";
+    const rect = figma.createRectangle();
+    rect.resize(Math.max(1, dw), Math.max(1, dh));
+    rect.fills = [{ type: "IMAGE", imageHash: hash, scaleMode: "FIT" }];
+    holder.appendChild(rect);
+    return holder;
+  }
+  async function _hdUiSummaryRows(item, root, main) {
+    const rows = [];
+    rows.push(_hdUiRow("Tipo", _HD_UI_TYPE_PT[root.type] || root.type));
+    if (root.type === "INSTANCE") {
+      if (main) {
+        const family = main.parent && main.parent.type === "COMPONENT_SET" ? main.parent.name : main.name;
+        const lib = _qsFindLibForKey(main.key) || item.matchedIn || null;
+        rows.push(_hdUiRow("Baseado em", lib ? `${family}
+${lib}` : `${family}
+Fora das libs DSC cadastradas`, !!lib));
+      }
+    } else if (root.type === "COMPONENT" || root.type === "COMPONENT_SET") {
+      const lib = _qsFindLibForKey(root.key);
+      rows.push(_hdUiRow("Baseado em", lib ? `Componente da lib
+${lib}` : "Componente novo, sem v\xEDnculo com a lib", !!lib));
+    } else {
+      rows.push(_hdUiRow("Baseado em", "Nenhum. Constru\xEDdo do zero, sem v\xEDnculo com a lib"));
+    }
+    if ("width" in root && typeof root.width === "number") rows.push(_hdUiRow("Tamanho", `${Math.round(root.width)} \xD7 ${Math.round(root.height)}px`));
+    const descSrc = root.type === "INSTANCE" ? main : root;
+    const desc = descSrc && typeof descSrc.description === "string" ? descSrc.description.trim() : "";
+    if (desc) rows.push(_hdUiRow("Descri\xE7\xE3o", desc.length > 400 ? desc.slice(0, 400) + "\u2026" : desc));
+    const links = descSrc && Array.isArray(descSrc.documentationLinks) ? descSrc.documentationLinks.map((l) => l.uri).filter(Boolean) : [];
+    if (links.length) rows.push(_hdUiRow("Documenta\xE7\xE3o", links.slice(0, 3).join("\n")));
+    return rows;
+  }
+  function _hdUiCustomizationRows(item) {
+    if (item.customizationsStatus === "evaluated" && Array.isArray(item.customizations)) {
+      if (item.customizations.length === 0) {
+        return [_hdUiRow("Resultado", "Nenhuma diferen\xE7a detectada nas propriedades avaliadas")];
+      }
+      const rows = item.customizations.slice(0, _HD_UI_MAX_LINES).map((c) => _hdUiRow(c.layer || "Camada", `${c.campo}: ${c.atual}
+Padr\xE3o da lib: ${c.padrao}`, true));
+      if (item.customizations.length > _HD_UI_MAX_LINES) rows.push(_hdUiRow("Outras", `+${item.customizations.length - _HD_UI_MAX_LINES} diferen\xE7a(s) n\xE3o listadas`));
+      return rows;
+    }
+    if (item.customizationsStatus === "not-evaluated") {
+      return [_hdUiRow("Resultado", "Diferen\xE7as n\xE3o avaliadas (leitura das altera\xE7\xF5es indispon\xEDvel neste item)")];
+    }
+    return [];
+  }
   async function _hdCollectUiComposition(root) {
     const out = [];
     async function walk(n, depth) {
       if (!n.children || depth > _HD_UI_COMP_MAX_DEPTH) return;
       for (const c of n.children) {
         if (out.length >= _HD_UI_COMP_MAX_NODES) return;
-        if (c.visible === false || _HD_UI_PRIMITIVE_TYPES.includes(c.type)) continue;
+        if (_HD_UI_PRIMITIVE_TYPES.includes(c.type)) continue;
+        let visibleRef = null;
+        try {
+          const ref = c.componentPropertyReferences;
+          if (ref && ref.visible) visibleRef = _hdUiCleanProp(ref.visible);
+        } catch (e) {
+        }
+        if (c.visible === false && !visibleRef) continue;
         let dscLib = null;
-        let dscLegacy = false;
+        let main = null;
         if (c.type === "INSTANCE") {
           try {
-            const main = await c.getMainComponentAsync();
-            if (main) {
-              dscLib = _qsFindLibForKey(main.key);
-              dscLegacy = !!dscLib && _qsIsLegacyLibName(dscLib);
-            }
+            main = await c.getMainComponentAsync();
+            if (main) dscLib = _qsFindLibForKey(main.key);
           } catch (e) {
           }
         }
-        let props = [];
-        try {
-          props = (await _qsExtractNodeProperties(c, QUICK_SPEC_CATEGORIES)).filter((p) => p.label !== "Componente");
-        } catch (e) {
+        const compact = true;
+        const rows = [];
+        rows.push(_hdUiRow("Tamanho", `${Math.round(c.width)} \xD7 ${Math.round(c.height)}px`));
+        if (visibleRef) rows.push(_hdUiRow("Visibilidade", `${c.visible === false ? "Oculto por padr\xE3o" : "Vis\xEDvel"}; controlado pela propriedade "${visibleRef}"`));
+        if (!dscLib) {
+          rows.push(...await _hdUiSafe(() => _hdUiLayoutRows(c, compact), []));
+          rows.push(...await _hdUiSafe(() => _hdUiAppearanceRows(c), []));
+          rows.push(...await _hdUiSafe(() => _hdUiTextRows(c), []));
         }
-        const text = c.type === "TEXT" && typeof c.characters === "string" ? c.characters.replace(/\s+/g, " ").trim().slice(0, 80) : "";
-        out.push({ name: c.name, type: c.type, depth, dscLib, dscLegacy, props, text });
+        let config = [];
+        if (c.type === "INSTANCE" && main) config = await _hdUiSafe(() => _hdUiConfigItems(c, main), []);
+        if (config.length) rows.push(_hdUiRow("Configura\xE7\xE3o", config.join(" \xB7 ")));
+        const reactions = await _hdUiSafe(() => _hdUiReactionLines(c, c.name), []);
+        out.push({ name: c.name, type: c.type, depth, dscLib, rows, reactions });
         if (!dscLib) await walk(c, depth + 1);
       }
     }
     await walk(root, 1);
     return out;
   }
+  function _hdUiAddGroup(card, title, subtitle, rows, highlight) {
+    if (!rows || rows.length === 0) return;
+    const box = highlight ? _hdCreateFrame("VERTICAL", 10, 6, { r: 1, g: 0.92, b: 0.75 }) : _hdCreateFrame("VERTICAL", 0, 4);
+    box.name = `Grupo/${title}`;
+    if (highlight) {
+      box.cornerRadius = 8;
+      box.strokes = [{ type: "SOLID", color: { r: 0.9, g: 0.7, b: 0.3 } }];
+      box.strokeWeight = 1;
+    }
+    card.appendChild(box);
+    _hdSetFillAndHug(box);
+    const tr = _hdCreateFrame("HORIZONTAL", 0, 8);
+    tr.counterAxisAlignItems = "CENTER";
+    box.appendChild(tr);
+    _hdSetFillAndHug(tr);
+    tr.appendChild(_hdCreateText(String(title).toUpperCase(), 11, "Bold", { r: 0.2, g: 0.25, b: 0.35 }));
+    if (subtitle) tr.appendChild(_hdCreateText(subtitle, 9, "Regular", { r: 0.5, g: 0.5, b: 0.5 }));
+    rows.forEach((r) => _hdAddUiPropRow(box, r.label, r.text, r.token, 11));
+  }
   async function _hdBuildUiItemCard(item, categoryTitle) {
-    const elCard = _hdCreateFrame("VERTICAL", 12, 8, { r: 1, g: 0.97, b: 0.91 });
+    const elCard = _hdCreateFrame("VERTICAL", 12, 14, { r: 1, g: 0.97, b: 0.91 });
     elCard.name = `[Token] ${item.name}`;
     elCard.cornerRadius = 12;
     elCard.strokes = [{ type: "SOLID", color: { r: 0.96, g: 0.85, b: 0.6 } }];
     elCard.strokeWeight = 1;
-    const head = _hdCreateFrame("HORIZONTAL", 0, 12);
-    head.counterAxisAlignItems = "CENTER";
+    const head = _hdCreateFrame("VERTICAL", 0, 2);
     elCard.appendChild(head);
     _hdSetFillAndHug(head);
-    if (item.preview) {
-      try {
-        const imageHash = figma.createImage(item.preview).hash;
-        const rect = figma.createRectangle();
-        rect.resize(32, 32);
-        rect.fills = [{ type: "IMAGE", imageHash, scaleMode: "FIT" }];
-        rect.cornerRadius = 4;
-        head.appendChild(rect);
-      } catch (e) {
-      }
-    }
-    const textCol = _hdCreateFrame("VERTICAL", 0, 2);
-    head.appendChild(textCol);
-    _hdSetFillAndHug(textCol);
-    const iName = _hdCreateText(item.name, 13, "Bold", { r: 0.1, g: 0.15, b: 0.25 });
+    const iName = _hdCreateText(item.name, 14, "Bold", { r: 0.1, g: 0.15, b: 0.25 });
     if (item.nodeId && figma.fileKey) {
       try {
         iName.hyperlink = {
@@ -900,52 +1380,87 @@
       } catch (e) {
       }
     }
-    textCol.appendChild(iName);
+    head.appendChild(iName);
     _hdSetFillAndHug(iName);
     const warn = _hdCreateText(`${categoryTitle} \xB7 Componente personalizado \u2014 precisa ser constru\xEDdo`, 10, "Bold", { r: 0.7, g: 0.4, b: 0 });
-    textCol.appendChild(warn);
+    head.appendChild(warn);
     _hdSetFillAndHug(warn);
-    const props = (item.properties || []).filter((p) => p && p.label);
-    if (props.length > 0) {
-      const propsCol = _hdCreateFrame("VERTICAL", 0, 4);
-      propsCol.name = "Propriedades";
-      elCard.appendChild(propsCol);
-      _hdSetFillAndHug(propsCol);
-      props.forEach((p) => {
-        const hasToken = _HD_UI_TOKENIZED_TYPES.includes(p.type) && !!(p.variableKey || p.styleKey || p.key);
-        _hdAddUiPropRow(propsCol, p.label, _hdFormatScanProp(p), hasToken, 11);
-      });
+    const root = item.nodeId ? await _hdUiSafe(() => figma.getNodeByIdAsync(item.nodeId), null) : null;
+    if (!root || root.removed) {
+      const props = (item.properties || []).filter((p) => p && p.label && p.type !== "variant" && p.type !== "layout");
+      _hdUiAddGroup(
+        elCard,
+        "Propriedades",
+        "N\xF3 n\xE3o encontrado no canvas; dados do \xFAltimo scan",
+        props.map((p) => _hdUiRow(p.label, _hdFormatScanProp(p), _HD_UI_TOKENIZED_TYPES.includes(p.type) && !!(p.variableKey || p.styleKey || p.key)))
+      );
+      return elCard;
     }
-    const root = item.nodeId ? await figma.getNodeByIdAsync(item.nodeId) : null;
-    if (root && !root.removed) {
-      const comp = await _hdCollectUiComposition(root);
-      if (comp.length > 0) {
-        const compTitle = _hdCreateText("COMPOSI\xC7\xC3O INTERNA", 10, "Bold", { r: 0.7, g: 0.4, b: 0 });
-        elCard.appendChild(compTitle);
-        _hdSetFillAndHug(compTitle);
-        for (const c of comp) {
-          const cNode = _hdCreateFrame("VERTICAL", 0, 2);
-          cNode.name = `[Interno] ${c.name}`;
-          cNode.paddingLeft = (c.depth - 1) * 16;
-          elCard.appendChild(cNode);
-          _hdSetFillAndHug(cNode);
-          const cHead = _hdCreateText(`${c.name} \xB7 ${c.type}`, 11, "Bold", { r: 0.1, g: 0.15, b: 0.25 });
-          cNode.appendChild(cHead);
-          _hdSetFillAndHug(cHead);
-          if (c.dscLib) {
-            const dsc = _hdCreateText(`Componente do DSC (${c.dscLib}) \u2014 reutilizar, n\xE3o construir${LEGACY_LIB_MIGRATION_HINT_ENABLED && c.dscLegacy ? " \xB7 lib legada, precisa migrar" : ""}`, 10, "Bold", { r: 0.1, g: 0.5, b: 0.25 });
-            cNode.appendChild(dsc);
-            _hdSetFillAndHug(dsc);
-          }
-          if (c.text) _hdAddUiPropRow(cNode, "Texto", `"${c.text}"`, false, 10);
-          c.props.forEach((p) => _hdAddUiPropRow(cNode, p.label, p.tokenName && p.tokenName !== p.value ? `${p.tokenName} \xB7 ${p.value}` : p.tokenName || p.value, !!p.tokenName, 10));
-        }
+    const main = root.type === "INSTANCE" ? await _hdUiSafe(() => root.getMainComponentAsync(), null) : null;
+    const img = await _hdUiSafe(() => _hdUiReferenceImage(root), null);
+    if (img) {
+      elCard.appendChild(img);
+      _hdSetFillAndHug(img);
+    }
+    _hdUiAddGroup(elCard, "Resumo", "O que \xE9", await _hdUiSafe(() => _hdUiSummaryRows(item, root, main), []));
+    _hdUiAddGroup(elCard, "Diferen\xE7as em rela\xE7\xE3o \xE0 lib", "O que foi alterado sobre o componente original", _hdUiCustomizationRows(item), true);
+    _hdUiAddGroup(elCard, "Layout", "Como se organiza", await _hdUiSafe(() => _hdUiLayoutRows(root, false), []));
+    _hdUiAddGroup(elCard, "Apar\xEAncia", "Como se parece", await _hdUiSafe(() => _hdUiAppearanceRows(root), []));
+    _hdUiAddGroup(elCard, "Texto", "Tipografia do item", await _hdUiSafe(() => _hdUiTextRows(root), []));
+    if (root.type === "COMPONENT" || root.type === "COMPONENT_SET") {
+      _hdUiAddGroup(elCard, "Estados e variantes", "Propriedades expostas e valores poss\xEDveis", await _hdUiSafe(() => _hdUiVariantRows(root), []));
+    }
+    const comp = await _hdUiSafe(() => _hdCollectUiComposition(root), []);
+    const reactionLines = [];
+    await _hdUiSafe(async () => {
+      if (root.type === "COMPONENT_SET") {
+        for (const v of root.children.slice(0, _HD_UI_VARIANT_SCAN_MAX)) reactionLines.push(...await _hdUiReactionLines(v, v.name));
+      } else {
+        reactionLines.push(...await _hdUiReactionLines(root, root.name));
       }
+    }, null);
+    comp.forEach((c) => reactionLines.push(...c.reactions));
+    const reactionRows = reactionLines.slice(0, _HD_UI_MAX_LINES).map((r) => _hdUiRow(r.owner, r.text));
+    if (reactionLines.length > _HD_UI_MAX_LINES) reactionRows.push(_hdUiRow("Outras", `+${reactionLines.length - _HD_UI_MAX_LINES} intera\xE7\xE3o(\xF5es) n\xE3o listadas`));
+    _hdUiAddGroup(elCard, "Intera\xE7\xF5es", "Prot\xF3tipo: o que acontece e quando", reactionRows);
+    if (comp.length > 0) {
+      const box = _hdCreateFrame("VERTICAL", 0, 8);
+      box.name = "Grupo/Composi\xE7\xE3o interna";
+      elCard.appendChild(box);
+      _hdSetFillAndHug(box);
+      const tr = _hdCreateFrame("HORIZONTAL", 0, 8);
+      tr.counterAxisAlignItems = "CENTER";
+      box.appendChild(tr);
+      _hdSetFillAndHug(tr);
+      tr.appendChild(_hdCreateText("COMPOSI\xC7\xC3O INTERNA", 11, "Bold", { r: 0.2, g: 0.25, b: 0.35 }));
+      tr.appendChild(_hdCreateText("De que \xE9 feito, na ordem em que aparecem", 9, "Regular", { r: 0.5, g: 0.5, b: 0.5 }));
+      for (const c of comp) {
+        const cNode = _hdCreateFrame("VERTICAL", 0, 2);
+        cNode.name = `[Interno] ${c.name}`;
+        cNode.paddingLeft = (c.depth - 1) * 16;
+        box.appendChild(cNode);
+        _hdSetFillAndHug(cNode);
+        const cHead = _hdCreateText(`${c.name} \xB7 ${_HD_UI_TYPE_PT[c.type] || c.type}`, 11, "Bold", { r: 0.1, g: 0.15, b: 0.25 });
+        cNode.appendChild(cHead);
+        _hdSetFillAndHug(cHead);
+        if (c.dscLib) {
+          const dsc = _hdCreateText(`Componente do DSC (${c.dscLib}) \u2014 reutilizar, n\xE3o construir`, 10, "Bold", { r: 0.1, g: 0.5, b: 0.25 });
+          cNode.appendChild(dsc);
+          _hdSetFillAndHug(dsc);
+        }
+        c.rows.forEach((r) => _hdAddUiPropRow(cNode, r.label, r.text, r.token, 10));
+      }
+    }
+    const cfg = root.type === "INSTANCE" && main ? await _hdUiSafe(() => _hdUiConfigItems(root, main), []) : [];
+    if (cfg.length > 0) {
+      _hdUiAddGroup(elCard, "Configura\xE7\xE3o do componente", "S\xF3 o que est\xE1 ligado ou fora do padr\xE3o", [_hdUiRow("Op\xE7\xF5es", cfg.join(" \xB7 "))]);
     }
     return elCard;
   }
   async function _hdRebuildUiBoard(data) {
     if (data.setup && data.setup.componentes === false) return null;
+    _hdUiImageCount = 0;
+    _hdUiVarCache.clear();
     const _cats = [
       { title: "Componentes", type: "components" },
       { title: "\xCDcones", type: "icons" },
@@ -5917,11 +6432,6 @@
       }
     }
     return found ? found.name : null;
-  }
-  function _qsIsLegacyLibName(libName) {
-    if (!libName || !_refSkeletonCache) return false;
-    const libs = Array.isArray(_refSkeletonCache) ? _refSkeletonCache : [_refSkeletonCache];
-    return libs.some((lib) => lib && lib.name === libName && lib.tier === "legacy");
   }
   var QUICK_SPEC_CATEGORIES = ["dimensions", "spacing", "fill", "border", "radius", "effect", "typography", "component"];
   async function _qsExtractNodeProperties(n, categories) {

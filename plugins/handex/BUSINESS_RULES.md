@@ -440,6 +440,15 @@ Todos os nós gerados pelo plugin são criados com `node.locked = true`:
 - **Dots de conformidade por propriedade foram removidos** — a acurácia de conformidade é responsabilidade do designer e não é informação acionável para o dev
 - O badge de status do componente (DSC / AJUSTE / FORA) permanece visível no header do card do elemento, mas apenas quando a auditoria está ativa (`data.isAudit = true`)
 
+**Card User Interface — redesenho "dev de UI" (2026-10-01):** o card deixou de listar `item.properties` (foto do scan) e passou a **ler o nó marcado direto do canvas** (só `isMarkedCustom`, sem `findAll`, tetos: profundidade 4, 40 nós, 12 imagens por geração; cada leitura protegida — falha omite o grupo). Grupos fixos, vazios omitidos, na ordem "O que é? → Como se organiza? → Como se parece? → O que muda? → De que é feito?":
+1. Cabeçalho (nome com link, categoria, "precisa ser construído") e **imagem de referência** do item (PNG, proporcional, máx. 848×420, nunca corta).
+2. **Resumo:** tipo, "Baseado em" (família + lib, vindos do skeleton/Plugin API), tamanho, descrição/links de documentação do componente.
+3. **Diferenças em relação à lib** (destaque; só instância DSC com `customizationsStatus`): camada, campo, valor atual e padrão da lib. Dado do scan (Fase 5b) — re-escanear para atualizar.
+4. **Layout** (direção, distribuição, alinhamento, espaço entre itens/linhas, espaço interno agrupado "16px nos 4 lados", dimensionamento Fixa/Ajusta/Preenche, limites mín./máx., posição absoluta, overflow, rotação), **Aparência** (todos os fills/strokes incl. gradiente/imagem, espessura/posição/estilo da borda, raio por canto, sombras completas, desfoque, opacidade, mistura), **Texto** (estilo/fonte/tamanho/altura de linha/letras/alinhamento/decoração/caixa/truncamento/cor). Onde há token: `token · valor`.
+5. **Estados e variantes** (só COMPONENT/COMPONENT_SET): propriedades, opções e padrão; **Interações** de protótipo em linguagem simples (gatilho → ação/destino/transição); **Composição interna** (mesmo formato por filho; instância DSC continua "reutilizar, não construir"; filhos ocultos por propriedade booleana aparecem com a propriedade que os controla); **Configuração do componente** no fim, em linha única, só o que está ligado ou fora do padrão (nunca ids de nó: slots de troca mostram o NOME do componente).
+- Texto de exemplo (`characters`) **não** entra: é conteúdo, não especificação.
+- Decisão de produto: `_qsExtractNodeProperties` (Spec Rápida) não foi alterada — o card tem leitor próprio (`_hdUi*`, `code.js`).
+
 ---
 
 ### 2.9 Limpar Todos os Dados
