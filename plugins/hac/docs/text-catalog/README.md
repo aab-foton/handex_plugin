@@ -7,6 +7,13 @@ conteúdo.
 
 ## Arquivos
 
+- `google-sheets-revisao-design.tsv`: **planilha principal para designers**.
+  Tem linguagem editorial, textos de alta confiança e nenhuma quebra de
+  linha interna. Importe usando o separador **Tabulação**.
+- `google-sheets-repeticoes.tsv`: apoio para unificar textos repetidos.
+- `google-sheets-triagem-tecnica.tsv`: fragmentos ambíguos, logs e
+  configurações. Destinada a produto/desenvolvimento, não à revisão de
+  redação pelos designers.
 - `text-catalog.csv`: tabela principal, pronta para abrir no Excel. Usa UTF-8
   com BOM e `;` como separador, adequado ao locale pt-BR.
 - `text-catalog.json`: a mesma base em formato estruturado, com totais por
@@ -19,6 +26,22 @@ Regere as três saídas com:
 ```bash
 npm run texts:catalog
 ```
+
+## Importação no Google Sheets
+
+1. Importe `google-sheets-revisao-design.tsv`.
+2. Em **Tipo de separador**, escolha **Tabulação**. Normalmente o Sheets
+   detecta o formato automaticamente.
+3. Mantenha a codificação UTF-8.
+4. Congele a primeira linha e ative um filtro.
+5. Os designers devem trabalhar principalmente em `Texto proposto`,
+   `Status da revisão` e `Observações do designer`.
+
+Valores sugeridos para `Status da revisão`: `A revisar`, `Alterar`,
+`Aprovado` e `Não se aplica`.
+
+O símbolo `⏎` dentro de uma célula representa uma quebra de linha do
+texto original. Ele é visual, portanto não quebra a linha durante a importação.
 
 ## Como ler a tabela
 

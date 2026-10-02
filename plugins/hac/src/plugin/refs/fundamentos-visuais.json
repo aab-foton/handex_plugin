@@ -2,7 +2,7 @@
   "meta": {
     "libraryName": "Fundamentos Visuais",
     "figmaFileKey": "nbv8CUA2nbukjSkhK44kgQ",
-    "exportedAt": "2026-09-30T14:18:26.558Z",
+    "exportedAt": "2026-10-02T19:49:04.180Z",
     "generator": "fetch-design-refs.cjs (hac)",
     "warnings": [
       "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
@@ -60,18 +60,18 @@
         "value": "#663a00"
       },
       {
-        "key": "ba19747c6d360cc5350ea33236c9dbbcf03c9430",
-        "name": "color/bg/highlight/1 (primary 10)",
-        "resolvedType": "COLOR",
-        "collection": "DSC",
-        "value": "#e5f2fc"
-      },
-      {
         "key": "4ba04e30cbb519fd60f78e5381e39f797a05398f",
         "name": "color/bg/accent/6 (secondary 110)",
         "resolvedType": "COLOR",
         "collection": "DSC",
         "value": "#a65e00"
+      },
+      {
+        "key": "ba19747c6d360cc5350ea33236c9dbbcf03c9430",
+        "name": "color/bg/highlight/1 (primary 10)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#e5f2fc"
       },
       {
         "key": "880572adeda4c06ca57b1703bac3a77a84121845",
@@ -613,18 +613,18 @@
         "value": "#ffffff"
       },
       {
-        "key": "cea130a8d6225db87ad3c323b11188bdee0a14c3",
-        "name": "color/border/warning/2 (attention 110)",
-        "resolvedType": "COLOR",
-        "collection": "DSC",
-        "value": "#977203"
-      },
-      {
         "key": "424e823e97ce3eb7469469703519980987fedcbd",
         "name": "color/border/success/1 (positive 90)",
         "resolvedType": "COLOR",
         "collection": "DSC",
         "value": "#127527"
+      },
+      {
+        "key": "cea130a8d6225db87ad3c323b11188bdee0a14c3",
+        "name": "color/border/warning/2 (attention 110)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "value": "#977203"
       },
       {
         "key": "c0554ea64846bfc3d3be3de64520287c06bfdcb4",
@@ -1271,18 +1271,18 @@
         "value": 1
       },
       {
-        "key": "86aeacfc4d60bddef2d53469cdce98427d8cda94",
-        "name": "border/width/thin",
-        "resolvedType": "FLOAT",
-        "collection": "DSC",
-        "value": 2
-      },
-      {
         "key": "983ded98ae2ef636d8adb1e3d53fbb4af9da84d5",
         "name": "border/radius/none",
         "resolvedType": "FLOAT",
         "collection": "DSC",
         "value": null
+      },
+      {
+        "key": "86aeacfc4d60bddef2d53469cdce98427d8cda94",
+        "name": "border/width/thin",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 2
       },
       {
         "key": "d705b6181c584aedf4e6cc8d2f7d695d87a1e48a",
@@ -1579,6 +1579,13 @@
         "value": 1
       },
       {
+        "key": "1732ec74322f89d7c2f2761cec03db041e3c8d00",
+        "name": "shadow/spread/0",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": null
+      },
+      {
         "key": "a0599faf9b6f8f9efb53961f1d64f08a01c9e32b",
         "name": "shadow/blur/2",
         "resolvedType": "FLOAT",
@@ -1586,11 +1593,11 @@
         "value": 2
       },
       {
-        "key": "1732ec74322f89d7c2f2761cec03db041e3c8d00",
-        "name": "shadow/spread/0",
+        "key": "5d9bcb90c2ba8eeae632e0739ea0cee516fdc39c",
+        "name": "shadow/y/2",
         "resolvedType": "FLOAT",
         "collection": "DSC",
-        "value": null
+        "value": 2
       },
       {
         "key": "5990db89bc4ec9867de67eb0edd7545f0b1ce774",
@@ -1607,15 +1614,8 @@
         "value": 1
       },
       {
-        "key": "5d9bcb90c2ba8eeae632e0739ea0cee516fdc39c",
-        "name": "shadow/y/2",
-        "resolvedType": "FLOAT",
-        "collection": "DSC",
-        "value": 2
-      },
-      {
-        "key": "9be3095c2f46715738b4132395219aa60bcff10c",
-        "name": "shadow/blur/4",
+        "key": "3d6fa4838ce2ed9593edc2e5e3f419a1acb69b8c",
+        "name": "shadow/y/4",
         "resolvedType": "FLOAT",
         "collection": "DSC",
         "value": 4
@@ -1628,8 +1628,8 @@
         "value": 2
       },
       {
-        "key": "3d6fa4838ce2ed9593edc2e5e3f419a1acb69b8c",
-        "name": "shadow/y/4",
+        "key": "9be3095c2f46715738b4132395219aa60bcff10c",
+        "name": "shadow/blur/4",
         "resolvedType": "FLOAT",
         "collection": "DSC",
         "value": 4
@@ -1656,18 +1656,18 @@
         "value": 6
       },
       {
-        "key": "50dd310e9c69e36606fbd2e92480c937247edea5",
-        "name": "shadow/y/8",
-        "resolvedType": "FLOAT",
-        "collection": "DSC",
-        "value": 8
-      },
-      {
         "key": "0bf2c0c6be4ba5c8968c3f851d713022cd786f7e",
         "name": "shadow/spread/4",
         "resolvedType": "FLOAT",
         "collection": "DSC",
         "value": 4
+      },
+      {
+        "key": "50dd310e9c69e36606fbd2e92480c937247edea5",
+        "name": "shadow/y/8",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "value": 8
       },
       {
         "key": "22168fecd6aef0e1cb4f111179615bf5fe02f6d7",

@@ -4,7 +4,7 @@
     "slug": "design-acessivel-mobile",
     "libraryName": "Design Acessível (mobile)",
     "fileKey": "HhriLSpKnCB2dHhyiU16iB",
-    "generatedAt": "2026-10-01T21:51:24.291Z",
+    "generatedAt": "2026-10-02T19:50:40.621Z",
     "generator": "fetch-component-properties.cjs",
     "deepScan": true,
     "discoverySignature": "95178d90b7d71421262d6d2ffcf1b33c2e4a3a000c0697ef38e3c76c31dd4eb8",
@@ -35,9 +35,7 @@
       "components[].wrapperVariants": "array — aditivo (2026-10-01), presente só nos sets \"Box specs leitor de tela\": por variante filha {nodeId, name, key, instances:[{name, componentId, properties:[{rawKey,name,syncId,type,value}]}]} — árvore de INSTANCEs diretas (Conector + conteúdo) com os valores ATUAIS das properties.",
       "warnings": "lista de avisos não fatais — JSON pode estar parcial se não vazio (ver counts.failed)"
     },
-    "warnings": [
-      "Entrada do component set mobile \".[hac mob base]  Elementos e imagens\" (nodeId 10206:2177) PRESERVADA do scan de 2026-09-30T14:05:31Z, de propósito: o scan de 2026-10-01 trouxe mudanças reais na lib mobile (2 componentes novos, sub-variantes de Leitor de Tela renomeadas) e a entrega que introduziu o perfil web não podia alterar o comportamento mobile. A próxima execução de refresh-dsc-refs.yml (--deep-scan --reset) atualiza esta entrada via PR revisável."
-    ]
+    "warnings": []
   },
   "components": [
     {
@@ -345,7 +343,7 @@
               "name": "Letra",
               "syncId": "10766:2",
               "type": "TEXT",
-              "value": "A"
+              "value": "1"
             }
           ],
           "toggles": []
@@ -362,7 +360,7 @@
               "name": "Letra",
               "syncId": "10766:2",
               "type": "TEXT",
-              "value": "A"
+              "value": "1"
             }
           ],
           "toggles": []
@@ -379,7 +377,7 @@
               "name": "Letra",
               "syncId": "10766:2",
               "type": "TEXT",
-              "value": "A"
+              "value": "1"
             }
           ],
           "toggles": []
@@ -396,7 +394,7 @@
               "name": "Letra",
               "syncId": "10766:2",
               "type": "TEXT",
-              "value": "A"
+              "value": "1"
             }
           ],
           "toggles": []
@@ -760,7 +758,7 @@
               "name": "Letra",
               "syncId": "10766:2",
               "type": "TEXT",
-              "value": "A"
+              "value": "1"
             }
           ],
           "toggles": []
@@ -818,7 +816,7 @@
               "name": "Letra",
               "syncId": "10766:2",
               "type": "TEXT",
-              "value": "A"
+              "value": "1"
             }
           ],
           "toggles": []
@@ -876,7 +874,7 @@
               "name": "Letra",
               "syncId": "10766:2",
               "type": "TEXT",
-              "value": "A"
+              "value": "1"
             }
           ],
           "toggles": []
@@ -934,7 +932,7 @@
               "name": "Letra",
               "syncId": "10766:2",
               "type": "TEXT",
-              "value": "A"
+              "value": "1"
             }
           ],
           "toggles": []
@@ -992,7 +990,7 @@
               "name": "Letra",
               "syncId": "10766:2",
               "type": "TEXT",
-              "value": "A"
+              "value": "1"
             }
           ],
           "toggles": []
@@ -1407,13 +1405,14 @@
             "Input Stepper",
             "Input / Text Field Form",
             "Input / Text Field Single",
+            "Link",
             "List Accordion",
-            "List Footer",
             "List Item",
             "List Item Funds",
             "List Item Transaction",
             "Loading Animation",
             "Menu",
+            "Page Controler",
             "Popover",
             "Product Card",
             "Progress",
@@ -1422,7 +1421,7 @@
             "Segmented Button",
             "Selectable Media",
             "Sheet",
-            "Shimmer",
+            "Skeleton Load / Shimmer",
             "Slider",
             "Snackbar",
             "Spinner",
@@ -1438,8 +1437,7 @@
             "Top App Bar",
             "Value Section",
             "Wheel Picker",
-            "Imagem",
-            "Page Controler"
+            "Imagem"
           ]
         }
       ],
@@ -1720,7 +1718,7 @@
           "variantName": "Variante=Componente, Componente=Badge",
           "variantId": "10206:2126",
           "nestedInstanceName": ".Badge",
-          "nestedInstanceId": "10206:1942",
+          "nestedInstanceId": "11113:4912",
           "nestedComponentId": "10129:342",
           "properties": [
             {
@@ -1753,22 +1751,29 @@
           "variantName": "Variante=Componente, Componente=Badge Notification",
           "variantId": "10206:2144",
           "nestedInstanceName": ".Badge Notification",
-          "nestedInstanceId": "10206:1929",
+          "nestedInstanceId": "11113:4926",
           "nestedComponentId": "10129:314",
           "properties": [
             {
-              "rawKey": "Observações#10204:12",
+              "rawKey": "Observações#11113:1",
               "name": "Observações",
-              "syncId": "10204:12",
+              "syncId": "11113:1",
               "type": "BOOLEAN",
               "value": true
             },
             {
-              "rawKey": "Nome Acessível#10204:11",
+              "rawKey": "Nome Acessível#11113:0",
               "name": "Nome Acessível",
-              "syncId": "10204:11",
+              "syncId": "11113:0",
               "type": "BOOLEAN",
               "value": true
+            },
+            {
+              "rawKey": "Leitor de Tela",
+              "name": "Leitor de Tela",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "Standard 9 to 999"
             }
           ],
           "toggles": [
@@ -1780,21 +1785,59 @@
               "name": "Nome Acessível",
               "value": true
             }
-          ]
+          ],
+          "screenReaderVariants": {
+            "setName": ".Badge Notification",
+            "setId": "11113:4874",
+            "subModeProperty": "Leitor de Tela",
+            "variants": [
+              {
+                "variantName": "Leitor de Tela=Standard 9 to 999",
+                "variantId": "10129:314",
+                "activeToggles": [
+                  "Nome Acessível",
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=Standard 999+",
+                "variantId": "11113:4875",
+                "activeToggles": [
+                  "Nome Acessível",
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=Small",
+                "variantId": "11113:4888",
+                "activeToggles": [
+                  "Nome Acessível",
+                  "Observações"
+                ]
+              }
+            ]
+          }
         },
         {
           "variantName": "Variante=Componente, Componente=Badge Text",
           "variantId": "10206:2130",
           "nestedInstanceName": ".Badge Text",
-          "nestedInstanceId": "10206:1919",
+          "nestedInstanceId": "11113:4940",
           "nestedComponentId": "10129:328",
           "properties": [
             {
-              "rawKey": "Observações#10204:13",
+              "rawKey": "Observações#11113:2",
               "name": "Observações",
-              "syncId": "10204:13",
+              "syncId": "11113:2",
               "type": "BOOLEAN",
               "value": true
+            },
+            {
+              "rawKey": "Leitor de Tela",
+              "name": "Leitor de Tela",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "Baseline"
             }
           ],
           "toggles": [
@@ -1802,7 +1845,28 @@
               "name": "Observações",
               "value": true
             }
-          ]
+          ],
+          "screenReaderVariants": {
+            "setName": ".Badge Text",
+            "setId": "11113:4901",
+            "subModeProperty": "Leitor de Tela",
+            "variants": [
+              {
+                "variantName": "Leitor de Tela=Baseline",
+                "variantId": "10129:328",
+                "activeToggles": [
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=Trigger Attached",
+                "variantId": "11113:4902",
+                "activeToggles": [
+                  "Observações"
+                ]
+              }
+            ]
+          }
         },
         {
           "variantName": "Variante=Componente, Componente=Button",
@@ -2289,7 +2353,7 @@
               "name": "Leitor de Tela",
               "syncId": null,
               "type": "VARIANT",
-              "value": "With Label"
+              "value": "Checkbox With Label"
             }
           ],
           "toggles": [
@@ -2308,7 +2372,7 @@
             "subModeProperty": "Leitor de Tela",
             "variants": [
               {
-                "variantName": "Leitor de Tela=With Label",
+                "variantName": "Leitor de Tela=Checkbox With Label",
                 "variantId": "10160:1456",
                 "activeToggles": [
                   "Observações"
@@ -2714,11 +2778,18 @@
           "nestedComponentId": "10181:2807",
           "properties": [
             {
-              "rawKey": "Observações#10204:72",
+              "rawKey": "Observações#11055:16",
               "name": "Observações",
-              "syncId": "10204:72",
+              "syncId": "11055:16",
               "type": "BOOLEAN",
               "value": true
+            },
+            {
+              "rawKey": "Leitor de Tela",
+              "name": "Leitor de Tela",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "Baseline"
             }
           ],
           "toggles": [
@@ -2726,7 +2797,35 @@
               "name": "Observações",
               "value": true
             }
-          ]
+          ],
+          "screenReaderVariants": {
+            "setName": ".Icon Button Text",
+            "setId": "11055:3861",
+            "subModeProperty": "Leitor de Tela",
+            "variants": [
+              {
+                "variantName": "Leitor de Tela=Baseline",
+                "variantId": "10181:2807",
+                "activeToggles": [
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=Loading",
+                "variantId": "11055:3862",
+                "activeToggles": [
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=Disabled",
+                "variantId": "11055:3872",
+                "activeToggles": [
+                  "Observações"
+                ]
+              }
+            ]
+          }
         },
         {
           "variantName": "Variante=Componente, Componente=Input Chat",
@@ -2747,7 +2846,7 @@
               "name": "Leitor de Tela",
               "syncId": null,
               "type": "VARIANT",
-              "value": "Default"
+              "value": "Baseline"
             }
           ],
           "toggles": [
@@ -2762,7 +2861,7 @@
             "subModeProperty": "Leitor de Tela",
             "variants": [
               {
-                "variantName": "Leitor de Tela=Default",
+                "variantName": "Leitor de Tela=Baseline",
                 "variantId": "10181:2811",
                 "activeToggles": [
                   "Observações"
@@ -2783,8 +2882,15 @@
                 ]
               },
               {
-                "variantName": "Leitor de Tela=Document Attachment",
+                "variantName": "Leitor de Tela=Attachment Document",
                 "variantId": "10181:2808",
+                "activeToggles": [
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=Attachment Button",
+                "variantId": "11055:3892",
                 "activeToggles": [
                   "Observações"
                 ]
@@ -2833,14 +2939,14 @@
                 ]
               },
               {
-                "variantName": "Leitor de Tela=Multiple Lines",
+                "variantName": "Leitor de Tela=Disabled",
                 "variantId": "10181:2859",
                 "activeToggles": [
                   "Observações"
                 ]
               },
               {
-                "variantName": "Leitor de Tela=On Error",
+                "variantName": "Leitor de Tela=Error",
                 "variantId": "10181:2858",
                 "activeToggles": [
                   "Observações"
@@ -2890,7 +2996,7 @@
                 ]
               },
               {
-                "variantName": "Leitor de Tela=On Error",
+                "variantName": "Leitor de Tela=Error",
                 "variantId": "10188:7628",
                 "activeToggles": [
                   "Observações"
@@ -2904,43 +3010,29 @@
                 ]
               },
               {
-                "variantName": "Leitor de Tela=Dropdown",
+                "variantName": "Leitor de Tela=Type Select",
                 "variantId": "10188:7622",
                 "activeToggles": [
                   "Observações"
                 ]
               },
               {
-                "variantName": "Leitor de Tela=Icon",
+                "variantName": "Leitor de Tela=Type Number",
                 "variantId": "10188:7624",
                 "activeToggles": [
                   "Observações"
                 ]
               },
               {
-                "variantName": "Leitor de Tela=Selector",
+                "variantName": "Leitor de Tela=With Expansion",
                 "variantId": "10188:7619",
                 "activeToggles": [
                   "Observações"
                 ]
               },
               {
-                "variantName": "Leitor de Tela=Search",
+                "variantName": "Leitor de Tela=Type Search",
                 "variantId": "10188:7627",
-                "activeToggles": [
-                  "Observações"
-                ]
-              },
-              {
-                "variantName": "Leitor de Tela=Show e Hide Password",
-                "variantId": "10188:7626",
-                "activeToggles": [
-                  "Observações"
-                ]
-              },
-              {
-                "variantName": "Leitor de Tela=Date Picker",
-                "variantId": "10188:7621",
                 "activeToggles": [
                   "Observações"
                 ]
@@ -2953,7 +3045,7 @@
                 ]
               },
               {
-                "variantName": "Leitor de Tela=Info",
+                "variantName": "Leitor de Tela=Type Password",
                 "variantId": "10683:3788",
                 "activeToggles": [
                   "Observações"
@@ -2981,7 +3073,7 @@
               "name": "Leitor de Tela",
               "syncId": null,
               "type": "VARIANT",
-              "value": "Default"
+              "value": "Baseline"
             }
           ],
           "toggles": [
@@ -2996,14 +3088,14 @@
             "subModeProperty": "Leitor de Tela",
             "variants": [
               {
-                "variantName": "Leitor de Tela=Default",
+                "variantName": "Leitor de Tela=Baseline",
                 "variantId": "10181:2903",
                 "activeToggles": [
                   "Observações"
                 ]
               },
               {
-                "variantName": "Leitor de Tela=Disabled",
+                "variantName": "Leitor de Tela=With Feedback",
                 "variantId": "10181:2901",
                 "activeToggles": [
                   "Observações"
@@ -3012,6 +3104,13 @@
               {
                 "variantName": "Leitor de Tela=Read Only",
                 "variantId": "10181:2902",
+                "activeToggles": [
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=Disabled",
+                "variantId": "11055:3902",
                 "activeToggles": [
                   "Observações"
                 ]
@@ -3038,7 +3137,7 @@
               "name": "Leitor de Tela",
               "syncId": null,
               "type": "VARIANT",
-              "value": "Default"
+              "value": "Numeric"
             }
           ],
           "toggles": [
@@ -3053,15 +3152,29 @@
             "subModeProperty": "Leitor de Tela",
             "variants": [
               {
-                "variantName": "Leitor de Tela=Default",
+                "variantName": "Leitor de Tela=Numeric",
                 "variantId": "10181:2940",
                 "activeToggles": [
                   "Observações"
                 ]
               },
               {
-                "variantName": "Leitor de Tela=On Error",
+                "variantName": "Leitor de Tela=Token",
                 "variantId": "10181:2939",
+                "activeToggles": [
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=Alphanumeric",
+                "variantId": "11055:3914",
+                "activeToggles": [
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=Error",
+                "variantId": "11056:3924",
                 "activeToggles": [
                   "Observações"
                 ]
@@ -3077,11 +3190,18 @@
           "nestedComponentId": "10181:2970",
           "properties": [
             {
-              "rawKey": "Observações#10204:115",
+              "rawKey": "Observações#11056:17",
               "name": "Observações",
-              "syncId": "10204:115",
+              "syncId": "11056:17",
               "type": "BOOLEAN",
               "value": true
+            },
+            {
+              "rawKey": "Leitor de Tela",
+              "name": "Leitor de Tela",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "Baseline"
             }
           ],
           "toggles": [
@@ -3089,7 +3209,28 @@
               "name": "Observações",
               "value": true
             }
-          ]
+          ],
+          "screenReaderVariants": {
+            "setName": ".Input Slider",
+            "setId": "11056:3934",
+            "subModeProperty": "Leitor de Tela",
+            "variants": [
+              {
+                "variantName": "Leitor de Tela=Baseline",
+                "variantId": "10181:2970",
+                "activeToggles": [
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=With Field",
+                "variantId": "11056:3935",
+                "activeToggles": [
+                  "Observações"
+                ]
+              }
+            ]
+          }
         },
         {
           "variantName": "Variante=Componente, Componente=Input Stepper",
@@ -3099,30 +3240,47 @@
           "nestedComponentId": "10181:2985",
           "properties": [
             {
-              "rawKey": "Nome Acessível#10204:117",
-              "name": "Nome Acessível",
-              "syncId": "10204:117",
+              "rawKey": "Observações#11057:19",
+              "name": "Observações",
+              "syncId": "11057:19",
               "type": "BOOLEAN",
               "value": true
             },
             {
-              "rawKey": "Observações#10204:120",
-              "name": "Observações",
-              "syncId": "10204:120",
-              "type": "BOOLEAN",
-              "value": true
+              "rawKey": "Leitor de Tela",
+              "name": "Leitor de Tela",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "Field"
             }
           ],
           "toggles": [
             {
-              "name": "Nome Acessível",
-              "value": true
-            },
-            {
               "name": "Observações",
               "value": true
             }
-          ]
+          ],
+          "screenReaderVariants": {
+            "setName": ".Input Stepper",
+            "setId": "11057:3945",
+            "subModeProperty": "Leitor de Tela",
+            "variants": [
+              {
+                "variantName": "Leitor de Tela=Field",
+                "variantId": "10181:2985",
+                "activeToggles": [
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=Feedback",
+                "variantId": "11057:3946",
+                "activeToggles": [
+                  "Observações"
+                ]
+              }
+            ]
+          }
         },
         {
           "variantName": "Variante=Componente, Componente=List Accordion",
@@ -3150,7 +3308,7 @@
               "name": "Leitor de Tela",
               "syncId": null,
               "type": "VARIANT",
-              "value": "Default"
+              "value": "Baseline"
             }
           ],
           "toggles": [
@@ -3169,7 +3327,7 @@
             "subModeProperty": "Leitor de Tela",
             "variants": [
               {
-                "variantName": "Leitor de Tela=Default",
+                "variantName": "Leitor de Tela=Baseline",
                 "variantId": "10181:3028",
                 "activeToggles": [
                   "Observações"
@@ -3192,46 +3350,6 @@
               }
             ]
           }
-        },
-        {
-          "variantName": "Variante=Componente, Componente=List Footer",
-          "variantId": "10206:2123",
-          "nestedInstanceName": ".List Footer",
-          "nestedInstanceId": "10206:1616",
-          "nestedComponentId": "10181:6245",
-          "properties": [
-            {
-              "rawKey": "Nome Acessível#10204:133",
-              "name": "Nome Acessível",
-              "syncId": "10204:133",
-              "type": "BOOLEAN",
-              "value": true
-            },
-            {
-              "rawKey": "Observações#10204:130",
-              "name": "Observações",
-              "syncId": "10204:130",
-              "type": "BOOLEAN",
-              "value": true
-            },
-            {
-              "rawKey": "Leitor de Tela",
-              "name": "Leitor de Tela",
-              "syncId": null,
-              "type": "VARIANT",
-              "value": "Both Labels"
-            }
-          ],
-          "toggles": [
-            {
-              "name": "Nome Acessível",
-              "value": true
-            },
-            {
-              "name": "Observações",
-              "value": true
-            }
-          ]
         },
         {
           "variantName": "Variante=Componente, Componente=List Item",
@@ -3259,7 +3377,7 @@
               "name": "Leitor de Tela",
               "syncId": null,
               "type": "VARIANT",
-              "value": "List Box"
+              "value": "ListBox"
             }
           ],
           "toggles": [
@@ -3278,7 +3396,7 @@
             "subModeProperty": "Leitor de Tela",
             "variants": [
               {
-                "variantName": "Leitor de Tela=List Box",
+                "variantName": "Leitor de Tela=ListBox",
                 "variantId": "10183:6418",
                 "activeToggles": [
                   "Observações"
@@ -3376,18 +3494,25 @@
           "nestedComponentId": "10183:6438",
           "properties": [
             {
-              "rawKey": "Observações#10204:163",
+              "rawKey": "Observações#11058:21",
               "name": "Observações",
-              "syncId": "10204:163",
+              "syncId": "11058:21",
               "type": "BOOLEAN",
               "value": true
             },
             {
-              "rawKey": "Nome Acessível#10204:162",
+              "rawKey": "Nome Acessível#11058:20",
               "name": "Nome Acessível",
-              "syncId": "10204:162",
+              "syncId": "11058:20",
               "type": "BOOLEAN",
               "value": true
+            },
+            {
+              "rawKey": "Leitor de tela",
+              "name": "Leitor de tela",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "With Status"
             }
           ],
           "toggles": [
@@ -3399,7 +3524,50 @@
               "name": "Nome Acessível",
               "value": true
             }
-          ]
+          ],
+          "screenReaderVariants": {
+            "setName": ".List Item Funds",
+            "setId": "11058:3956",
+            "subModeProperty": "Leitor de tela",
+            "variants": [
+              {
+                "variantName": "Leitor de tela=With Status",
+                "variantId": "10183:6438",
+                "activeToggles": [
+                  "Nome Acessível",
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de tela=With Avatar",
+                "variantId": "11072:3604",
+                "activeToggles": [
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de tela=With Micro Chart",
+                "variantId": "11074:3617",
+                "activeToggles": [
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de tela=With Image",
+                "variantId": "11074:3630",
+                "activeToggles": [
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de tela=Disabled",
+                "variantId": "11074:3643",
+                "activeToggles": [
+                  "Observações"
+                ]
+              }
+            ]
+          }
         },
         {
           "variantName": "Variante=Componente, Componente=List Item Transaction",
@@ -3453,11 +3621,18 @@
           "nestedComponentId": "10185:6494",
           "properties": [
             {
-              "rawKey": "Observações#10204:168",
+              "rawKey": "Observações#11076:0",
               "name": "Observações",
-              "syncId": "10204:168",
+              "syncId": "11076:0",
               "type": "BOOLEAN",
               "value": true
+            },
+            {
+              "rawKey": "Leitor de Tela",
+              "name": "Leitor de Tela",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "Linked"
             }
           ],
           "toggles": [
@@ -3465,7 +3640,28 @@
               "name": "Observações",
               "value": true
             }
-          ]
+          ],
+          "screenReaderVariants": {
+            "setName": ".Page Controller",
+            "setId": "11076:3633",
+            "subModeProperty": "Leitor de Tela",
+            "variants": [
+              {
+                "variantName": "Leitor de Tela=Linked",
+                "variantId": "10185:6494",
+                "activeToggles": [
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=Interactive",
+                "variantId": "11076:3634",
+                "activeToggles": [
+                  "Observações"
+                ]
+              }
+            ]
+          }
         },
         {
           "variantName": "Variante=Componente, Componente=Progress",
@@ -3475,49 +3671,16 @@
           "nestedComponentId": "10185:6536",
           "properties": [
             {
-              "rawKey": "Observações#10204:174",
+              "rawKey": "Observações#11076:4",
               "name": "Observações",
-              "syncId": "10204:174",
+              "syncId": "11076:4",
               "type": "BOOLEAN",
               "value": true
             },
             {
-              "rawKey": "Nome Acessível#10204:170",
+              "rawKey": "Nome Acessível#11076:3",
               "name": "Nome Acessível",
-              "syncId": "10204:170",
-              "type": "BOOLEAN",
-              "value": true
-            }
-          ],
-          "toggles": [
-            {
-              "name": "Observações",
-              "value": true
-            },
-            {
-              "name": "Nome Acessível",
-              "value": true
-            }
-          ]
-        },
-        {
-          "variantName": "Variante=Componente, Componente=Radio",
-          "variantId": "10206:2146",
-          "nestedInstanceName": ".Radio",
-          "nestedInstanceId": "10206:1524",
-          "nestedComponentId": "10185:6564",
-          "properties": [
-            {
-              "rawKey": "Nome Acessível#10696:7",
-              "name": "Nome Acessível",
-              "syncId": "10696:7",
-              "type": "BOOLEAN",
-              "value": true
-            },
-            {
-              "rawKey": "Observações#10696:8",
-              "name": "Observações",
-              "syncId": "10696:8",
+              "syncId": "11076:3",
               "type": "BOOLEAN",
               "value": true
             },
@@ -3531,11 +3694,73 @@
           ],
           "toggles": [
             {
-              "name": "Nome Acessível",
+              "name": "Observações",
               "value": true
             },
             {
+              "name": "Nome Acessível",
+              "value": true
+            }
+          ],
+          "screenReaderVariants": {
+            "setName": ".Progress",
+            "setId": "11076:3658",
+            "subModeProperty": "Leitor de Tela",
+            "variants": [
+              {
+                "variantName": "Leitor de Tela=Baseline",
+                "variantId": "10185:6536",
+                "activeToggles": [
+                  "Nome Acessível",
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=With Labels",
+                "variantId": "11076:3686",
+                "activeToggles": [
+                  "Observações"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "variantName": "Variante=Componente, Componente=Radio",
+          "variantId": "10206:2146",
+          "nestedInstanceName": ".Radio",
+          "nestedInstanceId": "10206:1524",
+          "nestedComponentId": "10185:6564",
+          "properties": [
+            {
+              "rawKey": "Observações#10696:8",
               "name": "Observações",
+              "syncId": "10696:8",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "Nome Acessível#10696:7",
+              "name": "Nome Acessível",
+              "syncId": "10696:7",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "Leitor de Tela",
+              "name": "Leitor de Tela",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "Baseline"
+            }
+          ],
+          "toggles": [
+            {
+              "name": "Observações",
+              "value": true
+            },
+            {
+              "name": "Nome Acessível",
               "value": true
             }
           ],
@@ -3548,12 +3773,27 @@
                 "variantName": "Leitor de Tela=Baseline",
                 "variantId": "10185:6564",
                 "activeToggles": [
+                  "Nome Acessível",
                   "Observações"
                 ]
               },
               {
                 "variantName": "Leitor de Tela=Radio Group",
                 "variantId": "10696:3814",
+                "activeToggles": [
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=Radio With Label",
+                "variantId": "11076:3706",
+                "activeToggles": [
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=Disabled",
+                "variantId": "11076:3719",
                 "activeToggles": [
                   "Observações"
                 ]
@@ -3602,8 +3842,15 @@
                 ]
               },
               {
-                "variantName": "Leitor de Tela=Typing",
+                "variantName": "Leitor de Tela=With Button",
                 "variantId": "10185:6592",
+                "activeToggles": [
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=Disabled",
+                "variantId": "11076:3732",
                 "activeToggles": [
                   "Observações"
                 ]
@@ -3637,7 +3884,7 @@
               "name": "Leitor de Tela",
               "syncId": null,
               "type": "VARIANT",
-              "value": "Only"
+              "value": "Baseline"
             }
           ],
           "toggles": [
@@ -3664,7 +3911,7 @@
                 ]
               },
               {
-                "variantName": "Leitor de Tela=Only",
+                "variantName": "Leitor de Tela=Baseline",
                 "variantId": "10187:6649",
                 "activeToggles": [
                   "Nome Acessível",
@@ -3686,6 +3933,14 @@
                   "Nome Acessível",
                   "Observações"
                 ]
+              },
+              {
+                "variantName": "Leitor de Tela=Not Loading",
+                "variantId": "11077:3742",
+                "activeToggles": [
+                  "Nome Acessível",
+                  "Observações"
+                ]
               }
             ]
           }
@@ -3698,11 +3953,18 @@
           "nestedComponentId": "10187:6676",
           "properties": [
             {
-              "rawKey": "Observações#10204:198",
+              "rawKey": "Observações#11077:5",
               "name": "Observações",
-              "syncId": "10204:198",
+              "syncId": "11077:5",
               "type": "BOOLEAN",
               "value": true
+            },
+            {
+              "rawKey": "Leitor de Tela",
+              "name": "Leitor de Tela",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "Radio"
             }
           ],
           "toggles": [
@@ -3710,7 +3972,35 @@
               "name": "Observações",
               "value": true
             }
-          ]
+          ],
+          "screenReaderVariants": {
+            "setName": ".Segmented Button",
+            "setId": "11077:3755",
+            "subModeProperty": "Leitor de Tela",
+            "variants": [
+              {
+                "variantName": "Leitor de Tela=Radio",
+                "variantId": "10187:6676",
+                "activeToggles": [
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=RadioGroup",
+                "variantId": "11077:3756",
+                "activeToggles": [
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=Disabled",
+                "variantId": "11077:3766",
+                "activeToggles": [
+                  "Observações"
+                ]
+              }
+            ]
+          }
         },
         {
           "variantName": "Variante=Componente, Componente=Sheet",
@@ -3719,6 +4009,13 @@
           "nestedInstanceId": "10206:1478",
           "nestedComponentId": "10187:6691",
           "properties": [
+            {
+              "rawKey": "Nome Acessível#11077:6",
+              "name": "Nome Acessível",
+              "syncId": "11077:6",
+              "type": "BOOLEAN",
+              "value": true
+            },
             {
               "rawKey": "Observações#10204:202",
               "name": "Observações",
@@ -3729,13 +4026,17 @@
           ],
           "toggles": [
             {
+              "name": "Nome Acessível",
+              "value": true
+            },
+            {
               "name": "Observações",
               "value": true
             }
           ]
         },
         {
-          "variantName": "Variante=Componente, Componente=Shimmer",
+          "variantName": "Variante=Componente, Componente=Skeleton Load / Shimmer",
           "variantId": "10206:2147",
           "nestedInstanceName": ".Skeleton Load / Shimmer",
           "nestedInstanceId": "10206:1465",
@@ -3747,22 +4048,11 @@
               "syncId": "10204:201",
               "type": "BOOLEAN",
               "value": true
-            },
-            {
-              "rawKey": "Nome Acessível#10204:200",
-              "name": "Nome Acessível",
-              "syncId": "10204:200",
-              "type": "BOOLEAN",
-              "value": true
             }
           ],
           "toggles": [
             {
               "name": "Observações",
-              "value": true
-            },
-            {
-              "name": "Nome Acessível",
               "value": true
             }
           ]
@@ -3793,7 +4083,7 @@
               "name": "Leitor de Tela",
               "syncId": null,
               "type": "VARIANT",
-              "value": "Free"
+              "value": "Baseline"
             }
           ],
           "toggles": [
@@ -3812,7 +4102,7 @@
             "subModeProperty": "Leitor de Tela",
             "variants": [
               {
-                "variantName": "Leitor de Tela=Free",
+                "variantName": "Leitor de Tela=Baseline",
                 "variantId": "10187:6737",
                 "activeToggles": [
                   "Nome Acessível",
@@ -3820,7 +4110,7 @@
                 ]
               },
               {
-                "variantName": "Leitor de Tela=Steps",
+                "variantName": "Leitor de Tela=With Steps",
                 "variantId": "10187:6736",
                 "activeToggles": [
                   "Nome Acessível",
@@ -3838,27 +4128,27 @@
           "nestedComponentId": "10187:6766",
           "properties": [
             {
-              "rawKey": "Observações#10204:211",
-              "name": "Observações",
-              "syncId": "10204:211",
+              "rawKey": "Nome Acessível#10204:210",
+              "name": "Nome Acessível",
+              "syncId": "10204:210",
               "type": "BOOLEAN",
               "value": true
             },
             {
-              "rawKey": "Nome Acessível#10204:210",
-              "name": "Nome Acessível",
-              "syncId": "10204:210",
+              "rawKey": "Observações#10204:211",
+              "name": "Observações",
+              "syncId": "10204:211",
               "type": "BOOLEAN",
               "value": true
             }
           ],
           "toggles": [
             {
-              "name": "Observações",
+              "name": "Nome Acessível",
               "value": true
             },
             {
-              "name": "Nome Acessível",
+              "name": "Observações",
               "value": true
             }
           ]
@@ -3871,38 +4161,9 @@
           "nestedComponentId": "10187:6765",
           "properties": [
             {
-              "rawKey": "Observações#10204:209",
+              "rawKey": "Observações#11117:3",
               "name": "Observações",
-              "syncId": "10204:209",
-              "type": "BOOLEAN",
-              "value": true
-            }
-          ],
-          "toggles": [
-            {
-              "name": "Observações",
-              "value": true
-            }
-          ]
-        },
-        {
-          "variantName": "Variante=Componente, Componente=Switch",
-          "variantId": "10206:2135",
-          "nestedInstanceName": ".Switch",
-          "nestedInstanceId": "10206:1416",
-          "nestedComponentId": "10187:6793",
-          "properties": [
-            {
-              "rawKey": "Nome Acessível#10725:0",
-              "name": "Nome Acessível",
-              "syncId": "10725:0",
-              "type": "BOOLEAN",
-              "value": true
-            },
-            {
-              "rawKey": "Observações#10725:1",
-              "name": "Observações",
-              "syncId": "10725:1",
+              "syncId": "11117:3",
               "type": "BOOLEAN",
               "value": true
             },
@@ -3916,11 +4177,68 @@
           ],
           "toggles": [
             {
-              "name": "Nome Acessível",
+              "name": "Observações",
+              "value": true
+            }
+          ],
+          "screenReaderVariants": {
+            "setName": ".Swap Preview",
+            "setId": "11117:4972",
+            "subModeProperty": "Leitor de Tela",
+            "variants": [
+              {
+                "variantName": "Leitor de Tela=Baseline",
+                "variantId": "10187:6765",
+                "activeToggles": [
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=Loading",
+                "variantId": "11117:4973",
+                "activeToggles": [
+                  "Observações"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "variantName": "Variante=Componente, Componente=Switch",
+          "variantId": "10206:2135",
+          "nestedInstanceName": ".Switch",
+          "nestedInstanceId": "10206:1416",
+          "nestedComponentId": "10187:6793",
+          "properties": [
+            {
+              "rawKey": "Observações#10725:1",
+              "name": "Observações",
+              "syncId": "10725:1",
+              "type": "BOOLEAN",
               "value": true
             },
             {
+              "rawKey": "Nome Acessível#10725:0",
+              "name": "Nome Acessível",
+              "syncId": "10725:0",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "Leitor de Tela",
+              "name": "Leitor de Tela",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "Only Bullet"
+            }
+          ],
+          "toggles": [
+            {
               "name": "Observações",
+              "value": true
+            },
+            {
+              "name": "Nome Acessível",
               "value": true
             }
           ],
@@ -3930,15 +4248,23 @@
             "subModeProperty": "Leitor de Tela",
             "variants": [
               {
-                "variantName": "Leitor de Tela=Baseline",
+                "variantName": "Leitor de Tela=Only Bullet",
                 "variantId": "10187:6793",
                 "activeToggles": [
+                  "Nome Acessível",
                   "Observações"
                 ]
               },
               {
                 "variantName": "Leitor de Tela=Disabled",
                 "variantId": "10725:2031",
+                "activeToggles": [
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=Bullet With Label",
+                "variantId": "11077:3776",
                 "activeToggles": [
                   "Observações"
                 ]
@@ -3965,7 +4291,7 @@
               "name": "Leitor de Tela",
               "syncId": null,
               "type": "VARIANT",
-              "value": "Default"
+              "value": "Tabgroup"
             }
           ],
           "toggles": [
@@ -3980,15 +4306,29 @@
             "subModeProperty": "Leitor de Tela",
             "variants": [
               {
-                "variantName": "Leitor de Tela=Default",
+                "variantName": "Leitor de Tela=Tabgroup",
                 "variantId": "10187:6807",
                 "activeToggles": [
                   "Observações"
                 ]
               },
               {
-                "variantName": "Leitor de Tela=Badge Notification",
+                "variantName": "Leitor de Tela=With Badge",
                 "variantId": "10725:2045",
+                "activeToggles": [
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=Tab",
+                "variantId": "11077:3793",
+                "activeToggles": [
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=Disabled",
+                "variantId": "11077:3803",
                 "activeToggles": [
                   "Observações"
                 ]
@@ -4022,23 +4362,64 @@
           "variantName": "Variante=Componente, Componente=Timeline",
           "variantId": "10206:2104",
           "nestedInstanceName": ".Timeline",
-          "nestedInstanceId": "10206:1386",
-          "nestedComponentId": "10187:6854",
+          "nestedInstanceId": "11117:5011",
+          "nestedComponentId": "11077:3815",
           "properties": [
             {
-              "rawKey": "Observações#10204:217",
-              "name": "Observações",
-              "syncId": "10204:217",
+              "rawKey": "Nome Acessível#11077:8",
+              "name": "Nome Acessível",
+              "syncId": "11077:8",
               "type": "BOOLEAN",
               "value": true
+            },
+            {
+              "rawKey": "Observações#11077:7",
+              "name": "Observações",
+              "syncId": "11077:7",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "Leitor de Tela",
+              "name": "Leitor de Tela",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "Baseline"
             }
           ],
           "toggles": [
             {
+              "name": "Nome Acessível",
+              "value": true
+            },
+            {
               "name": "Observações",
               "value": true
             }
-          ]
+          ],
+          "screenReaderVariants": {
+            "setName": ".Timeline",
+            "setId": "11077:3814",
+            "subModeProperty": "Leitor de Tela",
+            "variants": [
+              {
+                "variantName": "Leitor de Tela=Baseline",
+                "variantId": "11077:3815",
+                "activeToggles": [
+                  "Observações",
+                  "Nome Acessível"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=With Status",
+                "variantId": "11077:3855",
+                "activeToggles": [
+                  "Observações",
+                  "Nome Acessível"
+                ]
+              }
+            ]
+          }
         },
         {
           "variantName": "Variante=Componente, Componente=Popover",
@@ -4114,18 +4495,11 @@
           "nestedComponentId": "10188:6926",
           "properties": [
             {
-              "rawKey": "Observações#10725:4",
+              "rawKey": "Observações#10204:225",
               "name": "Observações",
-              "syncId": "10725:4",
+              "syncId": "10204:225",
               "type": "BOOLEAN",
               "value": true
-            },
-            {
-              "rawKey": "Leitor de Tela",
-              "name": "Leitor de Tela",
-              "syncId": null,
-              "type": "VARIANT",
-              "value": "Baseline Action"
             }
           ],
           "toggles": [
@@ -4133,28 +4507,7 @@
               "name": "Observações",
               "value": true
             }
-          ],
-          "screenReaderVariants": {
-            "setName": ".Toast",
-            "setId": "10725:2087",
-            "subModeProperty": "Leitor de Tela",
-            "variants": [
-              {
-                "variantName": "Leitor de Tela=Baseline Action",
-                "variantId": "10188:6926",
-                "activeToggles": [
-                  "Observações"
-                ]
-              },
-              {
-                "variantName": "Leitor de Tela=Baseline Text",
-                "variantId": "10725:2088",
-                "activeToggles": [
-                  "Observações"
-                ]
-              }
-            ]
-          }
+          ]
         },
         {
           "variantName": "Variante=Componente, Componente=Toolbar",
@@ -4259,18 +4612,10 @@
                 ]
               },
               {
-                "variantName": "Leitor de Tela=Show Media",
-                "variantId": "10188:7045",
+                "variantName": "Leitor de Tela=Home",
+                "variantId": "11117:5025",
                 "activeToggles": [
-                  "Observações",
-                  "Nome Acessível"
-                ]
-              },
-              {
-                "variantName": "Leitor de Tela=Show Filters",
-                "variantId": "10188:7046",
-                "activeToggles": [
-                  "Nome Acessível"
+                  "Observações"
                 ]
               }
             ]
@@ -4295,7 +4640,7 @@
               "name": "Leitor de Tela",
               "syncId": null,
               "type": "VARIANT",
-              "value": "Default"
+              "value": "Baseline"
             }
           ],
           "toggles": [
@@ -4310,21 +4655,21 @@
             "subModeProperty": "Leitor de Tela",
             "variants": [
               {
-                "variantName": "Leitor de Tela=Default",
+                "variantName": "Leitor de Tela=Baseline",
                 "variantId": "10188:7085",
                 "activeToggles": [
                   "Observações"
                 ]
               },
               {
-                "variantName": "Leitor de Tela=Display",
+                "variantName": "Leitor de Tela=With Button",
                 "variantId": "10188:7084",
                 "activeToggles": [
                   "Observações"
                 ]
               },
               {
-                "variantName": "Leitor de Tela=Navigation",
+                "variantName": "Leitor de Tela=With Navigation",
                 "variantId": "10188:7083",
                 "activeToggles": [
                   "Observações"
@@ -4366,7 +4711,7 @@
               "name": "Leitor de Tela",
               "syncId": null,
               "type": "VARIANT",
-              "value": "Single Columm"
+              "value": "Single Column"
             }
           ],
           "toggles": [
@@ -4385,7 +4730,7 @@
             "subModeProperty": "Leitor de Tela",
             "variants": [
               {
-                "variantName": "Leitor de Tela=Single Columm",
+                "variantName": "Leitor de Tela=Single Column",
                 "variantId": "10188:7114",
                 "activeToggles": [
                   "Nome Acessível",
@@ -4393,8 +4738,16 @@
                 ]
               },
               {
-                "variantName": "Leitor de Tela=Double Columm",
+                "variantName": "Leitor de Tela=Double Column",
                 "variantId": "10188:7113",
+                "activeToggles": [
+                  "Nome Acessível",
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=Triple Column",
+                "variantId": "11078:3872",
                 "activeToggles": [
                   "Nome Acessível",
                   "Observações"
@@ -4411,18 +4764,25 @@
           "nestedComponentId": "10188:7456",
           "properties": [
             {
-              "rawKey": "Observações#10206:8",
+              "rawKey": "Observações#11076:2",
               "name": "Observações",
-              "syncId": "10206:8",
+              "syncId": "11076:2",
               "type": "BOOLEAN",
               "value": true
             },
             {
-              "rawKey": "Nome Acessível#10206:7",
+              "rawKey": "Nome Acessível#11076:1",
               "name": "Nome Acessível",
-              "syncId": "10206:7",
+              "syncId": "11076:1",
               "type": "BOOLEAN",
               "value": true
+            },
+            {
+              "rawKey": "Leitor de Tela",
+              "name": "Leitor de Tela",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "Baseline"
             }
           ],
           "toggles": [
@@ -4434,7 +4794,29 @@
               "name": "Nome Acessível",
               "value": true
             }
-          ]
+          ],
+          "screenReaderVariants": {
+            "setName": ".Product Card",
+            "setId": "11076:3644",
+            "subModeProperty": "Leitor de Tela",
+            "variants": [
+              {
+                "variantName": "Leitor de Tela=Baseline",
+                "variantId": "10188:7456",
+                "activeToggles": [
+                  "Nome Acessível",
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=Loading",
+                "variantId": "11076:3645",
+                "activeToggles": [
+                  "Observações"
+                ]
+              }
+            ]
+          }
         },
         {
           "variantName": "Variante=Texto Alternativo, Componente=Imagem",
@@ -4457,6 +4839,77 @@
               "value": true
             }
           ]
+        },
+        {
+          "variantName": "Variante=Componente, Componente=Link",
+          "variantId": "11053:3553",
+          "nestedInstanceName": ".Link",
+          "nestedInstanceId": "11053:3564",
+          "nestedComponentId": "11053:3551",
+          "properties": [
+            {
+              "rawKey": "Observações#11053:4",
+              "name": "Observações",
+              "syncId": "11053:4",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "Nome Acessível#11053:0",
+              "name": "Nome Acessível",
+              "syncId": "11053:0",
+              "type": "BOOLEAN",
+              "value": true
+            },
+            {
+              "rawKey": "Leitor de Tela",
+              "name": "Leitor de Tela",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "Baseline"
+            }
+          ],
+          "toggles": [
+            {
+              "name": "Observações",
+              "value": true
+            },
+            {
+              "name": "Nome Acessível",
+              "value": true
+            }
+          ],
+          "screenReaderVariants": {
+            "setName": ".Link",
+            "setId": "11053:3552",
+            "subModeProperty": "Leitor de Tela",
+            "variants": [
+              {
+                "variantName": "Leitor de Tela=Baseline",
+                "variantId": "11053:3551",
+                "activeToggles": [
+                  "Nome Acessível",
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=Nova Janela",
+                "variantId": "11053:3550",
+                "activeToggles": [
+                  "Nome Acessível",
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=Enviar E-mail",
+                "variantId": "11053:3549",
+                "activeToggles": [
+                  "Nome Acessível",
+                  "Observações"
+                ]
+              }
+            ]
+          }
         }
       ]
     },

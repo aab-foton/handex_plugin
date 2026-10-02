@@ -1,7 +1,7 @@
 {
   "_meta": {
     "description": "Mapa containingFrame -> categoria de a11y, ESSENCIAL EM RUNTIME no hac (consumido por _getDscFrameToA11yMap em code.js para a Detecção Automática de a11y). Gerado por build-dsc-a11y-mapping.cjs a partir de refs/web-angular-react.json (dados reais da REST API do Figma, sem valores inventados). Adaptação do Handex Beta (onde este mesmo formato de arquivo é descrito como \"fundação de dados, não usado em runtime\" — desatualizado lá, mas aqui no hac o consumo em runtime é o desenho intencional desde o início).",
-    "generatedAt": "2026-09-30T23:42:25.957Z",
+    "generatedAt": "2026-10-02T19:49:30.114Z",
     "generator": "build-dsc-a11y-mapping.cjs (hac)",
     "sourceFile": "super-dsc-web.json",
     "sourceFileKey": "erkqbRKIbaFWbkHe51BeiZ",
@@ -34,7 +34,7 @@
       "imagem"
     ],
     "counts": {
-      "totalComponentsVariants": 4756,
+      "totalComponentsVariants": 4772,
       "totalFamilies": 1507,
       "altaConfianca": {
         "families": 19,
@@ -42,7 +42,7 @@
       },
       "baixaConfianca": {
         "families": 48,
-        "variantCount": 786
+        "variantCount": 802
       },
       "semMatch": {
         "families": 1440,
@@ -114,7 +114,7 @@
       },
       "imagem": {
         "families": 9,
-        "variantCount": 154
+        "variantCount": 170
       },
       "estrutura": {
         "families": 4,
@@ -477,6 +477,20 @@
       }
     },
     {
+      "containingFrame": "[dsc] Banking Logos",
+      "variantCount": 27,
+      "sampleKeys": [
+        "0bcb06ab89fb98311c4a1ab94d308ce9d1adbcf5",
+        "f6b2299f5661b161ec8c7c9eb5b079583a82a3a5",
+        "fd3c3e7186aaf1b97c3d4903ebc4e94d85c613cc"
+      ],
+      "match": {
+        "shortName": "imagem",
+        "confidence": "baixa",
+        "reason": "tabela curada (super-dsc-web) \"Banking Logos\""
+      }
+    },
+    {
       "containingFrame": "[dsc] Icon Container",
       "variantCount": 24,
       "sampleKeys": [
@@ -684,20 +698,6 @@
         "shortName": "inputs",
         "confidence": "baixa",
         "reason": "tabela curada (super-dsc-web) \"Input Money\""
-      }
-    },
-    {
-      "containingFrame": "[dsc] Banking Logos",
-      "variantCount": 11,
-      "sampleKeys": [
-        "98d7a2b2f4c3d63df9ed5c63bf465990cd4c5ec2",
-        "9ab27000a44de1b3467134661d862fb7f5a5a402",
-        "ce590a7d3c6609663f7dfaa3105d8fab0c092884"
-      ],
-      "match": {
-        "shortName": "imagem",
-        "confidence": "baixa",
-        "reason": "tabela curada (super-dsc-web) \"Banking Logos\""
       }
     },
     {
