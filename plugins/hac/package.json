@@ -6,6 +6,7 @@
   "scripts": {
     "lint": "tsc --noEmit && npm run lint:figma-api",
     "lint:figma-api": "node scripts/check-figma-api-usage.cjs",
+    "texts:catalog": "node scripts/build-text-catalog.cjs",
     "check:visual": "node src/plugin/refs/check-visual-foundations.cjs",
     "check:lib-sources": "node src/plugin/refs/check-lib-sources.cjs",
     "refs:web-recognition-report": "node src/plugin/refs/report-web-recognition.cjs",
