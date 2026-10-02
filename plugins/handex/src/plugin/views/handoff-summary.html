@@ -1,7 +1,7 @@
 <!-- VIEW: HANDOFF SUMMARY -->
 <main id="view-handoff-summary" class="view flex p-0 flex-col h-full overflow-hidden">
   <!-- Header -->
-  <div class="subheader-brand px-4 py-3 bg-[#005ca9] dark:bg-[#00335c] flex items-center justify-between shrink-0 shadow-md">
+  <div class="subheader-brand px-4 py-3 bg-[#005ca9] dark:bg-[#002747] flex items-center justify-between shrink-0 shadow-md">
     <div class="flex items-center gap-2">
       <button onclick="navigate('view-home')" aria-label="Voltar"
         class="min-w-[40px] min-h-[40px] flex items-center justify-center bg-white/10 dark:bg-white/10 rounded-2xl hover:bg-white/20 dark:hover:bg-white/20 transition-colors shrink-0">
@@ -74,23 +74,24 @@
     <div class="bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl shadow-sm p-4">
       <h4 class="text-[11px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-3">Documentação</h4>
       <div class="grid grid-cols-2 gap-3">
-        <div class="bg-sky-50 dark:bg-sky-900/20 rounded-xl p-3 text-center">
-          <p id="hs-count-frames" class="text-[22px] font-extrabold text-sky-600 dark:text-sky-400 leading-none">0</p>
+        <div class="bg-ceu-50 dark:bg-ceu-900/20 rounded-xl p-3 text-center">
+          <p id="hs-count-frames" class="text-[22px] font-extrabold text-ceu-600 dark:text-ceu-400 leading-none">0</p>
           <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-1">Frames</p>
         </div>
-        <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-xl p-3 text-center">
-          <p id="hs-count-specs" class="text-[22px] font-extrabold text-indigo-600 dark:text-indigo-400 leading-none">0</p>
+        <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-3 text-center">
+          <p id="hs-count-specs" class="text-[22px] font-extrabold text-blue-600 dark:text-blue-400 leading-none">0</p>
           <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-1">Specs</p>
         </div>
-        <div class="bg-cyan-50 dark:bg-cyan-900/20 rounded-xl p-3 text-center">
-          <p id="hs-count-measures" class="text-[22px] font-extrabold text-cyan-600 dark:text-cyan-400 leading-none">0</p>
+        <div class="bg-info-50 dark:bg-info-900/20 rounded-xl p-3 text-center">
+          <p id="hs-count-measures" class="text-[22px] font-extrabold text-info-600 dark:text-info-400 leading-none">0</p>
           <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-1">Medidas</p>
         </div>
-        <div class="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-3 text-center">
-          <p id="hs-count-flows" class="text-[22px] font-extrabold text-purple-600 dark:text-purple-400 leading-none">0</p>
+        <div class="bg-orange-50 dark:bg-orange-900/20 rounded-xl p-3 text-center">
+          <p id="hs-count-flows" class="text-[22px] font-extrabold text-orange-800 dark:text-orange-400 leading-none">0</p>
           <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-1">Fluxos</p>
         </div>
       </div>
+      <p id="hs-full-detail-row" class="hidden mt-3 text-[10px] text-slate-600 dark:text-dark-muted">Itens com detalhamento completo: <span id="hs-count-full-detail" class="font-bold text-st-info dark:text-st-info-dark">0</span></p>
     </div>
 
     <!-- Gerar Ficha no Canvas -- vem antes de Exportar de propósito: exportar

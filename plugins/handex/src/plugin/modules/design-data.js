@@ -47,15 +47,29 @@
           if (!p.token) return;
           // padding pode trazer vários tokens distintos numa string só ("a, b")
           String(p.token).split(',').map(t => t.trim()).filter(Boolean).forEach(key => {
-            if (!tokensUsados[key]) tokensUsados[key] = { token: key, label: p.label || p.key || '', ocorrencias: 0 };
+            if (!tokensUsados[key]) tokensUsados[key] = { token: key, label: _vocabLabel(p.label, p.key) || p.key || '', ocorrencias: 0 };
             tokensUsados[key].ocorrencias++;
           });
         });
       });
 
-      const cenariosExcecao = allSpecs.flatMap(s => (s.excecoes || []).map(e => ({
-        spec: s.name || '', tipo: e.tipo || '', titulo: e.titulo || '', obs: e.obs || ''
-      })));
+      // Exceções ficam atreladas à spec (nunca soltas); dedup por id porque
+      // saveSpecsToStorage() regrava o array global já mesclado com os por-frame.
+      const _excSeen = new Set();
+      const cenariosExcecao = frames.flatMap(f => (f.createdSpecs || []).map(s => ({ s, frame: f.nome || '' })))
+        .concat(looseSpecs.map(s => ({ s, frame: '' })))
+        .filter(({ s }) => {
+          if (!(s.excecoes || []).length) return false;
+          const k = s.id || s;
+          if (_excSeen.has(k)) return false;
+          _excSeen.add(k);
+          return true;
+        })
+        .map(({ s, frame }) => ({
+          spec: s.name || '',
+          frame,
+          excecoes: s.excecoes.map(e => ({ tipo: e.tipo || '', titulo: e.titulo || '', obs: e.obs || '' }))
+        }));
 
       const medidas = frames.flatMap(f => (f.measurements || []).map(m => ({
         frame: f.nome || '',
@@ -107,9 +121,9 @@
           nome: item.name,
           categoria: _CATEGORIA_LABELS[item.type] || item.type,
           personalizado: !!item.isMarkedCustom,
-          propriedades: (item.properties || []).map(p => ({ propriedade: p.label || p.type, valor: p.value })),
+          propriedades: (item.properties || []).map(p => ({ propriedade: _vocabLabel(p.label || p.type), valor: _vocabValue(p.value) })),
           ...(Array.isArray(item.customizations) && item.customizations.length > 0
-            ? { personalizacoesDSC: item.customizations.map(c => ({ camada: c.layer, campo: c.campo, atual: c.atual, padraoDaLib: c.padrao })) }
+            ? { personalizacoesDSC: item.customizations.map(c => ({ camada: c.layer, campo: _vocabLabel(c.campo), atual: c.atual, padraoDaLib: c.padrao })) }
             : {})
         }));
       }
@@ -163,9 +177,10 @@
           tag: el.tag,
           nome: el.name,
           tipoNode: el.nodeType,
+          ...((el.note || '').trim() ? { observacao: el.note.trim() } : {}),
           propriedades: el.properties.map(p => ({
-            propriedade: p.label,
-            valor: p.value,
+            propriedade: _vocabLabel(p.label),
+            valor: _vocabValue(p.value),
             token: p.tokenName || null,
             biblioteca: p.libName || null
           }))
@@ -239,7 +254,7 @@
               lines.push(`    - [${item.categoria}]${item.personalizado ? ' [Personalizado]' : ''} ${item.nome}${props ? ` — ${props}` : ''}`);
               if (item.personalizacoesDSC) {
                 lines.push(`      Personalizado em relação ao componente da lib (usar estes valores, não o padrão):`);
-                item.personalizacoesDSC.forEach(c => lines.push(`      - ${c.camada} · ${c.campo}: ${c.atual} (padrão da lib: ${c.padraoDaLib})`));
+                item.personalizacoesDSC.forEach(c => lines.push(`      - ${c.camada} · ${_vocabLabel(c.campo)}: ${c.atual} (padrão da lib: ${c.padraoDaLib})`));
               }
             });
           }
@@ -252,6 +267,7 @@
         ctx.especificacoesRapidas.itens.forEach(item => {
           const props = item.propriedades.map(p => `${p.propriedade}: ${p.valor}${p.token ? ` (token: ${p.token}${p.biblioteca ? `, ${p.biblioteca}` : ''})` : ''}`).join(' | ');
           lines.push(`- [${item.tag}] ${item.nome} (${item.tipoNode})${props ? ` — ${props}` : ''}`);
+          if (item.observacao) lines.push(`  Observação: ${item.observacao}`);
         });
       }
 
@@ -270,8 +286,11 @@
       }
 
       if (ctx.cenariosExcecao.length > 0) {
-        lines.push('', '## Cenários de exceção');
-        ctx.cenariosExcecao.forEach(e => lines.push(`- [${e.spec}] ${e.titulo || e.tipo}${e.obs ? ` — ${e.obs}` : ''}`));
+        lines.push('', '## Specs com cenários de exceção');
+        ctx.cenariosExcecao.forEach(c => {
+          lines.push(`- ${c.spec || 'Spec'}${c.frame ? ` (${c.frame})` : ''}`);
+          c.excecoes.forEach(e => lines.push(`  - [${e.tipo || 'Geral'}] ${e.titulo || e.tipo}${e.obs ? ` — ${e.obs}` : ''}`));
+        });
       }
 
       if (ctx.medidas.length > 0) {

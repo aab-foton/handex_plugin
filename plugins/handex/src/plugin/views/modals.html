@@ -368,7 +368,7 @@
     <div id="flow-form-modal" role="dialog" aria-modal="true" aria-labelledby="flow-modal-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
       <div class="bg-white dark:bg-dark-bg w-full max-w-[440px] rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line animate-in fade-in zoom-in duration-200 overflow-hidden">
         <div class="p-6 border-b border-gray-100 dark:border-dark-line flex items-center justify-between shrink-0">
-          <h3 id="flow-modal-title" class="text-[#1E293B] dark:text-white font-extrabold text-[18px] tracking-tight">Configurar Conexão</h3>
+          <h3 id="flow-modal-title" class="text-[#22292e] dark:text-white font-extrabold text-[18px] tracking-tight">Configurar Conexão</h3>
           <button onclick="closeModal('flow-form-modal')" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-white">
             <i data-lucide="x" class="w-6 h-6" aria-hidden="true"></i>
           </button>
@@ -385,7 +385,7 @@
             </div>
             <input type="text" id="flow-name-input" placeholder="Ex: Cadastro de conta" maxlength="70"
               oninput="_updateCharCount(this, 70)"
-              class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl p-4 text-[13px] text-[#1E293B] dark:text-white focus:ring-2 focus:ring-[#005ca9]/20 outline-none transition-all" />
+              class="w-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl p-4 text-[13px] text-[#22292e] dark:text-white focus:ring-2 focus:ring-[#005ca9]/20 outline-none transition-all" />
             <p class="text-[9px] text-slate-400 dark:text-dark-muted px-1 -mt-1">Se a seleção estender uma jornada já existente, deixe em branco para manter o nome atual.</p>
           </div>
 
@@ -486,7 +486,7 @@
                  ilegível/estourava a forma no canvas. -->
             <textarea id="flow-chip-text" placeholder="Ex: Sim, Não, Enviar..." maxlength="20"
               oninput="_updateCharCount(this, 20)"
-              class="w-full h-20 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl p-4 text-[13px] text-[#1E293B] dark:text-white focus:ring-2 focus:ring-[#005ca9]/20 outline-none resize-none transition-all"></textarea>
+              class="w-full h-20 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl p-4 text-[13px] text-[#22292e] dark:text-white focus:ring-2 focus:ring-[#005ca9]/20 outline-none resize-none transition-all"></textarea>
           </div>
 
           <!-- Estilo do conector (só linha sólida/tracejada -- diamond/evento têm forma própria, não se molda) -->
@@ -518,7 +518,7 @@
     <div id="decision-modal" role="dialog" aria-modal="true" aria-labelledby="decision-modal-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
       <div class="bg-white dark:bg-dark-bg w-full max-w-[400px] rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line animate-in fade-in zoom-in duration-200">
         <div class="p-6 border-b border-gray-100 dark:border-dark-line flex items-center justify-between">
-          <h3 id="decision-modal-title" class="text-[#1E293B] dark:text-white font-bold text-[16px]">Texto da Decisão</h3>
+          <h3 id="decision-modal-title" class="text-[#22292e] dark:text-white font-bold text-[16px]">Texto da Decisão</h3>
           <button onclick="closeModal('decision-modal')" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-white">
             <i data-lucide="x" class="w-6 h-6" aria-hidden="true"></i>
           </button>
@@ -527,7 +527,7 @@
           <div class="space-y-2">
             <label for="decision-text-input" class="text-[11px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Descreva a condição (IF)</label>
             <textarea id="decision-text-input" placeholder="Ex: Usuário logado? ou Saldo > 0?" 
-              class="w-full h-24 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl p-4 text-[13px] text-[#1E293B] dark:text-white focus:ring-2 focus:ring-[#005ca9]/20 focus:border-[#005ca9] outline-none transition-all resize-none"></textarea>
+              class="w-full h-24 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl p-4 text-[13px] text-[#22292e] dark:text-white focus:ring-2 focus:ring-[#005ca9]/20 focus:border-[#005ca9] outline-none transition-all resize-none"></textarea>
           </div>
           <p class="text-[10px] text-slate-500 dark:text-dark-muted leading-relaxed italic">
             Dica: Use frases curtas para melhor legibilidade dentro do losango.
@@ -544,27 +544,57 @@
     <div id="frame-status-modal" role="dialog" aria-modal="true" aria-labelledby="frame-status-modal-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
       <div class="bg-white dark:bg-dark-bg w-full max-w-[400px] max-h-[85vh] rounded-2xl shadow-2xl overflow-hidden border border-gray-100 dark:border-dark-line flex flex-col animate-in fade-in zoom-in duration-200">
         <div class="p-6 border-b border-gray-100 dark:border-dark-line flex items-center justify-between shrink-0">
-          <h3 id="frame-status-modal-title" class="text-[#1E293B] dark:text-white font-bold text-[18px]">Status do frame</h3>
+          <h3 id="frame-status-modal-title" class="text-[#22292e] dark:text-white font-bold text-[18px]">Status do frame</h3>
           <button onclick="closeModal('frame-status-modal')" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-white">
             <i data-lucide="x" class="w-6 h-6" aria-hidden="true"></i>
           </button>
         </div>
         <div class="flex-1 overflow-y-auto p-6 space-y-3.5" onscroll="handleScroll(this)">
+          <!-- Fonte do status: _getFrameStatusView (core.js) — manter sincronizado. -->
           <div>
-            <span class="text-[11px] font-bold text-violet-500">Novo Componente</span>
+            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-dark-muted">Status do frame</p>
+            <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed mt-0.5">É o veredito do frame inteiro, o texto abaixo do nome em cada card.</p>
+          </div>
+          <div>
+            <span class="text-[11px] font-bold text-st-info dark:text-st-info-dark">Novo Componente</span>
             <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed mt-0.5">Frame marcado como um componente inédito, ainda fora do DSC.</p>
           </div>
           <div>
-            <span class="text-[11px] font-bold text-slate-500 dark:text-dark-muted">Pendente</span>
+            <span class="text-[11px] font-bold text-st-neutral dark:text-dark-muted">Pendente</span>
             <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed mt-0.5">Frame registrado, mas o Check Design ainda não foi feito.</p>
           </div>
           <div>
-            <span class="text-[11px] font-bold text-green-600">Conforme</span>
+            <span class="text-[11px] font-bold text-st-ok dark:text-st-ok-dark">Conforme</span>
             <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed mt-0.5">Check Design feito, sem desvios e sem tokens não vinculados ao DSC.</p>
           </div>
           <div>
-            <span class="text-[11px] font-bold text-red-500">Não Conforme</span>
+            <span class="text-[11px] font-bold text-st-warn dark:text-st-warn-dark">Desvio justificado</span>
+            <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed mt-0.5">Há tokens sem vínculo com o DSC, mas o motivo foi registrado por escrito nas observações do frame.</p>
+          </div>
+          <div>
+            <span class="text-[11px] font-bold text-st-err dark:text-st-err-dark">Não Conforme</span>
             <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed mt-0.5">Check Design feito, mas há desvios declarados ou tokens sem vínculo.</p>
+          </div>
+
+          <div class="border-t border-gray-100 dark:border-dark-line pt-3.5">
+            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-dark-muted">Marcadores dos itens escaneados</p>
+            <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed mt-0.5">Aparecem em cada elemento da lista Tokens Escaneados. São o resultado automático do escaneamento, item a item, e alimentam o status do frame.</p>
+          </div>
+          <div>
+            <span class="text-[11px] font-bold text-st-ok dark:text-st-ok-dark">Em conformidade</span>
+            <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed mt-0.5">O item está vinculado a um componente, token ou estilo do DSC.</p>
+          </div>
+          <div>
+            <span class="text-[11px] font-bold text-st-warn dark:text-st-warn-dark">Necessita revisão</span>
+            <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed mt-0.5">O escaneamento não conseguiu confirmar o vínculo, por exemplo um componente personalizado ou uma instância com valores diferentes da lib. Pede atenção, mas não impede o status Conforme.</p>
+          </div>
+          <div>
+            <span class="text-[11px] font-bold text-st-err dark:text-st-err-dark">Fora do padrão</span>
+            <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed mt-0.5">O item não tem vínculo com o DSC. Em componentes, ícones, tipografia e vetores, isso impede o status Conforme: com uma justificativa escrita nas observações, o frame passa a Desvio justificado.</p>
+          </div>
+          <div>
+            <span class="text-[11px] font-bold text-slate-600 dark:text-slate-300">Lib legada, precisa migrar</span>
+            <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed mt-0.5">O componente vem de uma lib legada do DSC e já existe versão nas libs Super. É só um aviso e não altera o status.</p>
           </div>
         </div>
       </div>
@@ -573,7 +603,7 @@
     <div id="spec-types-help-modal" role="dialog" aria-modal="true" aria-labelledby="help-modal-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
       <div class="bg-white dark:bg-dark-bg w-full max-w-[500px] max-h-[85vh] rounded-2xl shadow-2xl overflow-hidden border border-gray-100 dark:border-dark-line flex flex-col animate-in fade-in zoom-in duration-200">
         <div class="p-6 border-b border-gray-100 dark:border-dark-line flex items-center justify-between shrink-0">
-          <h3 id="help-modal-title" class="text-[#1E293B] dark:text-white font-bold text-[18px]">Tipo de especificação</h3>
+          <h3 id="help-modal-title" class="text-[#22292e] dark:text-white font-bold text-[18px]">Tipo de especificação</h3>
           <button onclick="closeModal('spec-types-help-modal')" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-white">
             <i data-lucide="x" class="w-6 h-6" aria-hidden="true"></i>
           </button>
@@ -581,7 +611,7 @@
         <div class="flex-1 overflow-y-auto p-6 space-y-6" onscroll="handleScroll(this)">
 
           <!-- Tags e Agrupamento (accordion, recolhido por padrão) -->
-          <div class="rounded-xl overflow-hidden bg-[#EBF4FB] dark:bg-blue-900/20 border border-[#b3d4ea] dark:border-blue-800/40">
+          <div class="rounded-xl overflow-hidden bg-[#e5f2fc] dark:bg-blue-900/20 border border-[#a0d2fc] dark:border-blue-800/40">
             <button type="button" onclick="toggleAccordion(this)" aria-expanded="false"
               class="w-full p-4 flex items-center justify-between gap-2 hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">
               <div class="flex items-center gap-2 min-w-0">
@@ -613,7 +643,7 @@
           </div>
 
           <!-- Controles do grupo (accordion, recolhido por padrão) -->
-          <div class="rounded-xl overflow-hidden bg-[#EBF4FB] dark:bg-blue-900/20 border border-[#b3d4ea] dark:border-blue-800/40">
+          <div class="rounded-xl overflow-hidden bg-[#e5f2fc] dark:bg-blue-900/20 border border-[#a0d2fc] dark:border-blue-800/40">
             <button type="button" onclick="toggleAccordion(this)" aria-expanded="false"
               class="w-full p-4 flex items-center justify-between gap-2 hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">
               <div class="flex items-center gap-2 min-w-0">
@@ -710,7 +740,7 @@
       <div class="bg-white dark:bg-dark-bg w-full max-w-[500px] max-h-[85vh] rounded-2xl shadow-2xl overflow-hidden border border-gray-100 dark:border-dark-line flex flex-col animate-in fade-in zoom-in duration-200">
         <div class="p-6 pb-4 border-b border-gray-100 dark:border-dark-line shrink-0">
           <div class="flex items-center justify-between mb-3">
-            <h3 id="briefing-guide-modal-title" class="text-[#1E293B] dark:text-white font-bold text-[18px]">Guia do Briefing Estratégico</h3>
+            <h3 id="briefing-guide-modal-title" class="text-[#22292e] dark:text-white font-bold text-[18px]">Guia do Briefing Estratégico</h3>
             <button onclick="closeModal('briefing-guide-modal')" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-white">
               <i data-lucide="x" class="w-6 h-6" aria-hidden="true"></i>
             </button>
@@ -738,7 +768,7 @@
       <div class="bg-white dark:bg-dark-bg w-full max-w-[440px] max-h-[85vh] rounded-2xl shadow-2xl overflow-hidden border border-gray-100 dark:border-dark-line flex flex-col animate-in fade-in zoom-in duration-200">
         <div class="p-6 border-b border-gray-100 dark:border-dark-line flex items-center justify-between shrink-0">
           <div class="min-w-0">
-            <h3 id="briefing-question-modal-title" class="text-[#1E293B] dark:text-white font-bold text-[18px]">Adicionar pergunta</h3>
+            <h3 id="briefing-question-modal-title" class="text-[#22292e] dark:text-white font-bold text-[18px]">Adicionar pergunta</h3>
             <p id="briefing-question-modal-axis" class="text-[11px] text-slate-500 dark:text-dark-muted mt-0.5"></p>
           </div>
           <button onclick="closeBriefingQuestionModal()" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-white shrink-0">
@@ -779,7 +809,7 @@
           <div id="onboarding-modal-icon-wrap" class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0">
             <i id="onboarding-modal-icon" class="w-4.5 h-4.5"></i>
           </div>
-          <h3 id="onboarding-modal-title" class="text-[#1E293B] dark:text-white font-bold text-[16px] flex-1 min-w-0"></h3>
+          <h3 id="onboarding-modal-title" class="text-[#22292e] dark:text-white font-bold text-[16px] flex-1 min-w-0"></h3>
           <button onclick="closeOnboarding()" aria-label="Fechar" class="w-10 h-10 flex items-center justify-center text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-white shrink-0">
             <i data-lucide="x" class="w-6 h-6" aria-hidden="true"></i>
           </button>
@@ -1139,7 +1169,7 @@
           <button onclick="selectMeasurement('wh')" id="btn-measure-wh"
             class="measure-btn flex flex-col items-center justify-center p-3 bg-white dark:bg-dark-surface border-2 border-gray-100 dark:border-dark-line rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-700 transition-all">
             <i data-lucide="scaling" class="w-6 h-6 text-slate-500 dark:text-dark-muted mb-1.5 measure-icon"></i>
-            <span class="text-[10px] font-bold text-slate-500 dark:text-dark-text measure-label text-center leading-tight">Altura e Largura</span>
+            <span class="text-[10px] font-bold text-slate-500 dark:text-dark-text measure-label text-center leading-tight">Width e Height</span>
           </button>
           <button onclick="selectMeasurement('outer')" id="btn-measure-outer"
             class="measure-btn flex flex-col items-center justify-center p-3 bg-white dark:bg-dark-surface border-2 border-gray-100 dark:border-dark-line rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-700 transition-all">
@@ -1149,12 +1179,12 @@
           <button onclick="selectMeasurement('inner')" id="btn-measure-inner"
             class="measure-btn flex flex-col items-center justify-center p-3 bg-white dark:bg-dark-surface border-2 border-gray-100 dark:border-dark-line rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-700 transition-all">
             <i data-lucide="focus" class="w-6 h-6 text-slate-500 dark:text-dark-muted mb-1.5 measure-icon"></i>
-            <span class="text-[10px] font-bold text-slate-500 dark:text-dark-text measure-label text-center leading-tight">Padding Interno</span>
+            <span class="text-[10px] font-bold text-slate-500 dark:text-dark-text measure-label text-center leading-tight">Padding</span>
           </button>
           <button onclick="selectMeasurement('spacing')" id="btn-measure-spacing"
             class="measure-btn flex flex-col items-center justify-center p-3 bg-white dark:bg-dark-surface border-2 border-gray-100 dark:border-dark-line rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-700 transition-all">
             <i data-lucide="align-horizontal-space-between" class="w-6 h-6 text-slate-500 dark:text-dark-muted mb-1.5 measure-icon"></i>
-            <span class="text-[10px] font-bold text-slate-500 dark:text-dark-text measure-label text-center leading-tight">Padding e Gaps</span>
+            <span class="text-[10px] font-bold text-slate-500 dark:text-dark-text measure-label text-center leading-tight">Padding e Gap</span>
           </button>
         </div>
 
@@ -1177,7 +1207,7 @@
     <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeModal('scan-categories-modal')" aria-hidden="true"></div>
     <div class="relative w-full max-w-[400px] bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
       <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-dark-line">
-        <h3 id="scan-modal-title" class="text-[#1E293B] dark:text-white font-extrabold text-[15px] tracking-tight">Selecionar Categorias</h3>
+        <h3 id="scan-modal-title" class="text-[#22292e] dark:text-white font-extrabold text-[15px] tracking-tight">Selecionar Categorias</h3>
         <button onclick="closeModal('scan-categories-modal')" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-white transition-colors">
           <i data-lucide="x" class="w-6 h-6"></i>
         </button>
@@ -1442,20 +1472,20 @@
 
     <!-- Stats -->
     <div class="px-5 py-3 grid grid-cols-4 gap-2">
-      <div class="bg-sky-50 dark:bg-sky-900/20 rounded-xl p-2.5 text-center">
-        <p id="import-count-frames" class="text-[18px] font-extrabold text-sky-600 dark:text-sky-400 leading-none">0</p>
+      <div class="bg-ceu-50 dark:bg-ceu-900/20 rounded-xl p-2.5 text-center">
+        <p id="import-count-frames" class="text-[18px] font-extrabold text-ceu-600 dark:text-ceu-400 leading-none">0</p>
         <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-0.5 uppercase tracking-wide">Frames</p>
       </div>
-      <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-xl p-2.5 text-center">
-        <p id="import-count-specs" class="text-[18px] font-extrabold text-indigo-600 dark:text-indigo-400 leading-none">0</p>
+      <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-2.5 text-center">
+        <p id="import-count-specs" class="text-[18px] font-extrabold text-blue-600 dark:text-blue-400 leading-none">0</p>
         <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-0.5 uppercase tracking-wide">Specs</p>
       </div>
-      <div class="bg-cyan-50 dark:bg-cyan-900/20 rounded-xl p-2.5 text-center">
-        <p id="import-count-measures" class="text-[18px] font-extrabold text-cyan-600 dark:text-cyan-400 leading-none">0</p>
+      <div class="bg-info-50 dark:bg-info-900/20 rounded-xl p-2.5 text-center">
+        <p id="import-count-measures" class="text-[18px] font-extrabold text-info-600 dark:text-info-400 leading-none">0</p>
         <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-0.5 uppercase tracking-wide">Medidas</p>
       </div>
-      <div class="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-2.5 text-center">
-        <p id="import-count-flows" class="text-[18px] font-extrabold text-purple-600 dark:text-purple-400 leading-none">0</p>
+      <div class="bg-orange-50 dark:bg-orange-900/20 rounded-xl p-2.5 text-center">
+        <p id="import-count-flows" class="text-[18px] font-extrabold text-orange-800 dark:text-orange-400 leading-none">0</p>
         <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-0.5 uppercase tracking-wide">Fluxos</p>
       </div>
     </div>
@@ -1472,24 +1502,24 @@
         </div>
       </label>
 
-      <label id="import-opt-specs-label" class="flex items-start gap-3 p-3 border-2 border-gray-100 dark:border-dark-line rounded-xl cursor-pointer hover:border-indigo-300/60 transition-colors has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50/50 dark:has-[:checked]:bg-indigo-900/10">
-        <input type="checkbox" id="import-opt-specs" class="mt-0.5 w-4 h-4 accent-indigo-600 shrink-0">
+      <label id="import-opt-specs-label" class="flex items-start gap-3 p-3 border-2 border-gray-100 dark:border-dark-line rounded-xl cursor-pointer hover:border-blue-300/60 transition-colors has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50/50 dark:has-[:checked]:bg-blue-900/10">
+        <input type="checkbox" id="import-opt-specs" class="mt-0.5 w-4 h-4 accent-blue-600 shrink-0">
         <div class="flex-1">
           <p class="text-[12px] font-bold text-slate-800 dark:text-white leading-tight">Recriar Cards de Especificação</p>
           <p id="import-specs-hint" class="text-[10px] text-slate-500 dark:text-dark-muted leading-snug mt-0.5">Recria os cards de spec no canvas para os frames que possuem especificações.</p>
         </div>
       </label>
 
-      <label id="import-opt-measures-label" class="flex items-start gap-3 p-3 border-2 border-gray-100 dark:border-dark-line rounded-xl cursor-pointer hover:border-cyan-300/60 transition-colors has-[:checked]:border-cyan-500 has-[:checked]:bg-cyan-50/50 dark:has-[:checked]:bg-cyan-900/10">
-        <input type="checkbox" id="import-opt-measures" class="mt-0.5 w-4 h-4 accent-cyan-600 shrink-0">
+      <label id="import-opt-measures-label" class="flex items-start gap-3 p-3 border-2 border-gray-100 dark:border-dark-line rounded-xl cursor-pointer hover:border-info-300/60 transition-colors has-[:checked]:border-info-500 has-[:checked]:bg-info-50/50 dark:has-[:checked]:bg-info-900/10">
+        <input type="checkbox" id="import-opt-measures" class="mt-0.5 w-4 h-4 accent-info-600 shrink-0">
         <div class="flex-1">
           <p class="text-[12px] font-bold text-slate-800 dark:text-white leading-tight">Reaplicar Medidas</p>
           <p id="import-measures-hint" class="text-[10px] text-slate-500 dark:text-dark-muted leading-snug mt-0.5">Recria as anotações de medida no canvas para os frames que as possuem.</p>
         </div>
       </label>
 
-      <label id="import-opt-flows-label" class="flex items-start gap-3 p-3 border-2 border-gray-100 dark:border-dark-line rounded-xl cursor-pointer hover:border-purple-300/60 transition-colors has-[:checked]:border-purple-500 has-[:checked]:bg-purple-50/50 dark:has-[:checked]:bg-purple-900/10">
-        <input type="checkbox" id="import-opt-flows" class="mt-0.5 w-4 h-4 accent-purple-600 shrink-0">
+      <label id="import-opt-flows-label" class="flex items-start gap-3 p-3 border-2 border-gray-100 dark:border-dark-line rounded-xl cursor-pointer hover:border-orange-300/60 transition-colors has-[:checked]:border-orange-500 has-[:checked]:bg-orange-50/50 dark:has-[:checked]:bg-orange-900/10">
+        <input type="checkbox" id="import-opt-flows" class="mt-0.5 w-4 h-4 accent-orange-700 shrink-0">
         <div class="flex-1">
           <p class="text-[12px] font-bold text-slate-800 dark:text-white leading-tight">Recriar Fluxos</p>
           <p id="import-flows-hint" class="text-[10px] text-slate-500 dark:text-dark-muted leading-snug mt-0.5">Recria as conexões de fluxo no canvas, ligando novamente os elementos de origem e destino.</p>
@@ -1539,6 +1569,34 @@
         class="w-full py-2.5 rounded-2xl bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line text-slate-600 dark:text-dark-muted text-[11px] font-bold hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
         Não incluir
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- Revisão em lote do detalhamento (Essencial x Completo) dos itens marcados
+     "Vai para a Ficha". Edição só grava em "Salvar escolhas"; Cancelar,
+     Escape e clique no overlay descartam. Aberto por openDetailLevelModal (core.js). -->
+<div id="detail-level-modal" role="dialog" aria-modal="true" aria-labelledby="detail-level-modal-title" class="modal-overlay hidden fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onclick="if(event.target===this)cancelDetailLevelModal()">
+  <div class="modal-content bg-white dark:bg-dark-surface rounded-2xl shadow-2xl w-full max-w-sm max-h-[85vh] flex flex-col">
+    <div class="p-6 pb-3 flex flex-col gap-2 shrink-0">
+      <div class="flex items-center gap-2">
+        <p id="detail-level-modal-title" class="text-[13px] font-bold text-slate-800 dark:text-white">Quanto detalhe cada item terá na Ficha?</p>
+        <span class="shrink-0" title="Essencial é o padrão. Completo inclui composição interna, interações e todas as propriedades.">
+          <i data-lucide="help-circle" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted pointer-events-none"></i>
+        </span>
+      </div>
+      <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed">Marque os itens que precisam do detalhamento completo; os demais ficam no essencial.</p>
+      <div class="flex items-center justify-between gap-2">
+        <button id="detail-level-markall" type="button" onclick="toggleAllDetailLevel()" class="min-h-[40px] text-[11px] font-bold text-blue-500 hover:text-blue-600 dark:text-blue-300 dark:hover:text-blue-200 transition-colors">Marcar todos como completo</button>
+        <span id="detail-level-count" aria-live="polite" class="text-[10px] text-slate-600 dark:text-dark-muted shrink-0"></span>
+      </div>
+    </div>
+    <div id="detail-level-list" class="flex-1 min-h-0 overflow-y-auto px-6 py-1"></div>
+    <div class="p-6 pt-3 flex flex-col gap-2 shrink-0">
+      <button type="button" onclick="saveDetailLevelModal()"
+        class="w-full py-2.5 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white text-[11px] font-bold transition-colors">Salvar escolhas</button>
+      <button type="button" onclick="cancelDetailLevelModal()"
+        class="w-full py-2.5 rounded-2xl bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line text-slate-600 dark:text-dark-muted text-[11px] font-bold hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Cancelar</button>
     </div>
   </div>
 </div>
@@ -1817,43 +1875,43 @@
         <input type="checkbox" id="inject-chk-info" checked class="w-4 h-4 rounded border-gray-300 text-[#005ca9] focus:ring-[#005ca9]" />
       </label>
 
-      <label id="inject-chk-specs-row" class="hidden flex items-center justify-between p-3 bg-gray-50 dark:bg-dark-surface rounded-xl border border-gray-100 dark:border-dark-line cursor-pointer hover:border-indigo-300 transition-colors">
+      <label id="inject-chk-specs-row" class="hidden flex items-center justify-between p-3 bg-gray-50 dark:bg-dark-surface rounded-xl border border-gray-100 dark:border-dark-line cursor-pointer hover:border-blue-300 transition-colors">
         <div class="flex items-center gap-2.5">
-          <div class="w-7 h-7 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg flex items-center justify-center shrink-0">
-            <i data-lucide="tag" class="w-3.5 h-3.5 text-indigo-500"></i>
+          <div class="w-7 h-7 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center justify-center shrink-0">
+            <i data-lucide="tag" class="w-3.5 h-3.5 text-blue-500"></i>
           </div>
           <div>
             <p class="text-[12px] font-bold text-slate-800 dark:text-white">Especificações</p>
             <p id="inject-specs-count" class="text-[10px] text-slate-500 dark:text-dark-muted"></p>
           </div>
         </div>
-        <input type="checkbox" id="inject-chk-specs" checked class="w-4 h-4 rounded border-gray-300 text-indigo-500 focus:ring-indigo-400" />
+        <input type="checkbox" id="inject-chk-specs" checked class="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-400" />
       </label>
 
-      <label id="inject-chk-measures-row" class="hidden flex items-center justify-between p-3 bg-gray-50 dark:bg-dark-surface rounded-xl border border-gray-100 dark:border-dark-line cursor-pointer hover:border-cyan-300 transition-colors">
+      <label id="inject-chk-measures-row" class="hidden flex items-center justify-between p-3 bg-gray-50 dark:bg-dark-surface rounded-xl border border-gray-100 dark:border-dark-line cursor-pointer hover:border-info-300 transition-colors">
         <div class="flex items-center gap-2.5">
-          <div class="w-7 h-7 bg-cyan-50 dark:bg-cyan-900/20 rounded-lg flex items-center justify-center shrink-0">
-            <i data-lucide="ruler" class="w-3.5 h-3.5 text-cyan-600"></i>
+          <div class="w-7 h-7 bg-info-50 dark:bg-info-900/20 rounded-lg flex items-center justify-center shrink-0">
+            <i data-lucide="ruler" class="w-3.5 h-3.5 text-info-600"></i>
           </div>
           <div>
             <p class="text-[12px] font-bold text-slate-800 dark:text-white">Medidas</p>
             <p id="inject-measures-count" class="text-[10px] text-slate-500 dark:text-dark-muted"></p>
           </div>
         </div>
-        <input type="checkbox" id="inject-chk-measures" checked class="w-4 h-4 rounded border-gray-300 text-cyan-500 focus:ring-cyan-400" />
+        <input type="checkbox" id="inject-chk-measures" checked class="w-4 h-4 rounded border-gray-300 text-info-500 focus:ring-info-400" />
       </label>
 
-      <label id="inject-chk-flows-row" class="hidden flex items-center justify-between p-3 bg-gray-50 dark:bg-dark-surface rounded-xl border border-gray-100 dark:border-dark-line cursor-pointer hover:border-purple-300 transition-colors">
+      <label id="inject-chk-flows-row" class="hidden flex items-center justify-between p-3 bg-gray-50 dark:bg-dark-surface rounded-xl border border-gray-100 dark:border-dark-line cursor-pointer hover:border-orange-300 transition-colors">
         <div class="flex items-center gap-2.5">
-          <div class="w-7 h-7 bg-purple-50 dark:bg-purple-900/20 rounded-lg flex items-center justify-center shrink-0">
-            <i data-lucide="git-branch" class="w-3.5 h-3.5 text-purple-600"></i>
+          <div class="w-7 h-7 bg-orange-50 dark:bg-orange-900/20 rounded-lg flex items-center justify-center shrink-0">
+            <i data-lucide="git-branch" class="w-3.5 h-3.5 text-orange-800"></i>
           </div>
           <div>
             <p class="text-[12px] font-bold text-slate-800 dark:text-white">Fluxos de Tela</p>
             <p id="inject-flows-count" class="text-[10px] text-slate-500 dark:text-dark-muted"></p>
           </div>
         </div>
-        <input type="checkbox" id="inject-chk-flows" checked class="w-4 h-4 rounded border-gray-300 text-purple-500 focus:ring-purple-400" />
+        <input type="checkbox" id="inject-chk-flows" checked class="w-4 h-4 rounded border-gray-300 text-orange-700 focus:ring-orange-400" />
       </label>
 
       <div class="flex gap-2 pt-2">
@@ -1898,7 +1956,7 @@
         </div>
         <input type="text" id="edit-flow-name-input" maxlength="20" placeholder="Ex: Conexão 5..."
           oninput="_updateCharCount(this, 20)"
-          class="w-full bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[13px] text-[#1E293B] dark:text-white focus:ring-2 focus:ring-[#005ca9]/20 outline-none transition-all" />
+          class="w-full bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl px-3 py-2.5 text-[13px] text-[#22292e] dark:text-white focus:ring-2 focus:ring-[#005ca9]/20 outline-none transition-all" />
       </div>
 
       <!-- Tipo da conexão -- permite trocar Sequência/Mensagem/Decisão numa
@@ -1936,7 +1994,7 @@
         </div>
         <textarea id="edit-flow-chip-text" placeholder="Ex: Sim, Não, Enviar..." maxlength="20"
           oninput="_updateCharCount(this, 20)"
-          class="w-full h-20 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl p-4 text-[13px] text-[#1E293B] dark:text-white focus:ring-2 focus:ring-[#005ca9]/20 outline-none resize-none transition-all"></textarea>
+          class="w-full h-20 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-xl p-4 text-[13px] text-[#22292e] dark:text-white focus:ring-2 focus:ring-[#005ca9]/20 outline-none resize-none transition-all"></textarea>
       </div>
 
       <div class="space-y-3">

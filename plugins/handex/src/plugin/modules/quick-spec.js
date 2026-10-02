@@ -328,6 +328,7 @@ function handleQuickSpecResult(msg) {
     nodeType: el.nodeType,
     properties: el.properties,
     hidden: false,
+    note: '',
     // Id do card criado no canvas, preenchido só depois de uma inserção
     // bem-sucedida (ver handleQuickSpecCanvasResult) -- é o que permite
     // perguntar "apagar do canvas também?" ao excluir da lista.
@@ -376,6 +377,7 @@ function handleQuickSpecCanvasCardsList(msg) {
       nodeType: cc.nodeType,
       properties: cc.properties,
       hidden: false,
+      note: typeof cc.note === 'string' ? cc.note : '',
       insertedCardId: cc.cardId
     });
     addedAny = true;
@@ -457,7 +459,7 @@ function _quickSpecApplySearch(query) {
 window._quickSpecApplySearch = _quickSpecApplySearch;
 
 function _quickSpecPropSearchText(props) {
-  return (props || []).map(p => `${p.label} ${p.value} ${p.tokenName || ''} ${p.libName || ''}`).join(' ').toLowerCase();
+  return (props || []).map(p => `${p.label} ${_vocabLabel(p.label)} ${p.value} ${p.tokenName || ''} ${p.libName || ''}`).join(' ').toLowerCase();
 }
 
 // Pergunta sobre os cards do canvas quando os itens removidos da lista já
@@ -591,14 +593,14 @@ function _quickSpecRenderList() {
         if (p.tokenName) {
           return `
       <div class="text-[10px] leading-snug">
-        <div>${escapeHtml(p.label)}: <strong class="${p.libName ? 'text-[#005ca9] dark:text-blue-400' : 'text-slate-700 dark:text-white'}">${escapeHtml(p.tokenName)}</strong>${p.libName ? ` <span class="text-slate-400 dark:text-slate-500 font-normal">· ${escapeHtml(p.libName)}</span>` : ''}</div>
+        <div>${escapeHtml(_vocabLabel(p.label))}: <strong class="${p.libName ? 'text-[#005ca9] dark:text-blue-400' : 'text-slate-700 dark:text-white'}">${escapeHtml(p.tokenName)}</strong>${p.libName ? ` <span class="text-slate-400 dark:text-slate-500 font-normal">· ${escapeHtml(p.libName)}</span>` : ''}</div>
         <div class="pl-3 text-slate-400 dark:text-slate-500">↳ valor bruto: ${escapeHtml(String(p.value))}</div>
       </div>
     `;
         }
         return `
       <div class="text-[10px] text-slate-500 dark:text-dark-muted leading-snug">
-        <span>${escapeHtml(p.label)}: <strong class="text-slate-700 dark:text-white">${escapeHtml(String(p.value))}</strong></span>
+        <span>${escapeHtml(_vocabLabel(p.label))}: <strong class="text-slate-700 dark:text-white">${escapeHtml(String(_vocabValue(p.value)))}</strong></span>
       </div>
     `;
       }).join('');
@@ -611,7 +613,7 @@ function _quickSpecRenderList() {
             <span class="shrink-0 w-5 h-5 flex items-center justify-center bg-[#005ca9] text-white text-[9px] font-black rounded">${escapeHtml(el.tag)}</span>
             <span class="text-[11px] font-bold text-slate-700 dark:text-white truncate">${escapeHtml(el.name)}</span>
             <span class="text-[9.5px] text-slate-400 dark:text-slate-500 shrink-0">${el.nodeType}</span>
-            ${el.insertedCardId ? '<span title="Já tem card no canvas" class="shrink-0 text-[8.5px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-0.5 rounded">No canvas</span>' : ''}
+            ${el.insertedCardId ? '<span title="Já tem card no canvas" class="shrink-0 text-[8.5px] font-bold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-1.5 py-0.5 rounded">No canvas</span>' : ''}
           </div>
           <div class="flex items-center gap-1 shrink-0">
             <button onclick="focusNode('${el.nodeId}')" title="Focar no elemento original" aria-label="Focar no elemento original no canvas"
@@ -636,6 +638,15 @@ function _quickSpecRenderList() {
         <div class="accordion-content hidden">
           <div class="space-y-0.5 px-3 pt-2">
             ${propsHtml}
+          </div>
+          <div class="px-3 pt-2">
+            <div class="flex items-center justify-between mb-1 ml-1">
+              <label for="qs-note-${escapeHtml(el.tag)}" class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Observação <span class="normal-case font-medium text-slate-400 dark:text-slate-500">(opcional)</span></label>
+              <span id="qs-note-count-${escapeHtml(el.tag)}" class="text-[9px] font-bold text-slate-400 dark:text-dark-muted">${(el.note || '').length}/280</span>
+            </div>
+            <textarea id="qs-note-${escapeHtml(el.tag)}" rows="2" maxlength="280" placeholder="Ex: usar só no estado ativo"
+              oninput="quickSpecSetNote('${escapeHtml(el.tag)}', this.value)" onblur="quickSpecFlushNote('${escapeHtml(el.tag)}')"
+              class="w-full px-3 py-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-2xl text-[11px] text-slate-700 dark:text-dark-text placeholder:text-gray-300 outline-none focus:ring-2 focus:ring-blue-100 resize-none transition-all">${escapeHtml(el.note || '')}</textarea>
           </div>
           <div class="p-3 space-y-2">
             ${alreadyOnCanvas ? '' : `
@@ -801,11 +812,41 @@ function _quickSpecConfirmLayoutAndInsert() {
 }
 window._quickSpecConfirmLayoutAndInsert = _quickSpecConfirmLayoutAndInsert;
 
+// Observação por elemento (máx. 280): fica no estado da sessão e, se o item
+// já tem card no canvas, é reenviada ao backend com debounce (ou ao sair do
+// campo) para atualizar o bloco sem recriar o card.
+const _quickSpecNoteTimers = {};
+
+function _quickSpecSendNoteUpdate(tag) {
+  const el = _quickSpecSessionResults.find(e => e.tag === tag);
+  if (!el || !el.insertedCardId) return;
+  parent.postMessage({ pluginMessage: { type: 'quick-spec-update-note', nodeId: el.insertedCardId, note: (el.note || '').trim().slice(0, 280) } }, '*');
+}
+
+function quickSpecSetNote(tag, value) {
+  const el = _quickSpecSessionResults.find(e => e.tag === tag);
+  if (!el) return;
+  el.note = String(value).slice(0, 280);
+  const counter = document.getElementById('qs-note-count-' + tag);
+  if (counter) counter.textContent = `${el.note.length}/280`;
+  clearTimeout(_quickSpecNoteTimers[tag]);
+  if (el.insertedCardId) _quickSpecNoteTimers[tag] = setTimeout(() => _quickSpecSendNoteUpdate(tag), 500);
+}
+window.quickSpecSetNote = quickSpecSetNote;
+
+function quickSpecFlushNote(tag) {
+  if (_quickSpecNoteTimers[tag] === undefined) return;
+  clearTimeout(_quickSpecNoteTimers[tag]);
+  delete _quickSpecNoteTimers[tag];
+  _quickSpecSendNoteUpdate(tag);
+}
+window.quickSpecFlushNote = quickSpecFlushNote;
+
 // Insere no canvas UM card do elemento indicado.
 function quickSpecInsertCanvasCards(idx) {
   const el = _quickSpecSessionResults[idx];
   if (!el) return;
-  _quickSpecOpenLayoutModal([{ tag: el.tag, nodeId: el.nodeId, name: el.name, nodeType: el.nodeType, properties: el.properties }]);
+  _quickSpecOpenLayoutModal([{ tag: el.tag, nodeId: el.nodeId, name: el.name, nodeType: el.nodeType, properties: el.properties, note: (el.note || '').trim().slice(0, 280) }]);
 }
 window.quickSpecInsertCanvasCards = quickSpecInsertCanvasCards;
 
@@ -818,8 +859,7 @@ window._quickSpecPendingConversionTag = null;
 
 // Converte um item do Spec Express em Spec Detalhada -- abre o fluxo normal
 // de criação (openSpecFormModal, specifications.js) já com o elemento de
-// origem vinculado e as propriedades já escaneadas como ponto de partida da
-// nota. Reaproveita o fluxo inteiro (propriedades -> posição -> exceção)
+// origem vinculado e as observação como nota inicial. Reaproveita o fluxo inteiro (propriedades -> posição -> exceção)
 // sem duplicar nada dele; só o desfecho (spec-created, ver messages.js) é
 // que sabe completar a conversão removendo o card Express original.
 function quickSpecConvertToDetailedSpec(idx) {
@@ -847,12 +887,8 @@ function quickSpecConvertToDetailedSpec(idx) {
   if (typeof _onNodeNameForSpec === 'function') _onNodeNameForSpec(el.name);
 
   const noteField = document.getElementById('ann-note');
-  if (noteField && el.properties && el.properties.length > 0) {
-    const propsText = el.properties.map(p => {
-      const valueLabel = p.tokenName ? `${p.tokenName}${p.libName ? ` (${p.libName})` : ''}` : String(p.value);
-      return `${p.label}: ${valueLabel}`;
-    }).join('\n');
-    noteField.value = propsText.slice(0, 500);
+  if (noteField) {
+    noteField.value = (el.note || '').slice(0, 500);
     if (typeof _updateCharCount === 'function') _updateCharCount(noteField, 500);
   }
 }
@@ -893,7 +929,7 @@ function quickSpecInsertAllCanvasCards() {
     showToast('Nenhum elemento pendente de inserção.', 'error');
     return;
   }
-  _quickSpecOpenLayoutModal(visible.map(el => ({ tag: el.tag, nodeId: el.nodeId, name: el.name, nodeType: el.nodeType, properties: el.properties })));
+  _quickSpecOpenLayoutModal(visible.map(el => ({ tag: el.tag, nodeId: el.nodeId, name: el.name, nodeType: el.nodeType, properties: el.properties, note: (el.note || '').trim().slice(0, 280) })));
 }
 window.quickSpecInsertAllCanvasCards = quickSpecInsertAllCanvasCards;
 

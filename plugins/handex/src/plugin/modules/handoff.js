@@ -15,6 +15,25 @@
 // (escopo global compartilhado)
 // ============================================================
 
+    // Paleta de exceções por tipo, mesma semântica da UI (specifications.js
+    // _excColors) e do card da spec no canvas. "Aviso" é nome legado de Alerta.
+    const _EXC_TIPOS = {
+      'Erro':        { label: 'Erro',        text: '#8c2424', bg: '#fbebeb' },
+      'Alerta':      { label: 'Alerta',      text: '#654c02', bg: '#fff9e6' },
+      'Sucesso':     { label: 'Sucesso',     text: '#0d581d', bg: '#e7f4ea' },
+      'Confirmação': { label: 'Confirmação', text: '#005ca9', bg: '#e5f2fc' }
+    };
+    function _excTipoInfo(tipo) {
+      const t = tipo === 'Aviso' ? 'Alerta' : tipo;
+      return _EXC_TIPOS[t] || { label: tipo || 'Geral', text: '#64748b', bg: '#f1f5f9' };
+    }
+    // Specs sem frame vinculado (handoffData.specs menos as já presentes em
+    // frame.createdSpecs -- o array global é regravado já mesclado).
+    function _looseSpecsOf(data) {
+      const framed = new Set((data.frames || []).flatMap(f => (f.createdSpecs || []).map(s => s.id)));
+      return (data.specs || []).filter(s => !(s.id && framed.has(s.id)));
+    }
+
     function bytesToBase64(bytes) {
       let binary = '';
       const len = bytes.byteLength;
@@ -90,10 +109,8 @@ ${regras.length === 0 ? 'Nenhuma regra cadastrada.' : regras.map(r => `- **${r.t
 ${framesList.map(f => {
   const measurements = f.measurements || [];
   const createdSpecs = f.createdSpecs || [];
-  // Agrega exceções de todas as specs do frame -- frame.excecoes (nível de
-  // frame) nunca teve UI real de entrada e foi removido; spec.excecoes é o
-  // único conceito vivo. Resumo aqui + detalhe completo por spec na seção
-  // "Especificações Anotadas" mais abaixo (linha ~170).
+  // Só contagem informativa -- exceções vivem sob cada spec em "Especificações
+  // Anotadas" mais abaixo, nunca como seção solta.
   const excecoes = createdSpecs.flatMap(s => (s.excecoes || []).map(e => ({ ...e, _spec: s.name })));
   const isNew = f.isNewComponent ? '\n- **Novo Componente**' : '';
   const _auditStatus = (() => {
@@ -114,8 +131,7 @@ ${framesList.map(f => {
       `- [${r.label}] **${r.name}**${r.status === 'warning' ? ' *(revisão recomendada)*' : ''}${r.nodeId ? ` — Node ID: \`${r.nodeId}\`` : ''}`
     ).join('\n');
   const excMD = excecoes.length === 0 ? '' :
-    '\n\n#### Exceções (' + excecoes.length + ')\n' +
-    excecoes.map(e => `- [${e.tipo || 'Geral'}] **${e.titulo || ''}**${e._spec ? ' (' + e._spec + ')' : ''}${e.obs ? ': ' + e.obs : ''}`).join('\n');
+    '\n- **Exceções nas specs:** ' + excecoes.length + ' (detalhe sob cada spec em "Especificações Anotadas")';
   let tokensMD = '';
   if (f.specs) {
     const cats = [
@@ -136,7 +152,7 @@ ${framesList.map(f => {
         tokensMD += '\n\n#### Personalizações de componentes DSC\n' +
           '*Valores diferentes do componente principal da lib (o que o Reset do Figma restauraria):*\n' +
           customized.map(it => `- **${it.name}**\n` +
-            it.customizations.map(c => `  - ${c.layer} · ${c.campo}: ${c.atual} (padrão da lib: ${c.padrao})`).join('\n')
+            it.customizations.map(c => `  - ${c.layer} · ${_vocabLabel(c.campo)}: ${c.atual} (padrão da lib: ${c.padrao})`).join('\n')
           ).join('\n');
       }
     } else {
@@ -167,10 +183,21 @@ ${(() => {
   return parts.join('\n\n');
 })()}
 
-## Especificações Anotadas (${framesList.reduce((n, f) => n + (f.createdSpecs || []).length, 0)})
+## Especificações Anotadas (${framesList.reduce((n, f) => n + (f.createdSpecs || []).length, 0) + _looseSpecsOf(handoffData).length})
 ${(() => {
   const framesWithSpecs = framesList.filter(f => (f.createdSpecs || []).length > 0);
-  if (framesWithSpecs.length === 0) return 'Nenhuma especificação anotada.';
+  const looseSpecs = _looseSpecsOf(handoffData);
+  if (framesWithSpecs.length === 0 && looseSpecs.length === 0) return 'Nenhuma especificação anotada.';
+  const looseMD = looseSpecs.length === 0 ? [] : [`### Specs sem frame vinculado\n` + looseSpecs.map(s => {
+    const cat = s.type || s.categoryLabel || s.category || 'Geral';
+    const props = (s.properties || []).length > 0
+      ? '\n' + s.properties.map(p => `  - **${_vocabLabel(p.label, p.key)}**${p.token ? ` \`${p.token}\`` : ''}${p.value ? ` → ${_vocabValue(p.value)}` : ''}`).join('\n')
+      : '';
+    const excs = (s.excecoes || []).length > 0
+      ? '\n' + s.excecoes.map(e => `  - [${_excTipoInfo(e.tipo).label}] **${e.titulo || ''}**${e.obs ? ': ' + e.obs : ''}`).join('\n')
+      : '';
+    return `- **${s.name || 'Spec'}** [${cat}]${s.note ? ': ' + s.note : ''}${s.link ? ` — [DSC](${s.link})` : ''}${props}${excs}`;
+  }).join('\n')];
   return framesWithSpecs.map(f => {
     const groupNames = f.specGroupNames || {};
     const groupVisible = f.specGroupVisible || {};
@@ -188,17 +215,17 @@ ${(() => {
         const cat = s.type || s.categoryLabel || s.category || 'Geral';
         const nodeRef = s.targetNodeId ? ` _(Node: \`${s.targetNodeId}\`)_` : '';
         const props = (s.properties || []).length > 0
-          ? '\n' + s.properties.map(p => `  - **${p.label}**${p.token ? ` \`${p.token}\`` : ''}${p.value ? ` → ${p.value}` : ''}`).join('\n')
+          ? '\n' + s.properties.map(p => `  - **${_vocabLabel(p.label, p.key)}**${p.token ? ` \`${p.token}\`` : ''}${p.value ? ` → ${_vocabValue(p.value)}` : ''}`).join('\n')
           : '';
         const excs = (s.excecoes || []).length > 0
-          ? '\n' + s.excecoes.map(e => `  - [${e.tipo || 'Geral'}] **${e.titulo || ''}**${e.obs ? ': ' + e.obs : ''}`).join('\n')
+          ? '\n' + s.excecoes.map(e => `  - [${_excTipoInfo(e.tipo).label}] **${e.titulo || ''}**${e.obs ? ': ' + e.obs : ''}`).join('\n')
           : '';
         return `- **${s.name || 'Spec'}** [${cat}]${s.note ? ': ' + s.note : ''}${s.link ? ` — [DSC](${s.link})` : ''}${nodeRef}${props}${excs}`;
       });
       return `#### Grupo ${letter}${groupName}\n${specLines.join('\n')}`;
     }).filter(Boolean);
     return `### ${f.nome}\n${groups.join('\n\n')}`;
-  }).join('\n\n');
+  }).concat(looseMD).join('\n\n');
 })()}
 
 ## Fluxos de Tela (${(handoffData.createdFlows || []).length})
@@ -282,8 +309,24 @@ ${(handoffData.createdFlows || []).length === 0
     }
     window._continueCreateHandoffAfterVersionCheck = _continueCreateHandoffAfterVersionCheck;
 
+    // Aplica as seções desmarcadas no modal "o que inserir" (consumido uma
+    // vez): cópia rasa, sem alterar handoffData salvo.
+    function _dataForCreateHandoff() {
+      const flt = window._handoffInjectFilter;
+      window._handoffInjectFilter = null;
+      if (!flt) return handoffData;
+      return Object.assign({}, handoffData, {
+        measurements: flt.measures ? handoffData.measurements : [],
+        createdFlows: flt.flows ? handoffData.createdFlows : [],
+        frames: (handoffData.frames || []).map(f => Object.assign({}, f, {
+          createdSpecs: flt.specs ? f.createdSpecs : [],
+          measurements: flt.measures ? f.measurements : [],
+        })),
+      });
+    }
+
     function _sendCreateHandoff(includeAllFrames = false) {
-      parent.postMessage({ pluginMessage: _withRefSkeleton({ type: 'create-handoff', data: handoffData, includeAllFrames }) }, '*');
+      parent.postMessage({ pluginMessage: _withRefSkeleton({ type: 'create-handoff', data: _dataForCreateHandoff(), includeAllFrames }) }, '*');
       showHandoffLoading();
     }
     window._sendCreateHandoff = _sendCreateHandoff;
@@ -335,6 +378,7 @@ ${(handoffData.createdFlows || []).length === 0
     // Chamada pelo handler de 'ficha-version-pulled' em messages.js, depois
     // de sincronizar handoffData.step1.versao com o que está no canvas.
     function _continueOpenHandoffInjectModal() {
+      window._handoffInjectFilter = null;
       collectHandoffData();
 
       // Mesma checagem de obrigatórios usada em createHandoffOnCanvas — precisa
@@ -479,7 +523,7 @@ ${(handoffData.createdFlows || []).length === 0
       const versionType = selected ? selected.value : 'minor';
 
       if (typeof closeModal === 'function') closeModal('versioning-modal');
-      parent.postMessage({ pluginMessage: _withRefSkeleton({ type: 'create-handoff', data: handoffData, versionType }) }, '*');
+      parent.postMessage({ pluginMessage: _withRefSkeleton({ type: 'create-handoff', data: _dataForCreateHandoff(), versionType }) }, '*');
       showHandoffLoading();
     }
     window.confirmHandoffVersion = confirmHandoffVersion;
@@ -836,7 +880,7 @@ ${(handoffData.createdFlows || []).length === 0
           const before = String(prevMap.get(key).value || '');
           const after = String(p.value || '');
           if (before !== after) {
-            changes.push({ type: p.type, label: p.label || p.name, before, after });
+            changes.push({ type: p.type, label: _vocabLabel(p.label || p.name), before, after });
           }
         }
       });
@@ -875,14 +919,8 @@ ${(handoffData.createdFlows || []).length === 0
         }
       }
 
-      // Docs, excecoes (agregado das specs de todos os frames + avulsas --
-      // frame.excecoes, nível de frame, nunca teve UI real de entrada e foi
-      // removido), regras e anexos — schema v2
+      // Docs, regras e anexos — schema v2 (exceções vivem dentro de cada spec)
       const docs = handoffData.docs || {};
-      const excecoes = [
-        ...(handoffData.frames || []).flatMap(f => (f.createdSpecs || []).flatMap(s => s.excecoes || [])),
-        ...(handoffData.specs || []).flatMap(s => s.excecoes || [])
-      ];
       const regras = handoffData.step2.regras || [];
       const uploadedFileNames = (handoffData.step2.anexos || []).map(a => a.name);
 
@@ -930,19 +968,27 @@ ${(handoffData.createdFlows || []).length === 0
           </div>`;
       }
 
-      // Type → visual mapping for Cenários de Exceção
-      const excecaoTypeMap = {
-        "Erro":         { color: "red",    icon: "alert-circle",   label: "Erro" },
-        "Aviso":        { color: "amber",  icon: "alert-triangle", label: "Aviso" },
-        "Sucesso":      { color: "green",  icon: "check-circle",   label: "Sucesso" },
-        "Confirmação":  { color: "orange", icon: "help-circle",    label: "Confirmação" }
-      };
-      const excecaoTypePalette = {
-        red:    { dot: "bg-red-500",    title: "text-red-700 dark:text-red-300",    bg: "bg-red-50/40 dark:bg-red-950/10",    border: "border-red-100 dark:border-red-900/30",    badge: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300" },
-        amber:  { dot: "bg-amber-500",  title: "text-amber-700 dark:text-amber-300",bg: "bg-amber-50/40 dark:bg-amber-950/10",border: "border-amber-100 dark:border-amber-900/30",badge: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300" },
-        green:  { dot: "bg-green-500",  title: "text-green-700 dark:text-green-300",bg: "bg-green-50/40 dark:bg-green-950/10",border: "border-green-100 dark:border-green-900/30",badge: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300" },
-        orange: { dot: "bg-orange-500", title: "text-orange-700 dark:text-orange-300", bg: "bg-orange-50/40 dark:bg-orange-950/10", border: "border-orange-100 dark:border-orange-900/30", badge: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300" }
-      };
+      // Bloco de exceções de uma spec (HTML), cor/rótulo por tipo -- mesma paleta da UI.
+      function _specExcsHTML(excs) {
+        if (!excs || excs.length === 0) return '';
+        return `
+          <div class="border-t border-blue-100/60 dark:border-blue-900/30 px-2.5 py-2">
+            <p class="text-[8px] font-black uppercase tracking-widest text-slate-500 mb-1.5">Exceções · ${excs.length}</p>
+            <div class="space-y-1">
+              ${excs.map(e => {
+                const t = _excTipoInfo(e.tipo);
+                return `<div class="rounded-md px-2 py-1.5" style="background-color:${t.bg}">
+                  <div class="flex items-center gap-2">
+                    <span class="text-[9px] font-black uppercase tracking-wide shrink-0" style="color:${t.text}">${t.label}</span>
+                    <span class="text-[10px] font-bold text-slate-700">${e.titulo || ''}</span>
+                  </div>
+                  ${e.obs ? `<p class="text-[10px] text-slate-600 mt-0.5">${String(e.obs).split('\n').join('<br>')}</p>` : ''}
+                  ${e.anchor ? `<a href="${e.anchor}" target="_blank" class="inline-block text-[10px] font-bold mt-0.5 hover:underline" style="color:${t.text}">Abrir no Figma</a>` : ''}
+                </div>`;
+              }).join('')}
+            </div>
+          </div>`;
+      }
 
       // Accordion HTML builder helper (natively in plugin context)
       function buildAccordionHTML(id, title, icon, content, isExpanded = false) {
@@ -966,7 +1012,7 @@ ${(handoffData.createdFlows || []).length === 0
         `;
       }
 
-      // Generate Accordions List (ordem: Objetivo → Briefing → Exceções → Regras → Anexos → Equipe)
+      // Generate Accordions List (ordem: Objetivo → Briefing → Regras → Anexos → Equipe)
       let accordionsHTML = "";
 
       // 1. Objetivo da Entrega (sempre aberto, primeiro item)
@@ -1000,53 +1046,6 @@ ${(handoffData.createdFlows || []).length === 0
         `;
         accordionsHTML += buildAccordionHTML("acc-briefing", "Briefing Estratégico", "message-square", briefingContent, false);
       }
-
-      // 3. Cenários de Exceção & Erro (agrupados por tipo)
-      let excecoesContent = "";
-      if (excecoes.length === 0) {
-        excecoesContent = '<p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Nenhum cenário de exceção cadastrado.</p>';
-      } else {
-        const groups = {};
-        excecoes.forEach(e => {
-          const t = e.tipo || "Geral";
-          if (!groups[t]) groups[t] = [];
-          groups[t].push(e);
-        });
-        const groupOrder = ["Erro", "Aviso", "Confirmação", "Sucesso"];
-        const orderedTypes = Object.keys(groups).sort((a, b) => {
-          const ai = groupOrder.indexOf(a); const bi = groupOrder.indexOf(b);
-          return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
-        });
-        excecoesContent = `<div class="space-y-5 text-left">` + orderedTypes.map(type => {
-          const map = excecaoTypeMap[type] || { color: "red", icon: "alert-octagon", label: type };
-          const pal = excecaoTypePalette[map.color] || excecaoTypePalette.red;
-          const items = groups[type];
-          const cards = items.map(e => `
-            <div class="p-4 ${pal.bg} border ${pal.border} rounded-xl">
-              <div class="flex items-center justify-between gap-2 mb-1.5">
-                <h4 class="text-xs font-black ${pal.title} flex items-center gap-1.5">
-                  <span class="w-1.5 h-1.5 ${pal.dot} rounded-full"></span>${e.titulo || ''}
-                </h4>
-                <span class="shrink-0 px-2 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-wide ${pal.badge}">${map.label}</span>
-              </div>
-              ${e.notas ? `<p class="text-xs text-slate-600 dark:text-slate-300 mt-1.5">${e.notas.replace(/\n/g, '<br>')}</p>` : ''}
-              ${e.anchor ? `<a href="${e.anchor}" target="_blank" class="inline-flex items-center gap-1 text-[10px] text-blue-600 dark:text-blue-400 font-bold mt-2 hover:underline">Abrir no Figma <i data-lucide="external-link" class="w-2.5 h-2.5"></i></a>` : ''}
-            </div>
-          `).join('');
-          return `
-            <div>
-              <div class="flex items-center gap-2 mb-2 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
-                <i data-lucide="${map.icon}" class="w-3.5 h-3.5"></i>
-                <span>${map.label}</span>
-                <span class="text-slate-500">·</span>
-                <span class="text-slate-500 dark:text-slate-400 font-bold">${items.length}</span>
-              </div>
-              <div class="space-y-2">${cards}</div>
-            </div>
-          `;
-        }).join('') + `</div>`;
-      }
-      accordionsHTML += buildAccordionHTML("acc-excecoes", "Cenários de Exceção & Erro", "alert-octagon", excecoesContent, false);
 
       // 4. Regras de Negócio & HUs
       const regrasContent = `
@@ -1147,13 +1146,13 @@ ${(handoffData.createdFlows || []).length === 0
       if (statesArr.length > 0 || motionArr.length > 0) {
         const stateColorMap = {
           blue: 'bg-blue-50 dark:bg-blue-950/20 border-blue-100 dark:border-blue-900/30 text-blue-700 dark:text-blue-300',
-          indigo: 'bg-indigo-50 dark:bg-indigo-950/20 border-indigo-100 dark:border-indigo-900/30 text-indigo-700 dark:text-indigo-300',
+          indigo: 'bg-blue-50 dark:bg-blue-950/20 border-blue-100 dark:border-blue-900/30 text-blue-700 dark:text-blue-300',
           green: 'bg-green-50 dark:bg-green-950/20 border-green-100 dark:border-green-900/30 text-green-700 dark:text-green-300',
           amber: 'bg-amber-50 dark:bg-amber-950/20 border-amber-100 dark:border-amber-900/30 text-amber-700 dark:text-amber-300',
           gray: 'bg-slate-50 dark:bg-slate-900/40 border-slate-100 dark:border-slate-800/40 text-slate-700 dark:text-slate-300',
           slate: 'bg-slate-50 dark:bg-slate-900/40 border-slate-100 dark:border-slate-800/40 text-slate-700 dark:text-slate-300',
-          sky: 'bg-sky-50 dark:bg-sky-950/20 border-sky-100 dark:border-sky-900/30 text-sky-700 dark:text-sky-300',
-          emerald: 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-100 dark:border-emerald-900/30 text-emerald-700 dark:text-emerald-300'
+          sky: 'bg-ceu-50 dark:bg-ceu-950/20 border-ceu-100 dark:border-ceu-900/30 text-ceu-700 dark:text-ceu-300',
+          emerald: 'bg-green-50 dark:bg-green-950/20 border-green-100 dark:border-green-900/30 text-green-700 dark:text-green-300'
         };
 
         let statesHTML = "";
@@ -1185,10 +1184,10 @@ ${(handoffData.createdFlows || []).length === 0
               <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2 mt-${statesArr.length > 0 ? '4' : '0'}">Motion / Transições · ${motionArr.length}</p>
               <div class="space-y-2">
                 ${motionArr.map(m => `
-                  <div class="p-3 bg-pink-50/40 dark:bg-pink-950/10 border border-pink-100/60 dark:border-pink-900/30 rounded-xl">
+                  <div class="p-3 bg-turquesa-50/40 dark:bg-turquesa-950/10 border border-turquesa-100/60 dark:border-turquesa-900/30 rounded-xl">
                     <div class="flex items-center justify-between mb-2">
                       <span class="text-[11px] font-black text-slate-800 dark:text-white">${m.target || 'Global'}</span>
-                      ${m.trigger ? `<span class="px-2 py-0.5 bg-white dark:bg-slate-900 border border-pink-100 dark:border-pink-900/40 rounded text-[9px] font-bold text-pink-700 dark:text-pink-300 uppercase tracking-wide">${m.trigger}</span>` : ''}
+                      ${m.trigger ? `<span class="px-2 py-0.5 bg-white dark:bg-slate-900 border border-turquesa-100 dark:border-turquesa-900/40 rounded text-[9px] font-bold text-turquesa-700 dark:text-turquesa-300 uppercase tracking-wide">${m.trigger}</span>` : ''}
                     </div>
                     <div class="flex flex-wrap gap-1.5 mb-${m.notes ? '2' : '0'}">
                       ${m.property ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 bg-white dark:bg-slate-900 rounded text-[10px] font-mono font-bold text-slate-700 dark:text-slate-300"><i data-lucide="zap" class="w-2.5 h-2.5"></i>${m.property}</span>` : ''}
@@ -1303,8 +1302,7 @@ ${(handoffData.createdFlows || []).length === 0
             ${_allFrames.map((f, fi) => {
               const fMeasurements = f.measurements || [];
               const fCreatedSpecs = f.createdSpecs || [];
-              // frame.excecoes (nível de frame) nunca teve UI real de entrada
-              // e foi removido -- spec.excecoes é o único conceito vivo.
+              // Exceções só existem atreladas à spec (spec.excecoes); aqui só a contagem.
               const fSpecExcs = fCreatedSpecs.flatMap(s => s.excecoes || []);
               const fScanCategories = f.specs ? Object.keys(f.specs).filter(k => k !== 'framePreview' && k !== 'fileKey' && Array.isArray(f.specs[k]) && f.specs[k].length > 0) : [];
               const fTotalScan = fScanCategories.reduce((acc, k) => acc + f.specs[k].length, 0);
@@ -1330,20 +1328,20 @@ ${(handoffData.createdFlows || []).length === 0
                     ${fCreatedSpecs.map((s, si) => {
                       const _sc = s.type || s.categoryLabel || s.category || '';
                       return `
-                      <div id="html-spec-${fi}-${si}" data-toggle-item data-hidden="0" class="bg-indigo-50/40 dark:bg-indigo-950/10 border border-indigo-100/60 dark:border-indigo-900/30 rounded-lg transition-all overflow-hidden" data-node-id="${s.targetNodeId || ''}">
+                      <div id="html-spec-${fi}-${si}" data-toggle-item data-hidden="0" class="bg-blue-50/40 dark:bg-blue-950/10 border border-blue-100/60 dark:border-blue-900/30 rounded-lg transition-all overflow-hidden" data-node-id="${s.targetNodeId || ''}">
                         <div class="flex items-center gap-2 p-2">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#005ca9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
                           <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex-1 truncate">${s.name || s.label || 'Spec'}</span>
                           ${_sc ? `<span class="shrink-0" style="${_getCatStyleHTML(s.category || _sc)}">${_sc}</span>` : ''}
-                          ${(s.excecoes && s.excecoes.length > 0) ? `<span class="text-[9px] font-bold text-amber-600 dark:text-amber-400 shrink-0">${s.excecoes.length} exc.</span>` : ''}
                           <button data-toggle-btn onclick="toggleHTMLItem('html-spec-${fi}-${si}', this)" title="Ocultar" aria-label="Ocultar especificação" class="ml-1 shrink-0 opacity-40 hover:opacity-100 transition-opacity">
                             <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                           </button>
                         </div>
                         ${(s.properties || []).length > 0 ? `
-                        <div class="border-t border-indigo-100/60 dark:border-indigo-900/30 px-2 py-1.5 space-y-0.5">
-                          ${s.properties.map(p => `<div class="flex items-center gap-2 text-[10px]"><span class="font-bold text-slate-600 dark:text-slate-300 w-20 shrink-0 truncate">${p.label || ''}</span>${p.token ? `<code class="bg-slate-100 dark:bg-slate-800 text-slate-500 px-1 rounded text-[9px] font-mono">${p.token}</code>` : ''}${p.value ? `<span class="text-slate-400 truncate">→ ${p.value}</span>` : ''}</div>`).join('')}
+                        <div class="border-t border-blue-100/60 dark:border-blue-900/30 px-2 py-1.5 space-y-0.5">
+                          ${s.properties.map(p => `<div class="flex items-center gap-2 text-[10px]"><span class="font-bold text-slate-600 dark:text-slate-300 w-20 shrink-0 truncate">${_vocabLabel(p.label, p.key)}</span>${p.token ? `<code class="bg-slate-100 dark:bg-slate-800 text-slate-500 px-1 rounded text-[9px] font-mono">${p.token}</code>` : ''}${p.value ? `<span class="text-slate-400 truncate">→ ${_vocabValue(p.value)}</span>` : ''}</div>`).join('')}
                         </div>` : ''}
+                        ${_specExcsHTML(s.excecoes)}
                         ${_commentFieldHTML('annot-' + (s.id || (fi + '-' + si)), s.name || 'Spec')}
                       </div>`;
                     }).join('')}
@@ -1361,9 +1359,9 @@ ${(handoffData.createdFlows || []).length === 0
                   </div>
                   <div id="meas-${fi}" class="space-y-1.5">
                     ${fMeasurements.map((m, mi) => `
-                      <div id="html-meas-${fi}-${mi}" data-toggle-item data-hidden="0" class="flex flex-col bg-cyan-50/40 dark:bg-cyan-950/10 border border-cyan-100/60 dark:border-cyan-900/30 rounded-lg transition-all overflow-hidden">
+                      <div id="html-meas-${fi}-${mi}" data-toggle-item data-hidden="0" class="flex flex-col bg-info-50/40 dark:bg-info-950/10 border border-info-100/60 dark:border-info-900/30 rounded-lg transition-all overflow-hidden">
                         <div class="flex items-center gap-2 p-2">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M21.3 8.7 8.7 21.3c-1 1-2.5 1-3.4 0l-2.6-2.6c-1-1-1-2.5 0-3.4L15.3 2.7c1-1 2.5-1 3.4 0l2.6 2.6c1 1 1 2.5 0 3.4Z"/><path d="m7.5 10.5 2 2"/><path d="m10.5 7.5 2 2"/><path d="m13.5 4.5 2 2"/><path d="m4.5 13.5 2 2"/></svg>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#038299" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M21.3 8.7 8.7 21.3c-1 1-2.5 1-3.4 0l-2.6-2.6c-1-1-1-2.5 0-3.4L15.3 2.7c1-1 2.5-1 3.4 0l2.6 2.6c1 1 1 2.5 0 3.4Z"/><path d="m7.5 10.5 2 2"/><path d="m10.5 7.5 2 2"/><path d="m13.5 4.5 2 2"/><path d="m4.5 13.5 2 2"/></svg>
                           <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex-1 truncate">${m.name || m.label || 'Medida'}</span>
                           ${m.details ? `<span class="text-[10px] text-slate-500 font-mono shrink-0">${m.details}</span>` : ''}
                           <button data-toggle-btn onclick="toggleHTMLItem('html-meas-${fi}-${mi}', this)" title="Ocultar" aria-label="Ocultar medida" class="ml-1 shrink-0 opacity-40 hover:opacity-100 transition-opacity">
@@ -1376,20 +1374,6 @@ ${(handoffData.createdFlows || []).length === 0
                   </div>
                 </div>` : '';
 
-              const excecoesList = fSpecExcs.length > 0 ? `
-                <div class="mt-3">
-                  <p class="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1.5">Exceções · ${fSpecExcs.length}</p>
-                  <div class="space-y-1.5">
-                    ${fSpecExcs.map(e => `
-                      <div class="flex items-center gap-2 p-2 bg-red-50/40 dark:bg-red-950/10 border border-red-100/60 dark:border-red-900/30 rounded-lg">
-                        <i data-lucide="alert-octagon" class="w-3 h-3 text-red-400 shrink-0"></i>
-                        <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate">${e.titulo || 'Exceção'}</span>
-                        <span class="ml-auto text-[9px] font-bold text-slate-500 shrink-0 uppercase">${e.tipo || ''}</span>
-                      </div>
-                    `).join('')}
-                  </div>
-                </div>` : '';
-
               return `
                 <div class="p-4 bg-slate-50/50 dark:bg-slate-800/20 border border-slate-100 dark:border-slate-800/40 rounded-xl">
                   <div class="flex items-start justify-between gap-3 mb-2">
@@ -1397,7 +1381,7 @@ ${(handoffData.createdFlows || []).length === 0
                       <div class="w-6 h-6 rounded-md bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-[#005ca9] dark:text-blue-400 shrink-0 text-[10px] font-black">${fi + 1}</div>
                       <div>
                         <h4 class="text-xs font-black text-slate-800 dark:text-white">${f.nome || 'Frame'}</h4>
-                        ${f.isNewComponent ? '<span class="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wide">Novo Componente</span>' : ''}
+                        ${f.isNewComponent ? '<span class="text-[9px] font-bold text-st-info dark:text-st-info-dark uppercase tracking-wide">Novo Componente</span>' : ''}
                       </div>
                     </div>
                     <div class="flex items-center gap-2 shrink-0">
@@ -1424,7 +1408,6 @@ ${(handoffData.createdFlows || []).length === 0
                   </div>
                   ${specsList}
                   ${measuresList}
-                  ${excecoesList}
                   ${fRessalvas.length > 0 ? `
                 <div class="mt-3">
                   <p class="text-[9px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400 mb-1.5">Ressalvas DSC · ${fRessalvas.length}</p>
@@ -1460,11 +1443,11 @@ ${(handoffData.createdFlows || []).length === 0
             </p>
             <div class="space-y-1.5">
               ${measurements.map((m, mi) => `
-                <div class="flex flex-col bg-cyan-50/40 dark:bg-cyan-950/10 border border-cyan-100/60 dark:border-cyan-900/30 rounded-lg overflow-hidden">
+                <div class="flex flex-col bg-info-50/40 dark:bg-info-950/10 border border-info-100/60 dark:border-info-900/30 rounded-lg overflow-hidden">
                   <div class="flex items-center gap-2 p-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M21.3 8.7 8.7 21.3c-1 1-2.5 1-3.4 0l-2.6-2.6c-1-1-1-2.5 0-3.4L15.3 2.7c1-1 2.5-1 3.4 0l2.6 2.6c1 1 1 2.5 0 3.4Z"/><path d="m7.5 10.5 2 2"/><path d="m10.5 7.5 2 2"/><path d="m13.5 4.5 2 2"/><path d="m4.5 13.5 2 2"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#038299" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M21.3 8.7 8.7 21.3c-1 1-2.5 1-3.4 0l-2.6-2.6c-1-1-1-2.5 0-3.4L15.3 2.7c1-1 2.5-1 3.4 0l2.6 2.6c1 1 1 2.5 0 3.4Z"/><path d="m7.5 10.5 2 2"/><path d="m10.5 7.5 2 2"/><path d="m13.5 4.5 2 2"/><path d="m4.5 13.5 2 2"/></svg>
                     <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex-1 truncate">${m.name || m.label || 'Medida'}</span>
-                    ${m.details ? `<span class="text-[10px] font-mono text-cyan-700 dark:text-cyan-400 shrink-0">${Array.isArray(m.details) ? m.details.join(' | ') : m.details}</span>` : ''}
+                    ${m.details ? `<span class="text-[10px] font-mono text-info-700 dark:text-info-400 shrink-0">${Array.isArray(m.details) ? m.details.join(' | ') : m.details}</span>` : ''}
                   </div>
                   ${_commentFieldHTML('meas-' + (m.nodeId || (groupKey + '-' + mi)), m.name || m.label || 'Medida')}
                 </div>
@@ -1482,7 +1465,9 @@ ${(handoffData.createdFlows || []).length === 0
       }
 
       // 7.2 Especificações Anotadas (seção independente, agrupada por frame e grupo)
-      const _framesWithAnnot = (_allFrames).filter(f => (f.createdSpecs || []).length > 0);
+      const _looseAnnot = _looseSpecsOf(handoffData);
+      const _framesWithAnnot = (_allFrames).filter(f => (f.createdSpecs || []).length > 0)
+        .concat(_looseAnnot.length > 0 ? [{ nome: 'Specs sem frame vinculado', createdSpecs: _looseAnnot }] : []);
       if (_framesWithAnnot.length > 0) {
         const totalAnnot = _framesWithAnnot.reduce((n, f) => n + f.createdSpecs.length, 0);
         const annotContent = `
@@ -1508,20 +1493,19 @@ ${(handoffData.createdFlows || []).length === 0
                     const gLabel = _gNames[letter] ? `<span class="text-slate-500 font-normal"> — ${_gNames[letter]}</span>` : '';
                     return `
                     <div>
-                      <p class="text-[9px] font-black uppercase tracking-wider text-indigo-500 dark:text-indigo-400 mb-1.5">Grupo ${letter}${gLabel}</p>
+                      <p class="text-[9px] font-black uppercase tracking-wider text-blue-500 dark:text-blue-400 mb-1.5">Grupo ${letter}${gLabel}</p>
                       <div class="space-y-1.5">
                         ${_byLetter[letter].map((s, si) => {
                           const _sCat = s.type || s.categoryLabel || s.category || '';
                           const _sProps = (s.properties || []);
                           const _sExcs = (s.excecoes || []);
-                          const _excColors = { 'Erro': '#dc2626', 'Alerta': '#d97706', 'Sucesso': '#16a34a', 'Confirmação': '#2563eb' };
                           return `
-                          <div class="bg-indigo-50/40 dark:bg-indigo-950/10 border border-indigo-100/60 dark:border-indigo-900/30 rounded-lg overflow-hidden" data-node-id="${s.targetNodeId || ''}">
+                          <div class="bg-blue-50/40 dark:bg-blue-950/10 border border-blue-100/60 dark:border-blue-900/30 rounded-lg overflow-hidden" data-node-id="${s.targetNodeId || ''}">
                             <div class="flex items-center gap-2 p-2.5">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#005ca9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
                               <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2 flex-wrap">
-                                  ${s.link ? `<a href="${s.link}" target="_blank" class="text-[11px] font-bold text-indigo-700 dark:text-indigo-300 hover:underline">${s.name || 'Spec'}</a>` : `<span class="text-[11px] font-bold text-slate-700 dark:text-slate-300">${s.name || 'Spec'}</span>`}
+                                  ${s.link ? `<a href="${s.link}" target="_blank" class="text-[11px] font-bold text-blue-700 dark:text-blue-300 hover:underline">${s.name || 'Spec'}</a>` : `<span class="text-[11px] font-bold text-slate-700 dark:text-slate-300">${s.name || 'Spec'}</span>`}
                                   ${_sCat ? `<span style="${_getCatStyleHTML(s.category || _sCat)}">${_sCat}</span>` : ''}
                                 </div>
                                 ${s.note ? `<p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">${s.note}</p>` : ''}
@@ -1529,28 +1513,18 @@ ${(handoffData.createdFlows || []).length === 0
                               </div>
                             </div>
                             ${_sProps.length > 0 ? `
-                            <div class="border-t border-indigo-100/60 dark:border-indigo-900/30 px-2.5 py-2">
-                              <p class="text-[8px] font-black uppercase tracking-widest text-indigo-400 mb-1.5">Propriedades</p>
+                            <div class="border-t border-blue-100/60 dark:border-blue-900/30 px-2.5 py-2">
+                              <p class="text-[8px] font-black uppercase tracking-widest text-blue-600 mb-1.5">Propriedades</p>
                               <div class="space-y-1">
                                 ${_sProps.map(p => `
                                 <div class="flex items-center gap-2 text-[10px]">
-                                  <span class="font-bold text-slate-600 dark:text-slate-300 w-24 shrink-0 truncate">${p.label || ''}</span>
+                                  <span class="font-bold text-slate-600 dark:text-slate-300 w-24 shrink-0 truncate">${_vocabLabel(p.label, p.key)}</span>
                                   ${p.token ? `<code class="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-1.5 rounded text-[9px] font-mono">${p.token}</code>` : ''}
-                                  ${p.value ? `<span class="text-slate-500 dark:text-slate-400 truncate">→ ${p.value}</span>` : ''}
+                                  ${p.value ? `<span class="text-slate-500 dark:text-slate-400 truncate">→ ${_vocabValue(p.value)}</span>` : ''}
                                 </div>`).join('')}
                               </div>
                             </div>` : ''}
-                            ${_sExcs.length > 0 ? `
-                            <div class="border-t border-indigo-100/60 dark:border-indigo-900/30 px-2.5 py-2">
-                              <p class="text-[8px] font-black uppercase tracking-widest text-amber-500 mb-1.5">Exceções · ${_sExcs.length}</p>
-                              <div class="space-y-1">
-                                ${_sExcs.map(e => `
-                                <div class="flex items-center gap-2">
-                                  <span class="text-[9px] font-bold w-20 shrink-0" style="color:${_excColors[e.tipo] || '#64748b'}">${e.tipo || ''}</span>
-                                  <span class="text-[10px] text-slate-600 dark:text-slate-300">${e.titulo || ''}</span>
-                                </div>`).join('')}
-                              </div>
-                            </div>` : ''}
+                            ${_specExcsHTML(_sExcs)}
                             ${_commentFieldHTML('annot-' + (s.id || (fi + '-' + letter + '-' + si)), s.name || 'Spec')}
                           </div>`;
                         }).join('')}
@@ -1576,16 +1550,16 @@ ${(handoffData.createdFlows || []).length === 0
           <div class="space-y-4 text-left">
             ${_journeys.map(journey => `
               <div>
-                <p class="text-[9px] font-black uppercase tracking-wider text-purple-500 dark:text-purple-400 mb-1.5">${journey.isUnnamed ? journey.nome : escapeHtml(journey.nome)}<span class="text-slate-400 font-normal normal-case"> · ${journey.conexoes.length} conexões</span></p>
+                <p class="text-[9px] font-black uppercase tracking-wider text-orange-700 dark:text-orange-400 mb-1.5">${journey.isUnnamed ? journey.nome : escapeHtml(journey.nome)}<span class="text-slate-400 font-normal normal-case"> · ${journey.conexoes.length} conexões</span></p>
                 <div class="space-y-2">
                   ${journey.conexoes.map((flow, fi) => `
-                    <div class="flex items-center gap-3 p-3 bg-purple-50/40 dark:bg-purple-950/10 border border-purple-100/60 dark:border-purple-900/30 rounded-xl">
-                      <div class="w-6 h-6 rounded-md bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0 text-[10px] font-black">${fi + 1}</div>
+                    <div class="flex items-center gap-3 p-3 bg-orange-50/40 dark:bg-orange-950/10 border border-orange-100/60 dark:border-orange-900/30 rounded-xl">
+                      <div class="w-6 h-6 rounded-md bg-orange-100 dark:bg-orange-900/40 flex items-center justify-center text-orange-800 dark:text-orange-400 shrink-0 text-[10px] font-black">${fi + 1}</div>
                       <div class="flex-1 min-w-0">
                         <span class="text-[11px] font-black text-slate-800 dark:text-white">${flow.name || 'Fluxo'}</span>
                         ${flow.decisionText ? `<span class="ml-2 text-[10px] text-slate-500 dark:text-slate-400">"${flow.decisionText}"</span>` : ''}
                       </div>
-                      <span class="text-[9px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider shrink-0">${flowTypeLabel[flow.type] || flow.type || ''}</span>
+                      <span class="text-[9px] font-bold text-orange-800 dark:text-orange-400 uppercase tracking-wider shrink-0">${flowTypeLabel[flow.type] || flow.type || ''}</span>
                     </div>
                   `).join('')}
                 </div>
@@ -1716,7 +1690,7 @@ ${(handoffData.createdFlows || []).length === 0
           const adjustments = auditSummary.adjustments;
           const total = auditSummary.total;
           
-          const statusColor = adoption > 90 ? "text-[#10b981]" : (adoption > 70 ? "text-amber-500" : "text-red-500");
+          const statusColor = adoption > 90 ? "text-st-ok dark:text-st-ok-dark" : (adoption > 70 ? "text-amber-500" : "text-red-500");
           const statusBg = adoption > 90 ? "bg-green-50 dark:bg-green-950/20" : (adoption > 70 ? "bg-amber-50 dark:bg-amber-950/20" : "bg-red-50 dark:bg-red-950/20");
           const borderCol = adoption > 90 ? "border-green-100 dark:border-green-900/30" : (adoption > 70 ? "border-amber-100 dark:border-amber-900/30" : "border-red-100 dark:border-red-900/30");
 
@@ -1738,7 +1712,7 @@ ${(handoffData.createdFlows || []).length === 0
               <div class="grid grid-cols-3 gap-3 mb-4">
                 <div class="bg-white/60 dark:bg-black/20 p-2.5 rounded-xl">
                   <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Em conformidade</p>
-                  <p class="text-base font-black text-[#10b981]">${auditSummary.dsCount}</p>
+                  <p class="text-base font-black text-st-ok dark:text-st-ok-dark">${auditSummary.dsCount}</p>
                 </div>
                 <div class="bg-white/60 dark:bg-black/20 p-2.5 rounded-xl">
                   <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Necessita revisão</p>
@@ -1755,7 +1729,7 @@ ${(handoffData.createdFlows || []).length === 0
               <div class="grid grid-cols-3 gap-3 mb-4">
                 <div class="bg-white/60 dark:bg-black/20 p-2.5 rounded-xl">
                   <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">100% conformes</p>
-                  <p class="text-base font-black text-[#10b981]">${auditSummary.elementsOk}</p>
+                  <p class="text-base font-black text-st-ok dark:text-st-ok-dark">${auditSummary.elementsOk}</p>
                 </div>
                 <div class="bg-white/60 dark:bg-black/20 p-2.5 rounded-xl">
                   <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Com revisões</p>
@@ -1771,7 +1745,7 @@ ${(handoffData.createdFlows || []).length === 0
                 <p class="text-[9px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Como o elemento é classificado</p>
                 <div class="space-y-1.5">
                   <div class="flex items-start gap-2 text-[10px]">
-                    <span class="shrink-0 px-2 py-0.5 rounded-md bg-green-50 dark:bg-green-950/40 text-[#10b981] font-bold text-[8px] uppercase tracking-wide">Em conformidade</span>
+                    <span class="shrink-0 px-2 py-0.5 rounded-md bg-green-50 dark:bg-green-950/40 text-st-ok dark:text-st-ok-dark font-bold text-[8px] uppercase tracking-wide">Em conformidade</span>
                     <span class="text-slate-500 dark:text-slate-400 leading-snug"><strong class="text-slate-700 dark:text-slate-300">Todas</strong> as propriedades têm vínculo direto com tokens da DSC.</span>
                   </div>
                   <div class="flex items-start gap-2 text-[10px]">
@@ -1836,14 +1810,14 @@ ${(handoffData.createdFlows || []).length === 0
               const breakdownChips = b.total > 0
                 ? `<span class="inline-flex items-center gap-1.5 text-[8px] font-bold text-slate-500 dark:text-slate-400 normal-case tracking-normal ml-1.5">
                     <span class="text-slate-500 dark:text-slate-400">${b.total} props</span>
-                    ${b.ok > 0 ? `<span class="inline-flex items-center gap-0.5 text-[#10b981]"><i data-lucide="check" class="w-2.5 h-2.5"></i>${b.ok}</span>` : ''}
+                    ${b.ok > 0 ? `<span class="inline-flex items-center gap-0.5 text-st-ok dark:text-st-ok-dark"><i data-lucide="check" class="w-2.5 h-2.5"></i>${b.ok}</span>` : ''}
                     ${b.warning > 0 ? `<span class="inline-flex items-center gap-0.5 text-amber-500"><i data-lucide="alert-triangle" class="w-2.5 h-2.5"></i>${b.warning}</span>` : ''}
                     ${b.error > 0 ? `<span class="inline-flex items-center gap-0.5 text-red-500"><i data-lucide="x" class="w-2.5 h-2.5"></i>${b.error}</span>` : ''}
                   </span>`
                 : '';
 
               if (status === "ok") {
-                badgeHTML = `<span class="inline-flex items-center gap-1 text-[#10b981] font-bold"><i data-lucide="check-circle" class="w-2.5 h-2.5"></i>EM CONFORMIDADE</span>${breakdownChips}`;
+                badgeHTML = `<span class="inline-flex items-center gap-1 text-st-ok dark:text-st-ok-dark font-bold"><i data-lucide="check-circle" class="w-2.5 h-2.5"></i>EM CONFORMIDADE</span>${breakdownChips}`;
               } else if (status === "warning" && item.isCustomComponent) {
                 badgeHTML = `<span class="inline-flex items-center gap-1 text-amber-500 font-bold" title="Sem vínculo com componente publicado na lib DSC — verificar manualmente"><i data-lucide="help-circle" class="w-2.5 h-2.5"></i>COMPONENTE PERSONALIZADO</span>${breakdownChips}`;
               } else if (status === "warning" && item.customizations && item.customizations.length > 0) {
@@ -1936,7 +1910,7 @@ ${(handoffData.createdFlows || []).length === 0
                   if (p.isDS === null) {
                     pStatusHTML = `<span class="text-slate-300 dark:text-slate-600 shrink-0" title="Não avaliado contra a biblioteca"><i data-lucide="minus" class="w-3.5 h-3.5"></i></span>`;
                   } else if (p.isDS === true) {
-                    pStatusHTML = `<span class="text-[#10b981] shrink-0" title="Em conformidade"><i data-lucide="check" class="w-3.5 h-3.5"></i></span>`;
+                    pStatusHTML = `<span class="text-st-ok dark:text-st-ok-dark shrink-0" title="Em conformidade"><i data-lucide="check" class="w-3.5 h-3.5"></i></span>`;
                   } else if (p.isDS === "warning") {
                     pStatusHTML = `<span class="text-amber-500 shrink-0" title="Necessita revisão"><i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i></span>`;
                   } else {
@@ -1983,7 +1957,7 @@ ${(handoffData.createdFlows || []).length === 0
                     <div class="flex items-center justify-between gap-2">
                       <div class="flex items-center gap-2 truncate min-w-0" title="${p.name}">
                         <div class="w-3.5 h-3.5 flex items-center justify-center shrink-0">${pColorPreview}</div>
-                        <span class="truncate">${p.label || p.type}: <span class="font-bold text-slate-700 dark:text-slate-200">${p.value}</span></span>
+                        <span class="truncate">${_vocabLabel(p.label || p.type)}: <span class="font-bold text-slate-700 dark:text-slate-200">${_vocabValue(p.value)}</span></span>
                       </div>
                       ${pStatusHTML}
                     </div>
@@ -2017,7 +1991,7 @@ ${(handoffData.createdFlows || []).length === 0
                   <p class="text-[9px] font-extrabold uppercase tracking-wider text-amber-600 dark:text-amber-400 mb-1.5">Personalizações (${item.customizations.length})</p>
                   ${item.customizations.map(c => `
                     <div class="text-[10px] text-slate-600 dark:text-slate-300 mb-1">
-                      <span class="text-slate-500 dark:text-slate-400">${escapeHtml(c.layer)} · </span>${escapeHtml(c.campo)}: <span class="font-bold text-slate-800 dark:text-white">${escapeHtml(c.atual)}</span> <span class="text-slate-500 dark:text-slate-400">(padrão da lib: ${escapeHtml(c.padrao)})</span>
+                      <span class="text-slate-500 dark:text-slate-400">${escapeHtml(c.layer)} · </span>${escapeHtml(_vocabLabel(c.campo))}: <span class="font-bold text-slate-800 dark:text-white">${escapeHtml(c.atual)}</span> <span class="text-slate-500 dark:text-slate-400">(padrão da lib: ${escapeHtml(c.padrao)})</span>
                     </div>`).join('')}
                 </div>`;
             }
@@ -2165,6 +2139,23 @@ ${(handoffData.createdFlows || []).length === 0
         extend: {
           fontFamily: {
             sans: ['Inter', 'sans-serif'],
+          },
+          // Mesmas escalas de cor do plugin (tailwind.config.cjs): só valores da
+          // lib DSC | Fundamentos Visuais. Manter sincronizado com aquele arquivo.
+          colors: {
+            blue: { 50: '#f7fbfe', 100: '#eaf5fd', 200: '#c2e2fc', 300: '#8cc8fb', 400: '#479de6', 500: '#005ca9', 600: '#004d8d', 700: '#004075', 800: '#00325b', 900: '#002442', 950: '#00182a' },
+            orange: { 50: '#fff9ee', 100: '#fff2dd', 200: '#ffe1b4', 300: '#fec774', 400: '#f9a72b', 500: '#f39200', 600: '#e08200', 700: '#bf6c00', 800: '#935300', 900: '#5f3600', 950: '#3d2300' },
+            slate: { 50: '#f7fafa', 100: '#ebf1f2', 200: '#dee9eb', 300: '#d0e0e3', 400: '#819399', 500: '#64747a', 600: '#526066', 700: '#404b52', 800: '#22292e', 900: '#1a1f23', 950: '#0f1215' },
+            gray: { 50: '#f7fafa', 100: '#ebf1f2', 200: '#dee9eb', 300: '#d0e0e3', 400: '#819399', 500: '#64747a', 600: '#526066', 700: '#404b52', 800: '#22292e', 900: '#1a1f23', 950: '#0f1215' },
+            red: { 50: '#fbebeb', 100: '#f6cdcd', 200: '#f0afaf', 300: '#ea9191', 400: '#e47272', 500: '#b22c2c', 600: '#9f2828', 700: '#8c2424', 800: '#651a1a', 900: '#421111', 950: '#280a0a' },
+            green: { 50: '#e7f4ea', 100: '#c5e4cc', 200: '#a2d3ad', 300: '#7fc38e', 400: '#5cb26e', 500: '#127527', 600: '#106722', 700: '#0d581d', 800: '#093f15', 900: '#06290e', 950: '#041908' },
+            amber: { 50: '#fff9e6', 100: '#ffefc1', 200: '#fee59b', 300: '#fdd150', 400: '#fcbe05', 500: '#977203', 600: '#7e5f03', 700: '#654c02', 800: '#4c3902', 900: '#382a01', 950: '#231b01' },
+            ceu: { 50: '#e8faff', 100: '#d0f5ff', 200: '#6edbfa', 300: '#2ec8f3', 400: '#00b4e6', 500: '#008cb2', 600: '#007899', 700: '#006480', 800: '#003c4d', 900: '#002732', 950: '#00181f' },
+            turquesa: { 50: '#f2fbfa', 100: '#e4f7f4', 200: '#b9ebe3', 300: '#81d6c9', 400: '#54bbab', 500: '#359485', 600: '#2b8174', 700: '#216e62', 800: '#184f47', 900: '#10332e', 950: '#0a201c' },
+            info: { 50: '#f2fafc', 100: '#e5f5f8', 200: '#9bdae5', 300: '#4fbed2', 400: '#04a2bf', 500: '#038299', 600: '#037286', 700: '#026273', 800: '#014753', 900: '#012e36', 950: '#001c21' },
+            light: { bg: '#ebf1f2', surface: '#ffffff', line: '#d0e0e3', muted: '#64747a' },
+            dark: { bg: '#1a1f23', surface: '#22292e', line: '#404b52', text: '#f7fafa', muted: '#9eb2b8' },
+            st: { ok: '#127527', 'ok-dark': '#a2d3ad', warn: '#654c02', 'warn-dark': '#fee59b', err: '#b22c2c', 'err-dark': '#f0afaf', neutral: '#64747a', info: '#005ca9', 'info-dark': '#6dbafa' },
           }
         }
       }
@@ -2176,18 +2167,18 @@ ${(handoffData.createdFlows || []).length === 0
     }
     .bg-grid {
       background-size: 20px 20px;
-      background-image: linear-gradient(to right, rgba(148, 163, 184, 0.05) 1px, transparent 1px),
-                        linear-gradient(to bottom, rgba(148, 163, 184, 0.05) 1px, transparent 1px);
+      background-image: linear-gradient(to right, rgba(158, 178, 184, 0.05) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(158, 178, 184, 0.05) 1px, transparent 1px);
     }
     .dark .bg-grid {
       background-size: 20px 20px;
-      background-image: linear-gradient(to right, rgba(51, 65, 85, 0.15) 1px, transparent 1px),
-                        linear-gradient(to bottom, rgba(51, 65, 85, 0.15) 1px, transparent 1px);
+      background-image: linear-gradient(to right, rgba(64, 75, 82, 0.15) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(64, 75, 82, 0.15) 1px, transparent 1px);
     }
   </style>
 </head>
-<body class="bg-slate-50 dark:bg-[#090d16] bg-grid text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-200">
-  <header class="sticky top-0 z-50 bg-white/80 dark:bg-[#0f1626]/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/80 px-6 py-4 flex items-center justify-between">
+<body class="bg-slate-50 dark:bg-[#1a1f23] bg-grid text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-200">
+  <header class="sticky top-0 z-50 bg-white/80 dark:bg-[#22292e]/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/80 px-6 py-4 flex items-center justify-between">
     <div class="flex items-center gap-3">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 205.51265 46.553631" class="h-7 w-auto shrink-0" aria-label="CAIXA">
         <g transform="translate(-284.78446,-475.51214)">

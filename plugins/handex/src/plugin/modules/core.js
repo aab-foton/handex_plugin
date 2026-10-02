@@ -77,6 +77,55 @@ function getItemAuditBreakdown(item) {
   return out;
 }
 
+// Espelha HD_GLOSSARY do backend (code.js) -- os dois precisam ficar sincronizados.
+// Comunicação em português; nomenclatura técnica do Figma/CSS em inglês.
+const HX_GLOSSARY = {
+  fill: 'Fill', stroke: 'Border color', strokeWidth: 'Border width', radius: 'Radius',
+  gap: 'Gap', rowGap: 'Row gap', padding: 'Padding',
+  paddingTop: 'Padding Top', paddingRight: 'Padding Right', paddingBottom: 'Padding Bottom', paddingLeft: 'Padding Left',
+  width: 'Width', height: 'Height', sizingW: 'Width (sizing)', sizingH: 'Height (sizing)', dimensions: 'Width × Height',
+  direction: 'Auto layout', alignment: 'Primary / Counter axis',
+  textStyle: 'Text style', fontFamily: 'Font family', fontWeight: 'Font style', fontSize: 'Font size', typography: 'Text style',
+  component: 'Component', swap: 'Instance swap'
+};
+
+// Rótulos antigos persistidos (scans, specs e Spec Rápida salvos) -> rótulo atual.
+const HX_LABEL_ALIASES = {
+  'Cor (Fill)': 'Fill', 'Contorno': 'Border color', 'Cor (Stroke)': 'Border color', 'Border Color': 'Border color',
+  'Border Width': 'Border width', 'Espessura de borda': 'Border width',
+  'Raio de borda': 'Radius', 'Raio': 'Radius',
+  'Espaçamento (Gap)': 'Gap', 'Gap (eixo cruzado)': 'Row gap',
+  'Padding Interno': 'Padding',
+  'Tipografia': 'Text style', 'Text Style': 'Text style', 'Família': 'Font family', 'Peso': 'Font style', 'Tamanho da fonte': 'Font size',
+  'Direção': 'Auto layout', 'Alinhamento': 'Primary / Counter axis',
+  'Altura': 'Height', 'Largura': 'Width', 'Dimensões': 'Width × Height',
+  'W Sizing': 'Width (sizing)', 'H Sizing': 'Height (sizing)', 'Sizing Largura': 'Width (sizing)', 'Sizing Altura': 'Height (sizing)',
+  'Componente': 'Component', 'Subcomponente trocado': 'Instance swap',
+  'Effect (Sombra)': 'Effect', 'Effect (Blur)': 'Effect'
+};
+
+const HX_VALUE_ALIASES = {
+  'Hug Contents': 'Hug contents', 'Fill Container': 'Fill container',
+  DROP_SHADOW: 'Drop shadow', INNER_SHADOW: 'Inner shadow', LAYER_BLUR: 'Layer blur', BACKGROUND_BLUR: 'Background blur',
+  MIN: 'Min', CENTER: 'Center', MAX: 'Max', SPACE_BETWEEN: 'Space between', BASELINE: 'Baseline'
+};
+
+function _vocabLabel(label, key) {
+  if (key && HX_GLOSSARY[key]) return HX_GLOSSARY[key];
+  if (!label) return '';
+  const s = String(label);
+  if (HX_LABEL_ALIASES[s]) return HX_LABEL_ALIASES[s];
+  if (s.startsWith('Prop: ')) return 'Component properties: ' + s.slice(6);
+  return s;
+}
+
+function _vocabValue(value) {
+  if (typeof value !== 'string') return value;
+  if (HX_VALUE_ALIASES[value]) return HX_VALUE_ALIASES[value];
+  if (/^[A-Z_]+ \/ [A-Z_]+$/.test(value)) return value.split(' / ').map(v => HX_VALUE_ALIASES[v] || v).join(' / ');
+  return value;
+}
+
 let handoffData = {
   _schemaVersion: 3,
   step1: {
@@ -130,42 +179,53 @@ function _computeFrameHasUnlinked(frame) {
   );
 }
 
-function _updateFrameAuditSubtitle(frameId) {
-  const frame = getFrame(frameId);
-  const subtitle = document.getElementById(`frame-subtitle-${frameId}`);
-  if (!subtitle || !frame) return;
+// Status do frame — FONTE ÚNICA (2026-10-01). Antes existiam duas cópias da
+// regra com resultados diferentes: esta (5 estados) e a do primeiro desenho do
+// card, em specifications.js (só 4, sem o estado de desvio justificado) — o
+// mesmo frame mostrava "Não Conforme" ao ser desenhado e só virava o estado
+// certo depois de uma edição. As duas passam a chamar _getFrameStatusView.
+// Cores: tokens `st-*` do tailwind.config.cjs (valores da lib Fundamentos
+// Visuais, com contraste conferido). Legenda correspondente: modal
+// #frame-status-modal (modals.html) — manter as duas sincronizadas.
+const FRAME_STATUS_VIEW = {
+  novo:        { label: 'Novo Componente',    cls: 'text-st-info dark:text-st-info-dark' },
+  pendente:    { label: 'Pendente',           cls: 'text-st-neutral dark:text-dark-muted' },
+  conforme:    { label: 'Conforme',           cls: 'text-st-ok dark:text-st-ok-dark' },
+  justificado: { label: 'Desvio justificado', cls: 'text-st-warn dark:text-st-warn-dark' },
+  naoConforme: { label: 'Não Conforme',       cls: 'text-st-err dark:text-st-err-dark' }
+};
 
-  if (frame.isNewComponent) {
-    subtitle.className = 'text-[10px] text-violet-500 font-medium';
-    subtitle.textContent = 'Novo Componente';
-    return;
-  }
-
-  if (!frame.audit || !frame.audit.checkDone) {
-    subtitle.className = 'text-[10px] text-slate-500 dark:text-dark-muted font-medium';
-    subtitle.textContent = 'Pendente';
-    return;
-  }
-
+function _getFrameStatusKey(frame) {
+  if (frame.isNewComponent) return 'novo';
+  if (!frame.audit || !frame.audit.checkDone) return 'pendente';
   // Critério exigente: item sem token vinculado nunca é "conforme" por
   // omissão. Marcar "Sem desvios" sem justificar por escrito o que o scan
   // encontrou fora do padrão não move o status pra amarelo -- continua
   // vermelho até existir uma observação de fato explicando o desvio.
   const hasUnlinked = _computeFrameHasUnlinked(frame);
   const hasJustification = !!(frame.audit.observacoes && frame.audit.observacoes.trim());
-  if (hasUnlinked && hasJustification) {
-    subtitle.className = 'text-[10px] text-amber-500 font-medium';
-    subtitle.textContent = 'Em revisão';
-  } else if (hasUnlinked && !hasJustification) {
-    subtitle.className = 'text-[10px] text-red-500 font-medium';
-    subtitle.textContent = 'Não Conforme';
-  } else if (frame.audit.semDesvios) {
-    subtitle.className = 'text-[10px] text-green-600 font-medium';
-    subtitle.textContent = 'Conforme';
-  } else {
-    subtitle.className = 'text-[10px] text-red-500 font-medium';
-    subtitle.textContent = 'Não Conforme';
-  }
+  if (hasUnlinked && hasJustification) return 'justificado';
+  if (hasUnlinked) return 'naoConforme';
+  if (frame.audit.semDesvios) return 'conforme';
+  return 'naoConforme';
+}
+
+function _getFrameStatusView(frame) {
+  return FRAME_STATUS_VIEW[_getFrameStatusKey(frame)];
+}
+
+function _updateFrameAuditSubtitle(frameId) {
+  const frame = getFrame(frameId);
+  const subtitle = document.getElementById(`frame-subtitle-${frameId}`);
+  if (!subtitle || !frame) return;
+
+  const view = _getFrameStatusView(frame);
+  subtitle.className = 'text-[10px] font-medium ' + view.cls;
+  subtitle.textContent = view.label;
+  // Novo Componente e Pendente não passam pelo restante (alerta de conformidade
+  // e campo de observações só fazem sentido com o Check Design feito).
+  const _key = _getFrameStatusKey(frame);
+  if (_key === 'novo' || _key === 'pendente') return;
   if (typeof _refreshConformanceAlert === 'function') _refreshConformanceAlert(frameId);
 
   // Campo de declaração dos desvios só é útil quando há algo a justificar —
@@ -458,7 +518,7 @@ function addRegra() {
   item.innerHTML = `
     <div class="flex items-center justify-between mb-2">
       <div class="flex items-center gap-2">
-        <i data-lucide="file-text" class="w-3.5 h-3.5 text-indigo-500"></i>
+        <i data-lucide="file-text" class="w-3.5 h-3.5 text-blue-500"></i>
         <span class="text-[12px] font-bold text-slate-700 dark:text-white">Regra / HU</span>
       </div>
       <button onclick="removeRegra('${id}')" title="Remover" class="text-gray-400 hover:text-red-500 transition-colors">
@@ -750,7 +810,11 @@ function getFrame(frameId) {
 
 function toggleNewComponent(frameId, checked) {
   const frame = getFrame(frameId);
-  if (frame) { frame.isNewComponent = checked; saveToStorage(); }
+  if (frame) {
+    frame.isNewComponent = checked;
+    if (checked) _applyNewComponentDefaultToItems(frame);
+    saveToStorage();
+  }
   const badge = document.getElementById(`badge-new-component-${frameId}`);
   if (badge) badge.classList.toggle('hidden', !checked);
   const obsDiv = document.getElementById(`new-component-obs-${frameId}`);
@@ -772,11 +836,177 @@ function getSpecItem(frameId, category, nodeId) {
   return (list || []).find(i => i.nodeId === nodeId) || null;
 }
 
+// Ao ligar "Novo Componente", itens personalizados detectados e ainda sem
+// decisão manual passam a ir para a Ficha. Desligar o toggle não desfaz nada.
+function _applyNewComponentDefaultToItems(frame) {
+  if (!frame.specs) return;
+  let n = 0;
+  ['components', 'icons', 'typography', 'frames', 'vectors'].forEach(cat => {
+    (frame.specs[cat] || []).forEach(it => {
+      if (it && it.isCustomComponent === true && !it.isMarkedCustom && !it.customDecided) {
+        it.isMarkedCustom = true;
+        n++;
+        const card = document.querySelector(`#scan-results-${frame.id} [data-spec-card][data-node-id="${it.nodeId}"]`);
+        if (card) {
+          const sw = card.querySelector('input[role="switch"]');
+          if (sw) { sw.checked = true; sw.setAttribute('aria-checked', 'true'); }
+          const row = card.querySelector('[data-uidepth-row]');
+          if (row) row.classList.remove('hidden');
+          const badge = card.querySelector('[data-uidepth-badge]');
+          if (badge) badge.classList.toggle('hidden', _normUiDepth(it.uiDepth) !== 'full');
+        }
+      }
+    });
+  });
+  if (n > 0) {
+    updateReviewDetailButton();
+    showToast(`${n} ${n === 1 ? 'item personalizado marcado' : 'itens personalizados marcados'} para a Ficha. Você pode desmarcar item a item.`, 'success');
+  }
+}
+
 function toggleSpecItemCustom(frameId, category, nodeId, checked) {
   const item = getSpecItem(frameId, category, nodeId);
-  if (item) { item.isMarkedCustom = checked; saveToStorage(); }
+  if (item) { item.isMarkedCustom = checked; item.customDecided = true; saveToStorage(); }
+  updateReviewDetailButton();
 }
 window.toggleSpecItemCustom = toggleSpecItemCustom;
+
+// uiDepth só vale enquanto isMarkedCustom for true; ao desmarcar, o valor
+// fica guardado (não é limpo) mas é ignorado por quem lê o card.
+function _normUiDepth(v) { return v === 'full' ? 'full' : 'essential'; }
+
+function setSpecItemUiDepth(frameId, category, nodeId, depth) {
+  const item = getSpecItem(frameId, category, nodeId);
+  if (!item) return;
+  item.uiDepth = _normUiDepth(depth);
+  saveToStorage();
+}
+window.setSpecItemUiDepth = setSpecItemUiDepth;
+
+function _collectMarkedCustomItems() {
+  const out = [];
+  const cats = ['components', 'icons', 'typography', 'frames', 'vectors'];
+  const catLabel = { components: 'Componente', icons: 'Ícone', typography: 'Tipografia', frames: 'Frame', vectors: 'Vetor' };
+  const push = (frameId, frameName, specs) => {
+    if (!specs) return;
+    cats.forEach(cat => (specs[cat] || []).forEach(it => {
+      if (it && it.isMarkedCustom) out.push({ frameId, frameName, cat, catLabel: catLabel[cat], item: it });
+    }));
+  };
+  (handoffData.frames || []).forEach(f => push(f.id, f.nome || 'Frame', f.specs));
+  if (handoffData.step2 && handoffData.step2.specs) push('', 'Sem frame vinculado', handoffData.step2.specs);
+  return out;
+}
+
+function updateReviewDetailButton() {
+  const btn = document.getElementById('btn-review-detail');
+  if (!btn) return;
+  btn.classList.toggle('hidden', _collectMarkedCustomItems().length < 2);
+}
+window.updateReviewDetailButton = updateReviewDetailButton;
+
+// Linha "Detalhamento completo" do card do item só aparece com o toggle
+// "Vai para a Ficha" ligado; o badge COMPLETO acompanha o mesmo critério.
+function onSpecItemCustomChange(el, frameId, category, nodeId) {
+  toggleSpecItemCustom(frameId, category, nodeId, el.checked);
+  el.setAttribute('aria-checked', el.checked ? 'true' : 'false');
+  const card = el.closest('[data-spec-card]');
+  if (!card) return;
+  const item = getSpecItem(frameId, category, nodeId);
+  const row = card.querySelector('[data-uidepth-row]');
+  if (row) row.classList.toggle('hidden', !el.checked);
+  const badge = card.querySelector('[data-uidepth-badge]');
+  if (badge) badge.classList.toggle('hidden', !(el.checked && item && _normUiDepth(item.uiDepth) === 'full'));
+}
+window.onSpecItemCustomChange = onSpecItemCustomChange;
+
+function onSpecItemDepthChange(el, frameId, category, nodeId) {
+  setSpecItemUiDepth(frameId, category, nodeId, el.checked ? 'full' : 'essential');
+  el.setAttribute('aria-checked', el.checked ? 'true' : 'false');
+  const card = el.closest('[data-spec-card]');
+  const badge = card && card.querySelector('[data-uidepth-badge]');
+  if (badge) badge.classList.toggle('hidden', !el.checked);
+}
+window.onSpecItemDepthChange = onSpecItemDepthChange;
+
+let _detailModalEntries = [];
+
+function openDetailLevelModal() {
+  const entries = _collectMarkedCustomItems();
+  if (entries.length === 0) {
+    showToast('Marque algum item como "Vai para a Ficha" primeiro', 'error');
+    return;
+  }
+  _detailModalEntries = entries;
+  const list = document.getElementById('detail-level-list');
+  const multiFrame = new Set(entries.map(e => e.frameId)).size > 1;
+  let html = '';
+  let lastFrame = null;
+  entries.forEach((e, i) => {
+    if (multiFrame && e.frameId !== lastFrame) {
+      html += `<p class="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-dark-muted ${lastFrame === null ? '' : 'mt-3'} mb-1">${escapeHtml(e.frameName)}</p>`;
+      lastFrame = e.frameId;
+    }
+    html += `<label class="flex items-center gap-2.5 min-h-[40px] px-2 py-1 rounded-2xl border border-gray-100 dark:border-dark-line hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer mb-1.5">
+      <input type="checkbox" data-detail-idx="${i}" ${_normUiDepth(e.item.uiDepth) === 'full' ? 'checked' : ''} onchange="_updateDetailModalCount()" aria-label="Detalhamento completo: ${escapeHtml(e.item.name)}" class="w-4 h-4 shrink-0 accent-[#005ca9]">
+      <span class="min-w-0 flex-1">
+        <span class="block text-[11px] font-bold text-slate-700 dark:text-white truncate">${escapeHtml(e.item.name)}</span>
+        <span class="block text-[10px] text-slate-600 dark:text-dark-muted truncate">${escapeHtml(e.frameName)} · ${e.catLabel}</span>
+      </span>
+      <span class="text-[10px] text-slate-600 dark:text-dark-muted shrink-0">Completo</span>
+    </label>`;
+  });
+  list.innerHTML = html;
+  const markAll = document.getElementById('detail-level-markall');
+  if (markAll) markAll.classList.toggle('hidden', entries.length <= 3);
+  _updateDetailModalCount();
+  openModal('detail-level-modal');
+}
+window.openDetailLevelModal = openDetailLevelModal;
+
+function _updateDetailModalCount() {
+  const boxes = Array.from(document.querySelectorAll('#detail-level-list input[data-detail-idx]'));
+  const n = boxes.filter(b => b.checked).length;
+  const count = document.getElementById('detail-level-count');
+  if (count) count.textContent = `${n} de ${boxes.length} completos`;
+  const markAll = document.getElementById('detail-level-markall');
+  if (markAll) markAll.textContent = (boxes.length > 0 && n === boxes.length) ? 'Voltar todos ao essencial' : 'Marcar todos como completo';
+}
+window._updateDetailModalCount = _updateDetailModalCount;
+
+function toggleAllDetailLevel() {
+  const boxes = Array.from(document.querySelectorAll('#detail-level-list input[data-detail-idx]'));
+  const allOn = boxes.length > 0 && boxes.every(b => b.checked);
+  boxes.forEach(b => { b.checked = !allOn; });
+  _updateDetailModalCount();
+}
+window.toggleAllDetailLevel = toggleAllDetailLevel;
+
+function saveDetailLevelModal() {
+  document.querySelectorAll('#detail-level-list input[data-detail-idx]').forEach(b => {
+    const e = _detailModalEntries[Number(b.getAttribute('data-detail-idx'))];
+    if (!e) return;
+    e.item.uiDepth = b.checked ? 'full' : 'essential';
+    document.querySelectorAll('[data-spec-card]').forEach(card => {
+      if (card.getAttribute('data-node-id') !== e.item.nodeId) return;
+      const box = card.querySelector('[data-uidepth-box]');
+      if (box) box.checked = b.checked;
+      const badge = card.querySelector('[data-uidepth-badge]');
+      if (badge) badge.classList.toggle('hidden', !b.checked);
+    });
+  });
+  saveToStorage();
+  closeModal('detail-level-modal');
+  _detailModalEntries = [];
+  showToast('Detalhamento salvo', 'success');
+}
+window.saveDetailLevelModal = saveDetailLevelModal;
+
+function cancelDetailLevelModal() {
+  closeModal('detail-level-modal');
+  _detailModalEntries = [];
+}
+window.cancelDetailLevelModal = cancelDetailLevelModal;
 
 function updateNewComponentObs(frameId, value) {
   const frame = getFrame(frameId);
@@ -878,6 +1108,7 @@ function updateEmptyFramesState() {
   const headerBtn = document.getElementById('btn-frame-register-header');
   if (headerBtn) headerBtn.classList.toggle('hidden', !hasFrames);
   _moveHeaderHelpIcons('frames-header-help-icons', '#view-frames .subheader-brand > div:last-child', hasFrames);
+  updateReviewDetailButton();
 }
 
 function importTitleFromSelection() {
@@ -1321,12 +1552,12 @@ function exportChecklistMd() {
     frames.forEach(f => {
       const specsCount = (f.createdSpecs || []).length;
       const medsCount = (f.measurements || []).length;
-      const excsCount = (f.excecoes || []).length;
+      const excsCount = (f.createdSpecs || []).reduce((n, s) => n + (s.excecoes || []).length, 0);
       md += `### ${f.nome}\n`;
       md += `- Tokens escaneados: ${f.specs ? 'Sim' : 'Não'}\n`;
       md += `- Especificações: ${specsCount}\n`;
       md += `- Medidas: ${medsCount}\n`;
-      md += `- Cenários de Exceção: ${excsCount}\n\n`;
+      md += `- Exceções nas specs: ${excsCount}\n\n`;
     });
   } else {
     md += `_Nenhum frame registrado._\n\n`;
@@ -1436,23 +1667,23 @@ function renderValidationChecklist() {
   // Seção de Novos Componentes
   if (newComponentFrames.length > 0) {
     const warnings = newComponentFrames.map(f => `
-      <div class="flex items-start gap-2 py-2 border-b border-violet-100 dark:border-violet-800/20 last:border-0">
-        <i data-lucide="component" class="w-3.5 h-3.5 text-violet-500 shrink-0 mt-0.5"></i>
+      <div class="flex items-start gap-2 py-2 border-b border-blue-100 dark:border-blue-800/20 last:border-0">
+        <i data-lucide="component" class="w-3.5 h-3.5 text-st-info dark:text-st-info-dark shrink-0 mt-0.5"></i>
         <div class="flex-1 min-w-0">
           <p class="text-[11px] font-bold text-slate-700 dark:text-white truncate">${f.nome}</p>
-          <p class="text-[10px] text-violet-500">Novo Componente — verifique documentação</p>
+          <p class="text-[10px] text-st-info dark:text-st-info-dark">Novo Componente — verifique documentação</p>
         </div>
       </div>`).join('');
 
     container.innerHTML += `
-      <div class="mt-3 rounded-xl border border-violet-200 dark:border-violet-800/30 overflow-hidden">
-        <div class="px-3 py-2.5 bg-violet-50 dark:bg-violet-900/20 flex items-center gap-2 border-b border-violet-100 dark:border-violet-800/30">
-          <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-violet-500 shrink-0"></i>
-          <p class="text-[11px] font-bold text-violet-700 dark:text-violet-300">Frames com Novos Componentes</p>
+      <div class="mt-3 rounded-xl border border-blue-200 dark:border-blue-800/30 overflow-hidden">
+        <div class="px-3 py-2.5 bg-blue-50 dark:bg-blue-900/20 flex items-center gap-2 border-b border-blue-100 dark:border-blue-800/30">
+          <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-st-info dark:text-st-info-dark shrink-0"></i>
+          <p class="text-[11px] font-bold text-st-info dark:text-st-info-dark">Frames com Novos Componentes</p>
         </div>
         <div class="px-3 py-1 bg-white dark:bg-dark-surface">${warnings}</div>
-        <div class="px-3 py-2.5 bg-violet-50/60 dark:bg-violet-900/10">
-          <p class="text-[10px] text-violet-600 dark:text-violet-400 leading-relaxed">
+        <div class="px-3 py-2.5 bg-blue-50/60 dark:bg-blue-900/10">
+          <p class="text-[10px] text-st-info dark:text-st-info-dark leading-relaxed">
             Documente o padrão de uso, nomenclatura de tokens e diretrizes de aplicação antes de finalizar o handoff.
           </p>
         </div>
@@ -1671,75 +1902,10 @@ function showToast(message, type = 'success') {
 const FOCUSABLE_SELECTOR = 'input, button, select, textarea, a[href], [tabindex]:not([tabindex="-1"])';
 const _modalReturnFocus = {};
 
-// Figma Desktop (Electron) às vezes demora alguns segundos pra ceder foco
-// de teclado à janela do plugin depois que ela abre/ganha destaque -- uma
-// única chamada de .focus() logo na abertura do modal não tem efeito
-// nenhum nesse intervalo (o clique/foco é aceito pelo DOM, mas o SO ainda
-// não roteou input de teclado pra essa janela). Insiste em focar por até
-// ~3s, parando assim que o foco realmente "pegar" (document.activeElement
-// muda de verdade) -- não custa nada quando o foco já estava disponível
-// de primeira (a 1ª tentativa já resolve e as seguintes são no-op).
-//
-// GUARDA CRÍTICA: para em cada tentativa se `target` deixou de estar
-// visível (offsetParent null -- cobre tanto o próprio elemento quanto
-// qualquer ancestral, ex: o modal, terem ganho `hidden`). Sem isso, fechar
-// o modal ANTES do fim da janela de retentativa (ex: usuário clica
-// "Cancelar" em menos de 3s) deixava o loop rodando sozinho, chamando
-// .focus() num campo escondido -- isso rouba o foco de teclado de volta
-// pro iframe do plugin repetidamente, mesmo com o usuário já de volta no
-// canvas do Figma (sintoma: "Espaço não navega o canvas", sem nenhum
-// modal aberto).
-//
-// offsetParent === null sozinho não cobre todo caso de fechamento: se o
-// plugin inteiro for fechado (X do painel do Figma) enquanto o loop ainda
-// está de pé, ou se o modal for fechado por um caminho que não passa por
-// closeModal(), o alvo pode continuar tecnicamente visível e o loop nunca
-// para -- reproduzindo o mesmo sintoma ("Espaço não navega") já na
-// reabertura do plugin. Token de invalidação: cada nova chamada de
-// _persistentFocus, e todo closeModal(), incrementam o token e assim
-// matam qualquer loop anterior ainda em voo, sem depender só de
-// offsetParent.
-let _persistentFocusToken = 0;
-// Ponteiro sobre a janela do plugin. Com o mouse fora, o plugin nunca puxa
-// foco de teclado pra si: sem isso, Espaço/atalhos do Figma param de
-// funcionar no canvas enquanto o plugin está aberto.
-let _pointerInsidePlugin = false;
-function _releasePluginFocus() {
-  _pointerInsidePlugin = false;
-  _persistentFocusToken++;
-  const active = document.activeElement;
-  if (active && active !== document.body && typeof active.blur === 'function') active.blur();
-  try { window.parent.focus(); } catch (e) {}
-}
-document.addEventListener('mouseenter', () => { _pointerInsidePlugin = true; });
-document.addEventListener('mousemove', () => { _pointerInsidePlugin = true; }, { passive: true });
-document.addEventListener('mouseleave', _releasePluginFocus);
-// mouseleave no document sozinho não é confiável em todo navegador/SO --
-// pode não disparar quando o mouse sai rápido pela borda da janela. blur da
-// própria window do iframe (o usuário clicou/focou fora, no canvas ou em
-// outra janela) é um segundo sinal independente do movimento do ponteiro,
-// cobre exatamente esse caso residual.
-window.addEventListener('blur', _releasePluginFocus);
-
-function _persistentFocus(target, attempts = 15, intervalMs = 200) {
-  if (!target) return;
-  const token = ++_persistentFocusToken;
-  let tries = 0;
-  const tryFocus = () => {
-    if (token !== _persistentFocusToken) return;
-    if (!_pointerInsidePlugin) return;
-    if (target.offsetParent === null) return;
-    tries++;
-    target.focus();
-    if (document.activeElement === target || tries >= attempts) return;
-    setTimeout(tryFocus, intervalMs);
-  };
-  tryFocus();
-}
-window._persistentFocus = _persistentFocus;
-
 // Modais só de feedback (sem nada pra digitar/clicar) não pegam foco nem o
 // devolvem ao fechar -- o loading roda enquanto o designer olha o canvas.
+// Foco ordinário de acessibilidade apenas: uma chamada, sem retentativa e
+// sem tentar controlar o foco do canvas do Figma (ver CLAUDE.md, bug de foco).
 const _NO_FOCUS_MODALS = new Set(['generic-loading-modal']);
 
 function openModal(id) {
@@ -1752,10 +1918,10 @@ function openModal(id) {
   _modalReturnFocus[id] = document.activeElement;
   const focusTarget = el.querySelector(FOCUSABLE_SELECTOR);
   if (focusTarget) {
-    _persistentFocus(focusTarget);
+    focusTarget.focus();
   } else {
     if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '-1');
-    _persistentFocus(el);
+    el.focus();
   }
 }
 
@@ -1763,13 +1929,8 @@ function closeModal(id) {
   const el = document.getElementById(id);
   if (el) el.classList.add("hidden");
   updateFABVisibility(false);
-  // Mata qualquer loop de _persistentFocus ainda em voo -- inclusive de um
-  // modal diferente do que está sendo fechado agora, já que o cenário
-  // problemático é justamente um fechamento que não passou por aqui da
-  // forma esperada (ver comentário de _persistentFocus).
-  _persistentFocusToken++;
   const returnEl = _modalReturnFocus[id];
-  if (_pointerInsidePlugin && returnEl && document.contains(returnEl)) returnEl.focus();
+  if (returnEl && document.contains(returnEl)) returnEl.focus();
   delete _modalReturnFocus[id];
   // Desliga o listener de selectionchange do mini-mapa de ancoragem do
   // backend — ligado só em openFlowFormModal(), independente de por onde o
@@ -1894,25 +2055,6 @@ document.addEventListener('click', function (e) {
   closeModal(e.target.id);
 });
 
-// Bug real corrigido (2026-09-25, "preso no tabeamento do plugin" -- Espaço
-// no canvas do Figma não fazia pan/mão, ficava preso dentro do plugin):
-// <button> nativo do HTML mantém o foco de teclado depois de clicado, e
-// Espaço/Enter em cima de um botão focado o REATIVA (comportamento padrão
-// do navegador) em vez do evento chegar ao Figma por trás do iframe. Como
-// nenhuma tela do plugin usa Espaço como atalho (diferente do canvas do
-// Figma, onde Espaço é pan), tirar o foco do botão logo após o clique é
-// seguro em qualquer contexto -- exceto DENTRO de um modal aberto, onde o
-// focus trap de Tab (ver listener acima) depende de saber qual é o último
-// elemento focado para ciclar corretamente.
-document.addEventListener('click', function (e) {
-  const btn = e.target.closest && e.target.closest('button');
-  if (!btn) return;
-  if (_topmostVisibleModal()) return;
-  // rAF: deixa o próprio onclick do botão rodar antes de tirar o foco --
-  // alguns handlers (ex: abrir uma modal) precisam do foco ainda presente
-  // no momento do clique pra decidir o que fazer.
-  requestAnimationFrame(() => { try { btn.blur(); } catch (err) {} });
-});
 
 function startHandoff() {
   navigate("view-frames");
@@ -2188,6 +2330,10 @@ function updateHandoffSummary() {
   set('hs-count-specs', frames.reduce((s, f) => s + (f.createdSpecs?.length || 0), 0) + (handoffData.specs?.length || 0));
   set('hs-count-measures', frames.reduce((s, f) => s + (f.measurements?.length || 0), 0) + (handoffData.measurements?.length || 0));
   set('hs-count-flows', (handoffData.createdFlows || []).length);
+  const fullN = _collectMarkedCustomItems().filter(e => _normUiDepth(e.item.uiDepth) === 'full').length;
+  set('hs-count-full-detail', fullN);
+  const fullRow = document.getElementById('hs-full-detail-row');
+  if (fullRow) fullRow.classList.toggle('hidden', fullN === 0);
   _refreshIcons();
 }
 

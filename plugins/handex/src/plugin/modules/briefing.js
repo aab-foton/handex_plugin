@@ -60,7 +60,7 @@ const BRIEFING_AXES = [
     ]
   },
   {
-    id: 'stakeholders', name: 'Usuários e Stakeholders', icon: 'users', color: 'text-teal-500',
+    id: 'stakeholders', name: 'Usuários e Stakeholders', icon: 'users', color: 'text-turquesa-500',
     questions: [
       { label: 'Usuários Primários', text: 'Quem são os usuários primários deste produto ou fluxo?' },
       { label: 'Usuários Secundários', text: 'Quem são os usuários secundários ou indiretos?' },
@@ -69,7 +69,7 @@ const BRIEFING_AXES = [
     ]
   },
   {
-    id: 'design', name: 'UX e Design', icon: 'compass', color: 'text-purple-500',
+    id: 'design', name: 'UX e Design', icon: 'compass', color: 'text-orange-700',
     questions: [
       { label: 'Jornada', text: 'Em qual etapa da jornada do usuário esta interface está inserida?' },
       { label: 'Sentimento e Tom de Voz', text: 'Que tom de voz e percepção (ex: segurança, agilidade) o design deve transmitir nesta interação?' },

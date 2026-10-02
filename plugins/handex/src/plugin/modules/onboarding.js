@@ -24,15 +24,14 @@ const ONBOARDING_TOOLS = {
     view: 'view-home',
     title: 'Página Inicial',
     icon: 'layout-grid',
-    color: '#334155',
+    color: '#404b52',
     format: 'single',
     docUrl: 'https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=1-54',
-    purpose: 'É o painel central do handoff: daqui você navega para cada ferramenta de documentação e, quando tudo estiver pronto, consolida o trabalho numa Ficha de Handoff única no canvas.',
+    purpose: 'Painel central do handoff: abra cada ferramenta pelos cards e, no fim, gere a Ficha de Handoff no canvas.',
     steps: [
-      { text: 'Os cards levam a cada ferramenta do handoff: <strong>Informações do Projeto</strong>, <strong>Escanear Tokens</strong>, <strong>Anotar Specs Detalhadas</strong>, <strong>Anotar Specs Rápidas</strong>, <strong>Anotar Medidas</strong> e <strong>Fluxos de Tela</strong>.' },
-      { text: 'Você pode <strong>reorganizar os cards</strong> do jeito que preferir: passe o mouse sobre um card, segure a alcinha <strong>⠿</strong> que aparece no canto e arraste sobre outro card para trocar de lugar.' },
-      { text: 'A ordem escolhida fica <strong>salva neste computador</strong> — é uma preferência pessoal sua, não é salva no projeto nem exportada junto com a ficha.' },
-      { text: 'Quando terminar de documentar, use <strong>Gerar Ficha de Handoff</strong> no rodapé para consolidar tudo no canvas.' }
+      { text: 'Abra a ferramenta que precisar pelos <strong>cards</strong>, em qualquer ordem.' },
+      { text: 'Para reordenar os cards, arraste a alcinha <strong>⠿</strong> (a ordem fica salva só neste computador).' },
+      { text: 'Ao terminar, use <strong>Gerar Ficha de Handoff</strong> no rodapé.' }
     ]
   },
   guide: {
@@ -42,11 +41,11 @@ const ONBOARDING_TOOLS = {
     color: '#005ca9',
     format: 'single',
     docUrl: 'https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=1-54',
-    purpose: 'O Handex organiza a documentação de handoff em ferramentas independentes. Use cada uma no momento certo, sem ordem fixa. Quando tudo estiver pronto, gere a Ficha de Handoff no canvas.',
+    purpose: 'O Handex reúne ferramentas independentes de documentação, sem ordem fixa. No fim, gere a Ficha de Handoff no canvas.',
     steps: [
-      { text: 'Expanda cada ferramenta da lista para ver <strong>para que ela serve</strong>.' },
-      { text: 'Use <strong>Ver documentação completa</strong> para o passo a passo detalhado, na documentação oficial do Handex no Figma.' },
-      { text: 'Dentro de cada tela do plugin, o ícone <strong>?</strong> no topo abre o guia específico daquela ferramenta.' }
+      { text: 'Expanda uma ferramenta da lista para ver <strong>para que ela serve</strong>.' },
+      { text: 'Use <strong>Ver documentação completa</strong> para o passo a passo no Figma.' },
+      { text: 'Em cada tela, o ícone de ajuda no topo abre o guia daquela ferramenta.' }
     ]
   },
   dadosProjeto: {
@@ -56,54 +55,43 @@ const ONBOARDING_TOOLS = {
     color: '#005ca9',
     format: 'single',
     docUrl: 'https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=117-505',
-    purpose: 'Registra o contexto do que está sendo entregue — título, objetivo, equipe responsável e, dentro de Contexto de Negócio, o briefing estratégico, as regras de negócio/HUs e os links de referência. Esse contexto aparece no topo da ficha final, para o dev entender o "porquê" da entrega antes de mergulhar no "como" — sem precisar te perguntar no Slack ou adivinhar pelo protótipo.',
+    purpose: 'Registra título, objetivo, equipe, briefing, regras de negócio e links. Esse contexto abre a Ficha e responde ao dev o "porquê" da entrega.',
     steps: [
-      { text: 'Clique em <strong>Informações do Projeto</strong> na home para abrir esta tela completa. Para uma consulta ou edição rápida de Título/Versão/Status/Objetivo sem sair de onde você está, use o ícone <strong>📋</strong> no header principal — ele abre uma modal leve, com um atalho para vir até aqui se precisar editar Equipe, Briefing, Regras ou Links.' },
-      { text: 'Preencha <strong>Título</strong>, <strong>Versão</strong> e <strong>Objetivo</strong> — esses três campos são obrigatórios para gerar a ficha.' },
-      { text: 'Adicione ao menos <strong>1 membro de equipe</strong> com nome preenchido — sem isso o botão de gerar ficha fica bloqueado. O e-mail é opcional.' },
-      { text: 'As três seções de <strong>Contexto de Negócio</strong> são opcionais e vêm ativadas por padrão — cada uma tem seu próprio toggle no cabeçalho: desativar esconde a seção sem apagar nada já preenchido, útil quando ela não se aplica a este projeto.' },
-      { text: '<strong>Briefing Estratégico:</strong> perguntas de negócio organizadas em 5 eixos (Contexto do Projeto, Escopo e Riscos, Usuários e Stakeholders, UX e Design, Pesquisa e Evidências) — o lugar de registrar o "porquê" da entrega, decisões de escopo e riscos conhecidos, para o dev não perder esse contexto quando o design já estiver pronto. Use o ícone <strong>?</strong> para abrir o Guia e inserir perguntas sugeridas com um clique; o menu <strong>⋮</strong> reúne baixar template em branco, importar/exportar em .md e limpar tudo.' },
-      { text: '<strong>Regras de Negócio e HUs:</strong> lógica que não aparece no design em si — campos obrigatórios, validações, condições de exibição, histórias de usuário vinculadas. Sem isso documentado, o dev tem que adivinhar essas regras só olhando a tela ou te interromper para perguntar.' },
-      { text: '<strong>Links de Referência:</strong> URLs de Protótipo Navegável, Handoff de Acessibilidade e Pesquisa de UX — cada um vira um link clicável direto na ficha final, levando o dev para a fonte original sem precisar pedir de novo.' },
-      { text: 'Tudo é <strong>salvo automaticamente</strong> a cada alteração — não é preciso clicar em nenhum botão para não perder o que preencheu.' }
+      { text: 'Preencha <strong>Título</strong>, <strong>Versão</strong> e <strong>Objetivo</strong> (obrigatórios).' },
+      { text: 'Adicione ao menos <strong>1 membro da equipe</strong> com nome; o e-mail é opcional.' },
+      { text: 'Se quiser, preencha <strong>Briefing</strong>, <strong>Regras de Negócio</strong> e <strong>Links</strong>; cada seção pode ser desativada sem apagar nada.' },
+      { text: 'Para consulta rápida de outra tela, use o ícone <strong>📋</strong> no topo. Tudo é salvo automaticamente.' }
     ]
   },
   handoff: {
     view: 'view-frames',
     title: 'Escanear Tokens',
     icon: 'scan-line',
-    color: '#0284c7',
+    color: '#006480',
     format: 'stepper',
     docUrl: 'https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=117-342',
-    purpose: 'Não é uma leitura automática que basta rodar uma vez: o scan traz cores, tipografia, componentes e vetores do frame, já com um batimento automático contra o Design System CAIXA — mas o critério é exigente. Sem token vinculado, o item conta como fora do padrão, sem meio-termo. Cabe a você revisar cada caso, como no Check Designs nativo do Figma, e decidir: ajustar o elemento ou justificar o desvio por escrito. Quando o frame traz um componente inédito, ainda fora do DSC, a ferramenta registra as propriedades dele como referência para uma futura incorporação.',
+    purpose: 'Escaneia o frame e compara cores, tipografia e componentes com o Design System CAIXA. Você revisa os desvios e marca o que o dev precisa construir.',
     steps: [
-      { text: 'Com esta ferramenta aberta, <strong>selecione um Frame</strong> (ou Componente, Seção, Grupo) no canvas do Figma.' },
-      { text: 'Clique em <strong>+ Escanear Frame</strong> — o plugin captura o ID e o nome do elemento selecionado, cria um card e escaneia automaticamente Componentes, Ícones, Tipografia e Vetores.' },
-      { text: 'O resultado aparece agrupado por tipo em <strong>Tokens Escaneados</strong>, já com o batimento automático: cada item mostra "Em conformidade", "Necessita revisão" ou "Fora do padrão", com a contagem de propriedades em cada status. <strong>Este é o passo que exige sua revisão:</strong> expanda cada item para ver o token aplicado (trilha completa, ex: <em>cor › primária › 500</em>) e clique nele para <strong>focar o elemento correspondente no canvas</strong> e confirmar visualmente se o vínculo faz sentido.' },
-      { text: 'Se algum item não tem token vinculado, ele aparece destacado. O painel <strong>"Itens para revisar"</strong>, no topo do card, reúne todos esses casos num só lugar — clique em qualquer um para ir direto ao elemento.' },
-      { text: 'Mudou algo no frame depois do primeiro scan? O ícone de <strong>atualizar</strong>, ao lado de "Tokens Escaneados", re-escaneia a qualquer momento sem perder o que já foi declarado — o batimento automático não é ao vivo, só reflete o estado do Figma no momento em que você escaneou.' },
-      { text: 'Declare a <strong>Conformidade DSC</strong>: marque "Check Designs realizado" e informe se há desvios. O critério é rígido — um item sem token vinculado mantém o frame como <strong>"Não Conforme" (vermelho)</strong> mesmo que você marque "Sem desvios", até você escrever uma justificativa no campo de observações. Com a justificativa preenchida, o status passa para <strong>"Em revisão" (amarelo)</strong> — nunca vira "conforme" por omissão.' },
-      { text: 'Se o frame é um <strong>Novo Componente</strong>, ative o toggle — a seção de conformidade é ocultada (não se aplica a componentes inéditos) e o frame é destacado na ficha.' }
+      { text: 'Selecione um frame no canvas e clique em <strong>+ Escanear Frame</strong>.' },
+      { text: 'Expanda o item para ver o token; props desligadas ficam em <strong>Mostrar N inativas</strong>.' },
+      { text: 'No que o dev precisa <strong>construir</strong>, ligue <strong>Vai para a Ficha</strong>; use <strong>Detalhamento completo</strong> se ele precisar de mais.' },
+      { text: 'Declare a <strong>Conformidade DSC</strong> e justifique por escrito os desvios.' },
+      { text: 'Se o frame é um componente inédito, ligue <strong>Novo Componente</strong>: os itens personalizados já saem com <strong>Vai para a Ficha</strong> ligado, e você desmarca item a item.' }
     ]
   },
   specs: {
     view: 'view-specifications',
     title: 'Anotar Specs Detalhadas',
     icon: 'tag',
-    color: '#4f46e5',
+    color: '#00437a',
     format: 'stepper',
     docUrl: 'https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=117-431',
-    purpose: 'Registra decisões técnicas específicas de um elemento — regra de negócio, comportamento, valor de token aplicado — que o scan automático não capta sozinho. É a camada de contexto que só o designer sabe explicar, ancorada visualmente no elemento certo do canvas.',
+    purpose: 'Registra o que o dev precisa saber e implementar sobre um elemento: regra, comportamento, exceção. Entra na Ficha e fica ancorada no elemento do canvas.',
     steps: [
-      { text: '<strong>Quando usar esta e quando usar a outra:</strong> use <strong>Anotar Specs Detalhadas</strong> quando o dev precisa saber mais do que os valores — uma regra, um comportamento, uma exceção — ou quando a informação deve entrar na Ficha de Handoff. Se ele só precisa dos valores do elemento (cor, medidas, tipografia) e não tem acesso ao DevMode, use <strong>Anotar Specs Rápidas</strong>. A Detalhada traz tudo o que a Rápida traz, e mais.' },
-      { text: '<strong>Selecione um elemento</strong> no canvas do Figma — pode ser um componente, texto, ícone ou qualquer elemento.' },
-      { text: 'Clique no <strong>botão +</strong> no topo da view. O formulário abre com o elemento vinculado, mostrado em <strong>"Especificando: [nome]"</strong> no topo — essa referência fica fixa do início ao fim do fluxo.' },
-      { text: 'Defina a <strong>Tag</strong> (referência do grupo, ex: A, B, A1) e a <strong>Categoria</strong> — Informação extra, Comportamento, Regra de Negócio ou Dados da API; a cor do grupo vem automaticamente da categoria. Adicione uma <strong>Nota personalizada</strong> (opcional), escolha se quer inserir linha de conexão no canvas e, em <strong>Propriedades</strong>, marque os atributos técnicos identificados no scan.' },
-      { text: 'Ao avançar, você entra direto na etapa <strong>Posição no Canvas</strong>: o modal continua aberto e uma prévia tracejada já aparece no canvas — arraste-a até onde quiser e clique em <strong>Usar esta posição</strong>. O fluxo já segue direto para a próxima etapa (Cenário de Exceção). Não quer marcar? Clique em <strong>Pular</strong> e a spec nasce solta à direita do elemento.' },
-      { text: 'Sem marcar posição, arraste o card pra onde quiser depois e use <strong>Travar especificação</strong> no menu "..." para concluir: a linha guia é recalculada automaticamente a partir de onde o card ficou. Mesma letra empilha verticalmente; letra diferente abre nova coluna.' },
-      { text: 'No cabeçalho de cada grupo, você pode <strong>nomear o grupo</strong>, <strong>ocultar as linhas</strong> de conexão, <strong>ocultar o grupo</strong> inteiro, ou usar o menu "..." para travar/destravar e excluir o grupo todo.' },
-      { text: 'Para cenários alternativos, expanda uma spec e clique em <strong>+ Exceção</strong> — Erro, Sucesso, Alerta ou Confirmação.' },
-      { text: 'Já fez uma anotação em <strong>Anotar Specs Rápidas</strong> e quer detalhar? Expanda o item e clique em <strong>Converter em Spec Detalhada</strong> — o formulário abre com o elemento e as propriedades já preenchidos; ao concluir, o card da Spec Rápida é substituído pela Spec Detalhada no canvas.' }
+      { text: 'Só precisa dos valores do elemento? Use <strong>Anotar Specs Rápidas</strong>.' },
+      { text: 'Selecione um elemento no canvas e clique no <strong>botão +</strong> no topo.' },
+      { text: 'Defina a <strong>Tag</strong> e a <strong>Categoria</strong>; nota e propriedades são opcionais.' },
+      { text: 'Arraste a prévia até onde quiser e clique em <strong>Usar esta posição</strong> (ou em Pular).' }
     ],
     // Conteúdo migrado do popover "Tipo de especificação" (circle-help do
     // header e do modal de criação — ver spec-types-help-modal em
@@ -127,31 +115,29 @@ const ONBOARDING_TOOLS = {
     view: 'view-quick-spec',
     title: 'Anotar Specs Rápidas',
     icon: 'zap',
-    color: '#0d9488',
+    color: '#216e62',
     format: 'stepper',
-    purpose: 'Reúne o essencial de um elemento para o dev que não tem acesso ao DevMode do Figma conseguir executar o trabalho: cor, espaçamento, tipografia, dimensões, raio, efeitos e componente, sempre com o valor real e, quando existir, o token e a biblioteca. É uma consulta pontual — não tem categoria, nota nem exceção, e não entra na Ficha de Handoff.',
+    purpose: 'Mostra os valores reais de um elemento (cor, espaçamento, tipografia, medidas) para o dev sem DevMode. É consulta pontual e não entra na Ficha.',
     steps: [
-      { text: '<strong>Quando usar esta e quando usar a outra:</strong> use <strong>Anotar Specs Rápidas</strong> para responder "quais são os valores deste elemento?". Se o dev também precisa saber o que implementar — uma regra, um comportamento, uma exceção — ou se a informação deve entrar na Ficha, use <strong>Anotar Specs Detalhadas</strong>. Começou rápida e ganhou importância? Expanda o item e clique em <strong>Converter em Spec Detalhada</strong>.' },
-      { text: 'Clique em <strong>Escanear</strong> e escolha quais propriedades quer buscar (cor, espaçamento, tipografia etc.).' },
-      { text: 'O plugin recolhe numa barra pequena. No canvas, <strong>segure Shift e clique</strong> em cada elemento que quer consultar — só o que você marcar com Shift entra. Depois clique em <strong>Concluir</strong>.' },
-      { text: 'Cada elemento vira um item da lista, com uma tag (A, B, C…). Expanda para ver os valores reais, com o token e a biblioteca quando existirem.' },
-      { text: 'Para deixar a consulta visível ao dev, use <strong>Inserir no canvas</strong>: cada elemento ganha um card ao lado, ligado a ele por uma linha guia.' },
-      { text: 'A lista some ao fechar o plugin, mas os cards já inseridos no canvas guardam os valores e voltam a aparecer ao reabrir a tela.' }
+      { text: 'Precisa de regra, comportamento ou exceção? Use <strong>Anotar Specs Detalhadas</strong>.' },
+      { text: 'Clique em <strong>Escanear</strong>, escolha as propriedades e <strong>segure Shift e clique</strong> nos elementos no canvas.' },
+      { text: 'Clique em <strong>Concluir</strong> e expanda os itens para ver os valores, com token e biblioteca quando houver.' },
+      { text: 'Use <strong>Inserir no canvas</strong> para deixar um card ao lado de cada elemento. A <strong>Observação</strong> fica só no card; para levá-la à Ficha, converta em Spec Detalhada.' }
     ]
   },
   medidas: {
     view: 'view-measurement',
     title: 'Anotar Medidas',
     icon: 'ruler',
-    color: '#0e7490',
+    color: '#026273',
     format: 'stepper',
     docUrl: 'https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=117-342',
-    purpose: 'Converte espaçamentos e dimensões do canvas em anotações visíveis — altura, largura, margens, paddings e gaps — para o dev implementar sem precisar inspecionar o Figma medida por medida.',
+    purpose: 'Transforma larguras, alturas, margens, paddings e gaps do canvas em anotações visíveis, para o dev implementar sem inspecionar medida por medida.',
     steps: [
-      { text: '<strong>Selecione 1 ou mais elementos</strong> no canvas do Figma que você quer documentar dimensionalmente.' },
-      { text: 'Clique no <strong>botão +</strong> no topo da view e escolha ao menos um tipo: <strong>W × H</strong> (largura/altura), <strong>Margin</strong> (espaçamento externo), <strong>Padding</strong> (espaçamento interno) ou <strong>Spacing</strong> (padding + gaps automáticos).' },
-      { text: 'Confirme — as anotações são criadas no canvas e aparecem na lista do plugin com nome e valores.' },
-      { text: 'Use o botão <strong>Ocultar tudo</strong> para esconder temporariamente todas as medidas do canvas sem excluí-las.' }
+      { text: 'Selecione 1 ou mais elementos no canvas e clique no <strong>botão +</strong> no topo.' },
+      { text: 'Escolha o tipo de medida e confirme: as anotações aparecem no canvas e na lista.' },
+      { text: 'Use <strong>Ocultar tudo</strong> para esconder as medidas do canvas sem excluí-las.' },
+      { text: 'Medidas sem frame vinculado entram na Ficha num bloco próprio, só em texto.' }
     ],
     // Conteúdo migrado do popover "Tipos de medida" (circle-help do
     // header, removido — ver views/measurement.html). Referência de
@@ -159,10 +145,10 @@ const ONBOARDING_TOOLS = {
     reference: {
       title: 'Tipos de medida',
       items: [
-        { icon: 'scaling', text: '<strong>Altura e Largura:</strong> dimensões do elemento selecionado.' },
+        { icon: 'scaling', text: '<strong>Width e Height:</strong> dimensões do elemento selecionado.' },
         { icon: 'box-select', text: '<strong>Espaçamento Externo:</strong> distância entre o elemento e seus vizinhos.' },
-        { icon: 'focus', text: '<strong>Padding Interno:</strong> espaço entre a borda do frame e seu conteúdo.' },
-        { icon: 'align-horizontal-space-between', text: '<strong>Padding e Gaps:</strong> espaçamentos internos de um Auto Layout.' }
+        { icon: 'focus', text: '<strong>Padding:</strong> espaço entre a borda do frame e seu conteúdo.' },
+        { icon: 'align-horizontal-space-between', text: '<strong>Padding e Gap:</strong> espaçamentos internos de um Auto Layout.' }
       ]
     }
   },
@@ -170,19 +156,15 @@ const ONBOARDING_TOOLS = {
     view: 'view-flows',
     title: 'Fluxos de Tela',
     icon: 'git-branch',
-    color: '#9333ea',
+    color: '#a65e00',
     format: 'single',
     docUrl: 'https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=117-383',
-    purpose: 'Mapeia a navegação entre telas — sequências, decisões e eventos — para o dev enxergar a jornada completa antes de implementar cada tela isoladamente.',
+    purpose: 'Mapeia a navegação entre telas, com sequências, decisões e eventos, para o dev ver a jornada completa antes de implementar cada tela.',
     steps: [
-      { text: 'Selecione <strong>2 ou mais elementos</strong> no canvas e clique em <strong>+ Conectar Frames</strong>. Com 3 ou mais, o plugin conecta em cadeia automaticamente.' },
-      { text: 'O texto que você digitar em <strong>Nome da Jornada</strong> nomeia o card que agrupa todas as conexões que se tocam na lista de Fluxos — não é o nome de uma linha isolada. Se a seleção estender uma jornada já existente, deixe em branco para manter o nome atual.' },
-      { text: 'Marque <strong>Marcar início e fim automaticamente</strong> (opcional) para que o primeiro elemento selecionado receba o marcador de Início e o último o de Fim.' },
-      { text: 'Escolha o tipo: <strong>Sequência</strong> (transição direta), <strong>Mensagem</strong> (evento/assíncrono), <strong>Decisão</strong> (bifurcação, obriga texto, só com 2 elementos) ou <strong>Decisão (Opcional)</strong> (condicional, também só com 2 elementos).' },
-      { text: 'Quer ramificar uma decisão a partir de um card no meio de uma cadeia já criada? Não dá na mesma operação — conecte esse card com o novo elemento <strong>separadamente</strong>, escolhendo Decisão. Outra opção: crie a conexão como Sequência e depois troque o tipo pra Decisão editando a conexão já criada.' },
-      { text: 'No mini-mapa de ancoragem, clique numa borda de qualquer card para escolher, por card, o lado de onde a conexão sai — o mapa reflete a posição real dos elementos no canvas. O toggle <strong>Auto</strong> no topo do mini-mapa limpa todas as escolhas manuais de uma vez.' },
-      { text: 'O estilo da linha pode ser <strong>Reta</strong> ou <strong>Angular</strong>. O texto do chip/decisão tem limite de 20 caracteres.' },
-      { text: 'O fluxo é criado no canvas e aparece na lista — clique no ícone de foco para <strong>focar na seta</strong>. Numa conexão já criada, o modal de edição também permite trocar o <strong>tipo</strong> sem apagar e reconectar.' }
+      { text: 'Selecione 2 ou mais elementos no canvas e clique em <strong>+ Conectar Frames</strong>.' },
+      { text: 'Dê um <strong>Nome da Jornada</strong> e escolha o tipo: Sequência, Mensagem ou Decisão.' },
+      { text: 'Se quiser, ajuste o lado de saída da seta no mini-mapa e o estilo da linha (Reta ou Angular).' },
+      { text: 'Use o ícone de foco na lista para localizar a seta no canvas.' }
     ],
     // Conteúdo migrado do popover "Como funciona" (circle-help do header,
     // removido — ver views/flows.html). Referência de consulta, sempre
@@ -200,15 +182,15 @@ const ONBOARDING_TOOLS = {
     view: 'view-handoff-summary',
     title: 'Gerar Ficha de Handoff',
     icon: 'send',
-    color: '#004d8d',
+    color: '#0d581d',
     format: 'single',
     docUrl: 'https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=117-465',
-    purpose: 'Consolida tudo que foi documentado — specs, medidas, fluxos e conformidade com o DSC — num documento único e versionado no canvas, pronto para a entrega ao time de desenvolvimento.',
+    purpose: 'Reúne tudo o que foi documentado numa Ficha única e versionada no canvas, pronta para o time de desenvolvimento.',
     steps: [
-      { text: 'Verifique os <strong>pré-requisitos</strong>: título, objetivo, ao menos 1 membro de equipe com nome preenchido.' },
-      { text: 'Clique em <strong>Gerar Ficha</strong> — vem antes das opções de exportação de propósito: gere primeiro, para que o que você exportar depois já reflita o que foi de fato materializado no canvas. Se já existe uma ficha, o plugin pergunta se a nova versão é <strong>Minor</strong> (ajuste) ou <strong>Major</strong> (redesenho).' },
-      { text: 'A ficha é criada no canvas, posicionada fora dos frames existentes, e nasce <strong>desbloqueada</strong> para você organizar à vontade.' },
-      { text: 'Em <strong>Exportar</strong>, a ordem é Briefing → Markdown → JSON. <strong>Markdown</strong> é documentação de leitura — envie para quem não tem acesso ao Figma. <strong>JSON</strong> é o dado bruto completo e o único reimportável no plugin (backup ou transferência entre máquinas).' }
+      { text: 'Confira título, objetivo e ao menos 1 membro da equipe com nome.' },
+      { text: 'Clique em <strong>Gerar Ficha</strong>. Se já existir uma, escolha entre <strong>Atualização</strong> e <strong>Nova Versão</strong>.' },
+      { text: 'Na primeira vez, arraste a Ficha para o lugar desejado e confirme a posição.' },
+      { text: 'Use <strong>Exportar</strong> para baixar Ficha em PDF, Briefing, Markdown ou JSON (só o JSON pode ser reimportado).' }
     ]
   }
 };
@@ -389,7 +371,7 @@ function _renderOnboardingModal() {
     const isFirst = _onboardingCurrentStep === 0;
     body.innerHTML = `
       <div class="flex items-center justify-center gap-1.5 mb-4">
-        ${tool.steps.map((_, i) => `<span class="h-1.5 rounded-full transition-all ${i === _onboardingCurrentStep ? 'w-6' : 'w-1.5'}" style="background-color:${i <= _onboardingCurrentStep ? tool.color : '#e2e8f0'}"></span>`).join('')}
+        ${tool.steps.map((_, i) => `<span class="h-1.5 rounded-full transition-all ${i === _onboardingCurrentStep ? 'w-6' : 'w-1.5'}" style="background-color:${i <= _onboardingCurrentStep ? tool.color : '#d0e0e3'}"></span>`).join('')}
       </div>
       ${_onboardingMediaHTML(step)}
       <p class="text-[10px] font-bold uppercase tracking-wider mb-2" style="color:${tool.color}">Passo ${_onboardingCurrentStep + 1} de ${tool.steps.length}</p>

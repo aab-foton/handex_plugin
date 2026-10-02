@@ -47,7 +47,8 @@
           nodeId: frame ? frame.figmaId : null,
           selectedLibSlugs: selectedLibSlugs,
           categories: categories,
-          previousSpecs: frame ? frame.specs : (handoffData.step2 && handoffData.step2.specs) || null
+          previousSpecs: frame ? frame.specs : (handoffData.step2 && handoffData.step2.specs) || null,
+          isNewComponent: !!(frame && frame.isNewComponent)
         })
       }, "*");
     }
@@ -83,6 +84,7 @@
       });
 
       _refreshIcons();
+      if (typeof updateReviewDetailButton === 'function') updateReviewDetailButton();
       // Atualiza subtítulo de conformidade após scan (itens desvinculados podem mudar o estado)
       if (frameId && typeof _updateFrameAuditSubtitle === 'function') {
         _updateFrameAuditSubtitle(frameId);
@@ -149,8 +151,8 @@
       const hasJustification = !!(frame.audit.observacoes && frame.audit.observacoes.trim());
       const isUrgent = items.length > 0 && !hasJustification;
       const palette = isUrgent
-        ? { bg: 'bg-red-50 dark:bg-red-900/15', border: 'border-red-100 dark:border-red-800/30', text: 'text-red-700 dark:text-red-400', icon: 'text-red-600' }
-        : { bg: 'bg-amber-50 dark:bg-amber-900/15', border: 'border-amber-100 dark:border-amber-800/30', text: 'text-amber-700 dark:text-amber-400', icon: 'text-amber-600' };
+        ? { bg: 'bg-[#fbebeb] dark:bg-red-900/15', border: 'border-[#f0afaf] dark:border-red-800/30', text: 'text-st-err dark:text-st-err-dark', icon: 'text-st-err dark:text-st-err-dark' }
+        : { bg: 'bg-[#fff9e6] dark:bg-amber-900/15', border: 'border-[#fee59b] dark:border-amber-800/30', text: 'text-st-warn dark:text-st-warn-dark', icon: 'text-st-warn dark:text-st-warn-dark' };
 
       if (items.length === 0) {
         return `<div class="flex items-start gap-2 px-3 py-2.5 ${palette.bg} rounded-xl border ${palette.border}">
@@ -161,7 +163,7 @@
 
       const rows = items.map(it => {
         const icon = it.status === 'error' ? 'x-circle' : 'alert-triangle';
-        const cls  = it.status === 'error' ? 'text-red-500 dark:text-red-400' : 'text-amber-600 dark:text-amber-400';
+        const cls  = it.status === 'error' ? 'text-st-err dark:text-st-err-dark' : 'text-st-warn dark:text-st-warn-dark';
         const clickable = it.nodeId
           ? `onclick="focusNode('${it.nodeId}')" title="Focar no elemento no Figma" class="flex items-center gap-1.5 min-w-0 w-full cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 rounded px-1 py-0.5 transition-colors group"`
           : `class="flex items-center gap-1.5 min-w-0 w-full px-1 py-0.5"`;
@@ -216,20 +218,13 @@
           <i data-lucide="chevron-right" id="sub-chev-${key}" class="w-3.5 h-3.5 text-gray-400 transition-transform shrink-0"></i>
         </button>`;
 
-      // Subtítulo dinâmico baseado no estado de conformidade DSC
-      let _subCls, _subLabel;
-      if (frame.isNewComponent) {
-        _subCls = 'text-[10px] text-violet-500 font-medium'; _subLabel = 'Novo Componente';
-      } else if (!frame.audit || !frame.audit.checkDone) {
-        _subCls = 'text-[10px] text-slate-500 dark:text-dark-muted font-medium'; _subLabel = 'Pendente';
-      } else {
-        const _hasUnl = typeof _computeFrameHasUnlinked === 'function' ? _computeFrameHasUnlinked(frame) : false;
-        if (frame.audit.semDesvios && !_hasUnl) {
-          _subCls = 'text-[10px] text-green-600 font-medium'; _subLabel = 'Conforme';
-        } else {
-          _subCls = 'text-[10px] text-red-500 font-medium'; _subLabel = 'Não Conforme';
-        }
-      }
+      // Subtítulo dinâmico baseado no estado de conformidade DSC — mesma regra
+      // de _updateFrameAuditSubtitle (core.js), via _getFrameStatusView. Esta
+      // cópia local só conhecia 4 estados e mostrava "Não Conforme" para um
+      // desvio já justificado até a primeira edição do card.
+      const _statusView = _getFrameStatusView(frame);
+      const _subCls = 'text-[10px] font-medium ' + _statusView.cls;
+      const _subLabel = _statusView.label;
 
       card.innerHTML = `
         <!-- Cabeçalho -->
@@ -251,8 +246,8 @@
           <!-- ── Toggle Novo Componente ── -->
           <div class="px-4 py-2.5 flex items-center justify-between border-b border-gray-50 dark:border-dark-line">
             <div class="flex items-center gap-2.5">
-              <div class="w-6 h-6 flex items-center justify-center bg-violet-50 dark:bg-violet-900/30 rounded-lg shrink-0">
-                <i data-lucide="component" class="w-3.5 h-3.5 text-violet-500"></i>
+              <div class="w-6 h-6 flex items-center justify-center bg-blue-50 dark:bg-blue-900/30 rounded-lg shrink-0">
+                <i data-lucide="component" class="w-3.5 h-3.5 text-st-info dark:text-st-info-dark"></i>
               </div>
               <div>
                 <p class="text-[12px] font-bold text-slate-700 dark:text-white">Novo Componente</p>
@@ -263,7 +258,7 @@
               <input type="checkbox" id="toggle-new-component-${fid}" class="sr-only peer"
                 ${frame.isNewComponent ? 'checked' : ''}
                 onchange="toggleNewComponent('${fid}', this.checked)">
-              <div class="w-9 h-5 bg-gray-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-violet-500"></div>
+              <div class="w-9 h-5 bg-gray-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#005ca9]"></div>
             </label>
           </div>
 
@@ -277,7 +272,7 @@
               oninput="_updateCharCount(this, 500)"
               placeholder="Descreva o padrão de uso, nomenclatura de tokens e diretrizes de aplicação deste componente..."
               rows="3"
-              class="w-full bg-violet-50 dark:bg-violet-900/10 border border-violet-200 dark:border-violet-800/30 rounded-xl px-3 py-2.5 text-[11px] text-slate-700 dark:text-white outline-none resize-none focus:border-violet-400 transition-colors"
+              class="w-full bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800/30 rounded-xl px-3 py-2.5 text-[11px] text-slate-700 dark:text-white outline-none resize-none focus:border-blue-400 transition-colors"
             >${frame.newComponentObservations || ''}</textarea>
           </div>
 
@@ -343,9 +338,9 @@
                   <div class="w-9 h-5 bg-gray-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
                 </label>
               </div>` : `
-              <div class="flex items-center gap-2 px-3 py-2 bg-violet-50 dark:bg-violet-900/20 rounded-xl border border-violet-100 dark:border-violet-800/30">
-                <i data-lucide="component" class="w-3.5 h-3.5 text-violet-500 shrink-0"></i>
-                <p class="text-[11px] text-violet-700 dark:text-violet-300 leading-snug">Componente novo — desvios são esperados. Registre as divergências nas observações abaixo.</p>
+              <div class="flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30">
+                <i data-lucide="component" class="w-3.5 h-3.5 text-st-info dark:text-st-info-dark shrink-0"></i>
+                <p class="text-[11px] text-st-info dark:text-st-info-dark leading-snug">Componente novo — desvios são esperados. Registre as divergências nas observações abaixo.</p>
               </div>`}
               <div id="conformance-alert-${fid}">${_buildConformanceAlertHTML(frame)}</div>
               <div class="${_shouldShowAuditObs(frame) ? '' : 'hidden'} flex items-center justify-end" id="audit-obs-${fid}-count-row">
@@ -610,8 +605,8 @@
               <div class="space-y-1">
                 ${props.map(p => `
                   <div class="flex items-center justify-between gap-2">
-                    <span class="text-[10px] text-slate-500 dark:text-dark-muted shrink-0">${p.label || p.key}</span>
-                    <span class="text-[10px] font-semibold ${tokenKeys.has(p.key) && !p.token ? 'text-amber-600 dark:text-amber-400' : 'text-slate-700 dark:text-white'} text-right font-mono">${p.token || p.value}</span>
+                    <span class="text-[10px] text-slate-500 dark:text-dark-muted shrink-0">${_vocabLabel(p.label, p.key) || p.key}</span>
+                    <span class="text-[10px] font-semibold ${tokenKeys.has(p.key) && !p.token ? 'text-amber-600 dark:text-amber-400' : 'text-slate-700 dark:text-white'} text-right font-mono">${p.token || _vocabValue(p.value)}</span>
                   </div>`).join('')}
               </div>
             </div>` : '';
@@ -1204,10 +1199,10 @@
         </button>`;
 
       const issuesBadge = issuesCount > 0
-        ? chipButton("error", issuesCount, "bg-red-50 dark:bg-red-900/30 text-red-500")
+        ? chipButton("error", issuesCount, "bg-[#fbebeb] dark:bg-red-900/30 text-st-err dark:text-st-err-dark")
         : "";
       const adjustmentsBadge = adjustmentsCount > 0
-        ? chipButton("warning", adjustmentsCount, "bg-amber-50 dark:bg-amber-900/30 text-amber-500")
+        ? chipButton("warning", adjustmentsCount, "bg-[#fff9e6] dark:bg-amber-900/30 text-st-warn dark:text-st-warn-dark")
         : "";
       const badges = (issuesBadge || adjustmentsBadge) ? `<div class="flex gap-1.5 flex-wrap">${issuesBadge}${adjustmentsBadge}</div>` : "";
 
@@ -1345,14 +1340,14 @@
 
       const status = item.componentStatus || (item.isDS === true ? "ok" : (item.isDS === "warning" ? "warning" : "error"));
       const dsStatus = isCurrentFrameAuditEnabled() ? (status === "ok" ?
-        `<span class="flex items-center gap-1 text-[#10b981]"><i data-lucide="check-circle" class="w-2.5 h-2.5"></i>EM CONFORMIDADE</span>` :
+        `<span class="flex items-center gap-1 text-st-ok dark:text-st-ok-dark"><i data-lucide="check-circle" class="w-2.5 h-2.5"></i>EM CONFORMIDADE</span>` :
         (status === "warning" ?
           (item.isCustomComponent ?
-            `<span class="flex items-center gap-1 text-amber-500 font-bold" title="Sem vínculo com componente publicado na lib DSC — verificar manualmente"><i data-lucide="help-circle" class="w-2.5 h-2.5"></i>COMPONENTE PERSONALIZADO</span>` :
+            `<span class="flex items-center gap-1 text-st-warn dark:text-st-warn-dark font-bold" title="Sem vínculo com componente publicado na lib DSC — verificar manualmente"><i data-lucide="help-circle" class="w-2.5 h-2.5"></i>COMPONENTE PERSONALIZADO</span>` :
             (item.customizations && item.customizations.length > 0) ?
-            `<span class="flex items-center gap-1 text-amber-500 font-bold" title="Instância do DSC com valores diferentes do componente principal (o que o Reset do Figma restauraria)"><i data-lucide="sliders-horizontal" class="w-2.5 h-2.5"></i>PERSONALIZADO — FORA DO PADRÃO DA LIB</span>` :
-            `<span class="flex items-center gap-1 text-amber-500 font-bold"><i data-lucide="help-circle" class="w-2.5 h-2.5"></i>NECESSITA REVISÃO</span>`) :
-          `<span class="flex items-center gap-1 text-red-400 font-bold"><i data-lucide="alert-circle" class="w-2.5 h-2.5"></i>FORA DO PADRÃO</span>`)) : "";
+            `<span class="flex items-center gap-1 text-st-warn dark:text-st-warn-dark font-bold" title="Instância do DSC com valores diferentes do componente principal (o que o Reset do Figma restauraria)"><i data-lucide="sliders-horizontal" class="w-2.5 h-2.5"></i>PERSONALIZADO — FORA DO PADRÃO DA LIB</span>` :
+            `<span class="flex items-center gap-1 text-st-warn dark:text-st-warn-dark font-bold"><i data-lucide="help-circle" class="w-2.5 h-2.5"></i>NECESSITA REVISÃO</span>`) :
+          `<span class="flex items-center gap-1 text-st-err dark:text-st-err-dark font-bold"><i data-lucide="alert-circle" class="w-2.5 h-2.5"></i>FORA DO PADRÃO</span>`)) : "";
 
       const legacyBadge = (window._handexLegacyLibHint && item.legacyLib && isCurrentFrameAuditEnabled())
         ? `<span class="pointer-events-auto flex items-center gap-1 mt-0.5 text-slate-600 dark:text-slate-300 font-bold" title="Este componente vem de uma lib legada do DSC (Fundamentos Visuais ou Web Angular e React). Existe versão nas libs Super — vale migrar."><i data-lucide="library" class="w-2.5 h-2.5"></i>LIB LEGADA — PRECISA MIGRAR</span>`
@@ -1363,18 +1358,34 @@
       // entra ou não na Ficha final (ver createSpecList em code.js). Precisa de
       // stopPropagation nos dois níveis (label e input) porque o card inteiro
       // tem onclick="focusNode(...)".
+      const _isFull = item.uiDepth === 'full';
       const customToggleHtml = `
-        <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-gray-100 dark:border-dark-line" onclick="event.stopPropagation()">
+        <div class="flex items-center gap-1.5 mt-1" onclick="event.stopPropagation()">
           <label class="relative inline-flex items-center cursor-pointer shrink-0">
-            <input type="checkbox" class="sr-only peer"
+            <input type="checkbox" role="switch" aria-checked="${item.isMarkedCustom ? 'true' : 'false'}" aria-label="Vai para a Ficha (precisa ser construído)" class="sr-only peer"
               ${item.isMarkedCustom ? 'checked' : ''}
               onclick="event.stopPropagation()"
-              onchange="toggleSpecItemCustom('${activeFrameId || ''}', '${type}', '${item.nodeId}', this.checked)">
-            <div class="w-7 h-4 bg-gray-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[1px] after:left-[1px] after:bg-white after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-violet-500"></div>
+              onchange="onSpecItemCustomChange(this, '${activeFrameId || ''}', '${type}', '${item.nodeId}')">
+            <div class="w-7 h-4 bg-gray-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[1px] after:left-[1px] after:bg-white after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-[#005ca9]"></div>
           </label>
           <span class="text-[9px] text-slate-500 dark:text-dark-muted">Vai para a Ficha (precisa ser construído)</span>
         </div>
+        <div data-uidepth-row class="${item.isMarkedCustom ? '' : 'hidden '}flex flex-col mt-1.5" onclick="event.stopPropagation()">
+          <div class="flex items-center gap-1.5">
+          <label class="relative inline-flex items-center cursor-pointer shrink-0">
+            <input type="checkbox" role="switch" aria-checked="${_isFull ? 'true' : 'false'}" aria-label="Detalhamento completo" data-uidepth-box class="sr-only peer"
+              ${_isFull ? 'checked' : ''}
+              onclick="event.stopPropagation()"
+              onchange="onSpecItemDepthChange(this, '${activeFrameId || ''}', '${type}', '${item.nodeId}')">
+            <div class="w-7 h-4 bg-gray-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[1px] after:left-[1px] after:bg-white after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-[#005ca9]"></div>
+          </label>
+          <span class="text-[9px] text-slate-500 dark:text-dark-muted">Detalhamento completo</span>
+          </div>
+          <p class="text-[9px] leading-snug text-slate-500 dark:text-dark-muted mt-0.5 ml-9">Inclui composição interna, interações e todas as propriedades.</p>
+        </div>
       `;
+
+      const fullBadge = `<span data-uidepth-badge class="${(item.isMarkedCustom && _isFull) ? '' : 'hidden '}flex items-center gap-1 mt-0.5 font-bold text-st-info dark:text-st-info-dark" title="Detalhamento completo na Ficha"><i data-lucide="layers" class="w-2.5 h-2.5"></i>COMPLETO</span>`;
 
       // ── Prop split: "applied" (active) vs "inactive" (false/none variants) ──
       // Variant props with boolean-false or "none" values mean the feature is OFF
@@ -1390,7 +1401,6 @@
         p.type === 'variant' && INACTIVE_VALUES.has(String(p.value).toLowerCase().trim())
       );
       const inactiveCount = inactiveProps.length;
-      const uid = `sp-${String(item.nodeId || Math.random()).replace(/[^a-z0-9]/gi, '').slice(0, 12)}`;
 
       function renderActivePropsList(props) {
         if (!props || props.length === 0) return '';
@@ -1398,9 +1408,9 @@
         props.forEach(p => {
           const pStatus = isCurrentFrameAuditEnabled() ?
             (p.isDS === null ? `<span class="text-gray-300 dark:text-gray-600 shrink-0" title="Não avaliado contra a biblioteca"><i data-lucide="minus" class="w-3 h-3 pointer-events-none"></i></span>` :
-            p.isDS === true ? `<span class="text-[#10b981] shrink-0"><i data-lucide="check" class="w-3 h-3"></i></span>` :
-             (p.isDS === "warning" ? `<span class="text-amber-500 shrink-0" title="${p.matchedBy === 'remote-unverified' ? 'Token de uma biblioteca publicada que não está nas libs do DSC cadastradas no Handex. Confira se é um token DSC ou atualize as referências.' : p.matchedBy === 'unverified-no-skeleton' ? 'Não verificado: as referências do DSC não estavam carregadas neste scan. Escaneie de novo.' : 'Necessita revisão'}"><i data-lucide="alert-triangle" class="w-3 h-3 pointer-events-none"></i></span>` :
-              `<span class="text-red-400 shrink-0"><i data-lucide="x" class="w-3 h-3"></i></span>`)) : "";
+            p.isDS === true ? `<span class="text-st-ok dark:text-st-ok-dark shrink-0"><i data-lucide="check" class="w-3 h-3"></i></span>` :
+             (p.isDS === "warning" ? `<span class="text-st-warn dark:text-st-warn-dark shrink-0" title="${p.matchedBy === 'remote-unverified' ? 'Token de uma biblioteca publicada que não está nas libs do DSC cadastradas no Handex. Confira se é um token DSC ou atualize as referências.' : p.matchedBy === 'unverified-no-skeleton' ? 'Não verificado: as referências do DSC não estavam carregadas neste scan. Escaneie de novo.' : 'Necessita revisão'}"><i data-lucide="alert-triangle" class="w-3 h-3 pointer-events-none"></i></span>` :
+              `<span class="text-st-err dark:text-st-err-dark shrink-0"><i data-lucide="x" class="w-3 h-3"></i></span>`)) : "";
 
           let icon = "circle";
           if (p.type === "spacing") icon = "move-horizontal";
@@ -1433,7 +1443,7 @@
 
           const valueDisplay = hasToken
             ? `<span class="flex items-center gap-0.5 flex-wrap leading-tight">${chainHtml}</span>`
-            : `<span class="font-bold text-slate-700 dark:text-gray-200">${p.value}</span>`;
+            : `<span class="font-bold text-slate-700 dark:text-gray-200">${_vocabValue(p.value)}</span>`;
 
           const clickAttr = item.nodeId
             ? `onclick="focusNode('${item.nodeId}')" title="${tooltipText}\n\nClique para focar no elemento no Figma" style="cursor:pointer"`
@@ -1442,7 +1452,7 @@
             <div class="flex items-center gap-1.5 min-w-0">
               <div class="w-3 h-3 flex items-center justify-center shrink-0">${colorPrev}</div>
               <span class="flex items-center gap-1 flex-wrap min-w-0">
-                <span class="text-gray-600 dark:text-gray-300 shrink-0">${p.label || p.type}:</span>
+                <span class="text-gray-600 dark:text-gray-300 shrink-0">${_vocabLabel(p.label || p.type)}:</span>
                 ${valueDisplay}
               </span>
             </div>
@@ -1462,7 +1472,7 @@
         props.forEach(p => {
           html += `<div class="flex items-center gap-1.5 text-[9px] text-gray-400 dark:text-gray-600 bg-gray-50 dark:bg-dark-bg/20 rounded px-1.5 py-0.5">
             <i data-lucide="minus-circle" class="w-2.5 h-2.5 shrink-0"></i>
-            <span class="truncate line-through">${p.label || p.type}: ${p.value}</span>
+            <span class="truncate line-through">${_vocabLabel(p.label || p.type)}: ${_vocabValue(p.value)}</span>
           </div>`;
         });
         html += `</div>`;
@@ -1477,37 +1487,29 @@
             <p class="text-[8px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 mb-1">Personalizações (${_custList.length})</p>
             ${_custList.map(c => `<div class="flex items-start gap-1.5 text-[9px] text-gray-600 dark:text-gray-300 mb-0.5" title="${escapeHtml(c.layer)}">
               <i data-lucide="sliders-horizontal" class="w-3 h-3 text-amber-500 shrink-0 mt-px"></i>
-              <span class="min-w-0"><span class="text-gray-500 dark:text-gray-400">${escapeHtml(c.layer)} · </span>${escapeHtml(c.campo)}: <span class="font-bold text-slate-700 dark:text-gray-200">${escapeHtml(c.atual)}</span> <span class="text-gray-500 dark:text-gray-400">(padrão da lib: ${escapeHtml(c.padrao)})</span></span>
+              <span class="min-w-0"><span class="text-gray-500 dark:text-gray-400">${escapeHtml(c.layer)} · </span>${escapeHtml(_vocabLabel(c.campo))}: <span class="font-bold text-slate-700 dark:text-gray-200">${escapeHtml(c.atual)}</span> <span class="text-gray-500 dark:text-gray-400">(padrão da lib: ${escapeHtml(c.padrao)})</span></span>
             </div>`).join('')}
           </div>`
         : (item.customizationsStatus === 'not-evaluated'
           ? `<p class="mt-2 text-[8px] text-gray-400 dark:text-gray-600" title="Não foi possível ler o padrão da lib para comparar. Veja o console do plugin (prefixo [Handex 5b])."><i data-lucide="minus" class="w-2.5 h-2.5 inline-block align-middle"></i> Personalização não avaliada</p>`
           : ''));
 
-      // Expanded section shows ONLY the inactive props (applied ones stay visible above)
+      const _inKey = `${activeFrameId || ''}|${type}|${item.nodeId}`;
+      const _inOpen = inactiveCount > 0 && window._inactivePropsOpen.has(_inKey);
       const inactiveHtml = inactiveCount > 0
-        ? `<div id="${uid}-inactive" class="hidden">${renderInactivePropsList(inactiveProps)}</div>`
+        ? `<div data-inactive-panel class="${_inOpen ? '' : 'hidden'}">${renderInactivePropsList(inactiveProps)}</div>`
         : '';
 
-      const toggleLabel = `${inactiveCount} prop${inactiveCount > 1 ? 's' : ''} inativa${inactiveCount > 1 ? 's' : ''}`;
       const toggleHtml = inactiveCount > 0
-        ? `<button id="${uid}-btn"
-            onclick="event.stopPropagation();
-              var d=document.getElementById('${uid}-inactive');
-              var isHidden=d.classList.contains('hidden');
-              d.classList.toggle('hidden');
-              this.innerHTML = isHidden
-                ? '<i data-lucide=\\'chevron-up\\' class=\\'w-2.5 h-2.5\\'></i> Ocultar inativas'
-                : '<i data-lucide=\\'eye-off\\' class=\\'w-2.5 h-2.5\\'></i> ${toggleLabel}';
-              _refreshIcons()"
+        ? `<button type="button" data-inactive-btn data-inactive-count="${inactiveCount}" aria-expanded="${_inOpen ? 'true' : 'false'}"
+            onclick="event.stopPropagation(); toggleInactiveProps(this, '${_inKey}')"
             class="mt-1.5 flex items-center gap-1 text-[9px] text-gray-500 dark:text-gray-400 hover:text-[#005ca9] dark:hover:text-blue-400 transition-colors font-medium">
-            <i data-lucide="eye-off" class="w-2.5 h-2.5"></i>
-            ${toggleLabel}
+            ${_inactiveBtnInner(_inOpen, inactiveCount)}
           </button>`
         : '';
 
       return `
-        <div role="button" tabindex="0" class="col-span-2 p-2 border border-gray-100 dark:border-dark-line rounded-lg bg-gray-50/50 dark:bg-dark-bg/50 cursor-pointer hover:border-[#005ca9] hover:shadow-sm transition-all active:scale-[0.98] group" onclick="focusNode('${item.nodeId}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();focusNode('${item.nodeId}');}" title="Focar no elemento no Figma" aria-label="Focar em ${escapeHtml(item.name)} no Figma">
+        <div role="button" tabindex="0" data-spec-card data-node-id="${item.nodeId}" class="col-span-2 p-2 border border-gray-100 dark:border-dark-line rounded-lg bg-gray-50/50 dark:bg-dark-bg/50 cursor-pointer hover:border-[#005ca9] hover:shadow-sm transition-all active:scale-[0.98] group" onclick="focusNode('${item.nodeId}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();focusNode('${item.nodeId}');}" title="Focar no elemento no Figma" aria-label="Focar em ${escapeHtml(item.name)} no Figma">
           <div class="flex items-center gap-2 mb-1 pointer-events-none">
             ${preview}
             <div class="flex-1 min-w-0">
@@ -1515,15 +1517,16 @@
               <div class="text-[9px] uppercase tracking-wider font-medium">
                 ${dsStatus}
                 ${legacyBadge}
+                ${fullBadge}
               </div>
             </div>
             <i data-lucide="locate" class="w-3 h-3 text-gray-400 dark:text-gray-600 group-hover:text-[#005ca9] dark:group-hover:text-blue-400 transition-colors shrink-0"></i>
           </div>
+          ${customToggleHtml}
           ${appliedHtml}
           ${customizationsHtml}
           ${inactiveHtml}
           ${toggleHtml}
-          ${customToggleHtml}
         </div>
       `;
     }
@@ -1776,7 +1779,7 @@
 
     function requestSpecProperties() {
       if (!validateSpecLetterInput()) return;
-      parent.postMessage({ pluginMessage: _withRefSkeleton({ type: 'request-spec-properties' }) }, '*');
+      parent.postMessage({ pluginMessage: _withRefSkeleton({ type: 'request-spec-properties', targetNodeId: window._pendingSpecTargetNodeId || undefined }) }, '*');
     }
 
     function closeSpecPropertiesModal() {
@@ -1870,9 +1873,7 @@
     function backToSpecPropertiesFromPosition() {
       closeSpecPositionModal();
       document.getElementById('spec-properties-modal').classList.remove('hidden');
-      if (typeof _persistentFocus === 'function') {
-        _persistentFocus(document.querySelector('#spec-properties-modal ' + FOCUSABLE_SELECTOR));
-      }
+      { const _f = document.querySelector('#spec-properties-modal ' + FOCUSABLE_SELECTOR); if (_f) _f.focus(); }
     }
     window.backToSpecPropertiesFromPosition = backToSpecPropertiesFromPosition;
 
@@ -2267,7 +2268,7 @@
           section.setAttribute('data-spec-category', spec.category || '');
           section.setAttribute('data-spec-search', _normalizeSearchText(
             [spec.letter, spec.name, spec.type, spec.categoryLabel, spec.obs, spec.note]
-              .concat((spec.properties || []).flatMap(p => [p.label, p.value, p.token]))
+              .concat((spec.properties || []).flatMap(p => [p.label, _vocabLabel(p.label, p.key), p.value, p.token]))
               .filter(Boolean)
               .join(' ')
           ));
@@ -2490,12 +2491,12 @@
             spec.properties.forEach(p => {
               const detEl = document.createElement("div");
               detEl.className = "flex justify-between text-[10px] bg-white dark:bg-dark-bg p-1.5 rounded border border-gray-100 dark:border-dark-line";
-              const valStr = p.token ? `<span class="text-[8px] text-[#005ca9] dark:text-blue-400 font-medium mr-1 px-1 bg-blue-50 dark:bg-blue-900/20 rounded-sm border border-blue-100 dark:border-blue-800">${escapeHtml(p.token)}</span>${escapeHtml(p.value)}` : escapeHtml(p.value);
+              const valStr = p.token ? `<span class="text-[8px] text-[#005ca9] dark:text-blue-400 font-medium mr-1 px-1 bg-blue-50 dark:bg-blue-900/20 rounded-sm border border-blue-100 dark:border-blue-800">${escapeHtml(p.token)}</span>${escapeHtml(_vocabValue(p.value))}` : escapeHtml(_vocabValue(p.value));
               const displayVal = p.token || p.value;
               const valStr2 = p.token
                 ? `<span class="text-[9px] text-[#005ca9] dark:text-blue-400 font-medium px-1 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-100 dark:border-blue-800">${escapeHtml(p.token)}</span>`
-                : `<span class="font-mono">${escapeHtml(p.value)}</span>`;
-              detEl.innerHTML = `<span class="text-slate-500">${escapeHtml(p.label)}</span><span class="font-bold text-slate-700 dark:text-white flex items-center">${valStr2}</span>`;
+                : `<span class="font-mono">${escapeHtml(_vocabValue(p.value))}</span>`;
+              detEl.innerHTML = `<span class="text-slate-500">${escapeHtml(_vocabLabel(p.label, p.key))}</span><span class="font-bold text-slate-700 dark:text-white flex items-center">${valStr2}</span>`;
               content.appendChild(detEl);
             });
           }
@@ -2513,7 +2514,7 @@
               <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> Cenário de Exceção${(spec.excecoes || []).length > 0 ? ` (${(spec.excecoes || []).length})` : ''}
             </button>
             <button type="button" onclick="event.stopPropagation(); openSpecNoteModal(${spec.originalIndex})"
-              class="flex-1 flex items-center justify-center gap-1.5 py-2 text-[11px] font-bold text-[#004d8d] dark:text-[#4da3e0] bg-white dark:bg-dark-surface border border-blue-200 dark:border-blue-800/30 rounded-2xl hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+              class="flex-1 flex items-center justify-center gap-1.5 py-2 text-[11px] font-bold text-[#004d8d] dark:text-[#6dbafa] bg-white dark:bg-dark-surface border border-blue-200 dark:border-blue-800/30 rounded-2xl hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
               <i data-lucide="sticky-note" class="w-3.5 h-3.5"></i> ${spec.note ? 'Editar Nota' : 'Incluir Nota'}
             </button>
           `;
@@ -3010,16 +3011,16 @@
         const next = rects[i + 1];
         const x1 = r.x + r.w / 2, y1 = r.y + r.h / 2;
         const x2 = next.x + next.w / 2, y2 = next.y + next.h / 2;
-        return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#cbd5e1" stroke-width="1.5" marker-end="url(#flow-chain-arrowhead)" />`;
+        return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#d0e0e3" stroke-width="1.5" marker-end="url(#flow-chain-arrowhead)" />`;
       }).join('');
 
       const boxesHtml = rects.map((r, i) => {
         const isFirst = i === 0;
         const letter = FLOW_CHAIN_LETTERS[i] || '?';
         const name = escapeXml((nodes[i].name || letter).trim());
-        const fill = isFirst ? 'rgba(61,61,255,0.12)' : 'rgba(148,163,184,0.15)';
-        const stroke = isFirst ? '#005ca9' : '#94a3b8';
-        const textFill = isFirst ? '#004d8d' : '#64748b';
+        const fill = isFirst ? 'rgba(0,92,169,0.12)' : 'rgba(158,178,184,0.15)';
+        const stroke = isFirst ? '#005ca9' : '#9eb2b8';
+        const textFill = isFirst ? '#004d8d' : '#64747a';
         return `
           <rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="4" fill="${fill}" stroke="${stroke}" stroke-width="1.5"><title>${name}</title></rect>
           <text x="${r.x + r.w / 2}" y="${r.y + r.h / 2 + 3}" text-anchor="middle" font-size="9" font-weight="700" fill="${textFill}">${letter}</text>
@@ -3148,7 +3149,7 @@
       svg.innerHTML = `
         <defs>
           <marker id="flow-chain-arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-            <path d="M0,0 L6,3 L0,6 Z" fill="#cbd5e1" />
+            <path d="M0,0 L6,3 L0,6 Z" fill="#d0e0e3" />
           </marker>
         </defs>
         ${arrowsHtml}
@@ -3224,7 +3225,7 @@
       const activeCard = document.getElementById(`form-flow-${type}`) || document.getElementById(`flow-${type}`);
       if (activeCard) {
         activeCard.style.borderColor = '#005ca9';
-        activeCard.style.backgroundColor = 'rgba(61, 61, 255, 0.08)';
+        activeCard.style.backgroundColor = 'rgba(0, 92, 169, 0.08)';
         const icon = activeCard.querySelector('i[data-lucide]');
         if (icon) icon.style.color = '#005ca9';
         const diamond = activeCard.querySelector('.rotate-45');
@@ -3887,6 +3888,27 @@
       renderFlowsList();
     }
 
+window._inactivePropsOpen = window._inactivePropsOpen || new Set();
+
+function _inactiveBtnInner(open, count) {
+  return open
+    ? '<i data-lucide="chevron-up" class="w-2.5 h-2.5"></i> Ocultar inativas'
+    : `<i data-lucide="eye-off" class="w-2.5 h-2.5"></i> Mostrar ${count} inativa${count > 1 ? 's' : ''}`;
+}
+
+function toggleInactiveProps(btn, key) {
+  const card = btn.closest('[data-spec-card]');
+  const panel = card && card.querySelector('[data-inactive-panel]');
+  if (!panel) return;
+  const open = panel.classList.contains('hidden');
+  panel.classList.toggle('hidden', !open);
+  if (open) window._inactivePropsOpen.add(key); else window._inactivePropsOpen.delete(key);
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  btn.innerHTML = _inactiveBtnInner(open, Number(btn.getAttribute('data-inactive-count')));
+  _refreshIcons();
+}
+window.toggleInactiveProps = toggleInactiveProps;
+
 function toggleLinkInput(show) {
       const container = document.getElementById('spec-link-container');
       container.classList.toggle('hidden', !show);
@@ -3938,15 +3960,7 @@ function toggleLinkInput(show) {
       document.getElementById('spec-form-modal').classList.remove('hidden');
       updateFABVisibility(true);
       _refreshIcons();
-      // Figma Desktop às vezes demora alguns segundos pra ceder foco de
-      // teclado à janela do plugin -- insiste em focar o campo de Tag
-      // (primeiro campo real do formulário) até o foco realmente "pegar",
-      // em vez de exigir um clique manual do usuário que pode não
-      // funcionar se cair dentro dessa janela de atraso (ver
-      // _persistentFocus em core.js).
-      if (typeof _persistentFocus === 'function') {
-        _persistentFocus(document.getElementById('spec-letter-input'));
-      }
+      { const _f = document.getElementById('spec-letter-input'); if (_f) _f.focus(); }
     }
 
     function closeSpecFormModal() {

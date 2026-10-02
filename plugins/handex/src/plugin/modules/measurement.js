@@ -119,7 +119,7 @@
         btn.innerHTML = `
           <div class="w-5 h-5 flex items-center justify-center bg-[#004d8d] text-white text-[10px] font-bold rounded-full shrink-0">${item.number || (index + 1)}</div>
           <div class="flex-1 min-w-0 text-left">
-            <span class="text-[12px] font-bold text-[#1E293B] dark:text-white truncate block" title="${item.name}">${item.name}</span>
+            <span class="text-[12px] font-bold text-[#22292e] dark:text-white truncate block" title="${item.name}">${item.name}</span>
           </div>
           <i data-lucide="chevron-down" class="w-4 h-4 ${chevronColorClass} transition-transform ${chevronClass} shrink-0"></i>
         `;

@@ -1,6 +1,6 @@
 <!-- VIEW: GUIDE -->
     <main id="view-guide" class="view flex flex-col h-full overflow-hidden">
-      <div class="subheader-brand px-4 py-3 bg-[#005ca9] dark:bg-[#00335c] flex items-center justify-between shrink-0 shadow-md">
+      <div class="subheader-brand px-4 py-3 bg-[#005ca9] dark:bg-[#002747] flex items-center justify-between shrink-0 shadow-md">
         <div class="flex items-center gap-3">
           <button onclick="navigate('view-home')" aria-label="Voltar para a página inicial"
             class="min-w-[40px] min-h-[40px] flex items-center justify-center bg-white/10 dark:bg-white/10 rounded-2xl hover:bg-white/20 dark:hover:bg-white/20 transition-colors">
@@ -30,7 +30,7 @@
             <i data-lucide="chevron-down" class="acc-chev w-3.5 h-3.5 text-slate-500 dark:text-dark-muted transition-transform duration-200 shrink-0" aria-hidden="true"></i>
           </button>
           <div class="hidden px-4 pb-4 pt-2 bg-white dark:bg-dark-surface border-t border-gray-50 dark:border-dark-line">
-            <p class="text-[11px] text-slate-700 dark:text-white leading-relaxed">Registra o contexto do que está sendo entregue — título, objetivo, equipe responsável e, dentro de Contexto de Negócio, o briefing estratégico, as regras de negócio/HUs e os links de referência. Esse contexto aparece no topo da ficha final, para o dev entender o "porquê" da entrega antes de mergulhar no "como" — sem precisar te perguntar no Slack ou adivinhar pelo protótipo.</p>
+            <p class="text-[11px] text-slate-700 dark:text-white leading-relaxed">Registra título, objetivo, equipe, briefing, regras de negócio e links. Esse contexto abre a Ficha e responde ao dev o "porquê" da entrega.</p>
             <a href="https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=117-505" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 mt-2 text-[10px] font-bold text-[#005ca9] dark:text-blue-300">
               <i data-lucide="book-open" class="w-3 h-3 shrink-0" aria-hidden="true"></i> Ver documentação completa
             </a>
@@ -42,16 +42,16 @@
           <button onclick="var b=this.nextElementSibling;b.classList.toggle('hidden');var c=this.querySelector('.acc-chev');c.classList.toggle('rotate-180');c.classList.toggle('text-[#005ca9]');c.classList.toggle('dark:text-blue-300')"
             class="w-full flex items-center justify-between p-3.5 bg-white dark:bg-dark-surface hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors text-left">
             <div class="flex items-center gap-2.5">
-              <div class="w-6 h-6 rounded-xl bg-sky-50 dark:bg-sky-900/20 flex items-center justify-center shrink-0">
-                <i data-lucide="scan-line" class="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" aria-hidden="true"></i>
+              <div class="w-6 h-6 rounded-xl bg-ceu-50 dark:bg-ceu-900/20 flex items-center justify-center shrink-0">
+                <i data-lucide="scan-line" class="w-3.5 h-3.5 text-ceu-600 dark:text-ceu-400" aria-hidden="true"></i>
               </div>
               <span class="text-[12px] font-bold text-slate-800 dark:text-white">Escanear Tokens</span>
             </div>
             <i data-lucide="chevron-down" class="acc-chev w-3.5 h-3.5 text-slate-500 dark:text-dark-muted transition-transform duration-200 shrink-0" aria-hidden="true"></i>
           </button>
           <div class="hidden px-4 pb-4 pt-2 bg-white dark:bg-dark-surface border-t border-gray-50 dark:border-dark-line">
-            <p class="text-[11px] text-slate-700 dark:text-white leading-relaxed">Não é uma leitura automática que basta rodar uma vez: o scan traz cores, tipografia, componentes e vetores do frame, já com um batimento automático contra o Design System CAIXA — mas o critério é exigente. Sem token vinculado, o item conta como fora do padrão, sem meio-termo. Cabe a você revisar cada caso, como no Check Designs nativo do Figma, e decidir: ajustar o elemento ou justificar o desvio por escrito. Quando o frame traz um componente inédito, ainda fora do DSC, a ferramenta registra as propriedades dele como referência para uma futura incorporação.</p>
-            <a href="https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=117-342" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 mt-2 text-[10px] font-bold text-sky-600 dark:text-sky-400">
+            <p class="text-[11px] text-slate-700 dark:text-white leading-relaxed">Escaneia o frame e compara cores, tipografia e componentes com o Design System CAIXA. Você revisa os desvios e marca o que o dev precisa construir.</p>
+            <a href="https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=117-342" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 mt-2 text-[10px] font-bold text-ceu-600 dark:text-ceu-400">
               <i data-lucide="book-open" class="w-3 h-3 shrink-0" aria-hidden="true"></i> Ver documentação completa
             </a>
           </div>
@@ -62,17 +62,17 @@
           <button onclick="var b=this.nextElementSibling;b.classList.toggle('hidden');var c=this.querySelector('.acc-chev');c.classList.toggle('rotate-180');c.classList.toggle('text-[#005ca9]');c.classList.toggle('dark:text-blue-300')"
             class="w-full flex items-center justify-between p-3.5 bg-white dark:bg-dark-surface hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors text-left">
             <div class="flex items-center gap-2.5">
-              <div class="w-6 h-6 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center shrink-0">
-                <i data-lucide="tag" class="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" aria-hidden="true"></i>
+              <div class="w-6 h-6 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0">
+                <i data-lucide="tag" class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" aria-hidden="true"></i>
               </div>
               <span class="text-[12px] font-bold text-slate-800 dark:text-white">Anotar Specs Detalhadas</span>
             </div>
             <i data-lucide="chevron-down" class="acc-chev w-3.5 h-3.5 text-slate-500 dark:text-dark-muted transition-transform duration-200 shrink-0" aria-hidden="true"></i>
           </button>
           <div class="hidden px-4 pb-4 pt-2 bg-white dark:bg-dark-surface border-t border-gray-50 dark:border-dark-line">
-            <p class="text-[11px] text-slate-700 dark:text-white leading-relaxed">Registra decisões técnicas específicas de um elemento — regra de negócio, comportamento, valor de token aplicado — que o scan automático não capta sozinho. É a camada de contexto que só o designer sabe explicar, ancorada visualmente no elemento certo do canvas.</p>
-            <p class="text-[11px] text-slate-700 dark:text-white leading-relaxed mt-2"><strong>Quando usar:</strong> quando o dev precisa saber mais do que os valores — uma regra, um comportamento, uma exceção — ou quando a informação deve entrar na Ficha de Handoff. Se ele só precisa dos valores do elemento, use Anotar Specs Rápidas.</p>
-            <a href="https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=117-431" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 mt-2 text-[10px] font-bold text-indigo-600 dark:text-indigo-400">
+            <p class="text-[11px] text-slate-700 dark:text-white leading-relaxed">Registra o que o dev precisa saber e implementar sobre um elemento: regra, comportamento, exceção. Entra na Ficha e fica ancorada no elemento do canvas.</p>
+            <p class="text-[11px] text-slate-700 dark:text-white leading-relaxed mt-2"><strong>Quando usar:</strong> se o dev só precisa dos valores do elemento, use Anotar Specs Rápidas.</p>
+            <a href="https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=117-431" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 mt-2 text-[10px] font-bold text-blue-600 dark:text-blue-400">
               <i data-lucide="book-open" class="w-3 h-3 shrink-0" aria-hidden="true"></i> Ver documentação completa
             </a>
           </div>
@@ -83,16 +83,16 @@
           <button onclick="var b=this.nextElementSibling;b.classList.toggle('hidden');var c=this.querySelector('.acc-chev');c.classList.toggle('rotate-180');c.classList.toggle('text-[#005ca9]');c.classList.toggle('dark:text-blue-300')"
             class="w-full flex items-center justify-between p-3.5 bg-white dark:bg-dark-surface hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors text-left">
             <div class="flex items-center gap-2.5">
-              <div class="w-6 h-6 rounded-xl bg-teal-50 dark:bg-teal-900/20 flex items-center justify-center shrink-0">
-                <i data-lucide="zap" class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" aria-hidden="true"></i>
+              <div class="w-6 h-6 rounded-xl bg-turquesa-50 dark:bg-turquesa-900/20 flex items-center justify-center shrink-0">
+                <i data-lucide="zap" class="w-3.5 h-3.5 text-turquesa-600 dark:text-turquesa-400" aria-hidden="true"></i>
               </div>
               <span class="text-[12px] font-bold text-slate-800 dark:text-white">Anotar Specs Rápidas</span>
             </div>
             <i data-lucide="chevron-down" class="acc-chev w-3.5 h-3.5 text-slate-500 dark:text-dark-muted transition-transform duration-200 shrink-0" aria-hidden="true"></i>
           </button>
           <div class="hidden px-4 pb-4 pt-2 bg-white dark:bg-dark-surface border-t border-gray-50 dark:border-dark-line">
-            <p class="text-[11px] text-slate-700 dark:text-white leading-relaxed">Reúne o essencial de um elemento para o dev que não tem acesso ao DevMode do Figma conseguir executar o trabalho: cor, espaçamento, tipografia, dimensões, raio, efeitos e componente, sempre com o valor real e, quando existir, o token e a biblioteca. É uma consulta pontual — sem categoria, nota ou exceção, e fora da Ficha de Handoff.</p>
-            <p class="text-[11px] text-slate-700 dark:text-white leading-relaxed mt-2"><strong>Quando usar:</strong> para responder "quais são os valores deste elemento?". Se o dev também precisa saber o que implementar, use Anotar Specs Detalhadas — dá para converter um item rápido em spec detalhada a qualquer momento.</p>
+            <p class="text-[11px] text-slate-700 dark:text-white leading-relaxed">Mostra os valores reais de um elemento (cor, espaçamento, tipografia, medidas) para o dev sem DevMode. É consulta pontual e não entra na Ficha. A Observação de cada elemento fica só no card; para levá-la à Ficha, converta em Spec Detalhada.</p>
+            <p class="text-[11px] text-slate-700 dark:text-white leading-relaxed mt-2"><strong>Quando usar:</strong> se o dev também precisa de regra, comportamento ou exceção, use Anotar Specs Detalhadas (dá para converter um item rápido depois).</p>
           </div>
         </div>
 
@@ -101,16 +101,16 @@
           <button onclick="var b=this.nextElementSibling;b.classList.toggle('hidden');var c=this.querySelector('.acc-chev');c.classList.toggle('rotate-180');c.classList.toggle('text-[#005ca9]');c.classList.toggle('dark:text-blue-300')"
             class="w-full flex items-center justify-between p-3.5 bg-white dark:bg-dark-surface hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors text-left">
             <div class="flex items-center gap-2.5">
-              <div class="w-6 h-6 rounded-xl bg-cyan-50 dark:bg-cyan-900/20 flex items-center justify-center shrink-0">
-                <i data-lucide="ruler" class="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" aria-hidden="true"></i>
+              <div class="w-6 h-6 rounded-xl bg-info-50 dark:bg-info-900/20 flex items-center justify-center shrink-0">
+                <i data-lucide="ruler" class="w-3.5 h-3.5 text-info-600 dark:text-info-400" aria-hidden="true"></i>
               </div>
               <span class="text-[12px] font-bold text-slate-800 dark:text-white">Anotar Medidas</span>
             </div>
             <i data-lucide="chevron-down" class="acc-chev w-3.5 h-3.5 text-slate-500 dark:text-dark-muted transition-transform duration-200 shrink-0" aria-hidden="true"></i>
           </button>
           <div class="hidden px-4 pb-4 pt-2 bg-white dark:bg-dark-surface border-t border-gray-50 dark:border-dark-line">
-            <p class="text-[11px] text-slate-700 dark:text-white leading-relaxed">Converte espaçamentos e dimensões do canvas em anotações visíveis — altura, largura, margens, paddings e gaps — para o dev implementar sem precisar inspecionar o Figma medida por medida.</p>
-            <a href="https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=117-342" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 mt-2 text-[10px] font-bold text-cyan-600 dark:text-cyan-400">
+            <p class="text-[11px] text-slate-700 dark:text-white leading-relaxed">Transforma larguras, alturas, margens, paddings e gaps do canvas em anotações visíveis, para o dev implementar sem inspecionar medida por medida.</p>
+            <a href="https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=117-342" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 mt-2 text-[10px] font-bold text-info-600 dark:text-info-400">
               <i data-lucide="book-open" class="w-3 h-3 shrink-0" aria-hidden="true"></i> Ver documentação completa
             </a>
           </div>
@@ -121,16 +121,16 @@
           <button onclick="var b=this.nextElementSibling;b.classList.toggle('hidden');var c=this.querySelector('.acc-chev');c.classList.toggle('rotate-180');c.classList.toggle('text-[#005ca9]');c.classList.toggle('dark:text-blue-300')"
             class="w-full flex items-center justify-between p-3.5 bg-white dark:bg-dark-surface hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors text-left">
             <div class="flex items-center gap-2.5">
-              <div class="w-6 h-6 rounded-xl bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center shrink-0">
-                <i data-lucide="git-branch" class="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" aria-hidden="true"></i>
+              <div class="w-6 h-6 rounded-xl bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center shrink-0">
+                <i data-lucide="git-branch" class="w-3.5 h-3.5 text-orange-700 dark:text-orange-400" aria-hidden="true"></i>
               </div>
               <span class="text-[12px] font-bold text-slate-800 dark:text-white">Fluxos de Tela</span>
             </div>
             <i data-lucide="chevron-down" class="acc-chev w-3.5 h-3.5 text-slate-500 dark:text-dark-muted transition-transform duration-200 shrink-0" aria-hidden="true"></i>
           </button>
           <div class="hidden px-4 pb-4 pt-2 bg-white dark:bg-dark-surface border-t border-gray-50 dark:border-dark-line">
-            <p class="text-[11px] text-slate-700 dark:text-white leading-relaxed">Mapeia a navegação entre telas — sequências, decisões e eventos — para o dev enxergar a jornada completa antes de implementar cada tela isoladamente.</p>
-            <a href="https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=117-383" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 mt-2 text-[10px] font-bold text-purple-600 dark:text-purple-400">
+            <p class="text-[11px] text-slate-700 dark:text-white leading-relaxed">Mapeia a navegação entre telas, com sequências, decisões e eventos, para o dev ver a jornada completa antes de implementar cada tela.</p>
+            <a href="https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=117-383" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 mt-2 text-[10px] font-bold text-orange-800 dark:text-orange-400">
               <i data-lucide="book-open" class="w-3 h-3 shrink-0" aria-hidden="true"></i> Ver documentação completa
             </a>
           </div>
@@ -149,7 +149,7 @@
             <i data-lucide="chevron-down" class="acc-chev w-3.5 h-3.5 text-slate-500 dark:text-dark-muted transition-transform duration-200 shrink-0" aria-hidden="true"></i>
           </button>
           <div class="hidden px-4 pb-4 pt-2 bg-white dark:bg-dark-surface border-t border-gray-50 dark:border-dark-line">
-            <p class="text-[11px] text-slate-700 dark:text-white leading-relaxed">Consolida tudo que foi documentado — specs, medidas, fluxos e conformidade com o DSC — num documento único e versionado no canvas, pronto para a entrega ao time de desenvolvimento.</p>
+            <p class="text-[11px] text-slate-700 dark:text-white leading-relaxed">Reúne tudo o que foi documentado numa Ficha única e versionada no canvas, pronta para o time de desenvolvimento.</p>
             <a href="https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=117-465" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 mt-2 text-[10px] font-bold text-[#004d8d] dark:text-blue-300">
               <i data-lucide="book-open" class="w-3 h-3 shrink-0" aria-hidden="true"></i> Ver documentação completa
             </a>
@@ -217,7 +217,7 @@
         <div class="bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl shadow-sm p-4">
           <div class="flex items-center gap-2 mb-3">
             <div class="w-1 h-4 bg-[#005ca9] rounded-full"></div>
-            <h3 class="font-bold text-[#1E293B] dark:text-white text-[12px]">Documentação de Apoio</h3>
+            <h3 class="font-bold text-[#22292e] dark:text-white text-[12px]">Documentação de Apoio</h3>
           </div>
           <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Handex</p>
           <div class="space-y-2 mb-3">
@@ -238,7 +238,7 @@
           <i data-lucide="lock" class="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" aria-hidden="true"></i>
           <div>
             <p class="text-[11px] font-bold text-amber-700 dark:text-amber-400 mb-0.5">Algumas layers geradas pelo plugin são bloqueadas</p>
-            <p class="text-[10px] text-amber-600 dark:text-amber-500 leading-snug">
+            <p class="text-[10px] text-amber-600 dark:text-amber-400 leading-snug">
               Medidas e Fluxos são criados com bloqueio de edição para preservar a integridade do handoff. Specs nascem destravadas e podem ser bloqueadas manualmente pelo ícone de cadeado; a Ficha de Projeto também nasce destravada. Para remover qualquer item, use os botões de exclusão dentro do próprio plugin (ou "Apagar conteúdo do canvas", no ícone de lixeira da home).
             </p>
           </div>

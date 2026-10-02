@@ -4,7 +4,7 @@
   <!-- Título -->
   <div class="mb-2.5 flex items-start justify-between gap-2">
     <div class="min-w-0">
-      <h2 class="text-[#1E293B] dark:text-white font-extrabold text-[14px] tracking-tight">Do design à entrega, sem perder detalhes.</h2>
+      <h2 class="text-[#22292e] dark:text-white font-extrabold text-[14px] tracking-tight">Do design à entrega, sem perder detalhes.</h2>
       <p class="text-slate-600 dark:text-dark-muted text-[11px] mt-0.5">Escaneie tokens, registre specs, mapeie fluxos<br>e gere sua ficha técnica.</p>
     </div>
     <!-- "Como usar o plugin" deixou de ser card do dashboard (2026-09-25) --
@@ -70,10 +70,10 @@
            projeto (ver updateHomeCardsCheckState em core.js / getHomeCardsDocumentedState
            em design-data.js). hidden por padrão -- classe removida via JS. -->
       <div class="absolute top-3 left-3 right-3 flex items-start justify-start gap-1 pointer-events-none">
-        <div class="home-card-check-badge hidden w-4.5 h-4.5 flex items-center justify-center bg-[#10b981] rounded-full shrink-0" title="Documentação salva" aria-label="Documentação salva">
+        <div class="home-card-check-badge hidden w-4.5 h-4.5 flex items-center justify-center bg-green-500 rounded-full shrink-0" title="Documentação salva" aria-label="Documentação salva">
           <i data-lucide="check" class="w-3 h-3 text-white" aria-hidden="true"></i>
         </div>
-        <span class="home-card-check-text hidden text-[9px] leading-tight font-bold text-left text-[#10b981] dark:text-emerald-400"></span>
+        <span class="home-card-check-text hidden text-[9px] leading-tight font-bold text-left text-st-ok dark:text-st-ok-dark"></span>
       </div>
       <div class="home-card-grip absolute top-1.5 right-1.5 p-1 rounded-md text-slate-300 dark:text-slate-600 opacity-0 group-hover/card:opacity-100 cursor-grab active:cursor-grabbing transition-opacity" title="Arrastar para reorganizar" aria-hidden="true">
         <i data-lucide="grip-vertical" class="w-3.5 h-3.5 pointer-events-none"></i>
@@ -86,9 +86,9 @@
       ondragstart="_onHomeCardDragStart(event)" ondragover="_onHomeCardDragOver(event)"
       ondrop="_onHomeCardDrop(event)" ondragend="_onHomeCardDragEnd(event)">
       <button onclick="navigate('view-frames')" aria-label="Design Tokens"
-        class="flex flex-col items-start justify-center gap-1.5 p-3 w-full h-full bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line hover:border-sky-400 hover:bg-sky-100 dark:hover:bg-sky-900/40 dark:hover:border-sky-500 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all focus:ring-2 focus:ring-sky-300/30 outline-none group text-left">
-        <div class="w-10 h-10 flex items-center justify-center bg-sky-50 dark:bg-sky-900/20 rounded-xl shrink-0">
-          <i data-lucide="scan-line" class="w-5 h-5 text-sky-600 dark:text-sky-400" aria-hidden="true"></i>
+        class="flex flex-col items-start justify-center gap-1.5 p-3 w-full h-full bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line hover:border-ceu-400 hover:bg-ceu-100 dark:hover:bg-ceu-900/40 dark:hover:border-ceu-500 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all focus:ring-2 focus:ring-ceu-300/30 outline-none group text-left">
+        <div class="w-10 h-10 flex items-center justify-center bg-ceu-50 dark:bg-ceu-900/20 rounded-xl shrink-0">
+          <i data-lucide="scan-line" class="w-5 h-5 text-ceu-600 dark:text-ceu-400" aria-hidden="true"></i>
         </div>
         <div class="min-w-0">
           <p class="font-extrabold text-[11px] tracking-tight text-slate-800 dark:text-white leading-tight">Escanear Tokens</p>
@@ -96,10 +96,10 @@
         </div>
       </button>
       <div class="absolute top-3 left-3 right-3 flex items-start justify-start gap-1 pointer-events-none">
-        <div class="home-card-check-badge hidden w-4.5 h-4.5 flex items-center justify-center bg-[#10b981] rounded-full shrink-0" title="Documentação salva" aria-label="Documentação salva">
+        <div class="home-card-check-badge hidden w-4.5 h-4.5 flex items-center justify-center bg-green-500 rounded-full shrink-0" title="Documentação salva" aria-label="Documentação salva">
           <i data-lucide="check" class="w-3 h-3 text-white" aria-hidden="true"></i>
         </div>
-        <span class="home-card-check-text hidden text-[9px] leading-tight font-bold text-left text-[#10b981] dark:text-emerald-400"></span>
+        <span class="home-card-check-text hidden text-[9px] leading-tight font-bold text-left text-st-ok dark:text-st-ok-dark"></span>
       </div>
       <div class="home-card-grip absolute top-1.5 right-1.5 p-1 rounded-md text-slate-300 dark:text-slate-600 opacity-0 group-hover/card:opacity-100 cursor-grab active:cursor-grabbing transition-opacity" title="Arrastar para reorganizar" aria-hidden="true">
         <i data-lucide="grip-vertical" class="w-3.5 h-3.5 pointer-events-none"></i>
@@ -112,9 +112,9 @@
       ondragstart="_onHomeCardDragStart(event)" ondragover="_onHomeCardDragOver(event)"
       ondrop="_onHomeCardDrop(event)" ondragend="_onHomeCardDragEnd(event)">
       <button onclick="navigate('view-specifications')" aria-label="Especificações"
-        class="flex flex-col items-start justify-center gap-1.5 p-3 w-full h-full bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all focus:ring-2 focus:ring-indigo-300/30 outline-none group text-left">
-        <div class="w-10 h-10 flex items-center justify-center bg-indigo-50 dark:bg-indigo-900/20 rounded-xl shrink-0">
-          <i data-lucide="tag" class="w-5 h-5 text-indigo-600 dark:text-indigo-400" aria-hidden="true"></i>
+        class="flex flex-col items-start justify-center gap-1.5 p-3 w-full h-full bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all focus:ring-2 focus:ring-blue-300/30 outline-none group text-left">
+        <div class="w-10 h-10 flex items-center justify-center bg-blue-50 dark:bg-blue-900/20 rounded-xl shrink-0">
+          <i data-lucide="tag" class="w-5 h-5 text-blue-600 dark:text-blue-400" aria-hidden="true"></i>
         </div>
         <div class="min-w-0">
           <p class="font-extrabold text-[11px] tracking-tight text-slate-800 dark:text-white leading-tight">Anotar Specs Detalhadas</p>
@@ -122,10 +122,10 @@
         </div>
       </button>
       <div class="absolute top-3 left-3 right-3 flex items-start justify-start gap-1 pointer-events-none">
-        <div class="home-card-check-badge hidden w-4.5 h-4.5 flex items-center justify-center bg-[#10b981] rounded-full shrink-0" title="Documentação salva" aria-label="Documentação salva">
+        <div class="home-card-check-badge hidden w-4.5 h-4.5 flex items-center justify-center bg-green-500 rounded-full shrink-0" title="Documentação salva" aria-label="Documentação salva">
           <i data-lucide="check" class="w-3 h-3 text-white" aria-hidden="true"></i>
         </div>
-        <span class="home-card-check-text hidden text-[9px] leading-tight font-bold text-left text-[#10b981] dark:text-emerald-400"></span>
+        <span class="home-card-check-text hidden text-[9px] leading-tight font-bold text-left text-st-ok dark:text-st-ok-dark"></span>
       </div>
       <div class="home-card-grip absolute top-1.5 right-1.5 p-1 rounded-md text-slate-300 dark:text-slate-600 opacity-0 group-hover/card:opacity-100 cursor-grab active:cursor-grabbing transition-opacity" title="Arrastar para reorganizar" aria-hidden="true">
         <i data-lucide="grip-vertical" class="w-3.5 h-3.5 pointer-events-none"></i>
@@ -141,9 +141,9 @@
       ondragstart="_onHomeCardDragStart(event)" ondragover="_onHomeCardDragOver(event)"
       ondrop="_onHomeCardDrop(event)" ondragend="_onHomeCardDragEnd(event)">
       <button onclick="navigate('view-quick-spec')" aria-label="Anotar Specs Rápidas"
-        class="flex flex-col items-start justify-center gap-1.5 p-3 w-full h-full bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-100 dark:hover:bg-teal-900/40 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all focus:ring-2 focus:ring-teal-300/30 outline-none group text-left">
-        <div class="w-10 h-10 flex items-center justify-center bg-teal-50 dark:bg-teal-900/20 rounded-xl shrink-0">
-          <i data-lucide="zap" class="w-5 h-5 text-teal-600 dark:text-teal-400" aria-hidden="true"></i>
+        class="flex flex-col items-start justify-center gap-1.5 p-3 w-full h-full bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line hover:border-turquesa-400 dark:hover:border-turquesa-500 hover:bg-turquesa-100 dark:hover:bg-turquesa-900/40 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all focus:ring-2 focus:ring-turquesa-300/30 outline-none group text-left">
+        <div class="w-10 h-10 flex items-center justify-center bg-turquesa-50 dark:bg-turquesa-900/20 rounded-xl shrink-0">
+          <i data-lucide="zap" class="w-5 h-5 text-turquesa-600 dark:text-turquesa-400" aria-hidden="true"></i>
         </div>
         <div class="min-w-0">
           <p class="font-extrabold text-[11px] tracking-tight text-slate-800 dark:text-white leading-tight">Anotar Specs Rápidas</p>
@@ -161,9 +161,9 @@
       ondragstart="_onHomeCardDragStart(event)" ondragover="_onHomeCardDragOver(event)"
       ondrop="_onHomeCardDrop(event)" ondragend="_onHomeCardDragEnd(event)">
       <button onclick="navigate('view-measurement')" aria-label="Medidas"
-        class="flex flex-col items-start justify-center gap-1.5 p-3 w-full h-full bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line hover:border-cyan-400 dark:hover:border-cyan-500 hover:bg-cyan-100 dark:hover:bg-cyan-900/40 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all focus:ring-2 focus:ring-cyan-300/30 outline-none group text-left">
-        <div class="w-10 h-10 flex items-center justify-center bg-cyan-50 dark:bg-cyan-900/20 rounded-xl shrink-0">
-          <i data-lucide="ruler" class="w-5 h-5 text-cyan-600 dark:text-cyan-400" aria-hidden="true"></i>
+        class="flex flex-col items-start justify-center gap-1.5 p-3 w-full h-full bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line hover:border-info-400 dark:hover:border-info-500 hover:bg-info-100 dark:hover:bg-info-900/40 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all focus:ring-2 focus:ring-info-300/30 outline-none group text-left">
+        <div class="w-10 h-10 flex items-center justify-center bg-info-50 dark:bg-info-900/20 rounded-xl shrink-0">
+          <i data-lucide="ruler" class="w-5 h-5 text-info-600 dark:text-info-400" aria-hidden="true"></i>
         </div>
         <div class="min-w-0">
           <p class="font-extrabold text-[11px] tracking-tight text-slate-800 dark:text-white leading-tight">Anotar Medidas</p>
@@ -171,10 +171,10 @@
         </div>
       </button>
       <div class="absolute top-3 left-3 right-3 flex items-start justify-start gap-1 pointer-events-none">
-        <div class="home-card-check-badge hidden w-4.5 h-4.5 flex items-center justify-center bg-[#10b981] rounded-full shrink-0" title="Documentação salva" aria-label="Documentação salva">
+        <div class="home-card-check-badge hidden w-4.5 h-4.5 flex items-center justify-center bg-green-500 rounded-full shrink-0" title="Documentação salva" aria-label="Documentação salva">
           <i data-lucide="check" class="w-3 h-3 text-white" aria-hidden="true"></i>
         </div>
-        <span class="home-card-check-text hidden text-[9px] leading-tight font-bold text-left text-[#10b981] dark:text-emerald-400"></span>
+        <span class="home-card-check-text hidden text-[9px] leading-tight font-bold text-left text-st-ok dark:text-st-ok-dark"></span>
       </div>
       <div class="home-card-grip absolute top-1.5 right-1.5 p-1 rounded-md text-slate-300 dark:text-slate-600 opacity-0 group-hover/card:opacity-100 cursor-grab active:cursor-grabbing transition-opacity" title="Arrastar para reorganizar" aria-hidden="true">
         <i data-lucide="grip-vertical" class="w-3.5 h-3.5 pointer-events-none"></i>
@@ -187,9 +187,9 @@
       ondragstart="_onHomeCardDragStart(event)" ondragover="_onHomeCardDragOver(event)"
       ondrop="_onHomeCardDrop(event)" ondragend="_onHomeCardDragEnd(event)">
       <button onclick="navigate('view-flows')" aria-label="Fluxos"
-        class="flex flex-col items-start justify-center gap-1.5 p-3 w-full h-full bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line hover:border-purple-400 dark:hover:border-purple-500 hover:bg-purple-100 dark:hover:bg-purple-900/40 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all focus:ring-2 focus:ring-purple-300/30 outline-none group text-left">
-        <div class="w-10 h-10 flex items-center justify-center bg-purple-50 dark:bg-purple-900/20 rounded-xl shrink-0">
-          <i data-lucide="git-branch" class="w-5 h-5 text-purple-600 dark:text-purple-400" aria-hidden="true"></i>
+        class="flex flex-col items-start justify-center gap-1.5 p-3 w-full h-full bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line hover:border-orange-400 dark:hover:border-orange-500 hover:bg-orange-100 dark:hover:bg-orange-900/40 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all focus:ring-2 focus:ring-orange-300/30 outline-none group text-left">
+        <div class="w-10 h-10 flex items-center justify-center bg-orange-50 dark:bg-orange-900/20 rounded-xl shrink-0">
+          <i data-lucide="git-branch" class="w-5 h-5 text-orange-800 dark:text-orange-400" aria-hidden="true"></i>
         </div>
         <div class="min-w-0">
           <p class="font-extrabold text-[11px] tracking-tight text-slate-800 dark:text-white leading-tight">Fluxos de Tela</p>
@@ -197,10 +197,10 @@
         </div>
       </button>
       <div class="absolute top-3 left-3 right-3 flex items-start justify-start gap-1 pointer-events-none">
-        <div class="home-card-check-badge hidden w-4.5 h-4.5 flex items-center justify-center bg-[#10b981] rounded-full shrink-0" title="Documentação salva" aria-label="Documentação salva">
+        <div class="home-card-check-badge hidden w-4.5 h-4.5 flex items-center justify-center bg-green-500 rounded-full shrink-0" title="Documentação salva" aria-label="Documentação salva">
           <i data-lucide="check" class="w-3 h-3 text-white" aria-hidden="true"></i>
         </div>
-        <span class="home-card-check-text hidden text-[9px] leading-tight font-bold text-left text-[#10b981] dark:text-emerald-400"></span>
+        <span class="home-card-check-text hidden text-[9px] leading-tight font-bold text-left text-st-ok dark:text-st-ok-dark"></span>
       </div>
       <div class="home-card-grip absolute top-1.5 right-1.5 p-1 rounded-md text-slate-300 dark:text-slate-600 opacity-0 group-hover/card:opacity-100 cursor-grab active:cursor-grabbing transition-opacity" title="Arrastar para reorganizar" aria-hidden="true">
         <i data-lucide="grip-vertical" class="w-3.5 h-3.5 pointer-events-none"></i>

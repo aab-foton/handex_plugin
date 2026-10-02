@@ -45,20 +45,20 @@ body {
     }
 
     ::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
+      background: #d0e0e3;
       border-radius: 3px;
     }
 
     ::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
+      background: #9eb2b8;
     }
 
     .dark ::-webkit-scrollbar-thumb {
-      background: #475569;
+      background: #404b52;
     }
 
     .dark ::-webkit-scrollbar-thumb:hover {
-      background: #64748b;
+      background: #64747a;
     }
 
     * {
@@ -72,27 +72,27 @@ body {
       display: inline-flex;
       align-items: center;
       padding: 6px 12px;
-      background: #F8FAFC;
-      border: 1px solid #F1F5F9;
+      background: #f7fafa;
+      border: 1px solid #ebf1f2;
       border-radius: 99px;
       font-size: 11px;
       font-weight: 600;
-      color: #64748b;
+      color: #64747a;
       cursor: pointer;
       transition: all 0.2s ease;
     }
 
     .dark .checklist-pill {
-      background: #1e293b;
-      border-color: #334155;
-      color: #94a3b8;
+      background: #22292e;
+      border-color: #404b52;
+      color: #9eb2b8;
     }
 
     .checklist-pill:has(input:checked) {
       background: #004d8d;
       border-color: #004d8d;
       color: white;
-      box-shadow: 0 4px 12px rgba(46, 46, 224, 0.2);
+      box-shadow: 0 4px 12px rgba(0, 92, 169, 0.2);
     }
 
     /* Global overrides for buttons matching the Design System */
@@ -152,7 +152,7 @@ body {
       background-color: #935300 !important;
     }
     .dark button.border-\[\#005ca9\], .dark button.border-blue-500 {
-      background-color: #1e293b !important;
+      background-color: #22292e !important;
       color: #8cc8fb !important;
       border-color: #8cc8fb !important;
     }
@@ -206,7 +206,7 @@ body {
     }
     .fab-inline:hover { background: rgba(0, 92, 169, 0.24); }
     .fab-inline:active { transform: scale(0.92); }
-    .dark .fab-inline { background: rgba(0,92,169,0.18); border-color: rgba(96,165,250,0.35); color: #60a5fa; }
+    .dark .fab-inline { background: rgba(0,92,169,0.18); border-color: rgba(109,186,250,0.35); color: #6dbafa; }
     .dark .fab-inline:hover { background: rgba(0,92,169,0.3); }
 
     /* Fab-inline sobre header secundário azul — branco sólido: é a ação de
@@ -229,13 +229,13 @@ body {
     #btn-top {
       /* Efeito glass real (fundo continua visível através do blur), mas com
          opacidade/contraste suficiente pra não sumir sobre fundos claros --
-         era rgba(148,163,184,0.08) antes, quase 100% transparente. */
+         era rgba(158,178,184,0.08) antes, quase 100% transparente. */
       background: rgba(255, 255, 255, 0.55);
-      border: 1px solid rgba(100, 116, 139, 0.4);
+      border: 1px solid rgba(100, 116, 122, 0.4);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
-      color: rgb(71, 85, 105);
-      box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.2);
+      color: rgb(64, 75, 82);
+      box-shadow: 0 2px 8px -2px rgba(34, 41, 46, 0.2);
       transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease, opacity 0.3s ease, translate 0.3s ease;
     }
     #btn-top:hover {
@@ -246,9 +246,9 @@ body {
       transform: scale(1.1);
     }
     .dark #btn-top {
-      background: rgba(30, 41, 59, 0.55);
-      border-color: rgba(148, 163, 184, 0.3);
-      color: rgb(226, 232, 240);
+      background: rgba(34, 41, 46, 0.55);
+      border-color: rgba(158, 178, 184, 0.3);
+      color: rgb(208, 224, 227);
     }
 
     /* Standardized FAB Styling */
@@ -330,7 +330,7 @@ body {
       left: 50%;
       transform: translateX(-50%);
       padding: 6px 10px;
-      background-color: #1e293b;
+      background-color: #22292e;
       color: #fff;
       font-size: 10px;
       border-radius: 6px;
@@ -344,7 +344,7 @@ body {
       transition: all 0.2s ease;
       z-index: 1000;
       box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-      border: 1px solid #334155;
+      border: 1px solid #404b52;
       pointer-events: none;
     }
 
@@ -356,7 +356,7 @@ body {
       transform: translateX(-50%);
       border-width: 5px;
       border-style: solid;
-      border-color: #1e293b transparent transparent transparent;
+      border-color: #22292e transparent transparent transparent;
       opacity: 0;
       visibility: hidden;
       transition: all 0.2s ease;
@@ -372,12 +372,12 @@ body {
     }
 
     .dark [data-tooltip]:before {
-      background-color: #0f172a;
-      border-color: #1e293b;
+      background-color: #1a1f23;
+      border-color: #22292e;
     }
 
     .dark [data-tooltip]:after {
-      border-color: #0f172a transparent transparent transparent;
+      border-color: #1a1f23 transparent transparent transparent;
     }
 
     /* Tooltip Alignment Variants */
@@ -409,7 +409,7 @@ body {
       width: 14px;
       height: 14px;
       cursor: nwse-resize;
-      background: linear-gradient(135deg, transparent 50%, #94a3b8 50%);
+      background: linear-gradient(135deg, transparent 50%, #9eb2b8 50%);
       z-index: 10000;
       opacity: 0.5;
       transition: opacity 0.2s;
@@ -418,7 +418,7 @@ body {
       opacity: 1;
     }
     .dark #resize-handle {
-      background: linear-gradient(135deg, transparent 50%, #475569 50%);
+      background: linear-gradient(135deg, transparent 50%, #404b52 50%);
     }
 
     :root {
@@ -467,7 +467,7 @@ body {
     [id$="-card"],
     .view > section > div {
       border-radius: 16px !important; /* Premium 16px corner roundness */
-      border: 1px solid #f1f5f9 !important;
+      border: 1px solid #ebf1f2 !important;
       background-color: #ffffff !important;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02) !important;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -479,8 +479,8 @@ body {
     .dark .bg-white.dark\:bg-dark-bg\/30,
     .dark [id$="-card"],
     .dark .view > section > div {
-      border-color: #1e293b !important;
-      background-color: #0f172a !important;
+      border-color: #22292e !important;
+      background-color: #1a1f23 !important;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
     }
 
@@ -489,14 +489,14 @@ body {
     .bg-white.dark\:bg-dark-bg:hover,
     [id$="-card"]:hover {
       box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05) !important;
-      border-color: #e2e8f0 !important;
+      border-color: #dee9eb !important;
     }
 
     .dark .bg-white.dark\:bg-dark-surface:hover,
     .dark .bg-white.dark\:bg-dark-bg:hover,
     .dark [id$="-card"]:hover {
       box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.25) !important;
-      border-color: #334155 !important;
+      border-color: #404b52 !important;
     }
 
     /* 2. Uniform Typography & Hierarchy */
@@ -515,32 +515,32 @@ body {
     /* 3. Uniform Inputs and Textareas */
     input[type="text"], input[type="search"], select, textarea {
       border-radius: 8px !important;
-      border: 1px solid #e2e8f0 !important;
-      background-color: #f8fafc !important;
+      border: 1px solid #dee9eb !important;
+      background-color: #f7fafa !important;
       padding: 8px 12px !important;
       font-size: 12px !important;
-      color: #334155 !important;
+      color: #404b52 !important;
       font-weight: 500 !important; /* Keep input text at medium/regular weight */
       transition: all 0.2s ease !important;
     }
 
     .dark input[type="text"], .dark input[type="search"], .dark select, .dark textarea {
-      border-color: #1e293b !important;
-      background-color: #0f172a !important;
-      color: #f8fafc !important;
+      border-color: #22292e !important;
+      background-color: #1a1f23 !important;
+      color: #f7fafa !important;
     }
 
     input[type="text"]:focus, input[type="search"]:focus, select:focus, textarea:focus {
       border-color: #004d8d !important;
       background-color: #ffffff !important;
-      box-shadow: 0 0 0 3px rgba(46, 46, 224, 0.15) !important;
+      box-shadow: 0 0 0 3px rgba(0, 92, 169, 0.15) !important;
       outline: none !important;
     }
 
     .dark input[type="text"]:focus, .dark input[type="search"]:focus, .dark select:focus, .dark textarea:focus {
       border-color: #8cc8fb !important;
-      background-color: #0f172a !important;
-      box-shadow: 0 0 0 3px rgba(56, 169, 248, 0.15) !important;
+      background-color: #1a1f23 !important;
+      box-shadow: 0 0 0 3px rgba(109, 186, 250, 0.15) !important;
     }
 
     /* Textarea Resizing */
@@ -560,7 +560,7 @@ body {
     select::placeholder,
     .token-search-input::placeholder {
       font-weight: 400 !important;
-      color: #94a3b8 !important; /* Slate-400 */
+      color: #9eb2b8 !important; /* grayscale 70 (lib) */
       opacity: 0.85 !important;
     }
     
@@ -569,7 +569,7 @@ body {
     .dark select::placeholder,
     .dark .token-search-input::placeholder {
       font-weight: 400 !important;
-      color: #64748b !important; /* Slate-500 */
+      color: #64747a !important; /* grayscale 90 (lib) */
       opacity: 0.85 !important;
     }
 

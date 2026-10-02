@@ -153,8 +153,8 @@ ${css}
             </g>
           </g>
         </svg>
-        <span class="text-[#1E293B] dark:text-white font-bold text-[12px] opacity-50">|</span>
-        <h1 class="font-bold text-[#1E293B] dark:text-white text-[12px] tracking-[0.15em] uppercase">
+        <span class="text-slate-800 dark:text-white font-bold text-[12px] opacity-50">|</span>
+        <h1 class="font-bold text-slate-800 dark:text-white text-[12px] tracking-[0.15em] uppercase">
           HANDEX
         </h1>
       </button>

@@ -11,7 +11,7 @@
      propriedades. -->
     <main id="view-quick-spec" class="view flex p-0 flex-col h-full overflow-hidden">
       <!-- Header -->
-      <div class="subheader-brand px-4 py-3 bg-[#005ca9] dark:bg-[#00335c] flex items-center justify-between gap-3 shrink-0 shadow-md">
+      <div class="subheader-brand px-4 py-3 bg-[#005ca9] dark:bg-[#002747] flex items-center justify-between gap-3 shrink-0 shadow-md">
         <div class="flex items-center gap-2 min-w-0">
           <button onclick="navigate('view-home')" aria-label="Voltar para a página inicial"
             class="min-w-[40px] min-h-[40px] flex items-center justify-center bg-white/10 dark:bg-white/10 rounded-2xl hover:bg-white/20 dark:hover:bg-white/20 transition-colors shrink-0">
@@ -149,23 +149,23 @@
       <div class="px-5 py-4 space-y-1 max-h-[300px] overflow-y-auto">
         <label class="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
           <input type="checkbox" data-quick-spec-filter value="dimensions" checked class="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-400">
-          <span class="text-[12px] font-bold text-slate-700 dark:text-white">Dimensões</span>
-          <span class="text-[10px] text-slate-400 dark:text-slate-500 ml-auto">W/H, sizing</span>
+          <span class="text-[12px] font-bold text-slate-700 dark:text-white">Width × Height</span>
+          <span class="text-[10px] text-slate-400 dark:text-slate-500 ml-auto">Fixed, Hug, Fill</span>
         </label>
         <label class="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
           <input type="checkbox" data-quick-spec-filter value="spacing" checked class="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-400">
-          <span class="text-[12px] font-bold text-slate-700 dark:text-white">Espaçamento</span>
-          <span class="text-[10px] text-slate-400 dark:text-slate-500 ml-auto">Gap, padding</span>
+          <span class="text-[12px] font-bold text-slate-700 dark:text-white">Gap e Padding</span>
+          <span class="text-[10px] text-slate-400 dark:text-slate-500 ml-auto">Auto layout</span>
         </label>
         <label class="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
           <input type="checkbox" data-quick-spec-filter value="fill" checked class="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-400">
-          <span class="text-[12px] font-bold text-slate-700 dark:text-white">Cor</span>
-          <span class="text-[10px] text-slate-400 dark:text-slate-500 ml-auto">Fill</span>
+          <span class="text-[12px] font-bold text-slate-700 dark:text-white">Fill</span>
+          <span class="text-[10px] text-slate-400 dark:text-slate-500 ml-auto">Cor</span>
         </label>
         <label class="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
           <input type="checkbox" data-quick-spec-filter value="border" checked class="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-400">
-          <span class="text-[12px] font-bold text-slate-700 dark:text-white">Borda</span>
-          <span class="text-[10px] text-slate-400 dark:text-slate-500 ml-auto">Width, cor</span>
+          <span class="text-[12px] font-bold text-slate-700 dark:text-white">Border</span>
+          <span class="text-[10px] text-slate-400 dark:text-slate-500 ml-auto">Width, color</span>
         </label>
         <label class="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
           <input type="checkbox" data-quick-spec-filter value="radius" checked class="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-400">
@@ -173,16 +173,16 @@
         </label>
         <label class="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
           <input type="checkbox" data-quick-spec-filter value="effect" checked class="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-400">
-          <span class="text-[12px] font-bold text-slate-700 dark:text-white">Efeito</span>
-          <span class="text-[10px] text-slate-400 dark:text-slate-500 ml-auto">Sombra, blur</span>
+          <span class="text-[12px] font-bold text-slate-700 dark:text-white">Effects</span>
+          <span class="text-[10px] text-slate-400 dark:text-slate-500 ml-auto">Shadow, blur</span>
         </label>
         <label class="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
           <input type="checkbox" data-quick-spec-filter value="typography" checked class="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-400">
-          <span class="text-[12px] font-bold text-slate-700 dark:text-white">Tipografia</span>
+          <span class="text-[12px] font-bold text-slate-700 dark:text-white">Text style</span>
         </label>
         <label class="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
           <input type="checkbox" data-quick-spec-filter value="component" checked class="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-400">
-          <span class="text-[12px] font-bold text-slate-700 dark:text-white">Componente</span>
+          <span class="text-[12px] font-bold text-slate-700 dark:text-white">Component</span>
           <span class="text-[10px] text-slate-400 dark:text-slate-500 ml-auto">Nome e origem</span>
         </label>
         <!-- Opcional, desmarcada por padrão (2026-09-25, pedido do usuário

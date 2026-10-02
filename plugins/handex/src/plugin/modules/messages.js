@@ -307,8 +307,11 @@
       }
 
       if (msg.type === "measurements-applied") {
+        const _mFrame = activeFrameId ? getFrame(activeFrameId) : null;
+        console.log('[Handex medidas] applied', { n: (msg.data || []).length, activeFrameId, frameFound: !!_mFrame });
+        if (activeFrameId && !_mFrame) activeFrameId = null;
         if (activeFrameId) {
-          const frame = getFrame(activeFrameId);
+          const frame = _mFrame;
           if (frame) {
             frame.measurements = (frame.measurements || []).concat(msg.data);
             const maxNum = frame.measurements.reduce((max, m) => Math.max(max, m.number || 0), 0);
@@ -328,7 +331,7 @@
           const maxNum = handoffData.measurements.reduce((max, m) => Math.max(max, m.number || 0), 0);
           handoffData.nextMeasurementNumber = maxNum + 1;
           nextMeasurementNumber = handoffData.nextMeasurementNumber;
-          renderMeasurementsResults(handoffData.measurements);
+          renderAllMeasurements();
         }
         saveToStorage();
         if (window._toastSaved) _toastSaved();
@@ -544,10 +547,10 @@
                     </div>
                     <div>
                       <div class="flex items-center">
-                        <span class="text-[12px] font-bold text-slate-700 dark:text-white uppercase tracking-tight">${prop.label}</span>
+                        <span class="text-[12px] font-bold text-slate-700 dark:text-white uppercase tracking-tight">${_vocabLabel(prop.label, prop.key)}</span>
                         ${tokenBadge}
                       </div>
-                      ${prop.token !== prop.value ? `<span class="block text-[11px] text-slate-500 dark:text-dark-muted font-mono">${prop.value}</span>` : ''}
+                      ${prop.token !== prop.value ? `<span class="block text-[11px] text-slate-500 dark:text-dark-muted font-mono">${_vocabValue(prop.value)}</span>` : ''}
                     </div>
                   </div>
                   <input type="checkbox" id="${id}" value="${prop.key}" checked class="w-5 h-5 rounded-lg border-gray-200 text-[#005ca9] focus:ring-[#005ca9] transition-all cursor-pointer" />
@@ -558,9 +561,7 @@
         }
         document.getElementById('spec-properties-modal').classList.remove('hidden');
         _refreshIcons()
-        if (typeof _persistentFocus === 'function') {
-          _persistentFocus(document.querySelector('#spec-properties-modal ' + FOCUSABLE_SELECTOR));
-        }
+        { const _f = document.querySelector('#spec-properties-modal ' + FOCUSABLE_SELECTOR); if (_f) _f.focus(); }
       }
 
       if (msg.type === 'context-name') {
@@ -736,6 +737,15 @@
         } else {
           _restoreButton();
           showToast('Erro ao inserir na Ficha: ' + (msg.message || 'Verifique o console do plugin.'), 'error');
+        }
+        return;
+      }
+
+      if (msg.type === 'storage-save-failed') {
+        const _now = Date.now();
+        if (!window._lastStorageFailToast || _now - window._lastStorageFailToast > 15000) {
+          window._lastStorageFailToast = _now;
+          showToast('Não foi possível salvar o projeto neste dispositivo — ao reabrir o plugin, dados recentes (frames escaneados) podem não voltar. Exporte o JSON agora para não perder o trabalho.', 'error');
         }
         return;
       }
