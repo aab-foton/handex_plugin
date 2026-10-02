@@ -8,6 +8,12 @@
 
 Ainda não publicada na Figma Community (a versão publicada é a 6.32.1). Mudanças das fases 2 a 5 de conformidade e a detecção de personalização ainda aguardam validação final no Figma.
 
+### Corrigido — Status do frame: uma regra só, cores da marca e legenda completa
+O status do frame ("Pendente", "Conforme"…) era calculado em dois lugares com resultados diferentes: o primeiro desenho do card só conhecia 4 estados e mostrava "Não Conforme" para um desvio já justificado, que só virava o estado certo depois de uma edição. Agora há uma função única (`_getFrameStatusView`, `core.js`) para o desenho inicial e para toda atualização. O estado antes chamado "Em revisão" passa a se chamar **Desvio justificado**, para não se confundir com o marcador de item "Necessita revisão".
+As cores eram classes padrão do Tailwind (violet, green-600, red-500, amber-500) — o roxo é da marca antiga, e verde/vermelho/âmbar davam 2,2 a 3,8:1 em texto de 11px. Passam a tokens `st-*` com valores da lib "DSC | Fundamentos Visuais" (todos ≥ 4,5:1; variantes para o tema escuro): Novo Componente em azul da marca, Pendente cinza, Conforme verde, Desvio justificado âmbar, Não Conforme vermelho. O mesmo vale para os marcadores dos itens escaneados, os chips de filtro, o painel de conformidade, o card "Frames com Novos Componentes" e o resumo do handoff. Os interruptores "Vai para a Ficha" e o selo COMPLETO, que também eram roxos, passam ao azul dos demais toggles (são declarações, não status).
+A modal "Status do frame" ganhou um segundo bloco, "Marcadores dos itens escaneados", que explica a relação entre os dois níveis: só item **fora do padrão** impede "Conforme" (com justificativa o frame vira "Desvio justificado"); "necessita revisão" só alerta; "lib legada" só informa.
+Divergência conhecida, pendente de decisão: a exportação em Markdown e a prévia HTML do resumo ainda usam o modelo anterior ("Conforme com ressalvas") e podem divergir do card para o mesmo frame. Registrado em `BUSINESS_RULES.md`.
+
 ### Adicionado — Nomes de produto e critério "quando usar qual"
 "Anotar Specs" passou a se chamar **Anotar Specs Detalhadas** e "Spec Express" passou a se chamar **Anotar Specs Rápidas**. Os cards da home, o onboarding (com entrada própria para a Rápida), o guia "Como usar o plugin" e os empty-states agora explicam quando usar cada uma. Na home, Anotar Specs Rápidas abre ao lado das Detalhadas (linha 2); quem já reordenou os cards mantém a própria ordem.
 

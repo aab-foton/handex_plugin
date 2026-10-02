@@ -25,27 +25,48 @@
 
 Não usar `#3d3dff`, `#2e2ee0`, `#f5b400` ou qualquer variação da paleta "Uau CAIXA" — fica reservada para se e quando a CAIXA publicar oficialmente o rebranding, quando este documento será atualizado novamente.
 
-### Superfícies light/dark (`tailwind.config.cjs:46-58`)
+### Restrição de paleta — só cores da lib "DSC | Fundamentos Visuais"; exceção: categorias de spec (2026-10-01)
+
+Decisão do Augusto: **toda cor da UI do plugin e do que ele desenha no canvas (Ficha, medidas, fluxos, anotações) vem da lib "DSC | Fundamentos Visuais"** (`refs/fundamentos-visuais.json`, variáveis `color/*`, coleção "DSC"). **Única exceção: as cores das categorias de spec**, que seguem a paleta própria já documentada (ver "Categorias de spec — canônico" abaixo) e **não** são restringidas à lib. Cor nova só se existir na lib. O **roxo/violeta fica fora** da UI (`violet`, `purple`, `indigo`, `fuchsia`, `#3d3dff`, `#7c3aed`, `#6366f1`, `#4f46e5`, `#9333ea`) e a família `uva` da lib (mauve `#93537d`) não é usada fora das categorias de spec. Famílias disponíveis: marca azul `primary` (`#e5f2fc` 10 · `#a0d2fc` 30 · `#6dbafa` 50 · `#2d8ad8` 70 · `#005ca9` 90 · `#00437a` 110 · `#002747` 130), marca laranja `secondary` (`#ffefd6` · `#ffd392` · `#fdb548` · `#f39200` 70 · `#d87b00` 90 · `#a65e00` 110 · `#663a00` 130), neutros `grayscale` (`#f7fafa`, `#ebf1f2`, `#d0e0e3`, `#9eb2b8`, `#64747a`, `#404b52`, `#22292e`), feedback `positive`/`attention`/`negative`/`informative`, decorativas `tertiary` (turquesa), `ceu`, `limao`, `tangerina`, `goiaba`.
+
+**Como foi aplicado (`tailwind.config.cjs`):** mesmo método de `blue`/`orange` — as escalas padrão do Tailwind foram **redefinidas** com degraus ancorados nos valores reais da lib e intermediários interpolados, para que as classes já usadas nas views continuem valendo sem reescrever as telas.
+
+| Escala | Ancoragem na lib | Degraus-chave |
+|---|---|---|
+| `slate` e `gray` (idênticas) | grayscale | 50 `#f7fafa` · 100 `#ebf1f2` · 300 `#d0e0e3` · 500 `#64747a` (4,9:1 sobre branco) · 700 `#404b52` · 800 `#22292e` · 900 `#1a1f23` (interpolado) |
+| `red` | negative | 50 `#fbebeb` · 400 `#e47272` (texto no tema escuro, 4,9:1) · 500 `#b22c2c` (6,4:1) · 700 `#8c2424` |
+| `green` | positive | 50 `#e7f4ea` · 400 `#5cb26e` · 500 `#127527` (5,8:1) · 700 `#0d581d` |
+| `amber` | attention | 50 `#fff9e6` · 400 `#fcbe05` · 500 `#977203` (4,45:1) · 700 `#654c02` |
+| `ceu` (card Tokens) | ceu | 50 `#e8faff` · 400 `#00b4e6` · 600 `#007899` (5,1:1) · 700 `#006480` |
+| `turquesa` (card Specs Rápidas) | tertiary | 400 `#54bbab` · 600 `#2b8174` (4,7:1) · 700 `#216e62` |
+| `info` (card Medidas) | informative | 400 `#04a2bf` · 600 `#037286` (5,6:1) · 700 `#026273` |
+| `blue`, `orange` | primary, secondary | já ancoradas (ver "Paleta de marca") |
+
+`sky`/`cyan`/`teal`/`emerald`/`pink` deixaram de ser usadas: `sky`→`ceu`, `cyan`→`info`, `teal`→`turquesa`, `emerald`→`green`/`st-ok`, `pink` (Motion na Ficha HTML)→`turquesa`; `indigo`→`blue`, `purple`→`orange`, `violet` (Novo Componente)→`st-info`. No canvas (`code.js`), cada `{ r, g, b }` fora da lib foi mapeado para o token de lib semanticamente mais próximo (cinza de texto/borda/fill → grayscale; erro → negative 90; sucesso → positive 90; alerta/exceção → secondary 110; informação/confirmação → primary 90; fundos claros → degrau 10). A **Ficha HTML exportada** (`handoff.js`) carrega a mesma configuração de cores no `tailwind.config` do template (cópia literal: manter sincronizada com `tailwind.config.cjs`).
+
+**O que conta como "cor de categoria de spec" (exceção, não restringir nem alterar):** as 4 categorias (`info` Informação Extra, `comportamento`, `regra` Regra de Negócio, `api` Dados da API) e toda paleta que identifique **categoria/letra de spec** — selo (A, B, C), contorno e card de spec no canvas, chip de categoria na lista, legenda "Tipo de especificação" (`modals.html`) e legenda "Legendas de Especificação" do canvas, chip na Ficha HTML e no Markdown, e a paleta de fallback para categorias personalizadas (`_CAT_FALLBACK_PALETTE`, `specifications.js`). **Não contam como categoria** (seguem a lib): tipos de exceção (Erro/Alerta/Sucesso/Confirmação), status de conformidade, badge COMPLETO, tipos de conexão de fluxo, medidas, eixos do Briefing.
+
+**Aceitos como degraus do Handex, mesmo fora da lib exata:** `#004d8d` (`blue-600`, hover/fundo da Ficha), `#935300`/`#bf6c00` (`orange-800`/`700`) e demais degraus interpolados de `blue`/`orange`, e os degraus interpolados das escalas acima (200/400/600 neutros, 900/950). São intermediários entre dois valores reais da lib, não cores novas.
+
+### Superfícies light/dark (`tailwind.config.cjs`)
 
 | Token | Light | Dark |
 |---|---|---|
-| `light.bg` / `dark.bg` | `#eef2f7` | `#0f172a` |
-| `light.surface` / `dark.surface` | `#ffffff` | `#1e293b` |
-| `light.line` / `dark.line` | `#dde3ec` | `#334155` |
-| `light.muted` / `dark.muted` | `#8394a8` | `#b4c6d8` |
-| `dark.text` | — (usar `slate-800`) | `#f1f5f9` |
+| `light.bg` / `dark.bg` | `#ebf1f2` (grayscale 30) | `#1a1f23` (`slate-900`) |
+| `light.surface` / `dark.surface` | `#ffffff` | `#22292e` (grayscale 130) |
+| `light.line` / `dark.line` | `#d0e0e3` (grayscale 50) | `#404b52` (grayscale 110) |
+| `light.muted` / `dark.muted` | `#64747a` (grayscale 90) | `#9eb2b8` (grayscale 70, 6,7:1 sobre `dark.surface`) |
+| `dark.text` | — (usar `slate-800`) | `#f7fafa` |
 
 Uso: `bg-light-surface dark:bg-dark-surface`, `border-light-line dark:border-dark-line`, `text-slate-800 dark:text-dark-text`. Este é o par de tokens com maior disciplina de uso hoje — manter esse padrão como referência de "como todo token deveria ser aplicado".
 
-### Paleta de categoria de scan (`tailwind.config.cjs:62-87`, em `safelist`)
+### Paleta de categoria de scan (`safelist`) — órfã
 
-11 cores com par light/dark, atribuídas **rotativamente por índice** (não semântica fixa) via `_getCatColor` sobre a lista de categorias de token do DSC: `slate, pink, blue, lime, indigo, rose, emerald, yellow, teal, purple, cyan`.
-
-Uso: `bg-{cor}-50 text-{cor}-600 border-{cor}-200` no light, `dark:bg-{cor}-900/20 dark:text-{cor}-400 dark:border-{cor}-800/40` no dark (opacidade `/30` para `pink`/`blue`). Qualquer cor nova de categoria de scan precisa entrar em `safelist` (Tailwind não gera classe dinâmica não-safelisted).
+A lista de 11 cores rotativas (`slate, pink, blue, lime, indigo, rose, emerald, yellow, teal, purple, cyan`) descrita nas versões anteriores não é construída por nenhum arquivo (dívida 18). Em 2026-10-01 o `safelist` foi reduzido às escalas que existem na lib (`slate`, `blue`); as demais saíram. Não confundir com a cor de **categoria de spec** abaixo.
 
 ### Categorias de spec — canônico
 
-As 4 categorias de spec (`info`, `comportamento`, `regra`, `api`) usam **a paleta da Ficha exportada** como fonte única — é o que o desenvolvedor final vê na entrega, e é o ponto de maior peso de decisão.
+As 4 categorias de spec (`info`, `comportamento`, `regra`, `api`) usam **a paleta da Ficha exportada** como fonte única — é o que o desenvolvedor final vê na entrega, e é o ponto de maior peso de decisão. **Fora da restrição de paleta da lib** (ver "Restrição de paleta").
 
 | Categoria | Fill | Texto/borda |
 |---|---|---|
@@ -54,11 +75,25 @@ As 4 categorias de spec (`info`, `comportamento`, `regra`, `api`) usam **a palet
 | `regra` | `#eff6ff` | `#1d4ed8` |
 | `api` | mesmo padrão de `handoff.js:726-729` — usar o par já definido lá para a 4ª categoria |
 
-Card no canvas (`specifications.js:449-454`) e modal de ajuda (`modals.html:396-418`) devem passar a consumir este mesmo par de valores — ver dívida técnica (seção 9, item 1).
+Card no canvas (`specifications.js:449-454`) e modal de ajuda (`modals.html:396-418`) devem passar a consumir este mesmo par de valores — ver dívida técnica (seção 9, item 1). Hoje o código tem dois conjuntos documentados: o da Ficha HTML (`_getCatStyleHTML`, `handoff.js`, valores da tabela acima) e o da UI/canvas (`_CAT_COLORS`/`CATEGORY_COLORS`, `specifications.js`, e a legenda do modal de ajuda: `info` `#EBF1F2`/`#64747A`, `comportamento` `#F8EAF3`/`#93537D`, `regra` `#E5F5F8`/`#008CB2`, `api` `#F5FEC1`/`#6D8000`) — a divergência entre os dois é a dívida 1, anterior a esta decisão.
+
+### Cores de status em TEXTO (tokens `st-*`, 2026-10-01)
+
+Para **texto e ícones** que comunicam status (status do frame, marcadores dos itens escaneados, painel de conformidade) use os tokens `st-*` do `tailwind.config.cjs`, não as escalas padrão do Tailwind: `green-500`, `red-500`, `amber-500` e `violet-500` não passam 4,5:1 em texto de 11px (2,2 a 4,2:1). Os valores são da lib "DSC | Fundamentos Visuais" (`color/content/*`). `green-500` continua sendo o verde de **preenchimento** de sucesso (toggles, botões) descrito abaixo.
+
+| Token | Hex | Contraste sobre branco | Tema escuro | Uso |
+|---|---|---|---|---|
+| `st-ok` | `#127527` (positive 90) | 5,8:1 | `st-ok-dark` `#a2d3ad` | Conforme, Em conformidade |
+| `st-warn` | `#654c02` (attention 130) | 8,1:1 | `st-warn-dark` `#fee59b` | Desvio justificado, Necessita revisão |
+| `st-err` | `#b22c2c` (negative 90) | 6,4:1 | `st-err-dark` `#f0afaf` | Não Conforme, Fora do padrão |
+| `st-neutral` | `#64747a` (grayscale 90) | 4,9:1 | `dark-muted` | Pendente |
+| `st-info` | `#005ca9` (primary 90) | 6,8:1 | `st-info-dark` `#6dbafa` | Novo Componente, badge COMPLETO |
+
+O degrau `attention 110` (`#977203`) dá 4,45:1 e por isso não é usado em texto. Fundos de painel: `#fbebeb` (perigo), `#fff9e6` (atenção) e o `blue-50` da escala do Handex (destaque). Declarações do designer (toggle "Vai para a Ficha") **não** são status e usam o azul de toggle `#005ca9`.
 
 ### Cor de sucesso/confirmação
 
-`green-500` (`#22c55e`, escala padrão Tailwind) é o verde oficial de sucesso/confirmação — consistente com o uso já orgânico em status "Finalizado" (`dados-projeto.html:86`) e estado confirmado (`modals.html:770`).
+`green-500` (`#127527`, positive 90 da lib, escala `green` redefinida em 2026-10-01; antes `#22c55e` padrão Tailwind) é o verde oficial de sucesso/confirmação — consistente com o uso já orgânico em status "Finalizado" (`dados-projeto.html:86`) e estado confirmado (`modals.html:770`).
 
 | Uso | Classe |
 |---|---|
@@ -153,6 +188,10 @@ Todos compartilham o mesmo shell: `role="dialog" aria-modal="true"` + overlay + 
 | Título — modal grande | `text-[18px] font-bold` |
 
 Os 3 z-index acima ainda são valores mágicos sem constante nomeada no código — a tabela é a referência até a extração de token (dívida técnica, seção 9, item 6).
+
+### Modal de lista com checkboxes + badge `COMPLETO` (2026-10-01)
+
+Padrão usado por `detail-level-modal` ("Quanto detalhe cada item terá na Ficha?"): shell de modal com `max-w-sm max-h-[85vh]`, cabeçalho e rodapé fixos e miolo rolável (`overflow-y-auto`). Cada linha é um `<label>` clicável com altura mínima de 40px (checkbox + nome 11px bold + `Frame · Tipo` 10px `text-slate-600`/`dark:text-dark-muted`), agrupadas por frame quando há mais de um. Ação em lote em link azul (`text-blue-500`, alterna "Marcar todos como completo" / "Voltar todos ao essencial") e contador `aria-live="polite"`. Rodapé: primário `Salvar escolhas` (`bg-blue-500`) + outline `Cancelar`; edição só grava ao salvar, Cancelar/Escape/overlay descartam. Badge `COMPLETO` no card do item: ícone `layers` 10px + texto 9px bold, `text-st-info dark:text-st-info-dark` (azul da marca, token `st-info`; o toggle "Vai para a Ficha" usa `peer-checked:bg-[#005ca9]`, como os demais toggles — roxo/violet foi removido em 2026-10-01 por ser cor da marca antiga); itens no nível padrão (Essencial) não têm selo.
 
 ### Cards
 
@@ -338,6 +377,38 @@ Regras específicas descobertas nesta auditoria (motivadas pela reversão de mar
 
 ---
 
+## 7.5 Glossário de vocabulário
+
+Regra: **português para comunicação** (títulos, frases, avisos, botões); **nomenclatura técnica do Figma e do dev** (como no Dev Mode e em CSS) em inglês, sem traduzir — Auto layout, Gap, Padding, Width/Height (Fixed, Hug contents, Fill container), Fill, Border, Radius, Drop shadow, Text style, Component/Variant/Boolean/Instance swap etc. O espelho do glossário vive em `HX_GLOSSARY` (`modules/core.js`) e `HD_GLOSSARY` (`code.js`) — os dois precisam ficar sincronizados.
+
+| Termo antigo | Termo atual |
+|---|---|
+| Cor (Fill) | Fill |
+| Contorno / Cor (Stroke) / Border Color | Border color |
+| Border Width / Espessura de borda | Border width |
+| Raio de borda | Radius |
+| Espaçamento (Gap) | Gap |
+| Gap (eixo cruzado) | Row gap |
+| Padding Interno | Padding |
+| Tipografia / Text Style | Text style |
+| Família | Font family |
+| Peso | Font style |
+| Tamanho da fonte | Font size |
+| Direção | Auto layout (Horizontal/Vertical) |
+| Alinhamento (MIN / MIN) | Primary / Counter axis (Min / Min) |
+| Altura / Largura | Height / Width |
+| W Sizing / H Sizing (Sizing Largura/Altura) | Width (sizing) / Height (sizing) |
+| Dimensões | Width × Height |
+| Componente | Component |
+| Subcomponente trocado | Instance swap |
+| Effect (Sombra) / Effect (Blur) | Effect (valor: Drop shadow, Inner shadow, Layer blur, Background blur) |
+| Prop: X | Component properties: X |
+| Hug Contents / Fill Container | Hug contents / Fill container |
+
+**Dados antigos:** scans, specs e Spec Rápida salvos antes dessa uniformização guardam o rótulo antigo. A exibição passa por `_vocabLabel(label, key)` / `_vocabValue(value)` (`core.js`): usa a `key` estável quando existe (specs detalhadas), senão uma tabela de aliases do rótulo antigo. O dado persistido não é reescrito.
+
+---
+
 ## 8. Componentes propositalmente fora de escopo deste DS
 
 Este documento cobre a UI do próprio plugin. **Não cobre:**
@@ -365,10 +436,12 @@ Lista de prioridade — cada item é uma correção pontual, não um redesenho:
 13. **Código morto de wizard sequencial** — `core.js:2092-2181` e `modals.html:984-1014` (`check-designs-modal`) sem tela viva que os alimente. Não é dívida de *design*, mas deveria ser removido antes de qualquer nova geração de UI se acumular em cima.
 14. **Onboarding duplicado** — `guide.html` e `onboarding.js` (`ONBOARDING_TOOLS`) mantêm conteúdo quase idêntico por disciplina manual; já divergiram uma vez. Não é dívida de design system em si, mas afeta a camada de conteúdo que acompanha os componentes.
 15. **Resolvido em 2026-08-26** — `disabled:bg-gray-300` (`modals.html:1115`, botão "Salvar Cenário") migrado para `disabled:opacity-40`. Confirmado durante a auditoria de contraste que o padrão antigo reprovava gravemente (branco sobre cinza-300 = 1.49:1) — não é mais dívida.
-16. **Badge "Comportamento" da legenda de tipos de spec passa no piso, mas com pouca folga** — `modals.html:403` (`text-[#93537D]` sobre `bg-[#F8EAF3]`) mede 4.53:1, acima do piso de 4.5:1 mas por pouco. Não foi alterado nesta auditoria (só reprovações foram corrigidas), mas qualquer ajuste futuro de fill/tom deste badge específico deve reverificar o contraste antes de publicar (seção 7).
+16. **Badge "Comportamento" da legenda de tipos de spec passa no piso, mas com pouca folga** — `modals.html` (`text-[#93537D]` sobre `bg-[#F8EAF3]`) mede 4.53:1, acima do piso de 4.5:1 mas por pouco. Cor de categoria de spec (exceção da restrição de paleta, 2026-10-01): não alterar; qualquer ajuste futuro de fill/tom deste badge específico deve reverificar o contraste antes de publicar.
 17. **Assimetria de contraste do botão "dispensar" do banner de onboarding entre temas** — no light mode o ícone precisou subir de `/60` para `/80` de opacidade para passar do piso de 3:1 (ver seção 7, item 2). O par dark (`dark:text-blue-300/60`) já passava a 3.93:1 e não foi tocado — os dois temas usam frações de opacidade diferentes hoje (`/80` light, `/60` dark) para o mesmo elemento visual. Funciona, mas não é simétrico; um ajuste futuro que tente "unificar" a opacidade entre temas precisa recalcular, não presumir que o mesmo valor serve para os dois.
 18. **Paleta de categoria de scan (11 cores, `tailwind.config.cjs:69-93` safelist) parece órfã** — nenhum arquivo em `modules/*.js` ou `views/*.html` foi encontrado construindo dinamicamente as classes `bg-{cor}-50 text-{cor}-600 border-{cor}-200` descritas no comentário do safelist ("built dynamically via `_getCatColor`"). A função `_getCatColor` que existe hoje em `specifications.js:458` é sobre categoria de **spec** (info/comportamento/regra/api), não sobre esse ciclo de 11 cores. Se a feature que consumia essa paleta foi removida, o safelist deveria ser removido junto (reduz o CSS compilado); se ainda existe em algum lugar não encontrado nesta auditoria, precisa de investigação antes de confiar nos tons — 4 das 11 cores (`lime-700`, `rose-600`, `pink-600`, `teal-600`, todas sobre seu par `-50`) reprovariam o piso de 4.5:1 se algum dia voltarem a ser renderizadas (ver seção 7).
 19. **Contadores de caractere (`text-[9px] text-slate-400 dark:text-dark-muted`, ex: `dados-projeto.html:45,96,115,134,146`, `modals.html:127` e ~15 outras ocorrências) reprovam o piso de 4.5:1 sobre card branco** (`#9ca3af`≈slate-400 sobre `#ffffff` mede ~2.6:1). Não corrigido nesta auditoria — é um padrão muito replicado (~20 ocorrências) que hoje funciona como anotação secundária de apoio (contagem "0/100" ao lado do label do campo, nunca a única fonte da informação), não conteúdo primário. Fica registrado como dívida em vez de corrigido em massa porque mudar a cor de 20 pontos do produto de uma vez foge do "ajuste pontual" desta rodada — mas qualquer revisão de formulário/input deve tratar isso como pendência de contraste real, não estética (seção 7).
+
+20. **Resolvido em 2026-10-01** — escalas padrão do Tailwind fora da lib. `slate`/`gray`/`red`/`green`/`amber` foram redefinidas em `tailwind.config.cjs` ancoradas na lib; `sky`/`cyan`/`teal`/`emerald`/`pink` foram substituídas por `ceu`/`info`/`turquesa`/`green`. Restam, de propósito, `fuchsia`/`cyan`/`lime` apenas nas variantes escuras da legenda de categorias de spec em `modals.html` (exceção das categorias). Pendências conhecidas: fallbacks de categoria (`_getCatStyleHTML` `#f9fafb`/`#e5e7eb`/`#64748b` e `_getCatColor` `#F1F5F9`/`#94A3B8`) e cor de texto `tool.color` do onboarding sobre tema escuro (contraste baixo, anterior a esta decisão).
 
 ---
 
@@ -384,3 +457,4 @@ Lista de prioridade — cada item é uma correção pontual, não um redesenho:
 - **2026-09-24** — catálogo de ícones passou de menção genérica ("biblioteca Lucide via `data-lucide`") para tabela nomeada de **97 ícones únicos**, cada um com a importação equivalente em `lucide-react` (conversão kebab-case → PascalCase, ex: `circle-help` → `CircleHelp`, dígito colado ao segmento anterior em `edit-3` → `Edit3`). Motivado por pedido do usuário de cobrir todos os ícones do plugin com referência de código React na documentação. Levantamento por grep real em todo `views/*.html`/`modules/*.js`, incluindo ícones resolvidos só via variável dinâmica (eixos do Briefing, categorias de spec, tipo de conexão de fluxo) — a estimativa anterior de "~70 ícones" (só existia na página navegável, nunca neste `.md`) estava desatualizada. Tabela espelhada 1:1 em `docs/site/design-system.html` §4, cujos SVGs também deixaram de ser desenhados à mão e passaram a usar o traço real de `lucide-static@1.47.0` (mesma versão fixada em `build.cjs`). Achado incidental: a Ficha HTML interativa exportada (`modules/handoff.js`) ainda usa `lucide@latest` sem versão fixada — divergência sinalizada, não corrigida nesta rodada de documentação.
 
 **Arquivos-fonte:** `src/plugin/styles/{tailwind.config.cjs,plugin.css}`, `src/plugin/modules/{core,messages,home-cards,onboarding,specifications,measurement,handoff}.js`, `src/plugin/views/*.html`, `src/plugin/ui.html`, `CLAUDE.md`.
+- **2026-10-01** — paleta restrita à lib "DSC | Fundamentos Visuais" em toda a UI e no canvas (seção 1, "Restrição de paleta"): escalas `slate`/`gray`/`red`/`green`/`amber` redefinidas, `ceu`/`turquesa`/`info` criadas, superfícies `light`/`dark` migradas, `code.js` e Ficha HTML alinhados. **Exceção explícita do Augusto: as cores das categorias de spec seguem a paleta já documentada e não foram alteradas** (a primeira rodada do dia as havia alterado para goiaba/lib; revertido). Contraste verificado por luminância relativa (texto >= 4,5:1, componentes >= 3:1).

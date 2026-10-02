@@ -513,6 +513,8 @@ Versão atual: `_schemaVersion: 3`
   customizationsStatus:'evaluated' | 'not-evaluated' | null,   // Fase 5b; not-evaluated = padrão da lib ilegível, nunca verde nem âmbar. Com customizations não vazio: isDS "warning" + matchedBy 'customized'
   isMarkedCustom:      boolean,  // DECLARADO pelo designer (toggle "Componente Personalizado"
                                  // no card do item, tela Escanear Tokens) — ver nota abaixo
+  uiDepth:             'essential' | 'full',   // OPCIONAL (2026-10-01): nível de detalhe do card "User Interface" na Ficha. Gravado pelo frontend (checkbox "Detalhamento completo" / modal "Revisar detalhamento"); ausente ou desconhecido = 'essential'. Só vale com isMarkedCustom=true (ao desmarcar, o valor fica guardado e é ignorado). Sem bump de schema
+  customDecided:       boolean,  // OPCIONAL (2026-10-01, default false/ausente): true = o designer mexeu no toggle "Vai para a Ficha" deste item (ligou OU desligou). Usado só pela regra de padrão do "Novo Componente" (frame.isNewComponent): itens novos com isCustomComponent=true entram com isMarkedCustom=true enquanto customDecided não for true. Preservado no re-scan por nodeId. Sem bump de schema
   variants:            { name: string, value: string }[],
   properties:          Property[]
 }
@@ -539,6 +541,18 @@ re-scan do mesmo frame porque o frontend envia o `ScanResult` anterior
 junto no pedido de scan (`previousSpecs`, `scan-frame` handler, `code.js`)
 e o backend casa itens do scan novo com o anterior por `nodeId` — nunca
 por `name` (que pode colidir entre elementos diferentes).
+`uiDepth` (opcional, default `'essential'`) segue o mesmo caminho: herdado
+no re-scan por `nodeId`, lido sempre normalizado (valor ausente/desconhecido
+vira `'essential'`) e válido só enquanto `isMarkedCustom` for `true`.
+
+**Padrão do "Novo Componente" e `customDecided` (2026-10-01):** quando o
+frame tem `isNewComponent: true`, todo item `isCustomComponent: true` sem
+decisão manual fica com `isMarkedCustom: true` por padrão (o backend aplica
+no scan, para itens novos; o frontend aplica retroativamente ao ligar o toggle
+do frame). `customDecided` registra que o designer já decidiu: qualquer
+mudança no toggle do item grava `customDecided: true` e a regra de padrão
+nunca mais sobrescreve. Desligar "Novo Componente" não desfaz marcações.
+Leitura normalizada: ausente = `false`. Herdado no re-scan por `nodeId`.
 
 ---
 
@@ -572,11 +586,14 @@ por `name` (que pode colidir entre elementos diferentes).
 
 ```js
 {
+  key?: string,          // id estável (specs detalhadas)
   label: string,
   value: string | number,
   token: string | null   // token DSC se aplicável
 }
 ```
+
+`label` é o rótulo exibido; `key` (opcional, presente em specs detalhadas: `gap`, `padding`, `sizingW`, `fill`...) é o identificador estável da propriedade. Registros antigos guardam rótulos em português ("Cor (Fill)", "Raio de borda", "W Sizing", "Dimensões"...): a UI não reescreve o dado, traduz na exibição via `_vocabLabel(label, key)` — `key` primeiro, depois tabela de aliases (`HX_LABEL_ALIASES`, `core.js`). Nunca comparar lógica por `label`; usar `key`/`type`. Ver `docs/design-system-handex.md` §7.5.
 
 ---
 
@@ -622,6 +639,14 @@ por `name` (que pode colidir entre elementos diferentes).
   notas:  string
 }
 ```
+
+### 5.10 `_aiContext.especificacoesRapidas[]` (derivado, nunca persistido)
+
+```js
+{ tag, nome, tipoNode, observacao?: string /* <=280, só se preenchida */, propriedades: [{ propriedade, valor, token, biblioteca }] }
+```
+
+`observacao` vem do campo "Observação" da Spec Rápida (`el.note`, lista efêmera da sessão; no canvas fica no card via pluginData). Não entra na Ficha; ao converter em Spec Detalhada vira `Spec.note`.
 
 ---
 

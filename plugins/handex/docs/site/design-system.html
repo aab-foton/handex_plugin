@@ -396,7 +396,43 @@
     </div>
     <div class="debt-banner"><strong>Divergência confirmada nesta revisão:</strong> o card no canvas (<code>_CAT_COLORS</code>, <span class="source-tag">specifications.js:463-468</span>) e a legenda do modal de ajuda (<span class="source-tag">modals.html:396-418</span>) ainda usam uma <strong>terceira paleta diferente</strong> desta (ex: <code>info</code> é <code>#EBF1F2</code>/<code>#64747A</code> no canvas vs. <code>#f1f5f9</code>/<code>#475569</code> na Ficha) — as 3 fontes não convergiram ainda. Ver seção 7.</div>
 
-    <h3>Cor de sucesso/confirmação</h3>
+    <h3>Restrição de paleta — só cores da lib "DSC | Fundamentos Visuais"; exceção: categorias de spec (2026-10-01)</h3>
+<p>Decisão do Augusto: toda cor da UI e do que o plugin desenha no canvas (Ficha, medidas, fluxos, anotações) vem da lib <code>DSC | Fundamentos Visuais</code> (variáveis <code>color/*</code>). <strong>Única exceção: as cores das categorias de spec</strong>, que seguem a paleta própria já documentada (seção "Categorias de spec") e não são restringidas à lib. O <strong>roxo/violeta fica fora</strong> da UI (<code>violet</code>, <code>purple</code>, <code>indigo</code>, <code>fuchsia</code>, <code>#3d3dff</code>, <code>#7c3aed</code>, <code>#6366f1</code>); a família <code>uva</code> da lib só aparece nas categorias de spec. Famílias disponíveis: marca azul <code>primary</code> (<code>#e5f2fc</code> · <code>#6dbafa</code> · <code>#005ca9</code> 90 · <code>#00437a</code> 110), marca laranja <code>secondary</code> (<code>#ffefd6</code> · <code>#fdb548</code> · <code>#f39200</code> 70 · <code>#a65e00</code> 110), neutros <code>grayscale</code>, feedback (positive/attention/negative/informative) e decorativas (tertiary, ceu, limao, tangerina, goiaba).</p>
+<p>Aplicação em <code>tailwind.config.cjs</code>: as escalas padrão do Tailwind foram <strong>redefinidas</strong> com degraus ancorados nos valores reais da lib e intermediários interpolados (mesmo método de <code>blue</code>/<code>orange</code>), para as classes já usadas nas views valerem sem reescrever telas.</p>
+<div class="table-wrap"><table><thead><tr><th>Escala</th><th>Ancoragem</th><th>Degraus-chave</th></tr></thead><tbody>
+<tr><td><code>slate</code> = <code>gray</code></td><td>grayscale</td><td>50 <code>#f7fafa</code> · 100 <code>#ebf1f2</code> · 300 <code>#d0e0e3</code> · 500 <code>#64747a</code> (4,9:1) · 700 <code>#404b52</code> · 800 <code>#22292e</code> · 900 <code>#1a1f23</code></td></tr>
+<tr><td><code>red</code></td><td>negative</td><td>400 <code>#e47272</code> (texto escuro, 4,9:1) · 500 <code>#b22c2c</code> (6,4:1) · 700 <code>#8c2424</code></td></tr>
+<tr><td><code>green</code></td><td>positive</td><td>400 <code>#5cb26e</code> · 500 <code>#127527</code> (5,8:1) · 700 <code>#0d581d</code></td></tr>
+<tr><td><code>amber</code></td><td>attention</td><td>400 <code>#fcbe05</code> · 500 <code>#977203</code> (4,45:1) · 700 <code>#654c02</code></td></tr>
+<tr><td><code>ceu</code> (card Tokens)</td><td>ceu</td><td>400 <code>#00b4e6</code> · 600 <code>#007899</code> (5,1:1) · 700 <code>#006480</code></td></tr>
+<tr><td><code>turquesa</code> (card Specs Rápidas)</td><td>tertiary</td><td>400 <code>#54bbab</code> · 600 <code>#2b8174</code> (4,7:1) · 700 <code>#216e62</code></td></tr>
+<tr><td><code>info</code> (card Medidas)</td><td>informative</td><td>400 <code>#04a2bf</code> · 600 <code>#037286</code> (5,6:1) · 700 <code>#026273</code></td></tr>
+<tr><td><code>blue</code>, <code>orange</code></td><td>primary, secondary</td><td>já ancoradas (paleta de marca)</td></tr>
+</tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Antes</th><th>Depois</th><th>Onde</th></tr></thead><tbody>
+<tr><td><code>indigo-*</code> / <code>purple-*</code></td><td><code>blue-*</code> / <code>orange-*</code> (texto sobre claro em <code>orange-800</code>)</td><td>home, resumo, modais, Ficha HTML</td></tr>
+<tr><td><code>sky</code> / <code>cyan</code> / <code>teal</code> / <code>emerald</code> / <code>pink</code></td><td><code>ceu</code> / <code>info</code> / <code>turquesa</code> / <code>green</code> (<code>st-ok</code>) / <code>turquesa</code></td><td>cards da home, resumo, import/inject, guia, Ficha HTML</td></tr>
+<tr><td><code>violet-*</code> (Novo Componente)</td><td>azul <code>st-info</code> na UI; laranja no canvas</td><td>UI e Ficha no canvas</td></tr>
+<tr><td>Superfícies <code>light</code>/<code>dark</code> (<code>#eef2f7</code>, <code>#0f172a</code>, <code>#1e293b</code>, <code>#334155</code>…)</td><td>grayscale: <code>#ebf1f2</code>, <code>#1a1f23</code>, <code>#22292e</code>, <code>#404b52</code></td><td><code>tailwind.config.cjs</code>, <code>plugin.css</code></td></tr>
+<tr><td><code>{ r, g, b }</code> fora da lib (~110 valores)</td><td>token de lib semanticamente mais próximo</td><td><code>code.js</code> (Ficha, anotações, medidas, fluxos)</td></tr>
+<tr><td><code>ONBOARDING_TOOLS[].color</code></td><td>cores da lib distintas por ferramenta</td><td><code>onboarding.js</code></td></tr>
+<tr><td>Ficha HTML (Tailwind CDN padrão)</td><td>mesma configuração de cores injetada no <code>tailwind.config</code> do template</td><td><code>handoff.js</code></td></tr>
+<tr><td><code>rgba(61,61,255,*)</code>, <code>rgba(46,46,224,*)</code></td><td><code>rgba(0,92,169,*)</code></td><td><code>specifications.js</code>, <code>plugin.css</code></td></tr>
+</tbody></table></div>
+<p><strong>O que conta como cor de categoria de spec (exceção, não alterar):</strong> as 4 categorias (Informação Extra, Comportamento, Regra de Negócio, Dados da API) e toda paleta que identifique categoria/letra de spec — selo, contorno e card no canvas, chip na lista, legenda "Tipo de especificação", legenda do canvas, chip na Ficha HTML/Markdown e a paleta de fallback de categorias personalizadas. <strong>Não contam</strong> (seguem a lib): tipos de exceção, status de conformidade, badge COMPLETO, tipos de conexão de fluxo, medidas.</p>
+<p>Degraus aceitos fora da lib exata: <code>#004d8d</code> (<code>blue-600</code>), <code>#935300</code>/<code>#bf6c00</code> (<code>orange-800</code>/<code>700</code>) e os intermediários interpolados das escalas acima.</p>
+
+    <h3>Cores de status em texto (tokens <code>st-*</code>, 2026-10-01)</h3>
+<p>Para <strong>texto e ícones</strong> que comunicam status (status do frame, marcadores dos itens escaneados, painel de conformidade) use os tokens <code>st-*</code> do <code>tailwind.config.cjs</code>, não as escalas padrão do Tailwind: <code>green-500</code>, <code>red-500</code>, <code>amber-500</code> e <code>violet-500</code> não passam 4,5:1 em texto de 11px (2,2 a 4,2:1). Os valores são da lib "DSC | Fundamentos Visuais" (<code>color/content/*</code>). <code>green-500</code> continua sendo o verde de <strong>preenchimento</strong> de sucesso (toggles, botões) descrito abaixo.</p>
+<div class="table-wrap"><table><thead><tr><th>Token</th><th>Hex</th><th>Contraste sobre branco</th><th>Tema escuro</th><th>Uso</th></tr></thead><tbody>
+<tr><td><code>st-ok</code></td><td><code>#127527</code> (positive 90)</td><td>5,8:1</td><td><code>st-ok-dark</code> <code>#a2d3ad</code></td><td>Conforme, Em conformidade</td></tr>
+<tr><td><code>st-warn</code></td><td><code>#654c02</code> (attention 130)</td><td>8,1:1</td><td><code>st-warn-dark</code> <code>#fee59b</code></td><td>Desvio justificado, Necessita revisão</td></tr>
+<tr><td><code>st-err</code></td><td><code>#b22c2c</code> (negative 90)</td><td>6,4:1</td><td><code>st-err-dark</code> <code>#f0afaf</code></td><td>Não Conforme, Fora do padrão</td></tr>
+<tr><td><code>st-neutral</code></td><td><code>#64747a</code> (grayscale 90)</td><td>4,9:1</td><td><code>dark-muted</code></td><td>Pendente</td></tr>
+<tr><td><code>st-info</code></td><td><code>#005ca9</code> (primary 90)</td><td>6,8:1</td><td><code>st-info-dark</code> <code>#6dbafa</code></td><td>Novo Componente, badge COMPLETO</td></tr>
+</tbody></table></div>
+<p>O degrau <code>attention 110</code> (<code>#977203</code>) dá 4,45:1 e por isso não é usado em texto. Declarações do designer (toggle "Vai para a Ficha") <strong>não</strong> são status e usam o azul de toggle <code>#005ca9</code>.</p>
+<h3>Cor de sucesso/confirmação</h3>
     <p><code>green-500</code> (<code>#22c55e</code>, escala padrão Tailwind) é o verde oficial — usado em status "Finalizado" (<span class="source-tag">dados-projeto.html:86</span>) e estado confirmado (<span class="source-tag">modals.html:770</span>).</p>
     <div class="swatch-row">
       <div class="swatch"><div class="chip" style="background:#22c55e"></div><div class="label">green-500</div><div class="hex">#22c55e</div></div>
@@ -662,6 +698,9 @@
       <div class="hx-legend-card" style="background:#F5FEC1;border:1px solid #6D8000"><span class="hx-legend-pill" style="background:#F5FEC1;border:1px solid #6D8000;color:#556600">Dados da API</span></div>
     </div>
 
+    <h3>Modal de lista com checkboxes + badge COMPLETO (2026-10-01)</h3>
+    <p style="font-size:13px;color:var(--muted)">Padrão de <code>detail-level-modal</code> ("Quanto detalhe cada item terá na Ficha?"): shell <code>max-w-sm max-h-[85vh]</code> com cabeçalho e rodapé fixos e miolo rolável. Cada linha é um <code>&lt;label&gt;</code> clicável (altura mínima 40px) com checkbox, nome (11px bold) e <code>Frame · Tipo</code> (10px, <code>text-slate-600</code>), agrupadas por frame quando há mais de um. Ação em lote em link azul (alterna "Marcar todos como completo" / "Voltar todos ao essencial") e contador <code>aria-live="polite"</code>. Rodapé: primário <code>Salvar escolhas</code> + outline <code>Cancelar</code>; só grava ao salvar, Cancelar/Escape/overlay descartam. Badge <code>COMPLETO</code> no card do item: ícone <code>layers</code> + texto 9px bold, <code>text-st-info dark:text-st-info-dark</code> (azul da marca; o toggle "Vai para a Ficha" usa <code>peer-checked:bg-[#005ca9]</code>); o nível Essencial (padrão) não tem selo.</p>
+
     <h3>Modal — estrutura padrão</h3>
     <div class="demo-block">
       <div class="hx-modal-shell">
@@ -775,6 +814,39 @@
 
     <hr>
 
+    <!-- ═══════════════ 6.6 GLOSSÁRIO DE VOCABULÁRIO ═══════════════ -->
+    <h2 id="glossario">6.6 Glossário de vocabulário</h2>
+    <p>Regra: <strong>português para comunicação</strong> (títulos, frases, avisos, botões); <strong>nomenclatura técnica do Figma e do dev</strong> (como no Dev Mode e em CSS) em inglês, sem traduzir — Auto layout, Gap, Padding, Width/Height (Fixed, Hug contents, Fill container), Fill, Border, Radius, Drop shadow, Text style, Component/Variant/Boolean/Instance swap etc. O espelho do glossário vive em <code>HX_GLOSSARY</code> (<code>modules/core.js</code>) e <code>HD_GLOSSARY</code> (<code>code.js</code>) — os dois precisam ficar sincronizados.</p>
+    <table>
+      <thead><tr><th>Termo antigo</th><th>Termo atual</th></tr></thead>
+      <tbody>
+        <tr><td>Cor (Fill)</td><td>Fill</td></tr>
+        <tr><td>Contorno / Cor (Stroke) / Border Color</td><td>Border color</td></tr>
+        <tr><td>Border Width / Espessura de borda</td><td>Border width</td></tr>
+        <tr><td>Raio de borda</td><td>Radius</td></tr>
+        <tr><td>Espaçamento (Gap)</td><td>Gap</td></tr>
+        <tr><td>Gap (eixo cruzado)</td><td>Row gap</td></tr>
+        <tr><td>Padding Interno</td><td>Padding</td></tr>
+        <tr><td>Tipografia / Text Style</td><td>Text style</td></tr>
+        <tr><td>Família</td><td>Font family</td></tr>
+        <tr><td>Peso</td><td>Font style</td></tr>
+        <tr><td>Tamanho da fonte</td><td>Font size</td></tr>
+        <tr><td>Direção</td><td>Auto layout (Horizontal/Vertical)</td></tr>
+        <tr><td>Alinhamento (MIN / MIN)</td><td>Primary / Counter axis (Min / Min)</td></tr>
+        <tr><td>Altura / Largura</td><td>Height / Width</td></tr>
+        <tr><td>W Sizing / H Sizing (Sizing Largura/Altura)</td><td>Width (sizing) / Height (sizing)</td></tr>
+        <tr><td>Dimensões</td><td>Width × Height</td></tr>
+        <tr><td>Componente</td><td>Component</td></tr>
+        <tr><td>Subcomponente trocado</td><td>Instance swap</td></tr>
+        <tr><td>Effect (Sombra) / Effect (Blur)</td><td>Effect (valor: Drop shadow, Inner shadow, Layer blur, Background blur)</td></tr>
+        <tr><td>Prop: X</td><td>Component properties: X</td></tr>
+        <tr><td>Hug Contents / Fill Container</td><td>Hug contents / Fill container</td></tr>
+      </tbody>
+    </table>
+    <p><strong>Dados antigos:</strong> scans, specs e Spec Rápida salvos antes dessa uniformização guardam o rótulo antigo. A exibição passa por <code>_vocabLabel(label, key)</code> / <code>_vocabValue(value)</code> (<code>core.js</code>): usa a <code>key</code> estável quando existe (specs detalhadas), senão uma tabela de aliases do rótulo antigo. O dado persistido não é reescrito.</p>
+
+    <hr>
+
     <!-- ═══════════════ 7. DÍVIDA TÉCNICA ═══════════════ -->
     <h2 id="divida">7. Dívida técnica observada (código vs. padrão declarado)</h2>
     <p>Lista completa de prioridade, espelhada de <code>docs/design-system-handex.md</code> §9 (fonte normativa) — cada item é uma correção pontual, não um redesenho:</p>
@@ -794,7 +866,7 @@
       <li><strong>Código morto de wizard sequencial</strong> — <code>core.js:2092-2181</code> e <code>modals.html:984-1014</code> (<code>check-designs-modal</code>) sem tela viva que os alimente. Não é dívida de <em>design</em>, mas deveria ser removido antes de qualquer nova geração de UI se acumular em cima.</li>
       <li><strong>Onboarding duplicado</strong> — <code>guide.html</code> e <code>onboarding.js</code> (<code>ONBOARDING_TOOLS</code>) mantêm conteúdo quase idêntico por disciplina manual; já divergiram uma vez. Não é dívida de design system em si, mas afeta a camada de conteúdo que acompanha os componentes.</li>
       <li><strong>Resolvido em 2026-08-26</strong> — <code>disabled:bg-gray-300</code> (<code>modals.html:1115</code>, botão "Salvar Cenário") migrado para <code>disabled:opacity-40</code>. Confirmado durante a auditoria de contraste que o padrão antigo reprovava gravemente (branco sobre cinza-300 = 1.49:1) — não é mais dívida.</li>
-      <li><strong>Badge "Comportamento" da legenda de tipos de spec passa no piso, mas com pouca folga</strong> — <code>modals.html:403</code> (<code>text-[#93537D]</code> sobre <code>bg-[#F8EAF3]</code>) mede 4.53:1, acima do piso de 4.5:1 mas por pouco. Qualquer ajuste futuro de fill/tom deste badge específico deve reverificar o contraste antes de publicar.</li>
+      <li><strong>Badge "Comportamento" da legenda de tipos de spec passa no piso, mas com pouca folga</strong> — <code>modals.html</code> (<code>text-[#93537D]</code> sobre <code>bg-[#F8EAF3]</code>) mede 4.53:1, acima do piso de 4.5:1 mas por pouco. Cor de categoria de spec (exceção da restrição de paleta, 2026-10-01): não alterar; qualquer ajuste futuro de fill/tom deste badge específico deve reverificar o contraste antes de publicar.</li>
       <li><strong>Assimetria de contraste do botão "dispensar" do banner de onboarding entre temas</strong> — no light mode o ícone precisou subir de <code>/60</code> para <code>/80</code> de opacidade para passar do piso de 3:1. O par dark (<code>dark:text-blue-300/60</code>) já passava a 3.93:1 e não foi tocado — os dois temas usam frações de opacidade diferentes hoje para o mesmo elemento visual. Um ajuste futuro que tente "unificar" a opacidade entre temas precisa recalcular, não presumir que o mesmo valor serve para os dois.</li>
       <li><strong>Paleta de categoria de scan (11 cores, <code>tailwind.config.cjs:69-93</code> safelist) parece órfã</strong> — nenhum arquivo em <code>modules/*.js</code> ou <code>views/*.html</code> constrói dinamicamente as classes <code>bg-{cor}-50 text-{cor}-600 border-{cor}-200</code> descritas no comentário do safelist. A função <code>_getCatColor</code> que existe hoje (<code>specifications.js:458</code>) é sobre categoria de <strong>spec</strong> (info/comportamento/regra/api), não sobre esse ciclo de 11 cores. Se a feature que consumia essa paleta foi removida, o safelist deveria ser removido junto (reduz o CSS compilado); se ainda existe em algum lugar não encontrado, precisa de investigação antes de confiar nos tons — 4 das 11 cores (<code>lime-700</code>, <code>rose-600</code>, <code>pink-600</code>, <code>teal-600</code>, sobre seu par <code>-50</code>) reprovariam o piso de 4.5:1 se algum dia voltarem a ser renderizadas.</li>
       <li><strong>Contadores de caractere abaixo do piso de contraste</strong> — <code>text-[9px] text-slate-400 dark:text-dark-muted</code> (ex: <code>dados-projeto.html:45,96,115,134,146</code>, <code>modals.html:127</code> e ~15 outras ocorrências) reprova o piso de 4.5:1 sobre card branco (~2.6:1). Não corrigido por ser anotação secundária de apoio (contagem "0/100" ao lado do label, nunca a única fonte da informação) — mudar a cor de ~20 pontos do produto de uma vez foge do "ajuste pontual" desta rodada, mas qualquer revisão de formulário/input deve tratar isso como pendência de contraste real, não estética.</li>
