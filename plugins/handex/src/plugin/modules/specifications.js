@@ -3011,7 +3011,7 @@
         const next = rects[i + 1];
         const x1 = r.x + r.w / 2, y1 = r.y + r.h / 2;
         const x2 = next.x + next.w / 2, y2 = next.y + next.h / 2;
-        return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#d0e0e3" stroke-width="1.5" marker-end="url(#flow-chain-arrowhead)" />`;
+        return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${_flowColorSel}" stroke-width="1.5" marker-end="url(#flow-chain-arrowhead)" />`;
       }).join('');
 
       const boxesHtml = rects.map((r, i) => {
@@ -3149,7 +3149,7 @@
       svg.innerHTML = `
         <defs>
           <marker id="flow-chain-arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-            <path d="M0,0 L6,3 L0,6 Z" fill="#d0e0e3" />
+            <path d="M0,0 L6,3 L0,6 Z" fill="${_flowColorSel}" />
           </marker>
         </defs>
         ${arrowsHtml}
@@ -3301,9 +3301,63 @@
     }
     window._updateFlowConfirmButtonLabel = _updateFlowConfirmButtonLabel;
       
+    const FLOW_LINE_COLORS = [
+      { hex: '#22292e', name: 'Neutro escuro', hint: 'padrão' },
+      { hex: '#005ca9', name: 'Azul', hint: 'navegação principal' },
+      { hex: '#127527', name: 'Verde', hint: 'sucesso' },
+      { hex: '#b22c2c', name: 'Vermelho', hint: 'erro' },
+      { hex: '#a65e00', name: 'Laranja escuro', hint: 'alerta' },
+      { hex: '#216e62', name: 'Turquesa', hint: 'alternativa' },
+      { hex: '#026273', name: 'Informação', hint: 'informação' },
+      { hex: '#64747a', name: 'Cinza médio', hint: 'secundário' }
+    ];
+    const FLOW_LINE_DEFAULT_COLOR = '#22292e';
+    let _flowColorSel = FLOW_LINE_DEFAULT_COLOR;
+    let _editFlowColorSel = FLOW_LINE_DEFAULT_COLOR;
+
+    function _normalizeFlowColor(c) {
+      const v = typeof c === 'string' ? c.toLowerCase() : '';
+      return FLOW_LINE_COLORS.some(x => x.hex === v) ? v : FLOW_LINE_DEFAULT_COLOR;
+    }
+    window._normalizeFlowColor = _normalizeFlowColor;
+
+    function _renderFlowColorPicker(containerId, selected, onPick) {
+      const box = document.getElementById(containerId);
+      if (!box) return;
+      box.innerHTML = FLOW_LINE_COLORS.map(c => {
+        const on = c.hex === selected;
+        return `<button type="button" role="radio" aria-checked="${on}" tabindex="${on ? 0 : -1}" data-color="${c.hex}"
+          aria-label="${c.name}" title="${c.name}: ${c.hint}"
+          class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all ${on ? 'ring-2 ring-offset-2 ring-offset-white dark:ring-offset-dark-bg' : ''}"
+          style="background-color:${c.hex};${on ? `--tw-ring-color:${c.hex};` : ''}">${on ? '<i data-lucide="check" class="w-4 h-4 text-white pointer-events-none"></i>' : ''}</button>`;
+      }).join('');
+      const pick = (hex, focus) => {
+        onPick(hex);
+        _renderFlowColorPicker(containerId, hex, onPick);
+        if (focus) { const b = box.querySelector(`[data-color="${hex}"]`); if (b) b.focus(); }
+      };
+      box.querySelectorAll('button[role="radio"]').forEach((btn, i, all) => {
+        btn.onclick = () => pick(btn.dataset.color, false);
+        btn.onkeydown = (e) => {
+          const step = (e.key === 'ArrowRight' || e.key === 'ArrowDown') ? 1 : (e.key === 'ArrowLeft' || e.key === 'ArrowUp') ? -1 : 0;
+          if (!step) return;
+          e.preventDefault();
+          pick(all[(i + step + all.length) % all.length].dataset.color, true);
+        };
+      });
+      _refreshIcons();
+    }
+
+    function _setFlowColor(hex) {
+      _flowColorSel = _normalizeFlowColor(hex);
+      _renderFlowAnchorPreview();
+    }
+
     function openFlowFormModal() {
       openModal('flow-form-modal');
       currentFlowType = null;
+      _flowColorSel = FLOW_LINE_DEFAULT_COLOR;
+      _renderFlowColorPicker('flow-color-swatches', _flowColorSel, _setFlowColor);
 
       // Limpa o mini-mapa de ancoragem de uma renderização anterior até a
       // resposta de get-flow-selection-bounds chegar (evita lixo visual).
@@ -3383,6 +3437,7 @@
       const journeyNameInput = document.getElementById('flow-name-input');
       const journeyName = journeyNameInput ? journeyNameInput.value.trim().slice(0, 70) : '';
       window._pendingJourneyName = journeyName;
+      window._pendingFlowColor = _flowColorSel;
 
       const flowName = FLOW_TYPE_DEFAULT_NAMES[type] || `Conexão ${handoffData.nextFlowNumber || 1}`;
 
@@ -3417,6 +3472,7 @@
           flowEndSide: flowEndSide,
           connectorStyle: connectorStyle,
           curvature: curvature,
+          color: _flowColorSel,
           nextFlowNumber: handoffData.nextFlowNumber || 1,
           flowId: String(Date.now()),
           autoMarkEndpoints: autoMarkEndpoints
@@ -3525,6 +3581,7 @@
               <div class="flex-1 overflow-hidden">
                 <div class="flex items-center justify-between gap-2">
                   <div class="flex items-center gap-1.5 flex-1 min-w-0">
+                    ${flow.color && flow.color !== '#22292e' ? `<span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color:${_normalizeFlowColor(flow.color)}" title="Cor da linha" aria-hidden="true"></span>` : ''}
                     <span class="w-full text-[12px] font-bold text-slate-800 dark:text-white truncate" ${isEndpoint ? 'title="Início e Fim de jornada não podem ser renomeados"' : ''}>${escapeHtml(flow.name || defaultName)}</span>
                   </div>
 
@@ -3774,6 +3831,44 @@
     }
     window._selectEditFlowType = _selectEditFlowType;
 
+    function _editableJourneyMembers(flow) {
+      const jName = (flow.journeyName || '').trim();
+      if (!jName) return [];
+      return (handoffData.createdFlows || []).filter(f =>
+        (f.journeyName || '').trim() === jName && f.sourceId && f.targetId && EDITABLE_FLOW_TYPES.includes(f.type));
+    }
+
+    function _sendEditFlow(idx, color) {
+      const f = handoffData.createdFlows[idx];
+      if (!f) { _continueEditFlowQueue(); return; }
+      window._editingFlowIndex = idx;
+      window._pendingFlowColor = color;
+      parent.postMessage({
+        pluginMessage: {
+          type: 'edit-flow-connection',
+          flowType: f.type,
+          flowName: f.name || '',
+          sourceId: f.sourceId,
+          targetId: f.targetId || null,
+          decisionText: f.decisionText || '',
+          flowSide: f.flowSide || 'auto',
+          connectorStyle: f.connectorStyle || 'straight',
+          curvature: f.curvature || 0,
+          color: color,
+          nextFlowNumber: handoffData.nextFlowNumber || 1,
+          flowId: f.flowUid || String(Date.now()),
+          oldGroupId: f.id
+        }
+      }, '*');
+    }
+
+    function _continueEditFlowQueue() {
+      const q = window._editFlowQueue;
+      if (!q || !q.items.length) { window._editFlowQueue = null; return; }
+      _sendEditFlow(q.items.shift(), q.color);
+    }
+    window._continueEditFlowQueue = _continueEditFlowQueue;
+
     function openEditFlowModal(idx) {
       const flow = handoffData.createdFlows[idx];
       if (!flow || !flow.sourceId) {
@@ -3803,6 +3898,13 @@
       const style = flow.connectorStyle || 'straight';
       const styleRadio = document.querySelector(`input[name="edit-flow-connector-style"][value="${style}"]`);
       if (styleRadio) styleRadio.checked = true;
+      _editFlowColorSel = _normalizeFlowColor(flow.color);
+      _renderFlowColorPicker('edit-flow-color-swatches', _editFlowColorSel, (hex) => { _editFlowColorSel = _normalizeFlowColor(hex); });
+      const jMembers = _editableJourneyMembers(flow);
+      const jWrap = document.getElementById('edit-flow-color-journey-wrap');
+      const jCheck = document.getElementById('edit-flow-color-journey');
+      if (jCheck) jCheck.checked = false;
+      if (jWrap) jWrap.classList.toggle('hidden', jMembers.length < 2);
       const saveBtn = document.getElementById('edit-flow-save-btn');
       if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5"></i> Salvar'; }
       openModal('edit-flow-modal');
@@ -3864,11 +3966,18 @@
           flowSide: flow.flowSide || 'auto',
           connectorStyle: connectorStyle,
           curvature: curvature,
+          color: _editFlowColorSel,
           nextFlowNumber: handoffData.nextFlowNumber || 1,
           flowId: flow.flowUid || String(Date.now()),
           oldGroupId: flow.id
         }
       }, '*');
+      window._pendingFlowColor = _editFlowColorSel;
+      const jCheck = document.getElementById('edit-flow-color-journey');
+      if (jCheck && jCheck.checked) {
+        const others = _editableJourneyMembers(flow).filter(f => f !== flow).map(f => handoffData.createdFlows.indexOf(f));
+        if (others.length) window._editFlowQueue = { items: others, color: _editFlowColorSel };
+      }
       closeModal('edit-flow-modal');
     }
     window.confirmEditFlow = confirmEditFlow;

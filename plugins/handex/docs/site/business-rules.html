@@ -552,6 +552,7 @@
 <li>Tipos Início/Fim: exatamente 1 elemento selecionado no canvas</li>
 <li>Demais tipos: exatamente 2 elementos selecionados</li>
 </ul>
+<p><strong>Cor da conexão (2026-10-02):</strong> cada conexão (<code>createdFlows[].color</code>, <code>#rrggbb</code>) tem cor própria, aplicada à linha, seta, marcador de origem, losango da decisão e borda/texto do chip; vale por conexão, com opção de aplicar à jornada inteira (a UI envia uma edição por fluxo). A cor é livre quanto ao significado (ex.: erro/sucesso). Paleta <strong>limitada</strong> às cores reais da lib DSC | Fundamentos Visuais (todas com contraste mínimo 3:1 sobre branco): Neutro escuro <code>#22292e</code> (padrão), Azul <code>#005ca9</code>, Verde <code>#127527</code>, Vermelho <code>#b22c2c</code>, Laranja escuro <code>#a65e00</code>, Turquesa <code>#216e62</code>, Informação <code>#026273</code>, Cinza médio <code>#64747a</code>. Valor fora da lista ou ausente (fluxos antigos) cai no padrão. A cor também é gravada em pluginData (<code>handexFlowColor</code>) do grupo, para o redesenho reproduzi-la. Marcadores Início (verde <code>#127527</code>) e Fim (vermelho <code>#b22c2c</code>) mantêm cor própria de significado e não mudam.</p>
 <hr>
 <h3 id="27-excecoes-de-spec">2.7 Exceções de Spec</h3>
 <p><strong>Tipos disponíveis:</strong></p>

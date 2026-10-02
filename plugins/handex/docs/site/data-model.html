@@ -610,6 +610,7 @@
   frameDestino: string,
   decisao:     string | null
 }</code></pre>
+<p>Campo de runtime <code>createdFlows[].color</code> (opcional, 2026-10-02): hex da linha no canvas, escolhido por conexão no modal "Configurar Conexão"/"Editar". Valores permitidos (cores da lib DSC | Fundamentos Visuais): Neutro escuro #22292e (padrão), Azul #005ca9, Verde #127527, Vermelho #b22c2c, Laranja escuro #a65e00, Turquesa #216e62, Informação #026273, Cinza médio #64747a. Ausente = <code>#22292e</code>. Persistido em <code>handoffData</code> e incluído no export/import JSON; "Redesenhar" reenvia a cor guardada.</p>
 <hr>
 <h3 id="59-excecao">5.9 <code>Excecao</code></h3>
 <pre><code class="lang-js">{

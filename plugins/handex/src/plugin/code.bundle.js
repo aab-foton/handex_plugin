@@ -2297,6 +2297,12 @@ Padr\xE3o da lib: ${c.padrao}`, true));
     points.push(bPrime);
     return points;
   }
+  var _FLOW_COLOR_DEFAULT = "#22292e";
+  var _FLOW_COLORS = ["#22292e", "#005ca9", "#127527", "#b22c2c", "#a65e00", "#216e62", "#026273", "#64747a"];
+  function _normalizeFlowColor(c) {
+    const v = typeof c === "string" ? c.trim().toLowerCase() : "";
+    return _FLOW_COLORS.indexOf(v) !== -1 ? v : _FLOW_COLOR_DEFAULT;
+  }
   async function _buildFlowConnection(nodeA, nodeB, msg) {
     const isEvent = msg.flowType === "event_start" || msg.flowType === "event_end";
     let boundsA = nodeA.absoluteBoundingBox || nodeA.absoluteRenderBounds;
@@ -2397,7 +2403,8 @@ Padr\xE3o da lib: ${c.padrao}`, true));
       const p1 = _elbowFullPath[midIdx], p2 = _elbowFullPath[Math.min(midIdx + 1, _elbowFullPath.length - 1)];
       return { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
     })() : curveMid;
-    const strokeColor = { r: 0.1333, g: 0.1608, b: 0.1804 };
+    const _flowColorHex = _normalizeFlowColor(msg.color);
+    const strokeColor = hexToRgb(_flowColorHex);
     const line = figma.createVector();
     line.name = `Linha`;
     figma.currentPage.appendChild(line);
@@ -2467,7 +2474,8 @@ Padr\xE3o da lib: ${c.padrao}`, true));
       decisionText: msg.decisionText || null,
       flowSide: msg.flowSide || "auto",
       connectorStyle: _connectorStyle,
-      curvature: _curvature
+      curvature: _curvature,
+      color: _flowColorHex
     };
     let _flowResult = null;
     if (msg.flowType === "diamond" || msg.flowType === "diamond_dashed") {
@@ -2502,6 +2510,7 @@ Padr\xE3o da lib: ${c.padrao}`, true));
         finalGroup.locked = true;
         finalGroup.setPluginData("handexCategory", "fluxo");
         finalGroup.setPluginData("handexFlowId", _flowId);
+        finalGroup.setPluginData("handexFlowColor", _flowColorHex);
         _hdMoveToCategorySection(finalGroup, "fluxo");
         _flowResult = __spreadValues({ id: finalGroup.id, flowUid: _flowId, name: friendlyName, type: msg.flowType }, _flowExtra);
       } catch (e) {
@@ -2536,6 +2545,7 @@ Padr\xE3o da lib: ${c.padrao}`, true));
         finalGroup.locked = true;
         finalGroup.setPluginData("handexCategory", "fluxo");
         finalGroup.setPluginData("handexFlowId", _flowId);
+        finalGroup.setPluginData("handexFlowColor", _flowColorHex);
         _hdMoveToCategorySection(finalGroup, "fluxo");
         _flowResult = __spreadValues({ id: finalGroup.id, flowUid: _flowId, name: friendlyName, type: msg.flowType }, _flowExtra);
       } catch (e) {
@@ -2574,6 +2584,7 @@ Padr\xE3o da lib: ${c.padrao}`, true));
         finalGroup.locked = true;
         finalGroup.setPluginData("handexCategory", "fluxo");
         finalGroup.setPluginData("handexFlowId", _flowId);
+        finalGroup.setPluginData("handexFlowColor", _flowColorHex);
         _hdMoveToCategorySection(finalGroup, "fluxo");
         _flowResult = __spreadValues({ id: finalGroup.id, flowUid: _flowId, name: friendlyName, type: msg.flowType }, _flowExtra);
       } catch (e) {
@@ -2586,6 +2597,7 @@ Padr\xE3o da lib: ${c.padrao}`, true));
       finalGroup.locked = true;
       finalGroup.setPluginData("handexCategory", "fluxo");
       finalGroup.setPluginData("handexFlowId", _flowId);
+      finalGroup.setPluginData("handexFlowColor", _flowColorHex);
       _hdMoveToCategorySection(finalGroup, "fluxo");
       _flowResult = __spreadValues({ id: finalGroup.id, flowUid: _flowId, name: friendlyName, type: msg.flowType }, _flowExtra);
     }
@@ -5961,14 +5973,18 @@ Padr\xE3o da lib: ${c.padrao}`, true));
         figma.ui.postMessage({ type: "flow-edit-failed", reason: "nodes-nao-encontrados" });
         return;
       }
+      let _editColor = msg.color;
       if (msg.oldGroupId) {
         try {
           const oldGroup = await figma.getNodeByIdAsync(msg.oldGroupId);
-          if (oldGroup) oldGroup.remove();
+          if (oldGroup) {
+            if (!_editColor) _editColor = oldGroup.getPluginData("handexFlowColor");
+            oldGroup.remove();
+          }
         } catch (e) {
         }
       }
-      await _buildFlowConnection(nodeA, nodeB, msg);
+      await _buildFlowConnection(nodeA, nodeB, Object.assign({}, msg, { color: _editColor }));
     }
     if (msg.type === "resync-all-flows") {
       const updated = [];
@@ -5987,8 +6003,9 @@ Padr\xE3o da lib: ${c.padrao}`, true));
         }
         try {
           const oldGroup = flow.id ? await figma.getNodeByIdAsync(flow.id) : null;
+          const _savedColor = flow.color || (oldGroup ? oldGroup.getPluginData("handexFlowColor") : "");
           if (oldGroup) oldGroup.remove();
-          const result = await _buildFlowConnection(nodeA, nodeB, __spreadProps(__spreadValues({}, flow), { flowType: flow.type, flowName: flow.name, flowId: flow.flowUid, suppressFlowCreatedBroadcast: true }));
+          const result = await _buildFlowConnection(nodeA, nodeB, __spreadProps(__spreadValues({}, flow), { color: _savedColor, flowType: flow.type, flowName: flow.name, flowId: flow.flowUid, suppressFlowCreatedBroadcast: true }));
           if (!result) {
             failed.push({ flowUid: flow.flowUid, name: flow.name, reason: "erro-ao-recriar" });
             continue;

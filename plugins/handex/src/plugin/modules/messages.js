@@ -409,6 +409,7 @@
         if (typeof window._pendingJourneyName !== 'undefined' && msg.flow) {
           if (window._pendingJourneyName) msg.flow.journeyName = window._pendingJourneyName;
         }
+        if (msg.flow && !msg.flow.color && window._pendingFlowColor) msg.flow.color = window._pendingFlowColor;
         // Edição (apaga+recria, ver editFlowConnection em specifications.js)
         // substitui o item no mesmo índice em vez de adicionar um novo --
         // sem isso, editar um fluxo duplicaria a entrada na lista.
@@ -418,10 +419,12 @@
           handoffData.createdFlows.push(msg.flow);
           handoffData.nextFlowNumber = (handoffData.nextFlowNumber || 1) + 1;
         }
+        const _wasEditing = typeof window._editingFlowIndex === 'number';
         window._editingFlowIndex = null;
         renderFlowsList();
         saveToStorage();
         if (window._toastSaved) _toastSaved();
+        if (_wasEditing && window._editFlowQueue && typeof _continueEditFlowQueue === 'function') _continueEditFlowQueue();
         // Conexão em lote (3+ elementos selecionados) dispara flow-created
         // várias vezes em sequência rápida -- focar o canvas a cada uma
         // seria ruim (viewport pulando várias vezes). window._flowBatchActive
@@ -432,6 +435,7 @@
         // window._pendingJourneyName aqui. Em lote, quem consome é
         // flow-batch-created (dispara só depois de todos os segmentos).
         if (!window._flowBatchActive) window._pendingJourneyName = undefined;
+        if (!window._flowBatchActive && !window._editFlowQueue) window._pendingFlowColor = undefined;
         setTimeout(() => {
           const list = document.getElementById('flows-results');
           const last = list && list.lastElementChild;
@@ -448,6 +452,7 @@
           handoffData.createdFlows = handoffData.createdFlows.filter(f => f.id !== msg.removedOldId);
         }
         if (msg.flow) {
+          if (!msg.flow.color && window._pendingFlowColor) msg.flow.color = window._pendingFlowColor;
           handoffData.createdFlows.push(msg.flow);
           handoffData.nextFlowNumber = (handoffData.nextFlowNumber || 1) + 1;
         }
@@ -457,6 +462,8 @@
 
       if (msg.type === "flow-edit-failed") {
         window._editingFlowIndex = null;
+        window._editFlowQueue = null;
+        window._pendingFlowColor = undefined;
         showToast('Não foi possível editar o fluxo — elemento(s) de origem/destino não encontrado(s) no canvas.', 'error');
       }
 
@@ -467,6 +474,7 @@
       if (msg.type === "flow-batch-created") {
         window._flowBatchActive = false;
         window._pendingJourneyName = undefined;
+        window._pendingFlowColor = undefined;
         showToast(`${msg.count} conexão(ões) criadas em sequência`);
       }
 

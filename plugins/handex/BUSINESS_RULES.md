@@ -383,6 +383,8 @@ Módulo isolado (`modules/quick-spec.js`, view `view-quick-spec`); nunca chama n
 - `chipText`: opcional para `line_solid` e `line_dashed` (ex: "Sim", "Não")
 - `anchorSide`: posição da seta — `auto` · `top` · `bottom` · `left` · `right`
 
+**Cor da conexão (2026-10-02):** cada conexão (`createdFlows[].color`, `#rrggbb`) tem cor própria, aplicada à linha, seta, marcador de origem, losango da decisão e borda/texto do chip; vale por conexão, com opção de aplicar à jornada inteira (a UI envia uma edição por fluxo). A cor é livre quanto ao significado (ex.: erro/sucesso). Paleta **limitada** às cores reais da lib DSC | Fundamentos Visuais (todas com contraste mínimo 3:1 sobre branco): Neutro escuro `#22292e` (padrão), Azul `#005ca9`, Verde `#127527`, Vermelho `#b22c2c`, Laranja escuro `#a65e00`, Turquesa `#216e62`, Informação `#026273`, Cinza médio `#64747a`. Valor fora da lista ou ausente (fluxos antigos) cai no padrão. A cor também é gravada em pluginData (`handexFlowColor`) do grupo, para o redesenho reproduzi-la. Marcadores Início (verde `#127527`) e Fim (vermelho `#b22c2c`) mantêm cor própria de significado e não mudam.
+
 **Regra de seleção:**
 - Tipos Início/Fim: exatamente 1 elemento selecionado no canvas
 - Demais tipos: exatamente 2 elementos selecionados

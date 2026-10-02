@@ -164,6 +164,7 @@ const ONBOARDING_TOOLS = {
       { text: 'Selecione 2 ou mais elementos no canvas e clique em <strong>+ Conectar Frames</strong>.' },
       { text: 'Dê um <strong>Nome da Jornada</strong> e escolha o tipo: Sequência, Mensagem ou Decisão.' },
       { text: 'Se quiser, ajuste o lado de saída da seta no mini-mapa e o estilo da linha (Reta ou Angular).' },
+      { text: 'Escolha a <strong>cor da linha</strong>; vale para a conexão ou a jornada toda.' },
       { text: 'Use o ícone de foco na lista para localizar a seta no canvas.' }
     ],
     // Conteúdo migrado do popover "Como funciona" (circle-help do header,

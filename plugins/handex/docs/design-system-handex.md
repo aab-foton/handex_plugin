@@ -210,6 +210,10 @@ Estado padrão: um accordion nasce **fechado**, salvo decisão explícita de UX 
 
 O **switch estilizado** (usado em Dados do Projeto) é o padrão oficial para escolha binária habilitado/desabilitado. Checkbox nativo (`accent-*`) continua sendo o padrão correto para seleção múltipla em listas (import/limpeza de dados), não para toggle liga/desliga — os dois componentes têm papéis diferentes, não é uma substituição 1:1.
 
+### Seletor de cor da linha (Fluxos de Tela, 2026-10-02)
+
+8 amostras circulares (32px, `rounded-full`) em `role="radiogroup"`, cada uma um `button role="radio"` com `aria-label` = nome da cor, `aria-checked`, tabindex roving e setas do teclado. Selecionada: anel (`ring-2 ring-offset-2`, cor da própria amostra) + check branco. Paleta fechada, só cores da lib DSC | Fundamentos Visuais: Neutro escuro `#22292e` (padrão), Azul `#005ca9`, Verde `#127527`, Vermelho `#b22c2c`, Laranja escuro `#a65e00`, Turquesa `#216e62`, Informação `#026273`, Cinza médio `#64747a`. Sem seletor livre; `title` traz só sugestão de uso, sem impor significado. Usado em "Configurar Conexão" e "Editar conexão" (`FLOW_LINE_COLORS`, `specifications.js`).
+
 ### Inputs
 
 O componente mais consistente do plugin — tokenizado via regra global `plugin.css:507-576` (`input[type=text|search], select, textarea`). Todo input novo herda esse estilo automaticamente por seletor de tag/atributo; não redeclarar estilo de input por classe local.

@@ -627,6 +627,8 @@ Leitura normalizada: ausente = `false`. Herdado no re-scan por `nodeId`.
 }
 ```
 
+Campo de runtime `createdFlows[].color` (opcional, 2026-10-02): hex da linha no canvas, escolhido por conexão no modal "Configurar Conexão"/"Editar". Valores permitidos (cores da lib DSC | Fundamentos Visuais): Neutro escuro `#22292e` (padrão), Azul `#005ca9`, Verde `#127527`, Vermelho `#b22c2c`, Laranja escuro `#a65e00`, Turquesa `#216e62`, Informação `#026273`, Cinza médio `#64747a`. Ausente = `#22292e`. Persistido em `handoffData` e incluído no export/import JSON; "Redesenhar" reenvia a cor guardada.
+
 ---
 
 ### 5.9 `Excecao`

@@ -734,6 +734,12 @@
       <span class="demo-caption">Switch estilizado (<span class="source-tag">dados-projeto.html:233-234</span>) — padrão oficial para escolha binária habilitado/desabilitado (ex: ativar/desativar Briefing Estratégico). Markup: <code>peer</code> + <code>peer-checked:bg-[#005ca9]</code>. Checkbox nativo (<code>accent-*</code>) continua sendo o padrão correto para seleção múltipla em listas, não substitui o switch.</span>
     </div>
 
+    <h3>Seletor de cor da linha (Fluxos de Tela, 2026-10-02)</h3>
+    <div class="demo-block">
+      <div role="radiogroup" aria-label="Cor da linha"><span style="display:inline-block;width:32px;height:32px;border-radius:50%;background:#22292e;margin-right:8px" title="Neutro escuro"></span><span style="display:inline-block;width:32px;height:32px;border-radius:50%;background:#005ca9;margin-right:8px" title="Azul"></span><span style="display:inline-block;width:32px;height:32px;border-radius:50%;background:#127527;margin-right:8px" title="Verde"></span><span style="display:inline-block;width:32px;height:32px;border-radius:50%;background:#b22c2c;margin-right:8px" title="Vermelho"></span><span style="display:inline-block;width:32px;height:32px;border-radius:50%;background:#a65e00;margin-right:8px" title="Laranja escuro"></span><span style="display:inline-block;width:32px;height:32px;border-radius:50%;background:#216e62;margin-right:8px" title="Turquesa"></span><span style="display:inline-block;width:32px;height:32px;border-radius:50%;background:#026273;margin-right:8px" title="Informação"></span><span style="display:inline-block;width:32px;height:32px;border-radius:50%;background:#64747a;margin-right:8px" title="Cinza médio"></span></div>
+      <span class="demo-caption">8 amostras circulares de 32px em <code>role="radiogroup"</code>; cada uma é <code>button role="radio"</code> com <code>aria-label</code> = nome da cor, tabindex roving e setas do teclado. Selecionada: anel de 2px na cor da amostra + check branco. Paleta fechada, só cores da lib DSC | Fundamentos Visuais (padrão Neutro escuro <code>#22292e</code>); sem seletor livre. O <code>title</code> sugere uso (ex.: Vermelho: erro) sem impor significado. Origem: <code>FLOW_LINE_COLORS</code>, <code>specifications.js</code>.</span>
+    </div>
+
     <h3>Inputs</h3>
     <div class="demo-block">
       <input class="hx-input" type="text" placeholder="Nome do projeto">

@@ -754,6 +754,7 @@
               flowSide: flow.flowSide || 'auto',
               connectorStyle: flow.connectorStyle || 'straight',
               curvature: flow.curvature || 0,
+              color: flow.color || '#22292e',
               nextFlowNumber: handoffData.nextFlowNumber || 1,
               // Preserva o id estável já salvo (flowUid -- não o node.id
               // antigo em flow.id, que deixa de existir ao recriar) -- sem

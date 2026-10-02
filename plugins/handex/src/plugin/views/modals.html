@@ -505,6 +505,11 @@
               </label>
             </div>
           </div>
+
+          <div class="space-y-2 pt-4 border-t border-gray-50 dark:border-dark-line/50">
+            <label id="flow-color-label" class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider px-1">Cor da Linha</label>
+            <div id="flow-color-swatches" role="radiogroup" aria-labelledby="flow-color-label" class="flex flex-wrap gap-2 px-1 py-1"></div>
+          </div>
         </div>
 
         <div class="p-6 border-t border-gray-100 dark:border-dark-line flex justify-end gap-3 shrink-0">
@@ -2009,6 +2014,17 @@
             <input type="radio" name="edit-flow-connector-style" value="elbow" class="sr-only" />
             <i data-lucide="corner-down-right" class="w-4 h-4 text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#005ca9]"></i>
             <span class="text-[8px] font-bold text-gray-500 dark:text-dark-muted group-has-[:checked]:text-[#005ca9]">Angular</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <label id="edit-flow-color-label" class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider px-1">Cor da Linha</label>
+        <div id="edit-flow-color-swatches" role="radiogroup" aria-labelledby="edit-flow-color-label" class="flex flex-wrap gap-2 px-1 py-1"></div>
+        <div id="edit-flow-color-journey-wrap" class="hidden">
+          <label class="flex items-center gap-2 px-1 text-[11px] font-bold text-slate-600 dark:text-dark-muted cursor-pointer">
+            <input type="checkbox" id="edit-flow-color-journey" class="w-4 h-4 rounded accent-[#005ca9]" />
+            Aplicar à jornada inteira
           </label>
         </div>
       </div>
