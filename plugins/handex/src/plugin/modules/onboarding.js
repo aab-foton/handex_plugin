@@ -137,7 +137,7 @@ const ONBOARDING_TOOLS = {
       { text: 'Selecione 1 ou mais elementos no canvas e clique no <strong>botão +</strong> no topo.' },
       { text: 'Escolha o tipo de medida e confirme: as anotações aparecem no canvas e na lista.' },
       { text: 'Use <strong>Ocultar tudo</strong> para esconder as medidas do canvas sem excluí-las.' },
-      { text: 'Medidas sem frame vinculado entram na Ficha num bloco próprio, só em texto.' }
+      { text: 'Medidas avulsas entram na Ficha num bloco próprio, só em texto.' }
     ],
     // Conteúdo migrado do popover "Tipos de medida" (circle-help do
     // header, removido — ver views/measurement.html). Referência de

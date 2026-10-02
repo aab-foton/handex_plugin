@@ -25,7 +25,7 @@
     };
     function _excTipoInfo(tipo) {
       const t = tipo === 'Aviso' ? 'Alerta' : tipo;
-      return _EXC_TIPOS[t] || { label: tipo || 'Geral', text: '#64748b', bg: '#f1f5f9' };
+      return _EXC_TIPOS[t] || { label: tipo || 'Geral', text: '#64747a', bg: '#ebf1f2' };
     }
     // Specs sem frame vinculado (handoffData.specs menos as já presentes em
     // frame.createdSpecs -- o array global é regravado já mesclado).
@@ -188,7 +188,7 @@ ${(() => {
   const framesWithSpecs = framesList.filter(f => (f.createdSpecs || []).length > 0);
   const looseSpecs = _looseSpecsOf(handoffData);
   if (framesWithSpecs.length === 0 && looseSpecs.length === 0) return 'Nenhuma especificação anotada.';
-  const looseMD = looseSpecs.length === 0 ? [] : [`### Specs sem frame vinculado\n` + looseSpecs.map(s => {
+  const looseMD = looseSpecs.length === 0 ? [] : [`### Specs avulsas\n` + looseSpecs.map(s => {
     const cat = s.type || s.categoryLabel || s.category || 'Geral';
     const props = (s.properties || []).length > 0
       ? '\n' + s.properties.map(p => `  - **${_vocabLabel(p.label, p.key)}**${p.token ? ` \`${p.token}\`` : ''}${p.value ? ` → ${_vocabValue(p.value)}` : ''}`).join('\n')
@@ -1467,7 +1467,7 @@ ${(handoffData.createdFlows || []).length === 0
       // 7.2 Especificações Anotadas (seção independente, agrupada por frame e grupo)
       const _looseAnnot = _looseSpecsOf(handoffData);
       const _framesWithAnnot = (_allFrames).filter(f => (f.createdSpecs || []).length > 0)
-        .concat(_looseAnnot.length > 0 ? [{ nome: 'Specs sem frame vinculado', createdSpecs: _looseAnnot }] : []);
+        .concat(_looseAnnot.length > 0 ? [{ nome: 'Specs avulsas', createdSpecs: _looseAnnot }] : []);
       if (_framesWithAnnot.length > 0) {
         const totalAnnot = _framesWithAnnot.reduce((n, f) => n + f.createdSpecs.length, 0);
         const annotContent = `
