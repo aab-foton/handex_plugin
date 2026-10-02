@@ -3398,6 +3398,19 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-01 — Instruções do Leitor de Tela e da Tabulação na web têm texto próprio (v0.1.0-beta.70)</h2>
+
+    <p>O frame <code>[HAC] Instruções de Leitor de Tela</code> desenhado em projetos web trazia o texto do mobile
+    (VoiceOver/TalkBack, 3 passos, "no mobile não é necessário mapear a hierarquia…"). O template web do arquivo próprio
+    (<code>[hac web] Instruções Especificações para Leitores de Tela</code>, nó 10572:17023) cita NVDA/VoiceOver/Jaws e tem
+    <strong>4 passos</strong>, incluindo "Especifique a estrutura da página". <code>ficha-instruction-content.json</code>
+    ganhou um bloco <code>web</code> em <code>leitorTela</code> e <code>tabulacao</code> (campos que diferem do texto-base mobile),
+    escolhido pela origem do projeto no frame do canvas, na modal de instruções e no onboarding web. O passo de estrutura
+    ganha o selo da categoria. O mobile e o Swipe não mudam. Frames de instrução já criados no canvas não se atualizam
+    sozinhos: apague o frame para o plugin refazê-lo. Dois defeitos do texto-fonte (passo 1 sem "Siga"; numeração "3."
+    repetida) foram corrigidos no JSON — corrigir também no Figma. A página "Entendendo as categorias" do template web não é
+    desenhada pelo plugin (fora do escopo desta correção).</p>
+
     <h2>2026-10-01 — Web segue a base do arquivo próprio; fim de "Informações
     Adicionais"; perfis por plataforma (v0.1.0-beta.69)</h2>
 

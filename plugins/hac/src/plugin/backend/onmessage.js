@@ -4438,6 +4438,18 @@ figma.ui.onmessage = async (msg) => {
   // "[HAC] Instruções de {Func}" — agrupa o título do bloco e a legenda de
   // instruções, que antes ficavam soltos como filhos diretos do bloco.
   // Idempotente por pluginData `hacFichaInstrucoes` = sectionKey.
+  // Conteúdo de instrução por plataforma (2026-10-01): o JSON guarda o texto-base
+  // (mobile, extraído do frame Super App) e, quando a web difere, um bloco
+  // `web` com os campos que mudam (instructionsBody/steps).
+  function _resolveFichaInstructionContent(content, a11yOrigin) {
+    if (!content) return content;
+    if (a11yOrigin === 'web' && content.web) {
+      const { web, ...base } = content;
+      return { ...base, ...web };
+    }
+    return content;
+  }
+
   async function _getOrCreateFichaInstrucoesFrame(section, sectionKey, areaId, a11yOrigin) {
     const cfg = _FICHA_BLOCK_CONFIG[sectionKey];
     if (!cfg || !section) return null;
@@ -4511,7 +4523,10 @@ figma.ui.onmessage = async (msg) => {
       // 'leitorTela'|'tabulacao'|'swipe' (ver _FICHA_BLOCK_CONFIG em
       // code.js), reaproveitado tal como está, sem valor novo a inventar.
       const legend = await legendBuilder(
-        FICHA_INSTRUCTION_CONTENT[cfg.instructionKey],
+        // Web tem texto próprio no template (NVDA/VoiceOver/Jaws; Leitor de Tela
+        // com 4 passos, inclui Estrutura da Página). Sem `web` no JSON, cai no
+        // conteúdo-base (mobile) — nunca fica sem instrução.
+        _resolveFichaInstructionContent(FICHA_INSTRUCTION_CONTENT[cfg.instructionKey], a11yOrigin),
         cfg.legendTitle,
         cfg.legendFallback,
         a11yOrigin,

@@ -211,7 +211,13 @@ window.startTabOrderManualMode = startTabOrderManualMode;
 // steps. Não se aplica ao Leitor de Tela (chamado sempre com reduced=false/
 // omitido) nem ao modal pré-captura, que continuam com o conteúdo completo.
 function _renderA11yInstructionContent(feature, ids, reduced) {
-  const content = (typeof FICHA_INSTRUCTION_CONTENT_UI !== 'undefined') ? FICHA_INSTRUCTION_CONTENT_UI[feature] : null;
+  let content = (typeof FICHA_INSTRUCTION_CONTENT_UI !== 'undefined') ? FICHA_INSTRUCTION_CONTENT_UI[feature] : null;
+  // Texto próprio da web (2026-10-01), mesma regra de _resolveFichaInstructionContent
+  // (onmessage.js): campos de `content.web` sobrepõem o conteúdo-base (mobile).
+  if (content && content.web && (typeof getA11yProjectOrigin === 'function') && getA11yProjectOrigin() === 'web') {
+    const { web, ...base } = content;
+    content = { ...base, ...web };
+  }
   if (!content) return false;
   const titleEl = document.getElementById(ids.title);
   if (titleEl) titleEl.textContent = content.title || '';

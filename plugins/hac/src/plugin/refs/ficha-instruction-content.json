@@ -23,7 +23,16 @@
       "Ignore elementos não interativos: Não inclua na seleção textos puramente estáticos, rótulos de campos, imagens decorativas ou botões desativados (disabled)."
     ],
     "assetsHeading": "",
-    "assets": []
+    "assets": [],
+    "web": {
+      "instructionsBody": "É a sequência lógica que o Leitor de tela (NVDA/VoiceOver/Jaws) percorre nos elementos INTERATIVOS quando o usuário navega com devices como teclados, mouses com botões programáveis ou acionadores.",
+      "steps": [
+        "Selecione os componentes interativos e imagens essenciais: Selecione apenas os elementos acionáveis da tela (como botões ativos, links, campos de formulário e seletores) cujo conteúdo seja indispensável para a navegação.",
+        "Siga a ordem de leitura ocidental: Selecione esses elementos sequencialmente respeitando o fluxo do layout, da esquerda para a direita, de cima para baixo.",
+        "Ignore elementos não interativos: Não inclua na seleção textos puramente estáticos, rótulos de campos, imagens ou elementos desativados (Disabled)."
+      ],
+      "_source": "Frame '[hac web] Instruções Ordem de Tabulação' (node 10572:16996), 2º bloco 'Instruções sobre o tipo de documentação' (o 1º bloco do frame web ainda traz o texto mobile VoiceOver/TalkBack e foi ignorado)."
+    }
   },
   "swipe": {
     "title": "Ordem de Leitura Mobile (Swipe)",
@@ -48,6 +57,16 @@
       "Ignore itens decorativos: Imagens e ícones puramente ilustrativos não são lidos pelo leitor de tela, classifique-os com o conector Elementos Decorativos."
     ],
     "assetsHeading": "",
-    "assets": []
+    "assets": [],
+    "web": {
+      "instructionsBody": "Especificar para leitores de tela consiste em definir como as tecnologias assistivas (NVDA/VoiceOver/Jaws) interpretam e anunciam os elementos da interface. Essa documentação assegura que o conteúdo seja plenamente compreendido e inclusivo, fornecendo as orientações fundamentais para que o time de desenvolvimento implemente a experiência exatamente como projetada.",
+      "steps": [
+        "Classifique os componentes: Utilize o conector de Elementos Interativos e Imagens para classificar os componentes interativos e imagens essenciais para o contexto da sua interface. Siga a ordem numérica ou alfabética dentro do círculo.",
+        "Especifique os títulos: Se o elemento que você está documentando for um título, utilize o conector Nível de Título para marcá-lo, a estrutura da interface segue a lógica de H1 até H6. O H1 é o título principal (único por página), seguido por H2, H3 e assim por diante. Essa ordem permite que usuários de leitores de tela entendam o sumário do conteúdo.",
+        "Especifique a estrutura da página: Utilize o conector Estrutura da Página para marcar a estrutura da página, esses elementos semânticos que estruturam o “esqueleto” de uma interface e indicam as seções de conteúdo e para que servem, exemplos: <header>, <main>, <footer>, etc.",
+        "Ignore itens decorativos: Imagens e ícones puramente ilustrativos não são lidos pelo leitor de tela, classifique-os com o conector Elementos Decorativos."
+      ],
+      "_source": "Frame '[hac web] Instruções Especificações para Leitores de Tela' (node 10572:17023, arquivo HhriLSpKnCB2dHhyiU16iB), lido via REST API em 2026-10-01. Dois defeitos óbvios do texto-fonte foram corrigidos aqui (passo 1 sem 'Siga' no início; numeração '3.' repetida no último passo) — corrigir também no Figma."
+    }
   }
 }

@@ -4504,6 +4504,9 @@ function _fichaLegendAssetCategory(label) {
   // último passo, reportado pelo usuário com print real.
   if (l.includes('decorativ')) return 'decorativo';
   if (l.includes('título') || l.includes('titulo')) return 'titulo';
+  // Passo web "Especifique a estrutura da página" (2026-10-01). Depois de título:
+  // o passo de título também cita "estrutura da interface".
+  if (l.includes('estrutura da p')) return 'estrutura';
   if (l.includes('interativ') || l.includes('imagens')) return 'elemento';
   return null;
 }
