@@ -36639,7 +36639,7 @@
         // 16/12
       };
       FICHA_SECTION_ORDER = ["principal", "tabulacao", "swipe", "leitor"];
-      PLUGIN_VERSION = true ? "0.1.0-beta.71" : "dev";
+      PLUGIN_VERSION = true ? "0.1.0-beta.72" : "dev";
       HAC_DATA_LEGACY_KEY = "hacData";
       HAC_DOC_NS = "hac";
       HAC_DOC_KEY_PREFIX = "hacData";
