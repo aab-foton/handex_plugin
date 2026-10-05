@@ -799,6 +799,7 @@ async function _fichaGenerateCompleteHandoff(areaId) {
 
   if (pendingKeys.length === 0) {
     showToast('O Handoff de Acessibilidade já está atualizado.');
+    _fichaOpenAfterHandoffModal();
     return;
   }
 
@@ -832,8 +833,56 @@ async function _fichaGenerateCompleteHandoff(areaId) {
   //              handoff e foi reinserida (edição). Um lote só de seções
   //              novas é a montagem inicial do handoff, que não versiona.
   if (anyOk && _hasEdit) _fichaBumpSessionVersion('minor');
+
+  // Próximo passo da jornada (2026-10-05, pedido do usuário): depois de
+  // consolidar a tela, perguntar se vai documentar outra ou finalizar. Só
+  // quando ao menos uma seção entrou (um lote inteiro com falha não é entrega).
+  if (anyOk) _fichaOpenAfterHandoffModal();
 }
 window._fichaGenerateCompleteHandoff = _fichaGenerateCompleteHandoff;
+
+// ── Modal "Handoff gerado — e agora?" (2026-10-05) ──────────────────────
+// Duas saídas: documentar outra tela (volta pra listagem e já abre Selecionar
+// Tela) ou finalizar o handoff do projeto (reaproveita a modal de finalização
+// existente, que sobe a versão maior). Finalizar só habilita quando o projeto
+// está completo (_fichaProjectCompletion) — mesma regra do botão "Finalizar"
+// do resumo; antes disso o botão fica desabilitado com o motivo à vista.
+function _fichaOpenAfterHandoffModal() {
+  const completion = _fichaProjectCompletion();
+  const info = document.getElementById('a11y-after-handoff-info');
+  if (info) {
+    info.textContent = `${completion.complete} de ${completion.total} tela${completion.total === 1 ? '' : 's'} com o checklist fechado.`;
+  }
+  const btn = document.getElementById('a11y-after-handoff-finalize');
+  const hint = document.getElementById('a11y-after-handoff-finalize-hint');
+  if (btn) {
+    btn.disabled = !completion.isComplete;
+    btn.classList.toggle('opacity-50', !completion.isComplete);
+    btn.classList.toggle('cursor-not-allowed', !completion.isComplete);
+  }
+  if (hint) {
+    const faltam = completion.total - completion.complete;
+    hint.textContent = completion.isComplete
+      ? 'Marca esta geração do handoff como concluída e inicia uma nova versão.'
+      : `Disponível quando todas as telas estiverem prontas (faltam ${faltam}).`;
+  }
+  openModal('a11y-after-handoff-modal');
+}
+window._fichaOpenAfterHandoffModal = _fichaOpenAfterHandoffModal;
+
+function _fichaAfterHandoffAnotherScreen() {
+  closeModal('a11y-after-handoff-modal');
+  navigateBackToA11yList();
+  // navigate() remonta a view; abre a seleção de tela logo depois.
+  setTimeout(() => { if (typeof openA11yAreaModal === 'function') openA11yAreaModal(); }, 80);
+}
+window._fichaAfterHandoffAnotherScreen = _fichaAfterHandoffAnotherScreen;
+
+function _fichaAfterHandoffFinalize() {
+  closeModal('a11y-after-handoff-modal');
+  _fichaOpenFinalizeModal();
+}
+window._fichaAfterHandoffFinalize = _fichaAfterHandoffFinalize;
 
 // "Nova versão" (major, v1.x → v2.0) — decisão explícita do designer, nunca
 // automática. Existiu como botão "Iniciar nova versão do handoff" no

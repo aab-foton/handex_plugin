@@ -983,6 +983,38 @@
   </div>
 </div>
 
+<!-- MODAL: PRÓXIMO PASSO DEPOIS DE GERAR O HANDOFF (2026-10-05) — aberta por
+     _fichaOpenAfterHandoffModal (handoff-ficha.js) ao fim de "Gerar Handoff".
+     Duas saídas: documentar outra tela, ou finalizar o handoff do projeto. -->
+<div id="a11y-after-handoff-modal" role="dialog" aria-modal="true" aria-labelledby="a11y-after-handoff-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-dsc-smaller">
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeModal('a11y-after-handoff-modal')" aria-hidden="true"></div>
+  <div class="relative z-10 w-full max-w-sm max-h-full min-h-0 flex flex-col rounded-dsc-large overflow-hidden shadow-dsc-elevation-2 bg-white dark:bg-dark-surface">
+    <div class="flex items-center justify-between p-dsc-tiny border-b border-gray-100 dark:border-dark-line">
+      <h3 id="a11y-after-handoff-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-dsc-nano">
+        <i data-lucide="check-circle-2" class="w-4 h-4 text-green-600" aria-hidden="true"></i> Handoff da tela gerado
+      </h3>
+      <button onclick="closeModal('a11y-after-handoff-modal')" title="Fechar" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+    <div class="p-dsc-smaller space-y-3">
+      <p class="text-[12px] text-slate-600 dark:text-dark-muted leading-relaxed">O que você quer fazer agora?</p>
+      <p id="a11y-after-handoff-info" class="text-[12px] font-semibold text-slate-700 dark:text-white"></p>
+      <button type="button" onclick="_fichaAfterHandoffAnotherScreen()" class="w-full flex items-center gap-dsc-nano px-dsc-micro py-2.5 rounded-dsc-large text-left border border-[#005ca9] text-[#005ca9] dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+        <i data-lucide="scan" class="w-4 h-4 shrink-0" aria-hidden="true"></i>
+        <span class="text-[12px] font-bold">Documentar outra tela</span>
+      </button>
+      <div>
+        <button type="button" id="a11y-after-handoff-finalize" onclick="_fichaAfterHandoffFinalize()" class="w-full flex items-center gap-dsc-nano px-dsc-micro py-2.5 rounded-dsc-large text-left bg-[#005ca9] text-white hover:bg-blue-700 transition-colors disabled:hover:bg-[#005ca9]">
+          <i data-lucide="flag" class="w-4 h-4 shrink-0" aria-hidden="true"></i>
+          <span class="text-[12px] font-bold">Finalizar handoff</span>
+        </button>
+        <p id="a11y-after-handoff-finalize-hint" class="text-[11px] text-slate-500 dark:text-dark-muted leading-snug mt-1.5"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: INSTRUÇÃO DO TEMPLATE OFICIAL — Especificações para Leitor de
      Tela, e reabertura manual de Ordem de Tabulação/Ordem de Leitura Mobile
      (Swipe) (2026-09-15, substitui o antigo modal curto de dica

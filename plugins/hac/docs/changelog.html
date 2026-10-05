@@ -3398,6 +3398,14 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-05 — Modal "e agora?" depois de gerar o handoff da tela (v0.1.0-beta.74)</h2>
+
+    <p>Ao fim de <strong>Gerar Handoff</strong> (também quando já estava atualizado), abre uma modal com duas saídas:
+    <strong>Documentar outra tela</strong> (volta para a listagem e já abre Selecionar Tela) ou <strong>Finalizar handoff</strong>
+    (abre a modal de finalização existente, que sobe a versão maior). Finalizar só habilita quando todas as telas têm o
+    checklist fechado; antes disso o botão fica desabilitado e a modal diz quantas faltam. Fechar pelo X mantém o designer na
+    tela atual. Não abre se todas as seções falharem ao inserir.</p>
+
     <h2>2026-10-02 — Refresh completo das libs (v0.1.0-beta.73)</h2>
 
     <p>Scan das 5 libs do manifest e do arquivo próprio (<code>--deep-scan --reset</code>, nada encolheu). Mudanças reais:
