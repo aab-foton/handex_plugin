@@ -49,9 +49,11 @@ const skeleton = {
   libraries: []
 };
 
+const rawBySlug = {};
 for (const libMeta of manifest.libraries) {
   const lib = readLib(libMeta.file);
   if (!lib) continue;
+  rawBySlug[libMeta.slug] = lib;
 
   const entry = {
     slug: libMeta.slug,
@@ -95,6 +97,49 @@ for (const libMeta of manifest.libraries) {
   }
 
   skeleton.libraries.push(entry);
+}
+
+// PROVISÓRIO (decisão do Augusto, 2026-10-02), até a migração de vez para as
+// libs Super: as libs do DSC importam tokens de bibliotecas-base que não estão
+// cadastradas (ex.: coleções "general" e "dsc"). Uma coleção importada por 2 ou
+// mais libs cadastradas é tratada como base compartilhada do DSC e suas
+// variáveis entram numa entrada sintética. Coleções presentes numa lib só
+// (rascunhos, plugins, testes) ficam de fora. Para desligar: false.
+const SHARED_IMPORTED_COLLECTIONS_ENABLED = true;
+const SHARED_MIN_LIBS = 2;
+if (SHARED_IMPORTED_COLLECTIONS_ENABLED) {
+  const byCollection = new Map();
+  // Só as libs principais contam (as de acessibilidade, 'standalone', não
+  // definem tokens visuais), e só variáveis visuais (COLOR/FLOAT): STRING e
+  // BOOLEAN (glossários, dicionários, textos) nunca são ligadas a cor/medida.
+  for (const libMeta of (manifest.libraries || []).filter(l => l.tier !== 'standalone')) {
+    const raw = rawBySlug[libMeta.slug];
+    const imported = raw && raw.designTokens && Array.isArray(raw.designTokens.importedVariables) ? raw.designTokens.importedVariables : [];
+    for (const v of imported) {
+      if (!v.collectionKey || !v.key || (v.resolvedType !== 'COLOR' && v.resolvedType !== 'FLOAT')) continue;
+      if (!byCollection.has(v.collectionKey)) byCollection.set(v.collectionKey, { name: v.collection, libs: new Set(), vars: new Map() });
+      const c = byCollection.get(v.collectionKey);
+      c.libs.add(libMeta.slug);
+      c.vars.set(v.key, { key: v.key, name: clean(v.name || '') });
+    }
+  }
+  const ownKeys = new Set(skeleton.libraries.flatMap(l => l.variableKeys.map(v => v.key)));
+  const shared = [...byCollection.values()].filter(c => c.libs.size >= SHARED_MIN_LIBS);
+  const sharedVars = new Map();
+  for (const c of shared) for (const v of c.vars.values()) if (!ownKeys.has(v.key)) sharedVars.set(v.key, v);
+  if (sharedVars.size > 0) {
+    skeleton.libraries.push({
+      slug: 'dsc-base-compartilhada',
+      name: 'DSC (base compartilhada)',
+      tier: 'legacy',
+      shared: true,
+      sharedCollections: shared.map(c => ({ name: c.name, libs: [...c.libs] })),
+      styleTokens: { colors: [], typography: [], effects: [] },
+      componentKeys: [],
+      variableKeys: [...sharedVars.values()]
+    });
+    console.log(`   base compartilhada: ${sharedVars.size} variáveis de ${shared.length} coleções (${shared.map(c => c.name + ' em ' + c.libs.size + ' libs').join(', ')})`);
+  }
 }
 
 const json = JSON.stringify(skeleton);

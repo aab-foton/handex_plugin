@@ -2,7 +2,7 @@
   "meta": {
     "libraryName": "Design Acessível",
     "figmaFileKey": "Wy0IhXRVZMSOOr8E609UqI",
-    "exportedAt": "2026-09-24T12:35:29.285Z",
+    "exportedAt": "2026-10-02T19:15:16.187Z",
     "generator": "fetch-design-refs.cjs",
     "warnings": [
       "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
@@ -900,13 +900,6 @@
         "value": "Em HTML utilize a tag <ol>."
       },
       {
-        "key": "6506ef617dbb027d6c7714f609a07b82d41338c8",
-        "name": "itens interativos/lista/nao ordenada/descricao",
-        "resolvedType": "STRING",
-        "collection": "[a11y]specification",
-        "value": "Construir como lista não ordenada."
-      },
-      {
         "key": "3c17610e4228bf785764215fc58d4406848f1ff9",
         "name": "estruturais/marcos/header/nota",
         "resolvedType": "STRING",
@@ -914,11 +907,11 @@
         "value": "Em HTML use a tag <header> para um cabeçalho de uma seção ou página."
       },
       {
-        "key": "6e4aed443c5b6cfe318c637887897d3cce78b139",
-        "name": "estruturais/marcos/footer/descricao",
+        "key": "6506ef617dbb027d6c7714f609a07b82d41338c8",
+        "name": "itens interativos/lista/nao ordenada/descricao",
         "resolvedType": "STRING",
         "collection": "[a11y]specification",
-        "value": "Indicar como rodapé. "
+        "value": "Construir como lista não ordenada."
       },
       {
         "key": "e1710a4ac8687bb89799d8f5e46f9f74b7a1d263",
@@ -928,11 +921,11 @@
         "value": "Em HTML utilize a tag <ul>."
       },
       {
-        "key": "0c5e36755c9ffeace223ac70479e3cc06a33c013",
-        "name": "itens interativos/lista/de definição/descricao",
+        "key": "6e4aed443c5b6cfe318c637887897d3cce78b139",
+        "name": "estruturais/marcos/footer/descricao",
         "resolvedType": "STRING",
         "collection": "[a11y]specification",
-        "value": "Construir como lista de definição."
+        "value": "Indicar como rodapé. "
       },
       {
         "key": "dc0385fb306fc9c6e13c48bc6d6f6939457545ba",
@@ -942,11 +935,11 @@
         "value": "É um elemento que oferece um local centralizado para informações importantes para serem acessadas facilmente."
       },
       {
-        "key": "2cacfd2766356cba69327f85d9b015f7d33bd399",
-        "name": "estruturais/marcos/footer/nota",
+        "key": "0c5e36755c9ffeace223ac70479e3cc06a33c013",
+        "name": "itens interativos/lista/de definição/descricao",
         "resolvedType": "STRING",
         "collection": "[a11y]specification",
-        "value": " Em HTML use a tag <footer> para agrupar informações relacionadas à parte inferior de uma página ou seção."
+        "value": "Construir como lista de definição."
       },
       {
         "key": "f4cffb7e6b130dc20dee93887059f7fc68264134",
@@ -954,6 +947,13 @@
         "resolvedType": "STRING",
         "collection": "[a11y]specification",
         "value": "Em HTML utilize a tag <dl>."
+      },
+      {
+        "key": "2cacfd2766356cba69327f85d9b015f7d33bd399",
+        "name": "estruturais/marcos/footer/nota",
+        "resolvedType": "STRING",
+        "collection": "[a11y]specification",
+        "value": " Em HTML use a tag <footer> para agrupar informações relacionadas à parte inferior de uma página ou seção."
       },
       {
         "key": "0dbec947265d6d739987db9fedca81d9d42fed2b",
@@ -982,6 +982,519 @@
         "resolvedType": "STRING",
         "collection": "[a11y]specification",
         "value": "Elementos que contenham texto num idioma diferente do idioma principal da página devem estar declarados no HTML."
+      }
+    ],
+    "importedVariables": [
+      {
+        "key": "27d8bc0a196ccf83bf101251ed729b73dcc951dd",
+        "name": "color/bg/neutral/1 (grayscale white)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "169309d448b0d2e88e21f7993256f3d8462c20ff"
+      },
+      {
+        "key": "75d60f5deb246ae066cab36d3e33bc0eb63a8586",
+        "name": "color/limao/70 (limao cx)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "169309d448b0d2e88e21f7993256f3d8462c20ff"
+      },
+      {
+        "key": "815f44cd142987db986fb8cfbed35cabfaa2fb70",
+        "name": "componentes/botão/de icone/descricao",
+        "resolvedType": "STRING",
+        "collection": "[acessibility]specification",
+        "collectionKey": "e04717133d67224009eb5971292f848539abf9c5"
+      },
+      {
+        "key": "60740b8ccc59dada6a209449ac5f6813bb0b5397",
+        "name": "componentes/botão/de icone/nota de codigo",
+        "resolvedType": "STRING",
+        "collection": "[acessibility]specification",
+        "collectionKey": "e04717133d67224009eb5971292f848539abf9c5"
+      },
+      {
+        "key": "9a62592c5012e20ff1164275677a28b224c80cc5",
+        "name": "decorativo/ignorar LT elemento/descricao",
+        "resolvedType": "STRING",
+        "collection": "[acessibility]specification",
+        "collectionKey": "e04717133d67224009eb5971292f848539abf9c5"
+      },
+      {
+        "key": "095c723d1ceb724ebea82873ef6c73deda26c2b7",
+        "name": "web/content/neutral/1",
+        "resolvedType": "COLOR",
+        "collection": "token_colors",
+        "collectionKey": "7bacf97e8567a396beefd86dddbcb0b7b15be14b"
+      },
+      {
+        "key": "5d40584ba46e2dc205f5b122c4aa57d9f5ac4760",
+        "name": "color/bg/highlight/7 (primary 130)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "d7addb36752c9cc4b8c1cd5e7bd902c7ea4eee60",
+        "name": "color/bg/highlight/5 (azul cx - primary 90)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "ba19747c6d360cc5350ea33236c9dbbcf03c9430",
+        "name": "color/bg/highlight/1 (primary 10)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "b37f4530aa36d17e907cb0f8547a30d9ca63f234",
+        "name": "color/bg/accent/4 (laranja cx - secondary 70)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "94d482bde87c5b7a71a38cb9ed9ecc0fbb837e0f",
+        "name": "color/bg/accent/1 (secondary 10)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "2cc678fd8e0fc82ec68515656543b69672417279",
+        "name": "color/bg/neutral/7 (grayscale 110)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "b5f44aac715592754554727b62047c1d000c394b",
+        "name": "color/bg/neutral/6 (grayscale 90)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "897523ab801b11f9a94172a3334de26e2b300a88",
+        "name": "color/bg/neutral/4 (cinza cx - grayscale 50)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "dc37f7d2f4ef3a28768c351e8f9996ed1347834b",
+        "name": "color/bg/neutral/3 (grayscale 30)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "bc37810396f74ed1ff240af381ff75cfef1e530b",
+        "name": "color/bg/neutral/2 (grayscale 10)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "919a23da1279730c2ddea27d7d3096a6fc85b65a",
+        "name": "color/bg/neutral/1 (grayscale white)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "97fda18ea769d40ba55c5126428e24b6f5636b9e",
+        "name": "color/bg/warning/6 (attention 70)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "3d6175b03a605056c3df41d8d1f61bb64b9dc1c8",
+        "name": "color/bg/danger/5 (negative 110)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "438917b9411aea16051edc78dc81975013ecc148",
+        "name": "color/bg/danger/6 (negative 70)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "e9c2354608cde621caf9b741955ab9d477550042",
+        "name": "color/bg/danger/1 (negative 10)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "c7c4853b85406c88b4a4938532627129f2b46f99",
+        "name": "color/content/highlight/2 (primary 110)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "efcc594aa6a398b8eebc4f49d3450f24afd86764",
+        "name": "color/content/highlight/1 (azul cx - primary 90)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "69430f1d5f1bb3f22667c9548808762b55007e52",
+        "name": "color/content/accent/2 (secondary 90)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "0bfecd90e80a2b06fe34d8cbc9cc247ef3a559ff",
+        "name": "color/content/neutral/5 (grayscale 130)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "a100422d5c9560ec01aeaa1c0adf505eec4fdd1e",
+        "name": "color/content/neutral/4 (grayscale 110)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "6bb798f51b021c38186b67a994a8a9456ccf5950",
+        "name": "color/content/neutral/3 (grayscale 90)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "ceedc74a5597b0ccb7720cdeba09b0d55d6002a4",
+        "name": "color/content/neutral/2 (grayscale 70)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "3d4e6b60d67c869cb29d64fe3fca333e93c2545b",
+        "name": "color/content/neutral/1 (grayscale white)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "d9945adfa5839162bcb3fa66fa0a7237522b3cd4",
+        "name": "color/content/danger/3 (negative 110)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "a58010a6cb41c3f5243a9af80a9448a71b83f7d6",
+        "name": "color/content/information/3 (informative 110)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "7e6bb5846f97dd2e1648778101e82f0d27f55ed2",
+        "name": "color/border/highlight/1 (azul cx - primary 90)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "d3a6cb119bdfe5c89a656e67f35444e88a303061",
+        "name": "color/border/accent/1 (laranja cx - secondary 70)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "2a58ede4cab68e804cbff1c0a85456c2927a9da3",
+        "name": "color/border/neutral/6 (grayscale 110)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "85115d4931f4f4035500f9f187d2a49d99d8d046",
+        "name": "color/border/neutral/5 (grayscale 90)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "f5cbb9fd3ac2d21045269b917e17b9f461c0d4a4",
+        "name": "color/border/neutral/4 (grayscale 70)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "521fa4f87102f90b7730f8a812d45ed49a101d8f",
+        "name": "color/border/neutral/3 (cinza cx - grayscale 50)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "eb65c55cad8d0ebb2504ed360bb90b64e24f3061",
+        "name": "color/border/neutral/1 (grayscale white)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "c0554ea64846bfc3d3be3de64520287c06bfdcb4",
+        "name": "color/border/warning/1 (attention 90)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "a5942e938a31e6242abd8174afaeda2c3f2c49be",
+        "name": "color/border/danger/1 (negative 90)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "dd4702b5b58c3fc8627c529b049d1fa1553d9719",
+        "name": "color/ceu/50",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "c89c03eb1c81c0f79fb071b92d7a53f45253183e",
+        "name": "color/ceu/30",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "274138d2cfa53f9ba8115670ea21999216e45f48",
+        "name": "color/limao/90",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "a1199a4b21718d94249ac439197e5607fc72a338",
+        "name": "color/limao/70 (limao cx)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "51949cc6c7e2e9c24cb391c633b44125b7bdb2b5",
+        "name": "color/limao/10",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "a29d963e52abb6655c5cd7e906bfe4dc81b0079a",
+        "name": "color/tangerina/50",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "91c96fe8507ff0408a94772a7be31201eea96855",
+        "name": "color/state/content/disabled/1",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "dda2c47602f30fabc99d14f4e1eccd5fadddc732",
+        "name": "color/goiaba/90",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "16e88055f2a329a0a6dfd82d893e14ca6a6750fa",
+        "name": "color/goiaba/70 (goiaba cx)",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "655aa12a80d954b5acd2766df7df9294a337cd2c",
+        "name": "color/goiaba/50",
+        "resolvedType": "COLOR",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "1f5d400c8fa25e99b664d1a1e843ae18472088ac",
+        "name": "font/family/1",
+        "resolvedType": "STRING",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "70845d12f94975c816f985b9af2e41dcd248bf61",
+        "name": "font/size/nano",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "5af5969c86e20809817aae7df5c9d6857e56956e",
+        "name": "font/size/tiny",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "d72b6af34d3e2011b7c4bede5c0e089638ad94a2",
+        "name": "font/weight/400 (regular)",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "0ec9e56987dd72d98b9e92326f77d21397b18958",
+        "name": "font/weight/600 (semibold)",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "f2712d19e1f3f8d125bba21753e76da29d30d9f8",
+        "name": "font/weight/700 (bold)",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "eebfb76d42eb8a7264e8f1be61d395028b7906e2",
+        "name": "border/width/hairline",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "86aeacfc4d60bddef2d53469cdce98427d8cda94",
+        "name": "border/width/thin",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "cc58e108667306d447e4a907306085f928d45729",
+        "name": "border/radius/nano",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "31b76e534cfc7ebe5729c5055ac581774f1f77bd",
+        "name": "border/radius/small",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "14865d2d35489c15ab21215e6e4ee5943bb13685",
+        "name": "border/radius/medium",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "2179b5faf7600617dee70cf6a2d496f2e7f33c1e",
+        "name": "border/radius/large",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "0d2cd11a103b235e99005f71ed70420357a14a91",
+        "name": "border/radius/big",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "6fc8965f4b58051d2127101a13109d29e47c677c",
+        "name": "border/radius/pill",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "9df1a62b54def1153c64b44fcbe091ddbdb665e8",
+        "name": "border/width/heavy",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "bbe33647caa20b3e9fd652eceeee46af4cd2ca80",
+        "name": "spacing/none",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "f64c6e191c30b5c2de7aa355d8c02c771bf48b39",
+        "name": "spacing/quark",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "94bef6b4cca26ddfdeacefa6844f2d7299071fdf",
+        "name": "spacing/nano",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "97553cef9b3fde9890b205c6090d6fe7bcdf653e",
+        "name": "spacing/micro",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "00d785308c21ed7ec77b32ed98543347bb0d0112",
+        "name": "spacing/tiny",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "36698d2d6b6d73c183eaa3ea4877c667f074801d",
+        "name": "spacing/smaller",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "ba4df57ff47873c4b9792f1b4f3ddfed29af2b6d",
+        "name": "spacing/medium",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
+      },
+      {
+        "key": "c0f5dc5f78c5501b058c3fc80e238fa816a78f42",
+        "name": "spacing/larger",
+        "resolvedType": "FLOAT",
+        "collection": "DSC",
+        "collectionKey": "57a95a59b17d3ae24daea1dcd024f67940ebab9c"
       }
     ]
   },

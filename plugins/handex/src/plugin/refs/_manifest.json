@@ -4,7 +4,7 @@
     "dscAndroidRemoved": "A lib 'DSC | Android' (fileKey W8GUeHypdco1I3dneN6P3H, slug dsc-android) foi cadastrada em 2026-08-26 e removida por completo no mesmo dia, a pedido explícito do usuário ('não usaremos isso') — decisão de produto: o Handex não audita/escaneia projetos Android nativo. Entrada do manifest, refs/dsc-android.json e a entrada correspondente em code-mappings.json foram todos removidos, não só ocultados. Se precisar mapear no futuro, tratar como trabalho novo (recadastrar no manifest + rodar fetch-design-refs.cjs de novo) — ver histórico de commit deste arquivo só como referência do fileKey/contagens que existiam.",
     "tierPriority": "2026-09-24: as libs 'Super' (super-gerenciador/'Super DSC | Web' e super-app/'DSC | Super App') são PRIORIDADE — cada uma já carrega seus próprios tokens de cor/tipografia/espaçamento/efeito, específicos por plataforma (web/mobile), e são a fonte válida quando uma chave existir em mais de uma lib. 'fundamentos-visuais' e 'web-angular-react' são LEGADO — ainda contam como vínculo real do DSC (o projeto pode legitimamente não ter migrado ainda), mas nunca vencem uma lib 'priority' na mesma chave. As duas libs 'design-acessivel*' são STANDALONE — vertical de acessibilidade à parte, fora dessa hierarquia migração/legado, sempre válidas por si. Campo `tier` em cada entrada abaixo: 'priority' | 'legacy' | 'standalone'. Consumido por build-skeleton.cjs (propaga pro skeleton) e audit.js (índice de chaves prioriza 'priority' sobre 'legacy'/'standalone' quando a mesma chave aparece em mais de uma lib)."
   },
-  "generatedAt": "2026-09-24T12:35:37.189Z",
+  "generatedAt": "2026-10-02T19:15:22.245Z",
   "libraries": [
     {
       "slug": "fundamentos-visuais",
@@ -41,11 +41,11 @@
       "tier": "priority",
       "file": "super-gerenciador.json",
       "counts": {
-        "variables": 400,
+        "variables": 405,
         "colors": 0,
         "typography": 36,
         "effects": 2,
-        "components": 4750
+        "components": 4772
       }
     },
     {
@@ -55,11 +55,11 @@
       "tier": "priority",
       "file": "super-app.json",
       "counts": {
-        "variables": 295,
+        "variables": 301,
         "colors": 0,
         "typography": 42,
         "effects": 3,
-        "components": 4531
+        "components": 4532
       }
     },
     {

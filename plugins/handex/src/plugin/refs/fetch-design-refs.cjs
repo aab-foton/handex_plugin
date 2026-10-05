@@ -156,8 +156,24 @@ async function fetchLibrary(libMeta) {
       return raw;
     }
 
+    // Variáveis IMPORTADAS pela lib (remote=true): a lib não é a dona, mas
+    // os componentes dela as usam. Guardadas à parte, com a coleção de
+    // origem, para o build-skeleton decidir quais entram (base compartilhada).
+    out.designTokens.importedVariables = [];
     for (const v of Object.values(variablesObj)) {
-      if (!v || !v.key || v.hiddenFromPublishing) continue;
+      if (!v || !v.key || v.remote !== true) continue;
+      const col = collectionsObj[v.variableCollectionId] || {};
+      out.designTokens.importedVariables.push({
+        key: v.key,
+        name: clean(v.name || ''),
+        resolvedType: v.resolvedType || null,
+        collection: clean(col.name || ''),
+        collectionKey: col.key || null
+      });
+    }
+
+    for (const v of Object.values(variablesObj)) {
+      if (!v || !v.key || v.hiddenFromPublishing || v.remote === true) continue;
 
       const rawValue = resolveRaw(v);
 
