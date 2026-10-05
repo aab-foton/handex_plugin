@@ -8,6 +8,13 @@
 
 Ainda não publicada na Figma Community (a versão publicada é a 6.32.1). Mudanças das fases 2 a 5 de conformidade e a detecção de personalização ainda aguardam validação final no Figma.
 
+### Alterado — "Anotações" e "Especificações" (2026-10-05)
+- **Specs Rápidas** passam a se chamar **Anotações** (card da home "Inserir Anotações") e **Specs Detalhadas** passam a se chamar **Especificações** (card "Anotar Especificações"). Anotações vêm antes de Especificações na home, no "Como usar o plugin", no onboarding, no "Limpar canvas" e na documentação. Quem já reordenou os cards da home mantém a própria ordem.
+- Uma anotação pode virar especificação ("Converter em Especificação"); a observação vira a nota.
+- Sections do canvas renomeadas para "Handex | Anotações" e "Handex | Especificações" (achadas por pluginData; camadas antigas continuam reconhecidas).
+- Cards de Anotações no canvas: um por elemento, numa coluna ao lado do frame e na altura do próprio elemento, sem Auto Layout; a modal de grade saiu. Tag no ponto de saída da linha, em cinza sólido. As linhas de um lote nunca se cruzam.
+- Ficha: fonte Roboto (fonte vigente da lib DSC) no lugar da CAIXA Std; células das tabelas com altura igual por linha.
+
 ### Corrigido — Status do frame: uma regra só, cores da marca e legenda completa
 O status do frame ("Pendente", "Conforme"…) era calculado em dois lugares com resultados diferentes: o primeiro desenho do card só conhecia 4 estados e mostrava "Não Conforme" para um desvio já justificado, que só virava o estado certo depois de uma edição. Agora há uma função única (`_getFrameStatusView`, `core.js`) para o desenho inicial e para toda atualização. O estado antes chamado "Em revisão" passa a se chamar **Desvio justificado**, para não se confundir com o marcador de item "Necessita revisão".
 As cores eram classes padrão do Tailwind (violet, green-600, red-500, amber-500) — o roxo é da marca antiga, e verde/vermelho/âmbar davam 2,2 a 3,8:1 em texto de 11px. Passam a tokens `st-*` com valores da lib "DSC | Fundamentos Visuais" (todos ≥ 4,5:1; variantes para o tema escuro): Novo Componente em azul da marca, Pendente cinza, Conforme verde, Desvio justificado âmbar, Não Conforme vermelho. O mesmo vale para os marcadores dos itens escaneados, os chips de filtro, o painel de conformidade, o card "Frames com Novos Componentes" e o resumo do handoff. Os interruptores "Vai para a Ficha" e o selo COMPLETO, que também eram roxos, passam ao azul dos demais toggles (são declarações, não status).

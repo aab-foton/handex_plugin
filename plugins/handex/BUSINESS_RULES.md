@@ -224,51 +224,85 @@ Dica de leitura: os nomes parecidos não são o mesmo conceito. "Em conformidade
 - Tipografia: **sem atalho por família de fonte** (Fase 4, 2026-09-30) — a regex `/caixa/i` que aprovava estilo de texto fora do skeleton foi removida (a fonte vigente do DSC é Roboto); conformidade só pela chave do estilo/variável no skeleton, igual às demais propriedades
 - **Espessura de borda (Border Width) sem whitelist** (Fase 4): `1px`/`0px` deixaram de ser sempre conformes (`matchedBy: "value"`); passam pela checagem normal por chave. O DSC tem tokens de espessura em 3 libs (Fundamentos Visuais `border/width/none|hairline|thin|thick|heavy|strong`; Super DSC | Web e DSC | Super App `dsc/border/width/*`), então borda sem token é tratada como qualquer outra propriedade sem token
 - **Lib legada — precisa migrar** (Fase 4, decisão 2026-09-30): componente cujo vínculo (próprio ou por ancestral) vem de lib de tier `legacy` (Fundamentos Visuais, Web Angular & React) continua **conforme**, mas recebe `legacyLib: true` e o aviso "LIB LEGADA — PRECISA MIGRAR" (card do scan, Ficha no canvas, Ficha HTML, Markdown e `_aiContext.componentesDSC[].libLegada`). Não altera `isDS` nem a agregação. Re-escanear frames existentes: bordas de 1px sem token e textos em CAIXA Std sem token podem mudar de cor. **Aviso DESLIGADO por flag em 2026-10-01** (`LEGACY_LIB_MIGRATION_HINT_ENABLED = false`, topo de `code.js`): a Super DSC | Web ainda não foi adotada nos projetos (só a Super App existe de fato), então o aviso não faz sentido agora; nenhum dos pontos acima o exibe ou exporta. Os dados (`legacyLib`, `matchedTier`, `libLegada`) seguem calculados e gravados; a exibição consulta a flag (enviada à UI no `init-plugin` como `legacyLibHintEnabled`, lida em `window._handexLegacyLibHint`), então valores salvos em scans anteriores não reaparecem. A conformidade não muda. Para religar: trocar a flag para `true` e rodar `bundle:ui` + `bundle:code`.
-- **Personalização de componente DSC** (Fase 5b, decisão 2026-09-30): instância com vínculo próprio na lib é comparada ao componente principal (variante atual, propriedades de componente aplicadas = estado do "Reset" do Figma). Diferenças em token, tamanho/espaçamento (gap, padding, largura/altura fixas, raio, borda) ou subcomponente trocado manualmente viram âmbar ("Personalizado — fora do padrão da lib") com a lista "campo: valor atual (padrão da lib: valor)". Texto, visibilidade e valores de propriedades de componente não contam. Desvio de token (vermelho) tem precedência. Se o padrão da lib não puder ser lido, a personalização fica "não avaliada" (nunca verde nem âmbar). Aparece no scan, na Ficha HTML, no Markdown e no contexto para IA; Specs Detalhadas/Rápidas ainda não.
+- **Personalização de componente DSC** (Fase 5b, decisão 2026-09-30): instância com vínculo próprio na lib é comparada ao componente principal (variante atual, propriedades de componente aplicadas = estado do "Reset" do Figma). Diferenças em token, tamanho/espaçamento (gap, padding, largura/altura fixas, raio, borda) ou subcomponente trocado manualmente viram âmbar ("Personalizado — fora do padrão da lib") com a lista "campo: valor atual (padrão da lib: valor)". Texto, visibilidade e valores de propriedades de componente não contam. Desvio de token (vermelho) tem precedência. Se o padrão da lib não puder ser lido, a personalização fica "não avaliada" (nunca verde nem âmbar). Aparece no scan, na Ficha HTML, no Markdown e no contexto para IA; Especificações/Rápidas ainda não.
 - Nome de camada **nunca** decide vínculo (a convenção `[dsc]` foi removida na Fase 3, 2026-09-30)
 - Nó dentro de uma instância/componente cuja chave está no skeleton é **parte dele** (herança por ancestral, `matchedBy: "ancestor-key"`, `matchedIn` = nome real da lib do ancestral): tratado como vinculado; frames internos a ele não entram como item; fica de fora do `componentesDSC` do `_aiContext`
 - Sem chave própria nem ancestral com chave → "componente personalizado" (âmbar), nunca vermelho
 - Chave da instância presente em `componentKeys[]` do skeleton → `isDS: true` (match exato)
 - W/H Sizing e variantes/propriedades de instância → `isDS: null` + `matchedBy: "not-evaluated"` (não checados contra a lib até a Fase 5): mostram o valor com traço neutro, sem selo verde, e não entram na agregação de conformidade do componente/frame
 
+#### Casamento spec ↔ elemento escaneado (Fase A do card de elemento único, 2026-10-02)
+
+Base para a Ficha por tela com um card por elemento (`docs/plano-card-de-elemento-unico.md`). Esta fase só adiciona dados e a função de casamento; a Ficha não muda.
+
+- **`nodeIds`:** cada item do scan guarda `nodeIds: string[]` com os ids de TODOS os nós que a dedup agrupou sob o mesmo `_dedupKey` (o primeiro continua em `nodeId`), sem repetição, limite de 50. Preservado no re-scan junto de `isMarkedCustom`/`uiDepth`/`customDecided` (o item anterior é achado por `nodeId` ou por qualquer id de `nodeIds`). Item antigo sem `nodeIds` equivale a `[nodeId]`; só ganha a lista ao reescanear o frame.
+- **Mensagem `resolve-spec-owners`** (UI → backend): `{ frameId?, frameRootId, specs: [{ id, targetNodeId }], items: [{ key, nodeId, nodeIds }] }`. Resposta `spec-owners-resolved`: `{ frameId, results: [{ specId, itemKey|null, via: 'exact'|'ancestor'|'none' }] }`.
+- **Regra:** (a) `targetNodeId` em `nodeIds` de um item → `exact`; (b) senão sobe por `parent` até o primeiro nó cujo id esteja em `nodeIds` de algum item (o item MAIS PRÓXIMO) → `ancestor`; a subida para em `frameRootId` ou na página; (c) sem casamento → `none`.
+- **Em dúvida, não anexar:** falso positivo é pior que ausência. Nenhuma spec some: spec com `none` (ou nó removido) continua existindo sozinha, sem dono.
+- **Custo:** sem `findAll`; só `getNodeByIdAsync` + `parent`, memoizado por nó visitado, em lotes de 12, teto de 400 specs por chamada. Falha em uma spec vira `none` e nunca derruba a resposta.
+- `request-spec-properties` com `targetNodeId` funciona com o `nodeId` de um item (fluxo existente, inalterado).
+- **Pré-criações automáticas (revisão de 2026-10-02):** o scan não cria botões de spec no card do item. Itens fora do padrão (`isDS === false`), em revisão (`'warning'`), personalizados (`isCustomComponent`) ou com personalização (`customizations`) que ainda não têm spec casada aparecem em **Anotar Especificações > "Vindos do scan"**, derivados a cada render (nada novo é persistido, exceto `specDismissed`). O designer **Especifica** (abre o fluxo normal da Especificação com o elemento fixado) ou **Dispensa** ("Não precisa de spec", reversível). **Nada entra na Ficha, no Markdown, na Ficha HTML nem nos contadores sem o designer concluir a spec**: o julgamento do que merece spec é dele.
+
 ---
 
-### 2.4 Anotar Specs Detalhadas e Anotar Specs Rápidas
+### 2.4 Inserir Anotações e Anotar Especificações
 
-O Handex tem **duas ferramentas de anotação de spec** na home, com propósitos diferentes. Nomenclatura (definida em 2026-09-30): **"Anotar Specs Detalhadas"** (antes só "Anotar Specs", ferramenta tradicional) e **"Anotar Specs Rápidas"** (antes "Spec Express", módulo novo). O termo "Spec Express" não é mais usado em texto de produto.
+O Handex tem **duas ferramentas de anotação** na home, com propósitos diferentes. Nomenclatura vigente (decisão do Augusto em 2026-10-05): **"Anotações"** (card "Inserir Anotações"; antes "Specs Rápidas", e antes disso "Spec Express") e **"Especificações"** (card "Anotar Especificações"; antes "Specs Detalhadas"/"Anotar Specs"). **Anotações vêm sempre antes de Especificações** na home, no "Como usar o plugin", no onboarding e na documentação: é o passo mais leve, e **uma anotação pode virar especificação** (2.4.1). "Anotações" do Handex não é o recurso nativo de Annotations do Dev Mode do Figma.
 
 **Princípio (decisão de produto, 2026-09-30):** o designer precisa conseguir distinguir quando usar cada uma — por isso o critério aparece dentro do plugin (cards da home, onboarding, "Como usar o plugin" e empty-state).
-- **Anotar Specs Rápidas** = o **essencial** para o dev que **não tem acesso ao DevMode do Figma** olhar e já conseguir executar o trabalho: valores reais do elemento (cor, espaçamento, tipografia, dimensões, raio, efeitos, componente), com o token e a biblioteca quando existem. Sem categoria, nota nem exceção; não entra na Ficha; é consulta pontual.
-- **Anotar Specs Detalhadas** = o **aprofundamento**. Superconjunto da Rápida: traz os mesmos valores (token + valor) e mais categoria, nota, link, cenários de exceção e posicionamento escolhido pelo designer, e entra na Ficha de Handoff como documentação formal.
+- **Anotações** = o **essencial** para o dev que **não tem acesso ao DevMode do Figma** olhar e já conseguir executar o trabalho: valores reais do elemento (cor, espaçamento, tipografia, dimensões, raio, efeitos, componente), com o token e a biblioteca quando existem, mais uma observação opcional por elemento. Sem categoria nem exceção; não entra na Ficha; é consulta pontual.
+- **Especificações** = o **aprofundamento**. Superconjunto da anotação: traz os mesmos valores (token + valor) e mais categoria, nota, link, cenários de exceção e posicionamento escolhido pelo designer, e entra na Ficha de Handoff como documentação formal.
 
-**Posicionamento dos cards de Specs Rápidas (2026-10-01):** os cards de um mesmo frame formam uma única coluna ao lado dele, na ordem de inserção — cada inserção (avulsa ou em lote) entra logo abaixo do último card **daquele frame**; cards de outros frames não interferem.
+**Posicionamento dos cards de Anotações (revisto em 2026-10-05):** cada card nasce numa coluna ao lado do frame, na altura do próprio elemento; colisões empurram o card de baixo, considerando também lotes anteriores do mesmo frame (detalhes em 2.4.1).
 
 **Qual usar? Critério prático:**
 
 | Pergunta | Se a resposta é SIM |
 |---|---|
-| A informação precisa chegar ao dev dentro da Ficha de Handoff / Markdown / JSON exportado? | **Specs Detalhadas** |
-| Existe uma decisão do designer a registrar (comportamento, regra de negócio, dado da API, exceção)? | **Specs Detalhadas** |
-| O dev só precisa consultar valores de propriedade de um elemento (cor, tamanho, espaçamento, tipografia) e não tem acesso ao DevMode do Figma? | **Specs Rápidas** |
-| É consulta pontual, de rascunho, sem compromisso de virar documentação formal? | **Specs Rápidas** |
+| A informação precisa chegar ao dev dentro da Ficha de Handoff / Markdown / JSON exportado? | **Especificações** |
+| Existe uma decisão do designer a registrar (comportamento, regra de negócio, dado da API, exceção)? | **Especificações** |
+| O dev só precisa consultar valores de propriedade de um elemento (cor, tamanho, espaçamento, tipografia) e não tem acesso ao DevMode do Figma? | **Anotações** |
+| É consulta pontual, de rascunho, sem compromisso de virar documentação formal? | **Anotações** |
 
-Regra de bolso: **Rápida** responde "quais são os valores deste elemento?"; **Detalhada** responde "o que o dev precisa saber e implementar sobre este elemento?". Um elemento que começou como consulta rápida e passou a merecer documentação formal pode ser convertido (ver 2.4.2).
+Regra de bolso: **Anotação** responde "quais são os valores deste elemento?"; **Especificação** responde "o que o dev precisa saber e implementar sobre este elemento?". Um elemento que começou como anotação e passou a merecer documentação formal pode ser convertido em especificação (ver 2.4.1).
 
 **Comparativo:**
 
-| Aspecto | Anotar Specs Detalhadas | Anotar Specs Rápidas |
+| Aspecto | Inserir Anotações | Anotar Especificações |
 |---|---|---|
-| Natureza | Spec formal e aprofundada, artefato entregue ao dev | Essencial para o dev sem DevMode: consulta pontual de valores, rascunho |
-| Persistência | `handoffData` — sobrevive a tudo, entra em export/import JSON | Lista da UI efêmera (reseta ao fechar o plugin); propriedades gravadas no próprio card do canvas (pluginData), recuperadas ao reabrir |
-| Conteúdo | Categoria (Informação Extra / Comportamento / Regra de Negócio / Dados da API), nota livre, link opcional, propriedades (token + valor, como na Rápida), cenários de exceção | Valores reais do elemento, com o token e a biblioteca de origem quando existem — sem categoria, nota nem exceção |
-| Conformidade DSC | Não avaliada pela spec em si (vive no scan de Escanear Tokens) | Não avaliada — achados brutos, sem veredito de conformidade |
-| Captura | Fluxo multi-etapa: dados básicos → propriedades → posicionamento manual no canvas (fantasma arrastável) → exceção | Em lote por Shift+clique; o plugin colapsa numa barrinha durante a seleção |
-| Visual no canvas | Azul de marca, GROUP + contour, letra/tag sequencial por frame | Cards num grid, ligados ao elemento por linha guia cinza semi-transparente |
-| Ficha de Handoff e Markdown | **Entra** | **Não entra** (decisão de produto) — nem nos contadores do handoff formal |
-| `_aiContext` (contexto para IA externa) | Entra como spec formal | Entra num bloco separado (`especificacoesRapidas`), marcado como achados brutos sem conformidade DSC avaliada |
-| Conversão | — | Botão "Converter em Spec Detalhada" no item da lista: o card rápido é substituído pela spec formal |
+| Natureza | Essencial para o dev sem DevMode: consulta pontual de valores, rascunho | Spec formal e aprofundada, artefato entregue ao dev |
+| Persistência | Lista da UI efêmera (reseta ao fechar o plugin); propriedades gravadas no próprio card do canvas (pluginData), recuperadas ao reabrir | `handoffData` — sobrevive a tudo, entra em export/import JSON |
+| Conteúdo | Valores reais do elemento, com o token e a biblioteca de origem quando existem — sem categoria, nota nem exceção | Categoria (Informação Extra / Comportamento / Regra de Negócio / Dados da API), nota livre, link opcional, propriedades (token + valor, como na Rápida), cenários de exceção |
+| Conformidade DSC | Não avaliada — achados brutos, sem veredito de conformidade | Não avaliada pela spec em si (vive no scan de Escanear Tokens) |
+| Captura | Em lote por Shift+clique; o plugin colapsa numa barrinha durante a seleção | Fluxo multi-etapa: dados básicos → propriedades → posicionamento manual no canvas (fantasma arrastável) → exceção |
+| Visual no canvas | Cards numa coluna ao lado do frame, cada um na altura do seu elemento, ligados por linha guia cinza semi-transparente | Azul de marca, GROUP + contour, letra/tag sequencial por frame |
+| Ficha de Handoff e Markdown | **Não entra** (decisão de produto) — nem nos contadores do handoff formal | **Entra** |
+| `_aiContext` (contexto para IA externa) | Entra num bloco separado (`especificacoesRapidas`), marcado como achados brutos sem conformidade DSC avaliada | Entra como spec formal |
+| Conversão | Botão "Converter em Especificação" no item da lista: o card da anotação é substituído pela especificação formal, e a observação vira a nota | — |
 
-#### 2.4.1 Anotar Specs Detalhadas — estrutura e regras
+#### 2.4.1 Inserir Anotações — regras
+
+Módulo isolado (`modules/quick-spec.js`, view `view-quick-spec`); nunca chama nem é chamado pela ferramenta de Especificações nem pelo scan de tokens.
+
+**Fluxo:** Escanear → modal de filtro (categorias de propriedade a buscar, lista fixa) → plugin colapsa numa barra com contador + Cancelar/Concluir → designer marca elementos no canvas com **Shift+clique** (só o que foi marcado com Shift entra, evitando capturar cliques de passagem) → Concluir → propriedades são lidas e viram uma lista plana de accordions, 1 por elemento, com tag sequencial (A, B, C…) por sessão.
+
+**Regras:**
+- Lê **só o elemento marcado** com Shift+clique — nunca a subárvore (filhos e descendentes não entram; para consultar um filho, marque-o também).
+- Sem conformidade DSC avaliada, sem categoria, sem nota, sem exceção. O que aparece são valores brutos (e o token/biblioteca de origem quando existir) — não há veredito "conforme/fora do padrão".
+- A lista da UI é efêmera: não vai para `handoffData`, `localStorage` nem para export/import JSON. Cards já inseridos no canvas guardam as propriedades em pluginData e são recuperados ao reabrir o plugin/entrar na tela (`quick-spec-list-canvas-cards`). Cards legados (criados antes dessa gravação) voltam sem propriedades ("não disponível").
+- "Inserir no canvas" cria 1 card por elemento numa coluna ao lado do frame, cada card na altura do seu elemento (centro do card no centro do elemento, para a linha sair reta); se dois colidem, o de baixo desce o necessário, contando também cards de lotes anteriores do mesmo frame. Sem Auto Layout: o lote fica num frame só para agrupar e cada card pode ser movido livremente; se uma observação faz um card crescer, os de baixo descem e a linha deles é refeita. A modal de grade (colunas × linhas) foi removida em 2026-10-05. As linhas do lote nunca se cruzam: ordenadas pela altura do elemento, as que precisam descer dobram em faixas verticais escalonadas (a do elemento mais alto dobra mais perto dos cards, cada uma abaixo um passo mais à esquerda). O card é ligado ao elemento de origem por linha guia cinza semi-transparente. A linha nasce na borda do contorno tracejado do elemento, e a tag (A, B, C…) fica nesse ponto de saída, em círculo cinza sólido (`#64747a`, lib) com letra branca, no lugar do antigo dot de início (2026-10-05).
+- "Ocultar" alterna a visibilidade na lista e, se o card já está no canvas, também do card e da linha guia.
+- Excluir individualmente fecha o buraco na sequência de tags, só entre itens ainda sem card no canvas; tags de itens já inseridos nunca são renumeradas.
+- **Não entra** na Ficha de Handoff, no Markdown exportado, nem nos contadores da home/Resumo. Não tem badge de check no card da home.
+- Entra no `_aiContext` num bloco próprio (`especificacoesRapidas`, só itens não ocultos), rotulado como achados brutos sem conformidade DSC avaliada.
+- "Converter em Especificação" abre o fluxo normal de Especificações para o elemento; ao concluir, o card da anotação é substituído pela spec formal.
+- **Observação (2026-10-01):** cada elemento pode ter uma observação livre (texto curto, até 280 caracteres). Aparece no fim do card da anotação no canvas (bloco "Observação", cinza neutro), é gravada no card (`handexQuickSpecNote`), recuperada ao reabrir o plugin e pode ser editada depois de inserida (`quick-spec-update-note`, sem recriar o card). Não vai para a Ficha enquanto a spec for Rápida.
+- **Conversão (2026-10-01):** a especificação continua relendo as propriedades do elemento (sem duplicar dado); a **nota da especificação passa a ser a observação da Rápida** (antes era preenchida com as propriedades). O alvo da leitura é o elemento fixado na conversão (`targetNodeId` em `request-spec-properties`), não a seleção atual do canvas; sem alvo válido, cai na seleção.
+- "Limpar Dados"/limpar canvas tem opção própria para os cards de Anotações.
+
+---
+
+#### 2.4.2 Anotar Especificações — estrutura e regras
 
 **Estrutura de uma spec:**
 ```js
@@ -296,6 +330,7 @@ Regra de bolso: **Rápida** responde "quais são os valores deste elemento?"; **
 - Categoria: pode ser "Sem categoria"
 - Link: opcional; validado como URL ao blur
 - Propriedades: seleção múltipla via modal `spec-properties-modal`
+- Linha guia: o lado de saída é escolhido pelas caixas do elemento e do card, não só pelos centros. Vale o lado em que o card está totalmente separado do elemento; em diagonal, o de maior folga. Um lado pedido (ex.: "direita" padrão) só é mantido se o card estiver mesmo daquele lado, senão a linha cruzaria o card (2026-10-05).
 
 **Categorias padrão de spec:**
 
@@ -322,28 +357,6 @@ Regra de bolso: **Rápida** responde "quais são os valores deste elemento?"; **
 - Specs são agrupadas por letra (A, B, C…) com conectores coloridos
 - Nome do grupo editável por letra
 - Visibilidade togglável por spec e por grupo
-
-#### 2.4.2 Anotar Specs Rápidas — regras
-
-Módulo isolado (`modules/quick-spec.js`, view `view-quick-spec`); nunca chama nem é chamado pela ferramenta de Specs Detalhadas nem pelo scan de tokens.
-
-**Fluxo:** Escanear → modal de filtro (categorias de propriedade a buscar, lista fixa) → plugin colapsa numa barra com contador + Cancelar/Concluir → designer marca elementos no canvas com **Shift+clique** (só o que foi marcado com Shift entra, evitando capturar cliques de passagem) → Concluir → propriedades são lidas e viram uma lista plana de accordions, 1 por elemento, com tag sequencial (A, B, C…) por sessão.
-
-**Regras:**
-- Lê **só o elemento marcado** com Shift+clique — nunca a subárvore (filhos e descendentes não entram; para consultar um filho, marque-o também).
-- Sem conformidade DSC avaliada, sem categoria, sem nota, sem exceção. O que aparece são valores brutos (e o token/biblioteca de origem quando existir) — não há veredito "conforme/fora do padrão".
-- A lista da UI é efêmera: não vai para `handoffData`, `localStorage` nem para export/import JSON. Cards já inseridos no canvas guardam as propriedades em pluginData e são recuperados ao reabrir o plugin/entrar na tela (`quick-spec-list-canvas-cards`). Cards legados (criados antes dessa gravação) voltam sem propriedades ("não disponível").
-- "Inserir no canvas" cria 1 card por elemento num grid (layout escolhido em modal), ligado ao elemento de origem por linha guia cinza semi-transparente.
-- "Ocultar" alterna a visibilidade na lista e, se o card já está no canvas, também do card e da linha guia.
-- Excluir individualmente fecha o buraco na sequência de tags, só entre itens ainda sem card no canvas; tags de itens já inseridos nunca são renumeradas.
-- **Não entra** na Ficha de Handoff, no Markdown exportado, nem nos contadores da home/Resumo. Não tem badge de check no card da home.
-- Entra no `_aiContext` num bloco próprio (`especificacoesRapidas`, só itens não ocultos), rotulado como achados brutos sem conformidade DSC avaliada.
-- "Converter em Spec Detalhada" abre o fluxo normal de Specs Detalhadas para o elemento; ao concluir, o card rápido é substituído pela spec formal.
-- **Observação (2026-10-01):** cada elemento pode ter uma observação livre (texto curto, até 280 caracteres). Aparece no fim do card rápido no canvas (bloco "Observação", cinza neutro), é gravada no card (`handexQuickSpecNote`), recuperada ao reabrir o plugin e pode ser editada depois de inserida (`quick-spec-update-note`, sem recriar o card). Não vai para a Ficha enquanto a spec for Rápida.
-- **Conversão (2026-10-01):** a Detalhada continua relendo as propriedades do elemento (sem duplicar dado); a **nota da Detalhada passa a ser a observação da Rápida** (antes era preenchida com as propriedades). O alvo da leitura é o elemento fixado na conversão (`targetNodeId` em `request-spec-properties`), não a seleção atual do canvas; sem alvo válido, cai na seleção.
-- "Limpar Dados"/limpar canvas tem opção própria para os cards de Specs Rápidas.
-
----
 
 ### 2.5 Anotar Medidas
 
@@ -480,7 +493,7 @@ Todos os nós gerados pelo plugin são criados com `node.locked = true`:
 4. **Layout** (direção, distribuição, alinhamento, espaço entre itens/linhas, espaço interno agrupado "16px nos 4 lados", dimensionamento Fixa/Ajusta/Preenche, limites mín./máx., posição absoluta, overflow, rotação), **Aparência** (todos os fills/strokes incl. gradiente/imagem, espessura/posição/estilo da borda, raio por canto, sombras completas, desfoque, opacidade, mistura), **Texto** (estilo/fonte/tamanho/altura de linha/letras/alinhamento/decoração/caixa/truncamento/cor). Onde há token: `token · valor`.
 5. **Estados e variantes** (só COMPONENT/COMPONENT_SET): propriedades, opções e padrão; **Interações** de protótipo em linguagem simples (gatilho → ação/destino/transição); **Composição interna** (mesmo formato por filho; instância DSC continua "reutilizar, não construir"; filhos ocultos por propriedade booleana aparecem com a propriedade que os controla); **Configuração do componente** no fim, em linha única, só o que está ligado ou fora do padrão (nunca ids de nó: slots de troca mostram o NOME do componente). **Divisor entre grupos:** cada grupo tem uma linha de 1px sob o título e termina com uma linha divisória de 1px (retângulos "Divisor/Título" e "Divisor/Grupo", não stroke por lado — este não renderizou no Figma); o grupo "Diferenças" (âmbar, borda própria) e o último grupo do card ficam sem divisor.
 - Texto de exemplo (`characters`) **não** entra: é conteúdo, não especificação.
-- Decisão de produto: `_qsExtractNodeProperties` (Spec Rápida) não foi alterada — o card tem leitor próprio (`_hdUi*`, `code.js`).
+- Decisão de produto: `_qsExtractNodeProperties` (Anotação) não foi alterada — o card tem leitor próprio (`_hdUi*`, `code.js`).
 
 **Card User Interface — dois níveis, Essencial × Completo (2026-10-01):** o designer escolhe, por item marcado, quanto detalhe a Ficha leva. Campo opcional `uiDepth: 'essential' | 'full'` no item do scan (`frame.specs[cat][i].uiDepth` e `step2.specs`), no mesmo caminho de `isMarkedCustom`; ausente ou desconhecido = Essencial (Fichas antigas, sem o campo, saem Essenciais). Sem bump de schema. O re-scan preserva o valor por `nodeId` (mesma herança de `isMarkedCustom`, `code.js`). O cabeçalho do card mostra `<Categoria> · Personalizado, construir · Essencial|Completo`.
 
@@ -492,11 +505,21 @@ Todos os nós gerados pelo plugin são criados com `node.locked = true`:
 - **Rótulos (copy aprovada):** Alinhamento vertical/horizontal conforme a direção do auto layout (Topo/Centro/Base ou Esquerda/Centro/Direita), Distribuição horizontal/vertical ("Distribuídos, ocupando toda a largura/altura" para espaço entre itens), "Largura e altura", "Conteúdo que passa da borda", "Largura/altura mín. e máx.", "Posicionamento" (fora do fluxo do auto layout), "Elemento não encontrado no canvas; dados do último scan" e "Não foi possível comparar este item com a biblioteca."
 - **Card ≠ export:** o nível vale só para o card da Ficha no canvas. Markdown, Ficha HTML e `_aiContext` continuam sempre completos.
 
-**Leitor único de propriedades (`_readNodeSpec`) e vocabulário do plugin (2026-10-01):** `code.js` tem uma só leitura das propriedades de um nó, `_readNodeSpec(node, { level: 'quick'|'essential'|'full', include: { layout, appearance, text, componentProps }, propKeys })`, que devolve linhas neutras `[{ group, cat, key, label, value, raw, token, tokenKey, libName, state }]` (sem texto pronto de apresentação). Chamadores: Spec Detalhada (`request-spec-properties`, formato `{ key, label, value, token }`), Spec Rápida (`_qsExtractNodeProperties`, formato `{ label, value, tokenName, libName }`, nível `quick`) e os grupos Layout/Aparência/Texto/Configuração do card User Interface (`_hdUi*Rows`, que só formatam as linhas). O **scan** (`extractNodeProperties`) continua com leitura própria porque cada linha precisa de `audit()` por chave; ele compartilha os helpers de leitura (`_specStrokeWidths`, `_specComponentName`). A composição interna (filhos) segue em `_hdCollectUiComposition`, que chama o leitor por filho. Toda linha tem `key` estável, independente do rótulo (no scan, o campo equivalente é `propId`, porque `key` do scan já é a chave do token).
+**Card de elemento no padrão do handoff do DSC (2026-10-02, Fase B; flag `FICHA_DSC_STYLE_ENABLED` no topo de `code.js`):** o card de cada item `isMarkedCustom` da Ficha (o que monta a Documentação Visual / seção "User Interface") passa a seguir a estrutura do handoff de componente do DSC, medida em `docs/referencia-handoff-dsc.md`. **Atualização 2026-10-05 (pedido do Augusto: "padrão CAIXA na Ficha toda"):** a linguagem visual do handoff do DSC passa a valer para a **Ficha inteira** no canvas; conteúdo, ordem das seções, coluna única vertical e largura em cascata (1080 → 952 → 904 → 872, altura Hug) **não mudam**. Convertidas: header, Informações Básicas (status como chip), Equipe, Briefing, Regras de Negócio e HUs e Docs e Anexos (tabelas: cabeçalho `#ebf1f2`, células brancas, borda `#d0e0e3`, raio 8), Frames Escaneados (card + tabela de elementos), User Interface, Documentação Visual (painel `#ebf1f2` com borda `#9eb2b8`, tag "Preview", imagens com borda; card de spec com propriedades em chips por tipo e exceções como alertas por tipo; medidas em tabela; recortes), Specs/Medidas avulsas, Fluxos de Tela (tabela) e os blocos legados Design Specs/Auditoria (fonte, títulos, borda). Tipografia: toda a Ficha usa a fonte resolvida uma vez por geração (`_hdFicheFonts`: CAIXA Std → Roboto → Inter; código/tokens Fira Code → Roboto Mono), título de seção 22 semibold `#005ca9`, textos `#22292e`/`#404b52`, tags/chips com raio 4. Fundo externo (`mainContainer`) segue `#004d8d`; a folha (`fichaTecnica`) ganhou borda `#404b52` 2px e raio 16 como na referência. As **cores das categorias de spec** seguem como documentadas (exceção aprovada). Fontes só valem durante a geração da Ficha (`_hdFichaGen`): cards de Anotação e demais desenhos do canvas continuam em Inter. Com a flag `FICHA_DSC_STYLE_ENABLED` em `false` volta o visual anterior da Ficha inteira (Inter, cards cinza, pílulas, card `_hdBuildUiItemCard`). Também recai no card anterior, por item, se a montagem do novo falhar. (Texto original de 2026-10-02, escopo restrito ao card, superado nesta data.)
+- **Estrutura (ordem fixa):** (1) Título: nome do elemento, selo da categoria de cada spec casada (cor da categoria mantida) e "Baseado em <componente> · <lib>"; (2) Descrição de Funcionalidade: a nota da spec casada, omitida quando não há spec; (3) Propriedades: tabela Propriedade \| Valor (valores possíveis, padrão em negrito) \| Descrição ("—" quando o Figma não tem descrição), só para COMPONENT/COMPONENT_SET/INSTANCE com propriedades; (4) Anatomia: painel "Preview" com a imagem do elemento e marcadores numerados (círculo + conector) sobre as partes (a própria base + até 7 filhos diretos visíveis; excedentes viram "N partes não exibidas"), seguido de uma coluna por parte com linhas `propriedade:` + chip; (5) Espaçamento e Alinhamento; (6) Variações e Estados; (7) Notas.
+- **Níveis:** Essencial = Título, Descrição, Propriedades, Anatomia e Notas. Completo (`uiDepth: 'full'`) soma Espaçamento e Alinhamento (gap/padding desenhados sobre a imagem, fundo `#a0d2fc`, e rótulo de alinhamento) e Variações e Estados (só quando o elemento é COMPONENT_SET, variante de um conjunto ou instância cujo conjunto seja legível; cada variante numerada, só o que muda em relação à variante padrão, até 6 por card com a linha "N variantes não exibidas"; falha de leitura omite a seção sem erro). No Essencial, gap e padding da base aparecem na própria Anatomia; no Completo ficam na seção de Espaçamento.
+- **Chips por tipo:** cor (fundo `#e5f2fc`, borda `#005ca9`, amostra de 16px); número/medida (`#fff3d6`, `#d19400`); componente da lib (`#eac9de`, borda `#93537d`, selo "DSC Library" `#753c61`); valor bruto `NNpx | N.NNrem` (`#ebf1f2`, `#9eb2b8`, rem com base 16 e até 3 casas). Token exibido como variável CSS (`dsc/color/bg/highlight/4` vira `--dsc-color-bg-highlight-4`: `/` e espaços em `-`, minúsculas, prefixo `--`); o nome Figma original fica no nome da camada do chip e no pluginData `handexTokenName`.
+- **Notas:** exceções da spec casada como alertas (fundo branco, borda de 2px com lateral esquerda mais grossa, raio 4, ícone info), com a cor por tipo já aprovada (Erro `#b22c2c`, Alerta `#977203`, Sucesso `#127527`, Confirmação `#005ca9`, informativo `#038299`); link da spec e "Diferenças em relação à lib" entram como alertas informativos.
+- **Componente do DSC sem alteração** (instância com vínculo com a lib e personalização avaliada sem diferenças): o card traz só a nota da spec, as exceções e uma linha "Componente do DSC — reutilizar" (chip de componente), sem Anatomia/Variações.
+- **Casamento spec ↔ elemento (backend):** `_hdMatchSpecsToItems`, mesmo critério de `resolve-spec-owners`: `targetNodeId` igual a `nodeId`/`nodeIds` do item; senão sobe por `parent` até o primeiro item escaneado ou o frame (specs avulsas só casam por igualdade); em dúvida, não anexa; várias specs no mesmo item saem ordenadas por letra.
+- **Fontes:** Roboto (400/600/700, fonte vigente da lib DSC | Fundamentos Visuais; decisão do Augusto em 2026-10-05, a CAIXA Std da referência dependia de a fonte estar disponível em cada máquina) e Fira Code (regular/medium) para rótulos de propriedade e chips, resolvidas uma vez por geração (`_hdFicheFonts`, `figma.listAvailableFontsAsync` + `loadFontAsync`). Fallback silencioso e obrigatório: Inter / Roboto Mono. Escala reduzida da folha de 2400px para os 856px úteis da seção (nome 24, título de seção 22, descrição 14, parte 13, tabela 13, chips 12, marcador 18), mantendo raios (chip 4, painel/tabela 8, card 16) e cores da referência.
+- **Tetos e segurança:** sem `findAll`; leituras por `_hdUiSafe` (falha omite a parte); 12 imagens por geração (cada variante conta); a mesma imagem serve a Anatomia e ao Espaçamento. Pendência de decisão: enquanto a Fase C não existe, a Documentação Visual por frame continua exibindo o card de detalhe da spec, então nota e exceções de uma spec casada aparecem também no card do elemento.
+
+**Leitor único de propriedades (`_readNodeSpec`) e vocabulário do plugin (2026-10-01):** `code.js` tem uma só leitura das propriedades de um nó, `_readNodeSpec(node, { level: 'quick'|'essential'|'full', include: { layout, appearance, text, componentProps }, propKeys })`, que devolve linhas neutras `[{ group, cat, key, label, value, raw, token, tokenKey, libName, state }]` (sem texto pronto de apresentação). Chamadores: Especificação (`request-spec-properties`, formato `{ key, label, value, token }`), Anotação (`_qsExtractNodeProperties`, formato `{ label, value, tokenName, libName }`, nível `quick`) e os grupos Layout/Aparência/Texto/Configuração do card User Interface (`_hdUi*Rows`, que só formatam as linhas). O **scan** (`extractNodeProperties`) continua com leitura própria porque cada linha precisa de `audit()` por chave; ele compartilha os helpers de leitura (`_specStrokeWidths`, `_specComponentName`). A composição interna (filhos) segue em `_hdCollectUiComposition`, que chama o leitor por filho. Toda linha tem `key` estável, independente do rótulo (no scan, o campo equivalente é `propId`, porque `key` do scan já é a chave do token).
 
 - **Vocabulário (`HD_GLOSSARY`, espelhado em `HX_GLOSSARY`, `modules/core.js`):** comunicação em português (títulos de grupo, frases, avisos); nomenclatura técnica do Figma/CSS em inglês, como no Dev Mode, sem traduzir: `Auto layout` (Horizontal/Vertical/Wrap), `Gap`, `Row gap`, `Padding` (`Top/Right/Bottom/Left` ou `16px (all sides)`), `Width`/`Height` (`Fixed 360px`/`Hug contents`/`Fill container`), `Min/Max width/height`, `Primary axis`/`Counter axis` (`Min`/`Center`/`Max`/`Space between`/`Baseline`), `Fill`, `Border color`/`Border width`/`Border position` (`Inside`/`Outside`/`Center`)/`Dash`, `Radius`, efeitos `Drop shadow`/`Inner shadow`/`Layer blur`/`Background blur` (`X`/`Y`/`Blur`/`Spread`/`Color`), `Opacity`, `Blend mode`, `Clip content`, `Rotation`, `Position` (`Absolute (ignores auto layout)`), tipografia (`Text style`/`Font family`/`Font style`/`Font size`/`Line height`/`Letter spacing`/`Text align`/`Text decoration`/`Text case`/`Truncate text`/`Max lines`), componente (`Component`/`Variant`/`Boolean`/`Instance swap`/`Text`/`Component properties`) e interações com os nomes de gatilho/ação do Figma (`On click`, `While hovering`, `Navigate to`, `Open overlay`, `Smart animate` etc.). Títulos de grupo do card (PT): Resumo, Diferenças em relação à lib, Layout, Aparência, Texto, Estados e variantes, Interações, Composição interna, Configuração do componente. **Substitui** a "copy aprovada" de rótulos em português do card (Distribuição horizontal, Espaço interno, Raio dos cantos etc.) descrita acima. Rótulos antigos persistidos (`item.properties[].label`, `createdSpecs[].properties[].label`, `handexQuickSpecProperties`) não são migrados: a exibição os traduz por mapa de aliases (`HX_LABEL_ALIASES` no frontend, `HD_GLOSSARY.aliases` nas legendas do canvas).
 - **Borda por lado (bug corrigido):** a Plugin API só vincula variável em `strokeWeight` (todos os lados) e em `strokeTopWeight`/`strokeRightWeight`/`strokeBottomWeight`/`strokeLeftWeight` (`VariableBindableNodeField`). Com borda configurada por lado, o token vive em `boundVariables.strokeTopWeight` etc.; o scan lia só `strokeWeight` e reportava "1px sem token" (ex: instância de `[dsc] Tag`, token `border/width/hairline`), derrubando o componente para "Necessita revisão". Regra atual (`_specStrokeWidths`): lê os 4 lados; mesmo valor e mesmo token nos 4 = uma linha ("Border width"); senão uma linha por lado ("Border width Top/Right/Bottom/Left"), cada uma auditada por chave. Lado com valor 0 e token (`border/width/none`) é mantido (conformidade válida); lado 0 sem token é omitido.
-- **Valor 0 com token vinculado (gap/padding):** o scan registra e audita (`spacing/none` conta como conforme) em vez de omitir; valor 0 sem token continua omitido. Cards de construção (Ficha, Spec Rápida, Detalhada) ocultam essas linhas (`state: 'zero-token'`).
+- **Valor 0 com token vinculado (gap/padding):** o scan registra e audita (`spacing/none` conta como conforme) em vez de omitir; valor 0 sem token continua omitido. Cards de construção (Ficha, Anotação, Detalhada) ocultam essas linhas (`state: 'zero-token'`).
 - **Regra do chip "Necessita revisão" em componente/ícone (`addElement`, `code.js`):** só existe quando o item TEM vínculo com o DSC (componentKey no skeleton, próprio ou por ancestral). Entre as propriedades **avaliadas** (`isDS` true/"warning"/false; sizing e variantes são `null` e ficam fora): todas conformes = **Em conformidade**; pelo menos uma conforme e alguma não = **Necessita revisão** (âmbar); nenhuma conforme = **Fora do padrão**. Instância com personalização detectada (Fase 5b) e demais propriedades conformes também vira "Necessita revisão". Item sem vínculo é "Componente personalizado" (âmbar), nunca vermelho.
 - **Auditoria é por chave, nunca por valor:** `auditProperty` só aceita `componentKey`/key de variável/key de estilo presente no skeleton. O que se compara por VALOR no scan é só a detecção de personalização de instância (valor atual vs. padrão do componente principal) e, no card/Spec, a exibição. Valor sem token é desvio; valor com token de fora do skeleton é "warning".
 
@@ -539,7 +562,7 @@ Todos os nós gerados pelo plugin são criados com `node.locked = true`:
 - Incrementa versão minor automaticamente ao importar
 - Merge com defaults para campos ausentes
 
-**Organização do canvas por Sections — z-order (2026-10-01):** conteúdo do Handex vive em Sections (`Handex | Specs/Specs Rápidas/Medidas/Fluxos/Ficha`). A ordem de empilhamento é a ordem dos filhos da página, então `_hdBringAnnotationLayersToFront()` (`code.js`) mantém as Sections de anotação (exceto a Ficha) sempre acima das telas, a cada criação e no `ui-ready`; Sections sem fill; x/y não mudam.
+**Organização do canvas por Sections — z-order (2026-10-01):** conteúdo do Handex vive em Sections (`Handex | Specs/Anotações/Medidas/Fluxos/Ficha`). A ordem de empilhamento é a ordem dos filhos da página, então `_hdBringAnnotationLayersToFront()` (`code.js`) mantém as Sections de anotação (exceto a Ficha) sempre acima das telas, a cada criação e no `ui-ready`; Sections sem fill; x/y não mudam.
 
 ---
 
@@ -636,12 +659,12 @@ Mensagens exibidas como notificação nativa do Figma:
 
 ### 5.3 Hints visíveis na interface
 
-> **Nota (2026-09-17):** os cards de hint fixo que existiam em Anotar Specs Detalhadas/Anotar Medidas/Fluxos de Tela/Escanear Tokens foram **removidos** (v6.15.2/v6.16.1) por duplicarem a mesma explicação já coberta pelo empty-state e pelo onboarding contextual — ver CLAUDE.md ("Cards de hint fixo duplicavam o onboarding/empty-state"). A tabela abaixo documenta só o texto do **empty-state** de cada tela (que continua existindo), não um card separado.
+> **Nota (2026-09-17):** os cards de hint fixo que existiam em Anotar Especificações/Anotar Medidas/Fluxos de Tela/Escanear Tokens foram **removidos** (v6.15.2/v6.16.1) por duplicarem a mesma explicação já coberta pelo empty-state e pelo onboarding contextual — ver CLAUDE.md ("Cards de hint fixo duplicavam o onboarding/empty-state"). A tabela abaixo documenta só o texto do **empty-state** de cada tela (que continua existindo), não um card separado.
 
 | Local | Texto |
 |---|---|
 | Escanear Tokens (estado vazio) | "Nenhum frame escaneado" / "Selecione um frame no canvas do Figma para começar." + botão **+ Escanear Frame** |
-| Anotar Specs Detalhadas (estado vazio) | "Nenhuma especificação criada ainda" / "Selecione um elemento no canvas para começar." + botão **+ Nova spec** |
+| Anotar Especificações (estado vazio) | "Nenhuma especificação criada ainda" / "Selecione um elemento no canvas para começar." + botão **+ Nova spec** |
 | Anotar Medidas (estado vazio) | "Nenhuma medida criada ainda" / "Selecione elementos no canvas para começar." + botão **+ Inserir medida** |
 | Fluxos de Tela (estado vazio) | "Nenhum fluxo criado ainda" / "Selecione 2 ou mais elementos no canvas para começar." + botão **+ Conectar Frames** |
 | Tipo Decisão no modal de fluxo | "Dica: Use frases curtas para melhor legibilidade dentro do losango." |
@@ -681,12 +704,12 @@ HOME
  │       Marca conformidade DSC
  │       Marca se é Novo Componente
  │
- ├─► Anotar Specs Detalhadas
+ ├─► Anotar Especificações
  │     Seleciona elemento no canvas → botão +
  │     Define: letra, categoria, nota, link, guia
  │     Adiciona propriedades técnicas e exceções
  │
- ├─► Anotar Specs Rápidas (fora do handoff formal)
+ ├─► Inserir Anotações (fora do handoff formal)
  │     Escanear → filtro → Shift+clique nos elementos → Concluir
  │     Consulta de propriedades brutas; não entra na Ficha
  │
@@ -708,7 +731,7 @@ HOME
 ### 6.2 Jornada Rápida — Apenas Specs
 
 ```
-HOME → Anotar Specs Detalhadas
+HOME → Anotar Especificações
   Seleciona elemento → botão +
   Preenche letra e categoria
   Confirma → spec aparece no canvas e na lista
@@ -716,15 +739,15 @@ HOME → Anotar Specs Detalhadas
 
 Para só **consultar** valores de propriedade (sem documentar formalmente), ver a jornada abaixo.
 
-### 6.2.1 Jornada Rápida — Consulta de Propriedades (Specs Rápidas)
+### 6.2.1 Jornada Rápida — Consulta de Propriedades (Anotações)
 
 ```
-HOME → Anotar Specs Rápidas
+HOME → Inserir Anotações
   Escanear → escolhe categorias de propriedade
   Plugin colapsa → Shift+clique em cada elemento no canvas → Concluir
   Lista de elementos com propriedades brutas
-  Opcional: Inserir cards no canvas (grid + linha guia)
-  Opcional: Converter em Spec Detalhada (vira spec formal, entra na Ficha)
+  Opcional: Inserir cards no canvas (coluna na altura de cada elemento + linha guia)
+  Opcional: Converter em Especificação (vira especificação formal, entra na Ficha)
 ```
 
 ---
@@ -780,7 +803,7 @@ HOME → Gerar Ficha de Handoff (view-handoff-summary)
 ### 6.7 Jornada — Exceção em Spec
 
 ```
-Anotar Specs Detalhadas → expande uma spec → + Exceção
+Anotar Especificações → expande uma spec → + Exceção
   Seleciona tipo (Erro / Sucesso / Confirmação / Alerta)
   Preenche título, âncora, observação
   Se obs preenchida e spec tem nodeId:

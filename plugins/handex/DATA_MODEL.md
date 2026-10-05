@@ -515,10 +515,16 @@ Versão atual: `_schemaVersion: 3`
                                  // no card do item, tela Escanear Tokens) — ver nota abaixo
   uiDepth:             'essential' | 'full',   // OPCIONAL (2026-10-01): nível de detalhe do card "User Interface" na Ficha. Gravado pelo frontend (checkbox "Detalhamento completo" / modal "Revisar detalhamento"); ausente ou desconhecido = 'essential'. Só vale com isMarkedCustom=true (ao desmarcar, o valor fica guardado e é ignorado). Sem bump de schema
   customDecided:       boolean,  // OPCIONAL (2026-10-01, default false/ausente): true = o designer mexeu no toggle "Vai para a Ficha" deste item (ligou OU desligou). Usado só pela regra de padrão do "Novo Componente" (frame.isNewComponent): itens novos com isCustomComponent=true entram com isMarkedCustom=true enquanto customDecided não for true. Preservado no re-scan por nodeId. Sem bump de schema
+  nodeIds:             string[],  // OPCIONAL (2026-10-02, Fase A do card de elemento único): ids de todos os nós do mesmo item deduplicado (limite ~50), calculado pelo backend no scan. Usado só para casar spec ↔ item (resolve-spec-owners); ausente em scans antigos = tratar como [nodeId]
+  specDismissed:       boolean,  // OPCIONAL (2026-10-02, default false/ausente): designer marcou "Não precisa de spec" em "Vindos do scan" (Anotar Especificações). Gravado pelo frontend; herdado no re-scan por nodeId. Guia, não bloqueia nada
   variants:            { name: string, value: string }[],
   properties:          Property[]
 }
 ```
+
+**Estado derivado spec ↔ item (2026-10-02, NÃO persistido):** o mapa `specId ↔ itemKey` (`window._specOwners.bySpec`, `itemKey = frameId|categoria|nodeId`) vive só em memória no frontend. É recalculado ao abrir Escanear Tokens/Especificações, após escanear e após criar/excluir spec, via `resolve-spec-owners` (UI→backend) / `spec-owners-resolved` (backend→UI, `results: [{ specId, itemKey|null, via: 'exact'|'ancestor'|'none' }]`). Nunca entra em `handoffData`, export ou import; em dúvida, a spec fica sem item dono.
+
+**Pré-criações "Vindos do scan" (2026-10-02, DERIVADAS, NÃO persistidas):** a lista no topo de Anotar Especificações é recalculada a cada render a partir de `frames[].specs` (itens com `isDS === false`, `isDS === 'warning'`, `isCustomComponent` ou `customizations` não vazio), excluindo os que já têm spec casada (`_specOwners`) e os com `specDismissed`. Só `specDismissed` é gravado (no item do scan). Pré-criação não é spec: não entra em `createdSpecs`, contadores, Ficha, Markdown, Ficha HTML nem `_aiContext`; só vira spec quando o designer conclui o fluxo da Especificação.
 
 **`isCustomComponent` vs. `isMarkedCustom` — não confundir:**
 - `isCustomComponent` é **calculado automaticamente** pelo scan — proxy
@@ -586,14 +592,14 @@ Leitura normalizada: ausente = `false`. Herdado no re-scan por `nodeId`.
 
 ```js
 {
-  key?: string,          // id estável (specs detalhadas)
+  key?: string,          // id estável (especificações)
   label: string,
   value: string | number,
   token: string | null   // token DSC se aplicável
 }
 ```
 
-`label` é o rótulo exibido; `key` (opcional, presente em specs detalhadas: `gap`, `padding`, `sizingW`, `fill`...) é o identificador estável da propriedade. Registros antigos guardam rótulos em português ("Cor (Fill)", "Raio de borda", "W Sizing", "Dimensões"...): a UI não reescreve o dado, traduz na exibição via `_vocabLabel(label, key)` — `key` primeiro, depois tabela de aliases (`HX_LABEL_ALIASES`, `core.js`). Nunca comparar lógica por `label`; usar `key`/`type`. Ver `docs/design-system-handex.md` §7.5.
+`label` é o rótulo exibido; `key` (opcional, presente em especificações: `gap`, `padding`, `sizingW`, `fill`...) é o identificador estável da propriedade. Registros antigos guardam rótulos em português ("Cor (Fill)", "Raio de borda", "W Sizing", "Dimensões"...): a UI não reescreve o dado, traduz na exibição via `_vocabLabel(label, key)` — `key` primeiro, depois tabela de aliases (`HX_LABEL_ALIASES`, `core.js`). Nunca comparar lógica por `label`; usar `key`/`type`. Ver `docs/design-system-handex.md` §7.5.
 
 ---
 
@@ -648,7 +654,7 @@ Campo de runtime `createdFlows[].color` (opcional, 2026-10-02): hex da linha no 
 { tag, nome, tipoNode, observacao?: string /* <=280, só se preenchida */, propriedades: [{ propriedade, valor, token, biblioteca }] }
 ```
 
-`observacao` vem do campo "Observação" da Spec Rápida (`el.note`, lista efêmera da sessão; no canvas fica no card via pluginData). Não entra na Ficha; ao converter em Spec Detalhada vira `Spec.note`.
+`observacao` vem do campo "Observação" da Anotação (`el.note`, lista efêmera da sessão; no canvas fica no card via pluginData). Não entra na Ficha; ao converter em Especificação vira `Spec.note`.
 
 ---
 

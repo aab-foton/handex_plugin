@@ -4,11 +4,11 @@ Status: direção aprovada pelo Augusto; implementação aguardando liberação 
 
 ## 1. Decisão
 
-A Ficha passa a ser organizada **por tela**. Cada elemento tem **um card só**, que junta o que vem do Escanear Tokens (construção) com o que vem da Spec Detalhada (decisões do designer).
+A Ficha passa a ser organizada **por tela**. Cada elemento tem **um card só**, que junta o que vem do Escanear Tokens (construção) com o que vem da Especificação (decisões do designer).
 
 As ferramentas continuam separadas no plugin e uma municia a outra:
 - Escanear Tokens refina o elemento e alimenta a **construção** (como construir).
-- Spec Detalhada dá as **decisões** (categoria, nota, link, exceções) e a posição no mapa.
+- Especificação dá as **decisões** (categoria, nota, link, exceções) e a posição no mapa.
 - O que se unifica é a **unidade apresentada na Ficha**, não as ferramentas nem os dados persistidos.
 
 Padrões aprovados:
@@ -64,6 +64,8 @@ Cada fase fecha com `bundle:ui`, `bundle:code`, `export:plugin`, teste do August
 - Esforço 1 a 1,5 dia. Risco: dedup por nome e frames antigos sem `nodeIds` (cair na subida pelo parent).
 
 ### Fase B: card de elemento no backend (substitui `_hdBuildUiItemCard` + `_hdBuildSpecsSubgroup` na saída)
+
+**Atualização 2026-10-02: modelo do handoff do DSC (entregue no código, aguardando teste no Figma).** O card segue `docs/referencia-handoff-dsc.md`: Título (nome, selo da categoria, "Baseado em"), Descrição de Funcionalidade, Propriedades (tabela), Anatomia (Preview com marcadores + colunas por parte com chips por tipo), Espaçamento e Alinhamento e Variações e Estados (só Completo), Notas (exceções como alertas, cor por tipo). Implementado em `_hdBuildElementCard` (`code.js`) atrás de `FICHA_DSC_STYLE_ENABLED`; o casamento spec ↔ item no backend é `_hdMatchSpecsToItems`. **Escopo (correção do Augusto, mesmo dia): vale só para o card que monta a Documentação Visual / User Interface; as demais seções da Ficha (Informações Básicas, Equipe, Briefing, Regras, Frames Escaneados, Specs/Medidas avulsas, Fluxos) e a estrutura atual de apresentação não mudam.** Nesta entrega o card cobre os itens `isMarkedCustom` e continua na seção "User Interface"; ainda **não** cobre os casos "sem marcação, com spec" e "DSC conforme, só decisões" fora de item marcado, nem a ordenação por tela (Fase C), nem o recorte do elemento quando grande. Detalhes em `BUSINESS_RULES.md` ("Card de elemento no padrão do handoff do DSC").
 - Novo construtor `_hdBuildElementCard(item?, specs[], level)` reaproveitando `_hdUi*`/`_readNodeSpec` (leitor único já existente). Cabeçalho, decisões no topo, construção por nível.
 - Os 4 casos da tabela da seção 3. Caso "só decisões" para DSC conforme.
 - Recorte do elemento como imagem (reaproveitar `_hdUiReferenceImage`; teto de 12 imagens por geração).
@@ -76,7 +78,7 @@ Cada fase fecha com `bundle:ui`, `bundle:code`, `export:plugin`, teste do August
 - `_hdRemoveUiColumns`/`_hdReplaceSection` removem a seção User Interface de Fichas antigas ao regenerar.
 - Esforço 2 dias. Risco: Ficha longa com muitos elementos (padrão Essencial mitiga); posição fixa da Ficha e "Nova Versão" já tratadas (`_fichaBasePosition`).
 
-### Fase D: Spec Detalhada com a mesma estrutura na tela do plugin
+### Fase D: Especificação com a mesma estrutura na tela do plugin
 - Modal de propriedades e card da spec no canvas usam os grupos do leitor único (Layout/Aparência/Texto...), com `key` estável, aliases para dados antigos, padding por lado, `Component` sem repetir variantes.
 - A conversão Rápida→Detalhada já leva a observação como nota e lê o elemento convertido (feito em 2026-10-01).
 - Escolhas por elemento: grupos, **composição só se ligar, até o último nível** (teto de nós ~150 com aviso visível "o aprofundamento automático pode demorar"), **component properties só se o designer marcar**.

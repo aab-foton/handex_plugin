@@ -38,7 +38,7 @@ Decisão do Augusto: **toda cor da UI do plugin e do que ele desenha no canvas (
 | `green` | positive | 50 `#e7f4ea` · 400 `#5cb26e` · 500 `#127527` (5,8:1) · 700 `#0d581d` |
 | `amber` | attention | 50 `#fff9e6` · 400 `#fcbe05` · 500 `#977203` (4,45:1) · 700 `#654c02` |
 | `ceu` (card Tokens) | ceu | 50 `#e8faff` · 400 `#00b4e6` · 600 `#007899` (5,1:1) · 700 `#006480` |
-| `turquesa` (card Specs Rápidas) | tertiary | 400 `#54bbab` · 600 `#2b8174` (4,7:1) · 700 `#216e62` |
+| `turquesa` (card Anotações) | tertiary | 400 `#54bbab` · 600 `#2b8174` (4,7:1) · 700 `#216e62` |
 | `info` (card Medidas) | informative | 400 `#04a2bf` · 600 `#037286` (5,6:1) · 700 `#026273` |
 | `blue`, `orange` | primary, secondary | já ancoradas (ver "Paleta de marca") |
 
@@ -193,6 +193,12 @@ Os 3 z-index acima ainda são valores mágicos sem constante nomeada no código 
 
 Padrão usado por `detail-level-modal` ("Quanto detalhe cada item terá na Ficha?"): shell de modal com `max-w-sm max-h-[85vh]`, cabeçalho e rodapé fixos e miolo rolável (`overflow-y-auto`). Cada linha é um `<label>` clicável com altura mínima de 40px (checkbox + nome 11px bold + `Frame · Tipo` 10px `text-slate-600`/`dark:text-dark-muted`), agrupadas por frame quando há mais de um. Ação em lote em link azul (`text-blue-500`, alterna "Marcar todos como completo" / "Voltar todos ao essencial") e contador `aria-live="polite"`. Rodapé: primário `Salvar escolhas` (`bg-blue-500`) + outline `Cancelar`; edição só grava ao salvar, Cancelar/Escape/overlay descartam. Badge `COMPLETO` no card do item: ícone `layers` 10px + texto 9px bold, `text-st-info dark:text-st-info-dark` (azul da marca, token `st-info`; o toggle "Vai para a Ficha" usa `peer-checked:bg-[#005ca9]`, como os demais toggles — roxo/violet foi removido em 2026-10-01 por ser cor da marca antiga); itens no nível padrão (Essencial) não têm selo.
 
+### Ponte spec ↔ elemento escaneado (2026-10-02; revisada no mesmo dia)
+
+Os botões de spec saíram do card do scan: Escanear Tokens volta a ter só toggles, propriedades e inativas. A ponte vive em Anotar Especificações:
+- **Área "Vindos do scan"** no topo da lista: accordion (`rounded-xl`, borda fina, ícone `scan-line`), aberto quando há itens, contador "N para revisar". Uma linha por item, sem cards internos: nome (clique localiza no canvas) + `Frame · motivo` (Fora do padrão, Personalizado, Necessita revisão), botão outline `rounded-2xl` "Especificar" (`text-[#005ca9]`) e botão `x` 40×40 com `title` "Não precisa de spec". Recolhida abaixo: "M dispensados" com "Restaurar". É derivada; não é spec e não entra na Ficha.
+- **Selo "Veio do scan"** no card da spec: ícone `scan-line` 12px + texto 9px bold `text-slate-600`/`dark:text-dark-muted`; `title` com o nome do item e "mesmo elemento" ou "dentro de um elemento escaneado". Spec sem casamento não tem selo.
+
 ### Cards
 
 - **Card de ferramenta (home)**: markup único reutilizado nas 6 instâncias, variando cor de hover e ícone. Este é o padrão de reuso a seguir para qualquer card novo.
@@ -255,7 +261,7 @@ Biblioteca exclusiva: **Lucide** (`data-lucide="nome"` no plugin, equivalente a 
 | `loader-2` | `import { Loader2 } from 'lucide-react'` | Spinner de carregamento (animação de rotação via CSS). |
 | `file-plus-2` | `import { FilePlus2 } from 'lucide-react'` | Criar novo documento/anexo. |
 | `check-circle` | `import { CheckCircle } from 'lucide-react'` | EM CONFORMIDADE — selo de auditoria DSC. |
-| `tag` | `import { Tag } from 'lucide-react'` | Card Anotar Specs Detalhadas na home; badge de tag de spec. |
+| `tag` | `import { Tag } from 'lucide-react'` | Card Anotar Especificações na home; badge de tag de spec. |
 | `send` | `import { Send } from 'lucide-react'` | Gerar Ficha de Handoff — ícone alternativo em onboarding. |
 | `search` | `import { Search } from 'lucide-react'` | Campo de busca — filtro de specs/frames. |
 | `ruler` | `import { Ruler } from 'lucide-react'` | Card Anotar Medidas na home. |
@@ -280,7 +286,7 @@ Biblioteca exclusiva: **Lucide** (`data-lucide="nome"` no plugin, equivalente a 
 | `component` | `import { Component } from 'lucide-react'` | Referência de componente DSC vinculado a uma spec. |
 | `check-circle-2` | `import { CheckCircle2 } from 'lucide-react'` | Confirmação de sucesso — variante preenchida. |
 | `alert-circle` | `import { AlertCircle } from 'lucide-react'` | FORA DO PADRÃO — selo de auditoria DSC (desvio). |
-| `zap` | `import { Zap } from 'lucide-react'` | Comportamento — categoria de spec (reação do sistema); ícone do card Anotar Specs Rápidas na home. |
+| `zap` | `import { Zap } from 'lucide-react'` | Comportamento — categoria de spec (reação do sistema); ícone do card Inserir Anotações na home. |
 | `x-circle` | `import { XCircle } from 'lucide-react'` | Erro/falha — cenário de exceção tipo Erro. |
 | `shield-check` | `import { ShieldCheck } from 'lucide-react'` | Conformidade validada / selo de segurança. |
 | `scaling` | `import { Scaling } from 'lucide-react'` | Altura e Largura — tipo de medida (W×H). |
@@ -409,7 +415,7 @@ Regra: **português para comunicação** (títulos, frases, avisos, botões); **
 | Prop: X | Component properties: X |
 | Hug Contents / Fill Container | Hug contents / Fill container |
 
-**Dados antigos:** scans, specs e Spec Rápida salvos antes dessa uniformização guardam o rótulo antigo. A exibição passa por `_vocabLabel(label, key)` / `_vocabValue(value)` (`core.js`): usa a `key` estável quando existe (specs detalhadas), senão uma tabela de aliases do rótulo antigo. O dado persistido não é reescrito.
+**Dados antigos:** scans, specs e Anotação salvos antes dessa uniformização guardam o rótulo antigo. A exibição passa por `_vocabLabel(label, key)` / `_vocabValue(value)` (`core.js`): usa a `key` estável quando existe (especificações), senão uma tabela de aliases do rótulo antigo. O dado persistido não é reescrito.
 
 ---
 
