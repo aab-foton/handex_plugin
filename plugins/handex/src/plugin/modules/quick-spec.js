@@ -621,7 +621,7 @@ function _quickSpecRenderList() {
               <i data-lucide="crosshair" class="w-3.5 h-3.5"></i>
             </button>
             ${el.insertedCardId ? `
-            <button onclick="focusNode('${el.insertedCardId}')" title="Focar no card da spec" aria-label="Focar no card da spec no canvas"
+            <button onclick="focusNode('${el.insertedCardId}')" title="Focar no card da anotação" aria-label="Focar no card da anotação no canvas"
               class="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-[#005ca9] dark:text-slate-500 dark:hover:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors">
               <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
             </button>` : ''}
@@ -658,7 +658,7 @@ function _quickSpecRenderList() {
             <button onclick="quickSpecConvertToDetailedSpec(${idx})"
               class="w-full py-2 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line hover:bg-gray-50 dark:hover:bg-slate-800 text-[#005ca9] dark:text-blue-400 text-[11px] font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5">
               <i data-lucide="file-plus-2" class="w-3.5 h-3.5"></i>
-              Converter em Spec Detalhada
+              Converter em Especificação
             </button>`}
             <button onclick="quickSpecRemoveElement(${idx})"
               class="w-full py-2 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line hover:bg-gray-50 dark:hover:bg-slate-800 text-red-500 text-[11px] font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5">
@@ -709,108 +709,14 @@ window.handleQuickSpecCanvasProgress = handleQuickSpecCanvasProgress;
 // da grade -- só relevante com vários cards pra organizar; com poucos, a
 // modal era atrito sem ganho real (pedido do usuário 2026-09-25: só faz
 // sentido "na aplicação de vários elementos, mais de 4").
-let _quickSpecPendingInsertItems = null;
-const QUICK_SPEC_LAYOUT_GRID_MAX_COLS = 8;
-const QUICK_SPEC_LAYOUT_GRID_MAX_ROWS = 6;
-const QUICK_SPEC_LAYOUT_GRID_MIN_COLS = 2;
-const QUICK_SPEC_LAYOUT_GRID_MIN_ROWS = 2;
-const QUICK_SPEC_LAYOUT_MODAL_MIN_ITEMS = 5;
-
-// Grade nasce dimensionada pro total real de itens (quase quadrada, cobre
-// o total com o mínimo de sobra) -- em vez da grade fixa 8×6 sempre, que
-// aparecia toda preenchida mesmo com poucos itens (print do usuário
-// 2026-09-28: parecia sugerir qualquer combinação até 8×6 como válida).
-function _quickSpecComputeLayoutGridSize(total) {
-  const cols = Math.min(QUICK_SPEC_LAYOUT_GRID_MAX_COLS, Math.max(QUICK_SPEC_LAYOUT_GRID_MIN_COLS, Math.ceil(Math.sqrt(total))));
-  const rows = Math.min(QUICK_SPEC_LAYOUT_GRID_MAX_ROWS, Math.max(QUICK_SPEC_LAYOUT_GRID_MIN_ROWS, Math.ceil(total / cols)));
-  return { cols, rows };
-}
-
-function _quickSpecOpenLayoutModal(items) {
-  // 4 ou menos: pula a modal, insere direto empilhado (columns: 1) -- mesmo
-  // resultado de escolher 1×1 na grade, sem o passo extra.
-  if (items.length < QUICK_SPEC_LAYOUT_MODAL_MIN_ITEMS) {
-    _quickSpecShowCreatingLoading(items.length);
-    parent.postMessage({ pluginMessage: { type: 'quick-spec-insert-canvas', items, columns: 1 } }, '*');
-    return;
-  }
-  _quickSpecPendingInsertItems = items;
-  _quickSpecBuildLayoutGrid();
-  openModal('quick-spec-layout-modal');
-}
-
-// Monta a grade clicável estilo Excel/Word (hover destaca NxM a partir do
-// canto superior esquerdo, clique confirma) -- reconstruída a cada
-// abertura pra sempre nascer no estado 1×1.
-function _quickSpecBuildLayoutGrid() {
-  const grid = document.getElementById('quick-spec-layout-grid');
-  if (!grid) return;
-  const total = (_quickSpecPendingInsertItems || []).length;
-  const { cols, rows } = _quickSpecComputeLayoutGridSize(total);
-  // grid-template-columns precisa ser explícito por JS porque `cols` agora é
-  // variável (grade dimensionada ao total de itens, ver
-  // _quickSpecComputeLayoutGridSize) -- sem isso, o CSS mantinha um número
-  // fixo de colunas por linha (herdado de quando a grade era sempre 8×6),
-  // desalinhando o wrap dos divs em relação às linhas/colunas lógicas do JS.
-  grid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
-  let html = '';
-  for (let r = 1; r <= rows; r++) {
-    for (let c = 1; c <= cols; c++) {
-      html += `<div data-qs-layout-cell data-col="${c}" data-row="${r}"
-        onmouseenter="_quickSpecLayoutGridHover(${c}, ${r})" onclick="_quickSpecLayoutGridPick(${c}, ${r})"
-        class="w-5 h-5 rounded-sm border border-gray-200 dark:border-dark-line bg-gray-50 dark:bg-dark-surface cursor-pointer transition-colors"></div>`;
-    }
-  }
-  grid.innerHTML = html;
-  _quickSpecLayoutSelection = { columns: 1, rows: 1 };
-  _quickSpecLayoutGridHover(1, 1);
-}
-
-let _quickSpecLayoutSelection = { columns: 1, rows: 1 };
-
-function _quickSpecLayoutGridHover(columns, rows) {
-  const grid = document.getElementById('quick-spec-layout-grid');
-  const label = document.getElementById('quick-spec-layout-label');
-  if (!grid) return;
-  grid.querySelectorAll('[data-qs-layout-cell]').forEach(cell => {
-    const inRange = Number(cell.dataset.col) <= columns && Number(cell.dataset.row) <= rows;
-    cell.classList.toggle('bg-[#005ca9]', inRange);
-    cell.classList.toggle('border-[#005ca9]', inRange);
-    cell.classList.toggle('bg-gray-50', !inRange);
-    cell.classList.toggle('dark:bg-dark-surface', !inRange);
-    cell.classList.toggle('border-gray-200', !inRange);
-    cell.classList.toggle('dark:border-dark-line', !inRange);
-  });
-  if (label) label.textContent = columns === 1 && rows === 1 ? '1 coluna × 1 linha (empilhado)' : `${columns} coluna${columns > 1 ? 's' : ''} × ${rows} linha${rows > 1 ? 's' : ''}`;
-}
-window._quickSpecLayoutGridHover = _quickSpecLayoutGridHover;
-
-function _quickSpecLayoutGridReset() {
-  if (_quickSpecLayoutSelection) _quickSpecLayoutGridHover(_quickSpecLayoutSelection.columns, _quickSpecLayoutSelection.rows);
-}
-window._quickSpecLayoutGridReset = _quickSpecLayoutGridReset;
-
-function _quickSpecLayoutGridPick(columns, rows) {
-  _quickSpecLayoutSelection = { columns, rows };
-  _quickSpecLayoutGridHover(columns, rows);
-}
-window._quickSpecLayoutGridPick = _quickSpecLayoutGridPick;
-
-// "Inserir no canvas" da modal de layout -- linhas são só orientação visual
-// pro designer escolher a grade (mesma lógica de um seletor de tabela em
-// editor de texto); o backend só recebe `columns`, calculando quantas
-// linhas são de fato necessárias pra caber a quantidade real de cards.
-function _quickSpecConfirmLayoutAndInsert() {
-  const items = _quickSpecPendingInsertItems;
+// Inserção direta, sem modal de grade (2026-10-05, pedido do Augusto): cada
+// card nasce ao lado do frame, na altura do próprio elemento, e o backend
+// empurra para baixo o que colidir (ver quick-spec-insert-canvas, code.js).
+function _quickSpecInsertCards(items) {
   if (!items || items.length === 0) return;
-  closeModal('quick-spec-layout-modal');
   _quickSpecShowCreatingLoading(items.length);
-  parent.postMessage({
-    pluginMessage: { type: 'quick-spec-insert-canvas', items, columns: _quickSpecLayoutSelection.columns }
-  }, '*');
-  _quickSpecPendingInsertItems = null;
+  parent.postMessage({ pluginMessage: { type: 'quick-spec-insert-canvas', items } }, '*');
 }
-window._quickSpecConfirmLayoutAndInsert = _quickSpecConfirmLayoutAndInsert;
 
 // Observação por elemento (máx. 280): fica no estado da sessão e, se o item
 // já tem card no canvas, é reenviada ao backend com debounce (ou ao sair do
@@ -846,18 +752,18 @@ window.quickSpecFlushNote = quickSpecFlushNote;
 function quickSpecInsertCanvasCards(idx) {
   const el = _quickSpecSessionResults[idx];
   if (!el) return;
-  _quickSpecOpenLayoutModal([{ tag: el.tag, nodeId: el.nodeId, name: el.name, nodeType: el.nodeType, properties: el.properties, note: (el.note || '').trim().slice(0, 280) }]);
+  _quickSpecInsertCards([{ tag: el.tag, nodeId: el.nodeId, name: el.name, nodeType: el.nodeType, properties: el.properties, note: (el.note || '').trim().slice(0, 280) }]);
 }
 window.quickSpecInsertCanvasCards = quickSpecInsertCanvasCards;
 
 // Guarda qual elemento da sessão está em conversão -- só entre o clique em
-// "Converter em Spec Detalhada" e o desfecho do fluxo (spec-created ou
+// "Converter em Especificação" e o desfecho do fluxo (spec-created ou
 // cancelamento). Casado pela TAG (igual handleQuickSpecCanvasResult), nunca
 // pelo índice puro: o índice muda se a lista for reordenada/filtrada
-// enquanto o modal de Spec Detalhada está aberto por cima.
+// enquanto o modal de Especificação está aberto por cima.
 window._quickSpecPendingConversionTag = null;
 
-// Converte um item do Spec Express em Spec Detalhada -- abre o fluxo normal
+// Converte um item do Spec Express em Especificação -- abre o fluxo normal
 // de criação (openSpecFormModal, specifications.js) já com o elemento de
 // origem vinculado e as observação como nota inicial. Reaproveita o fluxo inteiro (propriedades -> posição -> exceção)
 // sem duplicar nada dele; só o desfecho (spec-created, ver messages.js) é
@@ -897,7 +803,7 @@ window.quickSpecConvertToDetailedSpec = quickSpecConvertToDetailedSpec;
 // Chamado pelo handler de 'spec-created' (messages.js) quando havia uma
 // conversão pendente -- remove o card Express original do canvas (mesmo
 // caminho de exclusão já usado no botão "Excluir da lista", sem confirmação
-// window.confirm: a criação da Spec Detalhada JÁ é a confirmação explícita
+// window.confirm: a criação da Especificação JÁ é a confirmação explícita
 // do designer) e tira o item da lista da sessão.
 function _quickSpecFinishPendingConversion() {
   const tag = window._quickSpecPendingConversionTag;
@@ -929,7 +835,7 @@ function quickSpecInsertAllCanvasCards() {
     showToast('Nenhum elemento pendente de inserção.', 'error');
     return;
   }
-  _quickSpecOpenLayoutModal(visible.map(el => ({ tag: el.tag, nodeId: el.nodeId, name: el.name, nodeType: el.nodeType, properties: el.properties, note: (el.note || '').trim().slice(0, 280) })));
+  _quickSpecInsertCards(visible.map(el => ({ tag: el.tag, nodeId: el.nodeId, name: el.name, nodeType: el.nodeType, properties: el.properties, note: (el.note || '').trim().slice(0, 280) })));
 }
 window.quickSpecInsertAllCanvasCards = quickSpecInsertAllCanvasCards;
 

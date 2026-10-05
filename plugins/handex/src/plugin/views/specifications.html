@@ -6,7 +6,7 @@
           <button onclick="navigate('view-home')" aria-label="Voltar para a página inicial" class="min-w-[40px] min-h-[40px] flex items-center justify-center bg-white/10 dark:bg-white/10 rounded-2xl hover:bg-white/20 dark:hover:bg-white/20 transition-colors shrink-0">
             <i data-lucide="arrow-left" class="w-5 h-5 text-white" aria-hidden="true"></i>
           </button>
-          <h2 class="text-white font-bold text-[18px] truncate min-w-0">Anotar Specs Detalhadas</h2>
+          <h2 class="text-white font-bold text-[18px] truncate min-w-0">Anotar Especificações</h2>
         </div>
         <!-- Ícones de ajuda: vivem no grupo esquerdo (ao lado do título)
              quando o botão de ação está no header; movidos pra cá (grupo
@@ -45,7 +45,7 @@
                todos/Buscar e filtrar são ações de usuário avançado,
                agrupadas atrás de um único botão em vez de sempre visíveis. -->
           <div class="flex items-center justify-between relative" id="specs-more-actions-wrap">
-            <p id="specs-section-title" class="hidden text-[11px] font-bold text-slate-600 dark:text-dark-muted uppercase tracking-wider">Specs Criadas</p>
+            <p id="specs-section-title" class="hidden text-[11px] font-bold text-slate-600 dark:text-dark-muted uppercase tracking-wider">Especificações criadas</p>
             <button id="btn-specs-more-actions" onclick="toggleSpecsMoreActions(event)"
               class="hidden text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200 transition-colors flex items-center gap-1">
               Mais ações
@@ -138,6 +138,8 @@
                   <i data-lucide="x" class="w-3.5 h-3.5"></i>
                 </button>
               </div>
+
+              <div id="specs-scan-precreations"></div>
 
               <ul id="specs-results" class="flex flex-col gap-2 min-h-[50px]">
                 <!-- List of accordions will be rendered here -->

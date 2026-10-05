@@ -278,15 +278,12 @@
 
           <!-- ── Tokens Escaneados (oculto até escanear) ── -->
           <div id="sub-sec-tokens-${fid}" class="hidden border-b border-gray-50 dark:border-dark-line">
-            <div class="w-full flex items-center gap-2.5 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-dark-line/20 transition-colors">
-              <button type="button" onclick="event.stopPropagation(); toggleSubAccordion('tokens-${fid}')"
-                class="flex-1 flex items-center gap-2.5 text-left min-w-0">
-                <div class="w-6 h-6 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-lg shrink-0">
-                  <i data-lucide="scan-line" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted"></i>
-                </div>
-                <span class="flex-1 text-[12px] font-bold text-slate-700 dark:text-white truncate">Tokens Escaneados</span>
-                <span id="sub-count-tokens-${fid}" class="text-[10px] text-slate-500 dark:text-dark-muted mr-1 shrink-0"></span>
-              </button>
+            <div class="w-full flex items-center gap-2.5 px-4 py-2.5">
+              <div class="w-6 h-6 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-lg shrink-0">
+                <i data-lucide="scan-line" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted"></i>
+              </div>
+              <span class="flex-1 text-[12px] font-bold text-slate-700 dark:text-white truncate">Tokens Escaneados</span>
+              <span id="sub-count-tokens-${fid}" class="text-[10px] text-slate-500 dark:text-dark-muted mr-1 shrink-0"></span>
               <span id="sub-spinner-tokens-${fid}" class="hidden mr-0.5 shrink-0">
                 <i data-lucide="loader-2" class="w-3 h-3 text-[#005ca9] animate-spin"></i>
               </span>
@@ -295,12 +292,8 @@
                 class="min-w-[28px] min-h-[28px] flex items-center justify-center rounded-lg text-[#005ca9] dark:text-blue-400 hover:bg-[#005ca9]/10 transition-colors shrink-0">
                 <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
               </button>
-              <button type="button" onclick="event.stopPropagation(); toggleSubAccordion('tokens-${fid}')"
-                class="p-0.5 shrink-0">
-                <i data-lucide="chevron-right" id="sub-chev-tokens-${fid}" class="w-3.5 h-3.5 text-gray-400 transition-transform"></i>
-              </button>
             </div>
-            <div id="sub-body-tokens-${fid}" data-accordion-content class="hidden bg-gray-50/30 dark:bg-dark-bg/20">
+            <div id="sub-body-tokens-${fid}" class="bg-gray-50/30 dark:bg-dark-bg/20">
               <div id="scan-results-${fid}" class="p-1"></div>
             </div>
           </div>
@@ -680,7 +673,7 @@
               ${propsHtml}
               <!-- Observations -->
               <div class="mb-3">
-                <textarea placeholder="Observações sobre esta spec..."
+                <textarea placeholder="Observações sobre esta especificação..."
                   class="w-full text-[11px] text-slate-600 dark:text-slate-300 bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line rounded-lg px-2 py-1.5 resize-none outline-none placeholder:text-gray-300 focus:border-[#005ca9]/30 transition-all"
                   rows="2"
                   onchange="updateSpecObs('${frameId}', ${spec._idx}, this.value)">${spec.obs || ''}</textarea>
@@ -847,7 +840,7 @@
       const frame = getFrame(frameId);
       if (!frame) return;
       const spec = (frame.createdSpecs || [])[specIdx];
-      if (!spec || !spec.id) { showToast('Spec sem ID de canvas. Recrie a anotação.', 'error'); return; }
+      if (!spec || !spec.id) { showToast('Especificação sem ID no canvas. Recrie a especificação.', 'error'); return; }
       parent.postMessage({ pluginMessage: {
         type: 'refresh-spec-card',
         nodeId: spec.id,
@@ -948,7 +941,7 @@
       frame.specGroupLocked[letter] = isNowUnlocked ? false : true;
       const willLock = !isNowUnlocked; // isNowUnlocked=true significa que esta ação DESTRAVOU o grupo
       const groupSpecs = (frame.createdSpecs || []).filter(spec => (spec.letter || '?') === letter && spec.id);
-      // Travar via grupo nunca deve pegar specs ainda pendentes de posicionamento inicial —
+      // Travar via grupo nunca deve pegar especificações ainda pendentes de posicionamento inicial —
       // essas só podem ser travadas via "Concluir posicionamento" (lock-spec), para a UI
       // não ficar mostrando "Posicionando…" com o nó já travado no canvas.
       const specIds = groupSpecs
@@ -966,7 +959,7 @@
       showToast(isNowUnlocked
         ? `Grupo ${letter} destravado — edite com cuidado e trave novamente ao concluir.`
         : (skippedPending
-          ? `Grupo ${letter} travado — specs ainda pendentes de posicionamento não foram travadas.`
+          ? `Grupo ${letter} travado — especificações ainda pendentes de posicionamento não foram travadas.`
           : `Grupo ${letter} travado novamente.`));
     }
     window.toggleSpecGroupLock = toggleSpecGroupLock;
@@ -1328,6 +1321,175 @@
     }
     window.toggleStatusFilter = toggleStatusFilter;
 
+    // ── Ponte spec ↔ item escaneado (estado derivado em window._specOwners, ver core.js) ──
+    function _findSpecById(specId) {
+      const merged = (typeof createdSpecs !== 'undefined' && createdSpecs) || [];
+      let s = merged.find(x => x && x.id === specId);
+      if (s) return s;
+      (handoffData.frames || []).some(f => { s = (f.createdSpecs || []).find(x => x && x.id === specId); return !!s; });
+      return s || (handoffData.specs || []).find(x => x && x.id === specId) || null;
+    }
+
+    function goToSpecDetail(specId) {
+      if (typeof navigate === 'function') navigate('view-specifications');
+      setTimeout(() => {
+        const li = document.querySelector(`#specs-results [data-spec-id="${specId}"]`);
+        if (!li) return;
+        const content = document.getElementById('content-' + specId);
+        if (content && content.classList.contains('hidden')) content.classList.remove('hidden');
+        li.scrollIntoView({ block: 'center' });
+      }, 60);
+    }
+    window.goToSpecDetail = goToSpecDetail;
+
+    function _specOriginBadgeHtml(specId) {
+      const own = (window._specOwners && window._specOwners.bySpec[specId]) || null;
+      if (!own) return '';
+      const parts = own.itemKey.split('|');
+      const item = getSpecItem(parts[0], parts[1], parts.slice(2).join('|'));
+      if (!item) return '';
+      const viaTxt = own.via === 'exact' ? 'mesmo elemento' : 'dentro de um elemento escaneado';
+      const title = `Veio do scan: ${item.name} (${viaTxt})`;
+      return `<span class="inline-flex items-center gap-1 text-[9px] font-bold text-slate-600 dark:text-dark-muted" title="${escapeHtml(title)}"><i data-lucide="scan-line" class="w-3 h-3 pointer-events-none"></i>Veio do scan</span>`;
+    }
+
+    function _applySpecOriginBadges() {
+      document.querySelectorAll('#specs-results [data-spec-id]').forEach(li => {
+        const slot = li.querySelector('[data-spec-origin-slot]');
+        if (slot) slot.innerHTML = _specOriginBadgeHtml(li.getAttribute('data-spec-id'));
+      });
+      _refreshIcons();
+    }
+    window._applySpecOriginBadges = _applySpecOriginBadges;
+
+    function _specPendingReason(item) {
+      if (item.isDS === false) return 'Fora do padrão';
+      if (item.isCustomComponent || (Array.isArray(item.customizations) && item.customizations.length > 0)) return 'Personalizado';
+      if (item.isDS === 'warning') return 'Necessita revisão';
+      return null;
+    }
+
+    const SPEC_ITEM_CATS = ['components', 'icons', 'typography', 'vectors'];
+
+    function _scanPrecreations() {
+      const pending = [], dismissed = [];
+      (handoffData.frames || []).forEach(frame => {
+        if (!frame || !frame.specs) return;
+        SPEC_ITEM_CATS.forEach(cat => (frame.specs[cat] || []).forEach(item => {
+          if (!item || !item.nodeId) return;
+          const reason = _specPendingReason(item);
+          if (!reason) return;
+          if (_specOwnersOfItem(_specItemKey(frame.id, cat, item.nodeId)).length > 0) return;
+          (item.specDismissed ? dismissed : pending).push({ frame, cat, item, reason });
+        }));
+      });
+      return { pending, dismissed };
+    }
+
+    let _scanPreOpen = null;
+    let _scanPreDismissedOpen = false;
+
+    function toggleScanPrecreations() {
+      const host = document.getElementById('specs-scan-precreations');
+      const body = host && host.querySelector('[data-scan-pre-body]');
+      if (!body) return;
+      _scanPreOpen = body.classList.contains('hidden');
+      _renderScanPrecreations();
+    }
+    window.toggleScanPrecreations = toggleScanPrecreations;
+
+    function toggleScanPrecreationsDismissed() {
+      _scanPreDismissedOpen = !_scanPreDismissedOpen;
+      _renderScanPrecreations();
+    }
+    window.toggleScanPrecreationsDismissed = toggleScanPrecreationsDismissed;
+
+    function specifyScanItem(frameId, cat, nodeId) {
+      const item = getSpecItem(frameId, cat, nodeId);
+      if (!item || typeof openSpecFormModal !== 'function') return;
+      window._pendingSpecTargetNodeId = item.nodeId;
+      openSpecFormModal(frameId || undefined);
+      if (typeof _onNodeNameForSpec === 'function') _onNodeNameForSpec(item.name);
+    }
+    window.specifyScanItem = specifyScanItem;
+
+    function focusScanItem(frameId, cat, nodeId) {
+      const item = getSpecItem(frameId, cat, nodeId);
+      if (item && typeof focusNode === 'function') focusNode(item.nodeId);
+    }
+    window.focusScanItem = focusScanItem;
+
+    function dismissScanItem(frameId, cat, nodeId, dismissed) {
+      const item = getSpecItem(frameId, cat, nodeId);
+      if (!item) return;
+      item.specDismissed = !!dismissed;
+      saveToStorage();
+      _renderScanPrecreations();
+    }
+    window.dismissScanItem = dismissScanItem;
+
+    function _renderScanPrecreations() {
+      const host = document.getElementById('specs-scan-precreations');
+      if (!host) return;
+      const { pending, dismissed } = _scanPrecreations();
+      if (pending.length + dismissed.length === 0) { host.innerHTML = ''; return; }
+
+      const open = _scanPreOpen === null ? pending.length > 0 : _scanPreOpen;
+      const btn = 'inline-flex items-center gap-1 px-3 py-2 text-[10px] font-bold rounded-2xl border bg-white dark:bg-dark-surface hover:bg-gray-50 dark:hover:bg-dark-line/20 transition-colors border-gray-200 dark:border-dark-line text-[#005ca9] dark:text-blue-400 shrink-0';
+      const ghost = 'w-10 h-10 flex items-center justify-center rounded-2xl text-gray-500 dark:text-dark-muted hover:bg-gray-100 dark:hover:bg-dark-line/20 transition-colors shrink-0';
+      const args = (r) => `'${r.frame.id}', '${r.cat}', '${r.item.nodeId}'`;
+
+      const pendingRows = pending.map(r => `
+        <li class="flex items-center gap-2 px-3 py-1.5">
+          <button type="button" class="flex-1 min-w-0 text-left" onclick="focusScanItem(${args(r)})" title="Localizar no canvas" aria-label="Localizar ${escapeHtml(r.item.name)} no canvas">
+            <span class="block text-[11px] font-bold text-slate-700 dark:text-white truncate">${escapeHtml(r.item.name)}</span>
+            <span class="block text-[9px] text-slate-500 dark:text-dark-muted truncate">${escapeHtml(r.frame.nome || 'Frame')} · ${r.reason}</span>
+          </button>
+          <button type="button" class="${btn}" onclick="specifyScanItem(${args(r)})" aria-label="Especificar ${escapeHtml(r.item.name)}">Especificar</button>
+          <button type="button" class="${ghost}" title="Não precisa de especificação" aria-label="Não precisa de especificação: ${escapeHtml(r.item.name)}" onclick="dismissScanItem(${args(r)}, true)"><i data-lucide="x" class="w-4 h-4 pointer-events-none"></i></button>
+        </li>`).join('');
+
+      const dismissedRows = dismissed.map(r => `
+        <li class="flex items-center gap-2 px-3 py-1.5">
+          <div class="flex-1 min-w-0">
+            <span class="block text-[11px] font-bold text-slate-600 dark:text-dark-muted truncate">${escapeHtml(r.item.name)}</span>
+            <span class="block text-[9px] text-slate-500 dark:text-dark-muted truncate">${escapeHtml(r.frame.nome || 'Frame')}</span>
+          </div>
+          <button type="button" class="${btn}" onclick="dismissScanItem(${args(r)}, false)" aria-label="Restaurar ${escapeHtml(r.item.name)}"><i data-lucide="undo-2" class="w-3 h-3 pointer-events-none"></i>Restaurar</button>
+        </li>`).join('');
+
+      host.innerHTML = `
+        <div class="mb-3 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-xl overflow-hidden shadow-sm">
+          <div role="button" tabindex="0" aria-expanded="${open ? 'true' : 'false'}" title="Expandir/Recolher" aria-label="Expandir ou recolher Vindos do scan"
+               onclick="toggleScanPrecreations()"
+               onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleScanPrecreations();}"
+               class="w-full px-4 py-3 hover:bg-gray-50 dark:hover:bg-dark-line/20 transition-colors cursor-pointer select-none flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-[#005ca9] dark:text-blue-400 shrink-0">
+              <i data-lucide="scan-line" class="w-4 h-4"></i>
+            </div>
+            <div class="flex-1 min-w-0 flex items-center gap-2">
+              <p class="text-[13px] font-bold text-slate-800 dark:text-white truncate">Vindos do scan</p>
+              <p class="text-[10px] text-gray-500 dark:text-dark-muted whitespace-nowrap">${pending.length} para revisar</p>
+            </div>
+            <i data-lucide="chevron-down" class="w-4 h-4 transition-transform shrink-0 ${open ? 'text-[#005ca9] dark:text-blue-300' : 'text-gray-400'}" ${open ? 'style="transform:rotate(180deg)"' : ''}></i>
+          </div>
+          <div data-scan-pre-body class="${open ? '' : 'hidden '}border-t border-gray-50 dark:border-dark-line py-1">
+            ${pending.length > 0
+              ? `<ul class="divide-y divide-gray-50 dark:divide-dark-line">${pendingRows}</ul>`
+              : `<p class="text-[10px] text-slate-500 dark:text-dark-muted px-4 py-2">Nada para revisar. Itens fora do padrão do scan aparecem aqui.</p>`}
+            ${dismissed.length > 0 ? `
+            <div class="border-t border-gray-50 dark:border-dark-line mt-1">
+              <button type="button" class="w-full flex items-center justify-between gap-2 px-4 py-2 text-[10px] font-bold text-slate-600 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-line/20 transition-colors" aria-expanded="${_scanPreDismissedOpen ? 'true' : 'false'}" onclick="toggleScanPrecreationsDismissed()">
+                <span>${dismissed.length} dispensado${dismissed.length === 1 ? '' : 's'}</span>
+                <i data-lucide="chevron-down" class="w-3.5 h-3.5 shrink-0 pointer-events-none"></i>
+              </button>
+              <ul class="${_scanPreDismissedOpen ? '' : 'hidden '}divide-y divide-gray-50 dark:divide-dark-line">${dismissedRows}</ul>
+            </div>` : ''}
+          </div>
+        </div>`;
+      _refreshIcons();
+    }
+    window._renderScanPrecreations = _renderScanPrecreations;
     function createSpecItem(item, type) {
       let preview = "";
       if (item.preview) {
@@ -1360,28 +1522,28 @@
       // tem onclick="focusNode(...)".
       const _isFull = item.uiDepth === 'full';
       const customToggleHtml = `
-        <div class="flex items-center gap-1.5 mt-1" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between gap-3 mt-1" onclick="event.stopPropagation()">
+          <span class="text-[12px] text-slate-600 dark:text-dark-muted">Vai para a Ficha (precisa ser construído)</span>
           <label class="relative inline-flex items-center cursor-pointer shrink-0">
             <input type="checkbox" role="switch" aria-checked="${item.isMarkedCustom ? 'true' : 'false'}" aria-label="Vai para a Ficha (precisa ser construído)" class="sr-only peer"
               ${item.isMarkedCustom ? 'checked' : ''}
               onclick="event.stopPropagation()"
               onchange="onSpecItemCustomChange(this, '${activeFrameId || ''}', '${type}', '${item.nodeId}')">
-            <div class="w-7 h-4 bg-gray-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[1px] after:left-[1px] after:bg-white after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-[#005ca9]"></div>
+            <div class="w-9 h-5 bg-gray-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#005ca9]"></div>
           </label>
-          <span class="text-[9px] text-slate-500 dark:text-dark-muted">Vai para a Ficha (precisa ser construído)</span>
         </div>
         <div data-uidepth-row class="${item.isMarkedCustom ? '' : 'hidden '}flex flex-col mt-1.5" onclick="event.stopPropagation()">
-          <div class="flex items-center gap-1.5">
+          <div class="flex items-center justify-between gap-3">
+          <span class="text-[12px] text-slate-600 dark:text-dark-muted">Detalhamento completo</span>
           <label class="relative inline-flex items-center cursor-pointer shrink-0">
             <input type="checkbox" role="switch" aria-checked="${_isFull ? 'true' : 'false'}" aria-label="Detalhamento completo" data-uidepth-box class="sr-only peer"
               ${_isFull ? 'checked' : ''}
               onclick="event.stopPropagation()"
               onchange="onSpecItemDepthChange(this, '${activeFrameId || ''}', '${type}', '${item.nodeId}')">
-            <div class="w-7 h-4 bg-gray-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[1px] after:left-[1px] after:bg-white after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-[#005ca9]"></div>
+            <div class="w-9 h-5 bg-gray-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#005ca9]"></div>
           </label>
-          <span class="text-[9px] text-slate-500 dark:text-dark-muted">Detalhamento completo</span>
           </div>
-          <p class="text-[9px] leading-snug text-slate-500 dark:text-dark-muted mt-0.5 ml-9">Inclui composição interna, interações e todas as propriedades.</p>
+          <p class="text-[10px] leading-snug text-slate-500 dark:text-dark-muted mt-0.5 pr-12">Inclui composição interna, interações e todas as propriedades.</p>
         </div>
       `;
 
@@ -1509,7 +1671,7 @@
         : '';
 
       return `
-        <div role="button" tabindex="0" data-spec-card data-node-id="${item.nodeId}" class="col-span-2 p-2 border border-gray-100 dark:border-dark-line rounded-lg bg-gray-50/50 dark:bg-dark-bg/50 cursor-pointer hover:border-[#005ca9] hover:shadow-sm transition-all active:scale-[0.98] group" onclick="focusNode('${item.nodeId}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();focusNode('${item.nodeId}');}" title="Focar no elemento no Figma" aria-label="Focar em ${escapeHtml(item.name)} no Figma">
+        <div role="button" tabindex="0" data-spec-card data-node-id="${item.nodeId}" data-item-key="${_specItemKey(activeFrameId || '', type, item.nodeId)}" class="col-span-2 p-2 border border-gray-100 dark:border-dark-line rounded-lg bg-gray-50/50 dark:bg-dark-bg/50 cursor-pointer hover:border-[#005ca9] hover:shadow-sm transition-all active:scale-[0.98] group" onclick="focusNode('${item.nodeId}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();focusNode('${item.nodeId}');}" title="Focar no elemento no Figma" aria-label="Focar em ${escapeHtml(item.name)} no Figma">
           <div class="flex items-center gap-2 mb-1 pointer-events-none">
             ${preview}
             <div class="flex-1 min-w-0">
@@ -1964,6 +2126,7 @@
       const list = document.getElementById('specs-results');
       if (!list) return;
       list.innerHTML = '';
+      _renderScanPrecreations();
 
       const exportBtn = document.getElementById('btn-export-specs');
       const hideAllBtn = document.getElementById('btn-hide-all-specs');
@@ -1983,7 +2146,7 @@
               <i data-lucide="file-text" class="w-16 h-16 text-slate-200 dark:text-slate-700" style="opacity:0.25"></i>
             </div>
             <p class="text-[12px] font-bold text-slate-600 dark:text-dark-muted text-center px-4 mb-1">Nenhuma especificação criada ainda</p>
-            <p class="text-[10px] text-slate-600 dark:text-dark-muted text-center px-6 mb-3">Selecione um elemento no canvas para registrar decisões, regras e exceções. Só precisa dos valores? Use Anotar Specs Rápidas.</p>
+            <p class="text-[10px] text-slate-600 dark:text-dark-muted text-center px-6 mb-3">Selecione um elemento no canvas para registrar decisões, regras e exceções. Só precisa dos valores? Use Inserir Anotações.</p>
             <button onclick="openSpecFormModal()" class="fab-inline" title="Criar especificação" aria-label="Criar especificação">
               <i data-lucide="plus" class="w-4 h-4 shrink-0"></i>
               <span>Nova spec</span>
@@ -2014,7 +2177,7 @@
       if (typeof _moveHeaderHelpIcons === 'function') _moveHeaderHelpIcons('specs-header-help-icons', '#view-specifications .subheader-brand > div:last-child', true);
       if (sectionTitle) {
         sectionTitle.classList.remove('hidden');
-        sectionTitle.textContent = `Specs Criadas (${createdSpecs.length})`;
+        sectionTitle.textContent = `Especificações criadas (${createdSpecs.length})`;
       }
 
       // Agrupar especificações por letra (Tag)
@@ -2186,6 +2349,7 @@
           createdSpecs = createdSpecs.filter(s => !specs.some(gs => gs.id === s.id));
           saveSpecsToStorage();
           renderSpecsList();
+          refreshSpecOwners();
         };
 
         const groupVisBtn = document.createElement('button');
@@ -2312,6 +2476,7 @@
             <div class="flex flex-col overflow-hidden min-w-0 text-left gap-0.5">
               <span class="text-[12px] font-bold text-slate-800 dark:text-white truncate" title="${spec.name}">${spec.name}</span>
               ${spec.category && _ccSpec ? `<span class="shrink-0 self-start text-[9px] font-bold px-1.5 py-0.5 rounded-full border" style="background-color:${_ccSpec.fill};border-color:${_ccSpec.stroke};color:${_ccSpec.stroke};">${spec.categoryLabel || spec.category}</span>` : ''}
+              <span data-spec-origin-slot class="self-start">${_specOriginBadgeHtml(spec.id)}</span>
             </div>
           `;
 
@@ -2448,6 +2613,7 @@
             removeSpecById(spec.id);
             saveSpecsToStorage();
             renderSpecsList();
+            refreshSpecOwners();
           };
 
           actions.appendChild(visBtn);
@@ -4059,7 +4225,7 @@ function toggleLinkInput(show) {
 
       const modalTitle = document.querySelector('#spec-form-modal h3');
       if (modalTitle) {
-        modalTitle.innerHTML = '<i data-lucide="plus-circle" class="w-4 h-4 text-[#004d8d]"></i> Criar Spec Detalhada';
+        modalTitle.innerHTML = '<i data-lucide="plus-circle" class="w-4 h-4 text-[#004d8d]"></i> Criar Especificação';
       }
       const confirmBtn = document.getElementById('btn-spec-form-confirm');
       if (confirmBtn) {

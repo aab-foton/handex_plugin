@@ -293,7 +293,7 @@ function hexToRgb(hex) {
 // categoria aparece. Nunca redimensiona a Section pra "abraçar" os filhos
 // automaticamente -- ela só existe pra dar um agrupamento visível na árvore
 // de camadas, o layout dos itens dentro continua exatamente como já era.
-const HANDEX_SECTION_NAMES = { medida: 'Handex | Medidas', spec: 'Handex | Specs', fluxo: 'Handex | Fluxos', ficha: 'Handex | Ficha', quickspec: 'Handex | Specs Rápidas' };
+const HANDEX_SECTION_NAMES = { medida: 'Handex | Medidas', spec: 'Handex | Especificações', fluxo: 'Handex | Fluxos', ficha: 'Handex | Ficha', quickspec: 'Handex | Anotações' };
 function _hdEnsureCategorySection(category) {
   const sectionName = HANDEX_SECTION_NAMES[category];
   if (!sectionName) return null;
@@ -305,7 +305,12 @@ function _hdEnsureCategorySection(category) {
   // total de nós da página a cada criação (ver nota de performance
   // discutida nesta mesma sessão sobre documentações densas).
   const existing = figma.currentPage.children.find(n => n.type === 'SECTION' && n.getPluginData('handexCategorySection') === category);
-  if (existing) return existing;
+  if (existing) {
+    // Nomes de Section mudaram (2026-10-05: "Anotações"/"Especificações");
+    // a busca é por pluginData, então só atualiza o rótulo visível.
+    if (existing.name !== sectionName) { try { existing.name = sectionName; } catch (e) {} }
+    return existing;
+  }
   const section = figma.createSection();
   section.name = sectionName;
   section.setPluginData('handexCategorySection', category);
@@ -357,14 +362,133 @@ function _hdMoveToCategorySection(node, category) {
 // isso, criar a ficha do zero e atualizar uma ficha existente podiam
 // divergir silenciosamente conforme um dos 3 fosse editado sem replicar a
 // mudança nos outros dois.
-function _hdCreateText(text, size = 14, weight = "Regular", color = { r: 0.1333, g: 0.1608, b: 0.1804 }) {
+// Padrão CAIXA na Ficha inteira: só vale DURANTE a geração/atualização da Ficha
+// (_hdFichaGen, ligado em create-handoff/insert-ficha-section) e com fontes já
+// resolvidas por _hdFicheFonts(). Fora disso (ex: card de Anotação, que
+// também usa _hdCreateText) o texto continua em Inter, como sempre foi.
+let _hdFichaGen = false;
+function _hdStyled() { return FICHA_DSC_STYLE_ENABLED && _hdFichaGen && !!_hdFichaFontsCache; }
+function _hdS(oldVal, styledVal) { return _hdStyled() ? styledVal : oldVal; }
+// Zera o cache de fontes e resolve de novo no início de CADA geração/atualização
+// da Ficha (create-handoff, insert-ficha-section); o fim desliga _hdFichaGen (finally).
+async function _hdBeginFichaStyle() {
+  _hdFichaFontsCache = null;
+  _hdFichaGen = false;
+  if (!FICHA_DSC_STYLE_ENABLED) return;
+  await _hdFicheFonts();
+  _hdFichaGen = true;
+}
+function _hdRemapColor(c) {
+  if (c && Math.abs(c.r - 0.3922) < 0.002 && Math.abs(c.g - 0.4549) < 0.002 && Math.abs(c.b - 0.4784) < 0.002) return hexToRgb(_DS.text2);
+  return c;
+}
+function _hdCreateText(text, size = 14, weight = "Regular", color = { r: 0.1333, g: 0.1608, b: 0.1804 }, opts) {
   const t = figma.createText();
+  if (_hdStyled()) {
+    const o = opts || {};
+    const f = _hdFichaFontsCache;
+    if (o.mono) {
+      t.fontName = { family: f.code.family, style: weight === "Regular" ? f.code.regular : f.code.medium };
+    } else {
+      t.fontName = { family: f.text.family, style: f.text[o.w || (weight === "Regular" ? "regular" : "semibold")] };
+    }
+    t.characters = String(text || "");
+    const sz = Math.max(size, 11);
+    t.fontSize = sz;
+    t.lineHeight = { unit: "PIXELS", value: Math.round(sz * 1.5) };
+    t.fills = [{ type: "SOLID", color: _hdRemapColor(color) }];
+    return t;
+  }
   t.fontName = { family: "Inter", style: weight };
   t.characters = String(text || "");
   t.fontSize = size;
   t.fills = [{ type: "SOLID", color }];
   return t;
 }
+// Tag/selo no padrão do chip da referência (raio 4, borda 1px). Só no padrão CAIXA.
+function _hdTag(text, o) {
+  const tag = _hdCreateFrame("HORIZONTAL", 0, 0, hexToRgb(o.bg));
+  tag.paddingTop = 3; tag.paddingBottom = 3; tag.paddingLeft = 8; tag.paddingRight = 8;
+  tag.cornerRadius = 4;
+  tag.counterAxisAlignItems = "CENTER";
+  if (o.border) { tag.strokes = [{ type: "SOLID", color: hexToRgb(o.border) }]; tag.strokeWeight = 1; }
+  tag.appendChild(_hdCreateText(text, o.size || 12, "Bold", hexToRgb(o.color)));
+  return tag;
+}
+
+// Bloco de Documentação Visual (por frame / avulsas): painel da referência no
+// padrão CAIXA (fundo #ebf1f2, borda #9eb2b8, raio 8); visual antigo se desligado.
+function _hdStyleDocBlock(block) {
+  if (_hdStyled()) {
+    block.fills = [{ type: "SOLID", color: hexToRgb(_DS.gray) }];
+    block.cornerRadius = 8;
+    block.strokes = [{ type: "SOLID", color: hexToRgb(_DS.panelBorder) }];
+  } else {
+    block.cornerRadius = 12;
+    block.strokes = [{ type: "SOLID", color: { r: 0.8157, g: 0.8784, b: 0.8902 } }];
+  }
+  block.strokeWeight = 1;
+}
+function _hdStylePreviewRect(rect) {
+  if (!_hdStyled()) return;
+  rect.strokes = [{ type: "SOLID", color: hexToRgb(_DS.panelBorder) }];
+  rect.strokeWeight = 1;
+}
+
+// Tag "Preview" da referência (fundo claro, raio 8), usada como rótulo de imagem.
+function _hdPreviewTag(text, fillHex) {
+  const tag = _hdCreateFrame("HORIZONTAL", 0, 0, hexToRgb(fillHex || _DS.gray));
+  tag.paddingTop = 6; tag.paddingBottom = 6; tag.paddingLeft = 12; tag.paddingRight = 12;
+  tag.cornerRadius = 8;
+  tag.counterAxisAlignItems = "CENTER";
+  tag.name = "Tag Preview";
+  tag.appendChild(_hdCreateText(text, 14, "Bold", hexToRgb(_DS.text)));
+  return tag;
+}
+
+// Tabela no padrão da referência: cabeçalho #ebf1f2, células brancas, borda
+// #d0e0e3 (só a linha inferior por célula), raio 8. cols: [{ title, w }] (w
+// ausente = ocupa o restante). rows: array de células ou { cells, pd }; célula =
+// string | { text, w, color, mono, link: HyperlinkTarget } | nó (TEXT/FRAME). Largura total = a do pai.
+function _hdCell(spec) {
+  if (spec == null) return _dsText("—", { size: 13, lh: 20, color: _DS.text2 });
+  if (typeof spec === "string" || typeof spec === "number") return _dsText(String(spec), { size: 13, lh: 20 });
+  if (spec.text === undefined) return spec;
+  const t = _dsText(spec.text, { size: spec.size || 13, lh: spec.lh || 20, w: spec.w, color: spec.color, mono: spec.mono });
+  if (spec.link) {
+    try { t.hyperlink = spec.link; t.textDecoration = "UNDERLINE"; } catch (e) {}
+  }
+  return t;
+}
+function _hdDsTable(parent, name, cols, rows) {
+  const table = _dsFrame(`[DSC] Tabela ${name}`, "VERTICAL", { fill: _DS.white, stroke: _DS.tableBorder, radius: 8, clip: true });
+  _dsAdd(parent, table, true);
+  const mkRow = (cells, header, pd) => {
+    const row = _dsFrame(header ? "Cabeçalho" : "Linha", "HORIZONTAL", {});
+    _dsAdd(table, row, true);
+    if (pd) Object.keys(pd).forEach(k => { try { row.setPluginData(k, String(pd[k])); } catch (e) {} });
+    cells.forEach((spec, ci) => {
+      const c = header ? _dsText(spec, { w: "semibold", size: 13, lh: 20 }) : _hdCell(spec);
+      const cell = _dsFrame("Célula", "VERTICAL", { pt: header ? 10 : 8, pb: header ? 10 : 8, pl: 12, pr: 12, fill: header ? _DS.gray : _DS.white, stroke: _DS.tableBorder });
+      try { cell.strokeTopWeight = 0; cell.strokeLeftWeight = 0; cell.strokeRightWeight = 0; cell.strokeBottomWeight = 1; } catch (e) {}
+      row.appendChild(cell);
+      const w = cols[ci] && cols[ci].w;
+      if (w) { cell.resize(w, 10); cell.counterAxisSizingMode = "FIXED"; cell.primaryAxisSizingMode = "AUTO"; }
+      else { try { cell.layoutGrow = 1; } catch (e) {} }
+      try { cell.layoutAlign = "STRETCH"; } catch (e) {}
+      cell.appendChild(c);
+      if (c.type === "TEXT") _dsFillW(c);
+      cell.primaryAxisAlignItems = "CENTER";
+    });
+    // Todas as células da linha com a altura da mais alta (ex.: chip de papel
+    // mais alto que o texto), para a borda inferior ficar contínua.
+    row.children.forEach(cell => { try { cell.layoutSizingVertical = "FILL"; } catch (e) {} });
+  };
+  mkRow(cols.map(c => c.title), true, null);
+  rows.forEach(r => (Array.isArray(r) ? mkRow(r, false, null) : mkRow(r.cells, false, r.pd)));
+  return table;
+}
+
 function _hdCreateFrame(direction = "VERTICAL", padding = 0, spacing = 0, fill = null) {
   const f = figma.createFrame();
   f.layoutMode = direction;
@@ -408,7 +532,7 @@ function _hdCreateSection(parent, titleText) {
   section.cornerRadius = 8;
   section.strokes = [{ type: "SOLID", color: { r: 0.8157, g: 0.8784, b: 0.8902 } }];
   section.strokeWeight = 1;
-  const title = _hdCreateText(titleText, 16, "Bold", hexToRgb("#005ca9"));
+  const title = _hdCreateText(titleText, _hdS(16, 22), "Bold", hexToRgb("#005ca9"));
   section.appendChild(title);
   _hdSetFillAndHug(title);
   return section;
@@ -435,23 +559,28 @@ function _hdCreateRow(parent, label, value) {
 // handexFrameId identifica o card entre gerações para permitir substituir em
 // vez de duplicar quando a ficha já existe.
 async function _hdBuildFrameCard(f, fi) {
-  const fRow = _hdCreateFrame("VERTICAL", 12, 8, { r: 0.9686, g: 0.9804, b: 0.9804 });
+  const _st = _hdStyled();
+  const fRow = _hdCreateFrame("VERTICAL", _st ? 16 : 12, _st ? 12 : 8, _st ? hexToRgb(_DS.white) : { r: 0.9686, g: 0.9804, b: 0.9804 });
   fRow.name = `[Frame] ${f.nome || 'Frame ' + (fi + 1)}`;
   fRow.cornerRadius = 8;
   fRow.strokes = [{ type: "SOLID", color: { r: 0.8157, g: 0.8784, b: 0.8902 } }];
   fRow.setPluginData('handexFrameId', f.figmaId || f.id || '');
   const fHeader = _hdCreateFrame("HORIZONTAL", 0, 8);
   fHeader.counterAxisAlignItems = "CENTER";
-  const fName = _hdCreateText(f.nome || 'Frame', 12, "Bold", { r: 0.1333, g: 0.1608, b: 0.1804 });
+  const fName = _hdCreateText(f.nome || 'Frame', _hdS(12, 18), "Bold", { r: 0.1333, g: 0.1608, b: 0.1804 });
   fName.layoutGrow = 1;
   fHeader.appendChild(fName);
   if (f.isNewComponent) {
-    const badge = _hdCreateFrame("HORIZONTAL", 8, 3, { r: 1, g: 0.937, b: 0.839 });
-    badge.cornerRadius = 999;
-    badge.strokes = [{ type: "SOLID", color: { r: 0.992, g: 0.710, b: 0.282 } }];
-    badge.strokeWeight = 1;
-    badge.appendChild(_hdCreateText("Novo componente", 9, "Medium", { r: 0.4, g: 0.2275, b: 0 }));
-    fHeader.appendChild(badge);
+    if (_st) {
+      fHeader.appendChild(_hdTag("Novo componente", { bg: _DS.numBg, border: _DS.numBorder, color: _DS.text }));
+    } else {
+      const badge = _hdCreateFrame("HORIZONTAL", 8, 3, { r: 1, g: 0.937, b: 0.839 });
+      badge.cornerRadius = 999;
+      badge.strokes = [{ type: "SOLID", color: { r: 0.992, g: 0.710, b: 0.282 } }];
+      badge.strokeWeight = 1;
+      badge.appendChild(_hdCreateText("Novo componente", 9, "Medium", { r: 0.4, g: 0.2275, b: 0 }));
+      fHeader.appendChild(badge);
+    }
   }
   fRow.appendChild(fHeader);
   _hdSetFillAndHug(fHeader);
@@ -474,7 +603,17 @@ async function _hdBuildFrameCard(f, fi) {
     const _allItems = f.specs
       ? Object.keys(_categoryLabels).flatMap(cat => (f.specs[cat] || []).map(item => ({ ...item, _cat: _categoryLabels[cat] })))
       : [];
-    if (_allItems.length > 0) {
+    if (_allItems.length > 0 && _st) {
+      const elementsWrap = _hdCreateFrame("VERTICAL", 0, 8);
+      elementsWrap.name = "[Campo] Elementos do Componente";
+      fRow.appendChild(elementsWrap);
+      _hdSetFillAndHug(elementsWrap);
+      const elementsLabel = _hdCreateText(`Elementos (${_allItems.length})`, 12, "Bold", { r: 0.3922, g: 0.4549, b: 0.4784 });
+      elementsWrap.appendChild(elementsLabel);
+      _hdSetFillAndHug(elementsLabel);
+      _hdDsTable(elementsWrap, "Elementos", [{ title: "Elemento" }, { title: "Categoria", w: 200 }],
+        _allItems.map(item => [item.name || 'Elemento', `${item._cat}${LEGACY_LIB_MIGRATION_HINT_ENABLED && item.legacyLib ? ' · lib legada, precisa migrar' : ''}`]));
+    } else if (_allItems.length > 0) {
       const elementsWrap = _hdCreateFrame("VERTICAL", 0, 4);
       elementsWrap.name = "[Campo] Elementos do Componente";
       fRow.appendChild(elementsWrap);
@@ -603,9 +742,17 @@ function _hdBuildMeasuresSubgroup(f) {
   const _frameKey = f.figmaId || f.id || '';
   fGroup.name = _frameKey ? `[Medidas | ${_frameKey}] ${f.nome || 'Frame'}` : `[Medidas] ${f.nome || 'Frame'}`;
   fGroup.setPluginData('handexFrameId', _frameKey);
-  const fLabel = _hdCreateText(f.nome || 'Frame', 10, "Bold", { r: 0, g: 0.3608, b: 0.6627 });
+  const fLabel = _hdCreateText(f.nome || 'Frame', _hdS(10, 16), "Bold", { r: 0, g: 0.3608, b: 0.6627 });
   fGroup.appendChild(fLabel);
   _hdSetFillAndHug(fLabel);
+  if (_hdStyled()) {
+    _hdDsTable(fGroup, "Medidas", [{ title: "Medida", w: 170 }, { title: "Valores" }],
+      f.measurements.map(m => [
+        { text: m.name || 'Medida', w: "semibold" },
+        { text: Array.isArray(m.details) ? m.details.join(' | ') : (m.details || ''), mono: true, size: 12, lh: 18, color: _DS.blue }
+      ]));
+    return fGroup;
+  }
   f.measurements.forEach(m => {
     const details = Array.isArray(m.details) ? m.details.join(' | ') : (m.details || '');
     const mRow = _hdCreateFrame("HORIZONTAL", 10, 7, { r: 0.9686, g: 0.9804, b: 0.9804 });
@@ -642,9 +789,10 @@ async function _hdBuildSpecsSubgroup(f) {
   const fGroup = _hdCreateFrame("VERTICAL", 0, 10);
   fGroup.name = `[Specs] ${f.nome || 'Frame'}`;
   fGroup.setPluginData('handexFrameId', f.figmaId || f.id || '');
-  const fLabel = _hdCreateText(f.nome || 'Frame', 10, "Bold", { r: 0, g: 0.3608, b: 0.6627 });
+  const fLabel = _hdCreateText(f.nome || 'Frame', _hdS(10, 16), "Bold", { r: 0, g: 0.3608, b: 0.6627 });
   fGroup.appendChild(fLabel);
   _hdSetFillAndHug(fLabel);
+  const _st = _hdStyled();
 
   const groupNames = f.specGroupNames || {};
   const groupVisible = f.specGroupVisible || {};
@@ -677,19 +825,24 @@ async function _hdBuildSpecsSubgroup(f) {
     gBadge.primaryAxisAlignItems = "CENTER";
     gBadge.counterAxisAlignItems = "CENTER";
     gHeader.appendChild(gBadge);
-    const gBadgeT = figma.createText();
-    gBadgeT.fontName = { family: "Inter", style: "Bold" };
-    gBadgeT.fontSize = 9;
-    gBadgeT.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
-    gBadgeT.characters = letter;
+    let gBadgeT;
+    if (_st) {
+      gBadgeT = _hdCreateText(letter, 11, "Bold", { r: 1, g: 1, b: 1 });
+    } else {
+      gBadgeT = figma.createText();
+      gBadgeT.fontName = { family: "Inter", style: "Bold" };
+      gBadgeT.fontSize = 9;
+      gBadgeT.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+      gBadgeT.characters = letter;
+    }
     gBadgeT.textAutoResize = "WIDTH_AND_HEIGHT";
     gBadge.appendChild(gBadgeT);
     if (groupNameText) {
-      const gName = _hdCreateText(groupNameText, 10, "Bold", { r: 0.1333, g: 0.1608, b: 0.1804 });
+      const gName = _hdCreateText(groupNameText, _hdS(10, 14), "Bold", { r: 0.1333, g: 0.1608, b: 0.1804 });
       gHeader.appendChild(gName);
       _hdSetFillAndHug(gName);
     }
-    const gCount = _hdCreateText(`${groupSpecs.length} esp.`, 9, "Regular", { r: 0.3922, g: 0.4549, b: 0.4784 });
+    const gCount = _hdCreateText(`${groupSpecs.length} esp.`, _hdS(9, 12), "Regular", { r: 0.3922, g: 0.4549, b: 0.4784 });
     gHeader.appendChild(gCount);
     _hdSetFillAndHug(gCount);
 
@@ -702,7 +855,7 @@ async function _hdBuildSpecsSubgroup(f) {
       const catLabel = s.type || s.categoryLabel || s.category || 'Geral';
       const sc = s.color ? hexToRgb(s.color) : { r: 0, g: 0.361, b: 0.663 };
       const scBg = s.fillColor ? hexToRgb(s.fillColor) : { r: 1 - (1 - sc.r) * 0.12, g: 1 - (1 - sc.g) * 0.12, b: 1 - (1 - sc.b) * 0.12 };
-      const sRow = _hdCreateFrame("VERTICAL", 10, 8, { r: 0.969, g: 0.980, b: 0.980 });
+      const sRow = _hdCreateFrame("VERTICAL", _st ? 12 : 10, _st ? 12 : 8, _st ? hexToRgb(_DS.white) : { r: 0.969, g: 0.980, b: 0.980 });
       sRow.name = `[Spec/${s.letter || 'A'}] ${s.name || s.label || 'Spec'}`;
       sRow.cornerRadius = 8;
       sRow.strokes = [{ type: "SOLID", color: sc }];
@@ -712,7 +865,7 @@ async function _hdBuildSpecsSubgroup(f) {
       sTop.counterAxisAlignItems = "CENTER";
       sRow.appendChild(sTop);
       _hdSetFillAndHug(sTop);
-      const sName = _hdCreateText(s.name || s.label || 'Spec', 11, "Bold", { r: 0.1333, g: 0.1608, b: 0.1804 });
+      const sName = _hdCreateText(s.name || s.label || 'Spec', _hdS(11, 14), "Bold", { r: 0.1333, g: 0.1608, b: 0.1804 });
       sName.layoutGrow = 1;
       sTop.appendChild(sName);
       if (s.link) {
@@ -723,19 +876,31 @@ async function _hdBuildSpecsSubgroup(f) {
         sName.hyperlink = { type: "NODE", value: s.id };
       }
       const sCatTag = _hdCreateFrame("HORIZONTAL", 6, 3, scBg);
-      sCatTag.cornerRadius = 999;
+      sCatTag.cornerRadius = _hdS(999, 4);
       sCatTag.strokes = [{ type: "SOLID", color: sc }];
       sCatTag.strokeWeight = 1;
       sTop.appendChild(sCatTag);
       _hdSetFillAndHug(sCatTag);
-      sCatTag.appendChild(_hdCreateText(catLabel, 9, "Medium", sc));
+      sCatTag.appendChild(_hdCreateText(catLabel, _hdS(9, 12), "Medium", sc));
       if (s.note) {
-        const sNote = _hdCreateText(s.note, 10, "Regular", { r: 0.3922, g: 0.4549, b: 0.4784 });
+        const sNote = _hdCreateText(s.note, _hdS(10, 13), "Regular", { r: 0.3922, g: 0.4549, b: 0.4784 });
         sRow.appendChild(sNote);
         _hdSetFillAndHug(sNote);
       }
       const _props = s.properties || [];
-      if (_props.length > 0) {
+      if (_props.length > 0 && _st) {
+        const propsCol = _dsFrame("Propriedades da spec", "VERTICAL", { gap: 8 });
+        _dsAdd(sRow, propsCol, true);
+        _props.forEach(prop => {
+          const val = String(_hdVocabValue(prop.value) || '');
+          const hexM = /#([0-9a-f]{6})/i.exec(val);
+          const chips = _dsChipsForRow({
+            key: prop.key || '', cat: hexM ? "fill" : "", label: prop.label || '', value: val,
+            token: prop.token || null, raw: hexM ? { hex: "#" + hexM[1] } : null, libName: null
+          });
+          _dsPropLine(propsCol, String(_hdVocabLabel(prop.label, prop.key) || prop.key || '').toLowerCase(), chips);
+        });
+      } else if (_props.length > 0) {
         const propsFrame = _hdCreateFrame("VERTICAL", 0, 3);
         propsFrame.fills = [];
         _hdSetFillAndHug(propsFrame);
@@ -760,7 +925,13 @@ async function _hdBuildSpecsSubgroup(f) {
         });
       }
       const _excs = s.excecoes || [];
-      if (_excs.length > 0) {
+      if (_excs.length > 0 && _st) {
+        const excCol = _dsFrame("Exceções da spec", "VERTICAL", { gap: 8 });
+        _dsAdd(sRow, excCol, true);
+        for (const exc of _excs) {
+          await _dsAlert(excCol, exc.tipo, `${exc.tipo || 'Exceção'}${exc.titulo ? ' — ' + exc.titulo : ''}`, [exc.obs]);
+        }
+      } else if (_excs.length > 0) {
         const excFrame = _hdCreateFrame("VERTICAL", 0, 4);
         excFrame.fills = [];
         _hdSetFillAndHug(excFrame);
@@ -866,7 +1037,7 @@ function _hdBuildSectionShell(titleText) {
   section.cornerRadius = 8;
   section.strokes = [{ type: "SOLID", color: { r: 0.8157, g: 0.8784, b: 0.8902 } }];
   section.strokeWeight = 1;
-  const title = _hdCreateText(titleText, 16, "Bold", hexToRgb("#005ca9"));
+  const title = _hdCreateText(titleText, _hdS(16, 22), "Bold", hexToRgb("#005ca9"));
   section.appendChild(title);
   _hdSetFillAndHug(title);
   return section;
@@ -967,11 +1138,10 @@ async function _hdBuildFrameShowcaseBlock(f, fi) {
   // começa.
   const block = _hdCreateFrame("VERTICAL", 16, 16, { r: 0.9686, g: 0.9804, b: 0.9804 });
   block.name = `[Documentação] ${f.nome || 'Frame ' + (fi + 1)}`;
-  block.cornerRadius = 12;
-  block.strokes = [{ type: "SOLID", color: { r: 0.8157, g: 0.8784, b: 0.8902 } }];
+  _hdStyleDocBlock(block);
   block.setPluginData('handexFrameId', f.figmaId || f.id || '');
 
-  const blockTitle = _hdCreateText(f.nome || 'Frame', 14, "Bold", { r: 0.1333, g: 0.1608, b: 0.1804 });
+  const blockTitle = _hdCreateText(f.nome || 'Frame', _hdS(14, 18), "Bold", { r: 0.1333, g: 0.1608, b: 0.1804 });
   block.appendChild(blockTitle);
   _hdSetFillAndHug(blockTitle);
 
@@ -988,7 +1158,7 @@ async function _hdBuildFrameShowcaseBlock(f, fi) {
   const _addShowcasePair = async (label, nodeIds, detailNode, buildExtras) => {
     if (!detailNode) return;
     const pair = _hdCreateFrame("VERTICAL", 0, 8);
-    pair.appendChild(_hdCreateText(label, 11, "Bold", { r: 0.3922, g: 0.4549, b: 0.4784 }));
+    pair.appendChild(_hdStyled() ? _hdPreviewTag(label, _DS.white) : _hdCreateText(label, 11, "Bold", { r: 0.3922, g: 0.4549, b: 0.4784 }));
 
     if (nodeIds.length > 0) {
       const bytes = await _hdSnapshotFrameWithNodes(_frameNode, nodeIds);
@@ -1002,7 +1172,8 @@ async function _hdBuildFrameShowcaseBlock(f, fi) {
           rect.resize(_w, _h);
           rect.fills = [{ type: "IMAGE", imageHash, scaleMode: "FIT" }];
           rect.cornerRadius = 8;
-          rect.layoutAlign = "MIN"; // alinhado à esquerda, nunca estica (FILL)
+          _hdStylePreviewRect(rect);
+          rect.layoutAlign = "INHERIT"; // alinhado à esquerda, nunca estica (FILL)
           pair.appendChild(rect);
         } catch (e) { /* tolera falha de imagem isolada, mantém o card de detalhe */ }
       }
@@ -1022,13 +1193,13 @@ async function _hdBuildFrameShowcaseBlock(f, fi) {
     detailNode.resize(_DETAIL_CARD_MAX_W, detailNode.height);
     if ('counterAxisSizingMode' in detailNode) detailNode.counterAxisSizingMode = "FIXED";
     if ('primaryAxisSizingMode' in detailNode) detailNode.primaryAxisSizingMode = "AUTO";
-    detailNode.layoutAlign = "MIN";
+    detailNode.layoutAlign = "INHERIT";
     block.appendChild(pair);
     _hdSetFillAndHug(pair);
   };
 
   if (_hasSpecs) {
-    await _addShowcasePair("Specs marcadas", await _hdCollectSpecContourIds(f), await _hdBuildSpecsSubgroup(f));
+    await _addShowcasePair("Especificações marcadas", await _hdCollectSpecContourIds(f), await _hdBuildSpecsSubgroup(f));
   }
   if (_hasMeasures) {
     const _measureIds = f.measurements.map(m => m.nodeId).filter(Boolean);
@@ -1044,8 +1215,9 @@ async function _hdBuildFrameShowcaseBlock(f, fi) {
         if (!crop) continue;
         perFrame++;
         _hdCropBudget--;
-        const lbl = _hdCreateText(crop.label, 11, "Bold", { r: 0.3922, g: 0.4549, b: 0.4784 });
+        const lbl = _hdStyled() ? _hdPreviewTag(crop.label, _DS.white) : _hdCreateText(crop.label, 11, "Bold", { r: 0.3922, g: 0.4549, b: 0.4784 });
         pair.appendChild(lbl);
+        _hdStylePreviewRect(crop.rect);
         pair.appendChild(crop.rect);
       }
     });
@@ -1129,7 +1301,7 @@ async function _hdBuildMeasureCropImage(frameNode, m, maxW) {
     ],
   }];
   rect.cornerRadius = 8;
-  rect.layoutAlign = "MIN";
+  rect.layoutAlign = "INHERIT";
   return { rect, label };
 }
 
@@ -1162,16 +1334,15 @@ async function _hdRebuildDocumentacaoVisualSection(frames, looseMeasurements, lo
   if (_looseSpecs.length > 0) {
     const block = _hdCreateFrame("VERTICAL", 16, 16, { r: 0.9686, g: 0.9804, b: 0.9804 });
     block.name = "[Documentação] Specs avulsas";
-    block.cornerRadius = 12;
-    block.strokes = [{ type: "SOLID", color: { r: 0.8157, g: 0.8784, b: 0.8902 } }];
+    _hdStyleDocBlock(block);
     block.setPluginData('handexFrameId', '__loose__');
-    const t = _hdCreateText("Specs avulsas", 14, "Bold", { r: 0.1333, g: 0.1608, b: 0.1804 });
+    const t = _hdCreateText("Especificações avulsas", _hdS(14, 18), "Bold", { r: 0.1333, g: 0.1608, b: 0.1804 });
     block.appendChild(t);
     _hdSetFillAndHug(t);
-    const tSub = _hdCreateText("Anotadas direto no canvas, sem um frame escaneado em Escanear Tokens.", 10, "Regular", { r: 0.3922, g: 0.4549, b: 0.4784 });
+    const tSub = _hdCreateText("Anotadas direto no canvas, sem um frame escaneado em Escanear Tokens.", _hdS(10, 12), "Regular", { r: 0.3922, g: 0.4549, b: 0.4784 });
     block.appendChild(tSub);
     _hdSetFillAndHug(tSub);
-    const detail = await _hdBuildSpecsSubgroup({ nome: "Specs anotadas", createdSpecs: _looseSpecs });
+    const detail = await _hdBuildSpecsSubgroup({ nome: "Especificações avulsas", createdSpecs: _looseSpecs });
     detail.setPluginData('handexFrameId', '__loose__');
     block.appendChild(detail);
     _hdSetFillAndHug(detail);
@@ -1180,13 +1351,12 @@ async function _hdRebuildDocumentacaoVisualSection(frames, looseMeasurements, lo
   if (_loose.length > 0) {
     const block = _hdCreateFrame("VERTICAL", 16, 16, { r: 0.9686, g: 0.9804, b: 0.9804 });
     block.name = "[Documentação] Medidas avulsas";
-    block.cornerRadius = 12;
-    block.strokes = [{ type: "SOLID", color: { r: 0.8157, g: 0.8784, b: 0.8902 } }];
+    _hdStyleDocBlock(block);
     block.setPluginData('handexFrameId', '__loose__');
-    const t = _hdCreateText("Medidas avulsas", 14, "Bold", { r: 0.1333, g: 0.1608, b: 0.1804 });
+    const t = _hdCreateText("Medidas avulsas", _hdS(14, 18), "Bold", { r: 0.1333, g: 0.1608, b: 0.1804 });
     block.appendChild(t);
     _hdSetFillAndHug(t);
-    const tSub = _hdCreateText("Aplicadas direto no canvas, sem um frame escaneado em Escanear Tokens.", 10, "Regular", { r: 0.3922, g: 0.4549, b: 0.4784 });
+    const tSub = _hdCreateText("Aplicadas direto no canvas, sem um frame escaneado em Escanear Tokens.", _hdS(10, 12), "Regular", { r: 0.3922, g: 0.4549, b: 0.4784 });
     block.appendChild(tSub);
     _hdSetFillAndHug(tSub);
     const detail = _hdBuildMeasuresSubgroup({ nome: "Medidas aplicadas", measurements: _loose });
@@ -1209,6 +1379,22 @@ function _hdRebuildFlowsSection(flows) {
   const _flows = flows || [];
   if (_flows.length === 0) return null;
   const flowsSection = _hdBuildSectionShell("Fluxos de Tela");
+  if (_hdStyled()) {
+    _hdDsTable(flowsSection, "Fluxos", [{ title: "Fluxo", w: 200 }, { title: "Tipo", w: 130 }, { title: "Conexão" }, { title: "Decisão", w: 170 }],
+      _flows.map((flow, fi) => {
+        const typeStr = _HD_FLOW_TYPE_LABEL[flow.type] || flow.type || '';
+        return {
+          cells: [
+            { text: flow.name || 'Fluxo ' + (fi + 1), w: "semibold" },
+            typeStr ? _hdTag(typeStr, { bg: _DS.colorBg, border: _DS.colorBorder, color: _DS.blue }) : "—",
+            (flow.fromName || flow.toName) ? `${flow.fromName || '?'} → ${flow.toName || '?'}` : "—",
+            flow.decisionText ? { text: `"${flow.decisionText}"`, color: _DS.text2 } : "—"
+          ],
+          pd: { handexFlowId: flow.flowUid || flow.id || '' }
+        };
+      }));
+    return flowsSection;
+  }
   _flows.forEach((flow, fi) => {
     const fRow = _hdBuildFlowCard(flow, fi);
     flowsSection.appendChild(fRow);
@@ -1263,7 +1449,7 @@ function _hdAddUiPropRow(parent, label, text, hasToken, size) {
 // na ordem "O que é? > Como se organiza? > Como se parece? > O que muda? >
 // De que é feito?". Cada leitura é protegida por _hdUiSafe: falha omite o
 // grupo, nunca quebra a Ficha. Lê pelo leitor único _readNodeSpec (o mesmo da
-// Spec Rápida e da Detalhada). Sem findAll: só children direto, com os tetos abaixo.
+// Anotação e da Detalhada). Sem findAll: só children direto, com os tetos abaixo.
 const _HD_UI_COMP_MAX_DEPTH = 4;
 const _HD_UI_COMP_MAX_NODES = 40;
 const _HD_UI_PRIMITIVE_TYPES = ["VECTOR", "BOOLEAN_OPERATION", "ELLIPSE", "RECTANGLE", "LINE", "STAR", "POLYGON"];
@@ -1297,7 +1483,7 @@ function _hdUiCleanProp(name) { return String(name).split("#")[0]; }
 // emitida por _readNodeSpec carrega `key` estável, independente do rótulo.
 //
 // Desvios do Dev Mode (justificativa): "Primary / Counter axis" (key
-// alignment) junta os dois eixos numa linha só na Spec Detalhada, que nunca
+// alignment) junta os dois eixos numa linha só na Especificação, que nunca
 // teve linha por eixo; "Width (sizing)"/"Height (sizing)" separam o modo
 // (Fixed/Hug contents/Fill container) do valor em px, que o Dev Mode mostra
 // numa linha só ("Fixed 360px"); o card da Ficha recompõe como Dev Mode.
@@ -1321,7 +1507,7 @@ const HD_GLOSSARY = {
     textDecoration: "Text decoration", textCase: "Text case", truncate: "Truncate text", maxLines: "Max lines",
     component: "Component", componentProps: "Component properties", swap: "Instance swap"
   },
-  // Rótulos antigos persistidos (scan, specs e Spec Rápida salvos) -> rótulo atual.
+  // Rótulos antigos persistidos (scan, specs e Anotação salvos) -> rótulo atual.
   aliases: {
     "Cor (Fill)": "Fill", "Contorno": "Border color", "Cor (Stroke)": "Border color", "Border Color": "Border color",
     "Border Width": "Border width", "Espessura de borda": "Border width",
@@ -1475,7 +1661,7 @@ async function _specDescribePaint(p, style, cache) {
 }
 
 // Leitor único das propriedades de um nó, neutro quanto a apresentação.
-//   opts.level: 'quick' (só valores/tokens essenciais, Spec Rápida) |
+//   opts.level: 'quick' (só valores/tokens essenciais, Anotação) |
 //     'essential' | 'full' (acrescentam eixos do auto layout, mín/máx,
 //     posição, clip, rotação, posição/tracejado da borda, suavização,
 //     opacidade, blend e detalhes de texto)
@@ -2279,6 +2465,819 @@ async function _hdBuildUiItemCard(item, categoryTitle) {
   return elCard;
 }
 
+// ═══════════════════════════════════════════════════════════════════════
+// CARD DE ELEMENTO NO PADRÃO DO HANDOFF DO DSC (Fase B) -- BLOCO DELIMITADO
+// Referência: docs/referencia-handoff-dsc.md. Vale SÓ para este card (o que
+// monta a Documentação Visual / User Interface); as demais seções da Ficha
+// não mudam. Controlado por FICHA_DSC_STYLE_ENABLED (false = card antigo,
+// _hdBuildUiItemCard). Escala reduzida da folha de 2400px para os 856px
+// úteis da seção, mantendo proporções, raios, bordas e cores da referência.
+// Leituras protegidas por _hdUiSafe (falha omite a parte); sem findAll.
+// ═══════════════════════════════════════════════════════════════════════
+const _DS = {
+  blue: "#005ca9", text: "#22292e", text2: "#404b52", white: "#ffffff", gray: "#ebf1f2",
+  tableBorder: "#d0e0e3", panelBorder: "#9eb2b8", previewAlt: "#a0d2fc",
+  colorBg: "#e5f2fc", colorBorder: "#005ca9", numBg: "#fff3d6", numBorder: "#d19400",
+  compBg: "#eac9de", compBorder: "#93537d", compBadge: "#753c61",
+  spaceFill: "#ef765e", spaceBorder: "#b23820",
+  alignFill: "#b26f9b", alignBorder: "#753c61", alignLabelBg: "#f8eaf3",
+  alert: { "Erro": "#b22c2c", "Alerta": "#977203", "Sucesso": "#127527", "Confirmação": "#005ca9", _info: "#038299" }
+};
+const _DS_PARTS_MAX = 8;
+const _DS_VARIANTS_MAX = 6;
+const _DS_PROPS_MAX = 12;
+const _DS_ROWS_PER_PART_MAX = 10;
+const _DS_COL_W = 372;
+const _DS_MARGIN = 34;
+const _DS_STAGE_MAX_W = 712;
+const _DS_STAGE_MAX_H = 300;
+
+const _DS_WEIGHT_STYLES = {
+  regular: ["Regular", "Book", "Normal"],
+  medium: ["Medium", "Regular"],
+  semibold: ["SemiBold", "Semi Bold", "Semibold", "DemiBold", "Demi Bold", "Bold"],
+  bold: ["Bold"]
+};
+let _hdFichaFontsCache = null;
+
+// Resolve UMA vez por geração: Roboto (texto, fonte vigente do DSC) e Fira Code
+// (código), com fallback silencioso Inter / Roboto Mono. Só devolve
+// famílias/estilos que carregaram de fato.
+async function _hdFicheFonts() {
+  if (_hdFichaFontsCache) return _hdFichaFontsCache;
+  let avail = null;
+  try { avail = await figma.listAvailableFontsAsync(); } catch (e) { avail = null; }
+  const stylesOf = (family) => avail ? avail.filter(f => f.fontName.family === family).map(f => f.fontName.style) : null;
+  const resolve = async (families, weights) => {
+    for (const family of families) {
+      const styles = stylesOf(family);
+      if (styles && styles.length === 0) continue;
+      const out = { family };
+      let ok = true;
+      for (const w of weights) {
+        let picked = null;
+        for (const cand of _DS_WEIGHT_STYLES[w]) {
+          if (styles && !styles.includes(cand)) continue;
+          try { await figma.loadFontAsync({ family, style: cand }); picked = cand; break; } catch (e) {}
+        }
+        if (!picked) { ok = false; break; }
+        out[w] = picked;
+      }
+      if (ok) return out;
+    }
+    return null;
+  };
+  let text = await resolve(["Roboto", "Inter"], ["regular", "semibold", "bold"]);
+  if (!text) {
+    try { await figma.loadFontAsync({ family: "Inter", style: "Regular" }); await figma.loadFontAsync({ family: "Inter", style: "Bold" }); } catch (e) {}
+    text = { family: "Inter", regular: "Regular", semibold: "Bold", bold: "Bold" };
+  }
+  const code = (await resolve(["Fira Code", "Roboto Mono"], ["regular", "medium"])) || { family: text.family, regular: text.regular, medium: text.semibold };
+  _hdFichaFontsCache = { text, code };
+  return _hdFichaFontsCache;
+}
+
+function _dsText(str, o) {
+  o = o || {};
+  const f = _hdFichaFontsCache;
+  const t = figma.createText();
+  const fam = o.mono ? f.code : f.text;
+  t.fontName = { family: fam.family, style: o.mono ? (o.w === "medium" ? fam.medium : fam.regular) : fam[o.w || "regular"] };
+  t.characters = String(str == null ? "" : str);
+  t.fontSize = o.size || 14;
+  if (o.lh) t.lineHeight = { unit: "PIXELS", value: o.lh };
+  t.fills = [{ type: "SOLID", color: hexToRgb(o.color || _DS.text) }];
+  return t;
+}
+
+function _dsFrame(name, dir, o) {
+  o = o || {};
+  const f = figma.createFrame();
+  f.name = name;
+  f.layoutMode = dir;
+  f.primaryAxisSizingMode = "AUTO";
+  f.counterAxisSizingMode = "AUTO";
+  const p = o.pad == null ? 0 : o.pad;
+  f.paddingTop = o.pt != null ? o.pt : p;
+  f.paddingBottom = o.pb != null ? o.pb : p;
+  f.paddingLeft = o.pl != null ? o.pl : p;
+  f.paddingRight = o.pr != null ? o.pr : p;
+  f.itemSpacing = o.gap || 0;
+  f.fills = o.fill ? [{ type: "SOLID", color: hexToRgb(o.fill) }] : [];
+  if (o.stroke) { f.strokes = [{ type: "SOLID", color: hexToRgb(o.stroke) }]; f.strokeWeight = o.sw || 1; }
+  if (o.radius) f.cornerRadius = o.radius;
+  if (o.align) f.counterAxisAlignItems = o.align;
+  f.clipsContent = !!o.clip;
+  return f;
+}
+
+function _dsFillW(n) {
+  try {
+    n.layoutSizingHorizontal = "FILL";
+    if (n.type === "TEXT") n.textAutoResize = "HEIGHT";
+  } catch (e) {}
+}
+
+function _dsAdd(parent, child, fillW) {
+  parent.appendChild(child);
+  if (fillW) _dsFillW(child);
+  return child;
+}
+
+function _dsWrap(row) {
+  try { row.layoutWrap = "WRAP"; row.counterAxisSpacing = 4; } catch (e) {}
+}
+
+function _dsNum(v) { return String(Math.round(v * 100) / 100); }
+function _dsPxRem(px) { return `${_dsNum(px)}px | ${String(Math.round(px / 16 * 1000) / 1000)}rem`; }
+
+function _dsCssVar(name) {
+  const s = String(name).trim().toLowerCase().replace(/[\s\/\\.]+/g, "-").replace(/[^a-z0-9_\-]/g, "").replace(/-+/g, "-").replace(/^-|-$/g, "");
+  return "--" + s;
+}
+
+function _dsChip(kind, text, o) {
+  o = o || {};
+  const label = String(text == null ? "" : text).replace(/\n/g, ", ");
+  const mk = (bg, border, name) => _dsFrame(name, "HORIZONTAL", { pad: 4, gap: 4, fill: bg, stroke: border, radius: 4, align: "CENTER" });
+  let chip;
+  if (kind === "color") {
+    chip = mk(_DS.colorBg, _DS.colorBorder, `[Token cor] ${o.tokenName || label}`);
+    if (o.hex) {
+      const sw = figma.createRectangle();
+      sw.resize(16, 16);
+      sw.fills = [{ type: "SOLID", color: hexToRgb(o.hex) }];
+      sw.strokes = [{ type: "SOLID", color: hexToRgb(_DS.panelBorder) }];
+      sw.strokeWeight = 1;
+      sw.cornerRadius = 4;
+      chip.appendChild(sw);
+    }
+  } else if (kind === "number") {
+    chip = mk(_DS.numBg, _DS.numBorder, `[Token número] ${o.tokenName || label}`);
+  } else if (kind === "component") {
+    chip = mk(_DS.compBg, _DS.compBorder, `[Componente DSC] ${label}`);
+    const badge = _dsFrame("Selo DSC Library", "HORIZONTAL", { pt: 2, pb: 2, pl: 4, pr: 4, fill: _DS.compBadge, radius: 4 });
+    badge.appendChild(_dsText("DSC Library", { mono: true, w: "medium", size: 11, color: _DS.white }));
+    chip.appendChild(badge);
+  } else {
+    chip = mk(_DS.gray, _DS.panelBorder, `[Valor] ${label}`);
+  }
+  chip.appendChild(_dsText(label, { mono: true, size: 12, color: _DS.text2 }));
+  if (o.tokenName) { try { chip.setPluginData("handexTokenName", String(o.tokenName)); } catch (e) {} }
+  return chip;
+}
+
+function _dsMarker(n) {
+  const m = _dsFrame(`Marcador ${n}`, "HORIZONTAL", { fill: _DS.blue, radius: 500, align: "CENTER" });
+  m.primaryAxisAlignItems = "CENTER";
+  m.resize(18, 18);
+  m.primaryAxisSizingMode = "FIXED";
+  m.counterAxisSizingMode = "FIXED";
+  m.appendChild(_dsText(String(n), { w: "semibold", size: 11, color: _DS.white }));
+  return m;
+}
+
+function _dsRect(parent, x, y, w, h, hex, o) {
+  o = o || {};
+  const r = figma.createRectangle();
+  r.resize(Math.max(0.01, w), Math.max(0.01, h));
+  r.fills = [{ type: "SOLID", color: hexToRgb(hex), opacity: o.opacity != null ? o.opacity : 1 }];
+  if (o.stroke) { r.strokes = [{ type: "SOLID", color: hexToRgb(o.stroke) }]; r.strokeWeight = o.sw || 1; }
+  parent.appendChild(r);
+  r.x = x; r.y = y;
+  return r;
+}
+
+// Seção do card: título (azul, 600) + descrição curta. Devolve o corpo.
+function _dsSection(card, title, desc) {
+  const body = _dsFrame(`[DSC] ${title}`, "VERTICAL", { gap: 12 });
+  _dsAdd(card, body, true);
+  _dsAdd(body, _dsText(title, { w: "semibold", size: 22, lh: 30, color: _DS.blue }), true);
+  if (desc) _dsAdd(body, _dsText(desc, { size: 14, lh: 21 }), true);
+  return body;
+}
+
+function _dsPartTitle(n, name) {
+  const h = _dsFrame("Cabeçalho da parte", "HORIZONTAL", { gap: 8, align: "CENTER" });
+  h.appendChild(_dsMarker(n));
+  h.appendChild(_dsText(name, { w: "bold", size: 13, lh: 20 }));
+  return h;
+}
+
+function _dsPropLine(col, label, chips) {
+  const row = _dsFrame(`[Propriedade] ${label}`, "HORIZONTAL", { gap: 8, align: "CENTER" });
+  col.appendChild(row);
+  _dsFillW(row);
+  _dsWrap(row);
+  row.appendChild(_dsText(`${label}:`, { mono: true, w: "medium", size: 12, lh: 18 }));
+  chips.forEach(c => row.appendChild(c));
+  return row;
+}
+
+function _dsColumns(parent, cols) {
+  const wrap = _dsFrame("Colunas", "HORIZONTAL", { gap: 24 });
+  _dsAdd(parent, wrap, true);
+  _dsWrap(wrap);
+  try { wrap.counterAxisSpacing = 20; } catch (e) {}
+  cols.forEach(c => {
+    wrap.appendChild(c);
+    c.resize(_DS_COL_W, c.height);
+    c.counterAxisSizingMode = "FIXED";
+    c.primaryAxisSizingMode = "AUTO";
+  });
+  return wrap;
+}
+
+function _dsLabelOf(r, node) {
+  if (r.cat === "fill") return node.type === "TEXT" ? "text color" : (r.key === "fill" ? "background color" : String(r.label).toLowerCase());
+  return String(r.label || r.key).toLowerCase();
+}
+
+function _dsChipsForRow(r) {
+  const out = [];
+  const val = String(r.value == null ? "" : r.value);
+  const tokVar = r.token ? _dsCssVar(r.token) : null;
+  if (r.key === "component") {
+    out.push(r.libName ? _dsChip("component", `${r.value} · ${r.libName}`) : _dsChip("raw", val));
+    return out;
+  }
+  if (r.cat === "fill" || (r.cat === "border" && /^stroke(-\d+)?$/.test(r.key))) {
+    const hex = r.raw && r.raw.hex;
+    if (hex) {
+      out.push(_dsChip("color", tokVar || val, { hex, tokenName: r.token }));
+      if (tokVar) out.push(_dsChip("raw", val));
+    } else out.push(_dsChip("raw", val));
+    return out;
+  }
+  const m = /^(-?\d+(?:\.\d+)?)px$/.exec(val);
+  if (m) {
+    if (tokVar) out.push(_dsChip("number", tokVar, { tokenName: r.token }));
+    out.push(_dsChip("raw", _dsPxRem(parseFloat(m[1]))));
+    return out;
+  }
+  if (tokVar) {
+    out.push(_dsChip("number", tokVar, { tokenName: r.token }));
+    if (val && val !== r.token) out.push(_dsChip("raw", val));
+    return out;
+  }
+  out.push(_dsChip("raw", val));
+  return out;
+}
+
+function _dsPickRow(r, node, isRoot, full) {
+  const k = r.key;
+  if (r.state === "zero-token") return false;
+  if (k === "fill" || k.startsWith("fill-")) return true;
+  if (/^stroke(-\d+)?$/.test(k) || k.startsWith("strokeWidth") || k === "radius" || k.startsWith("effect-") || k === "opacity") return true;
+  if (["textStyle", "fontFamily", "fontWeight", "fontSize", "lineHeight", "letterSpacing"].includes(k)) return true;
+  if ((k === "width" || k === "height") && node.type !== "TEXT") return true;
+  if (isRoot && k === "direction") return true;
+  if (isRoot && !full && (k === "gap" || k.startsWith("padding"))) return true;
+  if (k === "component") return true;
+  return false;
+}
+
+// Linhas { label, chips } de um nó (padding unificado quando os 4 lados são iguais).
+async function _dsLinesForNode(node, isRoot, full) {
+  const spec = await _hdUiSafe(() => _readNodeSpec(node, { level: "essential", include: { layout: isRoot, appearance: true, text: true, componentProps: false } }), []);
+  let comp = [];
+  if (node.type === "INSTANCE") {
+    comp = await _hdUiSafe(() => _readNodeSpec(node, { level: "quick", include: { layout: false, appearance: false, text: false, componentProps: true }, propKeys: ["component"] }), []);
+  }
+  const rows = comp.concat(spec).filter(r => _dsPickRow(r, node, isRoot, full));
+  const lines = [];
+  const pads = rows.filter(r => r.key.startsWith("padding"));
+  const others = rows.filter(r => !r.key.startsWith("padding"));
+  others.forEach(r => lines.push({ label: _dsLabelOf(r, node), chips: _dsChipsForRow(r) }));
+  if (pads.length > 0) {
+    const sig = (r) => `${r.raw && r.raw.value}|${r.token || ""}`;
+    const four = ["paddingTop", "paddingRight", "paddingBottom", "paddingLeft"].map(f => pads.find(r => r.key === f) || null);
+    const uniform = four.every(Boolean) && four.every(r => sig(r) === sig(four[0]));
+    if (uniform) lines.push({ label: "padding", chips: _dsChipsForRow(four[0]) });
+    else pads.forEach(r => lines.push({ label: String(r.label).toLowerCase(), chips: _dsChipsForRow(r) }));
+  }
+  return lines.slice(0, _DS_ROWS_PER_PART_MAX);
+}
+
+// PNG do elemento, dimensionado para caber no palco; conta no teto de imagens.
+async function _dsSnapshot(node, maxW, maxH, allowUpscale) {
+  if (!("exportAsync" in node) || _hdUiImageCount >= _HD_UI_IMG_MAX_CARDS) return null;
+  const w = node.width, h = node.height;
+  if (!(w > 0 && h > 0)) return null;
+  const k = Math.min(maxW / w, maxH / h, allowUpscale && w < 160 && h < 160 ? 3 : 1);
+  let px = Math.min(2400, Math.max(1, Math.round(w * k * 2)));
+  if (px * (h / w) > 4096) px = Math.max(1, Math.floor(4096 * (w / h)));
+  const bytes = await node.exportAsync({ format: "PNG", constraint: { type: "WIDTH", value: px } });
+  _hdUiImageCount++;
+  return { hash: figma.createImage(bytes).hash, k, W: w, H: h, dw: w * k, dh: h * k, bb: node.absoluteBoundingBox };
+}
+
+function _dsImageRect(snap, name) {
+  const r = figma.createRectangle();
+  r.name = name || "Imagem do elemento";
+  r.resize(Math.max(1, snap.dw), Math.max(1, snap.dh));
+  r.fills = [{ type: "IMAGE", imageHash: snap.hash, scaleMode: "FIT" }];
+  return r;
+}
+
+function _dsPanel(fill) {
+  const p = _dsFrame("[DSC] Preview", "VERTICAL", { pad: 16, gap: 12, fill, stroke: _DS.panelBorder, radius: 8, align: "MIN" });
+  const tag = _dsFrame("Tag Preview", "HORIZONTAL", { pt: 6, pb: 6, pl: 12, pr: 12, fill: _DS.gray, radius: 8 });
+  tag.appendChild(_dsText("Preview", { w: "semibold", size: 13, lh: 20 }));
+  p.appendChild(tag);
+  return p;
+}
+
+function _dsStage(panel, snap) {
+  const st = figma.createFrame();
+  st.name = "Palco";
+  st.resize(snap.dw + 2 * _DS_MARGIN, snap.dh + 2 * _DS_MARGIN);
+  st.fills = [];
+  st.clipsContent = false;
+  panel.appendChild(st);
+  try { st.layoutAlign = "CENTER"; } catch (e) {}
+  const img = _dsImageRect(snap);
+  st.appendChild(img);
+  img.x = _DS_MARGIN; img.y = _DS_MARGIN;
+  return st;
+}
+
+function _dsRelBox(node, snap) {
+  const b = node.absoluteBoundingBox;
+  if (!b || !snap.bb) return null;
+  return { x: _DS_MARGIN + (b.x - snap.bb.x) * snap.k, y: _DS_MARGIN + (b.y - snap.bb.y) * snap.k, w: b.width * snap.k, h: b.height * snap.k };
+}
+
+function _dsAnatomyRoot(root) {
+  if (root.type === "COMPONENT_SET") return root.defaultVariant || (root.children && root.children[0]) || null;
+  return root;
+}
+
+function _dsVisibleKids(n) {
+  return (n.children || []).filter(c => c.visible !== false && c.width >= 2 && c.height >= 2);
+}
+
+async function _dsSectionAnatomy(card, root, full) {
+  const aRoot = _dsAnatomyRoot(root);
+  if (!aRoot) return;
+  const kids = _dsVisibleKids(aRoot);
+  const shown = kids.slice(0, _DS_PARTS_MAX - 1);
+  const parts = [{ node: aRoot, name: "Base", isRoot: true }].concat(shown.map(c => ({ node: c, name: c.name, isRoot: false })));
+
+  const snap = await _hdUiSafe(() => _dsSnapshot(aRoot, _DS_STAGE_MAX_W - 2 * _DS_MARGIN, _DS_STAGE_MAX_H, true), null);
+  const body = _dsSection(card, "Anatomia", "Partes do elemento e as propriedades de cada uma.");
+  if (snap) {
+    const panel = _dsPanel(_DS.white);
+    _dsAdd(body, panel, true);
+    const st = _dsStage(panel, snap);
+    const sw = st.width, sh = st.height;
+    const used = { top: [], bottom: [] };
+    let childIdx = 0;
+    parts.forEach((p, i) => {
+      const n = i + 1;
+      const b = _dsRelBox(p.node, snap);
+      if (!b) return;
+      const mk = _dsMarker(n);
+      st.appendChild(mk);
+      if (p.isRoot) {
+        mk.x = 4; mk.y = Math.max(0, Math.min(sh - 18, _DS_MARGIN + snap.dh / 2 - 9));
+        _dsRect(st, 22, mk.y + 8, Math.max(2, _DS_MARGIN - 22), 2, _DS.blue);
+        return;
+      }
+      const above = childIdx % 2 === 0;
+      childIdx++;
+      const bucket = above ? used.top : used.bottom;
+      let cx = Math.max(0, Math.min(sw - 18, b.x + b.w / 2 - 9));
+      while (bucket.some(ux => Math.abs(ux - cx) < 22) && cx + 22 <= sw - 18) cx += 22;
+      bucket.push(cx);
+      mk.x = cx;
+      const lineX = cx + 8;
+      if (above) {
+        mk.y = 6;
+        const end = b.y + Math.min(10, b.h / 2);
+        _dsRect(st, lineX, 24, 2, Math.max(2, end - 24), _DS.blue);
+      } else {
+        mk.y = sh - 24;
+        const start = b.y + b.h - Math.min(10, b.h / 2);
+        _dsRect(st, lineX, start, 2, Math.max(2, mk.y - start), _DS.blue);
+      }
+    });
+  }
+  const full_ = !!full;
+  const cols = [];
+  for (const [i, p] of parts.entries()) {
+    const col = _dsFrame(`[Parte ${i + 1}] ${p.name}`, "VERTICAL", { gap: 10 });
+    col.appendChild(_dsPartTitle(i + 1, p.name));
+    const lines = await _hdUiSafe(() => _dsLinesForNode(p.node, p.isRoot, full_), []);
+    lines.forEach(l => _dsPropLine(col, l.label, l.chips));
+    if (lines.length === 0) col.appendChild(_dsText("Sem propriedades relevantes lidas.", { size: 12, lh: 18, color: _DS.text2 }));
+    cols.push(col);
+  }
+  _dsColumns(body, cols);
+  if (kids.length > shown.length) _dsAdd(body, _dsText(`${kids.length - shown.length} parte(s) não exibida(s).`, { size: 12, lh: 18, color: _DS.text2 }), true);
+  return snap;
+}
+
+async function _dsSectionSpacing(card, root) {
+  const aRoot = _dsAnatomyRoot(root);
+  if (!aRoot || (aRoot.layoutMode !== "HORIZONTAL" && aRoot.layoutMode !== "VERTICAL")) return;
+  const spec = await _hdUiSafe(() => _readNodeSpec(aRoot, { level: "full", include: { layout: true, appearance: false, text: false, componentProps: false } }), []);
+  const by = {};
+  spec.forEach(r => { by[r.key] = r; });
+  const pv = (f) => (by[f] && by[f].raw && typeof by[f].raw.value === "number") ? by[f].raw.value : 0;
+  const pt = pv("paddingTop"), pr = pv("paddingRight"), pb = pv("paddingBottom"), pl = pv("paddingLeft");
+  const gap = by.gap && by.gap.raw && !by.gap.raw.spaceBetween ? by.gap.raw.value : 0;
+  const pa = aRoot.primaryAxisAlignItems, ca = aRoot.counterAxisAlignItems;
+  const aligned = pa !== "MIN" || ca !== "MIN";
+  if (!(pt || pr || pb || pl || gap || aligned)) return;
+
+  const snap = await _hdUiSafe(() => _dsSnapshot(aRoot, _DS_STAGE_MAX_W - 2 * _DS_MARGIN, _DS_STAGE_MAX_H, true), null);
+  const body = _dsSection(card, "Espaçamento e Alinhamento", "Áreas de espaçamento (gap e padding) e alinhamento do elemento.");
+  if (snap) {
+    const panel = _dsPanel(_DS.previewAlt);
+    _dsAdd(body, panel, true);
+    const st = _dsStage(panel, snap);
+    const k = snap.k, M = _DS_MARGIN;
+    const area = (x, y, w, h) => { if (w >= 0.5 && h >= 0.5) _dsRect(st, x, y, w, h, _DS.spaceFill, { opacity: 0.64, stroke: _DS.spaceBorder }); };
+    area(M, M, snap.dw, pt * k);
+    area(M, M + snap.dh - pb * k, snap.dw, pb * k);
+    area(M, M + pt * k, pl * k, snap.dh - (pt + pb) * k);
+    area(M + snap.dw - pr * k, M + pt * k, pr * k, snap.dh - (pt + pb) * k);
+    if (gap > 0) {
+      const flow = _dsVisibleKids(aRoot).filter(c => c.layoutPositioning !== "ABSOLUTE").slice(0, 20);
+      const boxes = flow.map(c => _dsRelBox(c, snap)).filter(Boolean);
+      for (let i = 0; i < boxes.length - 1; i++) {
+        const a = boxes[i], b = boxes[i + 1];
+        if (aRoot.layoutMode === "HORIZONTAL") area(a.x + a.w, M + pt * k, b.x - (a.x + a.w), snap.dh - (pt + pb) * k);
+        else area(M + pl * k, a.y + a.h, snap.dw - (pl + pr) * k, b.y - (a.y + a.h));
+      }
+    }
+    if (aligned) {
+      _dsRect(st, M + pl * k, M + pt * k, snap.dw - (pl + pr) * k, snap.dh - (pt + pb) * k, _DS.alignFill, { opacity: 0.12, stroke: _DS.alignBorder });
+      const A = HD_GLOSSARY.axis;
+      const txt = (pa === "CENTER" && ca === "CENTER") ? "align center" : `main axis: ${(A[pa] || pa).toLowerCase()} · cross axis: ${(A[ca] || ca).toLowerCase()}`;
+      const lbl = _dsFrame("Rótulo de alinhamento", "HORIZONTAL", { pad: 6, fill: _DS.alignLabelBg, stroke: _DS.alignBorder, radius: 8 });
+      lbl.appendChild(_dsText(txt, { mono: true, size: 11, lh: 16, color: _DS.alignBorder }));
+      st.appendChild(lbl);
+      lbl.x = Math.max(0, Math.min(st.width - lbl.width, M + snap.dw / 2 - lbl.width / 2));
+      lbl.y = 0;
+      _dsRect(st, lbl.x + lbl.width / 2 - 1, lbl.height, 2, Math.max(2, M + pt * k - lbl.height), _DS.alignBorder);
+    }
+  }
+  const lines = [];
+  const padRows = ["paddingTop", "paddingRight", "paddingBottom", "paddingLeft"].map(f => by[f]).filter(Boolean);
+  if (by.gap && gap > 0) lines.push({ label: "gap", chips: _dsChipsForRow(by.gap) });
+  if (padRows.length) {
+    const sig = (r) => `${r.raw && r.raw.value}|${r.token || ""}`;
+    if (padRows.length === 4 && padRows.every(r => sig(r) === sig(padRows[0]))) lines.push({ label: "padding", chips: _dsChipsForRow(padRows[0]) });
+    else padRows.forEach(r => lines.push({ label: String(r.label).toLowerCase(), chips: _dsChipsForRow(r) }));
+  }
+  if (by.primaryAxis) lines.push({ label: "primary axis", chips: _dsChipsForRow(by.primaryAxis) });
+  if (by.counterAxis) lines.push({ label: "counter axis", chips: _dsChipsForRow(by.counterAxis) });
+  if (lines.length) {
+    const col = _dsFrame("Propriedades de espaçamento", "VERTICAL", { gap: 8 });
+    lines.forEach(l => _dsPropLine(col, l.label, l.chips));
+    _dsAdd(body, col, true);
+  }
+}
+
+async function _dsComparable(node) {
+  const spec = await _readNodeSpec(node, { level: "essential", include: { layout: true, appearance: true, text: node.type === "TEXT", componentProps: false } });
+  const m = new Map();
+  spec.filter(r => r.state !== "zero-token").forEach(r => m.set(r.key, r));
+  return m;
+}
+
+function _dsDiffMaps(def, cur, node, prefix) {
+  const out = [];
+  for (const [k, r] of cur) {
+    const d = def.get(k);
+    if (!d || d.value !== r.value || d.token !== r.token) out.push({ label: prefix + _dsLabelOf(r, node), chips: _dsChipsForRow(r) });
+  }
+  for (const [k, d] of def) {
+    if (!cur.has(k) && (d.cat === "fill" || d.cat === "border" || d.cat === "effect")) out.push({ label: prefix + _dsLabelOf(d, node), chips: [_dsChip("raw", "none")] });
+  }
+  return out;
+}
+
+async function _dsSectionVariants(card, root, main) {
+  let holder = null;
+  if (root.type === "COMPONENT_SET") holder = root;
+  else if (root.type === "COMPONENT") holder = root.parent && root.parent.type === "COMPONENT_SET" ? root.parent : null;
+  else if (root.type === "INSTANCE" && main) holder = main.parent && main.parent.type === "COMPONENT_SET" ? main.parent : null;
+  if (!holder) return;
+  const all = (holder.children || []).filter(c => c.type === "COMPONENT");
+  if (all.length < 2) return;
+  const def = holder.defaultVariant || all[0];
+  const ordered = [def].concat(all.filter(c => c !== def));
+  const shown = ordered.slice(0, _DS_VARIANTS_MAX);
+
+  const body = _dsSection(card, "Variações e Estados", "Variantes do componente e o que muda em relação à variante padrão.");
+  const panel = _dsPanel(_DS.white);
+  _dsAdd(body, panel, true);
+  const tiles = _dsFrame("Variantes", "HORIZONTAL", { gap: 24 });
+  _dsAdd(panel, tiles, true);
+  _dsWrap(tiles);
+
+  const defKids = _dsVisibleKids(def).slice(0, 6);
+  const defMap = await _hdUiSafe(() => _dsComparable(def), null);
+  const cols = [];
+  for (const [i, v] of shown.entries()) {
+    const n = i + 1;
+    const tile = _dsFrame(`Variante ${n}`, "VERTICAL", { gap: 8, align: "CENTER" });
+    const snap = await _hdUiSafe(() => _dsSnapshot(v, 180, 140, true), null);
+    if (snap) tile.appendChild(_dsImageRect(snap, `Imagem variante ${n}`));
+    tile.appendChild(_dsMarker(n));
+    tiles.appendChild(tile);
+
+    const props = v.variantProperties ? Object.entries(v.variantProperties).map(([a, b]) => `${a}=${b}`).join(" · ") : v.name;
+    const col = _dsFrame(`[Variante ${n}] ${props}`, "VERTICAL", { gap: 10 });
+    col.appendChild(_dsPartTitle(n, `${props}${v === def ? " (padrão)" : ""}`));
+    if (v !== def && defMap) {
+      const diffs = await _hdUiSafe(async () => {
+        const out = _dsDiffMaps(defMap, await _dsComparable(v), v, "");
+        const vKids = _dsVisibleKids(v);
+        for (const dk of defKids) {
+          const vk = vKids.find(c => c.name === dk.name);
+          if (!vk) continue;
+          out.push(..._dsDiffMaps(await _dsComparable(dk), await _dsComparable(vk), vk, `${dk.name} · `));
+        }
+        return out;
+      }, []);
+      diffs.slice(0, _DS_ROWS_PER_PART_MAX).forEach(l => _dsPropLine(col, l.label, l.chips));
+      if (diffs.length === 0) col.appendChild(_dsText("Sem diferenças de estilo lidas em relação ao padrão.", { size: 12, lh: 18, color: _DS.text2 }));
+    } else if (v === def) {
+      col.appendChild(_dsText("Variante de referência.", { size: 12, lh: 18, color: _DS.text2 }));
+    }
+    cols.push(col);
+  }
+  _dsColumns(body, cols);
+  if (ordered.length > shown.length) _dsAdd(body, _dsText(`${ordered.length - shown.length} variante(s) não exibida(s).`, { size: 12, lh: 18, color: _DS.text2 }), true);
+}
+
+async function _dsSectionProps(card, root, main) {
+  let holder = null;
+  if (root.type === "COMPONENT_SET") holder = root;
+  else if (root.type === "COMPONENT") holder = root.parent && root.parent.type === "COMPONENT_SET" ? root.parent : root;
+  else if (root.type === "INSTANCE" && main) holder = main.parent && main.parent.type === "COMPONENT_SET" ? main.parent : main;
+  const defs = holder ? holder.componentPropertyDefinitions : null;
+  const entries = defs ? Object.entries(defs) : [];
+  if (entries.length === 0) return;
+
+  const rows = [];
+  for (const [k, d] of entries.slice(0, _DS_PROPS_MAX)) {
+    let segs = [];
+    let defIdx = -1;
+    if (d.type === "VARIANT") { segs = (d.variantOptions || []).map(String); defIdx = segs.indexOf(String(d.defaultValue)); }
+    else if (d.type === "BOOLEAN") { segs = ["true", "false"]; defIdx = segs.indexOf(String(d.defaultValue)); }
+    else if (d.type === "TEXT") { segs = [String(d.defaultValue)]; defIdx = 0; }
+    else if (d.type === "INSTANCE_SWAP") { segs = [(await _specComponentName(d.defaultValue)) || "Instance swap"]; defIdx = 0; }
+    else segs = [String(d.type)];
+    rows.push({ name: _hdUiCleanProp(k), segs, defIdx, desc: typeof d.description === "string" && d.description.trim() ? d.description.trim() : "—" });
+  }
+
+  const body = _dsSection(card, "Propriedades", "Propriedades do componente e valores possíveis. O valor padrão aparece em negrito.");
+  const table = _dsFrame("[DSC] Tabela de propriedades", "VERTICAL", { fill: _DS.white, stroke: _DS.tableBorder, radius: 8, clip: true });
+  _dsAdd(body, table, true);
+  const widths = [190, 330];
+  const mkRow = (cells, header) => {
+    const row = _dsFrame(header ? "Cabeçalho" : "Linha", "HORIZONTAL", {});
+    _dsAdd(table, row, true);
+    cells.forEach((c, ci) => {
+      const cell = _dsFrame("Célula", "VERTICAL", { pt: header ? 10 : 8, pb: header ? 10 : 8, pl: 12, pr: 12, fill: header ? _DS.gray : _DS.white, stroke: _DS.tableBorder });
+      try { cell.strokeTopWeight = 0; cell.strokeLeftWeight = 0; cell.strokeRightWeight = 0; cell.strokeBottomWeight = 1; } catch (e) {}
+      row.appendChild(cell);
+      if (ci < 2) { cell.resize(widths[ci], 10); cell.counterAxisSizingMode = "FIXED"; cell.primaryAxisSizingMode = "AUTO"; }
+      else { try { cell.layoutGrow = 1; } catch (e) {} }
+      try { cell.layoutAlign = "STRETCH"; } catch (e) {}
+      cell.appendChild(c);
+      _dsFillW(c);
+    });
+  };
+  mkRow([
+    _dsText("Propriedade", { w: "semibold", size: 13, lh: 20 }),
+    _dsText("Valor", { w: "semibold", size: 13, lh: 20 }),
+    _dsText("Descrição", { w: "semibold", size: 13, lh: 20 })
+  ], true);
+  const F = _hdFichaFontsCache.text;
+  rows.forEach(r => {
+    const valueText = _dsText(r.segs.join(" | "), { size: 13, lh: 20 });
+    if (r.defIdx >= 0) {
+      let start = 0;
+      for (let i = 0; i < r.defIdx; i++) start += r.segs[i].length + 3;
+      const end = start + r.segs[r.defIdx].length;
+      try { if (end > start) valueText.setRangeFontName(start, end, { family: F.family, style: F.bold }); } catch (e) {}
+    }
+    mkRow([
+      _dsText(r.name, { size: 13, lh: 20 }),
+      valueText,
+      _dsText(r.desc, { size: 13, lh: 20, color: _DS.text2 })
+    ], false);
+  });
+  if (entries.length > rows.length) _dsAdd(body, _dsText(`${entries.length - rows.length} propriedade(s) não exibida(s).`, { size: 12, lh: 18, color: _DS.text2 }), true);
+}
+
+async function _dsAlertIcon(color) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`;
+  try {
+    const n = figma.createNodeFromSvg(svg);
+    n.name = "Ícone info";
+    return n;
+  } catch (e) {
+    const el = figma.createEllipse();
+    el.resize(20, 20);
+    el.fills = [];
+    el.strokes = [{ type: "SOLID", color: hexToRgb(color) }];
+    el.strokeWeight = 2;
+    return el;
+  }
+}
+
+async function _dsAlert(parent, tipo, title, lines, link) {
+  const color = _DS.alert[tipo] || _DS.alert._info;
+  const box = _dsFrame(`[DSC] Alerta ${tipo || "Informativo"}`, "HORIZONTAL", { pt: 10, pb: 10, pr: 12, pl: 14, gap: 12, fill: _DS.white, stroke: color, sw: 2, radius: 4 });
+  try { box.strokeLeftWeight = 8; } catch (e) {}
+  _dsAdd(parent, box, true);
+  box.appendChild(await _dsAlertIcon(color));
+  const txt = _dsFrame("Texto do alerta", "VERTICAL", { gap: 4 });
+  box.appendChild(txt);
+  try { txt.layoutGrow = 1; } catch (e) {}
+  _dsAdd(txt, _dsText(title, { w: "bold", size: 14, lh: 21, color }), true);
+  (lines || []).forEach(l => { if (l) _dsAdd(txt, _dsText(l, { size: 13, lh: 20 }), true); });
+  if (link) {
+    const lt = _dsText(link, { size: 13, lh: 20, color: _DS.blue });
+    try { lt.textDecoration = "UNDERLINE"; lt.hyperlink = { type: "URL", value: link }; } catch (e) {}
+    _dsAdd(txt, lt, true);
+  }
+}
+
+function _dsSpecDescription(specs) {
+  const withNote = specs.filter(s => s && s.note && String(s.note).trim());
+  if (withNote.length === 0) return null;
+  if (withNote.length === 1) return String(withNote[0].note).trim();
+  return withNote.map(s => `${s.letter || ""} · ${s.name || s.label || "Spec"}: ${String(s.note).trim()}`).join("\n\n");
+}
+
+async function _dsNotes(card, item, specs, withDiffs) {
+  const alerts = [];
+  specs.forEach(s => (s.excecoes || []).forEach(e => alerts.push({ tipo: e.tipo, title: `${e.tipo || "Exceção"}${e.titulo ? " — " + e.titulo : ""}`, lines: [e.obs] })));
+  specs.forEach(s => { if (s.link) alerts.push({ tipo: null, title: "Referência", lines: [], link: s.link }); });
+  if (withDiffs && item && item.customizationsStatus === "evaluated" && Array.isArray(item.customizations) && item.customizations.length > 0) {
+    const lines = item.customizations.slice(0, _HD_UI_MAX_LINES).map(c => `${c.layer || "Camada"} · ${c.campo}: ${c.atual} (padrão da lib: ${c.padrao})`);
+    if (item.customizations.length > _HD_UI_MAX_LINES) lines.push(`+${item.customizations.length - _HD_UI_MAX_LINES} diferença(s) não listada(s).`);
+    alerts.push({ tipo: null, title: "Diferenças em relação à lib", lines });
+  }
+  if (alerts.length === 0) return;
+  const body = _dsSection(card, "Notas", null);
+  for (const a of alerts) await _dsAlert(body, a.tipo, a.title, a.lines, a.link);
+}
+
+async function _hdBuildElementCard(item, categoryTitle, specs) {
+  await _hdFicheFonts();
+  const card = _dsFrame(`[Token] ${item.name}`, "VERTICAL", { pad: 20, gap: 28, fill: _DS.white, stroke: _DS.text2, sw: 2, radius: 16 });
+  try {
+    return await _hdFillElementCard(card, item, categoryTitle, Array.isArray(specs) ? specs : []);
+  } catch (e) {
+    try { card.remove(); } catch (e2) {}
+    throw e;
+  }
+}
+
+async function _hdFillElementCard(card, item, categoryTitle, specs) {
+  const full = item.uiDepth === "full";
+
+  const root = item.nodeId ? await _hdUiSafe(() => figma.getNodeByIdAsync(item.nodeId), null) : null;
+  const live = root && !root.removed ? root : null;
+  const main = live && live.type === "INSTANCE" ? await _hdUiSafe(() => live.getMainComponentAsync(), null) : null;
+
+  let baseText;
+  let libName = null;
+  if (live && live.type === "INSTANCE" && main) {
+    libName = _qsFindLibForKey(main.key);
+    const family = main.parent && main.parent.type === "COMPONENT_SET" ? main.parent.name : main.name;
+    baseText = `Baseado em ${family} · ${libName || "fora das libs DSC cadastradas"}`;
+  } else if (live && (live.type === "COMPONENT" || live.type === "COMPONENT_SET")) {
+    libName = _qsFindLibForKey(live.key);
+    baseText = libName ? `Componente da lib · ${libName}` : "Componente novo, sem vínculo com a lib";
+  } else {
+    baseText = "Sem vínculo com a lib DSC. Construído do zero";
+  }
+
+  const head = _dsFrame("[DSC] Título", "VERTICAL", { gap: 6 });
+  _dsAdd(card, head, true);
+  const nameRow = _dsFrame("Nome e selos", "HORIZONTAL", { gap: 10, align: "CENTER" });
+  _dsAdd(head, nameRow, true);
+  _dsWrap(nameRow);
+  const nameTxt = _dsText(item.name, { w: "semibold", size: 24, lh: 32 });
+  if (item.nodeId && figma.fileKey) {
+    try {
+      nameTxt.hyperlink = { type: "URL", value: `https://www.figma.com/design/${figma.fileKey}?node-id=${encodeURIComponent(item.nodeId)}` };
+      nameTxt.textDecoration = "UNDERLINE";
+    } catch (e) {}
+  }
+  nameRow.appendChild(nameTxt);
+  const seen = new Set();
+  specs.forEach(s => {
+    const lbl = s.type || s.categoryLabel || s.category;
+    if (!lbl || seen.has(lbl)) return;
+    seen.add(lbl);
+    const sc = s.color ? hexToRgb(s.color) : hexToRgb(_DS.blue);
+    const bg = s.fillColor ? hexToRgb(s.fillColor) : { r: 1 - (1 - sc.r) * 0.12, g: 1 - (1 - sc.g) * 0.12, b: 1 - (1 - sc.b) * 0.12 };
+    const pill = _dsFrame(`Selo ${lbl}`, "HORIZONTAL", { pt: 3, pb: 3, pl: 8, pr: 8, radius: 4 });
+    pill.fills = [{ type: "SOLID", color: bg }];
+    pill.strokes = [{ type: "SOLID", color: sc }];
+    pill.strokeWeight = 1;
+    const t = _dsText(`${s.letter ? s.letter + " · " : ""}${lbl}`, { w: "semibold", size: 12, lh: 18 });
+    t.fills = [{ type: "SOLID", color: sc }];
+    pill.appendChild(t);
+    nameRow.appendChild(pill);
+  });
+  _dsAdd(head, _dsText(baseText, { size: 14, lh: 21, color: _DS.text2 }), true);
+  _dsAdd(head, _dsText(`${categoryTitle} · Personalizado, construir · ${full ? "Completo" : "Essencial"}`, { size: 12, lh: 18, color: _DS.text2 }), true);
+
+  const desc = _dsSpecDescription(specs);
+  if (desc) {
+    const b = _dsSection(card, "Descrição de Funcionalidade", null);
+    _dsAdd(b, _dsText(desc, { size: 14, lh: 21 }), true);
+  }
+
+  if (!live) {
+    const props = (item.properties || []).filter(p => p && p.label && p.type !== "variant" && p.type !== "layout");
+    if (props.length > 0) {
+      const b = _dsSection(card, "Propriedades", "Elemento não encontrado no canvas; dados do último scan.");
+      const col = _dsFrame("Propriedades do scan", "VERTICAL", { gap: 8 });
+      props.slice(0, _HD_UI_MAX_LINES).forEach(p => _dsPropLine(col, String(_hdVocabLabel(p.label, p.propId)).toLowerCase(), [_dsChip("raw", _hdFormatScanProp(p))]));
+      _dsAdd(b, col, true);
+    }
+    await _dsNotes(card, item, specs, false);
+    return card;
+  }
+
+  const unaltered = live.type === "INSTANCE" && main && libName && item.customizationsStatus === "evaluated" && Array.isArray(item.customizations) && item.customizations.length === 0;
+  if (unaltered) {
+    const b = _dsSection(card, "Componente do DSC", null);
+    _dsAdd(b, _dsChip("component", `${main.parent && main.parent.type === "COMPONENT_SET" ? main.parent.name : main.name} · ${libName} — reutilizar`), false);
+    await _dsNotes(card, item, specs, false);
+    return card;
+  }
+
+  await _hdUiSafe(() => _dsSectionProps(card, live, main), null);
+  await _hdUiSafe(() => _dsSectionAnatomy(card, live, full), null);
+  if (full) {
+    await _hdUiSafe(() => _dsSectionSpacing(card, live), null);
+    await _hdUiSafe(() => _dsSectionVariants(card, live, main), null);
+  }
+  await _dsNotes(card, item, specs, true);
+  return card;
+}
+
+// Casa cada spec do frame ao item escaneado dono (mesmo critério de
+// resolve-spec-owners): igualdade em nodeIds, senão sobe por parent até o
+// primeiro item escaneado ou o frame raiz. Specs avulsas só casam por
+// igualdade. Em dúvida, não anexa. Devolve Map<item, spec[]> ordenado por letra.
+async function _hdMatchSpecsToItems(frame, items, looseSpecs) {
+  const result = new Map();
+  if (!frame || !frame.figmaId) return result;
+  const idToItem = new Map();
+  items.forEach(it => {
+    const ids = Array.isArray(it.nodeIds) && it.nodeIds.length ? it.nodeIds : (it.nodeId ? [it.nodeId] : []);
+    ids.forEach(id => { if (!idToItem.has(id)) idToItem.set(id, it); });
+  });
+  const memo = new Map();
+  const find = async (target, ancestors) => {
+    if (idToItem.has(target)) return idToItem.get(target);
+    if (!ancestors) return null;
+    if (memo.has(target)) return memo.get(target);
+    const path = [];
+    let found = null;
+    let node = await _hdUiSafe(() => figma.getNodeByIdAsync(target), null);
+    while (node && node.type !== "PAGE" && node.type !== "DOCUMENT") {
+      if (idToItem.has(node.id)) { found = idToItem.get(node.id); break; }
+      if (memo.has(node.id)) { found = memo.get(node.id); break; }
+      path.push(node.id);
+      if (node.id === frame.figmaId) break;
+      node = node.parent;
+    }
+    path.forEach(id => memo.set(id, found));
+    memo.set(target, found);
+    return found;
+  };
+  const attach = (it, s) => { if (!result.has(it)) result.set(it, []); result.get(it).push(s); };
+  for (const s of (frame.createdSpecs || [])) {
+    if (!s || !s.targetNodeId) continue;
+    const it = await find(s.targetNodeId, true);
+    if (it) attach(it, s);
+  }
+  for (const s of (looseSpecs || [])) {
+    if (!s || !s.targetNodeId) continue;
+    const it = await find(s.targetNodeId, false);
+    if (it) attach(it, s);
+  }
+  result.forEach(list => list.sort((a, b) => String(a.letter || "").localeCompare(String(b.letter || ""))));
+  return result;
+}
+// ═══ FIM DO BLOCO: card de elemento no padrão do DSC ════════════════════
+
 async function _hdRebuildUiBoard(data) {
   if (data.setup && data.setup.componentes === false) return null;
   _hdUiImageCount = 0;
@@ -2290,8 +3289,8 @@ async function _hdRebuildUiBoard(data) {
     { title: "Vetores", type: "vectors" },
     { title: "Frames e Layouts", type: "frames" },
   ];
-  const _sources = (data.frames || []).filter(f => f.specs).map(f => ({ nome: f.nome || 'Frame', specs: f.specs }));
-  if (_sources.length === 0 && data.step2 && data.step2.specs) _sources.push({ nome: 'Sem frame vinculado', specs: data.step2.specs });
+  const _sources = (data.frames || []).filter(f => f.specs).map(f => ({ nome: f.nome || 'Frame', specs: f.specs, frame: f }));
+  if (_sources.length === 0 && data.step2 && data.step2.specs) _sources.push({ nome: 'Sem frame vinculado', specs: data.step2.specs, frame: null });
 
   const groups = [];
   _sources.forEach(src => {
@@ -2299,18 +3298,30 @@ async function _hdRebuildUiBoard(data) {
     _cats.forEach(cat => {
       (src.specs[cat.type] || []).filter(it => it.isMarkedCustom === true).forEach(it => cards.push({ item: it, cat: cat.title }));
     });
-    if (cards.length > 0) groups.push({ nome: src.nome, cards });
+    if (cards.length > 0) groups.push({ nome: src.nome, cards, frame: src.frame, specs: src.specs });
   });
   if (groups.length === 0) return null;
+  const looseSpecs = FICHA_DSC_STYLE_ENABLED ? _hdLooseSpecsOf(data) : [];
   const section = _hdBuildSectionShell("User Interface");
   for (const g of groups) {
     if (groups.length > 1) {
-      const t = _hdCreateText(g.nome, 13, "Bold", { r: 0.1333, g: 0.1608, b: 0.1804 });
+      const t = _hdCreateText(g.nome, _hdS(13, 18), "Bold", { r: 0.1333, g: 0.1608, b: 0.1804 });
       section.appendChild(t);
       _hdSetFillAndHug(t);
     }
+    let matched = new Map();
+    if (FICHA_DSC_STYLE_ENABLED && g.frame) {
+      const scanned = [];
+      ['components', 'icons', 'typography', 'vectors'].forEach(t => (g.specs[t] || []).forEach(it => { if (it && it.nodeId) scanned.push(it); }));
+      (g.specs.frames || []).forEach(it => { if (it && it.nodeId && it.isMarkedCustom === true) scanned.push(it); });
+      matched = await _hdUiSafe(() => _hdMatchSpecsToItems(g.frame, scanned, looseSpecs), new Map());
+    }
     for (const c of g.cards) {
-      const card = await _hdBuildUiItemCard(c.item, c.cat);
+      let card = null;
+      if (FICHA_DSC_STYLE_ENABLED) {
+        card = await _hdUiSafe(() => _hdBuildElementCard(c.item, c.cat, matched.get(c.item) || []), null);
+      }
+      if (!card) card = await _hdBuildUiItemCard(c.item, c.cat);
       section.appendChild(card);
       _hdSetFillAndHug(card);
     }
@@ -2375,6 +3386,12 @@ const DSC_HANDOFF_SUMMARY_ENABLED = false;
 // não faz sentido. Os dados (legacyLib/matchedTier/libLegada) continuam sendo calculados;
 // religar = trocar para true. A UI recebe o valor no init-plugin (legacyLibHintEnabled).
 const LEGACY_LIB_MIGRATION_HINT_ENABLED = false;
+
+// Padrão visual do handoff do DSC (card de elemento: Fase B, 2026-10-02; Ficha INTEIRA desde
+// 2026-10-05: fontes, tabelas, chips, painéis; estrutura das seções inalterada).
+// false = visual antigo da Ficha toda (Inter, cards cinza, _hdBuildUiItemCard).
+// Ver docs/referencia-handoff-dsc.md.
+const FICHA_DSC_STYLE_ENABLED = true;
 
 // â”€â”€ Shared Plugin Data (MCP / REST API readable) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Usa setSharedPluginData (namespace 'handex') para que agentes externos
@@ -2508,6 +3525,37 @@ async function _moveFlowEndpointMarker(targetNode, isStart, nextFlowNumber) {
     targetNode.setPluginData(dataKey, result.id);
     figma.ui.postMessage({ type: 'flow-marker-moved', flow: result, removedOldId });
   }
+}
+
+// Lado da linha guia de uma especificação a partir das CAIXAS (elemento e
+// card), não só dos centros (2026-10-05, print do Augusto: card acima de um
+// header largo, linha saindo pela direita e entrando pela esquerda do card,
+// cruzando o card no meio). Prefere o lado em que o card está totalmente
+// separado do elemento; se houver dois (diagonal), o de maior folga; se as
+// caixas se sobrepõem nos dois eixos, cai no critério antigo pelo centro.
+function _hdSideFromBoxes(el, card) {
+  const gaps = {
+    right: card.x - (el.x + el.width),
+    left: el.x - (card.x + card.width),
+    bottom: card.y - (el.y + el.height),
+    top: el.y - (card.y + card.height)
+  };
+  const free = Object.keys(gaps).filter(k => gaps[k] >= 0).sort((a, b) => gaps[b] - gaps[a]);
+  if (free.length) return free[0];
+  const dx = (card.x + card.width / 2) - (el.x + el.width / 2);
+  const dy = (card.y + card.height / 2) - (el.y + el.height / 2);
+  return Math.abs(dx) >= Math.abs(dy) ? (dx >= 0 ? 'right' : 'left') : (dy >= 0 ? 'bottom' : 'top');
+}
+// Mantém o lado pedido só se o card estiver mesmo daquele lado do elemento;
+// senão a linha cruzaria o card ou o elemento, e o lado é recalculado.
+function _hdValidLineSide(el, card, side) {
+  const ok = {
+    right: card.x >= el.x + el.width,
+    left: card.x + card.width <= el.x,
+    bottom: card.y >= el.y + el.height,
+    top: card.y + card.height <= el.y
+  };
+  return (side && ok[side]) ? side : _hdSideFromBoxes(el, card);
 }
 
 // Corpo compartilhado da criação de fluxo — usado tanto pela criação normal
@@ -2938,7 +3986,7 @@ async function _buildFlowConnection(nodeA, nodeB, msg) {
 
 figma.ui.onmessage = async (msg) => {
   // Antes de qualquer await: garante o cache pronto pro handler desta mesma
-  // mensagem (scan, Spec Rápida, Ficha) e pras seguintes.
+  // mensagem (scan, Anotação, Ficha) e pras seguintes.
   if (msg.referenceTokens) _refSkeletonCache = msg.referenceTokens;
   if (msg.type === 'ui-ready') {
     try { _hdBringAnnotationLayersToFront(); } catch (e) {}
@@ -3159,7 +4207,7 @@ figma.ui.onmessage = async (msg) => {
       excRow.appendChild(typeLabel);
       excRow.appendChild(titleLabel);
       excFrame.appendChild(excRow);
-      figma.ui.postMessage({ type: 'toast', message: 'Cenário injetado no card de spec.', kind: 'success' });
+      figma.ui.postMessage({ type: 'toast', message: 'Cenário injetado no card da especificação.', kind: 'success' });
     })();
     return;
   }
@@ -3242,7 +4290,7 @@ figma.ui.onmessage = async (msg) => {
       if (wanted.spec && (node.name.startsWith('[Spec | ') || node.name.startsWith('[Spec]'))) return 'spec';
       if (wanted.medida && node.name.startsWith('[Medida]')) return 'medida';
       if (wanted.fluxo && node.name.startsWith('[Fluxo')) return 'fluxo';
-      if (wanted.quickspec && (node.name.startsWith('Spec Rápida') || node.name.startsWith('Spec Express'))) return 'quickspec';
+      if (wanted.quickspec && (node.name.startsWith('Anotação') || node.name.startsWith('Spec Rápida') || node.name.startsWith('Spec Express'))) return 'quickspec';
       return null;
     };
 
@@ -3409,6 +4457,7 @@ figma.ui.onmessage = async (msg) => {
       for (const font of fonts) {
         try { await figma.loadFontAsync(font); } catch (e) { console.log("Font not loaded:", font); }
       }
+      await _hdBeginFichaStyle();
 
       const _frames = data.frames || [];
 
@@ -3429,7 +4478,7 @@ figma.ui.onmessage = async (msg) => {
         // atual de handoffData, nunca seções separadas como antes.
         const docVisualSection = await _hdRebuildDocumentacaoVisualSection(_frames, data.measurements, _hdLooseSpecsOf(data));
         if (!docVisualSection) {
-          throw new Error('Não há specs nem medidas para inserir. Anote uma spec/medida (com ou sem frame vinculado) e tente de novo.');
+          throw new Error('Não há especificações nem medidas para inserir. Crie uma especificação ou medida (com ou sem frame vinculado) e tente de novo.');
         }
         _hdReplaceSection(content, "Documentação Visual", docVisualSection);
       } else if (msg.section === 'fluxos') {
@@ -3441,8 +4490,10 @@ figma.ui.onmessage = async (msg) => {
       figma.viewport.scrollAndZoomIntoView([existingFicha]);
       figma.ui.postMessage({ type: 'ficha-section-inserted', section: msg.section });
     } catch (err) {
-      console.error('Insert Ficha Section Error:', err);
+      console.error('Insert Ficha Section Error:', String(err && err.message || err), err && err.stack);
       figma.ui.postMessage({ type: 'ficha-section-insert-error', section: msg.section, message: err.message });
+    } finally {
+      _hdFichaGen = false;
     }
   }
 
@@ -3463,6 +4514,7 @@ figma.ui.onmessage = async (msg) => {
           console.log("Font not loaded:", font);
         }
       }
+      await _hdBeginFichaStyle();
 
       const data = msg.data;
 
@@ -3485,13 +4537,8 @@ figma.ui.onmessage = async (msg) => {
       }
 
       // Helpers
-      function createText(text, size = 14, weight = "Regular", color = { r: 0.1333, g: 0.1608, b: 0.1804 }) {
-        const t = figma.createText();
-        t.fontName = { family: "Inter", style: weight };
-        t.characters = String(text || "");
-        t.fontSize = size;
-        t.fills = [{ type: "SOLID", color }];
-        return t;
+      function createText(text, size = 14, weight = "Regular", color = { r: 0.1333, g: 0.1608, b: 0.1804 }, opts) {
+        return _hdCreateText(text, size, weight, color, opts);
       }
 
       function createFrame(direction = "VERTICAL", padding = 0, spacing = 0, fill = null) {
@@ -3591,7 +4638,7 @@ figma.ui.onmessage = async (msg) => {
       }
 
 
-      function createSection(parent, titleText) {
+      function createSection(parent, titleText, sub) {
         const section = createFrame("VERTICAL", 24, 16, { r: 1, g: 1, b: 1 });
         section.name = `[Seção] ${titleText}`;
         if (parent) {
@@ -3602,7 +4649,7 @@ figma.ui.onmessage = async (msg) => {
         section.strokes = [{ type: "SOLID", color: { r: 0.8157, g: 0.8784, b: 0.8902 } }];
         section.strokeWeight = 1;
 
-        const title = createText(titleText, 16, "Bold", hexToRgb("#005ca9"));
+        const title = createText(titleText, _hdS(16, sub ? 18 : 22), "Bold", hexToRgb("#005ca9"));
         section.appendChild(title);
         setFillAndHug(title);
         return section;
@@ -3711,6 +4758,12 @@ figma.ui.onmessage = async (msg) => {
       const fichaTecnica = createFrame("VERTICAL", 0, 0, { r: 1, g: 1, b: 1 });
       fichaTecnica.name = `${_handoffBase} | ${_ts} / Ficha de Projeto`;
       fichaTecnica.strokes = [{ type: "SOLID", color: { r: 0.8157, g: 0.8784, b: 0.8902 } }];
+      if (_hdStyled()) {
+        fichaTecnica.strokes = [{ type: "SOLID", color: hexToRgb(_DS.text2) }];
+        fichaTecnica.strokeWeight = 2;
+        fichaTecnica.cornerRadius = 16;
+        fichaTecnica.clipsContent = true;
+      }
       fichaTecnica.resize(952, 100);
       fichaTecnica.counterAxisSizingMode = "FIXED"; // Base width 952
       fichaTecnica.primaryAxisSizingMode = "AUTO";  // Hug height
@@ -3744,7 +4797,7 @@ figma.ui.onmessage = async (msg) => {
       const ratio = 205.51 / 46.55;
       logoWrapper.resize(32 * ratio, 32);
 
-      const headerTitle = createText("Handex - Handoff Expresso", 14, "Medium", { r: 0.3922, g: 0.4549, b: 0.4784 });
+      const headerTitle = createText("Handex - Handoff Expresso", _hdS(14, 18), "Medium", _hdStyled() ? hexToRgb(_DS.blue) : { r: 0.3922, g: 0.4549, b: 0.4784 });
       header.appendChild(logoWrapper);
       header.appendChild(headerTitle);
       fichaTecnica.appendChild(header);
@@ -3785,11 +4838,12 @@ figma.ui.onmessage = async (msg) => {
           setFillAndHug(statusCol);
           statusCol.appendChild(createText('Status', 12, "Bold", { r: 0.3922, g: 0.4549, b: 0.4784 }));
           const chip = createFrame("HORIZONTAL", 8, 4, _sc.bg);
-          chip.cornerRadius = 999;
+          chip.cornerRadius = _hdS(999, 4);
+          if (_hdStyled()) { chip.strokes = [{ type: "SOLID", color: _sc.text }]; chip.strokeWeight = 1; chip.paddingTop = 3; chip.paddingBottom = 3; }
           chip.primaryAxisSizingMode = "AUTO";
           chip.counterAxisSizingMode = "AUTO";
           chip.counterAxisAlignItems = "CENTER";
-          chip.appendChild(createText(_sc.label, 11, "Bold", _sc.text));
+          chip.appendChild(createText(_sc.label, _hdS(11, 12), "Bold", _sc.text));
           statusCol.appendChild(chip);
         }
         createRow(subGrid, "Versão", data.step1.versao);
@@ -3798,7 +4852,15 @@ figma.ui.onmessage = async (msg) => {
       // 1.2 EQUIPE E RESPONSÁVEIS
       if (data.step1.equipe && data.step1.equipe.length > 0) {
         const teamSection = createSection(content, "Equipe e Responsáveis");
-        data.step1.equipe.forEach(m => {
+        if (_hdStyled()) {
+          _hdDsTable(teamSection, "Equipe", [{ title: "Papel", w: 220 }, { title: "Nome" }, { title: "Contato", w: 140 }],
+            data.step1.equipe.map(m => [
+              _hdTag(m.papel || 'Membro', { bg: _DS.colorBg, border: _DS.colorBorder, color: _DS.blue }),
+              { text: m.nome || '', w: "semibold" },
+              m.email ? { text: "Contato", color: _DS.blue, link: { type: "URL", value: "mailto:" + m.email } } : "—"
+            ]));
+        }
+        else data.step1.equipe.forEach(m => {
           const mRow = createFrame("HORIZONTAL", 12, 12, { r: 0.9686, g: 0.9804, b: 0.9804 });
           teamSection.appendChild(mRow);
           setFillAndHug(mRow);
@@ -3832,7 +4894,11 @@ figma.ui.onmessage = async (msg) => {
         : [];
       if (_briefingQs.length > 0) {
         const briefingSection = createSection(content, "Briefing Estratégico");
-        _briefingQs.forEach((q, idx) => {
+        if (_hdStyled()) {
+          _hdDsTable(briefingSection, "Briefing", [{ title: "Pergunta", w: 340 }, { title: "Resposta" }],
+            _briefingQs.map((q, idx) => [{ text: `${idx + 1}. ${q.question || ''}`, w: "semibold" }, q.answer]));
+        }
+        else _briefingQs.forEach((q, idx) => {
           const qRow = createFrame("VERTICAL", 0, 4);
           qRow.name = `[Briefing] Pergunta ${idx + 1}`;
           briefingSection.appendChild(qRow);
@@ -3852,7 +4918,15 @@ figma.ui.onmessage = async (msg) => {
       const _regras = (data.step2 && data.step2.regras) ? data.step2.regras : [];
       if (_regras.length > 0) {
         const rulesSection = createSection(content, "Regras de Negócio e HUs");
-        _regras.forEach(r => {
+        if (_hdStyled()) {
+          _hdDsTable(rulesSection, "Regras", [{ title: "Regra", w: 260 }, { title: "HU", w: 150 }, { title: "Notas" }],
+            _regras.map(r => [
+              { text: r.titulo || '', w: "semibold" },
+              (r.link && r.link !== "#") ? { text: "Acesse o link da HU", color: _DS.blue, link: { type: "URL", value: r.link } } : "—",
+              r.notas ? { text: r.notas, color: _DS.text2 } : "—"
+            ]));
+        }
+        else _regras.forEach(r => {
           const rRow = createFrame("VERTICAL", 12, 8, { r: 0.9686, g: 0.9804, b: 0.9804 });
           rulesSection.appendChild(rRow);
           setFillAndHug(rRow);
@@ -3893,7 +4967,14 @@ figma.ui.onmessage = async (msg) => {
         const validDocItems = docItems.filter(item => data.docs[item.key] && data.docs[item.key].link);
         if (validDocItems.length > 0) {
           const docsSection = createSection(content, "Docs e Anexos");
-          validDocItems.forEach(item => {
+          if (_hdStyled()) {
+            _hdDsTable(docsSection, "Docs", [{ title: "Documento" }, { title: "Link", w: 220 }],
+              validDocItems.map(item => [
+                { text: item.label, w: "semibold" },
+                { text: "Acesse o link", color: _DS.blue, link: { type: "URL", value: data.docs[item.key].link } }
+              ]));
+          }
+          else validDocItems.forEach(item => {
             const docData = data.docs[item.key];
             const dRow = createFrame("HORIZONTAL", 12, 12, { r: 0.9686, g: 0.9804, b: 0.9804 });
             dRow.layoutAlign = "STRETCH";
@@ -3950,18 +5031,19 @@ figma.ui.onmessage = async (msg) => {
 
           const specsBoard = createFrame("VERTICAL", 32, 24, { r: 1, g: 1, b: 1 });
           specsBoard.name = `[Design Specs] ${node.name}`;
-          specsBoard.strokes = [{ type: "SOLID", color: { r: 0.8157, g: 0.8784, b: 0.8902 } }];
+          specsBoard.strokes = [{ type: "SOLID", color: _hdStyled() ? hexToRgb(_DS.text2) : { r: 0.8157, g: 0.8784, b: 0.8902 } }];
+          if (_hdStyled()) specsBoard.strokeWeight = 2;
           specsBoard.cornerRadius = 16;
           specsBoard.resize(800, 100);
           specsBoard.counterAxisSizingMode = "FIXED"; // Base width 800
           specsBoard.primaryAxisSizingMode = "AUTO";  // Hug height
 
-          const specsTitle = createText("Design Specs: " + node.name, 24, "Bold", { r: 0.1333, g: 0.1608, b: 0.1804 });
+          const specsTitle = createText("Design Specs: " + node.name, _hdS(24, 28), "Bold", { r: 0.1333, g: 0.1608, b: 0.1804 });
           specsBoard.appendChild(specsTitle);
           setFillAndHug(specsTitle);
 
           if (data.setup.anatomia || data.setup.espacamentos) {
-            const layoutSec = createSection(specsBoard, "Layout & Posicionamento");
+            const layoutSec = createSection(specsBoard, "Layout & Posicionamento", true);
             const grid = createFrame("HORIZONTAL", 0, 16);
             grid.layoutWrap = "WRAP";
             
@@ -3980,7 +5062,7 @@ figma.ui.onmessage = async (msg) => {
           }
 
           if (data.setup.instancias || data.setup.anatomia) {
-            const appearSec = createSection(specsBoard, "Aparência");
+            const appearSec = createSection(specsBoard, "Aparência", true);
             const grid = createFrame("HORIZONTAL", 0, 16);
             grid.layoutWrap = "WRAP";
             grid.layoutAlign = "STRETCH";
@@ -4022,7 +5104,8 @@ figma.ui.onmessage = async (msg) => {
       if (data.isAudit && data.auditSummary) {
         const auditBoard = createFrame("VERTICAL", 32, 24, { r: 1, g: 1, b: 1 });
         auditBoard.name = `${_handoffBase} / Auditoria`;
-        auditBoard.strokes = [{ type: "SOLID", color: { r: 0.8157, g: 0.8784, b: 0.8902 } }];
+        auditBoard.strokes = [{ type: "SOLID", color: _hdStyled() ? hexToRgb(_DS.text2) : { r: 0.8157, g: 0.8784, b: 0.8902 } }];
+        if (_hdStyled()) auditBoard.strokeWeight = 2;
         auditBoard.cornerRadius = 16;
         auditBoard.resize(800, 100);
         auditBoard.counterAxisSizingMode = "FIXED";
@@ -4041,7 +5124,7 @@ figma.ui.onmessage = async (msg) => {
         setFillAndHug(statsText);
 
         if (data.auditSummary.adjustments && data.auditSummary.adjustments.length > 0) {
-           const adjSection = createSection(auditBoard, "Ajustes Recomendados (Minorias)");
+           const adjSection = createSection(auditBoard, "Ajustes Recomendados (Minorias)", true);
            data.auditSummary.adjustments.slice(0, 10).forEach(adj => {
              const aRow = createText(`- [${adj.cat}] ${adj.name}`, 12, "Regular", { r: 0.651, g: 0.3686, b: 0 });
              adjSection.appendChild(aRow);
@@ -4050,7 +5133,7 @@ figma.ui.onmessage = async (msg) => {
         }
 
         if (data.auditSummary.issues && data.auditSummary.issues.length > 0) {
-           const issueList = createSection(auditBoard, "Pendências Críticas (Fora do Padrão)");
+           const issueList = createSection(auditBoard, "Pendências Críticas (Fora do Padrão)", true);
            data.auditSummary.issues.slice(0, 20).forEach(issue => {
              const iRow = createText(`- [${issue.cat}] ${issue.name}`, 12, "Regular", { r: 0.698, g: 0.1725, b: 0.1725 });
              issueList.appendChild(iRow);
@@ -4131,8 +5214,10 @@ figma.ui.onmessage = async (msg) => {
 
       figma.ui.postMessage({ type: "handoff-needs-position-confirmation", fichaId: mainContainer.id, isUpdate: _isUpdate, timestamp: _ts });
     } catch (err) {
-      console.error("Handoff Error:", err);
+      console.error('Handoff Error:', String(err && err.message || err), err && err.stack);
       figma.ui.postMessage({ type: "handoff-error", message: err.message });
+    } finally {
+      _hdFichaGen = false;
     }
   }
 
@@ -4494,8 +5579,8 @@ figma.ui.onmessage = async (msg) => {
     const referenceTokens = (() => {
       if (!rawReferenceTokens || !selectedLibSlugs) return rawReferenceTokens;
       const list = Array.isArray(rawReferenceTokens) ? rawReferenceTokens : [rawReferenceTokens];
-      const filtered = list.filter(lib => lib && lib.slug && selectedLibSlugs.includes(lib.slug));
-      if (filtered.length === 0) {
+      const filtered = list.filter(lib => lib && lib.slug && (selectedLibSlugs.includes(lib.slug) || lib.shared === true));
+      if (filtered.filter(lib => lib.shared !== true).length === 0) {
         // Mantém o fallback (travar o scan seria pior), mas não em silêncio:
         // slug salvo que já não existe no skeleton embarcado.
         console.warn('[Handex] Nenhuma das libs selecionadas existe no skeleton (' + selectedLibSlugs.join(', ') + '); auditando contra todas as libs.');
@@ -4521,6 +5606,17 @@ figma.ui.onmessage = async (msg) => {
     // DSC ou skeleton desatualizado), nunca false (vermelho é desvio
     // comprovado, não desconhecimento). Sem skeleton disponível também é
     // "warning" (não verificado), nunca aprovado.
+    const _unmatchedRemoteLogged = new Set();
+    const _lastVarIdByKey = new Map();
+    async function _logUnmatchedRemote(propType, propName, propKey, altKey, varId) {
+      let colecao = null, colecaoKey = null, modos = null;
+      try {
+        const v = varId ? await figma.variables.getVariableByIdAsync(varId) : null;
+        const c = v ? await figma.variables.getVariableCollectionByIdAsync(v.variableCollectionId) : null;
+        if (c) { colecao = c.name; colecaoKey = c.key || null; modos = (c.modes || []).map(m => m.name).join(', '); }
+      } catch (e) { colecao = 'erro: ' + (e && e.message); }
+      console.warn('[Handex scan] token de lib publicada sem chave no skeleton:', JSON.stringify({ tipo: propType, token: propName, key: propKey, altKey: altKey || null, colecao, colecaoKey, modos, varId: varId || null }));
+    }
     function audit(propType, propValue, propKey, propName, isRemote, altKey) {
       let result = auditProperty(propName, propValue, propType, propKey, referenceTokens);
       if (result.score < AUDIT_SCORE.EXACT && altKey && altKey !== propKey) {
@@ -4534,6 +5630,10 @@ figma.ui.onmessage = async (msg) => {
         // skeleton embarcado estiver ausente.
         if (!referenceTokens) {
           return { isDS: "warning", score: null, matchedBy: 'unverified-no-skeleton', matchedIn: null, matchedTokenName: null };
+        }
+        if (!_unmatchedRemoteLogged.has(propKey || propName)) {
+          _unmatchedRemoteLogged.add(propKey || propName);
+          _logUnmatchedRemote(propType, propName, propKey, altKey, _lastVarIdByKey.get(propKey));
         }
         return { isDS: "warning", score: null, matchedBy: 'remote-unverified', matchedIn: null, matchedTokenName: null };
       }
@@ -4565,6 +5665,7 @@ figma.ui.onmessage = async (msg) => {
       const id = Array.isArray(v) ? (v[0] && v[0].id) : v.id;
       if (!id) return null;
       const variable = await figma.variables.getVariableByIdAsync(id);
+      if (variable && variable.key) _lastVarIdByKey.set(variable.key, variable.id);
       return variable ? { name: variable.name, key: variable.key, remote: variable.remote === true } : null;
     }
     async function _resolveVarById(id) {
@@ -5295,7 +6396,7 @@ figma.ui.onmessage = async (msg) => {
         // diferentes) contra msg.previousSpecs, enviado pelo frontend
         // junto com o pedido de scan.
         const _prevItem = (msg.previousSpecs && msg.previousSpecs[category] || [])
-          .find(p => p.nodeId === node.id);
+          .find(p => p.nodeId === node.id || (Array.isArray(p.nodeIds) && p.nodeIds.includes(node.id)));
         const itemObj = {
           name: name,
           type: category,
@@ -5316,8 +6417,10 @@ figma.ui.onmessage = async (msg) => {
             : (msg.isNewComponent === true && isCustomComponent === true),
           customDecided: _prevItem ? _prevItem.customDecided === true : false,
           uiDepth: _prevItem && _prevItem.uiDepth === 'full' ? 'full' : 'essential',
+          specDismissed: _prevItem ? _prevItem.specDismissed === true : false,
           variants: variants,
           nodeId: node.id,
+          nodeIds: [node.id],
           layers: new Set([name]),
           properties: props
         };
@@ -5343,6 +6446,7 @@ figma.ui.onmessage = async (msg) => {
       } else {
         const item = map.get(_dedupKey);
         item.layers.add(name);
+        if (item.nodeIds.length < 50 && !item.nodeIds.includes(node.id)) item.nodeIds.push(node.id);
       }
     }
 
@@ -5568,6 +6672,51 @@ figma.ui.onmessage = async (msg) => {
 
       figma.notify(`${created} medida(s) reaplicada(s) no canvas!`);
     })();
+  }
+
+  if (msg.type === "resolve-spec-owners") {
+    const results = [];
+    try {
+      const specsIn = Array.isArray(msg.specs) ? msg.specs.slice(0, 400) : [];
+      const idToKey = new Map();
+      (Array.isArray(msg.items) ? msg.items : []).forEach(it => {
+        if (!it || it.key == null) return;
+        const ids = Array.isArray(it.nodeIds) && it.nodeIds.length ? it.nodeIds : (it.nodeId ? [it.nodeId] : []);
+        ids.forEach(id => { if (!idToKey.has(id)) idToKey.set(id, it.key); });
+      });
+      const memo = new Map();
+      const resolveOne = async (spec) => {
+        const target = spec && spec.targetNodeId;
+        if (!target) return { specId: spec && spec.id, itemKey: null, via: 'none' };
+        if (idToKey.has(target)) return { specId: spec.id, itemKey: idToKey.get(target), via: 'exact' };
+        if (memo.has(target)) {
+          const m = memo.get(target);
+          return { specId: spec.id, itemKey: m, via: m == null ? 'none' : 'ancestor' };
+        }
+        const path = [];
+        let found = null;
+        let node = await figma.getNodeByIdAsync(target);
+        while (node && node.type !== 'PAGE' && node.type !== 'DOCUMENT') {
+          if (idToKey.has(node.id)) { found = idToKey.get(node.id); break; }
+          if (memo.has(node.id)) { found = memo.get(node.id); break; }
+          path.push(node.id);
+          if (msg.frameRootId && node.id === msg.frameRootId) break;
+          node = node.parent;
+        }
+        path.forEach(id => memo.set(id, found));
+        memo.set(target, found);
+        return { specId: spec.id, itemKey: found, via: found == null ? 'none' : 'ancestor' };
+      };
+      for (let i = 0; i < specsIn.length; i += 12) {
+        const batch = specsIn.slice(i, i + 12);
+        const out = await Promise.all(batch.map(s => resolveOne(s).catch(() => ({ specId: s && s.id, itemKey: null, via: 'none' }))));
+        out.forEach(r => results.push(r));
+      }
+    } catch (err) {
+      console.error('[Handex] resolve-spec-owners falhou:', err);
+    }
+    figma.ui.postMessage({ type: 'spec-owners-resolved', frameId: msg.frameId || null, results });
+    return;
   }
 
   if (msg.type === "request-spec-properties") {
@@ -6273,14 +7422,15 @@ figma.ui.onmessage = async (msg) => {
         if (opts.drawConnection !== false) {
           // Âncora do lado do elemento: bounds do elemento/contorno.
           const _anchorB = _markerAnchorBounds;
+          const _lineSide = _hdValidLineSide(_anchorB, { x: specCard.x, y: specCard.y, width: specCard.width, height: specCard.height }, side);
           let startPt, endPt;
-          if (side === 'right') {
+          if (_lineSide === 'right') {
             startPt = { x: _anchorB.x + _anchorB.width, y: _anchorB.y + _anchorB.height / 2 };
             endPt   = { x: specCard.x, y: specCard.y + specCard.height / 2 };
-          } else if (side === 'left') {
+          } else if (_lineSide === 'left') {
             startPt = { x: _anchorB.x, y: _anchorB.y + _anchorB.height / 2 };
             endPt   = { x: specCard.x + specCard.width, y: specCard.y + specCard.height / 2 };
-          } else if (side === 'bottom') {
+          } else if (_lineSide === 'bottom') {
             startPt = { x: _anchorB.x + _anchorB.width / 2, y: _anchorB.y + _anchorB.height };
             endPt   = { x: specCard.x + specCard.width / 2, y: specCard.y };
           } else { // top
@@ -6331,8 +7481,8 @@ figma.ui.onmessage = async (msg) => {
               // lado voltado pra ele no card).
               const OPPOSITE_SIDE = { right: 'left', left: 'right', bottom: 'top', top: 'bottom' };
               const specElbowPoints = _orthogonalElbowPoints(
-                { x: startPt.x, y: startPt.y, side },
-                { x: endPt.x, y: endPt.y, side: OPPOSITE_SIDE[side] }
+                { x: startPt.x, y: startPt.y, side: _lineSide },
+                { x: endPt.x, y: endPt.y, side: OPPOSITE_SIDE[_lineSide] }
               );
               const segs = [startPt, ...specElbowPoints, endPt].map(p => `${p.x} ${p.y}`).join(' L ');
               connectorPath = `M ${segs}`;
@@ -6591,17 +7741,9 @@ figma.ui.onmessage = async (msg) => {
   // posição do centro do card contra os 4 lados do elemento e escolhe o
   // eixo dominante (maior distância relativa), depois o sinal dentro dele.
   function _computeSideFromBounds(elBounds, cardBounds) {
-    const elCx = elBounds.x + elBounds.width / 2;
-    const elCy = elBounds.y + elBounds.height / 2;
-    const cardCx = cardBounds.x + cardBounds.width / 2;
-    const cardCy = cardBounds.y + cardBounds.height / 2;
-    const dx = cardCx - elCx;
-    const dy = cardCy - elCy;
-    if (Math.abs(dx) >= Math.abs(dy)) {
-      return dx >= 0 ? 'right' : 'left';
-    }
-    return dy >= 0 ? 'bottom' : 'top';
+    return _hdSideFromBoxes(elBounds, cardBounds);
   }
+
 
   // Recalcula e recria a linha (Conector/DotInicio/DotFim) de UMA spec já
   // criada, a partir da posição ATUAL do card e do elemento vinculado no
@@ -6637,7 +7779,7 @@ figma.ui.onmessage = async (msg) => {
     // do card em relação ao elemento, em vez de usar uma escolha prévia
     // que pode não bater mais com onde o card acabou. Compara o centro do
     // card contra os 4 lados do elemento e escolhe o mais próximo.
-    const side = msg.guideSide || _computeSideFromBounds(bounds, cardBounds);
+    const side = _hdValidLineSide(bounds, cardBounds, msg.guideSide);
     let startPt, endPt;
     if (side === 'right') {
       startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
@@ -8139,110 +9281,97 @@ figma.ui.onmessage = async (msg) => {
         createdMap.push({ sourceNodeId: item.nodeId || null, tag: item.tag, cardId: card.id });
         figma.ui.postMessage({ type: "quick-spec-canvas-progress", done: i + 1, total: totalToCreate });
       }
-      // Organiza os cards num FRAME com Auto Layout WRAP (2026-09-25,
-      // pedido do usuário) -- em vez de posicionar cada card manualmente
-      // por x/y (frágil, sem organização real na árvore de camadas), um
-      // frame HORIZONTAL + layoutWrap="WRAP" faz o próprio Figma quebrar em
-      // linhas conforme a largura, exatamente o efeito de uma grade de N
-      // colunas. `columns` vem da modal "Organizar cards" (padrão 1 =
-      // efetivamente empilha tudo numa coluna, comportamento original antes
-      // da modal existir). A largura do wrapper é calculada pra caber
-      // exatamente N cards por linha (lida a largura real de cada card, já
-      // que todos nascem com a mesma largura fixa em _qsBuildElementCard,
-      // mas a leitura direta evita acoplar esse número aqui) -- sem alterar
-      // NADA da configuração interna de cada card (Auto Layout próprio,
-      // largura fixa, padding), só o container que os agrupa.
-      const columns = Math.max(1, Math.round(Number(msg.columns) || 1));
-      // 48px (dobro do valor original) -- pedido do Augusto: com 24px as
-      // linhas guia em cotovelo (cinza, semi-transparentes) ficavam
-      // praticamente coladas entre os cards, quase somem no espaço apertado.
-      const GRID_GAP = 48;
-      const cardWidth = cards.length > 0 ? Math.max(...cards.map(c => c.width)) : 280;
-      const wrapper = figma.createFrame();
-      wrapper.name = "Specs Rápidas — Cards";
-      wrapper.layoutMode = "HORIZONTAL";
-      wrapper.layoutWrap = "WRAP";
-      wrapper.itemSpacing = GRID_GAP;
-      wrapper.counterAxisSpacing = GRID_GAP;
-      wrapper.paddingLeft = wrapper.paddingRight = wrapper.paddingTop = wrapper.paddingBottom = 0;
-      wrapper.fills = [];
-      wrapper.clipsContent = false;
-      wrapper.primaryAxisSizingMode = "FIXED";
-      wrapper.counterAxisSizingMode = "AUTO";
-      wrapper.resize(columns * cardWidth + (columns - 1) * GRID_GAP, wrapper.height);
-      for (const card of cards) wrapper.appendChild(card);
-      figma.currentPage.appendChild(wrapper);
-      wrapper.setPluginData('handexCategory', 'quickspec');
-      if (anchorFrameId) wrapper.setPluginData('handexQuickSpecFrameId', anchorFrameId);
-      _hdMoveToCategorySection(wrapper, 'quickspec');
+      // Cada card na ALTURA DO SEU ELEMENTO, numa coluna ao lado do frame
+      // (2026-10-05, pedido do Augusto: na grade com Auto Layout as linhas se
+      // misturavam). O centro do card mira o centro do elemento, então a linha
+      // sai quase sempre reta e horizontal; quando dois cards colidem, o de
+      // baixo desce o necessário (GAP). Cards de lotes anteriores do mesmo
+      // frame também contam como ocupados. O wrapper é um frame SEM Auto
+      // Layout, só para agrupar (ocultar/excluir em lote continuam iguais) e
+      // deixar cada card livre para o designer mover.
+      const GAP = 24;
       const vp = figma.viewport.bounds;
-      let _wrapperX = anchorX !== null ? Math.round(anchorX) : Math.round(vp.x + vp.width / 2);
-      let _wrapperY = anchorY !== null ? Math.round(anchorY) : Math.round(vp.y + vp.height / 2);
-      // Bug real corrigido (2026-09-25, reportado pelo usuário: "os cards
-      // não podem se sobrepor, tem de estar empilhados") -- cada clique em
-      // "Inserir" cria um wrapper NOVO, mas até aqui sempre na mesma âncora
-      // (posição do elemento escaneado ou centro do viewport), sem checar
-      // se um wrapper anterior já ocupa esse lugar. Empilha o novo wrapper
-      // ABAIXO do último já existente na mesma Section (mesmo princípio já
-      // usado no resto do plugin: sugestão simples, o designer reorganiza
-      // livremente depois -- aqui só evita a colisão total).
+      const colX = anchorX !== null ? Math.round(anchorX) : Math.round(vp.x + vp.width / 2);
+      const fallbackY = anchorY !== null ? anchorY : Math.round(vp.y + vp.height / 2);
+      const cardWidth = cards.length > 0 ? Math.max(...cards.map(c => c.width)) : 280;
+
+      const occupied = [];
       const _qsSection = figma.currentPage.children.find(n => n.type === 'SECTION' && n.getPluginData('handexCategorySection') === 'quickspec');
       if (_qsSection) {
-        // Só wrappers do MESMO frame de referência contam (antes: o mais
-        // baixo de toda a Section, o que jogava o card novo abaixo do frame
-        // quando havia cards de outro frame). Wrappers legados sem
-        // handexQuickSpecFrameId são resolvidos pelo elemento de origem do
-        // 1º card.
-        const _prevWrappers = [];
         for (const n of _qsSection.children) {
-          if (n.id === wrapper.id || n.getPluginData('handexCategory') !== 'quickspec' || !n.absoluteBoundingBox) continue;
+          if (n.getPluginData('handexCategory') !== 'quickspec' || !('children' in n) || !n.absoluteBoundingBox) continue;
           let fid = n.getPluginData('handexQuickSpecFrameId');
-          if (!fid && 'children' in n) {
+          if (!fid) {
             const firstCard = n.children.find(c => c.getPluginData && c.getPluginData('handexQuickSpecSourceId'));
             const src = firstCard ? await figma.getNodeByIdAsync(firstCard.getPluginData('handexQuickSpecSourceId')) : null;
             const tf = src ? _qsFindTopLevelFrame(src) : null;
             fid = tf ? tf.id : (src ? src.id : '');
           }
-          if (anchorFrameId && fid === anchorFrameId) _prevWrappers.push(n);
-        }
-        if (_prevWrappers.length > 0) {
-          const _lowest = _prevWrappers.reduce((a, n) => {
-            const bb = n.absoluteBoundingBox;
-            return (bb.y + bb.height) > a.bottom ? { bottom: bb.y + bb.height, x: bb.x } : a;
-          }, { bottom: -Infinity, x: _wrapperX });
-          _wrapperX = Math.round(_lowest.x);
-          _wrapperY = Math.round(_lowest.bottom + GRID_GAP);
+          if (!anchorFrameId || fid !== anchorFrameId) continue;
+          for (const c of n.children) {
+            const bb = c.absoluteBoundingBox;
+            if (bb && bb.x < colX + cardWidth && bb.x + bb.width > colX) occupied.push({ top: bb.y, bottom: bb.y + bb.height });
+          }
         }
       }
-      wrapper.x = _wrapperX;
-      wrapper.y = _wrapperY;
 
-      // Linha guia até o elemento de origem (2026-09-25, pedido do usuário:
-      // "mesma proposta das specs tradicionais") -- SÓ depois que o wrapper
-      // já está no canvas com posição definitiva: o Auto Layout WRAP calcula
-      // a posição final de cada card (card.x/card.y viram absolutos e
-      // estáveis) só depois do appendChild + wrapper.x/y setados acima.
-      // Reaproveita o essencial da arquitetura de specs tradicionais
-      // (contour tracejado no elemento + conector reto + dots), mas sem o
-      // sistema de empilhamento por letra/lado (irrelevante aqui: a posição
-      // de cada card já é decidida pelo grid, não por essa lógica). Ver
-      // _qsBuildConnectorForCard.
-      // Bounds absolutos de todo card do lote, na mesma ordem de `cards` --
-      // calculados uma vez aqui (não dentro do loop) pra cada chamada de
-      // _qsBuildConnectorForCard poder filtrar "todo card menos a origem e
-      // o destino desta linha específica" sem recalcular nada.
-      const _qsAllCardBounds = cards.map(c => c.absoluteBoundingBox);
-
-      const markers = [];
-      const markerParts = [];
-      const _qsUsedSegments = [];
+      const desired = [];
       for (let i = 0; i < cards.length; i++) {
-        const item = items[i];
-        const node = item.nodeId ? await figma.getNodeByIdAsync(item.nodeId) : null;
-        const obstacles = _qsAllCardBounds.filter((b, j) => j !== i && b);
-        const built = _qsBuildConnectorForCard(cards[i], node, item.tag, obstacles, columns, _qsUsedSegments);
-        if (built) { markers.push(built.marker); markerParts.push(...built.parts); }
+        const node = items[i].nodeId ? await figma.getNodeByIdAsync(items[i].nodeId) : null;
+        const bb = node && node.absoluteBoundingBox;
+        desired.push(bb ? bb.y + bb.height / 2 - cards[i].height / 2 : null);
       }
+      let _seqY = fallbackY;
+      for (let i = 0; i < desired.length; i++) {
+        if (desired[i] === null) { desired[i] = _seqY; _seqY += cards[i].height + GAP; }
+      }
+      const order = cards.map((_, i) => i).sort((x, y) => desired[x] - desired[y]);
+      const placedY = new Array(cards.length);
+      for (const i of order) {
+        let y = Math.round(desired[i]);
+        const h = cards[i].height;
+        let moved = true;
+        while (moved) {
+          moved = false;
+          for (const o of occupied) {
+            if (y < o.bottom + GAP && y + h + GAP > o.top) { y = Math.round(o.bottom + GAP); moved = true; }
+          }
+        }
+        placedY[i] = y;
+        occupied.push({ top: y, bottom: y + h });
+      }
+
+      const minY = Math.min(...placedY);
+      const maxY = Math.max(...placedY.map((y, i) => y + cards[i].height));
+      const wrapper = figma.createFrame();
+      wrapper.name = "Anotações — Cards";
+      wrapper.fills = [];
+      wrapper.clipsContent = false;
+      wrapper.resize(cardWidth, Math.max(1, maxY - minY));
+      for (let i = 0; i < cards.length; i++) {
+        wrapper.appendChild(cards[i]);
+        cards[i].x = 0;
+        cards[i].y = placedY[i] - minY;
+      }
+      figma.currentPage.appendChild(wrapper);
+      wrapper.setPluginData('handexCategory', 'quickspec');
+      if (anchorFrameId) wrapper.setPluginData('handexQuickSpecFrameId', anchorFrameId);
+      _hdMoveToCategorySection(wrapper, 'quickspec');
+      wrapper.x = colX;
+      wrapper.y = minY;
+      // Corrige qualquer deslocamento do pai (Section) para o wrapper ficar
+      // exatamente na posição absoluta calculada.
+      const _wbb = wrapper.absoluteBoundingBox;
+      if (_wbb) { wrapper.x += colX - _wbb.x; wrapper.y += minY - _wbb.y; }
+
+      // Linhas guia do lote, roteadas juntas para não se cruzarem
+      // (ver _qsBuildBatchConnectors).
+      const _qsPairs = [];
+      for (let i = 0; i < cards.length; i++) {
+        const node = items[i].nodeId ? await figma.getNodeByIdAsync(items[i].nodeId) : null;
+        _qsPairs.push({ card: cards[i], node, tag: items[i].tag });
+      }
+      const { parts: markerParts, markers } = await _qsBuildBatchConnectors(_qsPairs);
 
       // Rede de segurança de z-order MANTIDA (2026-09-28) mesmo depois do
       // desvio geométrico acima -- o desvio cobre o caso comum (grid com gap
@@ -8264,7 +9393,7 @@ figma.ui.onmessage = async (msg) => {
       figma.currentPage.selection = [wrapper, ...markers];
       figma.viewport.scrollAndZoomIntoView([wrapper, ...markers]);
       figma.ui.postMessage({ type: "quick-spec-canvas-result", count: cards.length, created: createdMap });
-      figma.notify(cards.length > 1 ? `${cards.length} cards de Specs Rápidas inseridos no canvas ✓` : "Card de Spec Rápida inserido no canvas ✓");
+      figma.notify(cards.length > 1 ? `${cards.length} cards de Anotações inseridos no canvas ✓` : "Card de Anotação inserido no canvas ✓");
     } catch (err) {
       const errMsg = err && err.message ? err.message : String(err);
       console.error("Erro ao inserir card do Spec Express:", errMsg);
@@ -8334,6 +9463,7 @@ figma.ui.onmessage = async (msg) => {
       _qsAppendNoteBlock(card, note);
     }
     card.setPluginData('handexQuickSpecNote', note);
+    await _qsResolveCardOverlaps(card);
     figma.ui.postMessage({ type: 'quick-spec-note-updated', nodeId: card.id, note });
     return;
   }
@@ -8605,7 +9735,7 @@ async function _qsBuildElementCard(item, node) {
   const note = _qsNormalizeNote(item.note);
 
   const card = _hdCreateFrame("VERTICAL", 16, 10, { r: 1, g: 1, b: 1 });
-  card.name = "Spec Rápida " + item.tag + " | " + item.name;
+  card.name = "Anotação " + item.tag + " | " + item.name;
   card.strokes = [{ type: "SOLID", color: { r: 0.8157, g: 0.8784, b: 0.8902 } }];
   card.strokeWeight = 1;
   card.cornerRadius = 12;
@@ -8748,6 +9878,45 @@ async function _qsBuildElementCard(item, node) {
 // das 4 arestas do retângulo (caso o segmento atravesse de lado a lado sem
 // nenhum ponto interno -- ex: passando reto por cima de um card mais
 // estreito que o próprio segmento).
+// Cards das Anotações ficam soltos no wrapper (sem Auto Layout, ver
+// quick-spec-insert-canvas). Se um card cresce (observação nova), empurra para
+// baixo os cards do mesmo lote que passaram a colidir e refaz a linha guia
+// deles, para a linha continuar chegando no card.
+async function _qsResolveCardOverlaps(card) {
+  const wrapper = card.parent;
+  if (!wrapper || wrapper.type !== 'FRAME' || wrapper.layoutMode !== 'NONE' || wrapper.getPluginData('handexCategory') !== 'quickspec') return;
+  const GAP = 24;
+  const sorted = wrapper.children.slice().sort((a, b) => a.y - b.y);
+  const moved = [];
+  for (let i = 1; i < sorted.length; i++) {
+    const prev = sorted[i - 1], cur = sorted[i];
+    const minY = prev.y + prev.height + GAP;
+    if (cur.y < minY && cur.y + cur.height > prev.y) { cur.y = minY; moved.push(cur); }
+  }
+  const bottom = Math.max(...wrapper.children.map(c => c.y + c.height));
+  if (bottom > wrapper.height) wrapper.resize(wrapper.width, bottom);
+  if (moved.length === 0) return;
+  const section = wrapper.parent;
+  const ids = new Set(wrapper.children.map(c => c.id));
+  if (section && 'children' in section) {
+    section.children.slice().forEach(n => {
+      if (n.getPluginData && ids.has(n.getPluginData('handexQuickSpecMarkerFor'))) { try { n.remove(); } catch (e) {} }
+    });
+  }
+  const pairs = [];
+  for (const c of wrapper.children) {
+    const srcId = c.getPluginData('handexQuickSpecSourceId');
+    const src = srcId ? await figma.getNodeByIdAsync(srcId) : null;
+    if (src) pairs.push({ card: c, node: src, tag: c.getPluginData('handexQuickSpecTag') });
+  }
+  const { parts } = await _qsBuildBatchConnectors(pairs);
+  const hidden = new Set(wrapper.children.filter(c => !c.visible).map(c => c.id));
+  parts.forEach(n => { if (hidden.has(n.getPluginData('handexQuickSpecMarkerFor'))) n.visible = false; });
+  if (section && typeof section.insertChild === 'function') {
+    for (const part of parts) { try { section.insertChild(0, part); } catch (e) {} }
+  }
+}
+
 function _qsSegmentIntersectsRect(p1, p2, rect) {
   const { x, y, width: w, height: h } = rect;
   const pointInRect = (p) => p.x >= x && p.x <= x + w && p.y >= y && p.y <= y + h;
@@ -8913,7 +10082,39 @@ function _qsSeparateFromUsedLines(pathPoints, usedSegments, obstacleBounds) {
   return path;
 }
 
-function _qsBuildConnectorForCard(card, node, tag, obstacleBounds, gridColumns, usedSegments) {
+// Linhas de um lote em coluna (cards à direita do frame, cada um na altura
+// do seu elemento ou empurrado para baixo). Garante que nenhuma linha cruze
+// outra: ordenadas pela altura do elemento, as que precisam descer dobram em
+// faixas verticais escalonadas -- a do elemento mais alto dobra mais perto
+// dos cards, cada uma abaixo dobra um passo mais à esquerda. Como um card
+// nunca fica acima do seu elemento e a ordem dos cards segue a dos
+// elementos, essa regra elimina cruzamentos (2026-10-05, pedido do Augusto).
+async function _qsBuildBatchConnectors(pairs) {
+  const parts = [];
+  const markers = [];
+  const rows = [];
+  for (const p of pairs) {
+    const bb = p.node && (p.node.absoluteBoundingBox || p.node.absoluteRenderBounds);
+    const cb = p.card.absoluteBoundingBox;
+    if (!bb || !cb) continue;
+    rows.push({ p, sy: bb.y + bb.height / 2, ey: cb.y + cb.height / 2, startX: bb.x + bb.width + 16, cardX: cb.x });
+  }
+  if (rows.length === 0) return { parts, markers };
+  rows.sort((a, b) => a.sy - b.sy);
+  const cardX = Math.min(...rows.map(r => r.cardX));
+  const bendy = rows.filter(r => Math.abs(r.ey - r.sy) >= 1);
+  const left = Math.max(...rows.map(r => r.startX)) + 16;
+  const right = cardX - 16;
+  const step = bendy.length > 0 ? Math.max(4, Math.min(12, (right - left) / (bendy.length + 1))) : 0;
+  bendy.forEach((r, i) => { r.elbowX = Math.round(right - step * (i + 1)); });
+  for (const r of rows) {
+    const built = _qsBuildConnectorForCard(r.p.card, r.p.node, r.p.tag, [], 1, null, { elbowX: r.elbowX == null ? null : r.elbowX });
+    if (built) { markers.push(built.marker); parts.push(...built.parts); }
+  }
+  return { parts, markers };
+}
+
+function _qsBuildConnectorForCard(card, node, tag, obstacleBounds, gridColumns, usedSegments, lane) {
   if (!node) return null;
   const bounds = node.absoluteBoundingBox || node.absoluteRenderBounds;
   if (!bounds) return null;
@@ -8948,30 +10149,6 @@ function _qsBuildConnectorForCard(card, node, tag, obstacleBounds, gridColumns, 
   contour.locked = true;
   contour.setPluginData('handexCategory', 'quickspec');
 
-  // Tag chip no contour -- mesmo padrão visual das specs tradicionais,
-  // reaproveita a tag já atribuída ao card (A, B, C...) em vez de uma nova.
-  const chip = figma.createFrame();
-  chip.name = 'Chip';
-  chip.layoutMode = "HORIZONTAL";
-  chip.primaryAxisSizingMode = "FIXED";
-  chip.counterAxisSizingMode = "FIXED";
-  chip.resize(28, 28);
-  chip.cornerRadius = 14;
-  chip.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
-  chip.strokes = [{ type: "SOLID", color: themeColor, opacity: THEME_OPACITY }];
-  chip.strokeWeight = 1.5;
-  chip.primaryAxisAlignItems = "CENTER";
-  chip.counterAxisAlignItems = "CENTER";
-  const chipText = figma.createText();
-  chipText.fontName = { family: "Inter", style: "Bold" };
-  chipText.fontSize = 12;
-  chipText.fills = [{ type: "SOLID", color: themeColor, opacity: THEME_OPACITY }];
-  chipText.characters = tag;
-  chip.appendChild(chipText);
-  contour.appendChild(chip);
-  chip.x = 0;
-  chip.y = 0;
-
   // Lado de saída: eixo dominante entre o centro do elemento e o centro do
   // card (mesmo critério de _computeSideFromBounds nas specs tradicionais,
   // mas essa função vive dentro de outro closure/handler e não é acessível
@@ -8979,7 +10156,7 @@ function _qsBuildConnectorForCard(card, node, tag, obstacleBounds, gridColumns, 
   const elCx = bounds.x + bounds.width / 2, elCy = bounds.y + bounds.height / 2;
   const cardCx = cardBounds.x + cardBounds.width / 2, cardCy = cardBounds.y + cardBounds.height / 2;
   const dx = cardCx - elCx, dy = cardCy - elCy;
-  const sourceSide = Math.abs(dx) >= Math.abs(dy) ? (dx >= 0 ? 'right' : 'left') : (dy >= 0 ? 'bottom' : 'top');
+  const sourceSide = lane ? 'right' : (Math.abs(dx) >= Math.abs(dy) ? (dx >= 0 ? 'right' : 'left') : (dy >= 0 ? 'bottom' : 'top'));
   const OPPOSITE_SIDE = { right: 'left', left: 'right', bottom: 'top', top: 'bottom' };
 
   // Lado de ENTRADA no card -- não necessariamente o oposto de `sourceSide`
@@ -9011,19 +10188,23 @@ function _qsBuildConnectorForCard(card, node, tag, obstacleBounds, gridColumns, 
   // mesma linha do elemento (cardCy ~= elCy) também entra por cima/baixo em
   // vez de lateral direto -- 1 dobra a mais nesse caso pontual, mas nunca
   // reintroduz o corredor apertado entre colunas que causava o bug.
-  const cardSide = (gridColumns > 1)
+  const cardSide = lane ? 'left' : (gridColumns > 1)
     ? (cardCy >= elCy ? 'top' : 'bottom')
     : OPPOSITE_SIDE[sourceSide];
 
+  // A linha nasce na BORDA DO CONTORNO (16px fora do elemento), não na borda
+  // do elemento: não atravessa a área tracejada e a tag fica sobre o contorno,
+  // no ponto de saída (2026-10-05, pedido do Augusto).
+  const cb = { x: contour.x, y: contour.y, width: contour.width, height: contour.height };
   let startPt, endPt;
   if (sourceSide === 'right') {
-    startPt = { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 };
+    startPt = { x: cb.x + cb.width, y: cb.y + cb.height / 2 };
   } else if (sourceSide === 'left') {
-    startPt = { x: bounds.x, y: bounds.y + bounds.height / 2 };
+    startPt = { x: cb.x, y: cb.y + cb.height / 2 };
   } else if (sourceSide === 'bottom') {
-    startPt = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height };
+    startPt = { x: cb.x + cb.width / 2, y: cb.y + cb.height };
   } else {
-    startPt = { x: bounds.x + bounds.width / 2, y: bounds.y };
+    startPt = { x: cb.x + cb.width / 2, y: cb.y };
   }
   if (cardSide === 'left') {
     endPt = { x: cardBounds.x, y: cardBounds.y + cardBounds.height / 2 };
@@ -9089,14 +10270,23 @@ function _qsBuildConnectorForCard(card, node, tag, obstacleBounds, gridColumns, 
   // `side` pra decidir a ORIENTAÇÃO do desvio (vertical se a saída for
   // lateral) -- `sourceSide` continua correto pra essa decisão mesmo com
   // `cardSide` independente.
-  if (obstacleBounds && obstacleBounds.length > 0) {
+  // Coluna de cards ao lado do frame (lane): rota fixa calculada pelo lote
+  // inteiro em _qsBuildBatchConnectors -- sai reto, dobra na faixa vertical
+  // própria desta linha e entra reto no card. Sem desvio nem separação
+  // posterior, que reintroduziriam cruzamentos.
+  if (lane) {
+    qsPathPoints = (lane.elbowX == null || Math.abs(startPt.y - endPt.y) < 1)
+      ? [startPt, { x: endPt.x, y: startPt.y }]
+      : [startPt, { x: lane.elbowX, y: startPt.y }, { x: lane.elbowX, y: endPt.y }, endPt];
+    if (Math.abs(startPt.y - endPt.y) < 1) endPt = { x: endPt.x, y: startPt.y };
+  } else if (obstacleBounds && obstacleBounds.length > 0) {
     const hitRects = _qsPathObstacles(qsPathPoints, obstacleBounds);
     if (hitRects.length > 0) {
       qsPathPoints = _qsDetourAroundObstacles(startPt, endPt, sourceSide, cardSide, hitRects);
     }
   }
 
-  if (usedSegments) {
+  if (usedSegments && !lane) {
     qsPathPoints = _qsSeparateFromUsedLines(qsPathPoints, usedSegments, obstacleBounds);
     _qsRecordSegments(qsPathPoints, usedSegments);
   }
@@ -9115,18 +10305,37 @@ function _qsBuildConnectorForCard(card, node, tag, obstacleBounds, gridColumns, 
   connector.setPluginData('handexCategory', 'quickspec');
   connector.setPluginData('handexQuickSpecMarkerFor', card.id);
 
+  // Tag (A, B, C...) no ponto de saída da linha, no lugar do dot de início
+  // (2026-10-05, pedido do Augusto: no canto do contorno, em cinza a 50%, ela
+  // quase não aparecia e ficava longe da linha, que costuma sair pela direita).
+  // Preenchimento sólido no cinza de texto secundário da lib, texto branco.
   const _DOT_R = 4;
-  const startDot = figma.createEllipse();
-  startDot.name = 'DotInicio';
-  startDot.resize(_DOT_R * 2, _DOT_R * 2);
-  startDot.fills = [{ type: "SOLID", color: themeColor, opacity: THEME_OPACITY }];
-  startDot.strokes = [];
-  startDot.locked = true;
-  figma.currentPage.appendChild(startDot);
-  startDot.x = startPt.x - _DOT_R;
-  startDot.y = startPt.y - _DOT_R;
-  startDot.setPluginData('handexCategory', 'quickspec');
-  startDot.setPluginData('handexQuickSpecMarkerFor', card.id);
+  const _CHIP = 24;
+  const chip = figma.createFrame();
+  chip.name = 'Tag';
+  chip.layoutMode = "HORIZONTAL";
+  chip.primaryAxisSizingMode = "FIXED";
+  chip.counterAxisSizingMode = "FIXED";
+  chip.resize(_CHIP, _CHIP);
+  chip.cornerRadius = _CHIP / 2;
+  chip.fills = [{ type: "SOLID", color: hexToRgb("#64747a") }];
+  chip.strokes = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+  chip.strokeWeight = 2;
+  chip.strokeAlign = "OUTSIDE";
+  chip.primaryAxisAlignItems = "CENTER";
+  chip.counterAxisAlignItems = "CENTER";
+  const chipText = figma.createText();
+  chipText.fontName = { family: "Inter", style: "Bold" };
+  chipText.fontSize = 11;
+  chipText.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+  chipText.characters = tag;
+  chip.appendChild(chipText);
+  figma.currentPage.appendChild(chip);
+  chip.x = startPt.x - _CHIP / 2;
+  chip.y = startPt.y - _CHIP / 2;
+  chip.locked = true;
+  chip.setPluginData('handexCategory', 'quickspec');
+  chip.setPluginData('handexQuickSpecMarkerFor', card.id);
 
   const endDot = figma.createEllipse();
   endDot.name = 'DotFim';
@@ -9155,10 +10364,12 @@ function _qsBuildConnectorForCard(card, node, tag, obstacleBounds, gridColumns, 
   // organizados dentro da Section "Handex | Spec Express" junto do resto.
   _hdMoveToCategorySection(contour, 'quickspec');
   _hdMoveToCategorySection(connector, 'quickspec');
-  _hdMoveToCategorySection(startDot, 'quickspec');
+  _hdMoveToCategorySection(chip, 'quickspec');
   _hdMoveToCategorySection(endDot, 'quickspec');
 
-  return { marker: contour, parts: [contour, connector, startDot, endDot] };
+  // Ordem importa: o chamador reinsere cada parte no índice 0 da Section, então
+  // a primeira da lista termina por cima das demais (tag acima da linha).
+  return { marker: contour, parts: [chip, contour, connector, endDot] };
 }
 
 

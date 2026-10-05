@@ -55,7 +55,7 @@
 
 <!-- MODAL GENÉRICA DE LOADING (2026-09-25) -- padrão único a ser reaproveitado
      por QUALQUER etapa do Handex que precise de feedback bloqueante de
-     progresso (ex: criação de cards de Specs Rápidas), em vez de cada
+     progresso (ex: criação de cards de Anotações), em vez de cada
      feature nova inventar seu próprio loading inline. Modelada no mesmo
      padrão já usado no plugin irmão hac (overlay escurecido + blur, card
      central, ícone Lucide `loader-2` com `animate-spin` como spinner) e no
@@ -334,7 +334,7 @@
               <span class="text-[12px] font-extrabold text-slate-800 dark:text-white">Atualização</span>
               <span class="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[9px] font-bold rounded uppercase tracking-wide">v1.1</span>
             </div>
-            <p class="text-[11px] text-slate-500 dark:text-dark-muted">Novo conteúdo, frames, specs ou fluxos adicionados.</p>
+            <p class="text-[11px] text-slate-500 dark:text-dark-muted">Novo conteúdo, frames, especificações ou fluxos adicionados.</p>
             <p id="version-preview-minor" class="text-[11px] font-bold text-[#005ca9] mt-1"></p>
           </div>
         </label>
@@ -641,7 +641,7 @@
                 </div>
                 <div class="flex items-start gap-2">
                   <i data-lucide="pencil" class="w-4 h-4 shrink-0 mt-0.5 text-slate-500 dark:text-dark-muted"></i>
-                  <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Renomear grupo</strong> — clique no ícone de lápis ao lado do nome do grupo na lista de specs para personalizar o rótulo.</p>
+                  <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Renomear grupo</strong> — clique no ícone de lápis ao lado do nome do grupo na lista de especificações para personalizar o rótulo.</p>
                 </div>
               </div>
             </div>
@@ -658,7 +658,7 @@
               <i data-lucide="chevron-down" class="w-4 h-4 shrink-0 text-[#004d8d] dark:text-blue-300 transition-transform"></i>
             </button>
             <div class="accordion-content hidden p-4 pt-0 space-y-3">
-              <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed">Na lista de specs, o cabeçalho de cada grupo (tag) tem botões para organizar o que aparece no canvas.</p>
+              <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed">Na lista de especificações, o cabeçalho de cada grupo (tag) tem botões para organizar o que aparece no canvas.</p>
               <div class="space-y-2">
                 <div class="flex items-start gap-2">
                   <i data-lucide="spline" class="w-4 h-4 shrink-0 mt-0.5 text-slate-500 dark:text-dark-muted"></i>
@@ -666,7 +666,7 @@
                 </div>
                 <div class="flex items-start gap-2">
                   <i data-lucide="eye" class="w-4 h-4 shrink-0 mt-0.5 text-slate-500 dark:text-dark-muted"></i>
-                  <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Ocultar grupo</strong> — esconde todas as specs daquela tag no canvas, sem apagar nada.</p>
+                  <p class="text-[11px] text-slate-600 dark:text-dark-muted leading-relaxed"><strong>Ocultar grupo</strong> — esconde todas as especificações daquela tag no canvas, sem apagar nada.</p>
                 </div>
                 <div class="flex items-start gap-2">
                   <i data-lucide="lock" class="w-4 h-4 shrink-0 mt-0.5 text-slate-500 dark:text-dark-muted"></i>
@@ -830,7 +830,7 @@
     <div class="relative w-full max-w-[360px] max-h-full bg-white dark:bg-dark-surface rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
       <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-dark-line shrink-0">
         <h3 id="spec-modal-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-2">
-          <i data-lucide="plus-circle" class="w-4 h-4 text-[#004d8d]" aria-hidden="true"></i> Criar Spec Detalhada
+          <i data-lucide="plus-circle" class="w-4 h-4 text-[#004d8d]" aria-hidden="true"></i> Criar Especificação
         </h3>
         <div class="flex items-center gap-1 shrink-0">
           <button onclick="openHelp('spec-form-modal')" title="Ajuda" aria-label="Ajuda" class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-[#005ca9] transition-colors">
@@ -1151,7 +1151,7 @@
       </div>
       <div class="p-4 border-t border-gray-100 dark:border-dark-line flex gap-2">
         <button onclick="backToSpecPositionFromException()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 dark:text-dark-muted bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line hover:bg-gray-50 dark:hover:bg-slate-800 rounded-2xl transition-colors">Voltar</button>
-        <button onclick="finalizeSpecCreation()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-blue-500 hover:bg-blue-600 rounded-2xl transition-colors shadow-lg shadow-blue-500/20">Criar Spec Detalhada</button>
+        <button onclick="finalizeSpecCreation()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-blue-500 hover:bg-blue-600 rounded-2xl transition-colors shadow-lg shadow-blue-500/20">Criar Especificação</button>
       </div>
     </div>
   </div>
@@ -1483,7 +1483,7 @@
       </div>
       <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-2.5 text-center">
         <p id="import-count-specs" class="text-[18px] font-extrabold text-blue-600 dark:text-blue-400 leading-none">0</p>
-        <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-0.5 uppercase tracking-wide">Specs</p>
+        <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-0.5 uppercase tracking-wide">Especificações</p>
       </div>
       <div class="bg-info-50 dark:bg-info-900/20 rounded-xl p-2.5 text-center">
         <p id="import-count-measures" class="text-[18px] font-extrabold text-info-600 dark:text-info-400 leading-none">0</p>
@@ -1511,7 +1511,7 @@
         <input type="checkbox" id="import-opt-specs" class="mt-0.5 w-4 h-4 accent-blue-600 shrink-0">
         <div class="flex-1">
           <p class="text-[12px] font-bold text-slate-800 dark:text-white leading-tight">Recriar Cards de Especificação</p>
-          <p id="import-specs-hint" class="text-[10px] text-slate-500 dark:text-dark-muted leading-snug mt-0.5">Recria os cards de spec no canvas para os frames que possuem especificações.</p>
+          <p id="import-specs-hint" class="text-[10px] text-slate-500 dark:text-dark-muted leading-snug mt-0.5">Recria os cards de especificação no canvas para os frames que possuem especificações.</p>
         </div>
       </label>
 
@@ -1628,7 +1628,7 @@
     <!-- Bloco 1: dados internos do plugin -->
     <div class="border border-gray-200 dark:border-dark-line rounded-2xl p-3.5 flex flex-col gap-2.5">
       <p class="text-[11px] font-bold text-slate-700 dark:text-white">Apagar dados do plugin</p>
-      <p class="text-[10.5px] text-slate-500 dark:text-dark-muted leading-relaxed">Reseta o progresso salvo no Handex (frames, specs, medidas e fluxos registrados). Não remove nada do canvas do Figma.</p>
+      <p class="text-[10.5px] text-slate-500 dark:text-dark-muted leading-relaxed">Reseta o progresso salvo no Handex (frames, especificações, medidas e fluxos registrados). Não remove nada do canvas do Figma.</p>
       <button id="clear-plugin-data-btn" onclick="requestClearAllData()"
         class="w-full py-2 rounded-2xl bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold transition-colors">
         Apagar dados do plugin
@@ -1663,8 +1663,12 @@
           Ficha de Handoff
         </label>
         <label class="flex items-center gap-2 text-[11px] text-slate-700 dark:text-white cursor-pointer">
+          <input type="checkbox" id="clear-canvas-quickspec" onchange="updateClearCanvasButtonState()" class="w-4 h-4 rounded accent-red-500">
+          Anotações
+        </label>
+        <label class="flex items-center gap-2 text-[11px] text-slate-700 dark:text-white cursor-pointer">
           <input type="checkbox" id="clear-canvas-specs" onchange="updateClearCanvasButtonState()" class="w-4 h-4 rounded accent-red-500">
-          Specs
+          Especificações
         </label>
         <label class="flex items-center gap-2 text-[11px] text-slate-700 dark:text-white cursor-pointer">
           <input type="checkbox" id="clear-canvas-medidas" onchange="updateClearCanvasButtonState()" class="w-4 h-4 rounded accent-red-500">
@@ -1673,10 +1677,6 @@
         <label class="flex items-center gap-2 text-[11px] text-slate-700 dark:text-white cursor-pointer">
           <input type="checkbox" id="clear-canvas-fluxos" onchange="updateClearCanvasButtonState()" class="w-4 h-4 rounded accent-red-500">
           Fluxos
-        </label>
-        <label class="flex items-center gap-2 text-[11px] text-slate-700 dark:text-white cursor-pointer">
-          <input type="checkbox" id="clear-canvas-quickspec" onchange="updateClearCanvasButtonState()" class="w-4 h-4 rounded accent-red-500">
-          Specs Rápidas
         </label>
       </div>
 
@@ -1724,7 +1724,7 @@
       </div>
       <div>
         <p id="clear-briefing-modal-title" class="text-[13px] font-bold text-slate-800 dark:text-white">Limpar Briefing Estratégico</p>
-        <p id="clear-briefing-modal-desc" class="text-[11px] text-slate-500 dark:text-dark-muted mt-0.5">Remove todas as perguntas respondidas. O restante do projeto (frames, specs, medidas, fluxos) não é afetado.</p>
+        <p id="clear-briefing-modal-desc" class="text-[11px] text-slate-500 dark:text-dark-muted mt-0.5">Remove todas as perguntas respondidas. O restante do projeto (frames, especificações, medidas, fluxos) não é afetado.</p>
       </div>
     </div>
     <div class="flex gap-2">

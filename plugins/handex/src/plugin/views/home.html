@@ -5,7 +5,7 @@
   <div class="mb-2.5 flex items-start justify-between gap-2">
     <div class="min-w-0">
       <h2 class="text-[#22292e] dark:text-white font-extrabold text-[14px] tracking-tight">Do design à entrega, sem perder detalhes.</h2>
-      <p class="text-slate-600 dark:text-dark-muted text-[11px] mt-0.5">Escaneie tokens, registre specs, mapeie fluxos<br>e gere sua ficha técnica.</p>
+      <p class="text-slate-600 dark:text-dark-muted text-[11px] mt-0.5">Escaneie tokens, anote e especifique elementos, mapeie fluxos e gere sua ficha técnica.</p>
     </div>
     <!-- "Como usar o plugin" deixou de ser card do dashboard (2026-09-25) --
          o grid da home passou a listar só ferramentas de trabalho. O acesso
@@ -106,6 +106,29 @@
       </div>
     </div>
 
+    <!-- Inserir Anotações -- módulo isolado (ver quick-spec.js/quick-spec.html):
+         o essencial de um elemento para o dev sem DevMode (valores + token/
+         biblioteca), sem conformidade DSC, fora da Ficha. Sem badge de check (não há "documentação
+         salva" nesta ferramenta por design). -->
+    <div data-home-card-id="quick-spec" draggable="true"
+      class="home-card-draggable relative group/card"
+      ondragstart="_onHomeCardDragStart(event)" ondragover="_onHomeCardDragOver(event)"
+      ondrop="_onHomeCardDrop(event)" ondragend="_onHomeCardDragEnd(event)">
+      <button onclick="navigate('view-quick-spec')" aria-label="Inserir Anotações"
+        class="flex flex-col items-start justify-center gap-1.5 p-3 w-full h-full bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line hover:border-turquesa-400 dark:hover:border-turquesa-500 hover:bg-turquesa-100 dark:hover:bg-turquesa-900/40 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all focus:ring-2 focus:ring-turquesa-300/30 outline-none group text-left">
+        <div class="w-10 h-10 flex items-center justify-center bg-turquesa-50 dark:bg-turquesa-900/20 rounded-xl shrink-0">
+          <i data-lucide="zap" class="w-5 h-5 text-turquesa-600 dark:text-turquesa-400" aria-hidden="true"></i>
+        </div>
+        <div class="min-w-0">
+          <p class="font-extrabold text-[11px] tracking-tight text-slate-800 dark:text-white leading-tight">Inserir Anotações</p>
+          <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-0.5 leading-tight">O essencial para o dev sem DevMode, fora da Ficha</p>
+        </div>
+      </button>
+      <div class="home-card-grip absolute top-1.5 right-1.5 p-1 rounded-md text-slate-300 dark:text-slate-600 opacity-0 group-hover/card:opacity-100 cursor-grab active:cursor-grabbing transition-opacity" title="Arrastar para reorganizar" aria-hidden="true">
+        <i data-lucide="grip-vertical" class="w-3.5 h-3.5 pointer-events-none"></i>
+      </div>
+    </div>
+
     <!-- Especificações -->
     <div data-home-card-id="specs" draggable="true"
       class="home-card-draggable relative group/card"
@@ -117,7 +140,7 @@
           <i data-lucide="tag" class="w-5 h-5 text-blue-600 dark:text-blue-400" aria-hidden="true"></i>
         </div>
         <div class="min-w-0">
-          <p class="font-extrabold text-[11px] tracking-tight text-slate-800 dark:text-white leading-tight">Anotar Specs Detalhadas</p>
+          <p class="font-extrabold text-[11px] tracking-tight text-slate-800 dark:text-white leading-tight">Anotar Especificações</p>
           <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-0.5 leading-tight">Aprofunda com notas e exceções e entra na Ficha</p>
         </div>
       </button>
@@ -127,29 +150,6 @@
         </div>
         <span class="home-card-check-text hidden text-[9px] leading-tight font-bold text-left text-st-ok dark:text-st-ok-dark"></span>
       </div>
-      <div class="home-card-grip absolute top-1.5 right-1.5 p-1 rounded-md text-slate-300 dark:text-slate-600 opacity-0 group-hover/card:opacity-100 cursor-grab active:cursor-grabbing transition-opacity" title="Arrastar para reorganizar" aria-hidden="true">
-        <i data-lucide="grip-vertical" class="w-3.5 h-3.5 pointer-events-none"></i>
-      </div>
-    </div>
-
-    <!-- Anotar Specs Rápidas -- módulo isolado (ver quick-spec.js/quick-spec.html):
-         o essencial de um elemento para o dev sem DevMode (valores + token/
-         biblioteca), sem conformidade DSC, fora da Ficha. Sem badge de check (não há "documentação
-         salva" nesta ferramenta por design). -->
-    <div data-home-card-id="quick-spec" draggable="true"
-      class="home-card-draggable relative group/card"
-      ondragstart="_onHomeCardDragStart(event)" ondragover="_onHomeCardDragOver(event)"
-      ondrop="_onHomeCardDrop(event)" ondragend="_onHomeCardDragEnd(event)">
-      <button onclick="navigate('view-quick-spec')" aria-label="Anotar Specs Rápidas"
-        class="flex flex-col items-start justify-center gap-1.5 p-3 w-full h-full bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line hover:border-turquesa-400 dark:hover:border-turquesa-500 hover:bg-turquesa-100 dark:hover:bg-turquesa-900/40 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all focus:ring-2 focus:ring-turquesa-300/30 outline-none group text-left">
-        <div class="w-10 h-10 flex items-center justify-center bg-turquesa-50 dark:bg-turquesa-900/20 rounded-xl shrink-0">
-          <i data-lucide="zap" class="w-5 h-5 text-turquesa-600 dark:text-turquesa-400" aria-hidden="true"></i>
-        </div>
-        <div class="min-w-0">
-          <p class="font-extrabold text-[11px] tracking-tight text-slate-800 dark:text-white leading-tight">Anotar Specs Rápidas</p>
-          <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-0.5 leading-tight">O essencial para o dev sem DevMode, fora da Ficha</p>
-        </div>
-      </button>
       <div class="home-card-grip absolute top-1.5 right-1.5 p-1 rounded-md text-slate-300 dark:text-slate-600 opacity-0 group-hover/card:opacity-100 cursor-grab active:cursor-grabbing transition-opacity" title="Arrastar para reorganizar" aria-hidden="true">
         <i data-lucide="grip-vertical" class="w-3.5 h-3.5 pointer-events-none"></i>
       </div>
@@ -232,7 +232,7 @@
         <span class="truncate">Baixar</span>
       </button>
       <button onclick="importHandoffData()" aria-label="Importar dados de um arquivo JSON"
-        title="Importar dados de um arquivo JSON — restaura specs, medidas e fluxos de um backup"
+        title="Importar dados de um arquivo JSON — restaura especificações, medidas e fluxos de um backup"
         class="flex-1 min-w-0 min-h-[40px] flex items-center justify-center gap-1.5 px-2 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl text-[11px] font-bold text-slate-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 outline-none transition-all shadow-sm">
         <i data-lucide="upload" class="w-4 h-4 shrink-0" aria-hidden="true"></i>
         <span class="truncate">Importar</span>

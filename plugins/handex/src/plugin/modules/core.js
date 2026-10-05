@@ -89,7 +89,7 @@ const HX_GLOSSARY = {
   component: 'Component', swap: 'Instance swap'
 };
 
-// Rótulos antigos persistidos (scans, specs e Spec Rápida salvos) -> rótulo atual.
+// Rótulos antigos persistidos (scans, specs e Anotação salvos) -> rótulo atual.
 const HX_LABEL_ALIASES = {
   'Cor (Fill)': 'Fill', 'Contorno': 'Border color', 'Cor (Stroke)': 'Border color', 'Border Color': 'Border color',
   'Border Width': 'Border width', 'Espessura de borda': 'Border width',
@@ -2156,6 +2156,7 @@ function navigate(viewId) {
   }
   if (viewId === 'view-frames') {
     restoreUIFromState();
+    refreshSpecOwners();
     parent.postMessage({ pluginMessage: { type: 'get-project-name' } }, '*');
   }
   if (viewId === 'view-dados-projeto') {
@@ -2420,7 +2421,102 @@ function syncAndRenderSpecs() {
   // primeira resync depois de criadas.
   createdSpecs = _mergeLooseAndFramed(handoffData.specs, (handoffData.frames || []).flatMap(f => f.createdSpecs || []));
   if (typeof renderSpecsList === 'function') renderSpecsList();
+  refreshSpecOwners();
 }
+
+// ── Ponte spec ↔ item escaneado: estado DERIVADO, nunca persistido em handoffData ──
+// bySpec: specId -> { itemKey, via }. itemKey = frameId|categoria|nodeId.
+// Resolvido no backend (resolve-spec-owners) e recalculado ao abrir Escanear Tokens/
+// Especificações, após escanear e após criar/excluir spec. Em dúvida, sem dono.
+window._specOwners = { bySpec: {} };
+let _specOwnersQueue = [];
+let _specOwnersPending = null;
+let _specOwnersTimer = null;
+
+function _specItemKey(frameId, cat, nodeId) { return `${frameId}|${cat}|${nodeId}`; }
+
+function _specOwnersOfItem(itemKey) {
+  const out = [];
+  const bySpec = window._specOwners.bySpec;
+  Object.keys(bySpec).forEach(specId => {
+    if (bySpec[specId].itemKey === itemKey && typeof _findSpecById === 'function' && _findSpecById(specId)) {
+      out.push({ specId, via: bySpec[specId].via });
+    }
+  });
+  out.sort((a, b) => {
+    const la = (_findSpecById(a.specId) || {}).letter || '';
+    const lb = (_findSpecById(b.specId) || {}).letter || '';
+    return la.localeCompare(lb);
+  });
+  return out;
+}
+
+function refreshSpecOwners(frameId) {
+  const frames = frameId ? [getFrame(frameId)] : (handoffData.frames || []);
+  frames.forEach(f => {
+    if (f && f.id && !_specOwnersQueue.includes(f.id) && !(_specOwnersPending && _specOwnersPending.frameId === f.id)) {
+      _specOwnersQueue.push(f.id);
+    }
+  });
+  _pumpSpecOwners();
+}
+window.refreshSpecOwners = refreshSpecOwners;
+
+function _applySpecOwnersToDom(frameId) {
+  if (typeof _renderScanPrecreations === 'function') _renderScanPrecreations();
+  if (typeof _applySpecOriginBadges === 'function') _applySpecOriginBadges();
+}
+
+function _storeSpecOwners(frameId, results) {
+  const bySpec = window._specOwners.bySpec;
+  const before = JSON.stringify(bySpec);
+  Object.keys(bySpec).forEach(id => { if (bySpec[id].itemKey.startsWith(frameId + '|')) delete bySpec[id]; });
+  (results || []).forEach(r => {
+    if (r && r.specId && r.itemKey && r.via !== 'none' && r.itemKey.startsWith(frameId + '|')) {
+      bySpec[r.specId] = { itemKey: r.itemKey, via: r.via === 'exact' ? 'exact' : 'ancestor' };
+    }
+  });
+  return JSON.stringify(bySpec) !== before;
+}
+
+function _pumpSpecOwners() {
+  if (_specOwnersPending) return;
+  const fid = _specOwnersQueue.shift();
+  if (!fid) return;
+  const frame = getFrame(fid);
+  if (!frame || !frame.figmaId || !frame.specs) { _pumpSpecOwners(); return; }
+
+  const items = [];
+  ['components', 'icons', 'typography', 'vectors'].forEach(cat => (frame.specs[cat] || []).forEach(it => {
+    if (it && it.nodeId) items.push({ key: _specItemKey(fid, cat, it.nodeId), nodeId: it.nodeId, nodeIds: Array.isArray(it.nodeIds) ? it.nodeIds : [] });
+  }));
+  const framedIds = new Set((handoffData.frames || []).flatMap(f => (f.createdSpecs || []).map(s => s && s.id)));
+  const loose = (handoffData.specs || []).filter(s => s && s.id && !framedIds.has(s.id));
+  const specs = (frame.createdSpecs || []).concat(loose)
+    .filter(s => s && s.id && s.targetNodeId)
+    .map(s => ({ id: s.id, targetNodeId: s.targetNodeId }));
+
+  if (items.length === 0 || specs.length === 0) {
+    if (_storeSpecOwners(fid, [])) _applySpecOwnersToDom(fid);
+    _pumpSpecOwners();
+    return;
+  }
+
+  _specOwnersPending = { frameId: fid };
+  clearTimeout(_specOwnersTimer);
+  _specOwnersTimer = setTimeout(() => { _specOwnersPending = null; _pumpSpecOwners(); }, 6000);
+  parent.postMessage({ pluginMessage: { type: 'resolve-spec-owners', frameId: fid, frameRootId: frame.figmaId, specs, items } }, '*');
+}
+
+function _onSpecOwnersResolved(results) {
+  const pending = _specOwnersPending;
+  if (!pending) return;
+  clearTimeout(_specOwnersTimer);
+  _specOwnersPending = null;
+  if (_storeSpecOwners(pending.frameId, results)) _applySpecOwnersToDom(pending.frameId);
+  _pumpSpecOwners();
+}
+window._onSpecOwnersResolved = _onSpecOwnersResolved;
 
 function exportHandoffMD() {
   collectHandoffData();
@@ -2882,7 +2978,7 @@ function restoreUIFromState() {
 }
 
 // Skeleton das libs DSC (~1,1MB) vai pro backend sob demanda, anexado à
-// primeira mensagem da sessão que depende dele (scan, Spec Rápida, Detalhada,
+// primeira mensagem da sessão que depende dele (scan, Anotação, Detalhada,
 // Ficha) -- nunca no boot, pra não pesar o handshake ui-ready. Viaja DENTRO
 // da mensagem da operação: o backend guarda antes do handler rodar, sem
 // depender de ordem entre mensagens. O backend informa no init-plugin se já

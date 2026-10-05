@@ -807,8 +807,8 @@ function openClearBriefingModal() {
   const desc = document.getElementById('clear-briefing-modal-desc');
   if (desc) {
     desc.textContent = count === 1
-      ? 'Remove a única pergunta respondida. O restante do projeto (frames, specs, medidas, fluxos) não é afetado.'
-      : `Remove as ${count} perguntas respondidas. O restante do projeto (frames, specs, medidas, fluxos) não é afetado.`;
+      ? 'Remove a única pergunta respondida. O restante do projeto (frames, especificações, medidas, fluxos) não é afetado.'
+      : `Remove as ${count} perguntas respondidas. O restante do projeto (frames, especificações, medidas, fluxos) não é afetado.`;
   }
   openModal('clear-briefing-modal');
 }

@@ -196,7 +196,7 @@
         jornadas,
         padroesCategorizacao,
         especificacoesRapidas: especificacoesRapidas.length > 0 ? {
-          _note: 'Achados brutos e pontuais das Specs Rápidas -- propriedades reais sem conformidade DSC avaliada. Não confundir com telasDocumentadas.itensEscaneados (scan de auditoria completo).',
+          _note: 'Achados brutos e pontuais das Anotações -- propriedades reais sem conformidade DSC avaliada. Não confundir com telasDocumentadas.itensEscaneados (scan de auditoria completo).',
           itens: especificacoesRapidas
         } : null
       };
@@ -234,7 +234,7 @@
         lines.push('(cada tela também tem uma imagem correspondente — ver "Baixar imagens dos frames" na tela de Resumo do Handex — combine a imagem com os detalhes técnicos exatos abaixo pra replicar a estrutura com fidelidade: a imagem mostra o layout, esta lista traz cor/espaçamento/tipografia REAIS e os componentes do DSC a reutilizar em vez de recriar do zero)');
         ctx.telasDocumentadas.forEach(t => {
           const flags = [t.novoComponente ? 'Novo Componente' : null, t.conformeDSC === true ? 'Conforme DSC' : (t.conformeDSC === false ? 'Não conforme DSC' : null)].filter(Boolean).join(', ');
-          lines.push(`- ${t.nome}${flags ? ` (${flags})` : ''} — ${t.qtdSpecs} spec(s), ${t.qtdMedidas} medida(s)`);
+          lines.push(`- ${t.nome}${flags ? ` (${flags})` : ''} — ${t.qtdSpecs} especificação(ões), ${t.qtdMedidas} medida(s)`);
           if (t.componentesDSC.length > 0) {
             const _porLib = {};
             const _legadas = new Set();
@@ -262,7 +262,7 @@
       }
 
       if (ctx.especificacoesRapidas) {
-        lines.push('', '## Consultas rápidas (Specs Rápidas) — achados pontuais sem conformidade DSC avaliada');
+        lines.push('', '## Consultas rápidas (Anotações) — achados pontuais sem conformidade DSC avaliada');
         lines.push('(propriedades reais de elementos consultados pontualmente pelo designer, sem scan sistemático de frame — não confundir com "Telas já documentadas" acima)');
         ctx.especificacoesRapidas.itens.forEach(item => {
           const props = item.propriedades.map(p => `${p.propriedade}: ${p.valor}${p.token ? ` (token: ${p.token}${p.biblioteca ? `, ${p.biblioteca}` : ''})` : ''}`).join(' | ');
@@ -589,7 +589,7 @@
                 specsInput.disabled = false;
                 specsLabel.classList.remove('opacity-40', 'cursor-not-allowed');
                 const hint = document.getElementById('import-specs-hint');
-                if (hint) hint.textContent = `${nSpecs} spec(s) encontrada(s) — serão recriadas no canvas.`;
+                if (hint) hint.textContent = `${nSpecs} especificação(ões) encontrada(s) — serão recriadas no canvas.`;
               }
             }
 
@@ -705,7 +705,7 @@
             recreateSpec(spec, frame.figmaId);
           });
         });
-        if (count > 0) showToast(`${count} spec(s) sendo recriadas no canvas...`);
+        if (count > 0) showToast(`${count} especificação(ões) sendo recriadas no canvas...`);
       }
 
       if (doMeasures) {
@@ -930,7 +930,7 @@
       return {
         'dados-projeto': { done: hasDadosProjeto, label: 'Informações salvas' },
         'tokens': { done: scannedFramesCount > 0, label: _withCount('Tokens escaneados', scannedFramesCount) },
-        'specs': { done: specsCount > 0, label: _withCount('Specs criadas', specsCount) },
+        'specs': { done: specsCount > 0, label: _withCount('Especificações criadas', specsCount) },
         'measurement': { done: measurementsCount > 0, label: _withCount('Medidas inseridas', measurementsCount) },
         'flows': { done: flowsCount > 0, label: _withCount('Fluxos mapeados', flowsCount) }
       };
@@ -1078,10 +1078,10 @@
       const c = canvasCounts || {};
       const parts = [];
       if (c.ficha) parts.push(`${c.ficha} ficha${c.ficha > 1 ? 's' : ''}`);
-      if (c.spec) parts.push(`${c.spec} spec${c.spec > 1 ? 's' : ''}`);
+      if (c.spec) parts.push(`${c.spec} ${c.spec > 1 ? 'especificações' : 'especificação'}`);
       if (c.medida) parts.push(`${c.medida} medida${c.medida > 1 ? 's' : ''}`);
       if (c.fluxo) parts.push(`${c.fluxo} fluxo${c.fluxo > 1 ? 's' : ''}`);
-      if (c.quickspec) parts.push(`${c.quickspec} card${c.quickspec > 1 ? 's' : ''} de Specs Rápidas`);
+      if (c.quickspec) parts.push(`${c.quickspec} card${c.quickspec > 1 ? 's' : ''} de Anotações`);
       const canvasMsg = parts.length ? `, ${parts.join(', ')} removido(s) do canvas` : '';
       showToast(`Registro do plugin apagado${canvasMsg}.`);
     }

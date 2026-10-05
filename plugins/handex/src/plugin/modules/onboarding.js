@@ -79,16 +79,31 @@ const ONBOARDING_TOOLS = {
       { text: 'Se o frame é um componente inédito, ligue <strong>Novo Componente</strong>: os itens personalizados já saem com <strong>Vai para a Ficha</strong> ligado, e você desmarca item a item.' }
     ]
   },
+  quickSpec: {
+    view: 'view-quick-spec',
+    title: 'Inserir Anotações',
+    icon: 'zap',
+    color: '#216e62',
+    format: 'stepper',
+    purpose: 'Mostra os valores reais de um elemento (cor, espaçamento, tipografia, medidas) para o dev sem DevMode. É consulta pontual e não entra na Ficha.',
+    steps: [
+      { text: 'Precisa de regra, comportamento ou exceção? Use <strong>Anotar Especificações</strong>.' },
+      { text: 'Clique em <strong>Escanear</strong>, escolha as propriedades e <strong>segure Shift e clique</strong> nos elementos no canvas.' },
+      { text: 'Clique em <strong>Concluir</strong> e expanda os itens para ver os valores, com token e biblioteca quando houver.' },
+      { text: 'Use <strong>Inserir no canvas</strong> para deixar um card ao lado de cada elemento. A <strong>Observação</strong> fica só no card; para levá-la à Ficha, use <strong>Converter em Especificação</strong>: a anotação vira uma especificação e a observação vira a nota.' }
+    ]
+  },
   specs: {
     view: 'view-specifications',
-    title: 'Anotar Specs Detalhadas',
+    title: 'Anotar Especificações',
     icon: 'tag',
     color: '#00437a',
     format: 'stepper',
     docUrl: 'https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=117-431',
     purpose: 'Registra o que o dev precisa saber e implementar sobre um elemento: regra, comportamento, exceção. Entra na Ficha e fica ancorada no elemento do canvas.',
     steps: [
-      { text: 'Só precisa dos valores do elemento? Use <strong>Anotar Specs Rápidas</strong>.' },
+      { text: 'Só precisa dos valores do elemento? Use <strong>Inserir Anotações</strong>.' },
+      { text: 'Itens fora do padrão no scan aparecem em <strong>Vindos do scan</strong> para você especificar ou dispensar.' },
       { text: 'Selecione um elemento no canvas e clique no <strong>botão +</strong> no topo.' },
       { text: 'Defina a <strong>Tag</strong> e a <strong>Categoria</strong>; nota e propriedades são opcionais.' },
       { text: 'Arraste a prévia até onde quiser e clique em <strong>Usar esta posição</strong> (ou em Pular).' }
@@ -101,29 +116,15 @@ const ONBOARDING_TOOLS = {
     reference: {
       title: 'Tags, controles de grupo e tipos de especificação',
       items: [
-        { icon: 'tag', text: '<strong>Tags:</strong> mesma tag empilha specs no mesmo grupo do canvas; tags diferentes ficam lado a lado, sem sobreposição. Renomeie o grupo pelo ícone de lápis na lista.' },
-        { icon: 'sliders-horizontal', text: '<strong>Controles do grupo:</strong> ocultar linhas (esconde só os conectores), ocultar grupo (esconde as specs sem apagar) e cadeado (trava a posição no canvas).' },
+        { icon: 'tag', text: '<strong>Tags:</strong> mesma tag empilha especificações no mesmo grupo do canvas; tags diferentes ficam lado a lado, sem sobreposição. Renomeie o grupo pelo ícone de lápis na lista.' },
+        { icon: 'sliders-horizontal', text: '<strong>Controles do grupo:</strong> ocultar linhas (esconde só os conectores), ocultar grupo (esconde as especificações sem apagar) e cadeado (trava a posição no canvas).' },
         { icon: 'info', text: '<strong>Informação extra:</strong> o que não se encaixa nos demais tipos — pendências, decisões de reunião, componente legado ou fora do DSC.' },
         { icon: 'zap', text: '<strong>Comportamento:</strong> reação do sistema além do padrão do DSC — microinterações, abertura de modais, transições de estado.' },
         { icon: 'scale', text: '<strong>Regra de Negócio:</strong> lógica não visível na interface — campos obrigatórios, validações, restrições de ações.' },
         { icon: 'database', text: '<strong>Dados da API:</strong> informações técnicas de integração — endpoints, campos esperados, estados de carregamento.' },
-        { icon: 'alert-triangle', text: '<strong>Cenário de Exceção</strong> não é uma categoria — é um registro à parte dentro da própria spec, com 4 subtipos: Sucesso, Erro, Alerta, Confirmação.' }
+        { icon: 'alert-triangle', text: '<strong>Cenário de Exceção</strong> não é uma categoria — é um registro à parte dentro da própria especificação, com 4 subtipos: Sucesso, Erro, Alerta, Confirmação.' }
       ]
     }
-  },
-  quickSpec: {
-    view: 'view-quick-spec',
-    title: 'Anotar Specs Rápidas',
-    icon: 'zap',
-    color: '#216e62',
-    format: 'stepper',
-    purpose: 'Mostra os valores reais de um elemento (cor, espaçamento, tipografia, medidas) para o dev sem DevMode. É consulta pontual e não entra na Ficha.',
-    steps: [
-      { text: 'Precisa de regra, comportamento ou exceção? Use <strong>Anotar Specs Detalhadas</strong>.' },
-      { text: 'Clique em <strong>Escanear</strong>, escolha as propriedades e <strong>segure Shift e clique</strong> nos elementos no canvas.' },
-      { text: 'Clique em <strong>Concluir</strong> e expanda os itens para ver os valores, com token e biblioteca quando houver.' },
-      { text: 'Use <strong>Inserir no canvas</strong> para deixar um card ao lado de cada elemento. A <strong>Observação</strong> fica só no card; para levá-la à Ficha, converta em Spec Detalhada.' }
-    ]
   },
   medidas: {
     view: 'view-measurement',

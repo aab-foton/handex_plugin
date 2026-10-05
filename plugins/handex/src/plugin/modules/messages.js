@@ -151,6 +151,11 @@
           renderSpecs(msg.data);
         }
         saveToStorage();
+        if (targetFrameId && typeof refreshSpecOwners === 'function') refreshSpecOwners(targetFrameId);
+      }
+
+      if (msg.type === 'spec-owners-resolved') {
+        if (typeof _onSpecOwnersResolved === 'function') _onSpecOwnersResolved(msg.results);
       }
 
       if (msg.type === 'ficha-version-pulled') {
@@ -290,10 +295,10 @@
         const c = msg.counts || {};
         const parts = [];
         if (c.ficha) parts.push(`${c.ficha} ficha${c.ficha > 1 ? 's' : ''}`);
-        if (c.spec) parts.push(`${c.spec} spec${c.spec > 1 ? 's' : ''}`);
+        if (c.spec) parts.push(`${c.spec} ${c.spec > 1 ? 'especificações' : 'especificação'}`);
         if (c.medida) parts.push(`${c.medida} medida${c.medida > 1 ? 's' : ''}`);
         if (c.fluxo) parts.push(`${c.fluxo} fluxo${c.fluxo > 1 ? 's' : ''}`);
-        if (c.quickspec) parts.push(`${c.quickspec} card${c.quickspec > 1 ? 's' : ''} de Specs Rápidas`);
+        if (c.quickspec) parts.push(`${c.quickspec} card${c.quickspec > 1 ? 's' : ''} de Anotações`);
         showToast(parts.length ? `${parts.join(', ')} removido(s) do canvas.` : 'Nenhum elemento correspondente encontrado no canvas.');
         return;
       }
@@ -362,9 +367,10 @@
           renderSpecsList();
         }
         saveSpecsToStorage();
+        if (typeof refreshSpecOwners === 'function') refreshSpecOwners();
         if (window._toastSaved) _toastSaved();
         showToast('Especificação criada — arraste para posicionar e conclua o posicionamento.');
-        // Conversão Spec Express -> Spec Detalhada (ver quick-spec.js):
+        // Conversão Spec Express -> Especificação (ver quick-spec.js):
         // criação confirmada com sucesso é o gatilho pra remover o card
         // Express original do canvas -- cancelar o formulário no meio do
         // caminho nunca chega até aqui, então o Express original permanece
@@ -714,7 +720,7 @@
       // insertSectionInFicha (handoff.js).
       if (msg.type === 'ficha-section-inserted' || msg.type === 'ficha-section-insert-error' || msg.type === 'ficha-section-needs-full-create') {
         const _btnKeyMap = { tokens: 'tokens', specs: 'specs', medidas: 'measurements', fluxos: 'flows' };
-        const _labelMap = { tokens: 'Tokens', specs: 'Specs', medidas: 'Medidas', fluxos: 'Fluxos' };
+        const _labelMap = { tokens: 'Tokens', specs: 'Especificações', medidas: 'Medidas', fluxos: 'Fluxos' };
         const btnKey = _btnKeyMap[msg.section] || msg.section;
         const btn = document.getElementById('btn-insert-ficha-' + btnKey);
         const _restoreButton = () => {

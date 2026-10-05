@@ -131,7 +131,7 @@ ${framesList.map(f => {
       `- [${r.label}] **${r.name}**${r.status === 'warning' ? ' *(revisão recomendada)*' : ''}${r.nodeId ? ` — Node ID: \`${r.nodeId}\`` : ''}`
     ).join('\n');
   const excMD = excecoes.length === 0 ? '' :
-    '\n- **Exceções nas specs:** ' + excecoes.length + ' (detalhe sob cada spec em "Especificações Anotadas")';
+    '\n- **Exceções nas especificações:** ' + excecoes.length + ' (detalhe sob cada spec em "Especificações Anotadas")';
   let tokensMD = '';
   if (f.specs) {
     const cats = [
@@ -188,7 +188,7 @@ ${(() => {
   const framesWithSpecs = framesList.filter(f => (f.createdSpecs || []).length > 0);
   const looseSpecs = _looseSpecsOf(handoffData);
   if (framesWithSpecs.length === 0 && looseSpecs.length === 0) return 'Nenhuma especificação anotada.';
-  const looseMD = looseSpecs.length === 0 ? [] : [`### Specs avulsas\n` + looseSpecs.map(s => {
+  const looseMD = looseSpecs.length === 0 ? [] : [`### Especificações avulsas\n` + looseSpecs.map(s => {
     const cat = s.type || s.categoryLabel || s.category || 'Geral';
     const props = (s.properties || []).length > 0
       ? '\n' + s.properties.map(p => `  - **${_vocabLabel(p.label, p.key)}**${p.token ? ` \`${p.token}\`` : ''}${p.value ? ` → ${_vocabValue(p.value)}` : ''}`).join('\n')
@@ -1467,7 +1467,7 @@ ${(handoffData.createdFlows || []).length === 0
       // 7.2 Especificações Anotadas (seção independente, agrupada por frame e grupo)
       const _looseAnnot = _looseSpecsOf(handoffData);
       const _framesWithAnnot = (_allFrames).filter(f => (f.createdSpecs || []).length > 0)
-        .concat(_looseAnnot.length > 0 ? [{ nome: 'Specs avulsas', createdSpecs: _looseAnnot }] : []);
+        .concat(_looseAnnot.length > 0 ? [{ nome: 'Especificações avulsas', createdSpecs: _looseAnnot }] : []);
       if (_framesWithAnnot.length > 0) {
         const totalAnnot = _framesWithAnnot.reduce((n, f) => n + f.createdSpecs.length, 0);
         const annotContent = `
