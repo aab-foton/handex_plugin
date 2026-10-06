@@ -4489,7 +4489,7 @@ figma.ui.onmessage = async (msg) => {
       } catch (e) { }
       // Respiro entre instruções e réplica (2026-10-06, pedido do usuário:
       // "estão muito coladas") — converge seções já existentes.
-      try { section.itemSpacing = 64; // instruções ↔ réplica, web e mobile (era 16) } catch (e) { }
+      try { section.itemSpacing = 64; } catch (e) { } // instruções ↔ réplica (era 16)
     } else {
       section = figma.createFrame();
       section.name = cfg.name;
