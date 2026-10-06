@@ -4,7 +4,7 @@
 // Regenerar via: node src/plugin/refs/build-ficha-instruction-constants.cjs
 //            ou: npm run refs:ficha-instruction
 //
-// Gerado em: 2026-10-06T01:57:43.178Z
+// Gerado em: 2026-10-06T02:02:01.581Z
 //
 // Consumido por src/plugin/modules/onboarding.js como
 // FICHA_INSTRUCTION_CONTENT_UI.tabulacao/.swipe/.leitorTela — mesmo

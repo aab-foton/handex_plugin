@@ -798,8 +798,9 @@ async function _fichaGenerateCompleteHandoff(areaId) {
   pendingKeys = order.filter(key => pendingKeys.includes(key));
 
   if (pendingKeys.length === 0) {
+    // Nada gerado = sem modal de próximo passo (2026-10-06, pedido do
+    // usuário: ela só aparece quando a geração do handoff TERMINA).
     showToast('O Handoff de Acessibilidade já está atualizado.');
-    _fichaOpenAfterHandoffModal();
     return;
   }
 
@@ -835,8 +836,9 @@ async function _fichaGenerateCompleteHandoff(areaId) {
   if (anyOk && _hasEdit) _fichaBumpSessionVersion('minor');
 
   // Próximo passo da jornada (2026-10-05, pedido do usuário): depois de
-  // consolidar a tela, perguntar se vai documentar outra ou finalizar. Só
-  // quando ao menos uma seção entrou (um lote inteiro com falha não é entrega).
+  // consolidar a tela, perguntar se vai documentar outra ou finalizar. Chega
+  // aqui só quando a ÚLTIMA seção respondeu (o backend responde depois de
+  // terminar o canvas). Só quando ao menos uma seção entrou.
   if (anyOk) _fichaOpenAfterHandoffModal();
 }
 window._fichaGenerateCompleteHandoff = _fichaGenerateCompleteHandoff;
