@@ -1,13 +1,18 @@
+// Sondagens pontuais (PROBE=1 node tools/shoot.cjs) — não geram prints usados no vídeo.
 module.exports = [
   {
-    id: '_probe', run: () => { openA11yAreaWorkspace('A1', { initialTab: 'leitor' }); },
-    probe: () => {
-      const n = [...document.querySelectorAll('span,div')].filter(e => {
-        if (!e.offsetParent || e.children.length || e.textContent.trim()) return false;
-        const r = e.getBoundingClientRect();
-        return r.width > 8 && r.width < 40 && r.height < 20 && r.top > 250;
-      });
-      return n.slice(0, 2).map(e => e.outerHTML.slice(0, 300) + '\n PAI: ' + e.parentElement.outerHTML.slice(0, 500)).join('\n---\n');
-    },
+    id: '_probe-web-direto', empty: true,
+    run: () => { document.getElementById('a11y-home-origin-btn-web').click(); },
+    probe: () => JSON.stringify({
+      lib: getA11yProjectLib(), origin: getA11yProjectOrigin(),
+      etapa1b: !!document.getElementById('a11y-home-step-web-sublib'),
+      header: (document.getElementById('a11y-header-title') || {}).textContent,
+      viewSpecsVisivel: !document.getElementById('view-specifications').classList.contains('hidden'),
+    }),
+  },
+  {
+    id: '_probe-projeto-legado', origin: 'web',
+    run: () => { hacData.projectLib = 'web-angular-react'; navigate('view-specifications'); _applyA11yHeaderOriginTitle(); },
+    probe: () => JSON.stringify({ lib: getA11yProjectLib(), origin: getA11yProjectOrigin(), header: document.getElementById('a11y-header-title').textContent }),
   },
 ];

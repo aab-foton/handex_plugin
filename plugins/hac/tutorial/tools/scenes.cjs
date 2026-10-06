@@ -4,7 +4,6 @@
 const base = [
   // Início
   { id: '01-home-origem', empty: true, marks: { mobile: 'Super DSC Mobile', web: 'Super DSC Web' }, soWeb: true },
-  { id: '02-home-sublib-web', empty: true, run: () => { _showA11yHomeWebSublibStep(); }, marks: { nova: 'Super DSC Web', legado: 'DSC Web Angular & React' }, soWeb: true },
   { id: '03-lista-telas', run: () => { navigate('view-specifications'); }, marks: { selecionar: 'Selecionar Tela', tela1: 'Login', finalizar: 'Finalizar' } },
   { id: '04-selecionar-tela', run: () => { navigate('view-specifications'); openA11yAreaModal(); }, marks: { confirmar: 'Selecionar' } },
   // Onboarding

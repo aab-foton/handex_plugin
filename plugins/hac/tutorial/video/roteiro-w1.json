@@ -16,20 +16,10 @@
     },
     {
       "id": "lib",
-      "titulo": "Escolha Web",
-      "fala": "Na tela inicial, escolha Super DSC Web.",
+      "titulo": "Escolha Super DSC Web",
+      "fala": "Na tela inicial, escolha Super DSC Web. O HAC passa a reconhecer os componentes dessa biblioteca e já abre a lista de telas.",
       "print": "01-home-origem",
       "destaque": "web"
-    },
-    {
-      "id": "sublib",
-      "titulo": "Escolha a biblioteca",
-      "fala": "Na web convivem duas bibliotecas: a legada, Web Angular e React, e a nova, Super DSC Web. Escolha a do seu projeto. O HAC reconhece as duas.",
-      "print": "02-home-sublib-web",
-      "destaques": [
-        "legado",
-        "nova"
-      ]
     },
     {
       "id": "selecionar",

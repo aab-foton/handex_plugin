@@ -37,8 +37,7 @@ KW = "Tutorial HAC Web · {} de 4"
 w('w1', 'HAC Web | Primeiros passos', [
     abre(KW.format(1), "Primeiros passos", "Este é o HAC, o Handoff de Acessibilidade da CAIXA. Neste vídeo, você começa a documentar uma tela web direto no Figma."),
     cena("proposito", "O que o HAC faz", "O HAC registra como o leitor de tela anuncia cada elemento e em que ordem o teclado percorre a tela. O time de desenvolvimento recebe tudo pronto, no próprio canvas.", "01-home-origem"),
-    cena("lib", "Escolha Web", "Na tela inicial, escolha Super DSC Web.", "01-home-origem", destaque="web"),
-    cena("sublib", "Escolha a biblioteca", "Na web convivem duas bibliotecas: a legada, Web Angular e React, e a nova, Super DSC Web. Escolha a do seu projeto. O HAC reconhece as duas.", "02-home-sublib-web", destaques=["legado", "nova"]),
+    cena("lib", "Escolha Super DSC Web", "Na tela inicial, escolha Super DSC Web. O HAC passa a reconhecer os componentes dessa biblioteca e já abre a lista de telas.", "01-home-origem", destaque="web"),
     cena("selecionar", "Selecione a tela", "Selecione no canvas a tela que você quer documentar e clique em Selecionar Tela.", "03-lista-telas", destaque="selecionar"),
     cena("nomear", "Dê um nome", "Dê um nome para a tela e confirme. Ela ganha um selo numerado e passa a reunir toda a documentação dela.", "04-selecionar-tela", destaque="confirmar"),
     cena("cards", "Acompanhe cada tela", "Cada tela vira um card, com o andamento de cada etapa. Clique no card para abrir o espaço de trabalho.", "03-lista-telas", destaqueManual={"x": 17, "y": 158, "w": 446, "h": 183}),
