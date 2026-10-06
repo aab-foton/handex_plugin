@@ -42,43 +42,76 @@ let onboardingSeen = {};
 // divergentes. As 2 libs web (Web Angular&React/Super DSC Web) tinham
 // texto quase idêntico e caem na mesma jornada 'web' (o hac já reconhece
 // as duas simultaneamente, sem precisar de conteúdo por lib individual).
+// Compilado por funcionalidade (2026-10-06, pedido do usuário): cada passo é
+// uma funcionalidade, com o MESMO texto dos frames de instrução do Figma
+// ("📱 | Template de Handoff Mobile" / "🖥️ | Template de Handoff Web"), lido de
+// FICHA_INSTRUCTION_CONTENT_UI (refs/ficha-instruction-content.json — fonte
+// única, a mesma das modais de instrução de cada aba). Web e mobile têm textos
+// próprios; o Swipe só existe no mobile. Os passos são montados na abertura
+// (_onboardingStepsFromContent), nunca escritos à mão aqui.
 const ONBOARDING_TOOLS = {
-  // Textos curtos de propósito (2026-10-02): só o essencial para começar. Regras
-  // completas de cada categoria ficam no guia "?" e na lib Design Acessível.
   web: {
     view: 'view-specifications',
-    title: 'Documentação de Acessibilidade: Web',
+    title: 'Como utilizar o Plugin: Web',
     icon: 'monitor',
     color: '#005ca9',
     format: 'stepper',
-    purpose: 'O hac documenta no canvas como um leitor de tela interpreta cada elemento e em que ordem o teclado navega, para o time de desenvolvimento implementar acessibilidade sem especificação à parte. Reconhece componentes do <strong>Super DSC Web</strong>. Regras completas: lib <a href="https://www.figma.com/design/3zdtN13YvPlCGPdXeL0Y2i" target="_blank" rel="noopener noreferrer" class="text-[#005ca9] dark:text-blue-400 underline decoration-dotted hover:decoration-solid font-semibold">Design Acessível</a>.',
-    steps: [
-      { text: 'Clique em <strong>Selecionar Tela</strong> e escolha a seção a documentar. Ela vira um selo numerado no canvas e reúne as specs na listagem do plugin.' },
-      { text: 'Na aba <strong>Leitor de Tela</strong>, use <strong>Mapeamento Automático</strong> para o hac sugerir a categoria de cada componente, ou <strong>Nova spec</strong> para documentar do zero. Em <strong>Iniciar Revisão</strong> você confirma, ajusta ou descarta cada item; revise com atenção ícones e imagens (decorativo ou informativo).' },
-      { text: 'Clique no card da tela para abrir as abas: <strong>Tabulação</strong>, <strong>Leitor de Tela</strong> e <strong>Handoff de Acessibilidade</strong> (status geral e <strong>Gerar handoff completo</strong>).' },
-      { text: 'Cada spec tem uma das <strong>4 categorias</strong>: Elementos Interativos e Imagens, Estrutura da Página, Nível de Título (H1-H6, com H1 único na página) ou Elementos Decorativos. O guia <strong>"?"</strong> explica quando usar cada uma.' + (typeof FICHA_INSTRUCTION_CONTENT_UI !== 'undefined' ? _onboardingFichaStepsHTML(FICHA_INSTRUCTION_CONTENT_UI.leitorTela, 'web') : '') },
-      { text: 'Componentes encontrados sem spec ficam em <strong>Não Documentados</strong> (aba Leitor de Tela): use <strong>Criar spec</strong> para não deixar nada de fora.' },
-      { text: 'Na aba <strong>Tabulação</strong>, clique nos elementos em sequência ou use <strong>Gerar Automaticamente</strong>; o design original não é alterado. <strong>Simular leitura</strong> confere a ordem em voz alta.' + (typeof FICHA_INSTRUCTION_CONTENT_UI !== 'undefined' ? _onboardingFichaStepsHTML(FICHA_INSTRUCTION_CONTENT_UI.tabulacao, 'web') : '') }
-    ]
+    features: ['tabulacao', 'leitorTela'],
+    steps: [],
   },
   mobile: {
     view: 'view-specifications',
-    title: 'Documentação de Acessibilidade: Mobile',
+    title: 'Como utilizar o Plugin: Mobile',
     icon: 'smartphone',
     color: '#005ca9',
     format: 'stepper',
-    purpose: 'O hac documenta no canvas como um leitor de tela interpreta cada elemento e em que ordem o gesto ou teclado navega, para o time de desenvolvimento implementar acessibilidade sem especificação à parte. Reconhece componentes do <strong>Super DSC Mobile</strong> (React Native). Regras completas: lib <a href="https://www.figma.com/design/3zdtN13YvPlCGPdXeL0Y2i" target="_blank" rel="noopener noreferrer" class="text-[#005ca9] dark:text-blue-400 underline decoration-dotted hover:decoration-solid font-semibold">Design Acessível</a>.',
-    steps: [
-      { text: 'Clique em <strong>Selecionar Tela</strong> e escolha a seção a documentar. Ela vira um selo numerado no canvas e reúne as specs na listagem do plugin.' },
-      { text: 'Na aba <strong>Leitor de Tela</strong>, use <strong>Mapeamento Automático</strong> para o hac sugerir a categoria de cada componente, ou <strong>Nova spec</strong> para documentar do zero. Em <strong>Iniciar Revisão</strong> você confirma, ajusta ou descarta cada item; revise com atenção ícones e imagens (decorativo ou informativo).' },
-      { text: 'Clique no card da tela para abrir as abas: <strong>Tabulação</strong>, <strong>Ordem de Leitura</strong> (gesto de swipe, exclusivo do mobile), <strong>Leitor de Tela</strong> e <strong>Handoff de Acessibilidade</strong> (status geral e <strong>Gerar handoff completo</strong>).' },
-      { text: 'Cada spec tem uma das <strong>3 categorias</strong>: Elementos Interativos e Imagens (Componente, Link ou Texto Alternativo), Títulos (marcador único "H", sem H1-H6) ou Elementos Decorativos. O guia <strong>"?"</strong> explica quando usar cada uma.' + (typeof FICHA_INSTRUCTION_CONTENT_UI !== 'undefined' ? _onboardingFichaStepsHTML(FICHA_INSTRUCTION_CONTENT_UI.leitorTela) : '') },
-      { text: 'Componentes encontrados sem spec ficam em <strong>Não Documentados</strong> (aba Leitor de Tela): use <strong>Criar spec</strong> para não deixar nada de fora.' },
-      { text: 'Na aba <strong>Tabulação</strong>, clique nos elementos em sequência ou use <strong>Gerar Automaticamente</strong>; o design original não é alterado. <strong>Simular leitura</strong> confere a ordem em voz alta.' + (typeof FICHA_INSTRUCTION_CONTENT_UI !== 'undefined' ? _onboardingFichaStepsHTML(FICHA_INSTRUCTION_CONTENT_UI.tabulacao) : '') },
-      { text: 'Na aba <strong>Ordem de Leitura</strong>, reaproveite a tabulação já mapeada ou marque os pontos com Shift+clique no canvas. Para corrigir uma trilha, use <strong>Editar pontos</strong> no card dela.' }
-    ]
-  }
+    features: ['tabulacao', 'swipe', 'leitorTela'],
+    steps: [],
+  },
 };
+
+// Conteúdo de uma funcionalidade já resolvido para a plataforma (bloco `web`
+// sobrepõe o texto-base, mesma regra de _resolveFichaInstructionContent).
+function _onboardingFeatureContent(feature, toolKey) {
+  const all = (typeof FICHA_INSTRUCTION_CONTENT_UI !== 'undefined') ? FICHA_INSTRUCTION_CONTENT_UI : null;
+  let c = all && all[feature];
+  if (!c) return null;
+  if (toolKey === 'web' && c.web) {
+    const { web, ...base } = c;
+    c = { ...base, ...web };
+  }
+  return c;
+}
+
+function _onboardingStepsFromContent(toolKey) {
+  const tool = ONBOARDING_TOOLS[toolKey];
+  return (tool.features || []).map(feature => {
+    const c = _onboardingFeatureContent(feature, toolKey);
+    if (!c) return null;
+    const steps = Array.isArray(c.steps) ? c.steps : [];
+    const stepHtml = st => {
+      const k = st.indexOf(':');
+      return k > 0 ? `<strong>${escapeHtml(st.slice(0, k + 1))}</strong>${escapeHtml(st.slice(k + 1))}` : escapeHtml(st);
+    };
+    return {
+      title: c.title,
+      html: `
+        <div class="space-y-3">
+          <div class="rounded-dsc-medium border border-gray-100 dark:border-dark-line p-3">
+            <p class="text-[12px] font-bold text-slate-800 dark:text-white mb-1.5">${escapeHtml(c.instructionsHeading || 'Instruções sobre a documentação')}</p>
+            <p class="text-[12px] text-slate-600 dark:text-slate-300 leading-relaxed">${escapeHtml(c.instructionsBody || '')}</p>
+          </div>
+          ${steps.length ? `
+          <div class="rounded-dsc-medium border border-gray-100 dark:border-dark-line p-3">
+            <p class="text-[12px] font-bold text-slate-800 dark:text-white mb-1.5">${escapeHtml(c.stepsHeading || 'Como fazer')}</p>
+            <ol class="list-decimal pl-4 space-y-1.5 text-[12px] text-slate-600 dark:text-slate-300 leading-relaxed">
+              ${steps.map(st => `<li>${stepHtml(st)}</li>`).join('')}
+            </ol>
+          </div>` : ''}
+        </div>`,
+    };
+  }).filter(Boolean);
+}
 
 function _onboardingSeen(toolKey) {
   return !!onboardingSeen[toolKey];
@@ -129,6 +162,8 @@ function openOnboarding(toolKey, { markSeenOnOpen = false, onlyIfUnseen = false 
   if (!tool) return;
   if (onlyIfUnseen && _onboardingSeen(toolKey)) return;
   _onboardingCurrentTool = toolKey;
+  tool.steps = _onboardingStepsFromContent(toolKey);
+  if (!tool.steps.length) return;
   // -1 é a tela de "propósito" (para que serve), exibida sozinha antes do
   // Passo 1 -- só existe quando a ferramenta tem tool.purpose cadastrado.
   _onboardingCurrentStep = tool.purpose ? -1 : 0;
@@ -276,8 +311,9 @@ function _renderOnboardingModal() {
         ${tool.steps.map((_, i) => `<span class="h-1.5 rounded-dsc-circ transition-all ${i === _onboardingCurrentStep ? 'w-6' : 'w-1.5'}" style="background-color:${i <= _onboardingCurrentStep ? tool.color : '#d0e0e3'}"></span>`).join('')}
       </div>
       ${_onboardingMediaHTML(step)}
-      <p class="text-dsc-label-tiny font-bold uppercase tracking-wider mb-2" style="color:${tool.color}">Passo ${_onboardingCurrentStep + 1} de ${tool.steps.length}</p>
-      <p class="text-[14px] text-slate-700 dark:text-white leading-relaxed">${step.text}</p>
+      <p class="text-dsc-label-tiny font-bold uppercase tracking-wider mb-1" style="color:${tool.color}">Passo ${_onboardingCurrentStep + 1} de ${tool.steps.length}</p>
+      ${step.title ? `<p class="text-[16px] font-bold text-slate-800 dark:text-white mb-3">${escapeHtml(step.title)}</p>` : ''}
+      ${step.html || `<p class="text-[14px] text-slate-700 dark:text-white leading-relaxed">${step.text}</p>`}
       ${_onboardingReferenceHTML(tool.reference)}
     `;
     const showBack = !isFirst || !!tool.purpose;

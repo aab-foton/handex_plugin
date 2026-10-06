@@ -148,13 +148,19 @@ export const A11Y_IDENTIFICACAO_TELA_PROPS = {
 export const A11Y_ORDENACAO_ITEM_KEY = '860c9f70d42c05f23e00c8414df16911d3292cab';
 
 // Componentes PUBLICADOS de instrução da Ficha (2026-10-05) — página
-// "🖥️ | Template de Handoff Web" do arquivo próprio. Só web: o mobile segue
-// com a coluna montada a partir de ficha-instruction-content.json, porque o
-// template mobile tem diferenças que a web não usa (decisão do usuário).
+// "🖥️ | Template de Handoff Web" do arquivo próprio.
 // Chave = sectionKey de _FICHA_BLOCK_CONFIG (code.js).
 export const A11Y_WEB_INSTRUCTION_KEYS = {
   leitor:    '798a147836938ed8174a8027c9bcd7c022bc4921', // [hac web] Instruções para Especificações (10574:18222)
   tabulacao: 'b5059f2dfb5e4639686e3eb56a78e6914d8ddc4f', // [hac web]  Instruções para Ordem de Tabulação (10574:18221)
+};
+
+// Mobile (2026-10-06, pedido do usuário: "igual à web") — página
+// "📱 | Template de Handoff Mobile". Inclui o Swipe, que só existe no mobile.
+export const A11Y_MOBILE_INSTRUCTION_KEYS = {
+  leitor:    '70db108bb7f430ccba44d545e93e471d8cdb1d20', // [hac mob] Instruções para Especificações (10533:3117)
+  tabulacao: 'c4d3787688fd6f4bf09d54bac5637867478bf614', // [hac mob] Instruções para Ordem de Tabulação (10533:3078)
+  swipe:     'd00095a4988bdd68e25d414856b1293ffeaeea38', // [hac mob] Instruções para Ordem de Swipe (10533:3085)
 };
 
 const SELOS = {
@@ -253,7 +259,7 @@ export const PLATFORM_PROFILES = {
     blockOptions: null,
     markers: { agrupamentoKeys: A11Y_AGRUPAMENTO_KEYS, conectorLinhaKeys: A11Y_CONECTOR_LINHA_KEYS },
     selos: SELOS,
-    instructionComponentKeys: {},
+    instructionComponentKeys: A11Y_MOBILE_INSTRUCTION_KEYS,
   },
 };
 

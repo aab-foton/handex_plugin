@@ -4,7 +4,7 @@
 // Regenerar via: node src/plugin/refs/build-ficha-instruction-constants.cjs
 //            ou: npm run refs:ficha-instruction
 //
-// Gerado em: 2026-10-06T19:48:15.683Z
+// Gerado em: 2026-10-06T19:51:58.130Z
 //
 // Consumido por src/plugin/modules/onboarding.js como
 // FICHA_INSTRUCTION_CONTENT_UI.tabulacao/.swipe/.leitorTela — mesmo
@@ -54,7 +54,7 @@ const FICHA_INSTRUCTION_CONTENT_UI = {
     "instructionsBody": "Especificar para leitores de tela consiste em definir como as tecnologias assistivas (VoiceOver/Talkback) interpretam e anunciam os elementos da interface. Essa documentação assegura que o conteúdo seja plenamente compreendido e inclusivo, fornecendo as orientações fundamentais para que o time de desenvolvimento implemente a experiência exatamente como projetada.",
     "stepsHeading": "Como fazer as especificações para Leitor de Tela",
     "steps": [
-      "Classifique os componentes: Utilize o conector de Elementos Interativos e Imagens para classificar os componentes interativos e imagens essenciais para o contexto da sua interface. Siga a ordem numérica dentro do círculo.",
+      "Classifique os componentes: Utilize o conector de Elementos Interativos e Imagens para classificar os componentes interativos e imagens essenciais para o contexto da sua interface. Siga a ordem numérica ou alfabética dentro do circulo.",
       "Especifique os títulos: Se o elemento que você está documentando for um título, utilize o conector Títulos para marcá-lo. No mobile (React Native) não é necessário mapear a hierarquia de níveis como no desktop, todo título usa o mesmo marcador \"H\", sem distinção H1-H6.",
       "Ignore itens decorativos: Imagens e ícones puramente ilustrativos não são lidos pelo leitor de tela, classifique-os com o conector Elementos Decorativos."
     ],

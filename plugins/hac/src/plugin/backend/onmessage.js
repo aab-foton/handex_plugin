@@ -4466,7 +4466,7 @@ figma.ui.onmessage = async (msg) => {
         return inst;
       } catch (e) {
         console.error('[hac] instrução web: import falhou, usando texto local.', e);
-        try { figma.notify('Instruções web: não foi possível usar o componente da lib (' + ((e && e.message) || 'erro desconhecido').slice(0, 90) + ') — usado o texto local.', { timeout: 8000 }); } catch (e2) { }
+        try { figma.notify('Instruções: não foi possível usar o componente da lib (' + ((e && e.message) || 'erro desconhecido').slice(0, 90) + ') — usado o texto local.', { timeout: 8000 }); } catch (e2) { }
       }
     }
     return _buildFichaLegendColumn(
@@ -4534,10 +4534,9 @@ figma.ui.onmessage = async (msg) => {
     if (existingLegend) {
       instrucoes.appendChild(existingLegend);
     } else {
-      // Web: importa o componente de instrução PUBLICADO no arquivo próprio
-      // (2026-10-05) em vez de montar o texto — fica idêntico à lib e passa a
-      // trazer o que ela traz (ex.: "Entendendo as categorias"). Mobile e
-      // falha de import seguem com a coluna montada, avisando o designer.
+      // Web e mobile importam o componente de instrução PUBLICADO no arquivo
+      // próprio (web 2026-10-05, mobile 2026-10-06) em vez de montar o texto —
+      // fica idêntico à lib. Falha de import cai na coluna montada, com aviso.
       const legend = await _createFichaInstructionLegend(sectionKey, cfg, a11yOrigin);
       legend.setPluginData('hacCategory', 'a11y');
       if (areaId) legend.setPluginData('hacLegendForArea', `${areaId}::${sectionKey}`);

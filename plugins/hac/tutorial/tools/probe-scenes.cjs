@@ -1,18 +1,7 @@
-// Sondagens pontuais (PROBE=1 node tools/shoot.cjs) — não geram prints usados no vídeo.
+// Sondagens pontuais (PROBE=1 node tools/shoot.cjs) — prints em prints/_probe-*.png.
 module.exports = [
-  {
-    id: '_probe-web-direto', empty: true,
-    run: () => { document.getElementById('a11y-home-origin-btn-web').click(); },
-    probe: () => JSON.stringify({
-      lib: getA11yProjectLib(), origin: getA11yProjectOrigin(),
-      etapa1b: !!document.getElementById('a11y-home-step-web-sublib'),
-      header: (document.getElementById('a11y-header-title') || {}).textContent,
-      viewSpecsVisivel: !document.getElementById('view-specifications').classList.contains('hidden'),
-    }),
-  },
-  {
-    id: '_probe-projeto-legado', origin: 'web',
-    run: () => { hacData.projectLib = 'web-angular-react'; navigate('view-specifications'); _applyA11yHeaderOriginTitle(); },
-    probe: () => JSON.stringify({ lib: getA11yProjectLib(), origin: getA11yProjectOrigin(), header: document.getElementById('a11y-header-title').textContent }),
-  },
+  { id: '_probe-menu-ajuda', origin: 'web', run: () => { navigate('view-specifications'); toggleA11yMoreActionsMenu(); } },
+  { id: '_probe-suporte', origin: 'web', run: () => { navigate('view-specifications'); openModal('a11y-support-modal'); } },
+  { id: '_probe-como-usar-web', origin: 'web', run: () => { navigate('view-specifications'); openOnboarding('web'); _onboardingStep(1); } },
+  { id: '_probe-como-usar-mobile', origin: 'mobile', run: () => { navigate('view-specifications'); openOnboarding('mobile'); _onboardingStep(1); } },
 ];
