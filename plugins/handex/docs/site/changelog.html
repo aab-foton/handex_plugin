@@ -241,11 +241,23 @@
 <p>Ainda não publicada na Figma Community (a versão publicada é a 6.32.1). Mudanças das fases 2 a 5 de conformidade e a detecção de personalização ainda aguardam validação final no Figma.</p>
 <h3 id="alterado-anotacoes-e-especificacoes">Alterado — "Anotações" e "Especificações" (2026-10-05)</h3>
 <ul>
-<li><strong>Specs Rápidas</strong> passam a se chamar <strong>Anotações</strong> (card da home "Inserir Anotações") e <strong>Specs Detalhadas</strong> passam a se chamar <strong>Especificações</strong> (card "Anotar Especificações"). Anotações vêm antes de Especificações na home, no "Como usar o plugin", no onboarding, no "Limpar canvas" e na documentação. Quem já reordenou os cards da home mantém a própria ordem.</li>
+<li><strong>Specs Rápidas</strong> passam a se chamar <strong>Anotações</strong> (card da home "Inserir Anotações") e <strong>Specs Detalhadas</strong> passam a se chamar <strong>Especificações</strong> (card "Inserir Especificações"). Anotações vêm antes de Especificações na home, no "Como usar o plugin", no onboarding, no "Limpar canvas" e na documentação. Quem já reordenou os cards da home mantém a própria ordem.</li>
 <li>Uma anotação pode virar especificação ("Converter em Especificação"); a observação vira a nota.</li>
 <li>Sections do canvas renomeadas para "Handex | Anotações" e "Handex | Especificações" (achadas por pluginData; camadas antigas continuam reconhecidas).</li>
 <li>Cards de Anotações no canvas: um por elemento, numa coluna ao lado do frame e na altura do próprio elemento, sem Auto Layout; a modal de grade saiu. Tag no ponto de saída da linha, em cinza sólido. As linhas de um lote nunca se cruzam.</li>
 <li>Ficha: fonte Roboto (fonte vigente da lib DSC) no lugar da CAIXA Std; células das tabelas com altura igual por linha.</li>
+<li><strong>Corrigido (grave):</strong> inserir medidas/especificações na Ficha podia apagar o frame principal; o snapshot agora usa cópias e nunca mexe no frame original.</li>
+<li>Escanear Tokens: escaneamento de tela inteira não trava mais (miniaturas a 64px em lotes de 8, prévia do frame limitada a 1200px, erro sempre devolvido à UI e limite de 3 min no loading).</li>
+<li>Escanear Tokens: "Vai para a Ficha" só em Componentes e Frames/Layouts; Ícones e Tipografia ficam só como consulta.</li>
+<li>Medidas: aviso quando um tipo pedido não tem o que medir; gap com a distância real; remover não faz a medida reaparecer; Ficha não falha mais com medidas de frame não encontrado.</li>
+<li>Nome: "Inserir Especificações" (antes "Anotar Especificações").</li>
+<li>Limpar canvas: a Section "Handex | …" de cada categoria marcada é removida quando fica vazia.</li>
+<li>Ficha (canvas e HTML): Fluxos de Tela viram diagrama por jornada — telas em caixas com o nome do frame, Início/Fim em círculo, setas na cor da conexão e decisões numeradas com o texto abaixo.</li>
+<li>Ficha: cada frame em "Frames Escaneados" mostra "Reutilizar da lib" (componentes do DSC por biblioteca) e "Construir" (itens marcados), só com nomes.</li>
+<li>Home: o card de Anotações mostra "Anotações inseridas (N)", contando os cards no canvas.</li>
+<li>Anotações: tags, lista e coluna de cards na ordem dos cliques; incluir/excluir filhos não muda a ordem.</li>
+<li>Anotações: o que já está selecionado no canvas ao iniciar a captura entra direto na lista.</li>
+<li>Anotações: interruptor "Incluir filhos diretos" por elemento (desligado por padrão): lê o 1º nível, até 8 filhos, e mostra na lista, no card do canvas e no contexto para IA.</li>
 </ul>
 <h3 id="corrigido-status-do-frame-uma-regra-so-cores-da-marca-e-legenda-completa">Corrigido — Status do frame: uma regra só, cores da marca e legenda completa</h3>
 <p>O status do frame ("Pendente", "Conforme"…) era calculado em dois lugares com resultados diferentes: o primeiro desenho do card só conhecia 4 estados e mostrava "Não Conforme" para um desvio já justificado, que só virava o estado certo depois de uma edição. Agora há uma função única (<code>_getFrameStatusView</code>, <code>core.js</code>) para o desenho inicial e para toda atualização. O estado antes chamado "Em revisão" passa a se chamar <strong>Desvio justificado</strong>, para não se confundir com o marcador de item "Necessita revisão".</p>

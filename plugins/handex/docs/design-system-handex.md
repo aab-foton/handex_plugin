@@ -195,7 +195,7 @@ Padrão usado por `detail-level-modal` ("Quanto detalhe cada item terá na Ficha
 
 ### Ponte spec ↔ elemento escaneado (2026-10-02; revisada no mesmo dia)
 
-Os botões de spec saíram do card do scan: Escanear Tokens volta a ter só toggles, propriedades e inativas. A ponte vive em Anotar Especificações:
+Os botões de spec saíram do card do scan: Escanear Tokens volta a ter só toggles, propriedades e inativas. A ponte vive em Inserir Especificações:
 - **Área "Vindos do scan"** no topo da lista: accordion (`rounded-xl`, borda fina, ícone `scan-line`), aberto quando há itens, contador "N para revisar". Uma linha por item, sem cards internos: nome (clique localiza no canvas) + `Frame · motivo` (Fora do padrão, Personalizado, Necessita revisão), botão outline `rounded-2xl` "Especificar" (`text-[#005ca9]`) e botão `x` 40×40 com `title` "Não precisa de spec". Recolhida abaixo: "M dispensados" com "Restaurar". É derivada; não é spec e não entra na Ficha.
 - **Selo "Veio do scan"** no card da spec: ícone `scan-line` 12px + texto 9px bold `text-slate-600`/`dark:text-dark-muted`; `title` com o nome do item e "mesmo elemento" ou "dentro de um elemento escaneado". Spec sem casamento não tem selo.
 
@@ -261,7 +261,7 @@ Biblioteca exclusiva: **Lucide** (`data-lucide="nome"` no plugin, equivalente a 
 | `loader-2` | `import { Loader2 } from 'lucide-react'` | Spinner de carregamento (animação de rotação via CSS). |
 | `file-plus-2` | `import { FilePlus2 } from 'lucide-react'` | Criar novo documento/anexo. |
 | `check-circle` | `import { CheckCircle } from 'lucide-react'` | EM CONFORMIDADE — selo de auditoria DSC. |
-| `tag` | `import { Tag } from 'lucide-react'` | Card Anotar Especificações na home; badge de tag de spec. |
+| `tag` | `import { Tag } from 'lucide-react'` | Card Inserir Especificações na home; badge de tag de spec. |
 | `send` | `import { Send } from 'lucide-react'` | Gerar Ficha de Handoff — ícone alternativo em onboarding. |
 | `search` | `import { Search } from 'lucide-react'` | Campo de busca — filtro de specs/frames. |
 | `ruler` | `import { Ruler } from 'lucide-react'` | Card Anotar Medidas na home. |

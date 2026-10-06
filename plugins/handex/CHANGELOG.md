@@ -9,11 +9,23 @@
 Ainda não publicada na Figma Community (a versão publicada é a 6.32.1). Mudanças das fases 2 a 5 de conformidade e a detecção de personalização ainda aguardam validação final no Figma.
 
 ### Alterado — "Anotações" e "Especificações" (2026-10-05)
-- **Specs Rápidas** passam a se chamar **Anotações** (card da home "Inserir Anotações") e **Specs Detalhadas** passam a se chamar **Especificações** (card "Anotar Especificações"). Anotações vêm antes de Especificações na home, no "Como usar o plugin", no onboarding, no "Limpar canvas" e na documentação. Quem já reordenou os cards da home mantém a própria ordem.
+- **Specs Rápidas** passam a se chamar **Anotações** (card da home "Inserir Anotações") e **Specs Detalhadas** passam a se chamar **Especificações** (card "Inserir Especificações"). Anotações vêm antes de Especificações na home, no "Como usar o plugin", no onboarding, no "Limpar canvas" e na documentação. Quem já reordenou os cards da home mantém a própria ordem.
 - Uma anotação pode virar especificação ("Converter em Especificação"); a observação vira a nota.
 - Sections do canvas renomeadas para "Handex | Anotações" e "Handex | Especificações" (achadas por pluginData; camadas antigas continuam reconhecidas).
 - Cards de Anotações no canvas: um por elemento, numa coluna ao lado do frame e na altura do próprio elemento, sem Auto Layout; a modal de grade saiu. Tag no ponto de saída da linha, em cinza sólido. As linhas de um lote nunca se cruzam.
 - Ficha: fonte Roboto (fonte vigente da lib DSC) no lugar da CAIXA Std; células das tabelas com altura igual por linha.
+- **Corrigido (grave):** inserir medidas/especificações na Ficha podia apagar o frame principal; o snapshot agora usa cópias e nunca mexe no frame original.
+- Escanear Tokens: escaneamento de tela inteira não trava mais (miniaturas a 64px em lotes de 8, prévia do frame limitada a 1200px, erro sempre devolvido à UI e limite de 3 min no loading).
+- Escanear Tokens: "Vai para a Ficha" só em Componentes e Frames/Layouts; Ícones e Tipografia ficam só como consulta.
+- Medidas: aviso quando um tipo pedido não tem o que medir; gap com a distância real; remover não faz a medida reaparecer; Ficha não falha mais com medidas de frame não encontrado.
+- Nome: "Inserir Especificações" (antes "Anotar Especificações").
+- Limpar canvas: a Section "Handex | …" de cada categoria marcada é removida quando fica vazia.
+- Ficha (canvas e HTML): Fluxos de Tela viram diagrama por jornada — telas em caixas com o nome do frame, Início/Fim em círculo, setas na cor da conexão e decisões numeradas com o texto abaixo.
+- Ficha: cada frame em "Frames Escaneados" mostra "Reutilizar da lib" (componentes do DSC por biblioteca) e "Construir" (itens marcados), só com nomes.
+- Home: o card de Anotações mostra "Anotações inseridas (N)", contando os cards no canvas.
+- Anotações: tags, lista e coluna de cards na ordem dos cliques; incluir/excluir filhos não muda a ordem.
+- Anotações: o que já está selecionado no canvas ao iniciar a captura entra direto na lista.
+- Anotações: interruptor "Incluir filhos diretos" por elemento (desligado por padrão): lê o 1º nível, até 8 filhos, e mostra na lista, no card do canvas e no contexto para IA.
 
 ### Corrigido — Status do frame: uma regra só, cores da marca e legenda completa
 O status do frame ("Pendente", "Conforme"…) era calculado em dois lugares com resultados diferentes: o primeiro desenho do card só conhecia 4 estados e mostrava "Não Conforme" para um desvio já justificado, que só virava o estado certo depois de uma edição. Agora há uma função única (`_getFrameStatusView`, `core.js`) para o desenho inicial e para toda atualização. O estado antes chamado "Em revisão" passa a se chamar **Desvio justificado**, para não se confundir com o marcador de item "Necessita revisão".

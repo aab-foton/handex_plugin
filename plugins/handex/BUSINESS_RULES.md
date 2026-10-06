@@ -241,13 +241,13 @@ Base para a Ficha por tela com um card por elemento (`docs/plano-card-de-element
 - **Em dúvida, não anexar:** falso positivo é pior que ausência. Nenhuma spec some: spec com `none` (ou nó removido) continua existindo sozinha, sem dono.
 - **Custo:** sem `findAll`; só `getNodeByIdAsync` + `parent`, memoizado por nó visitado, em lotes de 12, teto de 400 specs por chamada. Falha em uma spec vira `none` e nunca derruba a resposta.
 - `request-spec-properties` com `targetNodeId` funciona com o `nodeId` de um item (fluxo existente, inalterado).
-- **Pré-criações automáticas (revisão de 2026-10-02):** o scan não cria botões de spec no card do item. Itens fora do padrão (`isDS === false`), em revisão (`'warning'`), personalizados (`isCustomComponent`) ou com personalização (`customizations`) que ainda não têm spec casada aparecem em **Anotar Especificações > "Vindos do scan"**, derivados a cada render (nada novo é persistido, exceto `specDismissed`). O designer **Especifica** (abre o fluxo normal da Especificação com o elemento fixado) ou **Dispensa** ("Não precisa de spec", reversível). **Nada entra na Ficha, no Markdown, na Ficha HTML nem nos contadores sem o designer concluir a spec**: o julgamento do que merece spec é dele.
+- **Pré-criações automáticas (revisão de 2026-10-02):** o scan não cria botões de spec no card do item. Itens fora do padrão (`isDS === false`), em revisão (`'warning'`), personalizados (`isCustomComponent`) ou com personalização (`customizations`) que ainda não têm spec casada aparecem em **Inserir Especificações > "Vindos do scan"**, derivados a cada render (nada novo é persistido, exceto `specDismissed`). O designer **Especifica** (abre o fluxo normal da Especificação com o elemento fixado) ou **Dispensa** ("Não precisa de spec", reversível). **Nada entra na Ficha, no Markdown, na Ficha HTML nem nos contadores sem o designer concluir a spec**: o julgamento do que merece spec é dele.
 
 ---
 
-### 2.4 Inserir Anotações e Anotar Especificações
+### 2.4 Inserir Anotações e Inserir Especificações
 
-O Handex tem **duas ferramentas de anotação** na home, com propósitos diferentes. Nomenclatura vigente (decisão do Augusto em 2026-10-05): **"Anotações"** (card "Inserir Anotações"; antes "Specs Rápidas", e antes disso "Spec Express") e **"Especificações"** (card "Anotar Especificações"; antes "Specs Detalhadas"/"Anotar Specs"). **Anotações vêm sempre antes de Especificações** na home, no "Como usar o plugin", no onboarding e na documentação: é o passo mais leve, e **uma anotação pode virar especificação** (2.4.1). "Anotações" do Handex não é o recurso nativo de Annotations do Dev Mode do Figma.
+O Handex tem **duas ferramentas de anotação** na home, com propósitos diferentes. Nomenclatura vigente (decisão do Augusto em 2026-10-05): **"Anotações"** (card "Inserir Anotações"; antes "Specs Rápidas", e antes disso "Spec Express") e **"Especificações"** (card "Inserir Especificações"; antes "Specs Detalhadas"/"Anotar Specs"). **Anotações vêm sempre antes de Especificações** na home, no "Como usar o plugin", no onboarding e na documentação: é o passo mais leve, e **uma anotação pode virar especificação** (2.4.1). "Anotações" do Handex não é o recurso nativo de Annotations do Dev Mode do Figma.
 
 **Princípio (decisão de produto, 2026-09-30):** o designer precisa conseguir distinguir quando usar cada uma — por isso o critério aparece dentro do plugin (cards da home, onboarding, "Como usar o plugin" e empty-state).
 - **Anotações** = o **essencial** para o dev que **não tem acesso ao DevMode do Figma** olhar e já conseguir executar o trabalho: valores reais do elemento (cor, espaçamento, tipografia, dimensões, raio, efeitos, componente), com o token e a biblioteca quando existem, mais uma observação opcional por elemento. Sem categoria nem exceção; não entra na Ficha; é consulta pontual.
@@ -268,7 +268,7 @@ Regra de bolso: **Anotação** responde "quais são os valores deste elemento?";
 
 **Comparativo:**
 
-| Aspecto | Inserir Anotações | Anotar Especificações |
+| Aspecto | Inserir Anotações | Inserir Especificações |
 |---|---|---|
 | Natureza | Essencial para o dev sem DevMode: consulta pontual de valores, rascunho | Spec formal e aprofundada, artefato entregue ao dev |
 | Persistência | Lista da UI efêmera (reseta ao fechar o plugin); propriedades gravadas no próprio card do canvas (pluginData), recuperadas ao reabrir | `handoffData` — sobrevive a tudo, entra em export/import JSON |
@@ -293,16 +293,19 @@ Módulo isolado (`modules/quick-spec.js`, view `view-quick-spec`); nunca chama n
 - "Inserir no canvas" cria 1 card por elemento numa coluna ao lado do frame, cada card na altura do seu elemento (centro do card no centro do elemento, para a linha sair reta); se dois colidem, o de baixo desce o necessário, contando também cards de lotes anteriores do mesmo frame. Sem Auto Layout: o lote fica num frame só para agrupar e cada card pode ser movido livremente; se uma observação faz um card crescer, os de baixo descem e a linha deles é refeita. A modal de grade (colunas × linhas) foi removida em 2026-10-05. As linhas do lote nunca se cruzam: ordenadas pela altura do elemento, as que precisam descer dobram em faixas verticais escalonadas (a do elemento mais alto dobra mais perto dos cards, cada uma abaixo um passo mais à esquerda). O card é ligado ao elemento de origem por linha guia cinza semi-transparente. A linha nasce na borda do contorno tracejado do elemento, e a tag (A, B, C…) fica nesse ponto de saída, em círculo cinza sólido (`#64747a`, lib) com letra branca, no lugar do antigo dot de início (2026-10-05).
 - "Ocultar" alterna a visibilidade na lista e, se o card já está no canvas, também do card e da linha guia.
 - Excluir individualmente fecha o buraco na sequência de tags, só entre itens ainda sem card no canvas; tags de itens já inseridos nunca são renumeradas.
-- **Não entra** na Ficha de Handoff, no Markdown exportado, nem nos contadores da home/Resumo. Não tem badge de check no card da home.
+- **Não entra** na Ficha de Handoff, no Markdown exportado, nem no Resumo. Na home, o card ganha badge de check com "Anotações inseridas (N)", contando os cards que estão no canvas (2026-10-05, pedido do Augusto).
 - Entra no `_aiContext` num bloco próprio (`especificacoesRapidas`, só itens não ocultos), rotulado como achados brutos sem conformidade DSC avaliada.
 - "Converter em Especificação" abre o fluxo normal de Especificações para o elemento; ao concluir, o card da anotação é substituído pela spec formal.
+- **Ordem das Anotações (2026-10-05):** as tags seguem a ordem dos cliques (A = 1º, B = 2º...), inclusive para o que já estava selecionado ao iniciar a captura (o plugin acompanha a ordem real de seleção). A lista e a coluna de cards no canvas seguem sempre a ordem das tags; incluir ou excluir filhos diretos ou a observação muda só a altura do card, nunca a ordem. Cada card tenta a altura do seu elemento sem subir acima do anterior; se os cliques não seguirem a ordem vertical dos elementos, linhas podem se cruzar.
+- **Seleção prévia (2026-10-05):** ao iniciar a captura, os elementos que já estavam selecionados no canvas entram direto na lista (exceto camadas criadas pelo Handex); Shift+clique acrescenta a partir daí.
+- **Incluir filhos diretos (2026-10-05):** interruptor por elemento, desligado por padrão. Ligado, lê só o 1º nível de filhos visíveis (até 8, com o mesmo filtro de categorias da captura) e mostra cada filho com nome, tipo e as mesmas linhas de propriedade; filho sem propriedade nas categorias não entra, e os filhos além do limite aparecem como "+N não lido(s)". Nunca desce mais de um nível: para um neto ou um filho além do limite, anote-o separadamente, e o aprofundamento completo fica com as Especificações. Vale na lista, no card do canvas (bloco "Filhos diretos" antes da Observação, gravado em pluginData `handexQuickSpecChildren` e recuperado ao reabrir) e no `_aiContext` (`filhosDiretos`). Ligar ou desligar num card já inserido atualiza o card sem recriá-lo; se ele crescer, os cards de baixo descem e as linhas são refeitas.
 - **Observação (2026-10-01):** cada elemento pode ter uma observação livre (texto curto, até 280 caracteres). Aparece no fim do card da anotação no canvas (bloco "Observação", cinza neutro), é gravada no card (`handexQuickSpecNote`), recuperada ao reabrir o plugin e pode ser editada depois de inserida (`quick-spec-update-note`, sem recriar o card). Não vai para a Ficha enquanto a spec for Rápida.
 - **Conversão (2026-10-01):** a especificação continua relendo as propriedades do elemento (sem duplicar dado); a **nota da especificação passa a ser a observação da Rápida** (antes era preenchida com as propriedades). O alvo da leitura é o elemento fixado na conversão (`targetNodeId` em `request-spec-properties`), não a seleção atual do canvas; sem alvo válido, cai na seleção.
-- "Limpar Dados"/limpar canvas tem opção própria para os cards de Anotações.
+- "Limpar Dados"/limpar canvas tem opção própria para os cards de Anotações. Ao limpar o canvas, a Section "Handex | …" de cada categoria marcada também é removida quando fica vazia; se sobrou algo dentro (colocado pelo designer), ela fica (2026-10-05).
 
 ---
 
-#### 2.4.2 Anotar Especificações — estrutura e regras
+#### 2.4.2 Inserir Especificações — estrutura e regras
 
 **Estrutura de uma spec:**
 ```js
@@ -371,6 +374,10 @@ Módulo isolado (`modules/quick-spec.js`, view `view-quick-spec`); nunca chama n
 
 **Regras:**
 - Pelo menos 1 tipo deve ser selecionado para executar
+- Tipo de medida pedido sem nada a medir (padding todo 0 ou sem Auto layout, filhos encostados ou menos de 2 filhos, elemento fora de frame ou encostado no pai) não cria marcação e gera aviso na tela com o elemento e o motivo (2026-10-05).
+- Rótulo do gap usa a distância real medida entre os filhos (faixa quando variam), marcando "(space between)" quando a distribuição é automática; antes repetia o gap configurado, que é 0 nesse caso.
+- Remover medida na tela de Medidas apaga a medida de todas as listas (avulsa e de qualquer frame), para ela não reaparecer.
+- Na Ficha, medidas e especificações de um frame cujo nó não é mais encontrado no canvas entram como avulsas, em vez de sumirem.
 - Numeração sequencial por frame (`frame.nextMeasurementNumber`)
 - Opção "Armazenar no frame pai" (`storeInParent`) — disponível mas oculto por padrão
 - Resultado retornado como array de `{ name, number, nodeId, details[], visible }`
@@ -452,6 +459,12 @@ Handex | Ficha de Projeto | {titulo} | {DD/MM/AAAA}
 No bloco "Medidas aplicadas" de cada frame, além do snapshot do frame inteiro (visão geral), cada grupo de medida gera um recorte ampliado ("Detalhe: {elemento}", ou "Detalhe: {nome da medida}" quando só a caixa das marcações é conhecida) da região do elemento medido + marcações + 24px de respiro, mostrando só as marcações daquela medida. O elemento alvo é lido do `pluginData` `handexMeasureTargetId` do grupo de medida (gravado na criação; medidas antigas usam a caixa das marcações). Recorte pulado quando a região passa de 80% da área do frame ou quando o mapeamento imagem↔região não é confiável. Tetos: 8 recortes por frame, 20 por geração da Ficha, sempre sequenciais. É só imagem na Ficha: nada novo em `handoffData`, Markdown, JSON ou `_aiContext`. Medidas avulsas não recebem recorte.
 
 Specs avulsas (sem frame vinculado) entram na "Documentação Visual" num bloco "Specs avulsas" (linha de apoio: "Anotadas direto no canvas, sem um frame escaneado em Escanear Tokens."; medidas análogas em "Medidas avulsas"; sem snapshot, só o card de detalhe). Gerar/atualizar a Ficha com 0 frames escaneados no plugin é recusado (erro visível) quando a Ficha atual já tem "Frames Escaneados"/"User Interface" — evita apagar essas seções por estado carregado incompleto; use "Nova Versão" (preserva a anterior) ou reescaneie.
+
+**Fluxos de Tela na Ficha — diagrama (2026-10-05):** a Ficha do canvas e a Ficha HTML mostram um diagrama por jornada (componente conectado; título = nome da jornada ou "Jornada sem nome N"), no lugar da tabela de conexões. Caixas = telas, com o nome real do frame (lido do canvas na geração; conexões novas já guardam `sourceName`/`targetName`); Início e Fim = círculos ligados à tela marcada (borda fina e grossa), nunca linhas soltas; setas na cor e no tracejado da conexão; decisão = losango numerado no meio da seta, com o texto completo numa tabela "# · Caminho · Decisão" abaixo do diagrama. Até 4 telas cabendo na largura: linha horizontal; acima disso, coluna vertical. Conexão para a tela seguinte vai reta; as demais (pular tela, voltar, repetida) correm em faixas próprias. Símbolos inspirados em BPMN, sem conformidade formal. Layout único em `src/plugin/shared/flow-diagram-layout.js` (importado por `code.js` e concatenado no `ui.html`). O Markdown continua em texto.
+
+**"Vai para a Ficha" só em Componentes e Frames/Layouts (2026-10-05):** Ícones e Tipografia não têm mais o interruptor (ícone se importa da lib ou se exporta como asset; texto é parte do componente ou layout). Marcação antiga nessas categorias fica salva, mas é ignorada no card User Interface, em "Construir", no `_aiContext` e na marcação automática de Novo Componente. Os itens continuam no scan e em "Vindos do scan" das Especificações.
+
+**Frames Escaneados — resumo para o dev (2026-10-05):** cada frame ganha até duas linhas, só com nomes. **Reutilizar da lib**: componentes e ícones com vínculo próprio a uma lib do DSC, agrupados por biblioteca e por nome (×N quando repete; "(personalizado)" quando a instância tem personalização), até 12 nomes e "+N" para o resto; subpartes herdadas por ancestral, itens sem vínculo e itens marcados "Vai para a Ficha" ficam de fora. **Construir**: itens marcados "Vai para a Ficha", com "→ ver User Interface". Sem percentual nem status de conformidade (controle do designer, não ação do dev). Não vale para frame de Novo Componente, que já lista os elementos. Só na Ficha do canvas; Markdown e Ficha HTML não mudam.
 
 **Locking automático:**
 Todos os nós gerados pelo plugin são criados com `node.locked = true`:
@@ -659,12 +672,12 @@ Mensagens exibidas como notificação nativa do Figma:
 
 ### 5.3 Hints visíveis na interface
 
-> **Nota (2026-09-17):** os cards de hint fixo que existiam em Anotar Especificações/Anotar Medidas/Fluxos de Tela/Escanear Tokens foram **removidos** (v6.15.2/v6.16.1) por duplicarem a mesma explicação já coberta pelo empty-state e pelo onboarding contextual — ver CLAUDE.md ("Cards de hint fixo duplicavam o onboarding/empty-state"). A tabela abaixo documenta só o texto do **empty-state** de cada tela (que continua existindo), não um card separado.
+> **Nota (2026-09-17):** os cards de hint fixo que existiam em Inserir Especificações/Anotar Medidas/Fluxos de Tela/Escanear Tokens foram **removidos** (v6.15.2/v6.16.1) por duplicarem a mesma explicação já coberta pelo empty-state e pelo onboarding contextual — ver CLAUDE.md ("Cards de hint fixo duplicavam o onboarding/empty-state"). A tabela abaixo documenta só o texto do **empty-state** de cada tela (que continua existindo), não um card separado.
 
 | Local | Texto |
 |---|---|
 | Escanear Tokens (estado vazio) | "Nenhum frame escaneado" / "Selecione um frame no canvas do Figma para começar." + botão **+ Escanear Frame** |
-| Anotar Especificações (estado vazio) | "Nenhuma especificação criada ainda" / "Selecione um elemento no canvas para começar." + botão **+ Nova spec** |
+| Inserir Especificações (estado vazio) | "Nenhuma especificação criada ainda" / "Selecione um elemento no canvas para começar." + botão **+ Nova spec** |
 | Anotar Medidas (estado vazio) | "Nenhuma medida criada ainda" / "Selecione elementos no canvas para começar." + botão **+ Inserir medida** |
 | Fluxos de Tela (estado vazio) | "Nenhum fluxo criado ainda" / "Selecione 2 ou mais elementos no canvas para começar." + botão **+ Conectar Frames** |
 | Tipo Decisão no modal de fluxo | "Dica: Use frases curtas para melhor legibilidade dentro do losango." |
@@ -704,7 +717,7 @@ HOME
  │       Marca conformidade DSC
  │       Marca se é Novo Componente
  │
- ├─► Anotar Especificações
+ ├─► Inserir Especificações
  │     Seleciona elemento no canvas → botão +
  │     Define: letra, categoria, nota, link, guia
  │     Adiciona propriedades técnicas e exceções
@@ -731,7 +744,7 @@ HOME
 ### 6.2 Jornada Rápida — Apenas Specs
 
 ```
-HOME → Anotar Especificações
+HOME → Inserir Especificações
   Seleciona elemento → botão +
   Preenche letra e categoria
   Confirma → spec aparece no canvas e na lista
@@ -803,7 +816,7 @@ HOME → Gerar Ficha de Handoff (view-handoff-summary)
 ### 6.7 Jornada — Exceção em Spec
 
 ```
-Anotar Especificações → expande uma spec → + Exceção
+Inserir Especificações → expande uma spec → + Exceção
   Seleciona tipo (Erro / Sucesso / Confirmação / Alerta)
   Preenche título, âncora, observação
   Se obs preenchida e spec tem nodeId:
