@@ -4,7 +4,7 @@
     "slug": "design-acessivel-mobile",
     "libraryName": "Design Acessível (mobile)",
     "fileKey": "HhriLSpKnCB2dHhyiU16iB",
-    "generatedAt": "2026-10-02T19:50:40.621Z",
+    "generatedAt": "2026-10-06T00:44:26.900Z",
     "generator": "fetch-component-properties.cjs",
     "deepScan": true,
     "discoverySignature": "95178d90b7d71421262d6d2ffcf1b33c2e4a3a000c0697ef38e3c76c31dd4eb8",
@@ -175,13 +175,6 @@
           "nestedComponentId": "1248:2328",
           "properties": [
             {
-              "rawKey": "letra / número#1248:0",
-              "name": "letra / número",
-              "syncId": "1248:0",
-              "type": "TEXT",
-              "value": "1"
-            },
-            {
               "rawKey": "Número#10766:0",
               "name": "Número",
               "syncId": "10766:0",
@@ -198,13 +191,6 @@
           "nestedInstanceId": "10766:173",
           "nestedComponentId": "1248:2328",
           "properties": [
-            {
-              "rawKey": "letra / número#1248:0",
-              "name": "letra / número",
-              "syncId": "1248:0",
-              "type": "TEXT",
-              "value": "1"
-            },
             {
               "rawKey": "Número#10766:0",
               "name": "Número",
@@ -223,13 +209,6 @@
           "nestedComponentId": "1248:2328",
           "properties": [
             {
-              "rawKey": "letra / número#1248:0",
-              "name": "letra / número",
-              "syncId": "1248:0",
-              "type": "TEXT",
-              "value": "1"
-            },
-            {
               "rawKey": "Número#10766:0",
               "name": "Número",
               "syncId": "10766:0",
@@ -246,13 +225,6 @@
           "nestedInstanceId": "10766:177",
           "nestedComponentId": "1248:2328",
           "properties": [
-            {
-              "rawKey": "letra / número#1248:0",
-              "name": "letra / número",
-              "syncId": "1248:0",
-              "type": "TEXT",
-              "value": "1"
-            },
             {
               "rawKey": "Número#10766:0",
               "name": "Número",
@@ -339,8 +311,8 @@
           "nestedComponentId": "10766:112",
           "properties": [
             {
-              "rawKey": "Letra#10766:2",
-              "name": "Letra",
+              "rawKey": "Número#10766:2",
+              "name": "Número",
               "syncId": "10766:2",
               "type": "TEXT",
               "value": "1"
@@ -356,8 +328,8 @@
           "nestedComponentId": "10766:112",
           "properties": [
             {
-              "rawKey": "Letra#10766:2",
-              "name": "Letra",
+              "rawKey": "Número#10766:2",
+              "name": "Número",
               "syncId": "10766:2",
               "type": "TEXT",
               "value": "1"
@@ -373,8 +345,8 @@
           "nestedComponentId": "10766:112",
           "properties": [
             {
-              "rawKey": "Letra#10766:2",
-              "name": "Letra",
+              "rawKey": "Número#10766:2",
+              "name": "Número",
               "syncId": "10766:2",
               "type": "TEXT",
               "value": "1"
@@ -390,8 +362,8 @@
           "nestedComponentId": "10766:112",
           "properties": [
             {
-              "rawKey": "Letra#10766:2",
-              "name": "Letra",
+              "rawKey": "Número#10766:2",
+              "name": "Número",
               "syncId": "10766:2",
               "type": "TEXT",
               "value": "1"
@@ -401,26 +373,6 @@
         }
       ],
       "variantKeys": [
-        {
-          "nodeId": "10766:226",
-          "name": "tipo=Estrutura da Página, orientação=Inferior",
-          "key": "7c9dca5e5312553824b84dfbb602097468be0bc4"
-        },
-        {
-          "nodeId": "10766:234",
-          "name": "tipo=Estrutura da Página, orientação=Superior",
-          "key": "2bf9e00f39fb195a017a6697177a325121576073"
-        },
-        {
-          "nodeId": "10766:210",
-          "name": "tipo=Estrutura da Página, orientação=Esquerda",
-          "key": "b16123a85a77b6f39b134d689e9ba18f966cc949"
-        },
-        {
-          "nodeId": "10766:218",
-          "name": "tipo=Estrutura da Página, orientação=Direita",
-          "key": "7b57c21d29e28b96a4b9d040cd77602a583783ac"
-        },
         {
           "nodeId": "1:188",
           "name": "tipo=Decorativo, orientação=Esquerda",
@@ -442,6 +394,11 @@
           "key": "2a317e3e61483a5fc0de41424ce82273f4c53a25"
         },
         {
+          "nodeId": "10766:234",
+          "name": "tipo=Estrutura da Página, orientação=Superior",
+          "key": "2bf9e00f39fb195a017a6697177a325121576073"
+        },
+        {
           "nodeId": "301:437",
           "name": "tipo=Títulos, orientação=Superior",
           "key": "517ba6be813cc42c1d296a5e3c7161137aad4488"
@@ -452,6 +409,16 @@
           "key": "73f5b3d53cd673a4846b60e251e0108805644951"
         },
         {
+          "nodeId": "10766:218",
+          "name": "tipo=Estrutura da Página, orientação=Direita",
+          "key": "7b57c21d29e28b96a4b9d040cd77602a583783ac"
+        },
+        {
+          "nodeId": "10766:226",
+          "name": "tipo=Estrutura da Página, orientação=Inferior",
+          "key": "7c9dca5e5312553824b84dfbb602097468be0bc4"
+        },
+        {
           "nodeId": "301:396",
           "name": "tipo=Elementos interativos e Imagens, orientação=Superior",
           "key": "83a72d71793cde67cb11c38df56e8f9bd1cb2acf"
@@ -460,6 +427,11 @@
           "nodeId": "1:174",
           "name": "tipo=Elementos interativos e Imagens, orientação=Inferior",
           "key": "97c0d6479a58b03397515b664e3d3de64b594706"
+        },
+        {
+          "nodeId": "10766:210",
+          "name": "tipo=Estrutura da Página, orientação=Esquerda",
+          "key": "b16123a85a77b6f39b134d689e9ba18f966cc949"
         },
         {
           "nodeId": "1:196",
@@ -515,14 +487,14 @@
       "perVariantProperties": [],
       "variantKeys": [
         {
-          "nodeId": "10757:5871",
-          "name": "Conector=Estrutura da Página",
-          "key": "393eccad3c607c49c1b30ac350e0bcb94f1b833e"
-        },
-        {
           "nodeId": "10330:4205",
           "name": "Conector=Elementos Decorativos",
           "key": "032c77f3a9a16fcd4ae4896c37e444202ecedf84"
+        },
+        {
+          "nodeId": "10757:5871",
+          "name": "Conector=Estrutura da Página",
+          "key": "393eccad3c607c49c1b30ac350e0bcb94f1b833e"
         },
         {
           "nodeId": "10330:4208",
@@ -604,13 +576,6 @@
               "componentId": "1248:2328",
               "properties": [
                 {
-                  "rawKey": "letra / número#1248:0",
-                  "name": "letra / número",
-                  "syncId": "1248:0",
-                  "type": "TEXT",
-                  "value": "1"
-                },
-                {
                   "rawKey": "Número#10766:0",
                   "name": "Número",
                   "syncId": "10766:0",
@@ -651,11 +616,11 @@
               "componentId": "10766:112",
               "properties": [
                 {
-                  "rawKey": "Letra#10766:2",
-                  "name": "Letra",
+                  "rawKey": "Número#10766:2",
+                  "name": "Número",
                   "syncId": "10766:2",
                   "type": "TEXT",
-                  "value": "A"
+                  "value": "1"
                 }
               ]
             },
@@ -725,17 +690,10 @@
         {
           "variantName": "tipo=Elementos interativos e Imagens, conector=Desativado",
           "variantId": "1:51",
-          "nestedInstanceName": "ordem",
+          "nestedInstanceName": "Ordem",
           "nestedInstanceId": "10768:330",
           "nestedComponentId": "1248:2328",
           "properties": [
-            {
-              "rawKey": "letra / número#1248:0",
-              "name": "letra / número",
-              "syncId": "1248:0",
-              "type": "TEXT",
-              "value": "1"
-            },
             {
               "rawKey": "Número#10766:0",
               "name": "Número",
@@ -754,8 +712,8 @@
           "nestedComponentId": "10766:112",
           "properties": [
             {
-              "rawKey": "Letra#10766:2",
-              "name": "Letra",
+              "rawKey": "Número#10766:2",
+              "name": "Número",
               "syncId": "10766:2",
               "type": "TEXT",
               "value": "1"
@@ -766,7 +724,7 @@
         {
           "variantName": "tipo=Títulos, conector=Desativado",
           "variantId": "1:55",
-          "nestedInstanceName": ".[hac] Conector títulos",
+          "nestedInstanceName": "Títulos",
           "nestedInstanceId": "7094:292",
           "nestedComponentId": "1248:2330",
           "properties": [
@@ -783,17 +741,10 @@
         {
           "variantName": "tipo=Elementos interativos e Imagensinterativos e imagens, conector=Esquerda",
           "variantId": "1:65",
-          "nestedInstanceName": "ordem",
+          "nestedInstanceName": "Ordem",
           "nestedInstanceId": "10768:332",
           "nestedComponentId": "1248:2328",
           "properties": [
-            {
-              "rawKey": "letra / número#1248:0",
-              "name": "letra / número",
-              "syncId": "1248:0",
-              "type": "TEXT",
-              "value": "1"
-            },
             {
               "rawKey": "Número#10766:0",
               "name": "Número",
@@ -812,8 +763,8 @@
           "nestedComponentId": "10766:112",
           "properties": [
             {
-              "rawKey": "Letra#10766:2",
-              "name": "Letra",
+              "rawKey": "Número#10766:2",
+              "name": "Número",
               "syncId": "10766:2",
               "type": "TEXT",
               "value": "1"
@@ -824,7 +775,7 @@
         {
           "variantName": "tipo=Títulos, conector=Esquerda",
           "variantId": "1:73",
-          "nestedInstanceName": ".[hac] Conector títulos",
+          "nestedInstanceName": "Títulos",
           "nestedInstanceId": "7094:282",
           "nestedComponentId": "1248:2330",
           "properties": [
@@ -841,17 +792,10 @@
         {
           "variantName": "tipo=Elementos interativos e Imagens, conector=Direita",
           "variantId": "1:91",
-          "nestedInstanceName": "ordem",
+          "nestedInstanceName": "Ordem",
           "nestedInstanceId": "10768:335",
           "nestedComponentId": "1248:2328",
           "properties": [
-            {
-              "rawKey": "letra / número#1248:0",
-              "name": "letra / número",
-              "syncId": "1248:0",
-              "type": "TEXT",
-              "value": "1"
-            },
             {
               "rawKey": "Número#10766:0",
               "name": "Número",
@@ -870,8 +814,8 @@
           "nestedComponentId": "10766:112",
           "properties": [
             {
-              "rawKey": "Letra#10766:2",
-              "name": "Letra",
+              "rawKey": "Número#10766:2",
+              "name": "Número",
               "syncId": "10766:2",
               "type": "TEXT",
               "value": "1"
@@ -882,7 +826,7 @@
         {
           "variantName": "tipo=Títulos, conector=Direita",
           "variantId": "1:99",
-          "nestedInstanceName": ".[hac] Conector títulos",
+          "nestedInstanceName": "Títulos",
           "nestedInstanceId": "7094:284",
           "nestedComponentId": "1248:2330",
           "properties": [
@@ -899,17 +843,10 @@
         {
           "variantName": "tipo=Elementos interativos e Imagens, conector=Inferior",
           "variantId": "1:117",
-          "nestedInstanceName": "ordem",
+          "nestedInstanceName": "Ordem",
           "nestedInstanceId": "10768:338",
           "nestedComponentId": "1248:2328",
           "properties": [
-            {
-              "rawKey": "letra / número#1248:0",
-              "name": "letra / número",
-              "syncId": "1248:0",
-              "type": "TEXT",
-              "value": "1"
-            },
             {
               "rawKey": "Número#10766:0",
               "name": "Número",
@@ -928,8 +865,8 @@
           "nestedComponentId": "10766:112",
           "properties": [
             {
-              "rawKey": "Letra#10766:2",
-              "name": "Letra",
+              "rawKey": "Número#10766:2",
+              "name": "Número",
               "syncId": "10766:2",
               "type": "TEXT",
               "value": "1"
@@ -940,7 +877,7 @@
         {
           "variantName": "tipo=Títulos, conector=Inferior",
           "variantId": "1:125",
-          "nestedInstanceName": ".[hac] Conector títulos",
+          "nestedInstanceName": "Títulos",
           "nestedInstanceId": "7094:286",
           "nestedComponentId": "1248:2330",
           "properties": [
@@ -957,17 +894,10 @@
         {
           "variantName": "tipo=Elementos interativos e Imagens, conector=Superior",
           "variantId": "1:143",
-          "nestedInstanceName": "ordem",
+          "nestedInstanceName": "Ordem",
           "nestedInstanceId": "10768:341",
           "nestedComponentId": "1248:2328",
           "properties": [
-            {
-              "rawKey": "letra / número#1248:0",
-              "name": "letra / número",
-              "syncId": "1248:0",
-              "type": "TEXT",
-              "value": "1"
-            },
             {
               "rawKey": "Número#10766:0",
               "name": "Número",
@@ -986,8 +916,8 @@
           "nestedComponentId": "10766:112",
           "properties": [
             {
-              "rawKey": "Letra#10766:2",
-              "name": "Letra",
+              "rawKey": "Número#10766:2",
+              "name": "Número",
               "syncId": "10766:2",
               "type": "TEXT",
               "value": "1"
@@ -998,7 +928,7 @@
         {
           "variantName": "tipo=Títulos, conector=Superior",
           "variantId": "1:151",
-          "nestedInstanceName": ".[hac] Conector títulos",
+          "nestedInstanceName": "Títulos",
           "nestedInstanceId": "7094:288",
           "nestedComponentId": "1248:2330",
           "properties": [
@@ -1015,34 +945,14 @@
       ],
       "variantKeys": [
         {
-          "nodeId": "10768:295",
-          "name": "tipo=Estrutura da Página, conector=Superior",
-          "key": "9ab20cfc07ba0de6fe15754d53804d491ab728bf"
-        },
-        {
-          "nodeId": "10768:287",
-          "name": "tipo=Estrutura da Página, conector=Direita",
-          "key": "9b9aa1cfd2bb4327be1d72bfb125b326b90bc62e"
+          "nodeId": "1:99",
+          "name": "tipo=Títulos, conector=Direita",
+          "key": "19fa60fe8f30a98e26eff0d2d1c75e973a87dfca"
         },
         {
           "nodeId": "10768:283",
           "name": "tipo=Estrutura da Página, conector=Esquerda",
           "key": "26fa2e6f7f6a16f35054f29cd12de90bbf190ba0"
-        },
-        {
-          "nodeId": "10768:280",
-          "name": "tipo=Estrutura da Página, conector=Desativado",
-          "key": "afedf7e06bde8d754bae4309a121b5760723bb96"
-        },
-        {
-          "nodeId": "10768:291",
-          "name": "tipo=Estrutura da Página, conector=Inferior",
-          "key": "575e5b4fe3d2be90721a46cad9e30473503684fa"
-        },
-        {
-          "nodeId": "1:99",
-          "name": "tipo=Títulos, conector=Direita",
-          "key": "19fa60fe8f30a98e26eff0d2d1c75e973a87dfca"
         },
         {
           "nodeId": "1:82",
@@ -1070,6 +980,11 @@
           "key": "5506fa7159f82aa6984493ed9e8ef60372c3dd72"
         },
         {
+          "nodeId": "10768:291",
+          "name": "tipo=Estrutura da Página, conector=Inferior",
+          "key": "575e5b4fe3d2be90721a46cad9e30473503684fa"
+        },
+        {
           "nodeId": "1:65",
           "name": "tipo=Elementos interativos e Imagensinterativos e imagens, conector=Esquerda",
           "key": "711ff70084002beb5484985790d313785826b041"
@@ -1095,6 +1010,21 @@
           "key": "938d4f64c6272528b49c22da2cb03cf54c1ddeff"
         },
         {
+          "nodeId": "10768:295",
+          "name": "tipo=Estrutura da Página, conector=Superior",
+          "key": "9ab20cfc07ba0de6fe15754d53804d491ab728bf"
+        },
+        {
+          "nodeId": "10768:287",
+          "name": "tipo=Estrutura da Página, conector=Direita",
+          "key": "9b9aa1cfd2bb4327be1d72bfb125b326b90bc62e"
+        },
+        {
+          "nodeId": "10768:280",
+          "name": "tipo=Estrutura da Página, conector=Desativado",
+          "key": "afedf7e06bde8d754bae4309a121b5760723bb96"
+        },
+        {
           "nodeId": "1:134",
           "name": "tipo=Decorativo, conector=Inferior",
           "key": "b054d91b10030c6aded2df65a801a425e1c1843f"
@@ -1105,14 +1035,14 @@
           "key": "bbea0b89885808fb9af379a23573b2f9360f6b88"
         },
         {
-          "nodeId": "1:125",
-          "name": "tipo=Títulos, conector=Inferior",
-          "key": "ef9578ce7fd51d26cdccc22fbc862bdd716050ce"
-        },
-        {
           "nodeId": "1:143",
           "name": "tipo=Elementos interativos e Imagens, conector=Superior",
           "key": "d103d6403ab8f289c44499cf931de5d08e1c80a2"
+        },
+        {
+          "nodeId": "1:125",
+          "name": "tipo=Títulos, conector=Inferior",
+          "key": "ef9578ce7fd51d26cdccc22fbc862bdd716050ce"
         }
       ]
     },
@@ -1307,13 +1237,6 @@
               "name": "Conector",
               "componentId": "1248:2328",
               "properties": [
-                {
-                  "rawKey": "letra / número#1248:0",
-                  "name": "letra / número",
-                  "syncId": "1248:0",
-                  "type": "TEXT",
-                  "value": "1"
-                },
                 {
                   "rawKey": "Número#10766:0",
                   "name": "Número",
@@ -5289,6 +5212,14 @@
                 "activeToggles": [
                   "Nome Acessível"
                 ]
+              },
+              {
+                "variantName": "Leitor de Tela=Disabled",
+                "variantId": "11120:5036",
+                "activeToggles": [
+                  "Nome Acessível",
+                  "Observações"
+                ]
               }
             ]
           }
@@ -5488,6 +5419,11 @@
                 "variantName": "Leitor de Tela=Drag Activated",
                 "variantId": "10603:7026",
                 "activeToggles": []
+              },
+              {
+                "variantName": "Leitor de Tela=Disabled",
+                "variantId": "11120:5059",
+                "activeToggles": []
               }
             ]
           }
@@ -5562,70 +5498,6 @@
                 "variantId": "10354:8670",
                 "activeToggles": [
                   "Nome Acessível",
-                  "Observações"
-                ]
-              }
-            ]
-          }
-        },
-        {
-          "variantName": "Variante=Componente, Componente=Card",
-          "variantId": "10658:3606",
-          "nestedInstanceName": ".Card",
-          "nestedInstanceId": "10654:3005",
-          "nestedComponentId": "10354:9073",
-          "properties": [
-            {
-              "rawKey": "Observações#10567:41",
-              "name": "Observações",
-              "syncId": "10567:41",
-              "type": "BOOLEAN",
-              "value": true
-            },
-            {
-              "rawKey": "Leitor de Tela",
-              "name": "Leitor de Tela",
-              "syncId": null,
-              "type": "VARIANT",
-              "value": "Default"
-            }
-          ],
-          "toggles": [
-            {
-              "name": "Observações",
-              "value": true
-            }
-          ],
-          "screenReaderVariants": {
-            "setName": ".Card",
-            "setId": "10354:9074",
-            "subModeProperty": "Leitor de Tela",
-            "variants": [
-              {
-                "variantName": "Leitor de Tela=Default",
-                "variantId": "10354:9073",
-                "activeToggles": [
-                  "Observações"
-                ]
-              },
-              {
-                "variantName": "Leitor de Tela=Button",
-                "variantId": "10354:9072",
-                "activeToggles": [
-                  "Observações"
-                ]
-              },
-              {
-                "variantName": "Leitor de Tela=Expanded",
-                "variantId": "10354:9071",
-                "activeToggles": [
-                  "Observações"
-                ]
-              },
-              {
-                "variantName": "Leitor de Tela=Other Actions",
-                "variantId": "10538:3128",
-                "activeToggles": [
                   "Observações"
                 ]
               }
@@ -5767,7 +5639,7 @@
                 ]
               },
               {
-                "variantName": "Leitor de Tela=100% Interactive",
+                "variantName": "Leitor de Tela=Interactive",
                 "variantId": "10354:9193",
                 "activeToggles": [
                   "Observações"
@@ -5892,6 +5764,14 @@
                   "Nome Acessível",
                   "Observações"
                 ]
+              },
+              {
+                "variantName": "Leitor de Tela=Disabled",
+                "variantId": "11120:5090",
+                "activeToggles": [
+                  "Nome Acessível",
+                  "Observações"
+                ]
               }
             ]
           }
@@ -5956,14 +5836,14 @@
                 "activeToggles": []
               },
               {
-                "variantName": "Leitor de Tela=Leitor de Tela5",
+                "variantName": "Leitor de Tela=With Expansion",
                 "variantId": "10538:3158",
                 "activeToggles": [
                   "Observações"
                 ]
               },
               {
-                "variantName": "Leitor de Tela=Leitor de Tela6",
+                "variantName": "Leitor de Tela=Removable Input Chip",
                 "variantId": "10538:3168",
                 "activeToggles": [
                   "Observações"
@@ -6293,7 +6173,7 @@
               "name": "Leitor de Tela",
               "syncId": null,
               "type": "VARIANT",
-              "value": "Padrão"
+              "value": "Baseline"
             }
           ],
           "toggles": [
@@ -6312,7 +6192,7 @@
             "subModeProperty": "Leitor de Tela",
             "variants": [
               {
-                "variantName": "Leitor de Tela=Padrão",
+                "variantName": "Leitor de Tela=Baseline",
                 "variantId": "10378:10606",
                 "activeToggles": [
                   "Nome Acessível",
@@ -6334,6 +6214,14 @@
                   "Nome Acessível",
                   "Observações"
                 ]
+              },
+              {
+                "variantName": "Leitor de Tela=Disabled",
+                "variantId": "11120:5126",
+                "activeToggles": [
+                  "Nome Acessível",
+                  "Observações"
+                ]
               }
             ]
           }
@@ -6346,11 +6234,18 @@
           "nestedComponentId": "10378:10620",
           "properties": [
             {
-              "rawKey": "Observações#10567:120",
+              "rawKey": "Observações#11120:10",
               "name": "Observações",
-              "syncId": "10567:120",
+              "syncId": "11120:10",
               "type": "BOOLEAN",
               "value": true
+            },
+            {
+              "rawKey": "Leitor de Tela",
+              "name": "Leitor de Tela",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "Baseline"
             }
           ],
           "toggles": [
@@ -6358,7 +6253,28 @@
               "name": "Observações",
               "value": true
             }
-          ]
+          ],
+          "screenReaderVariants": {
+            "setName": ".Icon Button Text",
+            "setId": "11120:5139",
+            "subModeProperty": "Leitor de Tela",
+            "variants": [
+              {
+                "variantName": "Leitor de Tela=Baseline",
+                "variantId": "10378:10620",
+                "activeToggles": [
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=Disabled",
+                "variantId": "11120:5140",
+                "activeToggles": [
+                  "Observações"
+                ]
+              }
+            ]
+          }
         },
         {
           "variantName": "Variante=Componente, Componente=Input / Chat",
@@ -6472,6 +6388,13 @@
               {
                 "variantName": "Leitor de Tela=Read Only",
                 "variantId": "10538:3294",
+                "activeToggles": [
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=Disabled",
+                "variantId": "11120:5161",
                 "activeToggles": [
                   "Observações"
                 ]
@@ -6802,7 +6725,7 @@
                 ]
               },
               {
-                "variantName": "Leitor de Tela=Feedback",
+                "variantName": "Leitor de Tela=With Feedbacks",
                 "variantId": "10543:3690",
                 "activeToggles": [
                   "Observações"
@@ -7411,6 +7334,14 @@
                 "activeToggles": [
                   "Observações"
                 ]
+              },
+              {
+                "variantName": "Leitor de Tela=Disabled",
+                "variantId": "11121:5171",
+                "activeToggles": [
+                  "Nome Acessível",
+                  "Observações"
+                ]
               }
             ]
           }
@@ -7418,16 +7349,23 @@
         {
           "variantName": "Variante=Componente, Componente=Searchbar",
           "variantId": "10658:3625",
-          "nestedInstanceName": ".Searchbar",
+          "nestedInstanceName": ".Search Bar",
           "nestedInstanceId": "10654:3397",
           "nestedComponentId": "10551:4126",
           "properties": [
             {
-              "rawKey": "Observações#10567:214",
+              "rawKey": "Observações#11121:11",
               "name": "Observações",
-              "syncId": "10567:214",
+              "syncId": "11121:11",
               "type": "BOOLEAN",
               "value": true
+            },
+            {
+              "rawKey": "Leitor de Tela",
+              "name": "Leitor de Tela",
+              "syncId": null,
+              "type": "VARIANT",
+              "value": "Baseline"
             }
           ],
           "toggles": [
@@ -7435,7 +7373,28 @@
               "name": "Observações",
               "value": true
             }
-          ]
+          ],
+          "screenReaderVariants": {
+            "setName": ".Search Bar",
+            "setId": "11121:5184",
+            "subModeProperty": "Leitor de Tela",
+            "variants": [
+              {
+                "variantName": "Leitor de Tela=Baseline",
+                "variantId": "10551:4126",
+                "activeToggles": [
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=Disabled",
+                "variantId": "11121:5185",
+                "activeToggles": [
+                  "Observações"
+                ]
+              }
+            ]
+          }
         },
         {
           "variantName": "Variante=Componente, Componente=Search Results",
@@ -7506,7 +7465,7 @@
               "name": "Leitor de Tela",
               "syncId": null,
               "type": "VARIANT",
-              "value": "Radios"
+              "value": "Radio"
             }
           ],
           "toggles": [
@@ -7521,7 +7480,7 @@
             "subModeProperty": "Leitor de Tela",
             "variants": [
               {
-                "variantName": "Leitor de Tela=Radios",
+                "variantName": "Leitor de Tela=Radio",
                 "variantId": "10551:4177",
                 "activeToggles": [
                   "Observações"
@@ -7530,6 +7489,13 @@
               {
                 "variantName": "Leitor de Tela=Radio Group",
                 "variantId": "10551:4176",
+                "activeToggles": [
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=Disabled",
+                "variantId": "11121:5195",
                 "activeToggles": [
                   "Observações"
                 ]
@@ -7787,7 +7753,7 @@
             "subModeProperty": "Leitor de Tela",
             "variants": [
               {
-                "variantName": "Leitor de Tela=Baseline",
+                "variantName": "Leitor de Tela=Only Bullet",
                 "variantId": "10551:4338",
                 "activeToggles": [
                   "Nome Acessível",
@@ -7798,6 +7764,14 @@
                 "variantName": "Leitor de Tela=Bullet With Label",
                 "variantId": "10551:4337",
                 "activeToggles": [
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=Disabled",
+                "variantId": "11121:5205",
+                "activeToggles": [
+                  "Nome Acessível",
                   "Observações"
                 ]
               }
@@ -7854,6 +7828,13 @@
               {
                 "variantName": "Leitor de Tela=Checkbox",
                 "variantId": "10551:4388",
+                "activeToggles": [
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=Disabled",
+                "variantId": "11121:5228",
                 "activeToggles": [
                   "Observações"
                 ]
@@ -7930,7 +7911,7 @@
               "name": "Leitor de Tela",
               "syncId": null,
               "type": "VARIANT",
-              "value": "Tabgroup"
+              "value": "TabGroup"
             }
           ],
           "toggles": [
@@ -7945,7 +7926,7 @@
             "subModeProperty": "Leitor de Tela",
             "variants": [
               {
-                "variantName": "Leitor de Tela=Tabgroup",
+                "variantName": "Leitor de Tela=TabGroup",
                 "variantId": "10551:4441",
                 "activeToggles": [
                   "Observações"
@@ -7954,6 +7935,13 @@
               {
                 "variantName": "Leitor de Tela=Tab",
                 "variantId": "10551:4440",
+                "activeToggles": [
+                  "Observações"
+                ]
+              },
+              {
+                "variantName": "Leitor de Tela=Disabled",
+                "variantId": "11121:5218",
                 "activeToggles": [
                   "Observações"
                 ]

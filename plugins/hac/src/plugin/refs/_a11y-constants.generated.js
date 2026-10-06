@@ -1,13 +1,13 @@
 // ============================================================
 // GERADO AUTOMATICAMENTE por build-a11y-constants.cjs — não editar à mão.
 // Fonte: refs/design-acessivel-properties.json (2026-09-30T13:57:57.953Z)
-//      + refs/design-acessivel-mobile-properties.json (2026-10-02T19:50:40.621Z)
-//      + refs/super-app.json (2026-10-02T19:46:07.201Z)
+//      + refs/design-acessivel-mobile-properties.json (2026-10-06T00:44:26.900Z)
+//      + refs/super-app.json (2026-10-06T00:39:37.584Z)
 //      + refs/_manifest.json (fileKey da lib 'super-app')
 // Regenerar via: node src/plugin/refs/build-a11y-constants.cjs
 //            ou: npm run refs:a11y-constants
 //
-// Gerado em: 2026-10-05T14:44:05.157Z
+// Gerado em: 2026-10-06T00:45:49.128Z
 //
 // Consumido via alias em src/plugin/modules/accessibility.js:
 //   const A11Y_COMPONENT_PROPERTIES = A11Y_COMPONENT_PROPERTIES_GENERATED;
@@ -1945,6 +1945,14 @@ const A11Y_WEB_SCREEN_READER_VARIANTS_GENERATED = {
         "activeToggles": [
           "Nome Acessível"
         ]
+      },
+      {
+        "name": "Disabled",
+        "hasNomeAcessivel": true,
+        "activeToggles": [
+          "Nome Acessível",
+          "Observações"
+        ]
       }
     ]
   },
@@ -2033,6 +2041,11 @@ const A11Y_WEB_SCREEN_READER_VARIANTS_GENERATED = {
         "name": "Drag Activated",
         "hasNomeAcessivel": false,
         "activeToggles": []
+      },
+      {
+        "name": "Disabled",
+        "hasNomeAcessivel": false,
+        "activeToggles": []
       }
     ]
   },
@@ -2070,39 +2083,6 @@ const A11Y_WEB_SCREEN_READER_VARIANTS_GENERATED = {
       }
     ]
   },
-  "Card": {
-    "subModeProperty": "Leitor de Tela",
-    "variants": [
-      {
-        "name": "Default",
-        "hasNomeAcessivel": false,
-        "activeToggles": [
-          "Observações"
-        ]
-      },
-      {
-        "name": "Button",
-        "hasNomeAcessivel": false,
-        "activeToggles": [
-          "Observações"
-        ]
-      },
-      {
-        "name": "Expanded",
-        "hasNomeAcessivel": false,
-        "activeToggles": [
-          "Observações"
-        ]
-      },
-      {
-        "name": "Other Actions",
-        "hasNomeAcessivel": false,
-        "activeToggles": [
-          "Observações"
-        ]
-      }
-    ]
-  },
   "Card Horizontal": {
     "subModeProperty": "Leitor de Tela",
     "variants": [
@@ -2133,7 +2113,7 @@ const A11Y_WEB_SCREEN_READER_VARIANTS_GENERATED = {
         ]
       },
       {
-        "name": "100% Interactive",
+        "name": "Interactive",
         "hasNomeAcessivel": false,
         "activeToggles": [
           "Observações"
@@ -2185,6 +2165,14 @@ const A11Y_WEB_SCREEN_READER_VARIANTS_GENERATED = {
           "Nome Acessível",
           "Observações"
         ]
+      },
+      {
+        "name": "Disabled",
+        "hasNomeAcessivel": true,
+        "activeToggles": [
+          "Nome Acessível",
+          "Observações"
+        ]
       }
     ]
   },
@@ -2218,14 +2206,14 @@ const A11Y_WEB_SCREEN_READER_VARIANTS_GENERATED = {
         "activeToggles": []
       },
       {
-        "name": "Leitor de Tela5",
+        "name": "With Expansion",
         "hasNomeAcessivel": false,
         "activeToggles": [
           "Observações"
         ]
       },
       {
-        "name": "Leitor de Tela6",
+        "name": "Removable Input Chip",
         "hasNomeAcessivel": false,
         "activeToggles": [
           "Observações"
@@ -2329,7 +2317,7 @@ const A11Y_WEB_SCREEN_READER_VARIANTS_GENERATED = {
     "subModeProperty": "Leitor de Tela",
     "variants": [
       {
-        "name": "Padrão",
+        "name": "Baseline",
         "hasNomeAcessivel": true,
         "activeToggles": [
           "Nome Acessível",
@@ -2349,6 +2337,33 @@ const A11Y_WEB_SCREEN_READER_VARIANTS_GENERATED = {
         "hasNomeAcessivel": true,
         "activeToggles": [
           "Nome Acessível",
+          "Observações"
+        ]
+      },
+      {
+        "name": "Disabled",
+        "hasNomeAcessivel": true,
+        "activeToggles": [
+          "Nome Acessível",
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Icon Button Text": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Disabled",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
           "Observações"
         ]
       }
@@ -2404,6 +2419,13 @@ const A11Y_WEB_SCREEN_READER_VARIANTS_GENERATED = {
       },
       {
         "name": "Read Only",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Disabled",
         "hasNomeAcessivel": false,
         "activeToggles": [
           "Observações"
@@ -2580,7 +2602,7 @@ const A11Y_WEB_SCREEN_READER_VARIANTS_GENERATED = {
         ]
       },
       {
-        "name": "Feedback",
+        "name": "With Feedbacks",
         "hasNomeAcessivel": false,
         "activeToggles": [
           "Observações"
@@ -2831,6 +2853,33 @@ const A11Y_WEB_SCREEN_READER_VARIANTS_GENERATED = {
         "activeToggles": [
           "Observações"
         ]
+      },
+      {
+        "name": "Disabled",
+        "hasNomeAcessivel": true,
+        "activeToggles": [
+          "Nome Acessível",
+          "Observações"
+        ]
+      }
+    ]
+  },
+  "Searchbar": {
+    "subModeProperty": "Leitor de Tela",
+    "variants": [
+      {
+        "name": "Baseline",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Disabled",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
       }
     ]
   },
@@ -2857,7 +2906,7 @@ const A11Y_WEB_SCREEN_READER_VARIANTS_GENERATED = {
     "subModeProperty": "Leitor de Tela",
     "variants": [
       {
-        "name": "Radios",
+        "name": "Radio",
         "hasNomeAcessivel": false,
         "activeToggles": [
           "Observações"
@@ -2865,6 +2914,13 @@ const A11Y_WEB_SCREEN_READER_VARIANTS_GENERATED = {
       },
       {
         "name": "Radio Group",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Disabled",
         "hasNomeAcessivel": false,
         "activeToggles": [
           "Observações"
@@ -2964,7 +3020,7 @@ const A11Y_WEB_SCREEN_READER_VARIANTS_GENERATED = {
     "subModeProperty": "Leitor de Tela",
     "variants": [
       {
-        "name": "Baseline",
+        "name": "Only Bullet",
         "hasNomeAcessivel": true,
         "activeToggles": [
           "Nome Acessível",
@@ -2975,6 +3031,14 @@ const A11Y_WEB_SCREEN_READER_VARIANTS_GENERATED = {
         "name": "Bullet With Label",
         "hasNomeAcessivel": false,
         "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Disabled",
+        "hasNomeAcessivel": true,
+        "activeToggles": [
+          "Nome Acessível",
           "Observações"
         ]
       }
@@ -2999,6 +3063,13 @@ const A11Y_WEB_SCREEN_READER_VARIANTS_GENERATED = {
       },
       {
         "name": "Checkbox",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Disabled",
         "hasNomeAcessivel": false,
         "activeToggles": [
           "Observações"
@@ -3029,7 +3100,7 @@ const A11Y_WEB_SCREEN_READER_VARIANTS_GENERATED = {
     "subModeProperty": "Leitor de Tela",
     "variants": [
       {
-        "name": "Tabgroup",
+        "name": "TabGroup",
         "hasNomeAcessivel": false,
         "activeToggles": [
           "Observações"
@@ -3037,6 +3108,13 @@ const A11Y_WEB_SCREEN_READER_VARIANTS_GENERATED = {
       },
       {
         "name": "Tab",
+        "hasNomeAcessivel": false,
+        "activeToggles": [
+          "Observações"
+        ]
+      },
+      {
+        "name": "Disabled",
         "hasNomeAcessivel": false,
         "activeToggles": [
           "Observações"
@@ -3096,9 +3174,6 @@ const A11Y_WEB_COMPONENT_TOGGLES_GENERATED = {
   "Button": [
     "Observações",
     "Nome Acessível"
-  ],
-  "Card": [
-    "Observações"
   ],
   "Card Alert": [
     "Observações"

@@ -1,7 +1,7 @@
 {
   "_meta": {
     "description": "Cobertura do reconhecimento web (exato normalizado + aliases aprovados) das 2 libs DSC web contra as opções da base web. NÃO ATIVADO: nada daqui é lido pelo plugin. \"sugestoes\" são similaridade de tokens (palpite) para aprovação humana — só entram em refs/web-component-aliases.json depois de aprovadas.",
-    "generatedAt": "2026-10-02T19:51:45.240Z",
+    "generatedAt": "2026-10-06T00:44:27.395Z",
     "baseOptions": 61,
     "aliasesAprovados": 0,
     "regra": "exato = nome normalizado (minúsculas, sem acento, só [a-z0-9], sem prefixo [dsc]) igual ao de uma opção da base"

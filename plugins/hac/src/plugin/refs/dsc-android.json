@@ -2,7 +2,7 @@
   "meta": {
     "libraryName": "DSC | Android",
     "figmaFileKey": "W8GUeHypdco1I3dneN6P3H",
-    "exportedAt": "2026-10-02T19:48:52.944Z",
+    "exportedAt": "2026-10-06T00:42:47.386Z",
     "generator": "fetch-design-refs.cjs (hac)",
     "warnings": [
       "styles: /nodes não consultado — valores são resolvidos em runtime via Plugin API"
