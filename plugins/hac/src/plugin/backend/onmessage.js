@@ -904,10 +904,14 @@ figma.ui.onmessage = async (msg) => {
     // o selo recém-criado ao final) vire, sem o designer perceber, o alvo
     // de uma nova Área ou o pré-preenchimento do rótulo dela.
     const picked = sel.length > 0 && !_isHacOwnedNode(sel[0]) ? sel[0] : null;
+    // `ids` (2026-10-06): seleção completa, para a spec em lote.
+    const all = sel.filter(n => !_isHacOwnedNode(n));
     figma.ui.postMessage({
       type: "a11y-selection-info",
       id: picked ? picked.id : null,
       name: picked ? picked.name : null,
+      ids: all.map(n => n.id),
+      names: all.map(n => n.name),
     });
     return;
   }
@@ -2350,6 +2354,9 @@ figma.ui.onmessage = async (msg) => {
           id: specGroup.id,
           targetNodeId: _originalTargetNodeId,
           name: node.name,
+          // Texto do elemento (2026-10-06): o card de Título no plugin mostra o
+          // nome da camada e o texto, em vez de repetir descrição/nota.
+          targetText: _a11yNodeText(node),
           letter: opts.letter,
           color: opts.color,
           fillColor: opts.fillColor || null,
@@ -3186,6 +3193,19 @@ figma.ui.onmessage = async (msg) => {
       } catch (e) { }
     }
     return n;
+  }
+
+  // Texto visível do elemento: o próprio TEXT ou o primeiro TEXT dentro dele.
+  function _a11yNodeText(node) {
+    try {
+      if (!node) return null;
+      if (node.type === 'TEXT') return String(node.characters || '').slice(0, 160) || null;
+      if ('findOne' in node) {
+        const t = node.findOne(n => n.type === 'TEXT' && n.visible !== false);
+        return t ? String(t.characters || '').slice(0, 160) || null : null;
+      }
+    } catch (e) { }
+    return null;
   }
 
   async function _createTabOrderCloneForArea(root, areaId, sectionName, designerName, currentUserId) {

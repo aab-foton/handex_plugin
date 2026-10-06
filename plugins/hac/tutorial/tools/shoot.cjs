@@ -32,8 +32,15 @@ async function newPage(browser, state) {
             theme: 'light', savedState: state.savedState, onboardingSeen: state.onboardingSeen,
           }), 30);
         }
-        if (msg.type === 'get-a11y-selection-info' || msg.type === 'get-selection-info') {
-          setTimeout(() => window.__reply({ type: msg.type + '-result', name: 'Tela Principal', id: '1:1' }), 10);
+        if (msg.type === 'get-a11y-selection-info') {
+          const sel = window.__fakeSelection || [{ id: '1:1', name: 'Tela Principal' }];
+          setTimeout(() => window.__reply({ type: 'a11y-selection-info', id: sel[0].id, name: sel[0].name, ids: sel.map(n => n.id), names: sel.map(n => n.name) }), 10);
+        }
+        if (msg.type === 'create-unified-spec') {
+          const o = msg.opts || {};
+          window.__specSeq = (window.__specSeq || 0) + 1;
+          setTimeout(() => window.__reply({ type: 'spec-created', spec: { id: 'NEW' + window.__specSeq, targetNodeId: o.targetNodeId, name: 'Elemento ' + o.targetNodeId,
+            letter: o.letter, a11yType: o.a11yType, a11yOrigin: o.a11yOrigin, a11yAreaId: o.a11yAreaId, properties: o.properties || [] } }), 20);
         }
       },
     };

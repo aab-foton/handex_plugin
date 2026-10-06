@@ -355,7 +355,7 @@
         if (typeof window._a11ySelectionInfoResolve === 'function') {
           const resolve = window._a11ySelectionInfoResolve;
           window._a11ySelectionInfoResolve = null;
-          resolve(msg.id ? { id: msg.id, name: msg.name } : null);
+          resolve(msg.id ? { id: msg.id, name: msg.name, ids: msg.ids || [msg.id], names: msg.names || [msg.name] } : null);
         }
       }
 

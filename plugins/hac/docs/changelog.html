@@ -3398,6 +3398,14 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-06 — Card do Leitor de Tela enxuto e spec em lote (v0.1.0-beta.83)</h2>
+
+    <ul>
+      <li>Card da spec no plugin: sem os botões de ocultar e de cadeado (a spec nasce travada e é destravada quando o Leitor de Tela entra no handoff, ver beta.82); sem o selo do componente abaixo do nome; o nome do componente vira o link (a URL inteira não aparece mais).</li>
+      <li>Títulos e Elementos Decorativos (specs que se repetem) mostram só o nome da camada no plugin — e, no título, o texto do elemento. O card completo continua no canvas. Novo campo <code>targetText</code> em <code>spec-created</code>.</li>
+      <li><strong>Spec em lote:</strong> com vários elementos selecionados ao clicar em Aplicar, a mesma spec é criada para cada um (web e mobile). Em Elementos Interativos e Imagens a tag numérica avança. Contrato: <code>a11y-selection-info</code> ganhou <code>ids</code>/<code>names</code>.</li>
+    </ul>
+
     <h2>2026-10-06 — Apagar no canvas, continuidade entre etapas e linha de posição (v0.1.0-beta.82)</h2>
 
     <ul>

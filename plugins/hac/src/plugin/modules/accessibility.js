@@ -3550,10 +3550,36 @@ function confirmA11ySpec() {
   // bloqueia a criação da spec por falta de seleção.
   _getA11ySelectionInfo().then(sel => {
     window._a11yPendingManualAnchorNodeId = (sel && sel.id) || null;
+    // Spec em lote (2026-10-06): mais de um elemento selecionado ao Aplicar →
+    // a mesma spec é criada para cada um (fora de edição e do wizard).
+    const modal = document.getElementById('a11y-spec-modal');
+    const ids = (sel && Array.isArray(sel.ids)) ? sel.ids : [];
+    window._a11yPendingBatchTargets = (ids.length > 1 && modal && !modal.dataset.editingSpecId && !window._a11yBatchWizardState)
+      ? ids.map((id, i) => ({ id, name: (sel.names || [])[i] || '' }))
+      : null;
     _finishA11ySpecConfirm();
   });
 }
 window.confirmA11ySpec = confirmA11ySpec;
+
+// Cria a mesma spec para vários elementos, um de cada vez (aguardando cada
+// spec-created). Em Elementos Interativos e Imagens a tag numérica avança.
+async function _createA11ySpecBatch(baseOpts, targets) {
+  if (typeof showA11yCanvasLoading === 'function') showA11yCanvasLoading(`Criando ${targets.length} especificações…`);
+  const firstNum = /^\d+$/.test(String(baseOpts.letter || '')) ? parseInt(baseOpts.letter, 10) : null;
+  let ok = 0;
+  for (let i = 0; i < targets.length; i++) {
+    const t = targets[i];
+    const opts = Object.assign({}, baseOpts, { targetNodeId: t.id, manualAnchorNodeId: t.id });
+    if (firstNum !== null && baseOpts.a11yType === 'elemento') opts.letter = String(firstNum + i);
+    // eslint-disable-next-line no-await-in-loop
+    if (await _createA11ySpecAndWait(opts)) ok++;
+  }
+  if (typeof hideA11yCanvasLoading === 'function') hideA11yCanvasLoading();
+  showToast(ok === targets.length
+    ? `${ok} especificações criadas.`
+    : `${ok} de ${targets.length} especificações criadas. Confira os elementos que faltaram.`);
+}
 
 // Corpo real de confirmA11ySpec (2026-09-21: extraído pra trás da leitura de
 // seleção acima). Monta opts a partir do formulário e dispara
@@ -3967,6 +3993,13 @@ function _finishA11ySpecConfirm() {
     window._a11yManualSpecLoadingTimeout = setTimeout(() => {
       if (typeof hideA11yCanvasLoading === 'function') hideA11yCanvasLoading();
     }, 15000);
+    const batch = window._a11yPendingBatchTargets;
+    window._a11yPendingBatchTargets = null;
+    if (Array.isArray(batch) && batch.length > 1 && !editingSpecId) {
+      if (window._a11yManualSpecLoadingTimeout) { clearTimeout(window._a11yManualSpecLoadingTimeout); window._a11yManualSpecLoadingTimeout = null; }
+      _createA11ySpecBatch(opts, batch);
+      return;
+    }
     parent.postMessage({ pluginMessage: { type: 'create-unified-spec', opts } }, '*');
   }
 }
@@ -4006,6 +4039,12 @@ function _a11ySpecItemHtml(spec, showCategoryChip) {
   // getA11yBadgeTextColor / A11Y_BADGE_TEXT_COLOR_DARK.
   const badgeTextColor = getA11yBadgeTextColor(spec.a11yType);
   const props = spec.properties || [];
+  // Link do componente vira o próprio nome do componente, clicável (2026-10-06).
+  const linkProp = props.find(p => p && p.key === 'linkComponente');
+  const linkUrl = linkProp && /^https?:\/\//.test(String(linkProp.value || '')) ? linkProp.value : null;
+  const componentProp = linkUrl ? (props.find(p => p && p.key !== 'linkComponente' && /componente/i.test(p.label || '')) || null) : null;
+  const isRepeatingType = spec.a11yType === 'titulo' || spec.a11yType === 'decorativo';
+  const visibleProps = isRepeatingType ? [] : props.filter(p => !(linkUrl && componentProp && p === linkProp));
   const isHidden = spec.visible === false;
   const isUnlocked = spec.locked === false;
 
@@ -4034,10 +4073,6 @@ function _a11ySpecItemHtml(spec, showCategoryChip) {
             <span class="inline-flex items-center px-1.5 py-0.5 rounded-dsc-circ border text-dsc-label-tiny normal-case tracking-normal font-medium bg-slate-50 dark:bg-dark-bg/60 border-slate-200 dark:border-dark-line text-slate-500 dark:text-dark-muted">
               ${escapeHtml(spec.a11ySourceLib.label)}
             </span>` : ''}
-            ${dscComponentLabel ? `
-            <span class="inline-flex items-center gap-dsc-quark px-1.5 py-0.5 rounded-dsc-circ border text-dsc-label-tiny normal-case tracking-normal font-medium bg-slate-50 dark:bg-dark-bg/60 border-slate-200 dark:border-dark-line text-slate-500 dark:text-dark-muted">
-              <i data-lucide="component" class="w-2.5 h-2.5"></i> ${escapeHtml(dscComponentLabel)}
-            </span>` : ''}
             ${spec.needsReview ? `
             <button type="button" title="Especificação precisa de revisão, clique para verificar" aria-label="Verificar especificação, precisa de revisão"
               onclick="editA11ySpec('${escapeHtml(spec.id)}')"
@@ -4051,16 +4086,6 @@ function _a11ySpecItemHtml(spec, showCategoryChip) {
           class="w-10 h-10 flex items-center justify-center rounded-2xl text-gray-400 hover:text-[#005ca9] transition-colors shrink-0">
           <i data-lucide="locate" class="w-5 h-5"></i>
         </button>
-        <button type="button" title="${isHidden ? 'Mostrar' : 'Ocultar'} no canvas" aria-label="${isHidden ? 'Mostrar' : 'Ocultar'} no canvas"
-          onclick="toggleA11ySpecVisibility('${escapeHtml(spec.id)}')"
-          class="w-10 h-10 flex items-center justify-center rounded-2xl text-gray-400 hover:text-[#005ca9] transition-colors shrink-0">
-          <i data-lucide="${isHidden ? 'eye-off' : 'eye'}" class="w-5 h-5"></i>
-        </button>
-        <button type="button" title="${isUnlocked ? 'Travar' : 'Destravar'}" aria-label="${isUnlocked ? 'Travar' : 'Destravar'}"
-          onclick="toggleA11ySpecLock('${escapeHtml(spec.id)}')"
-          class="w-10 h-10 flex items-center justify-center rounded-2xl ${isUnlocked ? 'text-amber-500' : 'text-gray-400'} hover:text-[#005ca9] transition-colors shrink-0">
-          <i data-lucide="${isUnlocked ? 'lock-open' : 'lock'}" class="w-5 h-5"></i>
-        </button>
         <button type="button" title="Editar" aria-label="Editar especificação de acessibilidade"
           onclick="editA11ySpec('${escapeHtml(spec.id)}')"
           class="w-10 h-10 flex items-center justify-center rounded-2xl text-gray-400 hover:text-[#005ca9] transition-colors shrink-0">
@@ -4072,16 +4097,19 @@ function _a11ySpecItemHtml(spec, showCategoryChip) {
           <i data-lucide="trash-2" class="w-5 h-5"></i>
         </button>
       </div>
-      ${props.length > 0 ? `
+      ${spec.a11yType === 'titulo' && spec.targetText ? `
+      <p class="px-2.5 pb-2.5 -mt-1 text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-slate-300 break-words">“${escapeHtml(spec.targetText)}”</p>` : ''}
+      ${visibleProps.length > 0 ? `
       <div class="px-2.5 pb-2.5 space-y-1">
-        ${props.map(p => {
-          const isLink = p.key === 'linkComponente' && /^https?:\/\//.test(String(p.value || ''));
+        ${visibleProps.map(p => {
+          const isLink = (p.key === 'linkComponente' || p === componentProp) && /^https?:\/\//.test(String(linkUrl || ''));
+          const linkHref = p.key === 'linkComponente' ? p.value : linkUrl;
           const valueHtml = isLink
-            ? `<a href="${escapeHtml(p.value)}" target="_blank" rel="noopener noreferrer" title="Abrir componente no Figma" class="text-[12px] leading-snug font-semibold text-[#005ca9] dark:text-blue-300 text-right break-all min-w-0 underline hover:no-underline">${escapeHtml(String(p.value))}</a>`
+            ? `<a href="${escapeHtml(linkHref)}" target="_blank" rel="noopener noreferrer" title="Abrir componente no Figma" class="text-[12px] leading-snug font-semibold text-[#005ca9] dark:text-blue-300 text-right break-all min-w-0 underline hover:no-underline">${escapeHtml(String(p.value))}</a>`
             : `<span class="text-dsc-label-tiny normal-case tracking-normal font-semibold text-slate-700 dark:text-white text-right break-all min-w-0">${escapeHtml(String(p.value))}</span>`;
           return `
           <div class="flex items-start justify-between gap-dsc-nano px-2 py-1 bg-white dark:bg-dark-surface rounded-dsc-small">
-            <span class="text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-500 dark:text-dark-muted shrink-0 pt-px">${escapeHtml(p.key === 'label' ? 'Nome Acessível' : p.label)}</span>
+            <span class="text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-500 dark:text-dark-muted shrink-0 pt-px">${escapeHtml(p.key === 'label' ? 'Nome Acessível' : (p === componentProp ? String(p.label || '').replace(/\s*\(Link\)\s*$/i, '') : p.label))}</span>
             ${valueHtml}
           </div>`;
         }).join('')}
