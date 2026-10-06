@@ -4487,6 +4487,9 @@ figma.ui.onmessage = async (msg) => {
       try {
         if (section.layoutMode === 'VERTICAL') section.layoutMode = 'HORIZONTAL';
       } catch (e) { }
+      // Respiro entre instruções e réplica (2026-10-06, pedido do usuário:
+      // "estão muito coladas") — converge seções já existentes.
+      try { section.itemSpacing = 64; // instruções ↔ réplica, web e mobile (era 16) } catch (e) { }
     } else {
       section = figma.createFrame();
       section.name = cfg.name;
@@ -4498,7 +4501,7 @@ figma.ui.onmessage = async (msg) => {
       section.layoutMode = 'HORIZONTAL';
       section.primaryAxisSizingMode = 'AUTO';
       section.counterAxisSizingMode = 'AUTO';
-      section.itemSpacing = 16;
+      section.itemSpacing = 64; // instruções ↔ réplica, web e mobile (era 16)
       if (cfg.counterAxisAlignItems) section.counterAxisAlignItems = cfg.counterAxisAlignItems;
       // Padding/radius intermediários (2026-09-10, mesma escala descendente
       // 80→64→24→16→8 confirmada via REST API no node de referência real —
