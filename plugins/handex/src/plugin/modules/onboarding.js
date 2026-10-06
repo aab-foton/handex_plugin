@@ -87,7 +87,7 @@ const ONBOARDING_TOOLS = {
     format: 'stepper',
     purpose: 'Mostra os valores reais de um elemento (cor, espaçamento, tipografia, medidas) para o dev sem DevMode. É consulta pontual e não entra na Ficha.',
     steps: [
-      { text: 'Precisa de regra, comportamento ou exceção? Use <strong>Anotar Especificações</strong>.' },
+      { text: 'Precisa de regra, comportamento ou exceção? Use <strong>Inserir Especificações</strong>.' },
       { text: 'Clique em <strong>Escanear</strong>, escolha as propriedades e <strong>segure Shift e clique</strong> nos elementos no canvas.' },
       { text: 'Clique em <strong>Concluir</strong> e expanda os itens para ver os valores, com token e biblioteca quando houver.' },
       { text: 'Use <strong>Inserir no canvas</strong> para deixar um card ao lado de cada elemento. A <strong>Observação</strong> fica só no card; para levá-la à Ficha, use <strong>Converter em Especificação</strong>: a anotação vira uma especificação e a observação vira a nota.' }
@@ -95,7 +95,7 @@ const ONBOARDING_TOOLS = {
   },
   specs: {
     view: 'view-specifications',
-    title: 'Anotar Especificações',
+    title: 'Inserir Especificações',
     icon: 'tag',
     color: '#00437a',
     format: 'stepper',

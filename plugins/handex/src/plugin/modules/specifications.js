@@ -32,6 +32,13 @@
 
       // Loading visual — overlay de scan + spinner discreto no frame
       if (typeof showScanLoading === 'function') showScanLoading();
+      // Rede de segurança: sem resposta do Figma em 3 min, libera a tela em vez
+      // de deixar o loading preso (2026-10-05). scan-result cancela o timer.
+      clearTimeout(window._scanWatchdog);
+      window._scanWatchdog = setTimeout(() => {
+        if (typeof hideScanLoading === 'function') hideScanLoading();
+        showToast('O escaneamento não respondeu. Tente um frame menor ou abra o console (Plugins → Development → Show/Hide console) e me envie a mensagem que começa com [Handex scan].', 'error');
+      }, 180000);
       if (activeFrameId) {
         const spinner = document.getElementById(`sub-spinner-tokens-${activeFrameId}`);
         if (spinner) spinner.classList.remove('hidden');
@@ -1521,7 +1528,9 @@
       // stopPropagation nos dois níveis (label e input) porque o card inteiro
       // tem onclick="focusNode(...)".
       const _isFull = item.uiDepth === 'full';
-      const customToggleHtml = `
+      // Só componentes e frames/layouts são construídos (HX_BUILDABLE_CATS).
+      const _buildable = HX_BUILDABLE_CATS.includes(type);
+      const customToggleHtml = !_buildable ? '' : `
         <div class="flex items-center justify-between gap-3 mt-1" onclick="event.stopPropagation()">
           <span class="text-[12px] text-slate-600 dark:text-dark-muted">Vai para a Ficha (precisa ser construído)</span>
           <label class="relative inline-flex items-center cursor-pointer shrink-0">
@@ -1547,7 +1556,7 @@
         </div>
       `;
 
-      const fullBadge = `<span data-uidepth-badge class="${(item.isMarkedCustom && _isFull) ? '' : 'hidden '}flex items-center gap-1 mt-0.5 font-bold text-st-info dark:text-st-info-dark" title="Detalhamento completo na Ficha"><i data-lucide="layers" class="w-2.5 h-2.5"></i>COMPLETO</span>`;
+      const fullBadge = !_buildable ? '' : `<span data-uidepth-badge class="${(item.isMarkedCustom && _isFull) ? '' : 'hidden '}flex items-center gap-1 mt-0.5 font-bold text-st-info dark:text-st-info-dark" title="Detalhamento completo na Ficha"><i data-lucide="layers" class="w-2.5 h-2.5"></i>COMPLETO</span>`;
 
       // ── Prop split: "applied" (active) vs "inactive" (false/none variants) ──
       // Variant props with boolean-false or "none" values mean the feature is OFF

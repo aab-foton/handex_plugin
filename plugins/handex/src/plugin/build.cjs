@@ -38,6 +38,9 @@ const modMsgs    = read('modules/messages.js');
 // Spec Express -- módulo isolado (consulta rápida de propriedades brutas,
 // sem conformidade DSC, sem persistência). Ver quick-spec.js/quick-spec.html.
 const modQuickSpec = read('modules/quick-spec.js');
+// Layout do diagrama de Fluxos de Tela -- mesmo arquivo importado por code.js
+// (Ficha do canvas); aqui entra como script comum, sem o `export`.
+const sharedFlowLayout = read('shared/flow-diagram-layout.js').replace(/^export\s+function/m, 'function');
 
 // Skeleton das libs DSC (refs/_skeleton.json, gerado por refs/build-skeleton.cjs)
 // -- reintroduzido no embed em 2026-09-24. Tinha sido removido achando que
@@ -255,6 +258,11 @@ ${modHandoff}
 // MODULE: quick-spec.js (Spec Express — módulo isolado)
 // ============================================================
 ${modQuickSpec}
+
+// ============================================================
+// SHARED: flow-diagram-layout.js (também usado por code.js)
+// ============================================================
+${sharedFlowLayout}
   </script>
 
   <!-- Back-to-top button (ghost at rest, highlighted on hover -- estilo real

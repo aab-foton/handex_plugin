@@ -836,12 +836,18 @@ function getSpecItem(frameId, category, nodeId) {
   return (list || []).find(i => i.nodeId === nodeId) || null;
 }
 
+// Só componentes e frames/layouts têm "Vai para a Ficha" (2026-10-05): ícone
+// se importa/exporta como asset e texto é parte do componente. Espelho de
+// HD_BUILDABLE_CATS (code.js). Marcação antiga em outras categorias é ignorada.
+const HX_BUILDABLE_CATS = ['components', 'frames'];
+function _isBuildItem(it, cat) { return !!(it && it.isMarkedCustom === true && HX_BUILDABLE_CATS.includes(cat)); }
+
 // Ao ligar "Novo Componente", itens personalizados detectados e ainda sem
 // decisão manual passam a ir para a Ficha. Desligar o toggle não desfaz nada.
 function _applyNewComponentDefaultToItems(frame) {
   if (!frame.specs) return;
   let n = 0;
-  ['components', 'icons', 'typography', 'frames', 'vectors'].forEach(cat => {
+  HX_BUILDABLE_CATS.forEach(cat => {
     (frame.specs[cat] || []).forEach(it => {
       if (it && it.isCustomComponent === true && !it.isMarkedCustom && !it.customDecided) {
         it.isMarkedCustom = true;
@@ -890,7 +896,7 @@ function _collectMarkedCustomItems() {
   const push = (frameId, frameName, specs) => {
     if (!specs) return;
     cats.forEach(cat => (specs[cat] || []).forEach(it => {
-      if (it && it.isMarkedCustom) out.push({ frameId, frameName, cat, catLabel: catLabel[cat], item: it });
+      if (_isBuildItem(it, cat)) out.push({ frameId, frameName, cat, catLabel: catLabel[cat], item: it });
     }));
   };
   (handoffData.frames || []).forEach(f => push(f.id, f.nome || 'Frame', f.specs));
@@ -1890,13 +1896,17 @@ function showToast(message, type = 'success') {
   // leitor de tela está lendo, mas anuncia com prioridade maior que sucesso).
   if (isError) toast.setAttribute('aria-live', 'assertive');
   toast.innerHTML = isError
-    ? `<i data-lucide="alert-circle" class="w-3.5 h-3.5 text-red-400"></i>`
-    : `<i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-green-400"></i>`;
+    ? `<i data-lucide="alert-circle" class="w-3.5 h-3.5 text-red-400 shrink-0"></i>`
+    : type === 'warning'
+      ? `<i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-amber-400 shrink-0"></i>`
+      : `<i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-green-400 shrink-0"></i>`;
   const _tn = document.createTextNode(' ' + message);
   toast.appendChild(_tn);
   container.appendChild(toast);
   try { _refreshIcons(); } catch(e) {}
-  setTimeout(() => { toast.classList.add('fade-out'); setTimeout(() => toast.remove(), 300); }, 3000);
+  // Aviso/erro com texto longo (ex.: medidas não criadas) fica mais tempo.
+  const _ms = (isError || type === 'warning') && message.length > 80 ? 7000 : 3000;
+  setTimeout(() => { toast.classList.add('fade-out'); setTimeout(() => toast.remove(), 300); }, _ms);
 }
 
 const FOCUSABLE_SELECTOR = 'input, button, select, textarea, a[href], [tabindex]:not([tabindex="-1"])';
@@ -2142,7 +2152,11 @@ function navigate(viewId) {
     btnTop.classList.remove('opacity-100', 'pointer-events-auto', 'translate-y-0');
   }
   document.getElementById("header-home")?.classList.remove("hidden");
-  if (viewId === 'view-home') { updateHomeFooterButtonsState(); updateHomeCardsCheckState(); }
+  if (viewId === 'view-home') {
+    updateHomeFooterButtonsState();
+    updateHomeCardsCheckState();
+    if (typeof quickSpecSyncFromCanvas === 'function') quickSpecSyncFromCanvas();
+  }
   if (viewId === 'view-specifications') {
     if (typeof _resetSpecsSearchInputs === 'function') _resetSpecsSearchInputs();
     syncAndRenderSpecs();

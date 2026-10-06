@@ -94,6 +94,192 @@
     return emptyResult();
   }
 
+  // src/plugin/shared/flow-diagram-layout.js
+  function hdFlowDiagramLayout(flows, nameOf, maxWidth) {
+    const MAXW = maxWidth || 872;
+    const BW = 140, BH = 52, R = 10, PAD = 24, EV = 36, LANE = 16;
+    const isEvent = (f) => f.type === "event_start" || f.type === "event_end";
+    const list = (flows || []).filter((f) => f && f.sourceId);
+    const parent = {};
+    const find = (x) => {
+      if (!(x in parent)) parent[x] = x;
+      while (parent[x] !== x) {
+        parent[x] = parent[parent[x]];
+        x = parent[x];
+      }
+      return x;
+    };
+    list.forEach((f) => {
+      find(f.sourceId);
+      if (f.targetId) {
+        const a = find(f.sourceId), b = find(f.targetId);
+        if (a !== b) parent[a] = b;
+      }
+    });
+    const groups = /* @__PURE__ */ new Map();
+    list.forEach((f) => {
+      const r = find(f.sourceId);
+      if (!groups.has(r)) groups.set(r, []);
+      groups.get(r).push(f);
+    });
+    const journeys = [];
+    let unnamed = 0;
+    groups.forEach((conns) => {
+      const named = conns.find((f) => f.journeyName && String(f.journeyName).trim());
+      const title = named ? String(named.journeyName).trim() : `Jornada sem nome ${++unnamed}`;
+      const edges = conns.filter((f) => !isEvent(f) && f.targetId);
+      const events = conns.filter(isEvent);
+      const order = [];
+      const seen = /* @__PURE__ */ new Set();
+      const visit = (start) => {
+        const q = [start];
+        while (q.length) {
+          const id = q.shift();
+          if (seen.has(id)) continue;
+          seen.add(id);
+          order.push(id);
+          edges.forEach((e) => {
+            if (e.sourceId === id && !seen.has(e.targetId)) q.push(e.targetId);
+          });
+        }
+      };
+      events.filter((e) => e.type === "event_start").forEach((e) => visit(e.sourceId));
+      conns.forEach((f) => {
+        visit(f.sourceId);
+        if (f.targetId) visit(f.targetId);
+      });
+      const idx = new Map(order.map((id, i) => [id, i]));
+      const n = order.length;
+      const startOn = new Set(events.filter((e) => e.type === "event_start").map((e) => e.sourceId));
+      const endOn = new Set(events.filter((e) => e.type === "event_end").map((e) => e.sourceId));
+      const usedPairs = /* @__PURE__ */ new Set();
+      const isStraight = (e) => {
+        const k = e.sourceId + ">" + e.targetId;
+        if (idx.get(e.targetId) !== idx.get(e.sourceId) + 1 || usedPairs.has(k)) return false;
+        usedPairs.add(k);
+        return true;
+      };
+      const straight = edges.map(isStraight);
+      const laneCount = straight.filter((s) => !s).length;
+      const build = (orient) => {
+        const boxes = [], ev = [], out = [], decisions = [];
+        let width, height;
+        if (orient === "h") {
+          const above = order.some((id, i) => startOn.has(id) && i > 0 || endOn.has(id) && i < n - 1);
+          const top = PAD + (above ? EV + R : 0);
+          const left = PAD + (startOn.has(order[0]) ? EV + R : 0);
+          const GAP = 56;
+          order.forEach((id, i) => boxes.push({ id, name: nameOf(id), x: left + i * (BW + GAP), y: top, w: BW, h: BH }));
+          const last = boxes[n - 1];
+          width = last.x + BW + (endOn.has(order[n - 1]) ? EV + R : 0) + PAD;
+          height = top + BH + (laneCount ? 24 + laneCount * LANE : 0) + PAD;
+          order.forEach((id, i) => {
+            const b = boxes[i], cy = b.y + BH / 2;
+            const both = startOn.has(id) && endOn.has(id) && i > 0 && i < n - 1;
+            if (startOn.has(id)) {
+              if (i === 0) ev.push({ kind: "start", cx: b.x - EV, cy, r: R, line: [{ x: b.x - EV + R, y: cy }, { x: b.x, y: cy }] });
+              else {
+                const cx = b.x + BW / 2 - (both ? 24 : 0);
+                ev.push({ kind: "start", cx, cy: b.y - EV, r: R, line: [{ x: cx, y: b.y - EV + R }, { x: cx, y: b.y }] });
+              }
+            }
+            if (endOn.has(id)) {
+              if (i === n - 1) ev.push({ kind: "end", cx: b.x + BW + EV, cy, r: R, line: [{ x: b.x + BW, y: cy }, { x: b.x + BW + EV - R, y: cy }] });
+              else {
+                const cx = b.x + BW / 2 + (both ? 24 : 0);
+                ev.push({ kind: "end", cx, cy: b.y - EV, r: R, line: [{ x: cx, y: b.y }, { x: cx, y: b.y - EV + R }] });
+              }
+            }
+          });
+          let k = 0;
+          edges.forEach((e, ei) => {
+            const s = boxes[idx.get(e.sourceId)], t = boxes[idx.get(e.targetId)];
+            let pts;
+            if (straight[ei]) {
+              pts = [{ x: s.x + BW, y: s.y + BH / 2 }, { x: t.x, y: t.y + BH / 2 }];
+            } else {
+              const laneY = s.y + BH + 24 + k * LANE, dx = (k % 5 - 2) * 10;
+              pts = [{ x: s.x + BW / 2 + dx, y: s.y + BH }, { x: s.x + BW / 2 + dx, y: laneY }, { x: t.x + BW / 2 + dx, y: laneY }, { x: t.x + BW / 2 + dx, y: t.y + BH }];
+              k++;
+            }
+            out.push(edgeOf(e, pts));
+          });
+        } else {
+          const side = order.some((id, i) => startOn.has(id) && i > 0 || endOn.has(id) && i < n - 1);
+          const left = PAD + (side ? EV + R + 8 : 0);
+          const top = PAD + (startOn.has(order[0]) ? EV + R : 0);
+          const GAP = 56;
+          order.forEach((id, i) => boxes.push({ id, name: nameOf(id), x: left, y: top + i * (BH + GAP), w: BW, h: BH }));
+          const last = boxes[n - 1];
+          width = left + BW + (laneCount ? 24 + laneCount * LANE : 0) + PAD;
+          height = last.y + BH + (endOn.has(order[n - 1]) ? EV + R : 0) + PAD;
+          order.forEach((id, i) => {
+            const b = boxes[i], cx = b.x + BW / 2;
+            const both = startOn.has(id) && endOn.has(id) && i > 0 && i < n - 1;
+            if (startOn.has(id)) {
+              if (i === 0) ev.push({ kind: "start", cx, cy: b.y - EV, r: R, line: [{ x: cx, y: b.y - EV + R }, { x: cx, y: b.y }] });
+              else {
+                const cy = b.y + BH / 2 - (both ? 14 : 0);
+                ev.push({ kind: "start", cx: b.x - EV, cy, r: R, line: [{ x: b.x - EV + R, y: cy }, { x: b.x, y: cy }] });
+              }
+            }
+            if (endOn.has(id)) {
+              if (i === n - 1) ev.push({ kind: "end", cx, cy: b.y + BH + EV, r: R, line: [{ x: cx, y: b.y + BH }, { x: cx, y: b.y + BH + EV - R }] });
+              else {
+                const cy = b.y + BH / 2 + (both ? 14 : 0);
+                ev.push({ kind: "end", cx: b.x - EV, cy, r: R, line: [{ x: b.x, y: cy }, { x: b.x - EV + R, y: cy }] });
+              }
+            }
+          });
+          let k = 0;
+          edges.forEach((e, ei) => {
+            const s = boxes[idx.get(e.sourceId)], t = boxes[idx.get(e.targetId)];
+            let pts;
+            if (straight[ei]) {
+              pts = [{ x: s.x + BW / 2, y: s.y + BH }, { x: t.x + BW / 2, y: t.y }];
+            } else {
+              const laneX = s.x + BW + 24 + k * LANE, dy = (k % 5 - 2) * 6;
+              pts = [{ x: s.x + BW, y: s.y + BH / 2 + dy }, { x: laneX, y: s.y + BH / 2 + dy }, { x: laneX, y: t.y + BH / 2 + dy }, { x: t.x + BW, y: t.y + BH / 2 + dy }];
+              k++;
+            }
+            out.push(edgeOf(e, pts));
+          });
+        }
+        out.forEach((ed, i) => {
+          if (ed.decision) decisions.push({ n: ed.decision.n, from: nameOf(edges[i].sourceId), to: nameOf(edges[i].targetId), text: ed.decision.text || "" });
+        });
+        return { title, orient, width, height, boxes, events: ev, edges: out, decisions };
+      };
+      let decN = 0;
+      const edgeOf = (e, pts) => {
+        const dashed = e.type === "line_dashed" || e.type === "diamond_dashed";
+        const isDecision = e.type === "diamond" || e.type === "diamond_dashed" || !!(e.decisionText && String(e.decisionText).trim());
+        let mid = null;
+        if (isDecision) {
+          let best = 0, bi = 0;
+          for (let i = 0; i < pts.length - 1; i++) {
+            const l = Math.abs(pts[i + 1].x - pts[i].x) + Math.abs(pts[i + 1].y - pts[i].y);
+            if (l > best) {
+              best = l;
+              bi = i;
+            }
+          }
+          mid = { x: (pts[bi].x + pts[bi + 1].x) / 2, y: (pts[bi].y + pts[bi + 1].y) / 2 };
+        }
+        const text = e.decisionText ? String(e.decisionText).trim() : "";
+        return { points: pts, color: e.color || "#22292e", dashed, decision: mid ? { x: mid.x, y: mid.y, n: ++decN, text } : null };
+      };
+      if (n === 0) return;
+      let lay = build("h");
+      if (lay.width > MAXW) {
+        decN = 0;
+        lay = build("v");
+      }
+      journeys.push(lay);
+    });
+    return journeys;
+  }
+
   // src/plugin/code.js
   figma.showUI(__html__, { width: 480, height: 750 });
   try {
@@ -135,8 +321,17 @@
   var _quickSpecCaptureModeActive = false;
   var _quickSpecCaptureSelection = [];
   var _quickSpecCaptureCountDebounceTimer = null;
+  var _hdSelectionOrder = [];
   figma.on("selectionchange", () => {
     const currentIds = figma.currentPage.selection.map((n) => n.id);
+    {
+      const cur = new Set(currentIds);
+      _hdSelectionOrder = _hdSelectionOrder.filter((id) => cur.has(id));
+      const known = new Set(_hdSelectionOrder);
+      currentIds.forEach((id) => {
+        if (!known.has(id)) _hdSelectionOrder.push(id);
+      });
+    }
     if (_quickSpecCaptureModeActive) {
       const currentIdSet = new Set(currentIds);
       _quickSpecCaptureSelection = _quickSpecCaptureSelection.filter((item) => currentIdSet.has(item.nodeId));
@@ -516,6 +711,51 @@
     _hdSetFillAndHug(val);
     return row;
   }
+  var HD_FRAME_REUSE_MAX = 12;
+  var HD_BUILDABLE_CATS = ["components", "frames"];
+  function _hdIsBuildItem(it, cat) {
+    return !!(it && it.isMarkedCustom === true && HD_BUILDABLE_CATS.includes(cat));
+  }
+  function _hdFrameDevSummary(f) {
+    const specs = f.specs || {};
+    const byLib = /* @__PURE__ */ new Map();
+    let total = 0;
+    for (const cat of ["components", "icons"]) {
+      for (const it of specs[cat] || []) {
+        if (!it || _hdIsBuildItem(it, cat) || it.isCustomComponent || !it.matchedIn || it.matchedBy === "ancestor-key") continue;
+        const lib = String(it.matchedIn);
+        if (!byLib.has(lib)) byLib.set(lib, /* @__PURE__ */ new Map());
+        const names = byLib.get(lib);
+        const key = it.name || "Componente";
+        const prev = names.get(key) || { n: 0, custom: false };
+        prev.n += Math.max(1, Array.isArray(it.nodeIds) ? it.nodeIds.length : 1);
+        prev.custom = prev.custom || Array.isArray(it.customizations) && it.customizations.length > 0;
+        names.set(key, prev);
+      }
+    }
+    const parts = [];
+    let shown = 0;
+    for (const [lib, names] of byLib) {
+      const list = [];
+      for (const [name, v] of names) {
+        total++;
+        if (shown >= HD_FRAME_REUSE_MAX) continue;
+        shown++;
+        list.push(`${name}${v.n > 1 ? " \xD7" + v.n : ""}${v.custom ? " (personalizado)" : ""}`);
+      }
+      if (list.length) parts.push(`${lib}: ${list.join(", ")}`);
+    }
+    let reuse = parts.join("\n");
+    if (total > shown) reuse += `
++${total - shown} outro(s) componente(s) da lib`;
+    const build = [];
+    for (const cat of HD_BUILDABLE_CATS) {
+      for (const it of specs[cat] || []) {
+        if (_hdIsBuildItem(it, cat)) build.push(`${it.name || "Elemento"} \u2192 ver User Interface`);
+      }
+    }
+    return { reuse: reuse || null, build: build.length ? build.join("\n") : null };
+  }
   async function _hdBuildFrameCard(f, fi) {
     const _st = _hdStyled();
     const fRow = _hdCreateFrame("VERTICAL", _st ? 16 : 12, _st ? 12 : 8, _st ? hexToRgb(_DS.white) : { r: 0.9686, g: 0.9804, b: 0.9804 });
@@ -544,6 +784,11 @@
     _hdSetFillAndHug(fHeader);
     if (f.audit && f.audit.status) {
       _hdCreateRow(fRow, "Auditoria DSC", f.audit.status + (f.audit.justificativa ? " \u2014 " + f.audit.justificativa : ""));
+    }
+    if (!f.isNewComponent) {
+      const _sum = _hdFrameDevSummary(f);
+      if (_sum.reuse) _hdCreateRow(fRow, "Reutilizar da lib", _sum.reuse);
+      if (_sum.build) _hdCreateRow(fRow, "Construir", _sum.build);
     }
     if (f.isNewComponent) {
       if (f.newComponentObservations) {
@@ -603,32 +848,49 @@
         return null;
       }
     }
-    const allNodes = [frameNode, ...extraNodes];
-    const originalInfo = allNodes.map((n) => ({
-      node: n,
-      parent: n.parent,
-      index: n.parent && "children" in n.parent ? n.parent.children.indexOf(n) : -1
-    }));
-    let tempGroup = null;
+    const allNodes = [frameNode, ...extraNodes].filter((n) => n && !n.removed);
+    const boxOf = (n) => n.absoluteRenderBounds || n.absoluteBoundingBox;
+    const boxes = allNodes.map(boxOf).filter(Boolean);
+    if (boxes.length === 0) return null;
+    const ux = Math.min(...boxes.map((b) => b.x)), uy = Math.min(...boxes.map((b) => b.y));
+    const ur = Math.max(...boxes.map((b) => b.x + b.width)), ub = Math.max(...boxes.map((b) => b.y + b.height));
+    if (info) info.bounds = { x: ux, y: uy, width: ur - ux, height: ub - uy };
+    let temp = null;
     let bytes = null;
     try {
-      tempGroup = figma.group(allNodes, figma.currentPage);
-      if (info) info.bounds = tempGroup.absoluteRenderBounds || tempGroup.absoluteBoundingBox;
-      bytes = await tempGroup.exportAsync({ format: "PNG", constraint: { type: "SCALE", value: 2 } });
-    } catch (e) {
-      bytes = null;
-    } finally {
-      for (const info2 of originalInfo) {
+      temp = figma.createFrame();
+      temp.name = "[Handex] snapshot tempor\xE1rio";
+      temp.fills = [];
+      temp.clipsContent = true;
+      figma.currentPage.appendChild(temp);
+      temp.resize(Math.max(1, ur - ux), Math.max(1, ub - uy));
+      temp.x = ux;
+      temp.y = uy;
+      for (const n of allNodes) {
+        const bb = n.absoluteBoundingBox || boxOf(n);
+        if (!bb) continue;
+        let c = null;
         try {
-          if (info2.parent && "insertChild" in info2.parent) {
-            const idx = Math.min(info2.index >= 0 ? info2.index : 0, info2.parent.children.length);
-            info2.parent.insertChild(idx, info2.node);
-          }
+          c = n.clone();
+        } catch (e) {
+          c = null;
+        }
+        if (!c) continue;
+        temp.appendChild(c);
+        try {
+          c.locked = false;
         } catch (e) {
         }
+        c.x = bb.x - ux;
+        c.y = bb.y - uy;
       }
+      bytes = await temp.exportAsync({ format: "PNG", constraint: { type: "SCALE", value: 2 } });
+    } catch (e) {
+      console.error("[Handex Ficha] snapshot falhou:", String(e && e.message || e));
+      bytes = null;
+    } finally {
       try {
-        if (tempGroup && tempGroup.type !== "REMOVED") tempGroup.remove();
+        if (temp && !temp.removed) temp.remove();
       } catch (e) {
       }
     }
@@ -960,8 +1222,7 @@
   }
   function _hdFrameHasCustomItem(f) {
     if (!f || !f.specs) return false;
-    const _categories = ["components", "icons", "typography", "frames", "vectors"];
-    return _categories.some((cat) => (f.specs[cat] || []).some((item) => item.isMarkedCustom === true));
+    return HD_BUILDABLE_CATS.some((cat) => (f.specs[cat] || []).some((item) => _hdIsBuildItem(item, cat)));
   }
   function _hdFrameIsRelevantForFicha(f) {
     return !!(f && f.isNewComponent) || _hdFrameHasCustomItem(f);
@@ -1142,7 +1403,14 @@
     const blocks = [];
     for (const [fi, f] of _frames.entries()) {
       const block = await _hdBuildFrameShowcaseBlock(f, fi);
-      if (block) blocks.push(block);
+      if (block) {
+        blocks.push(block);
+        continue;
+      }
+      const _orphanM = (f.measurements || []).filter(Boolean);
+      const _orphanS = (f.createdSpecs || []).filter(Boolean);
+      if (_orphanM.length) _loose.push(..._orphanM);
+      if (_orphanS.length) _looseSpecs.push(..._orphanS.filter((sp) => !_looseSpecs.some((x) => x && sp && x.id === sp.id)));
     }
     if (_looseSpecs.length > 0) {
       const block = _hdCreateFrame("VERTICAL", 16, 16, { r: 0.9686, g: 0.9804, b: 0.9804 });
@@ -1186,28 +1454,126 @@
     });
     return section;
   }
-  function _hdRebuildFlowsSection(flows) {
+  async function _hdFlowNodeNames(flows) {
+    const names = {};
+    for (const f of flows) {
+      for (const [id, stored] of [[f.sourceId, f.sourceName], [f.targetId, f.targetName]]) {
+        if (!id || names[id]) continue;
+        let n = null;
+        try {
+          n = await figma.getNodeByIdAsync(id);
+        } catch (e) {
+          n = null;
+        }
+        names[id] = n && n.name || stored || "Tela removida";
+      }
+    }
+    return names;
+  }
+  function _hdFlowVector(parent, d, o) {
+    const v = figma.createVector();
+    v.name = o.name || "Linha";
+    parent.appendChild(v);
+    v.x = 0;
+    v.y = 0;
+    v.vectorPaths = [{ windingRule: "NONZERO", data: d }];
+    v.strokes = o.stroke ? [{ type: "SOLID", color: hexToRgb(o.stroke) }] : [];
+    v.strokeWeight = o.sw || 1.5;
+    if (o.dashed) v.dashPattern = [4, 4];
+    v.fills = o.fill ? [{ type: "SOLID", color: hexToRgb(o.fill) }] : [];
+    return v;
+  }
+  function _hdFlowArrowHead(parent, a, b, color) {
+    const dx = b.x - a.x, dy = b.y - a.y, len = Math.sqrt(dx * dx + dy * dy) || 1;
+    const ux = dx / len, uy = dy / len, L = 8, W = 4.5;
+    const bx = b.x - ux * L, by = b.y - uy * L;
+    const p1 = `${bx + -uy * W} ${by + ux * W}`, p2 = `${bx - -uy * W} ${by - ux * W}`;
+    _hdFlowVector(parent, `M ${b.x} ${b.y} L ${p1} L ${p2} Z`, { name: "Seta", fill: color });
+  }
+  function _hdBuildFlowDiagram(lay) {
+    const box = figma.createFrame();
+    box.name = `[Diagrama] ${lay.title}`;
+    box.resize(Math.max(1, Math.round(lay.width)), Math.max(1, Math.round(lay.height)));
+    box.fills = [{ type: "SOLID", color: hexToRgb(_DS.gray) }];
+    box.cornerRadius = 8;
+    box.clipsContent = false;
+    lay.edges.forEach((e) => {
+      const pts = e.points;
+      _hdFlowVector(box, "M " + pts.map((p) => `${p.x} ${p.y}`).join(" L "), { name: "Conex\xE3o", stroke: e.color, dashed: e.dashed });
+      _hdFlowArrowHead(box, pts[pts.length - 2], pts[pts.length - 1], e.color);
+    });
+    lay.events.forEach((ev) => {
+      _hdFlowVector(box, `M ${ev.line[0].x} ${ev.line[0].y} L ${ev.line[1].x} ${ev.line[1].y}`, { name: ev.kind === "start" ? "Linha In\xEDcio" : "Linha Fim", stroke: _DS.text2 });
+      _hdFlowArrowHead(box, ev.line[0], ev.line[1], _DS.text2);
+      const c = figma.createEllipse();
+      c.name = ev.kind === "start" ? "In\xEDcio" : "Fim";
+      c.resize(ev.r * 2, ev.r * 2);
+      box.appendChild(c);
+      c.x = ev.cx - ev.r;
+      c.y = ev.cy - ev.r;
+      c.fills = [{ type: "SOLID", color: hexToRgb(_DS.white) }];
+      c.strokes = [{ type: "SOLID", color: hexToRgb(_DS.text) }];
+      c.strokeWeight = ev.kind === "start" ? 1.5 : 3.5;
+    });
+    lay.boxes.forEach((b) => {
+      const f = _dsFrame(`Tela | ${b.name}`, "VERTICAL", { pad: 8, fill: _DS.white, stroke: _DS.panelBorder, radius: 8 });
+      f.primaryAxisSizingMode = "FIXED";
+      f.counterAxisSizingMode = "FIXED";
+      f.resize(b.w, b.h);
+      f.primaryAxisAlignItems = "CENTER";
+      f.counterAxisAlignItems = "CENTER";
+      box.appendChild(f);
+      f.x = b.x;
+      f.y = b.y;
+      const t = _dsText(b.name, { size: 12, lh: 16, w: "semibold" });
+      t.textAlignHorizontal = "CENTER";
+      f.appendChild(t);
+      try {
+        t.layoutSizingHorizontal = "FILL";
+        t.textAutoResize = "HEIGHT";
+        t.textTruncation = "ENDING";
+        t.maxLines = 2;
+      } catch (e) {
+      }
+    });
+    lay.edges.forEach((e) => {
+      if (!e.decision) return;
+      const d = e.decision, h = 11;
+      _hdFlowVector(box, `M ${d.x} ${d.y - h} L ${d.x + h} ${d.y} L ${d.x} ${d.y + h} L ${d.x - h} ${d.y} Z`, { name: `Decis\xE3o ${d.n}`, stroke: e.color, fill: _DS.white });
+      const t = _dsText(String(d.n), { size: 10, lh: 12, w: "bold", color: e.color });
+      box.appendChild(t);
+      t.x = Math.round(d.x - t.width / 2);
+      t.y = Math.round(d.y - t.height / 2);
+    });
+    return box;
+  }
+  async function _hdRebuildFlowsSection(flows) {
     const _flows = flows || [];
     if (_flows.length === 0) return null;
     const flowsSection = _hdBuildSectionShell("Fluxos de Tela");
     if (_hdStyled()) {
-      _hdDsTable(
-        flowsSection,
-        "Fluxos",
-        [{ title: "Fluxo", w: 200 }, { title: "Tipo", w: 130 }, { title: "Conex\xE3o" }, { title: "Decis\xE3o", w: 170 }],
-        _flows.map((flow, fi) => {
-          const typeStr = _HD_FLOW_TYPE_LABEL[flow.type] || flow.type || "";
-          return {
-            cells: [
-              { text: flow.name || "Fluxo " + (fi + 1), w: "semibold" },
-              typeStr ? _hdTag(typeStr, { bg: _DS.colorBg, border: _DS.colorBorder, color: _DS.blue }) : "\u2014",
-              flow.fromName || flow.toName ? `${flow.fromName || "?"} \u2192 ${flow.toName || "?"}` : "\u2014",
-              flow.decisionText ? { text: `"${flow.decisionText}"`, color: _DS.text2 } : "\u2014"
-            ],
-            pd: { handexFlowId: flow.flowUid || flow.id || "" }
-          };
-        })
-      );
+      const names = await _hdFlowNodeNames(_flows);
+      try {
+        figma.ui.postMessage({ type: "flows-names-resolved", names });
+      } catch (e) {
+      }
+      const journeys = hdFlowDiagramLayout(_flows, (id) => names[id] || "Tela", 856);
+      journeys.forEach((lay) => {
+        const title = _dsText(lay.title, { size: 16, lh: 24, w: "semibold" });
+        flowsSection.appendChild(title);
+        _dsFillW(title);
+        const diagram = _hdBuildFlowDiagram(lay);
+        diagram.setPluginData("handexFlowJourney", lay.title);
+        flowsSection.appendChild(diagram);
+        if (lay.decisions.length > 0) {
+          _hdDsTable(
+            flowsSection,
+            `Decis\xF5es ${lay.title}`,
+            [{ title: "#", w: 48 }, { title: "Caminho", w: 320 }, { title: "Decis\xE3o" }],
+            lay.decisions.map((d) => [{ text: String(d.n), w: "semibold" }, `${d.from} \u2192 ${d.to}`, d.text || "\u2014"])
+          );
+        }
+      });
       return flowsSection;
     }
     _flows.forEach((flow, fi) => {
@@ -3197,7 +3563,7 @@ Padr\xE3o da lib: ${c.padrao}`, true));
     _sources.forEach((src) => {
       const cards = [];
       _cats.forEach((cat) => {
-        (src.specs[cat.type] || []).filter((it) => it.isMarkedCustom === true).forEach((it) => cards.push({ item: it, cat: cat.title }));
+        (src.specs[cat.type] || []).filter((it) => _hdIsBuildItem(it, cat.type)).forEach((it) => cards.push({ item: it, cat: cat.title }));
       });
       if (cards.length > 0) groups.push({ nome: src.nome, cards, frame: src.frame, specs: src.specs });
     });
@@ -3598,6 +3964,8 @@ Padr\xE3o da lib: ${c.padrao}`, true));
     const _flowExtra = {
       sourceId: nodeA.id,
       targetId: nodeB ? nodeB.id : null,
+      sourceName: nodeA.name,
+      targetName: nodeB ? nodeB.name : null,
       decisionText: msg.decisionText || null,
       flowSide: msg.flowSide || "auto",
       connectorStyle: _connectorStyle,
@@ -4085,6 +4453,14 @@ Padr\xE3o da lib: ${c.padrao}`, true));
         } catch (e) {
         }
       });
+      _handexSections.forEach((section) => {
+        const cat = section.getPluginData("handexCategorySection");
+        if (!wanted[cat]) return;
+        try {
+          if (!section.removed && section.children.length === 0) section.remove();
+        } catch (e) {
+        }
+      });
       figma.ui.postMessage({ type: "canvas-content-deleted", counts });
       return;
     }
@@ -4179,7 +4555,7 @@ Padr\xE3o da lib: ${c.padrao}`, true));
           }
           _hdReplaceSection(content, "Documenta\xE7\xE3o Visual", docVisualSection);
         } else if (msg.section === "fluxos") {
-          const flowsSection = _hdRebuildFlowsSection(data.createdFlows || []);
+          const flowsSection = await _hdRebuildFlowsSection(data.createdFlows || []);
           _hdReplaceSection(content, "Fluxos de Tela", flowsSection);
         }
         figma.currentPage.selection = [existingFicha];
@@ -4610,7 +4986,7 @@ Padr\xE3o da lib: ${c.padrao}`, true));
           content.appendChild(docVisualSection);
           _hdSetFillAndHug(docVisualSection);
         }
-        const flowsSection = _hdRebuildFlowsSection(data.createdFlows || []);
+        const flowsSection = await _hdRebuildFlowsSection(data.createdFlows || []);
         if (flowsSection) {
           content.appendChild(flowsSection);
           _hdSetFillAndHug(flowsSection);
@@ -4884,11 +5260,14 @@ Padr\xE3o da lib: ${c.padrao}`, true));
           return elements;
         }
         const appliedMeasuresList = [];
+        const skippedMeasures = [];
         for (const node of selection) {
           const bounds = node.absoluteRenderBounds || node.absoluteBoundingBox;
           if (!bounds) continue;
           let items = [];
           let appliedDetails = [];
+          const skipped = [];
+          const _isAL = "layoutMode" in node && node.layoutMode !== "NONE";
           if (measureTypes && measureTypes.includes("wh")) {
             const wToken = await getVariableInfo(node, "width");
             const hToken = await getVariableInfo(node, "height");
@@ -4923,9 +5302,13 @@ Padr\xE3o da lib: ${c.padrao}`, true));
               pads.push(`Right: ${node.paddingRight}${tR ? " [" + tR + "]" : ""}`);
             }
             if (pads.length > 0) appliedDetails.push(`Padding Interno: ${pads.join(", ")}`);
+            else skipped.push("padding interno (todos os lados com 0px)");
+          } else if (measureTypes && measureTypes.includes("inner")) {
+            skipped.push("padding interno (sem Auto layout)");
           }
-          if (measureTypes && measureTypes.includes("spacing") && "layoutMode" in node && node.layoutMode !== "NONE" && node.children.length > 1) {
+          if (measureTypes && measureTypes.includes("spacing") && _isAL && node.children.length > 1) {
             let spaceCount = 0;
+            const _gapVals = [];
             const gapToken = await getVariableInfo(node, "itemSpacing");
             for (let i = 0; i < node.children.length - 1; i++) {
               const child1 = node.children[i];
@@ -4940,6 +5323,7 @@ Padr\xE3o da lib: ${c.padrao}`, true));
                 if (endX > startX) {
                   items.push(...createMeasurementLine(startX, y, endX, y, endX - startX, "horizontal", { r: 0.208, g: 0.58, b: 0.522 }, gapToken));
                   spaceCount++;
+                  _gapVals.push(Math.round(endX - startX));
                 }
               } else if (node.layoutMode === "VERTICAL") {
                 const startY = b1.y + b1.height;
@@ -4948,10 +5332,20 @@ Padr\xE3o da lib: ${c.padrao}`, true));
                 if (endY > startY) {
                   items.push(...createMeasurementLine(x, startY, x, endY, endY - startY, "vertical", { r: 0.208, g: 0.58, b: 0.522 }, gapToken));
                   spaceCount++;
+                  _gapVals.push(Math.round(endY - startY));
                 }
               }
             }
-            if (spaceCount > 0) appliedDetails.push(`Gaps: ${spaceCount} espa\xE7os de ${node.itemSpacing}px ${gapToken ? "[" + gapToken + "]" : ""}`);
+            if (spaceCount > 0) {
+              const uniq = [...new Set(_gapVals)];
+              const auto = node.primaryAxisAlignItems === "SPACE_BETWEEN";
+              const vals = uniq.length === 1 ? `${uniq[0]}px` : `${Math.min(...uniq)}\u2013${Math.max(...uniq)}px`;
+              appliedDetails.push(`Gap: ${spaceCount} ${spaceCount > 1 ? "espa\xE7os" : "espa\xE7o"} de ${vals}${auto ? " (space between)" : ""}${gapToken ? " [" + gapToken + "]" : ""}`);
+            } else {
+              skipped.push("gap (os filhos est\xE3o encostados, 0px)");
+            }
+          } else if (measureTypes && measureTypes.includes("spacing")) {
+            skipped.push(_isAL ? "gap (menos de 2 filhos)" : "gap (sem Auto layout)");
           }
           if (measureTypes && measureTypes.includes("outer")) {
             if (node.parent && node.parent.type !== "PAGE") {
@@ -4977,11 +5371,13 @@ Padr\xE3o da lib: ${c.padrao}`, true));
                   outers.push(`Bottom: ${Math.round(pb.y + pb.height - (bounds.y + bounds.height))}`);
                 }
                 if (outers.length > 0) appliedDetails.push(`Espa\xE7amento Externo: ${outers.join(", ")}`);
+                else skipped.push("espa\xE7amento externo (encostado no frame pai)");
               }
             } else {
-              figma.notify("Outer padding necessita que o node esteja dentro de um frame.");
+              skipped.push("espa\xE7amento externo (o elemento n\xE3o est\xE1 dentro de um frame)");
             }
           }
+          if (skipped.length > 0) skippedMeasures.push({ name: node.name, reasons: skipped, created: items.length > 0 });
           if (items.length > 0) {
             const group = figma.group(items, figma.currentPage);
             group.name = `[Medida] ${node.name}`;
@@ -4992,12 +5388,77 @@ Padr\xE3o da lib: ${c.padrao}`, true));
             appliedMeasuresList.push({ name: node.name, nodeId: group.id, details: appliedDetails });
           }
         }
-        figma.ui.postMessage({ type: "measurements-applied", data: appliedMeasuresList });
-        figma.notify("Medidas aplicadas com sucesso!");
+        figma.ui.postMessage({ type: "measurements-applied", data: appliedMeasuresList, skipped: skippedMeasures });
+        if (appliedMeasuresList.length > 0) figma.notify("Medidas aplicadas com sucesso!");
       })();
     }
     if (msg.type === "scan-frame") {
-      let audit = function(propType, propValue, propKey, propName, isRemote, altKey) {
+      const _scanT0 = Date.now();
+      try {
+        await _hdRunScanFrame(msg);
+      } catch (err) {
+        console.error("[Handex scan] falhou:", String(err && err.message || err), err && err.stack);
+        figma.ui.postMessage({ type: "scan-result", frameId: msg.frameId || null, error: "N\xE3o foi poss\xEDvel concluir o escaneamento: " + (err && err.message || err) });
+      }
+      console.log("[Handex scan] total", Date.now() - _scanT0, "ms");
+      return;
+    }
+    async function _hdRunScanFrame(msg2) {
+      let selection;
+      if (msg2.nodeId) {
+        const specificNode = await figma.getNodeByIdAsync(msg2.nodeId);
+        selection = specificNode ? [specificNode] : [];
+      } else {
+        selection = figma.currentPage.selection;
+      }
+      const _scanFrameId = msg2.frameId || null;
+      if (selection.length === 0) {
+        figma.ui.postMessage({
+          type: "scan-result",
+          frameId: _scanFrameId,
+          error: "Nenhum item selecionado. Por favor, selecione um ou mais frames, se\xE7\xF5es ou grupos no Figma para escanear."
+        });
+        return;
+      }
+      const specs = {
+        components: /* @__PURE__ */ new Map(),
+        icons: /* @__PURE__ */ new Map(),
+        typography: /* @__PURE__ */ new Map(),
+        frames: /* @__PURE__ */ new Map(),
+        vectors: /* @__PURE__ */ new Map()
+      };
+      const frameJson = frameJsonTemplate();
+      const selectedLibSlugs = Array.isArray(msg2.selectedLibSlugs) && msg2.selectedLibSlugs.length > 0 ? msg2.selectedLibSlugs : null;
+      const rawReferenceTokens = _refSkeletonCache || null;
+      const referenceTokens = (() => {
+        if (!rawReferenceTokens || !selectedLibSlugs) return rawReferenceTokens;
+        const list = Array.isArray(rawReferenceTokens) ? rawReferenceTokens : [rawReferenceTokens];
+        const filtered = list.filter((lib) => lib && lib.slug && (selectedLibSlugs.includes(lib.slug) || lib.shared === true));
+        if (filtered.filter((lib) => lib.shared !== true).length === 0) {
+          console.warn("[Handex] Nenhuma das libs selecionadas existe no skeleton (" + selectedLibSlugs.join(", ") + "); auditando contra todas as libs.");
+          return rawReferenceTokens;
+        }
+        return filtered;
+      })();
+      const allowedCategories = msg2.categories || null;
+      const _unmatchedRemoteLogged = /* @__PURE__ */ new Set();
+      const _lastVarIdByKey = /* @__PURE__ */ new Map();
+      async function _logUnmatchedRemote(propType, propName, propKey, altKey, varId) {
+        let colecao = null, colecaoKey = null, modos = null;
+        try {
+          const v = varId ? await figma.variables.getVariableByIdAsync(varId) : null;
+          const c = v ? await figma.variables.getVariableCollectionByIdAsync(v.variableCollectionId) : null;
+          if (c) {
+            colecao = c.name;
+            colecaoKey = c.key || null;
+            modos = (c.modes || []).map((m) => m.name).join(", ");
+          }
+        } catch (e) {
+          colecao = "erro: " + (e && e.message);
+        }
+        console.warn("[Handex scan] token de lib publicada sem chave no skeleton:", JSON.stringify({ tipo: propType, token: propName, key: propKey, altKey: altKey || null, colecao, colecaoKey, modos, varId: varId || null }));
+      }
+      function audit(propType, propValue, propKey, propName, isRemote, altKey) {
         let result = auditProperty(propName, propValue, propType, propKey, referenceTokens);
         if (result.score < AUDIT_SCORE.EXACT && altKey && altKey !== propKey) {
           const alt = auditProperty(propName, propValue, propType, altKey, referenceTokens);
@@ -5022,74 +5483,13 @@ Padr\xE3o da lib: ${c.padrao}`, true));
           matchedTokenName: result.matchedTokenName,
           matchedTier: result.matchedTier
         };
-      }, rgbToHex2 = function(r, g, b) {
+      }
+      function rgbToHex2(r, g, b) {
         const toHex = (c) => {
           const hex = Math.round(c * 255).toString(16);
           return hex.length === 1 ? "0" + hex : hex;
         };
         return "#" + toHex(r) + toHex(g) + toHex(b);
-      }, _custBoundId = function(node, field) {
-        const bv = node.boundVariables && node.boundVariables[field];
-        if (!bv) return "";
-        return (Array.isArray(bv) ? bv[0] && bv[0].id : bv.id) || "";
-      }, _custVarKey = function(id) {
-        if (!id) return "";
-        const m = /^VariableID:([^/]+)/.exec(id);
-        return m ? m[1] : id;
-      };
-      let selection;
-      if (msg.nodeId) {
-        const specificNode = await figma.getNodeByIdAsync(msg.nodeId);
-        selection = specificNode ? [specificNode] : [];
-      } else {
-        selection = figma.currentPage.selection;
-      }
-      const _scanFrameId = msg.frameId || null;
-      if (selection.length === 0) {
-        figma.ui.postMessage({
-          type: "scan-result",
-          frameId: _scanFrameId,
-          error: "Nenhum item selecionado. Por favor, selecione um ou mais frames, se\xE7\xF5es ou grupos no Figma para escanear."
-        });
-        return;
-      }
-      const specs = {
-        components: /* @__PURE__ */ new Map(),
-        icons: /* @__PURE__ */ new Map(),
-        typography: /* @__PURE__ */ new Map(),
-        frames: /* @__PURE__ */ new Map(),
-        vectors: /* @__PURE__ */ new Map()
-      };
-      const frameJson = frameJsonTemplate();
-      const selectedLibSlugs = Array.isArray(msg.selectedLibSlugs) && msg.selectedLibSlugs.length > 0 ? msg.selectedLibSlugs : null;
-      const rawReferenceTokens = _refSkeletonCache || null;
-      const referenceTokens = (() => {
-        if (!rawReferenceTokens || !selectedLibSlugs) return rawReferenceTokens;
-        const list = Array.isArray(rawReferenceTokens) ? rawReferenceTokens : [rawReferenceTokens];
-        const filtered = list.filter((lib) => lib && lib.slug && (selectedLibSlugs.includes(lib.slug) || lib.shared === true));
-        if (filtered.filter((lib) => lib.shared !== true).length === 0) {
-          console.warn("[Handex] Nenhuma das libs selecionadas existe no skeleton (" + selectedLibSlugs.join(", ") + "); auditando contra todas as libs.");
-          return rawReferenceTokens;
-        }
-        return filtered;
-      })();
-      const allowedCategories = msg.categories || null;
-      const _unmatchedRemoteLogged = /* @__PURE__ */ new Set();
-      const _lastVarIdByKey = /* @__PURE__ */ new Map();
-      async function _logUnmatchedRemote(propType, propName, propKey, altKey, varId) {
-        let colecao = null, colecaoKey = null, modos = null;
-        try {
-          const v = varId ? await figma.variables.getVariableByIdAsync(varId) : null;
-          const c = v ? await figma.variables.getVariableCollectionByIdAsync(v.variableCollectionId) : null;
-          if (c) {
-            colecao = c.name;
-            colecaoKey = c.key || null;
-            modos = (c.modes || []).map((m) => m.name).join(", ");
-          }
-        } catch (e) {
-          colecao = "erro: " + (e && e.message);
-        }
-        console.warn("[Handex scan] token de lib publicada sem chave no skeleton:", JSON.stringify({ tipo: propType, token: propName, key: propKey, altKey: altKey || null, colecao, colecaoKey, modos, varId: varId || null }));
       }
       async function getVar(n, p) {
         if (!n.boundVariables) return null;
@@ -5409,6 +5809,16 @@ Padr\xE3o da lib: ${c.padrao}`, true));
         } catch (e) {
           return null;
         }
+      }
+      function _custBoundId(node, field) {
+        const bv = node.boundVariables && node.boundVariables[field];
+        if (!bv) return "";
+        return (Array.isArray(bv) ? bv[0] && bv[0].id : bv.id) || "";
+      }
+      function _custVarKey(id) {
+        if (!id) return "";
+        const m = /^VariableID:([^/]+)/.exec(id);
+        return m ? m[1] : id;
       }
       async function _custNum(node, field, fallbackField) {
         const v = node[field];
@@ -5763,7 +6173,7 @@ Padr\xE3o da lib: ${c.padrao}`, true));
         const _dedupKey = category === "components" || category === "icons" ? name + "|" + (_ownLibLink ? "own" : _ancestorLink ? "ancestor" : "none") + _custSigKey : name;
         const map = specs[category];
         if (!map.has(_dedupKey)) {
-          const _prevItem = (msg.previousSpecs && msg.previousSpecs[category] || []).find((p) => p.nodeId === node.id || Array.isArray(p.nodeIds) && p.nodeIds.includes(node.id));
+          const _prevItem = (msg2.previousSpecs && msg2.previousSpecs[category] || []).find((p) => p.nodeId === node.id || Array.isArray(p.nodeIds) && p.nodeIds.includes(node.id));
           const itemObj = {
             name,
             type: category,
@@ -5779,7 +6189,7 @@ Padr\xE3o da lib: ${c.padrao}`, true));
             legacyLib,
             customizations,
             customizationsStatus,
-            isMarkedCustom: _prevItem ? !!_prevItem.isMarkedCustom : msg.isNewComponent === true && isCustomComponent === true,
+            isMarkedCustom: _prevItem ? !!_prevItem.isMarkedCustom : msg2.isNewComponent === true && isCustomComponent === true && HD_BUILDABLE_CATS.includes(category),
             customDecided: _prevItem ? _prevItem.customDecided === true : false,
             uiDepth: _prevItem && _prevItem.uiDepth === "full" ? "full" : "essential",
             specDismissed: _prevItem ? _prevItem.specDismissed === true : false,
@@ -5838,9 +6248,9 @@ Padr\xE3o da lib: ${c.padrao}`, true));
             }
           }
         } catch (err) {
-          const msg2 = err && err.message ? err.message : String(err);
+          const msg3 = err && err.message ? err.message : String(err);
           const stack = err && err.stack ? err.stack : "";
-          console.error("Erro ao extrair specs do node:", n.name, "(type=" + n.type + ", id=" + n.id + ")", msg2, stack);
+          console.error("Erro ao extrair specs do node:", n.name, "(type=" + n.type + ", id=" + n.id + ")", msg3, stack);
         }
       }
       for (const node of selection) {
@@ -5849,35 +6259,30 @@ Padr\xE3o da lib: ${c.padrao}`, true));
       let framePreview = null;
       if (selection.length > 0 && "exportAsync" in selection[0]) {
         try {
-          framePreview = await selection[0].exportAsync({ format: "PNG", constraint: { type: "SCALE", value: 2 } });
+          const _fw = selection[0].width || 0;
+          framePreview = await selection[0].exportAsync({ format: "PNG", constraint: _fw > 1200 ? { type: "WIDTH", value: 1200 } : { type: "SCALE", value: Math.min(2, 1200 / Math.max(1, _fw)) } });
         } catch (err) {
           console.error("Erro ao exportar preview do frame principal:", err);
         }
       }
-      const previewPromises = [];
-      const prepareListWithPreviews = async (map) => {
-        const items = Array.from(map.values());
-        for (const item of items) {
-          if (item.nodeId) {
+      const _thumbJobs = [];
+      for (const map of [specs.components, specs.icons, specs.typography, specs.frames, specs.vectors]) {
+        for (const item of map.values()) if (item.nodeId) _thumbJobs.push(item);
+      }
+      const _tP = Date.now();
+      for (let i = 0; i < _thumbJobs.length; i += 8) {
+        await Promise.all(_thumbJobs.slice(i, i + 8).map(async (item) => {
+          try {
             const node = await figma.getNodeByIdAsync(item.nodeId);
-            if (node && "exportAsync" in node) {
-              previewPromises.push(
-                node.exportAsync({ format: "PNG", constraint: { type: "SCALE", value: 1 } }).then((bytes) => {
-                  item.preview = bytes;
-                }).catch(() => {
-                  item.preview = null;
-                })
-              );
-            }
+            if (!node || !("exportAsync" in node)) return;
+            const c = (node.width || 0) >= (node.height || 0) ? { type: "WIDTH", value: 64 } : { type: "HEIGHT", value: 64 };
+            item.preview = await node.exportAsync({ format: "PNG", constraint: c });
+          } catch (e) {
+            item.preview = null;
           }
-        }
-      };
-      await prepareListWithPreviews(specs.components);
-      await prepareListWithPreviews(specs.icons);
-      await prepareListWithPreviews(specs.typography);
-      await prepareListWithPreviews(specs.frames);
-      await prepareListWithPreviews(specs.vectors);
-      await Promise.all(previewPromises);
+        }));
+      }
+      console.log("[Handex scan] miniaturas", _thumbJobs.length, Date.now() - _tP, "ms");
       const formatMap = (map) => {
         return Array.from(map.values()).map((item) => {
           const newItem = Object.assign({}, item);
@@ -8025,7 +8430,9 @@ Padr\xE3o da lib: ${c.padrao}`, true));
     }
     if (msg.type === "start-quick-spec-capture") {
       _quickSpecCaptureModeActive = true;
-      _quickSpecCaptureSelection = [];
+      const _ord = new Map(_hdSelectionOrder.map((id, i) => [id, i]));
+      _quickSpecCaptureSelection = figma.currentPage.selection.filter((n) => !(n.getPluginData && n.getPluginData("handexCategory"))).slice().sort((a, b) => (_ord.has(a.id) ? _ord.get(a.id) : 1e9) - (_ord.has(b.id) ? _ord.get(b.id) : 1e9)).map((n) => ({ nodeId: n.id, name: n.name, nodeType: n.type }));
+      figma.ui.postMessage({ type: "quick-spec-capture-count-changed", count: _quickSpecCaptureSelection.length });
       return;
     }
     if (msg.type === "stop-quick-spec-capture") {
@@ -8129,22 +8536,31 @@ Padr\xE3o da lib: ${c.padrao}`, true));
           }
         }
         const desired = [];
+        const centers = [];
         for (let i = 0; i < cards.length; i++) {
           const node = items[i].nodeId ? await figma.getNodeByIdAsync(items[i].nodeId) : null;
           const bb = node && node.absoluteBoundingBox;
           desired.push(bb ? bb.y + bb.height / 2 - cards[i].height / 2 : null);
+          centers.push(bb ? bb.y + bb.height / 2 : null);
         }
         let _seqY = fallbackY;
         for (let i = 0; i < desired.length; i++) {
           if (desired[i] === null) {
             desired[i] = _seqY;
+            centers[i] = _seqY + cards[i].height / 2;
             _seqY += cards[i].height + GAP;
           }
         }
-        const order = cards.map((_, i) => i).sort((x, y) => desired[x] - desired[y]);
+        const _tagIdx = (t) => {
+          let n = -1;
+          for (const ch of String(t || "")) n = (n + 1) * 26 + (ch.charCodeAt(0) - 65);
+          return n;
+        };
+        const order = cards.map((_, i) => i).sort((x, y) => _tagIdx(items[x].tag) - _tagIdx(items[y].tag) || centers[x] - centers[y]);
         const placedY = new Array(cards.length);
+        let _prevBottom = -Infinity;
         for (const i of order) {
-          let y = Math.round(desired[i]);
+          let y = Math.round(Math.max(desired[i], _prevBottom + GAP));
           const h = cards[i].height;
           let moved = true;
           while (moved) {
@@ -8157,6 +8573,7 @@ Padr\xE3o da lib: ${c.padrao}`, true));
             }
           }
           placedY[i] = y;
+          _prevBottom = y + h;
           occupied.push({ top: y, bottom: y + h });
         }
         const minY = Math.min(...placedY);
@@ -8225,12 +8642,57 @@ Padr\xE3o da lib: ${c.padrao}`, true));
               nodeType: card.getPluginData("handexQuickSpecNodeType") || "",
               sourceNodeId: card.getPluginData("handexQuickSpecSourceId") || null,
               properties: rawProperties ? JSON.parse(rawProperties) : null,
-              note: card.getPluginData("handexQuickSpecNote") || ""
+              note: card.getPluginData("handexQuickSpecNote") || "",
+              childrenData: (() => {
+                try {
+                  const r = card.getPluginData("handexQuickSpecChildren");
+                  return r ? JSON.parse(r) : null;
+                } catch (e) {
+                  return null;
+                }
+              })()
             });
           });
         });
       }
       figma.ui.postMessage({ type: "quick-spec-canvas-cards-list", cards });
+      return;
+    }
+    if (msg.type === "quick-spec-read-children") {
+      try {
+        const node = msg.nodeId ? await figma.getNodeByIdAsync(msg.nodeId) : null;
+        if (!node) {
+          figma.ui.postMessage({ type: "quick-spec-children-read", tag: msg.tag, error: "Elemento n\xE3o encontrado no canvas." });
+          return;
+        }
+        const { children, more } = await _qsReadDirectChildren(node, msg.categories);
+        figma.ui.postMessage({ type: "quick-spec-children-read", tag: msg.tag, children, more });
+      } catch (e) {
+        figma.ui.postMessage({ type: "quick-spec-children-read", tag: msg.tag, error: "N\xE3o foi poss\xEDvel ler os filhos: " + (e && e.message || e) });
+      }
+      return;
+    }
+    if (msg.type === "quick-spec-update-children") {
+      const card = msg.nodeId ? await figma.getNodeByIdAsync(msg.nodeId) : null;
+      if (!card || card.removed || card.type !== "FRAME" || !card.getPluginData("handexQuickSpecTag")) {
+        figma.ui.postMessage({ type: "toast", message: "Card da anota\xE7\xE3o n\xE3o encontrado no canvas.", kind: "error" });
+        return;
+      }
+      await figma.loadFontAsync({ family: "Inter", style: "Regular" });
+      await figma.loadFontAsync({ family: "Inter", style: "Bold" });
+      const old = card.children.find((c) => c.name === "Filhos diretos" && c.type === "FRAME");
+      if (old) old.remove();
+      if (Array.isArray(msg.children)) {
+        const block = _qsBuildChildrenBlock(msg.children, msg.more || 0);
+        const noteIdx = card.children.findIndex((c) => c.name === "Observa\xE7\xE3o" && c.type === "FRAME");
+        if (noteIdx >= 0) card.insertChild(noteIdx, block);
+        else card.appendChild(block);
+        _hdSetFillAndHug(block);
+        card.setPluginData("handexQuickSpecChildren", JSON.stringify({ children: msg.children, more: msg.more || 0 }));
+      } else {
+        card.setPluginData("handexQuickSpecChildren", "");
+      }
+      await _qsResolveCardOverlaps(card);
       return;
     }
     if (msg.type === "quick-spec-update-note") {
@@ -8403,6 +8865,75 @@ Padr\xE3o da lib: ${c.padrao}`, true));
   function _qsNormalizeNote(raw) {
     return typeof raw === "string" ? raw.trim().slice(0, 280) : "";
   }
+  var QS_CHILDREN_MAX = 8;
+  async function _qsReadDirectChildren(node, categories) {
+    const cats = Array.isArray(categories) && categories.length > 0 ? categories : QUICK_SPEC_CATEGORIES;
+    if (!node || !("children" in node)) return { children: [], more: 0 };
+    const visible = node.children.filter((c) => c.visible !== false);
+    const children = [];
+    for (const c of visible.slice(0, QS_CHILDREN_MAX)) {
+      try {
+        const props = await _qsExtractNodeProperties(c, cats);
+        if (props.length > 0) children.push({ nodeId: c.id, name: c.name, nodeType: c.type, properties: props });
+      } catch (e) {
+        console.error("Anota\xE7\xF5es: erro ao ler filho", c.name, e && e.message);
+      }
+    }
+    return { children, more: Math.max(0, visible.length - QS_CHILDREN_MAX) };
+  }
+  function _qsPropLines(parent, props, indent) {
+    for (const prop of props || []) {
+      const lbl = _hdVocabLabel(prop.label, prop.key);
+      if (prop.tokenName) {
+        const tokenColor = prop.libName ? { r: 0, g: 0.3608, b: 0.6627 } : { r: 0.1333, g: 0.1608, b: 0.1804 };
+        const t = _hdCreateText(prop.libName ? `${lbl}: ${prop.tokenName}  \xB7  ${prop.libName}` : `${lbl}: ${prop.tokenName}`, 10, "Bold", tokenColor);
+        parent.appendChild(t);
+        _hdSetFillAndHug(t);
+        const r = _hdCreateText(`\u21B3 valor bruto: ${_hdVocabValue(prop.value)}`, 9.5, "Regular", { r: 0.3922, g: 0.4549, b: 0.4784 });
+        parent.appendChild(r);
+        _hdSetFillAndHug(r);
+      } else {
+        const t = _hdCreateText(`${lbl}: ${_hdVocabValue(prop.value)}`, 10, "Regular", { r: 0.3922, g: 0.4549, b: 0.4784 });
+        parent.appendChild(t);
+        _hdSetFillAndHug(t);
+      }
+    }
+  }
+  function _qsBuildChildrenBlock(children, more) {
+    const block = _hdCreateFrame("VERTICAL", 0, 8, null);
+    block.name = "Filhos diretos";
+    const label = _hdCreateText("Filhos diretos", 9, "Bold", { r: 0.3922, g: 0.4549, b: 0.4784 });
+    block.appendChild(label);
+    _hdSetFillAndHug(label);
+    if (!children || children.length === 0) {
+      const empty = _hdCreateText("Nenhum filho direto com propriedade nas categorias marcadas.", 10, "Regular", { r: 0.3922, g: 0.4549, b: 0.4784 });
+      block.appendChild(empty);
+      _hdSetFillAndHug(empty);
+    }
+    for (const ch of children || []) {
+      const sub = _hdCreateFrame("VERTICAL", 0, 2, null);
+      sub.name = "Filho | " + ch.name;
+      sub.paddingLeft = 8;
+      sub.strokes = [{ type: "SOLID", color: { r: 0.8157, g: 0.8784, b: 0.8902 } }];
+      sub.strokeWeight = 0;
+      try {
+        sub.strokeLeftWeight = 2;
+      } catch (e) {
+      }
+      block.appendChild(sub);
+      _hdSetFillAndHug(sub);
+      const head = _hdCreateText(`${ch.name}  \xB7  ${ch.nodeType || ""}`, 10, "Bold", { r: 0.1333, g: 0.1608, b: 0.1804 });
+      sub.appendChild(head);
+      _hdSetFillAndHug(head);
+      _qsPropLines(sub, ch.properties, 0);
+    }
+    if (more > 0) {
+      const m = _hdCreateText(`+${more} filho(s) n\xE3o lido(s): o limite \xE9 ${QS_CHILDREN_MAX}. Para ver outro filho, anote-o separadamente.`, 9.5, "Regular", { r: 0.3922, g: 0.4549, b: 0.4784 });
+      block.appendChild(m);
+      _hdSetFillAndHug(m);
+    }
+    return block;
+  }
   function _qsAppendNoteBlock(card, note) {
     const block = _hdCreateFrame("VERTICAL", 0, 2, null);
     block.name = "Observa\xE7\xE3o";
@@ -8491,6 +9022,12 @@ Padr\xE3o da lib: ${c.padrao}`, true));
         propText.textAutoResize = "HEIGHT";
         card.appendChild(propText);
       }
+    }
+    if (Array.isArray(item.children)) {
+      card.setPluginData("handexQuickSpecChildren", JSON.stringify({ children: item.children, more: item.childrenMore || 0 }));
+      const cb = _qsBuildChildrenBlock(item.children, item.childrenMore || 0);
+      card.appendChild(cb);
+      _hdSetFillAndHug(cb);
     }
     if (note) {
       card.setPluginData("handexQuickSpecNote", note);

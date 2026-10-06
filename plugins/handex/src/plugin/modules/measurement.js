@@ -187,15 +187,16 @@
           if (item.nodeId) {
             parent.postMessage({ pluginMessage: { type: 'delete-node', id: item.nodeId } }, '*');
           }
-          if (frameId) {
-            const fr = getFrame(frameId);
-            if (fr) fr.measurements = (fr.measurements || []).filter(m => m.nodeId !== item.nodeId);
-          } else {
-            handoffData.measurements = (handoffData.measurements || []).filter(m => m.nodeId !== item.nodeId);
-            lastMeasurements = handoffData.measurements;
-          }
+          // Remove de TODAS as listas (avulsa e de qualquer frame): a tela de
+          // Medidas mostra as duas juntas sem frameId, e antes só a avulsa era
+          // limpa -- a medida de um frame "voltava" no próximo render.
+          const _keep = m => m && m.nodeId !== item.nodeId;
+          (handoffData.frames || []).forEach(fr => { if (Array.isArray(fr.measurements)) fr.measurements = fr.measurements.filter(_keep); });
+          handoffData.measurements = (handoffData.measurements || []).filter(_keep);
+          lastMeasurements = handoffData.measurements;
           saveToStorage();
           section.remove();
+          if (!frameId && typeof renderAllMeasurements === 'function') renderAllMeasurements();
         };
         content.appendChild(delBtn);
 

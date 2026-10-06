@@ -81,6 +81,9 @@ let _quickSpecTagCounter = 0;
 // confirmação até o "Concluir" da captura (o plugin fica colapsado nesse
 // meio-tempo, sem acesso à modal).
 let _quickSpecPendingCategories = null;
+// Categorias da última captura -- reaproveitadas para ler os filhos diretos
+// com o mesmo filtro do elemento (null = todas).
+let _quickSpecLastCategories = null;
 
 function _quickSpecNextTag() {
   return _quickSpecTagFromIndex(_quickSpecTagCounter++);
@@ -307,6 +310,7 @@ function _quickSpecCaptureFinish() {
   parent.postMessage({
     pluginMessage: _withRefSkeleton({ type: 'quick-spec-capture-finish', categories: _quickSpecPendingCategories })
   }, '*');
+  _quickSpecLastCategories = _quickSpecPendingCategories;
   _quickSpecPendingCategories = null;
 }
 window._quickSpecCaptureFinish = _quickSpecCaptureFinish;
@@ -329,13 +333,21 @@ function handleQuickSpecResult(msg) {
     properties: el.properties,
     hidden: false,
     note: '',
+    categories: _quickSpecLastCategories,
+    includeChildren: false,
+    children: null,
+    childrenMore: 0,
+    childrenLoading: false,
     // Id do card criado no canvas, preenchido só depois de uma inserção
     // bem-sucedida (ver handleQuickSpecCanvasResult) -- é o que permite
     // perguntar "apagar do canvas também?" ao excluir da lista.
     insertedCardId: null
   }));
 
-  _quickSpecSessionResults = elements.concat(_quickSpecSessionResults);
+  // Lista sempre na ordem das tags (A no topo = 1º clique), nunca com o lote
+  // novo por cima (2026-10-05).
+  _quickSpecSessionResults = _quickSpecSessionResults.concat(elements)
+    .sort((a, b) => _quickSpecTagToIndex(a.tag) - _quickSpecTagToIndex(b.tag));
   _quickSpecRenderList();
   showToast(`${elements.length} elemento(s) com propriedade encontrada.`);
 }
@@ -378,6 +390,11 @@ function handleQuickSpecCanvasCardsList(msg) {
       properties: cc.properties,
       hidden: false,
       note: typeof cc.note === 'string' ? cc.note : '',
+      categories: null,
+      includeChildren: !!(cc.childrenData && Array.isArray(cc.childrenData.children)),
+      children: cc.childrenData && Array.isArray(cc.childrenData.children) ? cc.childrenData.children : null,
+      childrenMore: cc.childrenData ? (cc.childrenData.more || 0) : 0,
+      childrenLoading: false,
       insertedCardId: cc.cardId
     });
     addedAny = true;
@@ -386,7 +403,7 @@ function handleQuickSpecCanvasCardsList(msg) {
     // Mantém a ordem por tag (A, B, C...) em vez de empilhar os
     // recuperados no topo -- eles não são "mais recentes", só chegaram
     // depois na sincronização.
-    _quickSpecSessionResults.sort((a, b) => a.tag.localeCompare(b.tag, 'en', { numeric: true }));
+    _quickSpecSessionResults.sort((a, b) => _quickSpecTagToIndex(a.tag) - _quickSpecTagToIndex(b.tag));
     _quickSpecRenderList();
   }
   // Botão "Limpar Dados" da Home já pode ter avaliado hasDocumentedContent()
@@ -394,6 +411,7 @@ function handleQuickSpecCanvasCardsList(msg) {
   // entrar nesta tela -- ver quickSpecSyncFromCanvas/navigate) -- recalcula
   // pra não deixar o botão preso desabilitado com cards reais no canvas.
   if (typeof updateHomeFooterButtonsState === 'function') updateHomeFooterButtonsState();
+  if (typeof updateHomeCardsCheckState === 'function') updateHomeCardsCheckState();
 }
 window.handleQuickSpecCanvasCardsList = handleQuickSpecCanvasCardsList;
 
@@ -563,6 +581,39 @@ function quickSpecToggleHideElement(idx) {
 }
 window.quickSpecToggleHideElement = quickSpecToggleHideElement;
 
+function _quickSpecPropsHtml(props) {
+  return (props || []).map(p => {
+        if (p.tokenName) {
+          return `
+      <div class="text-[10px] leading-snug">
+        <div>${escapeHtml(_vocabLabel(p.label))}: <strong class="${p.libName ? 'text-[#005ca9] dark:text-blue-400' : 'text-slate-700 dark:text-white'}">${escapeHtml(p.tokenName)}</strong>${p.libName ? ` <span class="text-slate-400 dark:text-slate-500 font-normal">· ${escapeHtml(p.libName)}</span>` : ''}</div>
+        <div class="pl-3 text-slate-400 dark:text-slate-500">↳ valor bruto: ${escapeHtml(String(p.value))}</div>
+      </div>
+    `;
+        }
+        return `
+      <div class="text-[10px] text-slate-500 dark:text-dark-muted leading-snug">
+        <span>${escapeHtml(_vocabLabel(p.label))}: <strong class="text-slate-700 dark:text-white">${escapeHtml(String(_vocabValue(p.value)))}</strong></span>
+      </div>
+    `;
+      }).join('');
+}
+
+function _quickSpecChildrenHtml(el) {
+  if (!el.includeChildren) return '';
+  if (el.childrenLoading) return `<p class="text-[10px] text-slate-400 dark:text-slate-500 italic pt-2">Lendo filhos diretos...</p>`;
+  if (!Array.isArray(el.children)) return '';
+  const items = el.children.length === 0
+    ? `<p class="text-[10px] text-slate-400 dark:text-slate-500 italic">Nenhum filho direto com propriedade nas categorias marcadas.</p>`
+    : el.children.map(ch => `
+      <div class="border-l-2 border-gray-200 dark:border-dark-line pl-2 space-y-0.5">
+        <p class="text-[10px] font-bold text-slate-700 dark:text-white">${escapeHtml(ch.name)} <span class="font-normal text-slate-400 dark:text-slate-500">· ${escapeHtml(ch.nodeType || '')}</span></p>
+        ${_quickSpecPropsHtml(ch.properties)}
+      </div>`).join('');
+  const more = el.childrenMore > 0 ? `<p class="text-[10px] text-slate-400 dark:text-slate-500">+${el.childrenMore} filho(s) não lido(s): o limite é 8. Para ver outro filho, anote-o separadamente.</p>` : '';
+  return `<div class="pt-2 space-y-2"><p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Filhos diretos</p>${items}${more}</div>`;
+}
+
 function _quickSpecRenderList() {
   const list = document.getElementById('quick-spec-list');
   if (!list) return;
@@ -589,21 +640,8 @@ function _quickSpecRenderList() {
     // aparecia depois do hex bruto, precisava ser o oposto).
     const propsHtml = hasNoPropertiesData
       ? `<p class="text-[10px] text-slate-400 dark:text-slate-500 italic leading-snug">Card recuperado do canvas -- propriedades não disponíveis nesta sessão (re-escaneie o elemento se precisar consultá-las de novo).</p>`
-      : el.properties.map(p => {
-        if (p.tokenName) {
-          return `
-      <div class="text-[10px] leading-snug">
-        <div>${escapeHtml(_vocabLabel(p.label))}: <strong class="${p.libName ? 'text-[#005ca9] dark:text-blue-400' : 'text-slate-700 dark:text-white'}">${escapeHtml(p.tokenName)}</strong>${p.libName ? ` <span class="text-slate-400 dark:text-slate-500 font-normal">· ${escapeHtml(p.libName)}</span>` : ''}</div>
-        <div class="pl-3 text-slate-400 dark:text-slate-500">↳ valor bruto: ${escapeHtml(String(p.value))}</div>
-      </div>
-    `;
-        }
-        return `
-      <div class="text-[10px] text-slate-500 dark:text-dark-muted leading-snug">
-        <span>${escapeHtml(_vocabLabel(p.label))}: <strong class="text-slate-700 dark:text-white">${escapeHtml(String(_vocabValue(p.value)))}</strong></span>
-      </div>
-    `;
-      }).join('');
+      : _quickSpecPropsHtml(el.properties);
+    const childrenHtml = _quickSpecChildrenHtml(el);
 
     return `
       <li data-qs-element data-qs-search="${escapeHtml(searchText)}"
@@ -639,6 +677,22 @@ function _quickSpecRenderList() {
           <div class="space-y-0.5 px-3 pt-2">
             ${propsHtml}
           </div>
+          ${hasNoPropertiesData ? '' : `
+          <div class="px-3 pt-2">
+            <div class="flex items-center justify-between gap-3">
+              <div class="min-w-0">
+                <p class="text-[12px] font-medium text-slate-700 dark:text-white">Incluir filhos diretos</p>
+                <p class="text-[10px] text-slate-500 dark:text-dark-muted">Lê só o 1º nível, até 8 filhos.</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                <input type="checkbox" class="sr-only peer" ${el.includeChildren ? 'checked' : ''} ${el.childrenLoading ? 'disabled' : ''}
+                  aria-label="Incluir filhos diretos de ${escapeHtml(el.name)}"
+                  onchange="quickSpecToggleChildren('${escapeHtml(el.tag)}', this.checked)">
+                <div class="w-9 h-5 bg-gray-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#005ca9]"></div>
+              </label>
+            </div>
+            ${childrenHtml}
+          </div>`}
           <div class="px-3 pt-2">
             <div class="flex items-center justify-between mb-1 ml-1">
               <label for="qs-note-${escapeHtml(el.tag)}" class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Observação <span class="normal-case font-medium text-slate-400 dark:text-slate-500">(opcional)</span></label>
@@ -748,11 +802,67 @@ function quickSpecFlushNote(tag) {
 }
 window.quickSpecFlushNote = quickSpecFlushNote;
 
+// Item enviado ao backend para criar o card (filhos só se o designer ligou e
+// já foram lidos).
+function _quickSpecInsertPayload(el) {
+  const p = { tag: el.tag, nodeId: el.nodeId, name: el.name, nodeType: el.nodeType, properties: el.properties, note: (el.note || '').trim().slice(0, 280) };
+  if (el.includeChildren && Array.isArray(el.children)) { p.children = el.children; p.childrenMore = el.childrenMore || 0; }
+  return p;
+}
+
+// "Incluir filhos diretos" (2026-10-05): liga = lê o 1º nível no backend
+// (mesmo filtro de categorias da captura); desliga = descarta. Se o item já
+// tem card no canvas, o bloco do card acompanha.
+function quickSpecToggleChildren(tag, on) {
+  const el = _quickSpecSessionResults.find(e => e.tag === tag);
+  if (!el) return;
+  el.includeChildren = !!on;
+  if (!on) {
+    el.children = null;
+    el.childrenMore = 0;
+    if (el.insertedCardId) parent.postMessage({ pluginMessage: { type: 'quick-spec-update-children', nodeId: el.insertedCardId, children: null } }, '*');
+    _quickSpecRenderList();
+    _quickSpecReopenItem(tag);
+    return;
+  }
+  if (!el.nodeId) { el.includeChildren = false; showToast('Elemento de origem não encontrado.'); _quickSpecRenderList(); return; }
+  el.childrenLoading = true;
+  _quickSpecRenderList();
+  _quickSpecReopenItem(tag);
+  parent.postMessage({ pluginMessage: { type: 'quick-spec-read-children', tag, nodeId: el.nodeId, categories: el.categories || null } }, '*');
+}
+window.quickSpecToggleChildren = quickSpecToggleChildren;
+
+function handleQuickSpecChildrenRead(msg) {
+  const el = _quickSpecSessionResults.find(e => e.tag === msg.tag);
+  if (!el) return;
+  el.childrenLoading = false;
+  if (msg.error) {
+    el.includeChildren = false;
+    showToast(msg.error);
+  } else if (el.includeChildren) {
+    el.children = msg.children || [];
+    el.childrenMore = msg.more || 0;
+    if (el.insertedCardId) parent.postMessage({ pluginMessage: { type: 'quick-spec-update-children', nodeId: el.insertedCardId, children: el.children, more: el.childrenMore } }, '*');
+  }
+  _quickSpecRenderList();
+  _quickSpecReopenItem(msg.tag);
+}
+window.handleQuickSpecChildrenRead = handleQuickSpecChildrenRead;
+
+// A lista é redesenhada inteira; mantém aberto o item em que o designer mexia.
+function _quickSpecReopenItem(tag) {
+  const idx = _quickSpecSessionResults.findIndex(e => e.tag === tag);
+  const li = document.querySelectorAll('#quick-spec-list [data-qs-element]')[idx];
+  const btn = li && li.querySelector('[data-accordion-toggle]');
+  if (btn && btn.getAttribute('aria-expanded') !== 'true') toggleAccordion(btn);
+}
+
 // Insere no canvas UM card do elemento indicado.
 function quickSpecInsertCanvasCards(idx) {
   const el = _quickSpecSessionResults[idx];
   if (!el) return;
-  _quickSpecInsertCards([{ tag: el.tag, nodeId: el.nodeId, name: el.name, nodeType: el.nodeType, properties: el.properties, note: (el.note || '').trim().slice(0, 280) }]);
+  _quickSpecInsertCards([_quickSpecInsertPayload(el)]);
 }
 window.quickSpecInsertCanvasCards = quickSpecInsertCanvasCards;
 
@@ -835,7 +945,7 @@ function quickSpecInsertAllCanvasCards() {
     showToast('Nenhum elemento pendente de inserção.', 'error');
     return;
   }
-  _quickSpecInsertCards(visible.map(el => ({ tag: el.tag, nodeId: el.nodeId, name: el.name, nodeType: el.nodeType, properties: el.properties, note: (el.note || '').trim().slice(0, 280) })));
+  _quickSpecInsertCards(visible.map(_quickSpecInsertPayload));
 }
 window.quickSpecInsertAllCanvasCards = quickSpecInsertAllCanvasCards;
 

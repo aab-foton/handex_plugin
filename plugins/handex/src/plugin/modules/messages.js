@@ -89,6 +89,7 @@
         // navegar pra outra view e voltar.
         if (typeof updateHomeFooterButtonsState === 'function') updateHomeFooterButtonsState();
         if (typeof updateHomeCardsCheckState === 'function') updateHomeCardsCheckState();
+        if (typeof quickSpecSyncFromCanvas === 'function') quickSpecSyncFromCanvas();
 
         // Auto-fill do título com o nome do arquivo/projeto Figma se campo ainda estiver vazio
         if (msg.projectName) {
@@ -119,6 +120,7 @@
       }
 
       if (msg.type === "scan-result") {
+        clearTimeout(window._scanWatchdog);
         if (typeof hideScanLoading === 'function') hideScanLoading();
         _refreshIcons()
 
@@ -250,6 +252,22 @@
       if (msg.type === 'quick-spec-canvas-cards-list') {
         if (typeof handleQuickSpecCanvasCardsList === 'function') handleQuickSpecCanvasCardsList(msg);
       }
+      // Nomes reais das telas dos fluxos, lidos do canvas ao gerar a Ficha
+      // (ver _hdFlowNodeNames, code.js) -- guardados em cada conexão para a
+      // Ficha HTML desenhar o diagrama com os mesmos nomes.
+      if (msg.type === 'flows-names-resolved' && msg.names) {
+        let changed = false;
+        (handoffData.createdFlows || []).forEach(f => {
+          const sn = f.sourceId && msg.names[f.sourceId];
+          const tn = f.targetId && msg.names[f.targetId];
+          if (sn && sn !== 'Tela removida' && f.sourceName !== sn) { f.sourceName = sn; changed = true; }
+          if (tn && tn !== 'Tela removida' && f.targetName !== tn) { f.targetName = tn; changed = true; }
+        });
+        if (changed) saveToStorage();
+      }
+      if (msg.type === 'quick-spec-children-read') {
+        if (typeof handleQuickSpecChildrenRead === 'function') handleQuickSpecChildrenRead(msg);
+      }
 
       if (msg.type === 'snapshot-history') {
         handoffData._history = Array.isArray(msg.history) ? msg.history : [];
@@ -311,6 +329,11 @@
         return;
       }
 
+      if (msg.type === "measurements-applied" && Array.isArray(msg.skipped) && msg.skipped.length > 0) {
+        const _lines = msg.skipped.map(sk => `${sk.name}: sem ${sk.reasons.join(', sem ')}`);
+        const _none = (msg.data || []).length === 0;
+        showToast((_none ? 'Nenhuma medida criada. ' : 'Algumas medidas não foram criadas. ') + _lines.slice(0, 3).join(' · ') + (_lines.length > 3 ? ` · +${_lines.length - 3}` : ''), _none ? 'error' : 'warning');
+      }
       if (msg.type === "measurements-applied") {
         const _mFrame = activeFrameId ? getFrame(activeFrameId) : null;
         console.log('[Handex medidas] applied', { n: (msg.data || []).length, activeFrameId, frameFound: !!_mFrame });

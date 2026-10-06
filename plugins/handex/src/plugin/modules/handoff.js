@@ -1544,25 +1544,27 @@ ${(handoffData.createdFlows || []).length === 0
       // ficha, nunca reimplementada aqui.
       const _allFlows = handoffData.createdFlows || [];
       if (_allFlows.length > 0) {
-        const flowTypeLabel = { line_solid: 'Linha sólida', line_dashed: 'Linha tracejada', diamond: 'Decisão', diamond_dashed: 'Decisão tracejada', event_start: 'Início', event_end: 'Fim', gateway_parallel: 'Paralelo' };
-        const _journeys = typeof computeFlowJourneys === 'function' ? computeFlowJourneys(_allFlows) : [{ nome: 'Fluxos', isUnnamed: true, conexoes: _allFlows }];
+        // Mesmo diagrama da Ficha do canvas (hdFlowDiagramLayout, shared/),
+        // desenhado em SVG: caixas com o nome da tela, Início/Fim em círculo,
+        // setas na cor/tracejado da conexão, decisões numeradas com o texto
+        // completo listado abaixo.
+        const _nameOf = {};
+        _allFlows.forEach(f => {
+          if (f.sourceId && f.sourceName) _nameOf[f.sourceId] = f.sourceName;
+          if (f.targetId && f.targetName) _nameOf[f.targetId] = f.targetName;
+        });
+        const _journeys = typeof hdFlowDiagramLayout === 'function' ? hdFlowDiagramLayout(_allFlows, id => _nameOf[id] || 'Tela', 856) : [];
         const flowsContent = `
-          <div class="space-y-4 text-left">
-            ${_journeys.map(journey => `
+          <div class="space-y-5 text-left">
+            ${_journeys.map(lay => `
               <div>
-                <p class="text-[9px] font-black uppercase tracking-wider text-orange-700 dark:text-orange-400 mb-1.5">${journey.isUnnamed ? journey.nome : escapeHtml(journey.nome)}<span class="text-slate-400 font-normal normal-case"> · ${journey.conexoes.length} conexões</span></p>
-                <div class="space-y-2">
-                  ${journey.conexoes.map((flow, fi) => `
-                    <div class="flex items-center gap-3 p-3 bg-orange-50/40 dark:bg-orange-950/10 border border-orange-100/60 dark:border-orange-900/30 rounded-xl">
-                      <div class="w-6 h-6 rounded-md bg-orange-100 dark:bg-orange-900/40 flex items-center justify-center text-orange-800 dark:text-orange-400 shrink-0 text-[10px] font-black">${fi + 1}</div>
-                      <div class="flex-1 min-w-0">
-                        <span class="text-[11px] font-black text-slate-800 dark:text-white">${flow.name || 'Fluxo'}</span>
-                        ${flow.decisionText ? `<span class="ml-2 text-[10px] text-slate-500 dark:text-slate-400">"${flow.decisionText}"</span>` : ''}
-                      </div>
-                      <span class="text-[9px] font-bold text-orange-800 dark:text-orange-400 uppercase tracking-wider shrink-0">${flowTypeLabel[flow.type] || flow.type || ''}</span>
-                    </div>
-                  `).join('')}
-                </div>
+                <p class="text-[12px] font-black text-slate-800 dark:text-white mb-2">${escapeHtml(lay.title)}</p>
+                <div class="overflow-x-auto">${_flowDiagramSvg(lay)}</div>
+                ${lay.decisions.length > 0 ? `
+                <table class="w-full mt-2 text-[11px] border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+                  <thead><tr class="bg-slate-100 dark:bg-slate-800 text-left"><th class="p-2 w-8">#</th><th class="p-2">Caminho</th><th class="p-2">Decisão</th></tr></thead>
+                  <tbody>${lay.decisions.map(d => `<tr class="border-t border-slate-200 dark:border-slate-700"><td class="p-2 font-bold">${d.n}</td><td class="p-2">${escapeHtml(d.from)} → ${escapeHtml(d.to)}</td><td class="p-2">${escapeHtml(d.text || '—')}</td></tr>`).join('')}</tbody>
+                </table>` : ''}
               </div>
             `).join('')}
           </div>
@@ -2557,3 +2559,37 @@ ${(handoffData.createdFlows || []).length === 0
       return fullHTML;
     }
 
+// SVG do diagrama de uma jornada (Ficha HTML). Mesmas posições do diagrama
+// desenhado no canvas -- ver hdFlowDiagramLayout (shared/flow-diagram-layout.js).
+function _flowDiagramSvg(lay) {
+  const esc = v => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const head = (a, b, c) => {
+    const dx = b.x - a.x, dy = b.y - a.y, len = Math.sqrt(dx * dx + dy * dy) || 1;
+    const ux = dx / len, uy = dy / len, L = 8, W = 4.5, bx = b.x - ux * L, by = b.y - uy * L;
+    return `<path d="M ${b.x} ${b.y} L ${bx - uy * W} ${by + ux * W} L ${bx + uy * W} ${by - ux * W} Z" fill="${c}"/>`;
+  };
+  const clip = (t, n) => (t.length > n ? t.slice(0, n - 1) + '…' : t);
+  let out = `<svg xmlns="http://www.w3.org/2000/svg" width="${lay.width}" height="${lay.height}" viewBox="0 0 ${lay.width} ${lay.height}" style="max-width:100%;height:auto;font-family:Roboto,Inter,sans-serif">`;
+  out += `<rect width="${lay.width}" height="${lay.height}" rx="8" fill="#ebf1f2"/>`;
+  lay.edges.forEach(e => {
+    const p = e.points;
+    out += `<path d="M ${p.map(q => `${q.x} ${q.y}`).join(' L ')}" fill="none" stroke="${e.color}" stroke-width="1.5"${e.dashed ? ' stroke-dasharray="4 4"' : ''}/>`;
+    out += head(p[p.length - 2], p[p.length - 1], e.color);
+  });
+  lay.events.forEach(ev => {
+    out += `<path d="M ${ev.line[0].x} ${ev.line[0].y} L ${ev.line[1].x} ${ev.line[1].y}" stroke="#404b52" stroke-width="1.5"/>`;
+    out += head(ev.line[0], ev.line[1], '#404b52');
+    out += `<circle cx="${ev.cx}" cy="${ev.cy}" r="${ev.r}" fill="#ffffff" stroke="#22292e" stroke-width="${ev.kind === 'start' ? 1.5 : 3.5}"><title>${ev.kind === 'start' ? 'Início' : 'Fim'}</title></circle>`;
+  });
+  lay.boxes.forEach(b => {
+    out += `<rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="8" fill="#ffffff" stroke="#9eb2b8"/>`;
+    out += `<text x="${b.x + b.w / 2}" y="${b.y + b.h / 2 + 4}" text-anchor="middle" font-size="12" font-weight="600" fill="#22292e"><title>${esc(b.name)}</title>${esc(clip(b.name, 20))}</text>`;
+  });
+  lay.edges.forEach(e => {
+    if (!e.decision) return;
+    const d = e.decision, h = 11;
+    out += `<path d="M ${d.x} ${d.y - h} L ${d.x + h} ${d.y} L ${d.x} ${d.y + h} L ${d.x - h} ${d.y} Z" fill="#ffffff" stroke="${e.color}" stroke-width="1.5"/>`;
+    out += `<text x="${d.x}" y="${d.y + 3.5}" text-anchor="middle" font-size="10" font-weight="700" fill="${e.color}">${d.n}</text>`;
+  });
+  return out + '</svg>';
+}

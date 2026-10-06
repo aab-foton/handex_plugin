@@ -120,7 +120,7 @@
         return _CATEGORIAS.flatMap(cat => (f.specs && f.specs[cat]) || []).map(item => ({
           nome: item.name,
           categoria: _CATEGORIA_LABELS[item.type] || item.type,
-          personalizado: !!item.isMarkedCustom,
+          personalizado: _isBuildItem(item, item.type),
           propriedades: (item.properties || []).map(p => ({ propriedade: _vocabLabel(p.label || p.type), valor: _vocabValue(p.value) })),
           ...(Array.isArray(item.customizations) && item.customizations.length > 0
             ? { personalizacoesDSC: item.customizations.map(c => ({ camada: c.layer, campo: _vocabLabel(c.campo), atual: c.atual, padraoDaLib: c.padrao })) }
@@ -183,7 +183,19 @@
             valor: _vocabValue(p.value),
             token: p.tokenName || null,
             biblioteca: p.libName || null
-          }))
+          })),
+          ...(el.includeChildren && Array.isArray(el.children) && el.children.length > 0 ? {
+            filhosDiretos: el.children.map(ch => ({
+              nome: ch.name,
+              tipoNode: ch.nodeType,
+              propriedades: (ch.properties || []).map(p => ({
+                propriedade: _vocabLabel(p.label),
+                valor: _vocabValue(p.value),
+                token: p.tokenName || null,
+                biblioteca: p.libName || null
+              }))
+            }))
+          } : {})
         }));
 
       return {
@@ -268,6 +280,10 @@
           const props = item.propriedades.map(p => `${p.propriedade}: ${p.valor}${p.token ? ` (token: ${p.token}${p.biblioteca ? `, ${p.biblioteca}` : ''})` : ''}`).join(' | ');
           lines.push(`- [${item.tag}] ${item.nome} (${item.tipoNode})${props ? ` — ${props}` : ''}`);
           if (item.observacao) lines.push(`  Observação: ${item.observacao}`);
+          (item.filhosDiretos || []).forEach(ch => {
+            const cp = ch.propriedades.map(p => `${p.propriedade}: ${p.valor}${p.token ? ` (token: ${p.token}${p.biblioteca ? `, ${p.biblioteca}` : ''})` : ''}`).join(' | ');
+            lines.push(`  - filho ${ch.nome} (${ch.tipoNode})${cp ? ` — ${cp}` : ''}`);
+          });
         });
       }
 
@@ -923,12 +939,19 @@
 
       const flowsCount = (handoffData.createdFlows || []).length;
 
+      // Anotações não vivem em handoffData: conta os cards que estão no canvas
+      // (lista sincronizada com o canvas ao entrar na home, ver navigate/
+      // quickSpecSyncFromCanvas).
+      const annotationsCount = (typeof _quickSpecSessionResults !== 'undefined' ? _quickSpecSessionResults : [])
+        .filter(el => el.insertedCardId).length;
+
       const hasDadosProjeto = !!(s1.titulo && s1.titulo.trim()) && (s1.equipe || []).length > 0;
 
       const _withCount = (label, count) => `${label} (${count})`;
 
       return {
         'dados-projeto': { done: hasDadosProjeto, label: 'Informações salvas' },
+        'quick-spec': { done: annotationsCount > 0, label: _withCount('Anotações inseridas', annotationsCount) },
         'tokens': { done: scannedFramesCount > 0, label: _withCount('Tokens escaneados', scannedFramesCount) },
         'specs': { done: specsCount > 0, label: _withCount('Especificações criadas', specsCount) },
         'measurement': { done: measurementsCount > 0, label: _withCount('Medidas inseridas', measurementsCount) },
