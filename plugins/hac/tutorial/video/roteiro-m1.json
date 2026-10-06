@@ -1,0 +1,69 @@
+{
+  "titulo": "HAC Mobile | Primeiros passos",
+  "voz": "pf_dora",
+  "cenas": [
+    {
+      "id": "abertura",
+      "kicker": "Tutorial HAC Mobile · 1 de 5",
+      "titulo": "Primeiros passos",
+      "fala": "Este é o HAC, o Handoff de Acessibilidade da CAIXA. Neste vídeo, você começa a documentar uma tela mobile direto no Figma."
+    },
+    {
+      "id": "proposito",
+      "titulo": "O que o HAC faz",
+      "fala": "O HAC registra o que o leitor de tela anuncia em cada elemento e em que ordem ele percorre a tela. O time de desenvolvimento recebe tudo pronto, no próprio canvas.",
+      "print": "01-home-origem"
+    },
+    {
+      "id": "lib",
+      "titulo": "Escolha Mobile",
+      "fala": "Na tela inicial, escolha Super DSC Mobile. O HAC passa a reconhecer os componentes do DSC Super App.",
+      "print": "01-home-origem",
+      "destaque": "mobile"
+    },
+    {
+      "id": "selecionar",
+      "titulo": "Selecione a tela",
+      "fala": "Selecione no canvas a tela que você quer documentar e clique em Selecionar Tela.",
+      "print": "m-03-lista-telas",
+      "destaque": "selecionar"
+    },
+    {
+      "id": "nomear",
+      "titulo": "Dê um nome",
+      "fala": "Dê um nome para a tela e confirme. Ela ganha um selo numerado e passa a reunir toda a documentação dela.",
+      "print": "m-04-selecionar-tela",
+      "destaque": "confirmar"
+    },
+    {
+      "id": "cards",
+      "titulo": "Acompanhe cada tela",
+      "fala": "Cada tela vira um card, com o andamento de cada etapa. Clique no card para abrir o espaço de trabalho.",
+      "print": "m-03-lista-telas",
+      "destaqueManual": {
+        "x": 17,
+        "y": 158,
+        "w": 446,
+        "h": 178
+      }
+    },
+    {
+      "id": "abas",
+      "titulo": "Quatro etapas",
+      "fala": "No mobile, o trabalho tem quatro abas: Tabulação, Swipe para a ordem de leitura por gesto, Leitor de Tela e Resumo.",
+      "print": "m-05-aba-tabulacao",
+      "destaques": [
+        "abaTab",
+        "abaSwipe",
+        "abaLeitor",
+        "abaResumo"
+      ]
+    },
+    {
+      "id": "fim",
+      "kicker": "Próximo vídeo",
+      "titulo": "Ordem de Tabulação",
+      "fala": "No próximo vídeo, você monta a ordem de tabulação da tela mobile."
+    }
+  ]
+}

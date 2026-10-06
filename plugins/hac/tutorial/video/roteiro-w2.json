@@ -1,0 +1,70 @@
+{
+  "titulo": "HAC Web | Ordem de Tabulação",
+  "voz": "pf_dora",
+  "cenas": [
+    {
+      "id": "abertura",
+      "kicker": "Tutorial HAC Web · 2 de 4",
+      "titulo": "Ordem de Tabulação",
+      "fala": "A ordem de tabulação é a sequência em que o teclado percorre os elementos interativos da tela."
+    },
+    {
+      "id": "vazio",
+      "titulo": "Comece pela aba",
+      "fala": "Abra a tela, entre na aba Tabulação e clique em Criar ordem de tabulação.",
+      "print": "06-aba-tabulacao-vazia",
+      "destaque": "criar"
+    },
+    {
+      "id": "instrucao",
+      "titulo": "Leia as instruções",
+      "fala": "Na web, a tabulação é a sequência que o leitor de tela, como NVDA, VoiceOver ou Jaws, percorre quando o usuário navega por teclado ou outros dispositivos. Marque só os elementos interativos, como botões, links e campos.",
+      "print": "06b-instrucao-tabulacao"
+    },
+    {
+      "id": "marcar",
+      "titulo": "Marque no canvas",
+      "fala": "No canvas, segure Shift e clique em cada elemento, da esquerda para a direita, de cima para baixo. O HAC trabalha numa cópia da tela e não altera o design original.",
+      "print": "06c-revisao-tabulacao"
+    },
+    {
+      "id": "revisao",
+      "titulo": "Revise a sequência",
+      "fala": "Revise a lista. Arraste para reordenar, remova o que sobrou e confirme em Criar ordem de tabulação.",
+      "print": "06c-revisao-tabulacao",
+      "destaque": "confirmar"
+    },
+    {
+      "id": "tamanho",
+      "titulo": "Tamanho do selo",
+      "fala": "Escolha o tamanho do selo numerado, pequeno ou grande, conforme a escala da tela. Trocar depois atualiza os selos já aplicados.",
+      "print": "05-aba-tabulacao",
+      "destaqueManual": {
+        "x": 14,
+        "y": 208,
+        "w": 236,
+        "h": 36
+      }
+    },
+    {
+      "id": "simular",
+      "titulo": "Ouça a ordem",
+      "fala": "Use Simular leitura para ouvir a sequência em voz alta e conferir se ela faz sentido.",
+      "print": "05-aba-tabulacao",
+      "destaque": "simular"
+    },
+    {
+      "id": "preencher",
+      "titulo": "Leve para o handoff",
+      "fala": "Quando estiver tudo certo, clique em Preencher Tabulação.",
+      "print": "05-aba-tabulacao",
+      "destaque": "preencher"
+    },
+    {
+      "id": "fim",
+      "kicker": "Próximo vídeo",
+      "titulo": "Leitor de Tela",
+      "fala": "No próximo vídeo: as especificações para o leitor de tela na web."
+    }
+  ]
+}

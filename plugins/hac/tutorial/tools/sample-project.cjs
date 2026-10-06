@@ -13,10 +13,10 @@ module.exports = function sampleProject(origin) {
     a11ySourceLib: web ? { id: 'super-dsc-web', label: 'Super DSC | Web' } : { id: 'super-app', label: 'DSC | Super App' }, a11yDscComponentName: null,
     a11yAreaId: areaId, drawMode: 'contorno', needsReview: false, locked: true, visible: true,
     pendingConfirmation: false,
-  }, extra || {});
+  }, (!web && a11yType === 'elemento') ? { a11ySubtype: { variant: 'componente' } } : {}, extra || {});
   const specs = [
     spec('S1', 'A1', 'titulo', 'Acesse sua conta', 'H',
-      [{ key: 'descricao', label: 'Descrição', value: 'Identificar como título de nível 1.' }],
+      [{ key: 'descricao', label: 'Descrição', value: web ? 'Identificar como título de nível 1.' : 'Identificar como título.' }],
       { a11ySubtype: { nivel: 'H1' } }),
     spec('S2', 'A1', 'elemento', 'Campo CPF', '1',
       [{ key: 'componente', label: 'Componente', value: 'Input / Text Field - Form' },

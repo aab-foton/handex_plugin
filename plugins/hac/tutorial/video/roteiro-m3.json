@@ -1,0 +1,52 @@
+{
+  "titulo": "HAC Mobile | Ordem de Leitura",
+  "voz": "pf_dora",
+  "cenas": [
+    {
+      "id": "abertura",
+      "kicker": "Tutorial HAC Mobile · 3 de 5",
+      "titulo": "Ordem de Leitura",
+      "fala": "No celular, quem usa leitor de tela navega deslizando o dedo. A ordem de leitura documenta esse caminho."
+    },
+    {
+      "id": "aba",
+      "titulo": "Abra a aba Swipe",
+      "fala": "Abra a aba Swipe e clique em Criar ordem de leitura.",
+      "print": "m-21-aba-swipe",
+      "destaques": [
+        "aba",
+        "criar"
+      ]
+    },
+    {
+      "id": "instrucao",
+      "titulo": "Leia as instruções",
+      "fala": "Diferente da tabulação, aqui entram todos os elementos da tela, inclusive textos, na ordem em que o gesto passa por eles.",
+      "real": "Screenshot 2026-09-30 094757.png"
+    },
+    {
+      "id": "captura",
+      "titulo": "Marque os pontos",
+      "fala": "Segure Shift e clique em cada ponto no canvas. Se a tabulação já estiver pronta, você também pode reaproveitá-la como ponto de partida.",
+      "real": "Screenshot 2026-09-30 094913.png"
+    },
+    {
+      "id": "revisao",
+      "titulo": "Revise a trilha",
+      "fala": "Revise os pontos na lista, reordene se precisar e confirme.",
+      "real": "Screenshot 2026-09-30 094934.png"
+    },
+    {
+      "id": "trilha",
+      "titulo": "A trilha no canvas",
+      "fala": "O HAC desenha a trilha sobre a cópia da tela, mostrando o caminho exato do gesto.",
+      "real": "Screenshot 2026-09-30 094949.png"
+    },
+    {
+      "id": "fim",
+      "kicker": "Próximo vídeo",
+      "titulo": "Leitor de Tela",
+      "fala": "No próximo vídeo: as especificações para o leitor de tela no mobile."
+    }
+  ]
+}

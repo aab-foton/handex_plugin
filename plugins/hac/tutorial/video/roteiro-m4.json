@@ -1,0 +1,68 @@
+{
+  "titulo": "HAC Mobile | Leitor de Tela",
+  "voz": "pf_dora",
+  "cenas": [
+    {
+      "id": "abertura",
+      "kicker": "Tutorial HAC Mobile · 4 de 5",
+      "titulo": "Leitor de Tela",
+      "fala": "Agora, as especificações para o leitor de tela: o que o VoiceOver e o TalkBack anunciam em cada elemento."
+    },
+    {
+      "id": "instrucao",
+      "titulo": "Entenda a tarefa",
+      "fala": "As instruções explicam o objetivo: garantir que o conteúdo seja compreendido e implementado exatamente como projetado.",
+      "print": "m-11-instrucao-leitor"
+    },
+    {
+      "id": "nova",
+      "titulo": "Crie uma spec",
+      "fala": "Selecione o elemento no canvas e clique em Nova spec.",
+      "print": "m-07-aba-leitor",
+      "destaque": "novaSpec"
+    },
+    {
+      "id": "categoria",
+      "titulo": "Três categorias",
+      "fala": "No mobile são três categorias: Títulos, Elementos e Imagens, e Elemento Decorativo.",
+      "print": "m-12-nova-spec-categoria"
+    },
+    {
+      "id": "elemento",
+      "titulo": "Elementos e Imagens",
+      "fala": "Para botões, links e imagens, o HAC reconhece o componente do DSC Super App e preenche o link do componente. Você confere e ajusta.",
+      "print": "m-13-form-elemento",
+      "destaque": "componente"
+    },
+    {
+      "id": "titulo",
+      "titulo": "Títulos",
+      "fala": "No mobile, todo título usa o mesmo marcador H, sem níveis de H1 a H6.",
+      "print": "m-14-form-titulo"
+    },
+    {
+      "id": "decorativo",
+      "titulo": "Elemento Decorativo",
+      "fala": "Ilustrações e ícones sem função são marcados como decorativos, e o leitor de tela os ignora.",
+      "print": "m-15-form-decorativo"
+    },
+    {
+      "id": "canvas",
+      "titulo": "No canvas",
+      "fala": "Cada spec aparece no canvas, ligada ao elemento, com o card que o time de desenvolvimento vai consultar.",
+      "real": "Screenshot 2026-09-30 095224.png"
+    },
+    {
+      "id": "lista",
+      "titulo": "Tudo organizado",
+      "fala": "No plugin, as specs ficam agrupadas por categoria. Dá para localizar, editar ou excluir cada uma.",
+      "print": "m-07-aba-leitor"
+    },
+    {
+      "id": "fim",
+      "kicker": "Próximo vídeo",
+      "titulo": "Gerar e finalizar",
+      "fala": "No último vídeo da trilha mobile: gerar e finalizar o handoff."
+    }
+  ]
+}

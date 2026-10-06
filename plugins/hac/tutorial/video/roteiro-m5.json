@@ -1,0 +1,66 @@
+{
+  "titulo": "HAC Mobile | Gerar e finalizar",
+  "voz": "pf_dora",
+  "cenas": [
+    {
+      "id": "abertura",
+      "kicker": "Tutorial HAC Mobile · 5 de 5",
+      "titulo": "Gerar e finalizar",
+      "fala": "Com a tabulação, a ordem de leitura e o leitor de tela prontos, é hora de reunir tudo no handoff."
+    },
+    {
+      "id": "gerar",
+      "titulo": "Gere o handoff da tela",
+      "fala": "Abra a aba Resumo e clique em Gerar Handoff.",
+      "print": "m-08-aba-resumo",
+      "destaque": "gerar"
+    },
+    {
+      "id": "processando",
+      "titulo": "Consolidando",
+      "fala": "O HAC consolida cada etapa, uma de cada vez.",
+      "real": "Screenshot 2026-09-30 095638.png"
+    },
+    {
+      "id": "ficha",
+      "titulo": "A ficha no canvas",
+      "fala": "O resultado é a ficha da tela no canvas, com as instruções, a tabulação, a ordem de leitura e as especificações, lado a lado com o design.",
+      "real": "Screenshot 2026-09-30 095714.png"
+    },
+    {
+      "id": "proximo",
+      "titulo": "E agora?",
+      "fala": "Quando a ficha fica pronta, escolha: documentar outra tela, ou finalizar o handoff do projeto.",
+      "print": "m-09-modal-pos-handoff",
+      "destaques": [
+        "outra",
+        "finalizar"
+      ]
+    },
+    {
+      "id": "finalizar",
+      "titulo": "Finalize o projeto",
+      "fala": "Quando todas as telas estiverem prontas, o botão Finalizar é liberado na lista de telas.",
+      "print": "m-03-lista-telas",
+      "destaque": "finalizar"
+    },
+    {
+      "id": "confirmar",
+      "titulo": "Confirme",
+      "fala": "Confirme a finalização. Ela marca esta versão do handoff como concluída, e você pode continuar editando depois.",
+      "real": "Screenshot 2026-09-30 095815.png"
+    },
+    {
+      "id": "final",
+      "titulo": "Pronto para o desenvolvimento",
+      "fala": "Pronto. O time de desenvolvimento tem toda a acessibilidade documentada no próprio Figma, e o design original segue intocado.",
+      "real": "Screenshot 2026-09-30 095837.png"
+    },
+    {
+      "id": "fim",
+      "kicker": "Tutorial HAC Mobile",
+      "titulo": "Obrigado!",
+      "fala": "Você concluiu a trilha mobile do HAC. Boa documentação!"
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "titulo": "HAC Web | Primeiros passos",
+  "voz": "pf_dora",
+  "cenas": [
+    {
+      "id": "abertura",
+      "kicker": "Tutorial HAC Web · 1 de 4",
+      "titulo": "Primeiros passos",
+      "fala": "Este é o HAC, o Handoff de Acessibilidade da CAIXA. Neste vídeo, você começa a documentar uma tela web direto no Figma."
+    },
+    {
+      "id": "proposito",
+      "titulo": "O que o HAC faz",
+      "fala": "O HAC registra como o leitor de tela anuncia cada elemento e em que ordem o teclado percorre a tela. O time de desenvolvimento recebe tudo pronto, no próprio canvas.",
+      "print": "01-home-origem"
+    },
+    {
+      "id": "lib",
+      "titulo": "Escolha Web",
+      "fala": "Na tela inicial, escolha Super DSC Web.",
+      "print": "01-home-origem",
+      "destaque": "web"
+    },
+    {
+      "id": "sublib",
+      "titulo": "Escolha a biblioteca",
+      "fala": "Na web convivem duas bibliotecas: a legada, Web Angular e React, e a nova, Super DSC Web. Escolha a do seu projeto. O HAC reconhece as duas.",
+      "print": "02-home-sublib-web",
+      "destaques": [
+        "legado",
+        "nova"
+      ]
+    },
+    {
+      "id": "selecionar",
+      "titulo": "Selecione a tela",
+      "fala": "Selecione no canvas a tela que você quer documentar e clique em Selecionar Tela.",
+      "print": "03-lista-telas",
+      "destaque": "selecionar"
+    },
+    {
+      "id": "nomear",
+      "titulo": "Dê um nome",
+      "fala": "Dê um nome para a tela e confirme. Ela ganha um selo numerado e passa a reunir toda a documentação dela.",
+      "print": "04-selecionar-tela",
+      "destaque": "confirmar"
+    },
+    {
+      "id": "cards",
+      "titulo": "Acompanhe cada tela",
+      "fala": "Cada tela vira um card, com o andamento de cada etapa. Clique no card para abrir o espaço de trabalho.",
+      "print": "03-lista-telas",
+      "destaqueManual": {
+        "x": 17,
+        "y": 158,
+        "w": 446,
+        "h": 183
+      }
+    },
+    {
+      "id": "abas",
+      "titulo": "Três etapas",
+      "fala": "Na web, o trabalho tem três abas. Tabulação, para a ordem do teclado. Leitor de Tela, para o que cada elemento anuncia. E Resumo, para gerar o handoff.",
+      "print": "05-aba-tabulacao",
+      "destaques": [
+        "abaTab",
+        "abaLeitor",
+        "abaResumo"
+      ]
+    },
+    {
+      "id": "fim",
+      "kicker": "Próximo vídeo",
+      "titulo": "Ordem de Tabulação",
+      "fala": "No próximo vídeo, você monta a ordem de tabulação da tela web."
+    }
+  ]
+}

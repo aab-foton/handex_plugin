@@ -1,0 +1,70 @@
+{
+  "titulo": "HAC Mobile | Ordem de Tabulação",
+  "voz": "pf_dora",
+  "cenas": [
+    {
+      "id": "abertura",
+      "kicker": "Tutorial HAC Mobile · 2 de 5",
+      "titulo": "Ordem de Tabulação",
+      "fala": "A ordem de tabulação é a sequência que o leitor de tela percorre nos elementos interativos da tela."
+    },
+    {
+      "id": "vazio",
+      "titulo": "Comece pela aba",
+      "fala": "Abra a tela, entre na aba Tabulação e clique em Criar ordem de tabulação.",
+      "print": "m-06-aba-tabulacao-vazia",
+      "destaque": "criar"
+    },
+    {
+      "id": "instrucao",
+      "titulo": "Leia as instruções",
+      "fala": "No mobile, é a sequência que o VoiceOver e o TalkBack percorrem nos elementos interativos. Marque só botões, links, campos e seletores.",
+      "print": "m-06b-instrucao-tabulacao"
+    },
+    {
+      "id": "captura",
+      "titulo": "Marque no canvas",
+      "fala": "No canvas, segure Shift e clique em cada elemento, na ordem certa. O HAC trabalha numa cópia da tela e não altera o design original.",
+      "real": "Screenshot 2026-09-30 094350.png"
+    },
+    {
+      "id": "revisao",
+      "titulo": "Revise a sequência",
+      "fala": "Revise a lista. Arraste para reordenar, remova o que sobrou e confirme em Criar ordem de tabulação.",
+      "print": "m-06c-revisao-tabulacao",
+      "destaque": "confirmar"
+    },
+    {
+      "id": "tamanho",
+      "titulo": "Tamanho do selo",
+      "fala": "Escolha o tamanho do selo numerado, pequeno ou grande. Trocar depois atualiza os selos já aplicados.",
+      "print": "m-05-aba-tabulacao",
+      "destaqueManual": {
+        "x": 14,
+        "y": 208,
+        "w": 236,
+        "h": 36
+      }
+    },
+    {
+      "id": "simular",
+      "titulo": "Ouça a ordem",
+      "fala": "Use Simular leitura para ouvir a sequência em voz alta.",
+      "print": "m-05-aba-tabulacao",
+      "destaque": "simular"
+    },
+    {
+      "id": "preencher",
+      "titulo": "Leve para o handoff",
+      "fala": "Quando estiver tudo certo, clique em Preencher Tabulação.",
+      "print": "m-05-aba-tabulacao",
+      "destaque": "preencher"
+    },
+    {
+      "id": "fim",
+      "kicker": "Próximo vídeo",
+      "titulo": "Ordem de Leitura",
+      "fala": "No próximo vídeo: a ordem de leitura por gesto, o Swipe."
+    }
+  ]
+}

@@ -1,16 +1,16 @@
 # Tutorial em vídeo do HAC
 
-Série de 5 vídeos curtos (1920×1080, narração em português), montada com
+Duas trilhas de vídeos curtos (1920×1080, narração em português), montadas com
 [HyperFrames](https://github.com/heygen-com/hyperframes) a partir de prints da
-interface **real** do plugin.
+interface **real** do plugin. Cada trilha usa só prints e regras da sua plataforma.
 
-| # | Vídeo | Duração |
-|---|---|---|
-| 1 | Primeiros passos | ~1min28 |
-| 2 | Ordem de Tabulação | ~1min09 |
-| 3 | Leitor de Tela | ~1min19 |
-| 4 | Ordem de Leitura (mobile) | ~51s |
-| 5 | Gerar e finalizar o handoff | ~59s |
+| Trilha | Vídeos |
+|---|---|
+| **Web** (`w1`–`w4`) | Primeiros passos · Ordem de Tabulação · Leitor de Tela (4 categorias, H1–H6) · Gerar e finalizar |
+| **Mobile** (`m1`–`m5`) | Primeiros passos · Ordem de Tabulação · Ordem de Leitura (Swipe) · Leitor de Tela (3 categorias, "H" único) · Gerar e finalizar |
+
+A trilha web não mostra o canvas: os prints reais do canvas (`../prints`) são de um
+projeto mobile e só entram na trilha mobile.
 
 ## Como funciona
 
@@ -18,16 +18,17 @@ interface **real** do plugin.
    headless e troca o `parent` da página por um "Figma de mentira" que responde às
    mensagens da UI (`init-plugin` com o projeto de exemplo de `tools/sample-project.cjs`).
    Cada cena de `tools/scenes.cjs` chama funções reais da interface (abrir aba, modal,
-   onboarding) e gera `prints/NN-*.png` (480×750 a 2x). As coordenadas dos botões a
+   onboarding) e sai em duas versões: web (`prints/NN-*.png`) e mobile (`prints/m-NN-*.png`), 480×750 a 2x. As coordenadas dos botões a
    destacar vão para `prints/rects.json`.
 2. **Prints do canvas** — a Plugin API não roda fora do Figma, então as cenas que
    mostram o resultado no canvas usam os prints reais de `../prints/Screenshot *.png`
    (feitos à mão em 30/09, projeto mobile).
-3. **Roteiros** — `video/roteiro-NN.json` (o 1 é editado à mão; 2 a 5 vêm de
-   `tools/roteiros.py`). Cada cena tem `fala`, `titulo` e um `print` (UI) ou `real`
+3. **Roteiros** — `video/roteiro-<id>.json`, todos gerados por `tools/roteiros.py`
+   (edite lá e rode de novo). Cada cena tem `fala`, `titulo` e um `print` (UI) ou `real`
    (canvas), com `destaque`/`destaques`/`destaqueManual`.
-4. **Narração** — `tools/tts.py NN` gera um `.wav` por cena com `hyperframes tts`
-   (Kokoro local, voz `pf_dora`). Só refaz a cena cuja fala mudou.
+4. **Narração** — `tools/tts.py <id>` gera um `.wav` por cena com o Kokoro local (voz
+   `pf_dora`). Termos em inglês (handoff, plugin...) e "HAC" (lido "hack") seguem
+   `video/pronuncia.json`. Só refaz a cena cuja fala mudou.
 5. **Composição** — `tools/build-video.cjs NN` monta `video/vNN/index.html` (tempo de
    cada cena = duração da fala + respiro), com Roboto local e cores da marca.
 6. **Render** — `npx hyperframes render video/vNN -o renders/....mp4 --workers 2`.
@@ -38,9 +39,10 @@ interface **real** do plugin.
 cd plugins/hac && npm run bundle:ui          # ui.html atualizado
 cd tutorial
 node tools/shoot.cjs                         # todos os prints (ou: node tools/shoot.cjs 05-aba-tabulacao)
-python tools/tts.py 01 02 03 04 05           # só se alguma fala mudou
-node tools/build-video.cjs 02                # monta
-npx hyperframes render video/v02 -o renders/hac-02-ordem-de-tabulacao.mp4 --workers 2
+python tools/roteiros.py                     # se mudou algum roteiro
+python tools/tts.py w2                       # só refaz as falas alteradas
+node tools/build-video.cjs w2                # monta
+npx hyperframes render video/vw2 -o renders/hac-web-2-ordem-de-tabulacao.mp4 --workers 2
 ```
 
 Requisitos já instalados nesta máquina: Node 22+, Chrome, FFmpeg (winget
