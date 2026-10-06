@@ -703,3 +703,25 @@ body {
          em dark:text-dark-muted no resto do plugin. */
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%239eb2b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
     }
+
+
+/* ── Personalização (2026-10-06) ───────────────────────────────────────── */
+.hac-pz-opt {
+  height: 2rem; border-radius: var(--radius-dsc-medium, 8px);
+  font-size: 12px; font-weight: 700;
+  border: 1px solid rgba(64, 75, 82, 0.2); color: #404b52; background: #fff;
+}
+.dark .hac-pz-opt { border-color: #334155; color: #b4c6d8; background: transparent; }
+.hac-pz-opt[aria-pressed="true"] { background: #005ca9; border-color: #005ca9; color: #fff; }
+
+/* Espaçamento de texto — WCAG 2.2, 1.4.12 (Text Spacing). Valores mínimos do
+   critério; aplicado com !important para vencer utilitários de line-height e
+   tracking. Texto que trunca (.truncate) passa a quebrar linha para não perder
+   conteúdo. */
+html.hac-text-spacing body * {
+  line-height: 1.5 !important;
+  letter-spacing: 0.12em !important;
+  word-spacing: 0.16em !important;
+}
+html.hac-text-spacing body p + p { margin-top: 2em !important; }
+html.hac-text-spacing body .truncate { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; }

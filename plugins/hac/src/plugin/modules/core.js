@@ -732,6 +732,59 @@ function _a11yCaptureMiniBarCancel() {
 }
 window._a11yCaptureMiniBarCancel = _a11yCaptureMiniBarCancel;
 
+// ── Personalização (2026-10-06) ─────────────────────────────────────────
+function toggleHacPersonalizeMenu() {
+  const menu = document.getElementById('hac-personalize-menu');
+  const btn = document.getElementById('btn-hac-personalize');
+  if (!menu) return;
+  const willOpen = menu.classList.contains('hidden');
+  menu.classList.toggle('hidden', !willOpen);
+  if (btn) btn.setAttribute('aria-expanded', String(willOpen));
+  if (willOpen) _hacRenderPersonalizeMenu();
+}
+window.toggleHacPersonalizeMenu = toggleHacPersonalizeMenu;
+
+function _hacRenderPersonalizeMenu() {
+  const isDark = document.documentElement.classList.contains('dark');
+  document.querySelectorAll('#hac-personalize-menu [data-hac-scale]').forEach(b => {
+    const on = Math.abs(parseFloat(b.dataset.hacScale) - (window.currentUiScale || 1)) < 0.01;
+    b.setAttribute('aria-pressed', String(on));
+  });
+  document.querySelectorAll('#hac-personalize-menu [data-hac-theme]').forEach(b => {
+    b.setAttribute('aria-pressed', String((b.dataset.hacTheme === 'dark') === isDark));
+  });
+  const ts = document.getElementById('hac-pz-text-spacing');
+  if (ts) ts.checked = document.documentElement.classList.contains('hac-text-spacing');
+}
+window._hacRenderPersonalizeMenu = _hacRenderPersonalizeMenu;
+
+function setHacTheme(theme) {
+  const isDark = document.documentElement.classList.contains('dark');
+  if ((theme === 'dark') !== isDark) toggleTheme();
+  _hacRenderPersonalizeMenu();
+}
+window.setHacTheme = setHacTheme;
+
+// Espaçamento de texto (WCAG 2.2, critério 1.4.12): entrelinha 1,5, 2em após
+// parágrafos, 0,12em entre letras e 0,16em entre palavras — ver
+// .hac-text-spacing em styles/plugin.css. Preferência por instalação.
+function setHacTextSpacing(on) {
+  document.documentElement.classList.toggle('hac-text-spacing', !!on);
+  try { localStorage.setItem('hac-text-spacing', on ? '1' : '0'); } catch (e) { }
+  _hacRenderPersonalizeMenu();
+}
+window.setHacTextSpacing = setHacTextSpacing;
+try { if (localStorage.getItem('hac-text-spacing') === '1') document.documentElement.classList.add('hac-text-spacing'); } catch (e) { }
+
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('hac-personalize-menu');
+  const btn = document.getElementById('btn-hac-personalize');
+  if (!menu || menu.classList.contains('hidden')) return;
+  if (menu.contains(e.target) || (btn && btn.contains(e.target))) return;
+  menu.classList.add('hidden');
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+});
+
 function toggleTheme() {
   document.documentElement.classList.toggle("dark");
   const isDark = document.documentElement.classList.contains("dark");

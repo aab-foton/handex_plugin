@@ -140,19 +140,40 @@ ${css}
         </h1>
       </button>
       <div class="flex items-center gap-2 shrink-0">
-        <button id="btn-zoom-out" onclick="ensureExpanded(); zoomOut()" title="Diminuir escala" aria-label="Diminuir escala da interface"
-          class="hidden p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
-          <i data-lucide="zoom-out" class="w-5 h-5" aria-hidden="true"></i>
-        </button>
-        <button id="btn-zoom-in" onclick="ensureExpanded(); zoomIn()" title="Aumentar escala" aria-label="Aumentar escala da interface"
-          class="p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
-          <i data-lucide="zoom-in" class="w-5 h-5" aria-hidden="true"></i>
-        </button>
-        <button onclick="toggleTheme()" title="Alternar tema" aria-label="Alternar tema claro/escuro"
-          class="p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
-          <i data-lucide="sun" class="sun-icon w-5 h-5" aria-hidden="true"></i>
-          <i data-lucide="moon" class="moon-icon w-5 h-5 hidden" aria-hidden="true"></i>
-        </button>
+        <!-- Personalização (2026-10-06, pedido do usuário): zoom, tema e
+             espaçamento de texto (WCAG 2.2, 1.4.12) num único menu. -->
+        <div class="relative">
+          <button type="button" id="btn-hac-personalize" onclick="ensureExpanded(); toggleHacPersonalizeMenu()"
+            title="Personalização" aria-label="Personalização" aria-haspopup="true" aria-expanded="false"
+            class="p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
+            <i data-lucide="sliders-horizontal" class="w-5 h-5" aria-hidden="true"></i>
+          </button>
+          <div id="hac-personalize-menu" role="dialog" aria-label="Personalização" class="hidden absolute right-0 top-full mt-1 w-64 p-3 space-y-3 bg-white dark:bg-dark-surface rounded-dsc-large shadow-2xl border border-gray-100 dark:border-dark-line z-[1100]">
+            <p class="text-[12px] font-bold text-slate-800 dark:text-white">Personalização</p>
+            <div>
+              <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted mb-1.5" id="hac-pz-scale-label">Tamanho da interface</p>
+              <div class="grid grid-cols-3 gap-1" role="group" aria-labelledby="hac-pz-scale-label">
+                <button type="button" data-hac-scale="1" onclick="setUiScale(1); _hacRenderPersonalizeMenu()" class="hac-pz-opt">100%</button>
+                <button type="button" data-hac-scale="1.15" onclick="setUiScale(1.15); _hacRenderPersonalizeMenu()" class="hac-pz-opt">115%</button>
+                <button type="button" data-hac-scale="1.3" onclick="setUiScale(1.3); _hacRenderPersonalizeMenu()" class="hac-pz-opt">130%</button>
+              </div>
+            </div>
+            <div>
+              <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted mb-1.5" id="hac-pz-theme-label">Tema</p>
+              <div class="grid grid-cols-2 gap-1" role="group" aria-labelledby="hac-pz-theme-label">
+                <button type="button" data-hac-theme="light" onclick="setHacTheme('light')" class="hac-pz-opt">Claro</button>
+                <button type="button" data-hac-theme="dark" onclick="setHacTheme('dark')" class="hac-pz-opt">Escuro</button>
+              </div>
+            </div>
+            <label class="flex items-start justify-between gap-2 cursor-pointer">
+              <span>
+                <span class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted">Espaçamento de texto</span>
+                <span class="block text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-snug">Mais espaço entre linhas, letras e palavras (WCAG 1.4.12)</span>
+              </span>
+              <input type="checkbox" id="hac-pz-text-spacing" onchange="setHacTextSpacing(this.checked)" class="mt-1 w-4 h-4 accent-[#005ca9] shrink-0">
+            </label>
+          </div>
+        </div>
         <button onclick="toggleCollapse()" id="btn-collapse" aria-label="Minimizar plugin"
           title="Minimizar — clique no ícone para expandir novamente"
           class="p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
