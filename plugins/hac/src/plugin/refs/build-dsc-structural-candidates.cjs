@@ -55,7 +55,6 @@ const FIGMA_API = 'https://api.figma.com';
 // correspondente. Não é 1:1 com o slug (build-dsc-a11y-mapping.cjs usa
 // convenções de nome próprias, herdadas de quando só existiam 2 libs).
 const LIB_MAPPING_FILES = {
-  'web-angular-react': 'dsc-component-a11y-mapping.json',
   'super-app': 'dsc-component-a11y-mapping-mobile.json',
   'super-dsc-web': 'dsc-component-a11y-mapping-superdscweb.json',
   'dsc-android': 'dsc-component-a11y-mapping-android.json',

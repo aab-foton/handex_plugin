@@ -6,19 +6,6 @@
   "generatedAt": "2026-10-06T00:43:21.542Z",
   "libraries": [
     {
-      "slug": "web-angular-react",
-      "name": "Web Angular & React",
-      "fileKey": "8QvOeTODSBi3PquJT5CISP",
-      "file": "web-angular-react.json",
-      "counts": {
-        "variables": 7,
-        "colors": 0,
-        "typography": 0,
-        "effects": 0,
-        "components": 1893
-      }
-    },
-    {
       "slug": "super-app",
       "name": "DSC | Super App",
       "fileKey": "epCGtlKQxedDxQVlK3lNcN",

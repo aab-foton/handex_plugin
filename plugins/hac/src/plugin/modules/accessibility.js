@@ -5425,12 +5425,17 @@ window.setA11yProjectOrigin = setA11yProjectOrigin;
 // impreciso quando existem 2 libs web coexistindo na mesma tela (legado +
 // nova). dsc-android é reconhecida no matching mas NÃO é uma opção de
 // escolha aqui (decisão explícita do usuário, 2026-09-04).
-const A11Y_LIB_TO_ORIGIN = { 'web-angular-react': 'web', 'super-dsc-web': 'web', 'super-app': 'mobile' };
-const A11Y_LIB_LABELS = { 'web-angular-react': 'DSC Web Angular & React', 'super-dsc-web': 'Super DSC Web', 'super-app': 'Super DSC Mobile' };
-const A11Y_LIB_ICONS = { 'web-angular-react': 'monitor', 'super-dsc-web': 'monitor', 'super-app': 'smartphone' };
+// A lib legada "DSC Web Angular & React" (web-angular-react) saiu do HAC em
+// 2026-10-06 (decisão de produto): não é mais escolhível nem reconhecida.
+const A11Y_LIB_TO_ORIGIN = { 'super-dsc-web': 'web', 'super-app': 'mobile' };
+const A11Y_LIB_LABELS = { 'super-dsc-web': 'Super DSC Web', 'super-app': 'Super DSC Mobile' };
+const A11Y_LIB_ICONS = { 'super-dsc-web': 'monitor', 'super-app': 'smartphone' };
 
 function getA11yProjectLib() {
-  return (hacData && hacData.projectLib) || null;
+  const lib = (hacData && hacData.projectLib) || null;
+  // Projeto salvo com a lib legada (removida em 2026-10-06) segue como web,
+  // agora na Super DSC Web — a origem (web) não muda.
+  return lib === 'web-angular-react' ? 'super-dsc-web' : lib;
 }
 window.getA11yProjectLib = getA11yProjectLib;
 
@@ -5717,11 +5722,9 @@ window.renderA11yExistingDocumentationSurvey = renderA11yExistingDocumentationSu
 // dado documentado ainda.
 function _renderA11yHomeOriginPicker() {
   const step1 = document.getElementById('a11y-home-step-origin');
-  const stepWebSublib = document.getElementById('a11y-home-step-web-sublib');
   if (!step1) return;
 
   step1.classList.remove('hidden');
-  if (stepWebSublib) stepWebSublib.classList.add('hidden');
 
   if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
 }
@@ -5748,31 +5751,6 @@ function _resetA11yProjectOriginIfNothingDocumented() {
   if (typeof saveToStorage === 'function') saveToStorage();
 }
 window._resetA11yProjectOriginIfNothingDocumented = _resetA11yProjectOriginIfNothingDocumented;
-
-// Avança da Etapa 1 (Web/Mobile) pra Etapa 1b (sub-escolha de lib web) —
-// Mobile não passa por aqui, resolve direto em chooseA11yHomeOrigin('super-app')
-// já que só existe 1 lib mobile real hoje. Só troca a visibilidade das 2
-// etapas — nenhuma escolha é persistida ainda (só chooseA11yHomeOrigin
-// grava de fato, quando uma das 2 libs web é escolhida na Etapa 1b).
-function _showA11yHomeWebSublibStep() {
-  const step1 = document.getElementById('a11y-home-step-origin');
-  const stepWebSublib = document.getElementById('a11y-home-step-web-sublib');
-  if (!step1 || !stepWebSublib) return;
-  step1.classList.add('hidden');
-  stepWebSublib.classList.remove('hidden');
-}
-window._showA11yHomeWebSublibStep = _showA11yHomeWebSublibStep;
-
-// "Voltar" da Etapa 1b pra Etapa 1 — desiste da sub-escolha sem persistir
-// nada.
-function _hideA11yHomeWebSublibStep() {
-  const step1 = document.getElementById('a11y-home-step-origin');
-  const stepWebSublib = document.getElementById('a11y-home-step-web-sublib');
-  if (!step1 || !stepWebSublib) return;
-  stepWebSublib.classList.add('hidden');
-  step1.classList.remove('hidden');
-}
-window._hideA11yHomeWebSublibStep = _hideA11yHomeWebSublibStep;
 
 // Título do header secundário (specifications.html) — substitui o antigo
 // texto fixo "Acessibilidade" por "Documentando projeto Web/Mobile", já que

@@ -51,7 +51,7 @@ const ONBOARDING_TOOLS = {
     icon: 'monitor',
     color: '#005ca9',
     format: 'stepper',
-    purpose: 'O hac documenta no canvas como um leitor de tela interpreta cada elemento e em que ordem o teclado navega, para o time de desenvolvimento implementar acessibilidade sem especificação à parte. Reconhece componentes do <strong>Super DSC Web</strong> e do <strong>DSC Web Angular &amp; React</strong> (legado). Regras completas: lib <a href="https://www.figma.com/design/3zdtN13YvPlCGPdXeL0Y2i" target="_blank" rel="noopener noreferrer" class="text-[#005ca9] dark:text-blue-400 underline decoration-dotted hover:decoration-solid font-semibold">Design Acessível</a>.',
+    purpose: 'O hac documenta no canvas como um leitor de tela interpreta cada elemento e em que ordem o teclado navega, para o time de desenvolvimento implementar acessibilidade sem especificação à parte. Reconhece componentes do <strong>Super DSC Web</strong>. Regras completas: lib <a href="https://www.figma.com/design/3zdtN13YvPlCGPdXeL0Y2i" target="_blank" rel="noopener noreferrer" class="text-[#005ca9] dark:text-blue-400 underline decoration-dotted hover:decoration-solid font-semibold">Design Acessível</a>.',
     steps: [
       { text: 'Clique em <strong>Selecionar Tela</strong> e escolha a seção a documentar. Ela vira um selo numerado no canvas e reúne as specs na listagem do plugin.' },
       { text: 'Na aba <strong>Leitor de Tela</strong>, use <strong>Mapeamento Automático</strong> para o hac sugerir a categoria de cada componente, ou <strong>Nova spec</strong> para documentar do zero. Em <strong>Iniciar Revisão</strong> você confirma, ajusta ou descarta cada item; revise com atenção ícones e imagens (decorativo ou informativo).' },

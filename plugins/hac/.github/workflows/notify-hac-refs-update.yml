@@ -57,7 +57,6 @@ jobs:
           # inesperada (falha aberta: lib nao mapeada aqui so nao aparece
           # nomeada no changelog, sem quebrar o resto do job).
           declare -A LIB_NAMES=(
-            ["src/plugin/refs/web-angular-react.json"]="Web Angular & React"
             ["src/plugin/refs/super-app.json"]="DSC | Super App"
             ["src/plugin/refs/super-dsc-web.json"]="Super DSC | Web"
             ["src/plugin/refs/dsc-android.json"]="DSC | Android"

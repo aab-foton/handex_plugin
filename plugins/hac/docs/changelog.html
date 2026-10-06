@@ -3398,6 +3398,15 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-06 — Lib legada "DSC Web Angular &amp; React" sai do HAC (v0.1.0-beta.79)</h2>
+
+    <p>Decisão de produto: a lib legada não entra mais no HAC. Na home, <strong>Super DSC Web</strong> escolhe a lib direto
+    (sumiu a sub-escolha "Qual biblioteca web?"). O reconhecimento web passa a usar só a Super DSC Web; a lib legada saiu do
+    <code>_manifest.json</code>, do skeleton embutido (ui.html ~380 KB menor), do relatório de reconhecimento e do CI, e os
+    arquivos <code>web-angular-react.json</code>, <code>web-angular-react-properties.json</code> e
+    <code>dsc-component-a11y-mapping.json</code> foram removidos. Projeto salvo com a lib legada abre como Super DSC Web
+    (mesma origem, web). Componentes da lib legada no canvas deixam de ser reconhecidos pelo Mapeamento Automático.</p>
+
     <h2>2026-10-06 — Modal "e agora?" só depois de gerar o handoff (v0.1.0-beta.78)</h2>
 
     <p>A modal de próximo passo abria também quando o handoff já estava atualizado, no próprio clique em Gerar Handoff, sem

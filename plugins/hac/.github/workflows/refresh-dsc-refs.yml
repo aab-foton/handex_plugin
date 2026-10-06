@@ -4,7 +4,8 @@
 # o skeleton + os mapeamentos DSC→a11y, e abre PR pra revisão humana —
 # nunca push direto em main.
 #
-# Diferente do Handex, o hac busca QUATRO libs DSC (web-angular-react,
+# A lib legada web-angular-react saiu do HAC em 2026-10-06 (o texto abaixo é
+# histórico). Diferente do Handex, o hac busca QUATRO libs DSC (web-angular-react,
 # super-app, super-dsc-web, dsc-android — ver src/plugin/refs/_manifest.json)
 # e regenera os QUATRO mapeamentos de a11y correspondentes
 # (dsc-component-a11y-mapping.json para web-angular-react,
@@ -54,9 +55,8 @@ jobs:
           node src/plugin/refs/fetch-instruction-frames.cjs
           node src/plugin/refs/build-skeleton.cjs
 
-      - name: "Regenera mapeamento DSC→a11y (4 libs: web-angular-react, super-app, super-dsc-web, dsc-android)"
+      - name: "Regenera mapeamento DSC→a11y (3 libs: super-app, super-dsc-web, dsc-android)"
         run: |
-          node src/plugin/refs/build-dsc-a11y-mapping.cjs
           node src/plugin/refs/build-dsc-a11y-mapping.cjs --src super-app.json --out dsc-component-a11y-mapping-mobile.json
           node src/plugin/refs/build-dsc-a11y-mapping.cjs --src super-dsc-web.json --out dsc-component-a11y-mapping-superdscweb.json
           node src/plugin/refs/build-dsc-a11y-mapping.cjs --src dsc-android.json --out dsc-component-a11y-mapping-android.json
@@ -148,7 +148,7 @@ jobs:
           git commit -m "chore(dsc): atualiza refs DSC (4 libs + Fundamentos Visuais + Design Acessível) e mapeamentos/constantes de a11y ($(date -u +%Y-%m-%d))"
           git push origin "$BRANCH"
           {
-            echo 'Atualização automática das refs (`src/plugin/refs/`): as quatro libs DSC de produto (web-angular-react, super-app, super-dsc-web, dsc-android) com regeneração dos quatro mapeamentos DSC→a11y, a lib de tokens visuais `fundamentos-visuais`, e as duas libs Design Acessível (desktop + mobile) com regeneração das constantes de a11y derivadas (`_a11y-constants.generated.js`, `design-acessivel-mobile-wrapper.generated.json`) — todas buscadas via REST API do Figma. Revisar o diff e aprovar se OK.'
+            echo 'Atualização automática das refs (`src/plugin/refs/`): as três libs DSC de produto (super-app, super-dsc-web, dsc-android) com regeneração dos três mapeamentos DSC→a11y, a lib de tokens visuais `fundamentos-visuais`, e as duas libs Design Acessível (desktop + mobile) com regeneração das constantes de a11y derivadas (`_a11y-constants.generated.js`, `design-acessivel-mobile-wrapper.generated.json`) — todas buscadas via REST API do Figma. Revisar o diff e aprovar se OK.'
             echo
             echo '### Alinhamento visual do hac com a lib Fundamentos Visuais'
             echo

@@ -27,7 +27,6 @@ const options = wrapper.componentOptions || [];
 const { accepted: aliases } = loadWebAliases(options);
 
 const LIBS = [
-  { slug: 'web-angular-react', file: 'web-angular-react.json', label: 'Web Angular & React (legada)' },
   { slug: 'super-dsc-web', file: 'super-dsc-web.json', label: 'Super DSC | Web' },
 ];
 

@@ -44,7 +44,6 @@
 
 import MOBILE_WRAPPER_RAW from '../refs/design-acessivel-mobile-wrapper.generated.json';
 import WEB_WRAPPER_RAW from '../refs/design-acessivel-web-wrapper.generated.json';
-import DSC_A11Y_MAPPING from '../refs/dsc-component-a11y-mapping.json';
 import DSC_A11Y_MAPPING_MOBILE from '../refs/dsc-component-a11y-mapping-mobile.json';
 import DSC_A11Y_MAPPING_SUPERDSCWEB from '../refs/dsc-component-a11y-mapping-superdscweb.json';
 import DSC_A11Y_MAPPING_ANDROID from '../refs/dsc-component-a11y-mapping-android.json';
@@ -211,7 +210,6 @@ export const PLATFORM_PROFILES = {
     },
     categories: ['elemento', 'estrutura', 'titulo', 'decorativo'],
     recognitionLibs: [
-      { slug: 'web-angular-react', sourceLib: { id: 'web-angular-react', label: 'DSC Legado' }, mapping: DSC_A11Y_MAPPING },
       { slug: 'super-dsc-web', sourceLib: { id: 'super-dsc-web', label: 'Super DSC | Web' }, mapping: DSC_A11Y_MAPPING_SUPERDSCWEB },
     ],
     recognition: { strategy: 'exact+alias', options: WEB_COMPONENT_OPTIONS, aliases: WEB_COMPONENT_ALIASES },

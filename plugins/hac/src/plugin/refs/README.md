@@ -7,6 +7,8 @@ Automática de a11y** (componente do canvas → categoria de acessibilidade).
 
 ## Estrutura
 
+> **Nota (2026-10-06)**: a lib legada `web-angular-react` ("DSC Web Angular & React") saiu do HAC — fora do manifest, do skeleton, do reconhecimento e do CI; os arquivos dela foram removidos. Menções abaixo são históricas.
+
 > **Nota (2026-10-01)**: o hac tem agora PERFIS por plataforma (`backend/platform-profiles.js`) — ver a seção "Pipeline do perfil web" abaixo.
 
 > **Nota (2026-09-08)**: as seções abaixo ficaram desatualizadas em
@@ -23,7 +25,7 @@ Automática de a11y** (componente do canvas → categoria de acessibilidade).
 | Arquivo | Origem | Versionado? | Conteúdo |
 |---------|--------|-------------|----------|
 | `_manifest.json` | curado | sim | As 4 libs de componentes reais (ver nota acima) — fonte de `componentsDetailed` |
-| `{slug}.json` (ex. `web-angular-react.json`) | `fetch-design-refs.cjs` | sim | Meta + styles + components de cada lib do manifest (só keys/nomes) |
+| `{slug}.json` (ex. `super-dsc-web.json`) | `fetch-design-refs.cjs` | sim | Meta + styles + components de cada lib do manifest (só keys/nomes) |
 | `fundamentos-visuais.json` | `fetch-design-refs.cjs` (manifest, `resolveStyles: true`) | sim | Base de conhecimento da lib **"DSC \| Fundamentos Visuais"** (fileKey `nbv8CUA2nbukjSkhK44kgQ`, v2.6.0): 248 variáveis resolvidas (cores, `spacing/`, `border/`, `font/`, `icon/`, `opacity/`, `shadow/`), 39 estilos de tipografia e 5 de efeito **com valores reais** (`resolved`), 12 gradientes e ~10 mil ícones. É a fonte de verdade dos tokens visuais do próprio hac. **Não** entra em `componentsDetailed` nem no matching de a11y; `build-skeleton.cjs` não embute as keys de ícones (ver `tecnico.html`, seção 8y) |
 | `_skeleton.json` | `build-skeleton.cjs` | sim | Bundle agregado embarcado em `ui.html` como `window.__HAC_REF_SKELETON__` |
 | `dsc-component-a11y-mapping*.json` | `build-dsc-a11y-mapping.cjs` | sim | Mapa `containingFrame → {shortName, confidence}` por lib — **essencial em runtime** (`_resolveDscComponentA11yMatch`, `code.js`) |
@@ -134,8 +136,8 @@ FIGMA_TOKEN=<seu_token> npm run refs:update
 # Rebuild do skeleton isolado
 npm run bundle:refs
 
-# Regenerar só o mapping DSC → a11y (depois de ter web-angular-react.json)
-node src/plugin/refs/build-dsc-a11y-mapping.cjs
+# Regenerar só o mapping DSC → a11y de uma lib
+node src/plugin/refs/build-dsc-a11y-mapping.cjs --src super-dsc-web.json --out dsc-component-a11y-mapping-superdscweb.json
 ```
 
 ## Onde está o token e onde **não** está
