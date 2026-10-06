@@ -1,7 +1,8 @@
 // Sondagens pontuais (PROBE=1 node tools/shoot.cjs).
 module.exports = [
-  { id: '_probe-swipe-com-trilha', origin: 'mobile', run: () => {
-      hacData.a11ySwipePaths = [{ id: 'P1', areaId: 'A1', points: [{ nodeId: 'p1', nodeName: 'Título' }, { nodeId: 'p2', nodeName: 'Saldo' }, { nodeId: 'p3', nodeName: 'Botão Pix' }] }];
-      openA11yAreaWorkspace('A1', { initialTab: 'swipe' }); } },
-  { id: '_probe-swipe-vazio', origin: 'mobile', run: () => { openA11yAreaWorkspace('A2', { initialTab: 'swipe' }); } },
+  { id: '_probe-decorativos', origin: 'web', run: () => {
+      const d = (id, name) => ({ id, targetNodeId: 't' + id, name, letter: 'Ø', a11yType: 'decorativo', a11yOrigin: 'web', a11yAreaId: 'A1', locked: true, properties: [] });
+      a11ySpecs = [d('D1', 'Ícone'), d('D2', 'Ícone'), d('D3', 'Ícone'), d('D4', 'Ilustração')];
+      openA11yAreaWorkspace('A1', { initialTab: 'leitor' }); },
+    probe: () => JSON.stringify(Array.from(document.querySelectorAll('[data-a11y-spec-item]')).map(e => e.querySelector('p').textContent.replace(/\s+/g, ' ').trim())) },
 ];

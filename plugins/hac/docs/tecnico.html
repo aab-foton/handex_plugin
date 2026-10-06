@@ -4713,6 +4713,26 @@ hr {
     mantendo o lado de ancoragem (<code>hacTabOrderConector</code>, gravado desde esta versão; selos antigos assumem
     "direita"). A seção de Tabulação da Ficha lê <code>area.tabBadgeSize</code> do objeto área enviado.</p>
 
+    <h2 id="s8ae">8ae. Rodada de 06/10: contrato de mensagens e regras novas (v0.1.0-beta.80–86)</h2>
+
+    <ul>
+      <li><code>delete-tab-order-copy-for-area</code> e <code>cleanup-swipe-path-for-area</code> aceitam <code>everywhere: true</code>:
+      apagam também, por pluginData em qualquer profundidade, os grupos de selos/trilha da área
+      (<code>hacTabOrderBadgesGroupForCloneForArea</code>/<code>hacSwipePathGroupForCloneForArea</code>) e a seção da Ficha
+      (<code>hacFichaTelaForArea</code> → <code>hacFichaSection</code>). Resposta nova: <code>tab-order-deleted-for-area</code>.</li>
+      <li><code>start-tab-order-copy</code>/<code>start-swipe-path-mode</code>: falha ao criar a cópia responde <code>cloneId: null</code> com
+      <code>figma.notify</code> (antes o plugin ficava preso em "Criando cópia…").</li>
+      <li><code>spec-created</code> ganhou <code>targetText</code> (texto do elemento; card de Título no plugin).</li>
+      <li><code>a11y-selection-info</code> ganhou <code>ids</code>/<code>names</code> (spec em lote: <code>_createA11ySpecBatch</code>).</li>
+      <li><code>manual-spec-match-resolved</code>: <code>match.autoOpen</code> (reconhecimento determinístico — texto → Título,
+      ícone bruto → Elementos Decorativos; <code>dsc-matching.js</code>, <code>_resolveDeterministicA11yMatch</code>, dados de
+      <code>refs/a11y-heuristics.generated.json</code>).</li>
+      <li>Swipe automático usa <code>_orderNodesInReadingOrder</code> (ocidental); Tabulação segue com o zigue-zague.</li>
+      <li>Instruções da Ficha: web e mobile importam os componentes publicados (<code>instructionComponentKeys</code> nos dois perfis).</li>
+      <li>Removido: <code>set-tab-order-badge-size</code>/<code>tab-order-badge-size-set</code> e o campo <code>badgeSize</code>.</li>
+    </ul>
+    <p><code>docs/knowledge-graph.json</code> ainda não foi regenerado com estas mudanças.</p>
+
     <h2 id="s9">9. Contrato de mensagens (UI ↔ backend)</h2>
 
     <p>Toda comunicação passa por <code>postMessage</code>/<code>window.onmessage</code> — o frontend

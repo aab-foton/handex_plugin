@@ -4033,7 +4033,7 @@ window._finishA11ySpecConfirm = _finishA11ySpecConfirm;
 // próprio accordion já mostra ícone + nome da categoria + contagem, e
 // repetir o mesmo chip em cada item era redundante (todas as specs dali são
 // da mesma categoria, por definição).
-function _a11ySpecItemHtml(spec, showCategoryChip) {
+function _a11ySpecItemHtml(spec, showCategoryChip, group) {
   if (showCategoryChip === undefined) showCategoryChip = true;
   const meta = getA11yCategoryMeta(spec.a11yType) || { label: 'Acessibilidade', icon: 'accessibility' };
   // Label por ORIGEM DA PRÓPRIA SPEC (spec.a11yOrigin), não a lib atualmente
@@ -4077,7 +4077,7 @@ function _a11ySpecItemHtml(spec, showCategoryChip) {
       <div class="flex items-start px-2.5 py-dsc-nano gap-dsc-nano">
         <div class="w-6 h-6 rounded-dsc-circ flex items-center justify-center text-dsc-label-tiny normal-case tracking-normal font-extrabold shrink-0 mt-0.5" style="background-color:${color};color:${badgeTextColor}">${escapeHtml(spec.letter || 'A')}</div>
         <div class="flex-1 min-w-0">
-          <p class="text-dsc-label-tiny normal-case tracking-normal font-semibold text-slate-700 dark:text-white truncate">${escapeHtml(spec.targetNodeName || spec.name || 'Elemento')}</p>
+          <p class="text-dsc-label-tiny normal-case tracking-normal font-semibold text-slate-700 dark:text-white truncate">${escapeHtml(spec.targetNodeName || spec.name || 'Elemento')}${group ? ` <span class="font-bold text-slate-500 dark:text-dark-muted">×${group.ids.length}</span>` : ''}</p>
           <div class="flex items-center flex-wrap gap-dsc-quark mt-0.5">
             ${showCategoryChip ? `
             <span class="inline-flex items-center gap-dsc-quark px-1.5 py-0.5 rounded-dsc-circ border text-dsc-label-tiny normal-case tracking-normal font-bold" style="background-color:${fill};border-color:${textColor};color:${textColor};">
@@ -4100,13 +4100,14 @@ function _a11ySpecItemHtml(spec, showCategoryChip) {
           class="w-10 h-10 flex items-center justify-center rounded-2xl text-gray-400 hover:text-[#005ca9] transition-colors shrink-0">
           <i data-lucide="locate" class="w-5 h-5"></i>
         </button>
-        <button type="button" title="Editar" aria-label="Editar especificação de acessibilidade"
+        ${group ? '' : `        <button type="button" title="Editar" aria-label="Editar especificação de acessibilidade"
           onclick="editA11ySpec('${escapeHtml(spec.id)}')"
           class="w-10 h-10 flex items-center justify-center rounded-2xl text-gray-400 hover:text-[#005ca9] transition-colors shrink-0">
           <i data-lucide="pencil" class="w-5 h-5"></i>
         </button>
+        `}
         <button type="button" title="Remover" aria-label="Remover especificação de acessibilidade"
-          onclick="deleteA11ySpec('${escapeHtml(spec.id)}')"
+          onclick="${group ? `deleteA11ySpecGroup('${escapeHtml(group.ids.join(','))}')` : `deleteA11ySpec('${escapeHtml(spec.id)}')`}"
           class="w-10 h-10 flex items-center justify-center rounded-2xl text-gray-400 hover:text-red-500 transition-colors shrink-0">
           <i data-lucide="trash-2" class="w-5 h-5"></i>
         </button>
@@ -4233,11 +4234,43 @@ function _a11yCategoryAccordionEl(uid, catKey, catSpecs) {
         <i data-lucide="chevron-down" id="chevron-${uid}" class="w-3.5 h-3.5 text-gray-400 transition-transform shrink-0" style="transform:${expand ? 'rotate(180deg)' : 'rotate(0deg)'}"></i>
       </div>
       <div id="body-${uid}" class="accordion-content ${expand ? '' : 'hidden'} border-t border-gray-100 dark:border-dark-line p-1.5 space-y-1.5">
-        ${catSpecs.map(spec => _a11ySpecItemHtml(spec, false)).join('')}
+        ${_a11yGroupRepeatedSpecs(catKey, catSpecs).map(g => _a11ySpecItemHtml(g.spec, false, g.ids.length > 1 ? g : null)).join('')}
       </div>
     </div>
   `;
 }
+
+// Decorativos repetidos (2026-10-06, pedido do usuário: "não precisamos
+// mostrar na interface do plugin as repetições"): specs da categoria com o
+// MESMO nome de camada viram uma linha só no plugin (×N). O canvas continua
+// com todas.
+function _a11yGroupRepeatedSpecs(catKey, catSpecs) {
+  if (catKey !== 'decorativo') return catSpecs.map(spec => ({ spec, ids: [spec.id] }));
+  const byName = new Map();
+  for (const spec of catSpecs) {
+    const key = (spec.targetNodeName || spec.name || '').trim().toLowerCase() || spec.id;
+    if (!byName.has(key)) byName.set(key, { spec, ids: [] });
+    byName.get(key).ids.push(spec.id);
+  }
+  return Array.from(byName.values());
+}
+
+function deleteA11ySpecGroup(idsCsv) {
+  const ids = String(idsCsv || '').split(',').filter(Boolean);
+  if (!ids.length) return;
+  openA11yConfirmModal({
+    title: 'Remover especificações?',
+    body: `As ${ids.length} especificações iguais deste grupo serão removidas do plugin e do canvas.`,
+    confirmLabel: 'Remover',
+    onConfirm: () => {
+      ids.forEach(id => parent.postMessage({ pluginMessage: { type: 'delete-node', id } }, '*'));
+      a11ySpecs = a11ySpecs.filter(sp => !(sp && ids.includes(sp.id)));
+      saveToStorage();
+      renderA11yGroupedList();
+    },
+  });
+}
+window.deleteA11ySpecGroup = deleteA11ySpecGroup;
 
 // Mesmo padrão visual/estrutural de _a11yCategoryAccordionEl (header
 // clicável com chevron + contador entre parênteses + corpo com
