@@ -3398,6 +3398,16 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-06 — Apagar no canvas, continuidade entre etapas e linha de posição (v0.1.0-beta.82)</h2>
+
+    <ul>
+      <li>Lixeira da <strong>Tabulação</strong> e do <strong>Swipe</strong>: pede confirmação e apaga também no canvas — cópia de trabalho, selos/trilha onde estiverem (inclusive dentro da Ficha) e a seção daquela etapa na Ficha da tela. Antes só limpava o plugin.</li>
+      <li>Recomeçar depois de apagar não trava mais: o estado de captura da área é zerado, e uma falha ao criar a cópia da tela agora libera a interface e mostra o motivo (antes ficava preso em "Criando cópia de trabalho…").</li>
+      <li>Ao concluir <strong>Preencher [etapa]</strong>, o plugin vai para a próxima aba (Tabulação → Swipe no mobile → Leitor de Tela → Resumo) e avisa qual é a próxima etapa.</li>
+      <li>Specs de Leitor de Tela ficam destravadas no canvas depois que o Leitor de Tela entra no handoff.</li>
+      <li>Linha azul de posição ao arrastar itens nas listas de Tabulação e Swipe.</li>
+    </ul>
+
     <h2>2026-10-06 — Instruções mobile da lib, "Como utilizar" do Figma e Canais de Suporte (v0.1.0-beta.81)</h2>
 
     <ul>

@@ -344,6 +344,25 @@ const _fichaPendingResolvers = {};
 // hacData.a11yAreas[i].handoffFicha (via a11yAreas, mesma referência que
 // saveToStorage sincroniza) e persiste. Re-renderiza a tab ATIVA (o botão
 // que acabou de ser clicado precisa trocar de label na hora).
+// Próxima aba depois de uma etapa preenchida: Tabulação → Swipe (só mobile)
+// → Leitor de Tela → Resumo.
+function _fichaNextStepAfter(sectionKey) {
+  const isMobile = typeof isA11yMobileProject === 'function' && isA11yMobileProject();
+  const order = isMobile ? ['tabulacao', 'swipe', 'leitor', 'handoff'] : ['tabulacao', 'leitor', 'handoff'];
+  const i = order.indexOf(sectionKey);
+  if (i < 0 || i === order.length - 1) return null;
+  const tab = order[i + 1];
+  const label = tab === 'handoff' ? 'Resumo' : _fichaSectionDisplayName(tab);
+  return { tab, label };
+}
+
+function _fichaUnlockSpecsForArea(areaId) {
+  const specs = (a11ySpecs || []).filter(sp => sp && sp.a11yAreaId === areaId && sp.id);
+  if (!specs.length) return;
+  specs.forEach(sp => { sp.locked = false; });
+  parent.postMessage({ pluginMessage: { type: 'unlock-spec-group', specIds: specs.map(sp => sp.id), locked: false } }, '*');
+}
+
 function _fichaHandleSectionInserted(msg) {
   if (typeof hideA11yCanvasLoading === 'function') hideA11yCanvasLoading();
   const area = _fichaLiveArea(msg.areaId);
@@ -369,11 +388,23 @@ function _fichaHandleSectionInserted(msg) {
     [countKey]: msg.itemCount || 0,
   };
 
+  // Leitor de Tela consolidado (2026-10-06): as specs nascem travadas e
+  // ficam destravadas depois que entram no handoff.
+  if (msg.sectionKey === 'leitor') _fichaUnlockSpecsForArea(area.id);
+
   saveToStorage();
   if (window._toastSaved) _toastSaved();
-  showToast('Handoff de Acessibilidade atualizado.');
 
-  if (typeof _renderA11yWorkspaceTab === 'function') _renderA11yWorkspaceTab();
+  // Continuidade da jornada (2026-10-06): fora do "Gerar Handoff" em lote,
+  // concluir o "Preencher" de uma etapa já leva para a próxima aba.
+  const _next = !_fichaPendingResolvers[msg.sectionKey] ? _fichaNextStepAfter(msg.sectionKey) : null;
+  if (_next && window._a11yWorkspaceAreaId === area.id && typeof switchA11yWorkspaceTab === 'function') {
+    showToast(`${_fichaSectionDisplayName(msg.sectionKey)} no handoff. Próxima etapa: ${_next.label}.`);
+    switchA11yWorkspaceTab(_next.tab);
+  } else {
+    showToast('Handoff de Acessibilidade atualizado.');
+    if (typeof _renderA11yWorkspaceTab === 'function') _renderA11yWorkspaceTab();
+  }
 
   // Incremento de versão (2026-09-22, regra revista no mesmo dia após o
   // usuário observar "a cada nova tela roda um bump de versão"):

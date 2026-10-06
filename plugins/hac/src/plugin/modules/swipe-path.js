@@ -631,7 +631,7 @@ function deleteSwipePathPendingItem(tempId, autoSave) {
   // redesenhar com 1 ponto só (o que insert-swipe-path/applySwipePathToCanvas
   // já bloqueiam via list.length < 2).
   if (autoSave && list.length < 2) {
-    deleteSwipePathForArea(window._swipePathPendingAreaId);
+    deleteSwipePathForArea(window._swipePathPendingAreaId, true);
     return;
   }
   if (autoSave) applySwipePathToCanvas();
@@ -782,15 +782,36 @@ window.handleSwipePathCreateFailed = handleSwipePathCreateFailed;
 
 // Botão "Remover trilha" da tab Swipe (fora do modal, no card da área já
 // com trilha existente).
-function deleteSwipePathForArea(areaId) {
+// Lixeira da aba Swipe (2026-10-06): confirmação + apaga também no canvas
+// (trilha, cópia de trabalho e seção de Swipe da Ficha). `skipConfirm` é usado
+// quando a remoção vem de dentro da revisão (último ponto removido).
+function deleteSwipePathForArea(areaId, skipConfirm) {
   if (!areaId) return;
+  if (!skipConfirm) {
+    openA11yConfirmModal({
+      title: 'Apagar ordem de leitura?',
+      body: 'A trilha de swipe desta tela será apagada do plugin e do canvas, inclusive do handoff. Esta ação não pode ser desfeita.',
+      confirmLabel: 'Apagar',
+      onConfirm: () => deleteSwipePathForArea(areaId, true),
+    });
+    return;
+  }
   const existing = (hacData.a11ySwipePaths || []).find(p => p && p.areaId === areaId);
   if (existing && existing.id) {
     parent.postMessage({ pluginMessage: { type: 'delete-node', id: existing.id } }, '*');
   }
+  parent.postMessage({ pluginMessage: { type: 'cleanup-swipe-path-for-area', areaId, everywhere: true } }, '*');
+  if (window._swipePathPendingAreaId === areaId) {
+    if (typeof _swipePathSetCaptureMode === 'function') _swipePathSetCaptureMode(null);
+    window._swipePathPendingList = [];
+    window._swipePathPendingAreaId = null;
+    window._swipePathLocked = false;
+  }
   hacData.a11ySwipePaths = (hacData.a11ySwipePaths || []).filter(p => p && p.areaId !== areaId);
+  const area = (a11yAreas || []).find(a => a && a.id === areaId);
+  if (area && area.handoffFicha && area.handoffFicha.sections) delete area.handoffFicha.sections.swipe;
   saveToStorage();
-  showToast('Trilha de swipe removida.');
+  showToast('Ordem de leitura removida do plugin e do canvas.');
   if (typeof _renderA11yWorkspaceTab === 'function') _renderA11yWorkspaceTab();
   renderA11yGroupedList();
 }

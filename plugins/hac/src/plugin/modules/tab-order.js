@@ -1414,8 +1414,38 @@ window._tabOrderDragStart = _tabOrderDragStart;
 function _tabOrderDragOver(ev) {
   ev.preventDefault();
   ev.dataTransfer.dropEffect = 'move';
+  _a11yShowDropLine(ev.currentTarget);
 }
 window._tabOrderDragOver = _tabOrderDragOver;
+
+// Linha de posição no arraste (2026-10-06, pedido do usuário: "mais claro onde
+// o elemento irá se posicionar"). Serve a TODAS as listas que reordenam por
+// arraste (Tabulação, revisão da Tabulação e do Swipe), que compartilham este
+// dragover. O soltar faz splice(alvo): quem desce cai DEPOIS do alvo, quem
+// sobe cai ANTES — a linha segue a mesma regra.
+function _a11yClearDropLine() {
+  const el = window._a11yDropLineEl;
+  if (el) el.style.boxShadow = el.dataset.a11yPrevShadow || '';
+  window._a11yDropLineEl = null;
+}
+function _a11yShowDropLine(target) {
+  const src = window._a11yDragSrcEl;
+  if (window._a11yDropLineEl === target) return;
+  _a11yClearDropLine();
+  if (!src || !target || src === target || src.parentElement !== target.parentElement) return;
+  const kids = Array.from(target.parentElement.children);
+  const goesBefore = kids.indexOf(src) > kids.indexOf(target);
+  target.dataset.a11yPrevShadow = target.style.boxShadow || '';
+  target.style.boxShadow = goesBefore ? '0 -4px 0 -1px #005ca9' : '0 4px 0 -1px #005ca9';
+  window._a11yDropLineEl = target;
+}
+document.addEventListener('dragstart', (e) => {
+  window._a11yDragSrcEl = (e.target && e.target.closest) ? e.target.closest('[draggable="true"]') : null;
+}, true);
+['dragend', 'drop'].forEach(type => document.addEventListener(type, () => {
+  _a11yClearDropLine();
+  window._a11yDragSrcEl = null;
+}, true));
 
 function _tabOrderDragEnd(ev) {
   ev.currentTarget.classList.remove('opacity-50');
@@ -1718,17 +1748,44 @@ window.deleteTabOrderItem = deleteTabOrderItem;
 // delete-node por item. Sem modal de confirmação, mesmo padrão já usado
 // por "Remover área"/"Remover trilha" (ação imediata, com Ctrl+Z do
 // próprio Figma como rede de segurança).
+// Lixeira da aba Tabulação (2026-10-06): pede confirmação e apaga também no
+// canvas — a cópia de trabalho, os selos onde estiverem (inclusive dentro da
+// Ficha) e a seção de Tabulação da Ficha desta tela.
 function deleteAllTabOrderForArea(areaId) {
   if (!areaId) return;
   const items = _currentTabOrderItems(areaId);
   if (items.length === 0) return;
-
-  parent.postMessage({ pluginMessage: { type: 'delete-tab-order-copy-for-area', areaId } }, '*');
-  tabOrderItems = (tabOrderItems || []).filter(it => !it || it.a11yAreaId !== areaId);
-
-  saveToStorage();
-  renderA11yGroupedList(); // já atualiza a tab da workspace aberta, se houver
-  showToast('Ordem de tabulação removida.');
+  openA11yConfirmModal({
+    title: 'Apagar ordem de tabulação?',
+    body: `Os ${items.length} selo${items.length === 1 ? '' : 's'} desta tela serão apagados do plugin e do canvas, inclusive do handoff. Esta ação não pode ser desfeita.`,
+    confirmLabel: 'Apagar',
+    onConfirm: () => _deleteAllTabOrderForAreaNow(areaId),
+  });
 }
 window.deleteAllTabOrderForArea = deleteAllTabOrderForArea;
+
+function _deleteAllTabOrderForAreaNow(areaId) {
+  // Zera qualquer captura/rascunho desta área — sem isso, começar uma nova
+  // ordem logo depois herdava estado da anterior.
+  if (window._tabOrderPendingAreaId === areaId) {
+    if (typeof _tabOrderSetCaptureMode === 'function') _tabOrderSetCaptureMode(null);
+    window._tabOrderResumeCaptureMode = null;
+    window._tabOrderScanInFlight = false;
+    window._tabOrderPendingGeneration = null;
+    window._tabOrderPendingList = [];
+    window._tabOrderPendingAreaId = null;
+    window._tabOrderPendingTargetNodeId = null;
+    window._tabOrderActiveCloneId = null;
+    window._tabOrderActiveCloneNodeMap = null;
+    window._tabOrderCopyStartPending = false;
+  }
+  parent.postMessage({ pluginMessage: { type: 'delete-tab-order-copy-for-area', areaId, everywhere: true } }, '*');
+  tabOrderItems = (tabOrderItems || []).filter(it => !it || it.a11yAreaId !== areaId);
+  const area = (a11yAreas || []).find(a => a && a.id === areaId);
+  if (area && area.handoffFicha && area.handoffFicha.sections) delete area.handoffFicha.sections.tabulacao;
+  saveToStorage();
+  renderA11yGroupedList(); // já atualiza a tab da workspace aberta, se houver
+  showToast('Ordem de tabulação removida do plugin e do canvas.');
+}
+window._deleteAllTabOrderForAreaNow = _deleteAllTabOrderForAreaNow;
 

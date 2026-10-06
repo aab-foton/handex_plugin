@@ -2458,7 +2458,15 @@ figma.ui.onmessage = async (msg) => {
         return;
       }
 
-      const { clone, nodeMap } = await _createSwipePathCloneForArea(root, msg.areaId, msg.sectionName, msg.designerName, msg.designerId);
+      let clone, nodeMap;
+      try {
+        ({ clone, nodeMap } = await _createSwipePathCloneForArea(root, msg.areaId, msg.sectionName, msg.designerName, msg.designerId));
+      } catch (e) {
+        console.error('[hac] start-swipe-path-mode: falha ao criar a cópia.', e);
+        figma.notify('Não foi possível criar a cópia da tela (' + ((e && e.message) || 'erro desconhecido').slice(0, 100) + ').', { error: true, timeout: 8000 });
+        figma.ui.postMessage({ type: "swipe-path-copy-started", cloneId: null });
+        return;
+      }
       if (msg.areaId) _activeSwipePathCloneMaps.set(msg.areaId, nodeMap);
 
       figma.currentPage.selection = [clone];
@@ -3156,6 +3164,30 @@ figma.ui.onmessage = async (msg) => {
   // acontece ANTES do cálculo de posição livre de propósito: se a
   // recriação for da MESMA área, o espaço que ela ocupava deve contar como
   // livre de novo.
+  // Remoção por marcação em QUALQUER profundidade da página (2026-10-06). Os
+  // selos/trilhas saem da cópia de trabalho e vão para dentro da Ficha depois
+  // do "Preencher", então as varreduras por nível (_forEach*Candidate) não os
+  // alcançavam — apagar a Tabulação deixava os selos no canvas.
+  function _removeOverlayGroupsForArea(key, areaId) {
+    let n = 0;
+    for (const g of figma.currentPage.findAllWithCriteria({ pluginData: { keys: [key] } })) {
+      try { if (!g.removed && g.getPluginData(key) === areaId) { g.remove(); n++; } } catch (e) { }
+    }
+    return n;
+  }
+  function _removeFichaSectionForArea(areaId, sectionKey) {
+    let n = 0;
+    for (const tela of figma.currentPage.findAllWithCriteria({ pluginData: { keys: ['hacFichaTelaForArea'] } })) {
+      try {
+        if (tela.getPluginData('hacFichaTelaForArea') !== areaId || !('findAll' in tela)) continue;
+        for (const sec of tela.findAll(c => !!(c.getPluginData && c.getPluginData('hacFichaSection') === sectionKey))) {
+          if (!sec.removed) { sec.remove(); n++; }
+        }
+      } catch (e) { }
+    }
+    return n;
+  }
+
   async function _createTabOrderCloneForArea(root, areaId, sectionName, designerName, currentUserId) {
     _removeExistingTabOrderCopiesForArea(areaId);
 
@@ -3486,7 +3518,17 @@ figma.ui.onmessage = async (msg) => {
         return;
       }
 
-      const { clone, nodeMap } = await _createTabOrderCloneForArea(root, msg.areaId, msg.sectionName, msg.designerName, msg.designerId);
+      let clone, nodeMap;
+      try {
+        ({ clone, nodeMap } = await _createTabOrderCloneForArea(root, msg.areaId, msg.sectionName, msg.designerName, msg.designerId));
+      } catch (e) {
+        // Antes sem try: uma falha aqui deixava o plugin preso em "Criando
+        // cópia de trabalho…" até ser reaberto (relato de 2026-10-06).
+        console.error('[hac] start-tab-order-copy: falha ao criar a cópia.', e);
+        figma.notify('Não foi possível criar a cópia da tela (' + ((e && e.message) || 'erro desconhecido').slice(0, 100) + ').', { error: true, timeout: 8000 });
+        figma.ui.postMessage({ type: "tab-order-copy-started", cloneId: null, nodeMap: {} });
+        return;
+      }
       if (msg.areaId) _activeTabOrderCloneMaps.set(msg.areaId, nodeMap);
 
       figma.currentPage.selection = [clone];
@@ -3879,7 +3921,14 @@ figma.ui.onmessage = async (msg) => {
   // nome (o designer pode ter renomeado a cópia livremente).
   if (msg.type === "delete-tab-order-copy-for-area") {
     _removeExistingTabOrderCopiesForArea(msg.areaId);
+    _activeTabOrderCloneMaps.delete(msg.areaId);
+    let removed = 0;
+    if (msg.everywhere) {
+      removed += _removeOverlayGroupsForArea('hacTabOrderBadgesGroupForCloneForArea', msg.areaId);
+      removed += _removeFichaSectionForArea(msg.areaId, 'tabulacao');
+    }
     _clearOrphanedHighlightStrokes();
+    if (msg.everywhere) figma.ui.postMessage({ type: 'tab-order-deleted-for-area', areaId: msg.areaId, removed });
     return;
   }
 
@@ -4232,6 +4281,13 @@ figma.ui.onmessage = async (msg) => {
     (async () => {
       const areaId = msg.areaId;
       _removeSwipePathForArea(areaId);
+      _activeSwipePathCloneMaps.delete(areaId);
+      _swipePathModeActive = false;
+      if (msg.everywhere) {
+        _removeExistingSwipePathCopiesForArea(areaId);
+        _removeOverlayGroupsForArea('hacSwipePathGroupForCloneForArea', areaId);
+        _removeFichaSectionForArea(areaId, 'swipe');
+      }
       _clearOrphanedHighlightStrokes();
       figma.ui.postMessage({ type: 'swipe-path-cleaned-up', areaId });
     })();
