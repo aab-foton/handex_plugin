@@ -53,11 +53,11 @@
         </button>
         <button type="button" id="a11y-category-btn-elemento" onclick="chooseA11yType('elemento')"
           class="w-full flex items-center gap-2.5 px-dsc-micro py-2.5 rounded-dsc-medium text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-[#005ca9] transition-colors text-left">
-          <span class="a11y-cat-badge-picker shrink-0 flex" data-a11y-cat="elemento" aria-hidden="true"></span> Elementos e Imagens
+          <span class="a11y-cat-badge-picker shrink-0 flex" data-a11y-cat="elemento" aria-hidden="true"></span> Elementos Interativos e Imagens
         </button>
         <button type="button" id="a11y-category-btn-decorativo" onclick="chooseA11yType('decorativo')"
           class="w-full flex items-center gap-2.5 px-dsc-micro py-2.5 rounded-dsc-medium text-[12px] font-bold text-slate-600 dark:text-dark-muted hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-[#005ca9] transition-colors text-left">
-          <span class="a11y-cat-badge-picker shrink-0 flex" data-a11y-cat="decorativo" aria-hidden="true"></span> Elemento Decorativo
+          <span class="a11y-cat-badge-picker shrink-0 flex" data-a11y-cat="decorativo" aria-hidden="true"></span> Elementos Decorativos
         </button>
     </div>
   </div>
@@ -424,9 +424,8 @@
           <div class="col-span-1">
             <label for="a11y-estrutura-tag-input" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1.5 ml-1">Tag</label>
             <input type="text" id="a11y-estrutura-tag-input" maxlength="8" value="A" placeholder="A, A1..."
-              oninput="validateA11yTagInput(); updateA11yCharCounter(this)"
+              oninput="validateA11yTagInput()"
               class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-2 py-2.5 text-[12px] text-center font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-blue-100 outline-none transition-all uppercase" />
-            <span id="a11y-estrutura-tag-input-counter" class="block text-center text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted mt-0.5">1/8</span>
           </div>
           <div class="col-span-3">
             <label for="a11y-estrutura-subtipo-select" class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1.5 ml-1">Subtipo</label>
@@ -1388,7 +1387,8 @@
         <div class="a11y-cat-badge w-7 h-7 rounded-dsc-circ border-2 flex items-center justify-center text-dsc-label-tiny normal-case tracking-normal font-extrabold shrink-0" data-a11y-cat="elemento"></div>
         <div class="space-y-1">
           <p class="text-[14px] font-bold text-slate-800 dark:text-white">Elementos Interativos e Imagens</p>
-          <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed">Utilizado para referenciar componentes no DSC Super App, garantir nome acessível aos elementos e descrever textos alternativos nas imagens.</p>
+          <p data-a11y-help-origin="web" class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed">Utilizado para referenciar componentes no Super DSC Web, garantir nome acessível aos elementos e descrever textos alternativos nas imagens.</p>
+          <p data-a11y-help-origin="mobile" class="hidden text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed">Utilizado para referenciar componentes no DSC Super App, garantir nome acessível aos elementos e descrever textos alternativos nas imagens.</p>
         </div>
       </div>
 

@@ -3550,7 +3550,7 @@ export const _FICHA_BLOCK_CONFIG = {
     name: '[HAC] Leitor de Tela',
     title: 'Leitor de Tela',
     instructionKey: 'leitorTela',
-    legendFallback: 'Elementos e imagens, estrutura da página, nível de título, elemento decorativo e informações adicionais — cada marcador indica a categoria de acessibilidade documentada naquele ponto da tela.',
+    legendFallback: 'Elementos interativos e imagens, estrutura da página, nível de título e elementos decorativos — cada marcador indica a categoria de acessibilidade documentada naquele ponto da tela.',
     legendTitle: 'Especificações para Leitor de Tela',
     counterAxisAlignItems: 'MIN',
   },
@@ -3968,7 +3968,9 @@ async function _ensureTelaTituloCard(telaFrame, area) {
   card.primaryAxisSizingMode = 'FIXED';
   // Barra azul-escura (referência visual do usuário) — reafirmado
   // incondicionalmente, pra convergir cards de sessões anteriores.
-  card.fills = [{ type: 'SOLID', color: hexToRgb('#1F2933') }];
+  // Azul CAIXA (2026-10-06, pedido do usuário; era #1F2933). Texto branco
+  // sobre #005ca9 dá 6,8:1.
+  card.fills = [{ type: 'SOLID', color: hexToRgb('#005ca9') }];
 
   let titulo = (card.children || []).find(c => {
     try { return c.getPluginData && c.getPluginData('hacFichaTelaTituloText') === areaId; } catch (e) { return false; }

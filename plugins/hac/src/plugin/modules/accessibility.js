@@ -116,7 +116,7 @@ const A11Y_AUTO_MAPPING_HIDDEN_SWIPE = true;
 // DENTRO do badge de letra (círculo/estrela/quadrado cheio), que é um caso
 // diferente: ali o fundo é "color" (sólido), não "fill" (claro).
 const A11Y_CATEGORIES = {
-  elemento:    { label: 'Elementos e Imagens',     icon: 'image',   color: '#FCBE05', textColor: '#8D6A03', fill: '#FFF6DC', badge: null, shape: 'circle' },
+  elemento:    { label: 'Elementos Interativos e Imagens', icon: 'image',   color: '#FCBE05', textColor: '#8D6A03', fill: '#FFF6DC', badge: null, shape: 'circle' },
   estrutura:   { label: 'Estrutura da Página',     icon: 'star',    color: '#EF765E', textColor: '#A75342', fill: '#FDEAE6', badge: null, shape: 'star' },
   // label abaixo é o valor WEB (default/fallback quando a origem não está
   // disponível no ponto de consumo) — RN não tem hierarquia H1-H6, então o
@@ -125,7 +125,7 @@ const A11Y_CATEGORIES = {
   // 2026-09-16. Nunca ler A11Y_CATEGORIES[key].label diretamente para a
   // categoria 'titulo' fora daqui — use getA11yCategoryLabel(key, origin).
   titulo:      { label: 'Nível de Título',         icon: 'heading', color: '#AFCA0B', textColor: '#677706', fill: '#F5F9DA', badge: 'H', shape: 'circle' },
-  decorativo:  { label: 'Elemento Decorativo',     icon: 'ban',     color: '#D93636', textColor: '#C33131', fill: '#FBE4E4', badge: 'Ø', shape: 'circle' },
+  decorativo:  { label: 'Elementos Decorativos',   icon: 'ban',     color: '#D93636', textColor: '#C33131', fill: '#FBE4E4', badge: 'Ø', shape: 'circle' },
 };
 
 // Categorias DESCONTINUADAS que ainda existem em dados salvos por usuários.
@@ -261,7 +261,7 @@ function renderA11yCategoryBadgeSvg(categoryKey, size, letterOverride) {
     }
     // Fonte reduzida pra badges de 2+ caracteres (ex.: "H1"), senão vaza do
     // círculo — 1 caractere (A, H, Ø...) continua no tamanho original.
-    const fontSize = Math.round(size * (letter.length > 1 ? 0.34 : 0.46));
+    const fontSize = Math.round(size * (letter.length > 1 ? 0.42 : 0.46));
     // Cor do texto do badge: #22292E (escuro) pra alinhar com o componente
     // REAL da lib publicada, exceto 'decorativo' (branco) — ver
     // getA11yBadgeTextColor / A11Y_BADGE_TEXT_COLOR_DARK acima.
@@ -3398,7 +3398,7 @@ function _applyA11yDecorativoOriginLock(select, isMobile) {
   const fixedDisplay = document.getElementById('a11y-decorativo-subtipo-fixed');
   if (fixedDisplay) {
     fixedDisplay.classList.remove('hidden');
-    fixedDisplay.textContent = isMobile ? 'Elemento Decorativo (mobile, sem subtipo)' : 'Elemento Decorativo (sem subtipo)';
+    fixedDisplay.textContent = isMobile ? 'Elementos Decorativos (mobile, sem subtipo)' : 'Elementos Decorativos (sem subtipo)';
   }
 }
 window.updateA11yDecorativoFields = updateA11yDecorativoFields;
@@ -3633,7 +3633,7 @@ function _finishA11ySpecConfirm() {
       ? A11Y_CONTENT.elemento.mobileLink.descricao
       : null;
     properties = [
-      ...(hasNomeAcessivel ? [{ key: 'label', label: 'Label', value: label }] : []),
+      ...(hasNomeAcessivel ? [{ key: 'label', label: 'Nome Acessível', value: label }] : []),
       ...(overrideDescricao ? [{ key: 'descricao', label: 'Descrição', value: overrideDescricao }] : []),
       // Dica para Leitor de Tela/Observações/Link do Componente/Descrição
       // (texto alternativo)/Leitor de Tela — coletados conforme a sub-variante
@@ -4081,7 +4081,7 @@ function _a11ySpecItemHtml(spec, showCategoryChip) {
             : `<span class="text-dsc-label-tiny normal-case tracking-normal font-semibold text-slate-700 dark:text-white text-right break-all min-w-0">${escapeHtml(String(p.value))}</span>`;
           return `
           <div class="flex items-start justify-between gap-dsc-nano px-2 py-1 bg-white dark:bg-dark-surface rounded-dsc-small">
-            <span class="text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-500 dark:text-dark-muted shrink-0 pt-px">${escapeHtml(p.label)}</span>
+            <span class="text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-500 dark:text-dark-muted shrink-0 pt-px">${escapeHtml(p.key === 'label' ? 'Nome Acessível' : p.label)}</span>
             ${valueHtml}
           </div>`;
         }).join('')}
@@ -4223,7 +4223,7 @@ function _a11yUndocumentedItemLabel(kind, item) {
   if (match.isUnmapped === true) return `Outro (${_cleanDscContainingFrameName(match.containingFrame)})`;
   const shortName = match.a11yCategory;
   if (shortName === 'titulo') return `Nível de Título (${(match.suggestedLevel || 'h1').toUpperCase()})`;
-  if (shortName === 'decorativo') return 'Elemento Decorativo';
+  if (shortName === 'decorativo') return 'Elementos Decorativos';
   if (shortName === 'estrutura') return `Estrutura da Página (${_cleanDscContainingFrameName(match.containingFrame)})`;
   return A11Y_COMPONENTE_LABELS[shortName] || _capitalizeFirst(shortName);
 }
@@ -4410,7 +4410,6 @@ function _a11yWorkspaceTabTabulacao(area) {
           <i data-lucide="list-ordered" class="w-3.5 h-3.5" aria-hidden="true"></i>
           Criar ordem de tabulação
         </button>
-        ${typeof _tabBadgeSizeControlHtml === 'function' ? `<div class="mt-2">${_tabBadgeSizeControlHtml(area)}</div>` : ''}
         ${A11Y_AUTO_MAPPING_HIDDEN_TABULACAO ? '' : `
         <button type="button" onclick="_confirmGenerateTabOrderFromLayers('${escapeHtml(areaIdAttr)}', '${escapeHtml(area.targetNodeId || '')}')"
           class="mt-1 flex items-center justify-center gap-1.5 h-7 px-3 rounded-dsc-small text-dsc-label-tiny normal-case tracking-normal font-bold text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 active:scale-[0.99] transition-all">
@@ -4418,7 +4417,6 @@ function _a11yWorkspaceTabTabulacao(area) {
           Mapeamento Automático
         </button>`}
       </div>`}
-      ${hasManualItems && typeof _tabBadgeSizeControlHtml === 'function' ? _tabBadgeSizeControlHtml(area) : ''}
       <ul id="${ulId}" class="flex flex-col gap-1.5 min-h-[10px] min-w-0"></ul>
       ${hasManualItems ? `
       <div class="flex items-center gap-1.5 mt-1">
