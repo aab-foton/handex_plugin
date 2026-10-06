@@ -840,7 +840,10 @@ function getSpecItem(frameId, category, nodeId) {
 // se importa/exporta como asset e texto é parte do componente. Espelho de
 // HD_BUILDABLE_CATS (code.js). Marcação antiga em outras categorias é ignorada.
 const HX_BUILDABLE_CATS = ['components', 'frames'];
-function _isBuildItem(it, cat) { return !!(it && it.isMarkedCustom === true && HX_BUILDABLE_CATS.includes(cat)); }
+function _isUnalteredDsc(it) {
+  return !!(it && it.matchedIn && it.matchedBy !== 'ancestor-key' && !it.isCustomComponent && it.customizationsStatus === 'evaluated' && Array.isArray(it.customizations) && it.customizations.length === 0);
+}
+function _isBuildItem(it, cat) { return !!(it && it.isMarkedCustom === true && HX_BUILDABLE_CATS.includes(cat) && !_isUnalteredDsc(it)); }
 
 // Ao ligar "Novo Componente", itens personalizados detectados e ainda sem
 // decisão manual passam a ir para a Ficha. Desligar o toggle não desfaz nada.

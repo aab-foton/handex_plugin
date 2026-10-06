@@ -579,7 +579,12 @@ const HD_FRAME_REUSE_MAX = 12;
 // do componente/layout. "Vai para a Ficha" marcado em ícone/tipografia/vetor
 // (dado antigo) fica salvo, mas é ignorado em toda a Ficha.
 const HD_BUILDABLE_CATS = ['components', 'frames'];
-function _hdIsBuildItem(it, cat) { return !!(it && it.isMarkedCustom === true && HD_BUILDABLE_CATS.includes(cat)); }
+// Instância do DSC com vínculo próprio e sem nenhuma personalização avaliada:
+// não há o que construir, mesmo marcada (vai para "Reutilizar da lib").
+function _hdIsUnalteredDsc(it) {
+  return !!(it && it.matchedIn && it.matchedBy !== 'ancestor-key' && !it.isCustomComponent && it.customizationsStatus === 'evaluated' && Array.isArray(it.customizations) && it.customizations.length === 0);
+}
+function _hdIsBuildItem(it, cat) { return !!(it && it.isMarkedCustom === true && HD_BUILDABLE_CATS.includes(cat) && !_hdIsUnalteredDsc(it)); }
 function _hdFrameDevSummary(f) {
   const specs = f.specs || {};
   const byLib = new Map();
@@ -617,7 +622,10 @@ function _hdFrameDevSummary(f) {
       if (_hdIsBuildItem(it, cat)) build.push(`${it.name || 'Elemento'} → ver User Interface`);
     }
   }
-  return { reuse: reuse || null, build: build.length ? build.join('\n') : null };
+  // Ícones soltos no frame (não os de dentro de um componente do DSC, que
+  // vêm junto com o componente): o dev só precisa saber quais importar.
+  const icons = [...new Set((specs.icons || []).filter(it => it && it.matchedBy !== 'ancestor-key').map(it => it.name).filter(Boolean))];
+  return { reuse: reuse || null, build: build.length ? build.join('\n') : null, icons: icons.length ? icons.join(', ') : null };
 }
 
 // Card de "Frame Documentado" (nome, badge "Novo componente", auditoria DSC).
@@ -657,52 +665,21 @@ async function _hdBuildFrameCard(f, fi) {
   if (f.audit && f.audit.status) {
     _hdCreateRow(fRow, "Auditoria DSC", f.audit.status + (f.audit.justificativa ? ' — ' + f.audit.justificativa : ''));
   }
-  if (!f.isNewComponent) {
-    const _sum = _hdFrameDevSummary(f);
-    if (_sum.reuse) _hdCreateRow(fRow, "Reutilizar da lib", _sum.reuse);
-    if (_sum.build) _hdCreateRow(fRow, "Construir", _sum.build);
+  // Resumo para o dev (2026-10-05): o que reutilizar da lib, quais ícones
+  // importar e o que construir. Em Novo Componente, o próprio frame é o item a
+  // construir (card dele em User Interface, com anatomia e interações); a
+  // antiga tabela com todas as camadas (nomes de texto, partes internas de
+  // componentes do DSC) saiu por não dar ao dev nada acionável.
+  const _sum = _hdFrameDevSummary(f);
+  if (f.isNewComponent && f.newComponentObservations) {
+    _hdCreateRow(fRow, "Padrão de uso, nomenclatura e diretrizes", f.newComponentObservations);
   }
-
-  // Frame de Novo Componente: a Ficha precisa carregar o que o dev vai
-  // efetivamente construir -- descrição do padrão de uso (texto livre do
-  // designer) e a lista de elementos que compõem o componente (todo o scan
-  // do frame, sem filtro de isMarkedCustom -- aqui o objetivo é documentar
-  // o componente novo por inteiro, não só as peças individualmente
-  // "personalizadas"). Sem isso, o card de Novo Componente virava só um
-  // nome e um badge, sem nenhuma informação de construção.
-  if (f.isNewComponent) {
-    if (f.newComponentObservations) {
-      _hdCreateRow(fRow, "Padrão de uso, nomenclatura e diretrizes", f.newComponentObservations);
-    }
-    const _categoryLabels = { components: 'Componentes', icons: 'Ícones', typography: 'Tipografia', frames: 'Frames e Layouts', vectors: 'Vetores' };
-    const _allItems = f.specs
-      ? Object.keys(_categoryLabels).flatMap(cat => (f.specs[cat] || []).map(item => ({ ...item, _cat: _categoryLabels[cat] })))
-      : [];
-    if (_allItems.length > 0 && _st) {
-      const elementsWrap = _hdCreateFrame("VERTICAL", 0, 8);
-      elementsWrap.name = "[Campo] Elementos do Componente";
-      fRow.appendChild(elementsWrap);
-      _hdSetFillAndHug(elementsWrap);
-      const elementsLabel = _hdCreateText(`Elementos (${_allItems.length})`, 12, "Bold", { r: 0.3922, g: 0.4549, b: 0.4784 });
-      elementsWrap.appendChild(elementsLabel);
-      _hdSetFillAndHug(elementsLabel);
-      _hdDsTable(elementsWrap, "Elementos", [{ title: "Elemento" }, { title: "Categoria", w: 200 }],
-        _allItems.map(item => [item.name || 'Elemento', `${item._cat}${LEGACY_LIB_MIGRATION_HINT_ENABLED && item.legacyLib ? ' · lib legada, precisa migrar' : ''}`]));
-    } else if (_allItems.length > 0) {
-      const elementsWrap = _hdCreateFrame("VERTICAL", 0, 4);
-      elementsWrap.name = "[Campo] Elementos do Componente";
-      fRow.appendChild(elementsWrap);
-      _hdSetFillAndHug(elementsWrap);
-      const elementsLabel = _hdCreateText(`Elementos (${_allItems.length})`, 12, "Bold", { r: 0.3922, g: 0.4549, b: 0.4784 });
-      elementsWrap.appendChild(elementsLabel);
-      _hdSetFillAndHug(elementsLabel);
-      _allItems.forEach(item => {
-        const itemText = _hdCreateText(`${item.name || 'Elemento'} — ${item._cat}${LEGACY_LIB_MIGRATION_HINT_ENABLED && item.legacyLib ? ' · lib legada, precisa migrar' : ''}`, 12, "Regular", { r: 0.1333, g: 0.1608, b: 0.1804 });
-        elementsWrap.appendChild(itemText);
-        _hdSetFillAndHug(itemText);
-      });
-    }
-  }
+  if (_sum.reuse) _hdCreateRow(fRow, "Reutilizar da lib", _sum.reuse);
+  if (_sum.icons) _hdCreateRow(fRow, "Ícones", _sum.icons);
+  const _build = [];
+  if (f.isNewComponent) _build.push(`${f.nome || 'Frame'} (novo componente) → ver User Interface`);
+  if (_sum.build) _build.push(_sum.build);
+  if (_build.length) _hdCreateRow(fRow, "Construir", _build.join('\n'));
 
   return fRow;
 }
@@ -3371,7 +3348,9 @@ async function _hdFillElementCard(card, item, categoryTitle, specs) {
     nameRow.appendChild(pill);
   });
   _dsAdd(head, _dsText(baseText, { size: 14, lh: 21, color: _DS.text2 }), true);
-  _dsAdd(head, _dsText(`${categoryTitle} · Personalizado, construir · ${full ? "Completo" : "Essencial"}`, { size: 12, lh: 18, color: _DS.text2 }), true);
+  const _unalteredDsc = live && live.type === "INSTANCE" && main && libName && item.customizationsStatus === "evaluated" && Array.isArray(item.customizations) && item.customizations.length === 0;
+  const _metaWhat = _unalteredDsc ? "Componente do DSC, reutilizar" : (item._newComponentRoot ? "Novo componente, construir" : "Personalizado, construir");
+  _dsAdd(head, _dsText(`${categoryTitle} · ${_metaWhat}${_unalteredDsc ? "" : " · " + (full ? "Completo" : "Essencial")}`, { size: 12, lh: 18, color: _DS.text2 }), true);
 
   const desc = _dsSpecDescription(specs);
   if (desc) {
@@ -3401,12 +3380,45 @@ async function _hdFillElementCard(card, item, categoryTitle, specs) {
 
   await _hdUiSafe(() => _dsSectionProps(card, live, main), null);
   await _hdUiSafe(() => _dsSectionAnatomy(card, live, full), null);
+  await _hdUiSafe(() => _dsSectionInteractions(card, live), null);
   if (full) {
     await _hdUiSafe(() => _dsSectionSpacing(card, live), null);
     await _hdUiSafe(() => _dsSectionVariants(card, live, main), null);
   }
   await _dsNotes(card, item, specs, true);
   return card;
+}
+
+// Interações do protótipo do elemento e de tudo dentro dele (2026-10-05: o
+// card no padrão do DSC não trazia comportamento nenhum; um menu com estados
+// e navegação chegava ao dev sem nada disso). Percorre até 6 níveis / 150 nós
+// por node.children (sem findAll) e lista "Quando → O que acontece" por camada.
+const _DS_INTERACTION_DEPTH = 6, _DS_INTERACTION_NODES = 150, _DS_INTERACTION_ROWS = 30;
+async function _dsSectionInteractions(card, root) {
+  const lines = [];
+  let visited = 0;
+  const walk = async (n, depth) => {
+    if (!n || visited >= _DS_INTERACTION_NODES) return;
+    visited++;
+    const ls = await _hdUiSafe(() => _hdUiReactionLines(n, n === root ? (root.name || "Elemento") : n.name), []);
+    lines.push(...ls);
+    if (depth >= _DS_INTERACTION_DEPTH || !("children" in n)) return;
+    for (const c of n.children) {
+      if (c.visible === false) continue;
+      await walk(c, depth + 1);
+      if (visited >= _DS_INTERACTION_NODES) break;
+    }
+  };
+  if (root.type === "COMPONENT_SET") {
+    for (const v of root.children.slice(0, _HD_UI_VARIANT_SCAN_MAX)) await walk(v, 0);
+  } else {
+    await walk(root, 0);
+  }
+  if (lines.length === 0) return;
+  const b = _dsSection(card, "Interações", "Protótipo: o que acontece e quando, por camada.");
+  const rows = lines.slice(0, _DS_INTERACTION_ROWS).map(l => [{ text: l.owner, w: "semibold" }, l.text]);
+  if (lines.length > _DS_INTERACTION_ROWS) rows.push(["Outras", `+${lines.length - _DS_INTERACTION_ROWS} interação(ões) no protótipo do Figma`]);
+  _hdDsTable(b, "Interações", [{ title: "Camada", w: 260 }, { title: "Quando → O que acontece" }], rows);
 }
 
 // Casa cada spec do frame ao item escaneado dono (mesmo critério de
@@ -3473,8 +3485,18 @@ async function _hdRebuildUiBoard(data) {
   const groups = [];
   _sources.forEach(src => {
     const cards = [];
+    // Frame marcado como Novo Componente: o PRÓPRIO frame é o que o dev
+    // constrói (2026-10-05, pedido do Augusto: o card trazia só um [dsc]
+    // Button pronto e nada do menu escaneado). Nasce no nível Completo, com
+    // anatomia, espaçamento e interações do frame inteiro.
+    if (src.frame && src.frame.isNewComponent && src.frame.figmaId) {
+      cards.push({
+        item: { name: src.frame.nome || 'Novo componente', type: 'frames', nodeId: src.frame.figmaId, nodeIds: [src.frame.figmaId], isMarkedCustom: true, uiDepth: 'full', properties: [], _newComponentRoot: true },
+        cat: 'Novo componente'
+      });
+    }
     _cats.forEach(cat => {
-      (src.specs[cat.type] || []).filter(it => _hdIsBuildItem(it, cat.type)).forEach(it => cards.push({ item: it, cat: cat.title }));
+      (src.specs[cat.type] || []).filter(it => _hdIsBuildItem(it, cat.type) && it.nodeId !== (src.frame && src.frame.figmaId)).forEach(it => cards.push({ item: it, cat: cat.title }));
     });
     if (cards.length > 0) groups.push({ nome: src.nome, cards, frame: src.frame, specs: src.specs });
   });

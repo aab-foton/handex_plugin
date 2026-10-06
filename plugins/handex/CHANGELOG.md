@@ -14,6 +14,7 @@ Ainda não publicada na Figma Community (a versão publicada é a 6.32.1). Mudan
 - Sections do canvas renomeadas para "Handex | Anotações" e "Handex | Especificações" (achadas por pluginData; camadas antigas continuam reconhecidas).
 - Cards de Anotações no canvas: um por elemento, numa coluna ao lado do frame e na altura do próprio elemento, sem Auto Layout; a modal de grade saiu. Tag no ponto de saída da linha, em cinza sólido. As linhas de um lote nunca se cruzam.
 - Ficha: fonte Roboto (fonte vigente da lib DSC) no lugar da CAIXA Std; células das tabelas com altura igual por linha.
+- Ficha: Novo Componente vira o card a construir (com Interações do protótipo); tabela de camadas trocada por Reutilizar/Ícones/Construir; instância do DSC sem personalização não aparece como "construir".
 - **Corrigido (grave):** inserir medidas/especificações na Ficha podia apagar o frame principal; o snapshot agora usa cópias e nunca mexe no frame original.
 - Escanear Tokens: escaneamento de tela inteira não trava mais (miniaturas a 64px em lotes de 8, prévia do frame limitada a 1200px, erro sempre devolvido à UI e limite de 3 min no loading).
 - Escanear Tokens: "Vai para a Ficha" só em Componentes e Frames/Layouts; Ícones e Tipografia ficam só como consulta.
