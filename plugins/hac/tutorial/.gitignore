@@ -1,0 +1,10 @@
+node_modules/
+renders/
+*.mp4
+*.wav
+*.wav.txt
+.cache/
+.cache_*.png
+video/audio/
+video/v*/
+contato.png

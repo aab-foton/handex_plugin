@@ -1,0 +1,79 @@
+{
+  "titulo": "HAC | Leitor de Tela",
+  "voz": "pf_dora",
+  "cenas": [
+    {
+      "id": "abertura",
+      "kicker": "Tutorial HAC · 3 de 5",
+      "titulo": "Leitor de Tela",
+      "fala": "Agora, as especificações para o leitor de tela: o que cada elemento anuncia para quem não enxerga a tela."
+    },
+    {
+      "id": "instrucao",
+      "print": "11-instrucao-leitor",
+      "titulo": "Entenda a tarefa",
+      "fala": "Na aba Leitor de Tela, as instruções explicam o objetivo: garantir que o conteúdo seja compreendido e implementado exatamente como projetado."
+    },
+    {
+      "id": "nova",
+      "print": "07-aba-leitor",
+      "destaque": "novaSpec",
+      "titulo": "Crie uma spec",
+      "fala": "Selecione o elemento no canvas e clique em Nova spec."
+    },
+    {
+      "id": "categoria",
+      "print": "12-nova-spec-categoria",
+      "titulo": "Escolha a categoria",
+      "fala": "Escolha a categoria: Elementos e Imagens, Nível de Título, Estrutura da Página ou Elemento Decorativo."
+    },
+    {
+      "id": "elemento",
+      "print": "13-form-elemento",
+      "destaqueManual": {
+        "x": 82,
+        "y": 266,
+        "w": 316,
+        "h": 36
+      },
+      "titulo": "Elementos e Imagens",
+      "fala": "Para botões, links e imagens, o HAC já reconhece o componente do design system e preenche o formulário. Você só confere e ajusta."
+    },
+    {
+      "id": "titulo",
+      "print": "14-form-titulo",
+      "titulo": "Nível de Título",
+      "fala": "Para títulos, indique o nível, de H1 a H6. O H1 é o título principal, único na página."
+    },
+    {
+      "id": "decorativo",
+      "print": "15-form-decorativo",
+      "titulo": "Elemento Decorativo",
+      "fala": "Ilustrações e ícones sem função são marcados como decorativos, e o leitor de tela os ignora."
+    },
+    {
+      "id": "canvas",
+      "real": "Screenshot 2026-09-30 095224.png",
+      "titulo": "No canvas",
+      "fala": "Cada spec aparece no canvas, ligada ao elemento, com o card que o time de desenvolvimento vai consultar."
+    },
+    {
+      "id": "lista",
+      "print": "07-aba-leitor",
+      "titulo": "Tudo organizado",
+      "fala": "No plugin, as specs ficam agrupadas por categoria. Dá para localizar, editar ou excluir cada uma."
+    },
+    {
+      "id": "ajuda",
+      "print": "16-categorias-ajuda",
+      "titulo": "Na dúvida, consulte",
+      "fala": "Se tiver dúvida sobre qual categoria usar, abra o guia Entendendo as categorias, no botão de ajuda."
+    },
+    {
+      "id": "fim",
+      "kicker": "Próximo vídeo",
+      "titulo": "Ordem de Leitura (mobile)",
+      "fala": "No próximo vídeo: a ordem de leitura por gesto, exclusiva do mobile."
+    }
+  ]
+}

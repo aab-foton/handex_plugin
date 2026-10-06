@@ -1,0 +1,66 @@
+{
+  "titulo": "HAC | Gerar e finalizar o handoff",
+  "voz": "pf_dora",
+  "cenas": [
+    {
+      "id": "abertura",
+      "kicker": "Tutorial HAC · 5 de 5",
+      "titulo": "Gerar e finalizar",
+      "fala": "Com as etapas prontas, é hora de reunir tudo no handoff de acessibilidade."
+    },
+    {
+      "id": "gerar",
+      "print": "08-aba-resumo",
+      "destaque": "gerar",
+      "titulo": "Gere o handoff da tela",
+      "fala": "Abra a aba Resumo. Ela mostra o que já foi inserido no handoff. Clique em Gerar Handoff."
+    },
+    {
+      "id": "processando",
+      "real": "Screenshot 2026-09-30 095638.png",
+      "titulo": "Consolidando",
+      "fala": "O HAC consolida cada etapa, uma de cada vez."
+    },
+    {
+      "id": "ficha",
+      "real": "Screenshot 2026-09-30 095714.png",
+      "titulo": "A ficha no canvas",
+      "fala": "O resultado é a ficha da tela no canvas, com as instruções, a ordem de tabulação e as especificações, lado a lado com o design."
+    },
+    {
+      "id": "proximo",
+      "print": "09-modal-pos-handoff",
+      "destaques": [
+        "outra",
+        "finalizar"
+      ],
+      "titulo": "E agora?",
+      "fala": "Depois, escolha: documentar outra tela, ou finalizar o handoff do projeto."
+    },
+    {
+      "id": "finalizar",
+      "print": "03-lista-telas",
+      "destaque": "finalizar",
+      "titulo": "Finalize o projeto",
+      "fala": "Quando todas as telas estiverem prontas, o botão Finalizar é liberado na lista de telas."
+    },
+    {
+      "id": "confirmar",
+      "real": "Screenshot 2026-09-30 095815.png",
+      "titulo": "Confirme",
+      "fala": "Confirme a finalização. Ela marca esta versão do handoff como concluída, e você pode continuar editando depois."
+    },
+    {
+      "id": "final",
+      "real": "Screenshot 2026-09-30 095837.png",
+      "titulo": "Pronto para o desenvolvimento",
+      "fala": "Pronto. O time de desenvolvimento tem toda a acessibilidade documentada no próprio Figma, e o design original segue intocado."
+    },
+    {
+      "id": "fim",
+      "kicker": "Tutorial HAC",
+      "titulo": "Obrigado!",
+      "fala": "Você concluiu o tutorial do HAC. Bom trabalho e boa documentação!"
+    }
+  ]
+}
