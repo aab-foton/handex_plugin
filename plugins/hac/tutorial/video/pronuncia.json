@@ -1,0 +1,7 @@
+{
+  "_como_funciona": "A fala é fonetizada em pt-br, exceto os termos abaixo, fonetizados em inglês (en-us). 'fonemas_fixos' força a pronúncia exata (IPA do Kokoro). O texto na tela não muda.",
+  "termos_em_ingles": ["handoff", "plugin", "canvas", "design", "system", "mobile", "swipe", "shift", "spec", "specs", "card", "cards"],
+  "fonemas_fixos": {
+    "HAC": "hˈæk"
+  }
+}
