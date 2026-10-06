@@ -757,6 +757,46 @@ window.handleTabOrderAccumulatedSelectionResult = handleTabOrderAccumulatedSelec
 // é sempre a posição ATUAL do item na lista no momento do disparo; se a
 // ordem mudar antes da resposta voltar, o flush em handleTabOrderBadgeDrawn
 // corrige.
+// Tamanho do selo por tela (2026-10-06) — 'pequeno' (padrão, o de sempre) ou
+// 'grande'. Guardado em area.tabBadgeSize; o backend lê o mesmo campo ao
+// montar a seção de Tabulação da Ficha (o objeto área vai inteiro).
+function _tabBadgeSizeForArea(areaId) {
+  const area = (a11yAreas || []).find(a => a && a.id === areaId);
+  return (area && area.tabBadgeSize === 'grande') ? 'grande' : 'pequeno';
+}
+window._tabBadgeSizeForArea = _tabBadgeSizeForArea;
+
+function setTabBadgeSize(areaId, size) {
+  const area = (a11yAreas || []).find(a => a && a.id === areaId);
+  if (!area) return;
+  const next = size === 'grande' ? 'grande' : 'pequeno';
+  if (_tabBadgeSizeForArea(areaId) === next) return;
+  area.tabBadgeSize = next;
+  saveToStorage();
+  if (typeof _renderA11yWorkspaceTab === 'function') _renderA11yWorkspaceTab();
+  const hasItems = typeof _currentTabOrderItems === 'function' && _currentTabOrderItems(areaId).length > 0;
+  if (hasItems) parent.postMessage({ pluginMessage: { type: 'set-tab-order-badge-size', areaId, size: next } }, '*');
+}
+window.setTabBadgeSize = setTabBadgeSize;
+
+function _tabBadgeSizeControlHtml(area) {
+  const cur = _tabBadgeSizeForArea(area.id);
+  const opt = (value, label) => {
+    const on = cur === value;
+    const cls = on ? 'bg-[#005ca9] text-white' : 'text-slate-600 dark:text-dark-muted hover:bg-gray-100 dark:hover:bg-dark-line';
+    return `<button type="button" onclick="setTabBadgeSize('${escapeHtml(area.id)}', '${value}')" aria-pressed="${on}"
+      class="px-dsc-nano h-7 rounded-dsc-medium text-dsc-label-tiny normal-case tracking-normal font-bold transition-colors ${cls}">${label}</button>`;
+  };
+  return `
+    <div class="flex items-center gap-dsc-nano" role="group" aria-label="Tamanho do selo de tabulação">
+      <span class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted">Tamanho do selo</span>
+      <div class="flex items-center gap-0.5 p-0.5 rounded-dsc-large border border-gray-200 dark:border-dark-line">
+        ${opt('pequeno', 'Pequeno')}${opt('grande', 'Grande')}
+      </div>
+    </div>`;
+}
+window._tabBadgeSizeControlHtml = _tabBadgeSizeControlHtml;
+
 function _tabOrderDrawPendingBadge(tempId) {
   const list = window._tabOrderPendingList || [];
   const it = list.find(x => x.tempId === tempId);
@@ -771,6 +811,7 @@ function _tabOrderDrawPendingBadge(tempId) {
       nodeId: it.nodeId,
       number,
       a11yOrigin: window._tabOrderDeclaredOrigin || 'web',
+      badgeSize: _tabBadgeSizeForArea(window._tabOrderPendingAreaId),
       sectionName: getA11yActiveSectionName(),
       designerName: getA11yDesignerName(),
       designerId: getA11yDesignerId(),

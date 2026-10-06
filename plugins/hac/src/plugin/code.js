@@ -4492,7 +4492,7 @@ function _fichaLegendAssetColor(label) {
 // ícone. Espelha A11Y_CATEGORIES (accessibility.js, frontend) — o backend
 // não pode importar aquele módulo, mas o mapeamento label→categoria é o
 // mesmo por definição (mesmas 3 categorias, mesmos textos).
-function _fichaLegendAssetCategory(label) {
+export function _fichaLegendAssetCategory(label) {
   const l = (label || '').toLowerCase();
   // Bug real corrigido (2026-09-17): "decorativ" precisa ser checado ANTES
   // de "interativ"/"imagens" — o passo 3 do template de Leitor de Tela
@@ -4509,6 +4509,47 @@ function _fichaLegendAssetCategory(label) {
   if (l.includes('estrutura da p')) return 'estrutura';
   if (l.includes('interativ') || l.includes('imagens')) return 'elemento';
   return null;
+}
+
+// Ícones das categorias no componente de instrução importado (2026-10-06,
+// pedido do usuário: "trazer também os ícones, igual tínhamos antes"). O
+// componente "[hac web] Instruções para Especificações" tem, ao lado do título
+// de cada categoria, uma instância de conector própria do template (uma delas
+// com número vazio, outra com estrela). Aqui cada uma é TROCADA (swapComponent,
+// override de instância aninhada — o vínculo com a lib continua) pelo MESMO
+// conector que o plugin usa nos selos dos passos e no canvas
+// (_tryImportA11yConectorLinha, orientação 'desativado', "H" no título). A
+// categoria vem do texto ao lado (_fichaLegendAssetCategory). Best-effort por
+// item: o que falhar fica com o ícone do template. Devolve quantos trocou.
+export async function _swapInstructionCategoryBadges(inst, a11yOrigin) {
+  let swapped = 0;
+  const slots = inst.findAll(n => n.type === 'INSTANCE' && n !== inst && n.parent && n.parent.name === 'Title');
+  for (const slot of slots) {
+    try {
+      const label = slot.parent.findOne(n => n.type === 'TEXT');
+      const category = label ? _fichaLegendAssetCategory(/** @type {TextNode} */(label).characters) : null;
+      if (!category) continue;
+      const badge = await _tryImportA11yConectorLinha({ a11yType: category, a11yOrigin, orientacao: 'desativado', letter: category === 'titulo' ? 'H' : null });
+      const main = await badge.getMainComponentAsync();
+      const w = slot.width, h = slot.height;
+      if (main) {
+        /** @type {InstanceNode} */(slot).swapComponent(main);
+        try { slot.resize(w, h); } catch (e) { }
+        if (category === 'titulo') {
+          const propKey = A11Y_AGRUPAMENTO_LETTER_PROP_KEY[category];
+          try { if (propKey) /** @type {InstanceNode} */(slot).setProperties({ [propKey]: 'H' }); } catch (e) {
+            const t = slot.findOne(n => n.type === 'TEXT' && n.name === 'Number');
+            if (t && t.type === 'TEXT' && t.fontName !== figma.mixed) { await figma.loadFontAsync(t.fontName); t.characters = 'H'; }
+          }
+        }
+        swapped++;
+      }
+      badge.remove();
+    } catch (e) {
+      console.error('[hac] ícone de categoria da instrução não trocado:', e);
+    }
+  }
+  return swapped;
 }
 
 // Coluna de legenda textual, reaproveitada pelas seções de Tabulação/Swipe/

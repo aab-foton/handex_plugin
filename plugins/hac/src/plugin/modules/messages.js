@@ -556,6 +556,12 @@
       // Resposta de 'draw-tab-order-badge' (code.js) — o selo real do item
       // recém-adicionado à lista pendente já foi desenhado na cópia; guarda
       // o id real (canvasId) no item pendente correspondente (por tempId).
+      if (msg.type === "tab-order-badge-size-set") {
+        showToast(msg.changed > 0
+          ? `Selos de tabulação no tamanho ${msg.size} (${msg.changed} atualizado${msg.changed === 1 ? '' : 's'}).`
+          : 'Nenhum selo encontrado no canvas; os próximos já saem no novo tamanho.');
+        return;
+      }
       if (msg.type === "tab-order-badge-drawn") {
         if (typeof handleTabOrderBadgeDrawn === 'function') {
           handleTabOrderBadgeDrawn(msg.tempId, msg.canvasId, msg.item);

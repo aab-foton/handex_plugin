@@ -4410,6 +4410,7 @@ function _a11yWorkspaceTabTabulacao(area) {
           <i data-lucide="list-ordered" class="w-3.5 h-3.5" aria-hidden="true"></i>
           Criar ordem de tabulação
         </button>
+        ${typeof _tabBadgeSizeControlHtml === 'function' ? `<div class="mt-2">${_tabBadgeSizeControlHtml(area)}</div>` : ''}
         ${A11Y_AUTO_MAPPING_HIDDEN_TABULACAO ? '' : `
         <button type="button" onclick="_confirmGenerateTabOrderFromLayers('${escapeHtml(areaIdAttr)}', '${escapeHtml(area.targetNodeId || '')}')"
           class="mt-1 flex items-center justify-center gap-1.5 h-7 px-3 rounded-dsc-small text-dsc-label-tiny normal-case tracking-normal font-bold text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 active:scale-[0.99] transition-all">
@@ -4417,6 +4418,7 @@ function _a11yWorkspaceTabTabulacao(area) {
           Mapeamento Automático
         </button>`}
       </div>`}
+      ${hasManualItems && typeof _tabBadgeSizeControlHtml === 'function' ? _tabBadgeSizeControlHtml(area) : ''}
       <ul id="${ulId}" class="flex flex-col gap-1.5 min-h-[10px] min-w-0"></ul>
       ${hasManualItems ? `
       <div class="flex items-center gap-1.5 mt-1">

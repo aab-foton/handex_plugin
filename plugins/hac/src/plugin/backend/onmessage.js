@@ -120,6 +120,7 @@ import {
   _tryImportA11yAgrupamento,
   _tryImportA11yComponent,
   _tryImportA11yConectorLinha,
+  _swapInstructionCategoryBadges,
   hexToRgb,
 } from '../code.js';
 import {
@@ -2557,7 +2558,7 @@ figma.ui.onmessage = async (msg) => {
   // nunca em lote. Não faz appendChild na seleção nem scroll de viewport
   // (quem chama decide isso). Só desenha selo de ITEM de tabulação — o selo
   // de Área (create-a11y-area) tem seu próprio código, não passa por aqui.
-  async function _createTabOrderBadge(node, number, label, conector, areaId, reparentToSection, origin, tabOrderClone, sectionName) {
+  async function _createTabOrderBadge(node, number, label, conector, areaId, reparentToSection, origin, tabOrderClone, sectionName, badgeSize) {
     const _conectorOptions = ['desativado', 'inferior', 'superior', 'esquerda', 'direita'];
     const _conector = _conectorOptions.includes(conector) ? conector : 'direita';
 
@@ -2573,6 +2574,9 @@ figma.ui.onmessage = async (msg) => {
       const comp = await figma.importComponentByKeyAsync(A11Y_ORDENACAO_ITEM_KEY);
       badge = comp.createInstance();
       badge.setProperties({ 'número#5265:3': String(number) });
+      // Tamanho escolhido pelo designer na aba Tabulação (2026-10-06): variante
+      // "tamanho" do mesmo set [hac] Ordenação. Padrão = pequeno (o de sempre).
+      if (badgeSize === 'grande') { try { badge.setProperties({ tamanho: 'grande' }); } catch (eSize) { } }
     } catch (e) {
       // Nunca deveria cair aqui com as keys atuais (confirmadas via REST API
       // contra o component set real "[hac] Ordenação") — mas se a lib não estiver
@@ -2648,6 +2652,7 @@ figma.ui.onmessage = async (msg) => {
     // decidir o que redesenhar, depois que a réplica de trabalho passou a
     // ser MOVIDA (não reclonada) pra dentro da Ficha.
     group.setPluginData('hacTabOrderBadgeForTarget', node.id);
+    group.setPluginData('hacTabOrderConector', _conector);
 
     // O selo nasce em figma.currentPage (precisa de posição absoluta livre
     // pra calcular contra a bounding box do nó-alvo, que também é absoluta).
@@ -3845,6 +3850,41 @@ figma.ui.onmessage = async (msg) => {
   // resolve o node ALVO já mapeado pra dentro dela. tempId só existe do lado
   // do frontend (identifica o item na lista pendente antes de ter um id real
   // de canvas) — o backend só ecoa de volta pra resposta ser correlacionável.
+  // Tamanho do selo de Ordem de Tabulação (2026-10-06): troca a variante
+  // "tamanho" de TODOS os selos já aplicados da área (réplica de trabalho e
+  // Ficha), sem refazer a ordem. Mantém o lado de ancoragem: o selo cresce
+  // para longe do elemento (conector gravado em hacTabOrderConector).
+  if (msg.type === "set-tab-order-badge-size") {
+    (async () => {
+      const size = msg.size === 'grande' ? 'grande' : 'pequeno';
+      let changed = 0;
+      try {
+        const groups = figma.currentPage.findAllWithCriteria({ pluginData: { keys: ['hacTabOrderBadgesGroupForCloneForArea'] } })
+          .filter(g => g.getPluginData('hacTabOrderBadgesGroupForCloneForArea') === msg.areaId);
+        for (const g of groups) {
+          for (const badge of ('children' in g ? g.children : [])) {
+            if (badge.type !== 'INSTANCE' || !badge.getPluginData('hacTabOrderBadgeForTarget')) continue;
+            try {
+              const w0 = badge.width, h0 = badge.height, x0 = badge.x, y0 = badge.y;
+              badge.setProperties({ tamanho: size });
+              const dw = badge.width - w0, dh = badge.height - h0;
+              const side = badge.getPluginData('hacTabOrderConector') || 'direita';
+              if (side === 'esquerda') { badge.x = x0 - dw; badge.y = y0 - dh / 2; }
+              else if (side === 'superior' || side === 'desativado') { badge.x = x0 - dw / 2; badge.y = y0 - dh; }
+              else if (side === 'inferior') { badge.x = x0 - dw / 2; badge.y = y0; }
+              else { badge.x = x0; badge.y = y0 - dh / 2; }
+              changed++;
+            } catch (e) { console.error('[hac] set-tab-order-badge-size: selo não trocado', e); }
+          }
+        }
+      } catch (e) {
+        console.error('[hac] set-tab-order-badge-size', e);
+      }
+      figma.ui.postMessage({ type: 'tab-order-badge-size-set', areaId: msg.areaId, size, changed });
+    })();
+    return;
+  }
+
   if (msg.type === "draw-tab-order-badge") {
     (async () => {
       const resolved = await _resolveActiveTabOrderClone(msg.areaId, msg.targetNodeId, msg.sectionName, msg.designerName, msg.designerId);
@@ -3860,7 +3900,7 @@ figma.ui.onmessage = async (msg) => {
       }
       try {
         try { await figma.loadFontAsync({ family: "Inter", style: "Bold" }); } catch (e) { }
-        const { group, item } = await _createTabOrderBadge(mappedNode, msg.number, '', 'direita', msg.areaId, false, msg.a11yOrigin, clone, msg.sectionName);
+        const { group, item } = await _createTabOrderBadge(mappedNode, msg.number, '', 'direita', msg.areaId, false, msg.a11yOrigin, clone, msg.sectionName, msg.badgeSize);
         figma.currentPage.selection = [clone, group];
         figma.viewport.scrollAndZoomIntoView([clone, group]);
         figma.ui.postMessage({ type: "tab-order-badge-drawn", tempId: msg.tempId, canvasId: group.id, item });
@@ -4459,6 +4499,8 @@ figma.ui.onmessage = async (msg) => {
         const comp = await figma.importComponentByKeyAsync(key);
         const inst = comp.createInstance();
         inst.name = comp.name;
+        // Mesmos ícones de categoria do resto do plugin (ver code.js).
+        await _swapInstructionCategoryBadges(inst, a11yOrigin);
         return inst;
       } catch (e) {
         console.error('[hac] instrução web: import falhou, usando texto local.', e);
@@ -5121,7 +5163,7 @@ figma.ui.onmessage = async (msg) => {
         try {
           await _createTabOrderBadge(
             mappedNode, item.number, item.label || '', item.conector || 'direita',
-            area.id, false, area.a11yOrigin, clone, area.sectionName
+            area.id, false, area.a11yOrigin, clone, area.sectionName, area.tabBadgeSize
           );
         } catch (e) {
           console.error('[hac] _buildFichaTabulacaoSection: falha ao desenhar selo.', e && e.message);

@@ -4696,6 +4696,23 @@ hr {
       <li>A modal de instruções da UI do plugin continua lendo o JSON (é texto da interface, não canvas).</li>
     </ul>
 
+    <h2 id="s8ad">8ad. Ícones das categorias na instrução web e tamanho do selo de tabulação (2026-10-06, v0.1.0-beta.77)</h2>
+
+    <p><strong>Ícones.</strong> O componente <code>[hac web] Instruções para Especificações</code> traz, ao lado de cada
+    categoria, conectores próprios do template (um com número vazio, outro com estrela). Depois do import,
+    <code>_swapInstructionCategoryBadges</code> (<code>code.js</code>) troca cada um, via <code>swapComponent</code> (override,
+    o vínculo com a lib continua), pelo mesmo conector que o plugin usa nos selos (<code>_tryImportA11yConectorLinha</code>,
+    orientação <code>desativado</code>, "H" no título). A categoria vem do texto ao lado (<code>_fichaLegendAssetCategory</code>).
+    Falha por item mantém o ícone do template.</p>
+
+    <p><strong>Tamanho do selo.</strong> Seletor "Tamanho do selo: Pequeno | Grande" na aba Tabulação, por tela
+    (<code>area.tabBadgeSize</code>, padrão pequeno). É a variante <code>tamanho</code> do set <code>[hac] Ordenação</code>.
+    Contrato de mensagens: <code>draw-tab-order-badge</code> ganhou <code>badgeSize</code>; mensagens novas
+    <code>set-tab-order-badge-size</code> {areaId, size} → <code>tab-order-badge-size-set</code> {areaId, size, changed}.
+    A troca atua nos selos de todos os grupos <code>hacTabOrderBadgesGroupForCloneForArea</code> da área na página atual,
+    mantendo o lado de ancoragem (<code>hacTabOrderConector</code>, gravado desde esta versão; selos antigos assumem
+    "direita"). A seção de Tabulação da Ficha lê <code>area.tabBadgeSize</code> do objeto área enviado.</p>
+
     <h2 id="s9">9. Contrato de mensagens (UI ↔ backend)</h2>
 
     <p>Toda comunicação passa por <code>postMessage</code>/<code>window.onmessage</code> — o frontend
