@@ -148,6 +148,16 @@ export const A11Y_IDENTIFICACAO_TELA_PROPS = {
 // "número#5265:3"); a posição é resolvida por x/y absoluto no chamador.
 export const A11Y_ORDENACAO_ITEM_KEY = '860c9f70d42c05f23e00c8414df16911d3292cab';
 
+// Componentes PUBLICADOS de instrução da Ficha (2026-10-05) — página
+// "🖥️ | Template de Handoff Web" do arquivo próprio. Só web: o mobile segue
+// com a coluna montada a partir de ficha-instruction-content.json, porque o
+// template mobile tem diferenças que a web não usa (decisão do usuário).
+// Chave = sectionKey de _FICHA_BLOCK_CONFIG (code.js).
+export const A11Y_WEB_INSTRUCTION_KEYS = {
+  leitor:    '798a147836938ed8174a8027c9bcd7c022bc4921', // [hac web] Instruções para Especificações (10574:18222)
+  tabulacao: 'b5059f2dfb5e4639686e3eb56a78e6914d8ddc4f', // [hac web]  Instruções para Ordem de Tabulação (10574:18221)
+};
+
 const SELOS = {
   identificacaoTelaKeys: A11Y_IDENTIFICACAO_TELA_KEYS,
   identificacaoTelaProps: A11Y_IDENTIFICACAO_TELA_PROPS,
@@ -182,6 +192,7 @@ const WEB_COMPONENT_ALIASES = (WEB_WRAPPER_RAW && WEB_WRAPPER_RAW.componentAlias
  * @property {null | { estrutura: { variacoes: string[], marcoTipos: string[], idiomaTipos: string[], togglesByVariacao: Record<string, string[]> }, tituloNiveis: string[] }} blockOptions
  * @property {{ agrupamentoKeys: Record<string, Record<string, string>>, conectorLinhaKeys: Record<string, Record<string, string>> }} markers
  * @property {typeof SELOS} selos
+ * @property {Record<string, string>} instructionComponentKeys  sectionKey -> key do componente de instrução publicado (vazio = coluna montada)
  */
 
 /** @type {Record<'web'|'mobile', PlatformProfile>} */
@@ -214,6 +225,7 @@ export const PLATFORM_PROFILES = {
     },
     markers: { agrupamentoKeys: A11Y_AGRUPAMENTO_KEYS, conectorLinhaKeys: A11Y_CONECTOR_LINHA_KEYS },
     selos: SELOS,
+    instructionComponentKeys: A11Y_WEB_INSTRUCTION_KEYS,
   },
   mobile: {
     origin: 'mobile',
@@ -243,6 +255,7 @@ export const PLATFORM_PROFILES = {
     blockOptions: null,
     markers: { agrupamentoKeys: A11Y_AGRUPAMENTO_KEYS, conectorLinhaKeys: A11Y_CONECTOR_LINHA_KEYS },
     selos: SELOS,
+    instructionComponentKeys: {},
   },
 };
 

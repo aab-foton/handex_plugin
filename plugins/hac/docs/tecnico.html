@@ -4676,6 +4676,26 @@ hr {
       Títulos (decisão a confirmar).</li>
     </ul>
 
+    <h2 id="s8ac">8ac. Instruções da Ficha na web vêm do componente publicado (2026-10-05, v0.1.0-beta.76)</h2>
+
+    <p>A coluna de instruções da Ficha era montada à mão (<code>_buildFichaLegendColumn</code>, <code>code.js</code>) a
+    partir de <code>ficha-instruction-content.json</code>, uma cópia do texto do template. O arquivo próprio publica os
+    componentes de instrução, e a web passa a importá-los: <code>[hac web] Instruções para Especificações</code>
+    (seção <code>leitor</code>, traz "Entendendo as categorias") e <code>[hac web] Instruções para Ordem de Tabulação</code>
+    (seção <code>tabulacao</code>). Keys em <code>A11Y_WEB_INSTRUCTION_KEYS</code> e no campo
+    <code>instructionComponentKeys</code> do perfil (<code>backend/platform-profiles.js</code>);
+    <code>check-lib-sources.cjs</code> as audita (51 keys).</p>
+    <ul>
+      <li><strong>Só web</strong>, por decisão do usuário: o mobile tem <code>instructionComponentKeys: {}</code> e segue com
+      a coluna montada, sem nenhuma mudança.</li>
+      <li>Usa <strong>o que o componente traz</strong>: os passos numerados com selo da coluna montada não aparecem na web.
+      O componente tem 683px; o frame <code>[HAC] Instruções de …</code> acompanha essa largura.</li>
+      <li>Falha no import cai na coluna montada com <code>figma.notify</code> (nunca silencioso, ver 8a).</li>
+      <li>Frames de instrução já existentes não mudam: a legenda é reaproveitada por <code>hacLegendForArea</code>. Para
+      trocar, apague o frame e gere o handoff de novo.</li>
+      <li>A modal de instruções da UI do plugin continua lendo o JSON (é texto da interface, não canvas).</li>
+    </ul>
+
     <h2 id="s9">9. Contrato de mensagens (UI ↔ backend)</h2>
 
     <p>Toda comunicação passa por <code>postMessage</code>/<code>window.onmessage</code> — o frontend

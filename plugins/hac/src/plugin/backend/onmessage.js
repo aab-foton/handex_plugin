@@ -42,6 +42,7 @@ import {
   A11Y_IDENTIFICACAO_TELA_KEYS,
   A11Y_IDENTIFICACAO_TELA_PROPS,
   A11Y_ORDENACAO_ITEM_KEY,
+  getPlatformProfile,
 } from './platform-profiles.js';
 
 import {
@@ -4450,6 +4451,29 @@ figma.ui.onmessage = async (msg) => {
     return content;
   }
 
+  async function _createFichaInstructionLegend(sectionKey, cfg, a11yOrigin) {
+    const keys = (getPlatformProfile(a11yOrigin).instructionComponentKeys) || {};
+    const key = keys[sectionKey];
+    if (key) {
+      try {
+        const comp = await figma.importComponentByKeyAsync(key);
+        const inst = comp.createInstance();
+        inst.name = comp.name;
+        return inst;
+      } catch (e) {
+        console.error('[hac] instrução web: import falhou, usando texto local.', e);
+        try { figma.notify('Instruções web: não foi possível usar o componente da lib (' + ((e && e.message) || 'erro desconhecido').slice(0, 90) + ') — usado o texto local.', { timeout: 8000 }); } catch (e2) { }
+      }
+    }
+    return _buildFichaLegendColumn(
+      _resolveFichaInstructionContent(FICHA_INSTRUCTION_CONTENT[cfg.instructionKey], a11yOrigin),
+      cfg.legendTitle,
+      cfg.legendFallback,
+      a11yOrigin,
+      cfg.instructionKey
+    );
+  }
+
   async function _getOrCreateFichaInstrucoesFrame(section, sectionKey, areaId, a11yOrigin) {
     const cfg = _FICHA_BLOCK_CONFIG[sectionKey];
     if (!cfg || !section) return null;
@@ -4506,35 +4530,19 @@ figma.ui.onmessage = async (msg) => {
     if (existingLegend) {
       instrucoes.appendChild(existingLegend);
     } else {
-      // Tabulação/Swipe/Leitor de Tela: as 3 usam a legenda COMPLETA
-      // (título + introdução + passos numerados do template) na Ficha final
-      // — 2026-09-16, correção de mal-entendido: uma sessão anterior tinha
-      // removido a instrução da Ficha pra Tabulação/Swipe interpretando
-      // errado um pedido que era só sobre a UI do plugin ("retire da aba,
-      // viva só na modal"); o usuário nunca pediu pra tirar da Ficha
-      // entregável, e a reclamou explicitamente ao ver o frame sem o texto.
-      // _buildFichaInstructionOnlyLegendColumn (só título) permanece
-      // definida em code.js pra não perder o código, mas não é mais
-      // chamada por nenhum caminho — reintroduzir exigiria pedido explícito
-      // novo do usuário.
-      const legendBuilder = _buildFichaLegendColumn;
-      // 5º parâmetro `feature` (2026-09-17, correção de bug real: badges
-      // vazando pra Tabulação/Swipe) — `cfg.instructionKey` já é exatamente
-      // 'leitorTela'|'tabulacao'|'swipe' (ver _FICHA_BLOCK_CONFIG em
-      // code.js), reaproveitado tal como está, sem valor novo a inventar.
-      const legend = await legendBuilder(
-        // Web tem texto próprio no template (NVDA/VoiceOver/Jaws; Leitor de Tela
-        // com 4 passos, inclui Estrutura da Página). Sem `web` no JSON, cai no
-        // conteúdo-base (mobile) — nunca fica sem instrução.
-        _resolveFichaInstructionContent(FICHA_INSTRUCTION_CONTENT[cfg.instructionKey], a11yOrigin),
-        cfg.legendTitle,
-        cfg.legendFallback,
-        a11yOrigin,
-        cfg.instructionKey
-      );
+      // Web: importa o componente de instrução PUBLICADO no arquivo próprio
+      // (2026-10-05) em vez de montar o texto — fica idêntico à lib e passa a
+      // trazer o que ela traz (ex.: "Entendendo as categorias"). Mobile e
+      // falha de import seguem com a coluna montada, avisando o designer.
+      const legend = await _createFichaInstructionLegend(sectionKey, cfg, a11yOrigin);
       legend.setPluginData('hacCategory', 'a11y');
       if (areaId) legend.setPluginData('hacLegendForArea', `${areaId}::${sectionKey}`);
       instrucoes.appendChild(legend);
+      // O componente web tem largura própria (683px); o frame acompanha.
+      if (legend.type === 'INSTANCE' && legend.width > instrucoes.width) {
+        instrucoes.resizeWithoutConstraints(legend.width, instrucoes.height);
+        instrucoes.primaryAxisSizingMode = 'AUTO';
+      }
     }
     return instrucoes;
   }
