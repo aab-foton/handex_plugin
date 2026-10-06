@@ -1424,8 +1424,8 @@ window._tabOrderDragOver = _tabOrderDragOver;
 // dragover. O soltar faz splice(alvo): quem desce cai DEPOIS do alvo, quem
 // sobe cai ANTES — a linha segue a mesma regra.
 function _a11yClearDropLine() {
-  const el = window._a11yDropLineEl;
-  if (el) el.style.boxShadow = el.dataset.a11yPrevShadow || '';
+  const ind = document.getElementById('a11y-drop-indicator');
+  if (ind) ind.remove();
   window._a11yDropLineEl = null;
 }
 function _a11yShowDropLine(target) {
@@ -1433,16 +1433,34 @@ function _a11yShowDropLine(target) {
   if (window._a11yDropLineEl === target) return;
   _a11yClearDropLine();
   if (!src || !target || src === target || src.parentElement !== target.parentElement) return;
-  const kids = Array.from(target.parentElement.children);
+  const list = target.parentElement;
+  const kids = Array.from(list.children).filter(k => k.id !== 'a11y-drop-indicator');
   const goesBefore = kids.indexOf(src) > kids.indexOf(target);
-  target.dataset.a11yPrevShadow = target.style.boxShadow || '';
-  target.style.boxShadow = goesBefore ? '0 -4px 0 -1px #005ca9' : '0 4px 0 -1px #005ca9';
+  // Marcador próprio (2026-10-06, 2ª versão — a sombra de 3px era discreta e
+  // podia ser cortada pela rolagem da modal): barra azul com uma bolinha na
+  // ponta, posicionada NO VÃO entre os itens onde o elemento vai entrar.
+  if (getComputedStyle(list).position === 'static') list.style.position = 'relative';
+  const gap = parseFloat(getComputedStyle(list).rowGap) || 6;
+  let y = goesBefore ? target.offsetTop - gap / 2 : target.offsetTop + target.offsetHeight + gap / 2;
+  // Nunca fora da área visível da lista (no topo/fim de uma modal com rolagem
+  // o marcador era cortado): encosta na borda do primeiro/último item.
+  y = Math.min(Math.max(y, 5), Math.max(5, list.scrollHeight - 5));
+  const ind = document.createElement('div');
+  ind.id = 'a11y-drop-indicator';
+  ind.setAttribute('aria-hidden', 'true');
+  ind.style.cssText = `position:absolute;left:10px;right:6px;top:${Math.round(y - 1.5)}px;height:3px;background:#005ca9;border-radius:2px;pointer-events:none;z-index:5;`;
+  const dot = document.createElement('span');
+  dot.style.cssText = 'position:absolute;left:-6px;top:-3.5px;width:10px;height:10px;border-radius:50%;background:#005ca9;';
+  ind.appendChild(dot);
+  list.appendChild(ind);
   window._a11yDropLineEl = target;
 }
 document.addEventListener('dragstart', (e) => {
   window._a11yDragSrcEl = (e.target && e.target.closest) ? e.target.closest('[draggable="true"]') : null;
+  if (window._a11yDragSrcEl) window._a11yDragSrcEl.style.opacity = '0.4';
 }, true);
 ['dragend', 'drop'].forEach(type => document.addEventListener(type, () => {
+  if (window._a11yDragSrcEl) window._a11yDragSrcEl.style.opacity = '';
   _a11yClearDropLine();
   window._a11yDragSrcEl = null;
 }, true));
