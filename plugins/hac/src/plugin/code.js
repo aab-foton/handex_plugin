@@ -364,6 +364,32 @@ export function _orderNodesInZigzagReadingOrder(nodes) {
 // mutável que ele compartilha com o dispatcher figma.ui.onmessage (ver
 // comentário completo acima, no lugar onde os `let` viviam).
 
+// Ordem de leitura OCIDENTAL (2026-10-06) — usada pelo Swipe automático: linhas
+// de cima para baixo e, em CADA linha, da esquerda para a direita. É o que o
+// template "Ordem de Leitura Mobile (Swipe)" pede ("Siga a ordem de leitura
+// ocidental ... da esquerda para a direita, de cima para baixo"). Mesmo
+// agrupamento em linhas de _orderNodesInZigzagReadingOrder (sobreposição
+// vertical), sem inverter as linhas pares — o zigue-zague continua sendo o
+// critério da Tabulação, não do Swipe.
+export function _orderNodesInReadingOrder(nodes) {
+  const sortedByY = nodes.slice().sort((a, b) => a.absoluteBoundingBox.y - b.absoluteBoundingBox.y);
+  const rows = [];
+  let currentRow = [];
+  const overlaps = (node, row) => row.some(other => {
+    const t1 = node.absoluteBoundingBox.y, b1 = t1 + node.absoluteBoundingBox.height;
+    const t2 = other.absoluteBoundingBox.y, b2 = t2 + other.absoluteBoundingBox.height;
+    return t1 < b2 && t2 < b1;
+  });
+  for (const node of sortedByY) {
+    if (currentRow.length === 0 || overlaps(node, currentRow)) currentRow.push(node);
+    else { rows.push(currentRow); currentRow = [node]; }
+  }
+  if (currentRow.length > 0) rows.push(currentRow);
+  const ordered = [];
+  for (const row of rows) ordered.push(...row.slice().sort((a, b) => a.absoluteBoundingBox.x - b.absoluteBoundingBox.x));
+  return ordered;
+}
+
 export function _nodeOnCurrentPage(node) {
   let n = node;
   while (n && n.type !== 'PAGE') n = n.parent;

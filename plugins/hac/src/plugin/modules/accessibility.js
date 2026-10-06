@@ -74,7 +74,9 @@ const A11Y_AUTO_MAPPING_HIDDEN_TABULACAO = true;
 // telas reais — fica pra depois, com a lógica intacta (nada foi apagado,
 // só o botão de entrada esconde de novo, mesmo padrão já usado antes pra
 // Tabulação). Manter só o caminho manual visível por enquanto.
-const A11Y_AUTO_MAPPING_HIDDEN_SWIPE = true;
+// Reativado em 2026-10-06 com a ordem ocidental (_orderNodesInReadingOrder) e
+// todos os elementos legíveis (não só os de categoria reconhecida).
+const A11Y_AUTO_MAPPING_HIDDEN_SWIPE = false;
 
 // Cores reais extraídas dos fills dos componentes publicados na lib "Design
 // Acessível". O selo (Tag/Chip) de cada categoria usa a cor "color" no
@@ -1271,7 +1273,19 @@ function _applyA11yManualMatchToPicker() {
   // de item esperado (kind 'detection').
   const fakeItem = { name: result.nodeName || null, nodeId: result.nodeId || null, dscComponentMatch: result.match };
   const { category, options } = _resolveA11yFormPresetFromItem(fakeItem, 'detection');
+  // Mobile não tem níveis H1-H6: título usa o marcador único.
+  if (result.match.autoOpen) options.a11yOrigin = getA11yProjectOrigin() || options.a11yOrigin || 'web';
+  if (category === 'titulo' && isA11yMobileProject()) delete options.presetTituloNivel;
   window._a11yManualMatchPreset = { category, options };
+
+  // Reconhecimento determinístico (texto → Título, ícone bruto → Elementos
+  // Decorativos, 2026-10-06): abre o formulário direto, sem o seletor.
+  if (result.match.autoOpen) {
+    const lvl = category === 'titulo' && options.presetTituloNivel ? ` (${String(options.presetTituloNivel).toUpperCase()})` : '';
+    showToast(`${result.nodeName || 'Elemento'} reconhecido como ${getA11yCategoryLabel(category)}${lvl}.`);
+    chooseA11yType(category);
+    return;
+  }
 
   const btn = document.getElementById('a11y-category-btn-' + category);
   if (btn) {
@@ -4595,7 +4609,28 @@ function _a11yWorkspaceTabSwipe(area) {
            canvas (só a trilha inteira tem um grupo), toda edição já
            implica redesenhar a trilha do zero mesmo, então não faz
            sentido represar mudanças pendentes sem persistir. -->
-      <ul id="a11y-swipe-path-tab-list" class="flex flex-col gap-1.5 min-h-[10px] min-w-0"></ul>` : `
+      <ul id="a11y-swipe-path-tab-list" class="flex flex-col gap-1.5 min-h-[10px] min-w-0"></ul>
+      <!-- Simular leitura (2026-10-06): mesma narração da Tabulação, percorrendo
+           os pontos da trilha. -->
+      <div class="flex items-center gap-1.5 mt-1">
+        <button type="button" id="tab-order-narration-btn-swipe-${escapeHtml(areaIdAttr)}" onclick="toggleSwipeNarration('${escapeHtml(areaIdAttr)}', 'swipe-${escapeHtml(areaIdAttr)}')"
+          class="flex-1 min-w-0 flex items-center justify-center gap-dsc-nano h-8 rounded-dsc-large text-dsc-label-tiny normal-case tracking-normal font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm border border-gray-200 dark:border-dark-line hover:bg-gray-50 dark:hover:bg-dark-line transition-colors">
+          <i data-lucide="play" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i>
+          <span class="truncate">Simular leitura</span>
+        </button>
+        <select id="tab-order-narration-lang-swipe-${escapeHtml(areaIdAttr)}" title="Idioma da narração" aria-label="Idioma da narração"
+          class="dsc-select shrink-0 h-8 pl-2.5 rounded-dsc-medium text-dsc-label-tiny normal-case tracking-normal font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm border border-gray-200 dark:border-dark-line">
+          <option value="pt" selected>PT</option>
+          <option value="en">EN</option>
+        </select>
+        <select id="tab-order-narration-rate-swipe-${escapeHtml(areaIdAttr)}" title="Velocidade da narração" aria-label="Velocidade da narração"
+          class="dsc-select shrink-0 h-8 pl-2.5 rounded-dsc-medium text-dsc-label-tiny normal-case tracking-normal font-bold bg-white dark:bg-dark-surface text-slate-600 dark:text-dark-muted shadow-sm border border-gray-200 dark:border-dark-line">
+          <option value="1">1x</option>
+          <option value="1.5" selected>1.5x</option>
+          <option value="2">2x</option>
+          <option value="2.5">2.5x</option>
+        </select>
+      </div>` : `
       <!-- Alert com botão embutido (2026-09-18) — mesmo padrão de
            tabulacaoHintIconBtn/o bloco correspondente em
            _a11yWorkspaceTabTabulacao; SÓ no estado VAZIO (sem trilha ainda).

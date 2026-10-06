@@ -104,6 +104,7 @@ import {
   _moveActiveCloneIntoFichaSection,
   _nodeOnCurrentPage,
   _orderNodesInZigzagReadingOrder,
+  _orderNodesInReadingOrder,
   _rectsOverlap,
   _removeCloneWorkFrame,
   _removeExistingSwipePathCopiesForArea,
@@ -2999,11 +3000,15 @@ figma.ui.onmessage = async (msg) => {
         // conteúdo — só os filhos resolvidos são. Exigir a11yCategory
         // truthy exclui esses containers estruturais sem descartar nenhum
         // componente/texto/imagem com match real.
+        // O Swipe percorre TODOS os elementos lidos pelo leitor de tela
+        // (2026-10-06): componentes (reconhecidos ou não), textos e imagens —
+        // antes só entravam os de categoria reconhecida, e a trilha pulava
+        // textos comuns. Decorativos ficam de fora (o leitor os ignora).
         const candidates = [
           ...(scanned.components || []),
           ...(scanned.typography || []),
           ...(scanned.images || []),
-        ].filter(item => item && item.dscComponentMatch && !item.dscComponentMatch.isUnmapped && item.dscComponentMatch.a11yCategory);
+        ].filter(item => item && !(item.dscComponentMatch && item.dscComponentMatch.a11yCategory === 'decorativo'));
 
         const plainNodeMap = {};
         const cloneIdToOriginalId = new Map();
@@ -3024,7 +3029,7 @@ figma.ui.onmessage = async (msg) => {
           const n = await _getSceneNodeById(originalId);
           if (n && n.absoluteBoundingBox) resolvedNodes.push(n);
         }
-        const items = _orderNodesInZigzagReadingOrder(resolvedNodes)
+        const items = _orderNodesInReadingOrder(resolvedNodes)
           .map(node => ({ nodeId: node.id, nodeName: _findVisibleLabelText(node) || node.name }));
 
         figma.ui.postMessage({ type: "swipe-path-generated-from-layers", areaId: msg.areaId, generation: msg.generation, items, cloneId: clone.id, nodeMap: plainNodeMap });

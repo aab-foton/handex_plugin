@@ -3398,6 +3398,14 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-06 — Reconhecimento de texto e ícone, Swipe automático e Simular leitura no Swipe (v0.1.0-beta.85)</h2>
+
+    <ul>
+      <li><strong>Reconhecimento determinístico</strong> na Nova spec, a partir da lib Fundamentos Visuais: texto selecionado abre direto <strong>Título</strong> (web: nível pelo estilo "heading" da lib — huge=H1 … tiny=H6, display=H1 — ou, sem estilo, pelo tamanho da fonte; mobile: marcador único) e ícone bruto (instância de um dos ~10 mil ícones da lib, ou desenho só de vetores até 64 px) abre direto <strong>Elementos Decorativos</strong>. Dados em <code>refs/a11y-heuristics.generated.json</code>, gerado por <code>build-a11y-heuristics.cjs</code> (rodado pelo build-skeleton/CI).</li>
+      <li><strong>Swipe automático</strong> reativado: percorre todos os elementos lidos pelo leitor de tela (componentes, textos, imagens; decorativos de fora) na ordem de leitura ocidental, como pede o template. A Tabulação mantém o zigue-zague definido pela vertical.</li>
+      <li><strong>Simular leitura</strong> na aba Swipe, com a mesma narração da Tabulação.</li>
+    </ul>
+
     <h2>2026-10-06 — Menu Personalização com espaçamento de texto (v0.1.0-beta.84)</h2>
 
     <p>Os botões de zoom e tema do header viram um único menu <strong>Personalização</strong>: tamanho da interface (100%, 115%,

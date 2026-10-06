@@ -185,3 +185,7 @@ const instructionFramesKB = (instructionFramesJS.length / 1024).toFixed(1);
 const instructionFrameKeys = Object.keys(instructionFrames);
 console.log(`✅ _instruction-frames.generated.js (${instructionFramesKB} KB)`);
 console.log(`   ${instructionFrameKeys.length} frame(s) de instrução${instructionFrameKeys.length ? ' (' + instructionFrameKeys.join(', ') + ')' : ' — nenhum ainda, ver fetch-instruction-frames.cjs'}`);
+
+// Heurísticas determinísticas da seleção manual (ícones e níveis de título da
+// lib Fundamentos Visuais) — ver build-a11y-heuristics.cjs.
+require('./build-a11y-heuristics.cjs').build();

@@ -20,6 +20,7 @@
 // ============================================================
 
 import REF_SKELETON from '../refs/_skeleton.json';
+import A11Y_HEURISTICS from '../refs/a11y-heuristics.generated.json';
 // Libs de reconhecimento por plataforma (slug -> origin/sourceLib) e os 4
 // mapeamentos componente -> categoria de a11y agora vêm dos PERFIS
 // (platform-profiles.js, 2026-10-01) — antes eram 4 imports + 2 tabelas
@@ -213,6 +214,62 @@ export function _resolveDscComponentA11yMatch(componentKey) {
 // (que decide entre a seleção atual e o registro de "última seleção real",
 // exatamente como get-selection-name já faz), nunca lê seleção por conta
 // própria.
+// ── Reconhecimento determinístico da seleção manual (2026-10-06) ─────────────
+const _FUND_ICON_PREFIXES = new Set((A11Y_HEURISTICS && A11Y_HEURISTICS.iconKeyPrefixes) || []);
+const _FUND_HEADING_LEVELS = (A11Y_HEURISTICS && A11Y_HEURISTICS.headingLevels) || [];
+
+function _isVectorLike(n) {
+  return n && ['VECTOR', 'BOOLEAN_OPERATION', 'STAR', 'POLYGON', 'ELLIPSE', 'LINE'].includes(n.type);
+}
+
+// Ícone bruto: instância de um ícone da lib Fundamentos Visuais, ou desenho só
+// de vetores (sem texto) de até 64 px.
+async function _isRawIcon(node) {
+  if (_isVectorLike(node)) return 'vector';
+  if (node.type === 'INSTANCE') {
+    try {
+      const mc = await node.getMainComponentAsync();
+      if (mc && mc.key && _FUND_ICON_PREFIXES.has(mc.key.slice(0, 12))) return 'fundamentos-icon';
+    } catch (e) { }
+  }
+  if (['INSTANCE', 'FRAME', 'GROUP', 'COMPONENT'].includes(node.type) && node.width <= 64 && node.height <= 64 && 'findAll' in node) {
+    const kids = node.findAll(() => true);
+    if (kids.length && !kids.some(k => k.type === 'TEXT') && kids.some(_isVectorLike)) return 'vector-group';
+  }
+  return null;
+}
+
+// Nível do título (1..6): estilo "heading X" da lib → nível da lib; "display" →
+// H1; sem estilo, pelo tamanho da fonte comparado aos headings da lib.
+async function _headingLevelForText(node) {
+  try {
+    if (typeof node.textStyleId === 'string' && node.textStyleId) {
+      const st = await figma.getStyleByIdAsync(node.textStyleId);
+      const name = (st && st.name || '').toLowerCase();
+      if (/display/.test(name)) return 1;
+      const hit = _FUND_HEADING_LEVELS.find(h => name.indexOf(h.name) !== -1);
+      if (hit) return hit.level;
+    }
+  } catch (e) { }
+  let fs = node.fontSize;
+  if (fs === figma.mixed) {
+    try { fs = Math.max(...node.getStyledTextSegments(['fontSize']).map(s => s.fontSize)); } catch (e) { fs = 0; }
+  }
+  for (const h of _FUND_HEADING_LEVELS) if (fs >= h.fontSize) return h.level;
+  return _FUND_HEADING_LEVELS.length ? _FUND_HEADING_LEVELS[_FUND_HEADING_LEVELS.length - 1].level : 1;
+}
+
+async function _resolveDeterministicA11yMatch(node) {
+  if (!node) return null;
+  if (node.type === 'TEXT') {
+    const level = await _headingLevelForText(node);
+    return { containingFrame: null, a11yCategory: 'titulo', confidence: 'alta', source: 'texto-fundamentos', suggestedLevel: 'h' + level, autoOpen: true };
+  }
+  const icon = await _isRawIcon(node);
+  if (icon) return { containingFrame: null, a11yCategory: 'decorativo', confidence: 'alta', source: icon, autoOpen: true };
+  return null;
+}
+
 export async function _resolveManualSpecMatchAndNotify(token, node) {
   let match = null;
   if (node && node.type === 'INSTANCE') {
@@ -222,6 +279,14 @@ export async function _resolveManualSpecMatchAndNotify(token, node) {
         match = _resolveDscComponentA11yMatch(mainComp.key);
       }
     } catch (e) { match = null; }
+  }
+  // Reconhecimento DETERMINÍSTICO (2026-10-06): sem match de componente DSC,
+  // texto vira Título (nível pelos estilos "heading" da lib Fundamentos) e
+  // ícone bruto vira Elementos Decorativos. `autoOpen` faz a UI abrir o
+  // formulário direto na categoria, sem passar pelo seletor.
+  if ((!match || match.isUnmapped || !match.a11yCategory) && node) {
+    const det = await _resolveDeterministicA11yMatch(node);
+    if (det) match = det;
   }
   figma.ui.postMessage({
     type: 'manual-spec-match-resolved',

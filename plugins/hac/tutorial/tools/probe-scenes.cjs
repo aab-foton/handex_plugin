@@ -1,7 +1,7 @@
-// Sondagens pontuais (PROBE=1 node tools/shoot.cjs) — prints em prints/_probe-*.png.
+// Sondagens pontuais (PROBE=1 node tools/shoot.cjs).
 module.exports = [
-  { id: '_probe-pz-menu', origin: 'web', run: () => { navigate('view-specifications'); toggleHacPersonalizeMenu(); } },
-  { id: '_probe-ts-lista', origin: 'web', run: () => { setHacTextSpacing(true); navigate('view-specifications'); } },
-  { id: '_probe-ts-leitor', origin: 'mobile', run: () => { setHacTextSpacing(true); openA11yAreaWorkspace('A1', { initialTab: 'leitor' }); } },
-  { id: '_probe-ts-form', origin: 'web', run: () => { setHacTextSpacing(true); openA11yAreaWorkspace('A1', { initialTab: 'leitor' }); window._a11yPendingAreaId = 'A1'; setTimeout(() => openA11yModal('elemento', { a11yOrigin: 'web', targetNodeName: 'Botão Entrar', dscComponentName: '[dsc] Button' }), 300); }, wait: 1200 },
+  { id: '_probe-swipe-com-trilha', origin: 'mobile', run: () => {
+      hacData.a11ySwipePaths = [{ id: 'P1', areaId: 'A1', points: [{ nodeId: 'p1', nodeName: 'Título' }, { nodeId: 'p2', nodeName: 'Saldo' }, { nodeId: 'p3', nodeName: 'Botão Pix' }] }];
+      openA11yAreaWorkspace('A1', { initialTab: 'swipe' }); } },
+  { id: '_probe-swipe-vazio', origin: 'mobile', run: () => { openA11yAreaWorkspace('A2', { initialTab: 'swipe' }); } },
 ];

@@ -1660,6 +1660,31 @@ window._handleTabOrderNarrationResolved = _handleTabOrderNarrationResolved;
 // Clique único no botão "Simular leitura" / "Parar simulação" — alterna
 // entre iniciar e interromper, nunca duas simulações ao mesmo tempo
 // (starta sempre para do zero a anterior, se houver).
+// Simular leitura do Swipe (2026-10-06): mesma narração da Tabulação, com os
+// pontos da trilha salva no lugar dos itens de tabulação.
+function toggleSwipeNarration(areaId, uid) {
+  const state = window._tabOrderNarration;
+  if (state.active) { _stopTabOrderNarration(); return; }
+  if (!('speechSynthesis' in window)) {
+    showToast('Simulação de leitura por voz não está disponível neste ambiente.', 'error');
+    return;
+  }
+  const path = (hacData.a11ySwipePaths || []).find(p => p && p.areaId === areaId);
+  const points = (path && path.points) || [];
+  if (points.length === 0) { showToast('Nenhum ponto na Ordem de Leitura para narrar.'); return; }
+  state.active = true;
+  state.areaId = areaId;
+  state.uid = uid;
+  state.queue = [];
+  state.index = -1;
+  const langSelect = document.getElementById(`tab-order-narration-lang-${uid}`);
+  state.lang = (langSelect && langSelect.value === 'en') ? 'en' : 'pt';
+  _setTabOrderNarrationButtonState(uid, true);
+  parent.postMessage({ pluginMessage: { type: 'resolve-tab-order-narration', areaId,
+    items: points.map((p, i) => ({ targetNodeId: p.nodeId, targetNodeName: p.nodeName, number: i + 1 })) } }, '*');
+}
+window.toggleSwipeNarration = toggleSwipeNarration;
+
 function toggleTabOrderNarration(areaId, uid) {
   const state = window._tabOrderNarration;
   if (state.active) {
