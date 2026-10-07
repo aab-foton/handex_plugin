@@ -3398,6 +3398,17 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-07 — Foco sempre na réplica; card da spec alinhado (v0.1.0-beta.112)</h2>
+
+    <p><strong>Foco na réplica</strong> (web e mobile): a mira de uma spec (e de um item de Tabulação/ponto de Swipe) selecionava o
+    elemento na tela original quando o mapa original→réplica em memória não existia — por exemplo, depois de reabrir o plugin.
+    Os três focos passam por <code>_focusNodeInReplica</code>: alvo gravado na spec → mapa em memória → réplica da área no canvas +
+    elemento equivalente. Sem equivalente, mostra a réplica/spec e avisa — nunca a tela original. As mensagens de foco passam a
+    levar <code>areaTargetNodeId</code> (e <code>specId</code>, no Leitor de Tela), e a área cai na tela aberta quando não há captura ativa.</p>
+
+    <p><strong>Card da spec</strong>: selo, título e ícones de ação na mesma altura; os chips (lib, categoria, "Verificar") passam
+    para uma linha própria abaixo do título.</p>
+
     <h2>2026-10-07 — Card da spec sem label repetida; documentação atualizada (v0.1.0-beta.111)</h2>
 
     <p><strong>Card da spec</strong> (web e mobile): o nome do card é o nome do elemento, e a label (texto do elemento) só aparece

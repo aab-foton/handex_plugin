@@ -3539,27 +3539,9 @@ figma.ui.onmessage = async (msg) => {
   // (figma.currentPage.selection), que já dá o contorno azul nativo do
   // Figma como feedback visual, sem nenhum node extra criado/removido.
   if (msg.type === "highlight-tab-order-copy-node") {
-    (async () => {
-      let targetId = msg.id;
-      const cloneMap = msg.areaId ? _activeTabOrderCloneMaps.get(msg.areaId) : null;
-      if (cloneMap && cloneMap.has(msg.id)) {
-        targetId = cloneMap.get(msg.id).id;
-      }
-
-      const node = await _getSceneNodeById(targetId);
-      if (!node || !node.visible || !_nodeOnCurrentPage(node) || !node.absoluteBoundingBox) return;
-
-      figma.currentPage.selection = [node];
-
-      // Clicar num item da lista (pendente ou já aplicada) da Ordem de
-      // Tabulação precisa levar a viewport até o elemento — sem isso, numa
-      // área grande/muito escalada o designer via a seleção só se já
-      // estivesse olhando pro trecho certo do canvas (pedido explícito do
-      // usuário, 2026-09-03: hoje só o clique direto no canvas focava).
-      if (msg.shouldScroll) {
-        figma.viewport.scrollAndZoomIntoView([node]);
-      }
-    })();
+    // shouldScroll: clicar num item da lista leva a viewport até o elemento
+    // (pedido do usuário, 2026-09-03). Foco na réplica — ver _focusNodeInReplica.
+    _focusNodeInReplica(msg, _activeTabOrderCloneMaps, _findTabOrderCopyForArea);
     return;
   }
 
@@ -3610,22 +3592,55 @@ figma.ui.onmessage = async (msg) => {
   // aparecer. Resolve via _activeSpecCloneMaps (mesmo Map por área que
   // create-unified-spec já usa) pro node equivalente dentro da cópia de
   // trabalho ativa da área.
+  // Foco SEMPRE na réplica, nunca na tela original (2026-10-07, print do
+  // usuário: a mira da spec selecionava o elemento no frame principal). Antes
+  // só o mapa em memória traduzia original→réplica — perdido ao reabrir o
+  // plugin, e aí o foco caía no original. Ordem: (1) alvo gravado na spec
+  // (hacSpecTargetCloneNodeId); (2) mapa em memória; (3) réplica da área no
+  // canvas + elemento equivalente (_findEquivalentNodeInClone); (4) sem
+  // equivalente: foca a spec/réplica e avisa — nunca o original. Usado pelos
+  // 3 focos (Leitor de Tela, Tabulação, Swipe), web e mobile.
+  async function _focusNodeInReplica(msg, cloneMaps, findCloneForArea) {
+    let node = null;
+    const usable = n => n && !n.removed && n.visible !== false && _nodeOnCurrentPage(n) && n.absoluteBoundingBox;
+    if (msg.specId) {
+      const g = await _getSceneNodeById(msg.specId);
+      const savedId = g && g.getPluginData ? g.getPluginData('hacSpecTargetCloneNodeId') : '';
+      if (savedId) { const t = await _getSceneNodeById(savedId); if (usable(t)) node = t; }
+    }
+    if (!node && msg.areaId && cloneMaps) {
+      const map = cloneMaps.get(msg.areaId);
+      if (map && map.has(msg.id)) { const t = map.get(msg.id); if (usable(t)) node = t; }
+    }
+    let clone = null;
+    if (!node && msg.areaId) {
+      clone = findCloneForArea(msg.areaId);
+      const orig = await _getSceneNodeById(msg.id);
+      const root = msg.areaTargetNodeId ? await _getSceneNodeById(msg.areaTargetNodeId) : null;
+      if (clone && orig && root) {
+        const eq = _findEquivalentNodeInClone(orig, root, clone);
+        if (eq && usable(eq.node)) node = eq.node;
+      } else if (clone && orig && _isDescendantOf(orig, clone)) {
+        node = orig;
+      }
+    }
+    if (!node) {
+      const fallback = (msg.specId && await _getSceneNodeById(msg.specId)) || clone;
+      if (usable(fallback)) {
+        node = fallback;
+        figma.notify('Elemento não encontrado na réplica — mostrando a réplica da tela.');
+      }
+    }
+    if (!node) {
+      figma.notify('Réplica desta tela não encontrada no canvas.');
+      return;
+    }
+    figma.currentPage.selection = [node];
+    if (msg.shouldScroll) figma.viewport.scrollAndZoomIntoView([node]);
+  }
+
   if (msg.type === "highlight-spec-copy-node") {
-    (async () => {
-      let targetId = msg.id;
-      const cloneMap = msg.areaId ? _activeSpecCloneMaps.get(msg.areaId) : null;
-      if (cloneMap && cloneMap.has(msg.id)) {
-        targetId = cloneMap.get(msg.id).id;
-      }
-
-      const node = await _getSceneNodeById(targetId);
-      if (!node || !node.visible || !_nodeOnCurrentPage(node) || !node.absoluteBoundingBox) return;
-
-      figma.currentPage.selection = [node];
-      if (msg.shouldScroll) {
-        figma.viewport.scrollAndZoomIntoView([node]);
-      }
-    })();
+    _focusNodeInReplica(msg, _activeSpecCloneMaps, _findSpecCloneForArea);
     return;
   }
 
@@ -3639,21 +3654,7 @@ figma.ui.onmessage = async (msg) => {
   // _activeSwipePathCloneMaps (mesmo Map por área que insert-swipe-path já
   // usa) pro node equivalente dentro da cópia de trabalho ativa da área.
   if (msg.type === "highlight-swipe-path-copy-node") {
-    (async () => {
-      let targetId = msg.id;
-      const cloneMap = msg.areaId ? _activeSwipePathCloneMaps.get(msg.areaId) : null;
-      if (cloneMap && cloneMap.has(msg.id)) {
-        targetId = cloneMap.get(msg.id).id;
-      }
-
-      const node = await _getSceneNodeById(targetId);
-      if (!node || !node.visible || !_nodeOnCurrentPage(node) || !node.absoluteBoundingBox) return;
-
-      figma.currentPage.selection = [node];
-      if (msg.shouldScroll) {
-        figma.viewport.scrollAndZoomIntoView([node]);
-      }
-    })();
+    _focusNodeInReplica(msg, _activeSwipePathCloneMaps, _findSwipePathCopyForArea);
     return;
   }
 

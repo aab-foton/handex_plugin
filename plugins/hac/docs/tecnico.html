@@ -4850,6 +4850,16 @@ hr {
       fica em <code>_…Now</code>.</li>
     </ul>
 
+    <h3>Foco na réplica (beta.112)</h3>
+    <ul>
+      <li><code>highlight-spec-copy-node</code>, <code>highlight-tab-order-copy-node</code> e <code>highlight-swipe-path-copy-node</code> usam
+      <code>_focusNodeInReplica(msg, cloneMaps, findCloneForArea)</code>: alvo gravado na spec (<code>hacSpecTargetCloneNodeId</code>) → mapa em
+      memória → réplica da área + <code>_findEquivalentNodeInClone</code> → spec/réplica com aviso. Nunca seleciona a tela original.
+      Payload ganhou <code>areaTargetNodeId</code> (e <code>specId</code> no Leitor); <code>areaId</code> cai em
+      <code>_a11yWorkspaceAreaId</code> fora da captura.</li>
+      <li>Card da spec: cabeçalho <code>items-center</code>; chips em linha própria.</li>
+    </ul>
+
     <h3>Mensagens novas/alteradas desta rodada</h3>
     <ul>
       <li><code>a11y-spec-create-failed</code> (backend → UI) e <code>a11y-no-lib-card</code> (backend → UI) — ver 8af.</li>

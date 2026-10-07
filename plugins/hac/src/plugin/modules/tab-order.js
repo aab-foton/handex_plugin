@@ -798,7 +798,11 @@ function _highlightTabOrderListItem(nodeId) {
   // areaId incluído (2026-09-08): o cache de clone ativo virou por área
   // (Map<areaId, nodeMap>, ver code.js) — sem isso o backend teria que
   // adivinhar de qual área é o nodeId clicado.
-  parent.postMessage({ pluginMessage: { type: 'highlight-tab-order-copy-node', id: nodeId, areaId: window._tabOrderPendingAreaId, highlight: true, color: '#005ca9', selectNode: false, shouldScroll: true } }, '*');
+  // Fora da captura (lista salva, plugin reaberto) a área vem da tela aberta;
+  // areaTargetNodeId deixa o backend achar a réplica sem o mapa em memória.
+  const areaId = window._tabOrderPendingAreaId || window._a11yWorkspaceAreaId || null;
+  parent.postMessage({ pluginMessage: { type: 'highlight-tab-order-copy-node', id: nodeId, areaId,
+    areaTargetNodeId: (_findA11yAreaById(areaId) || {}).targetNodeId || null, highlight: true, color: '#005ca9', selectNode: false, shouldScroll: true } }, '*');
 }
 window._highlightTabOrderListItem = _highlightTabOrderListItem;
 

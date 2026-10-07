@@ -4086,29 +4086,16 @@ function _a11ySpecItemHtml(spec, showCategoryChip, group) {
   return `
     <div class="relative bg-gray-50/60 dark:bg-dark-bg/40 rounded-dsc-medium border ${isUnlocked ? 'border-amber-200 dark:border-amber-800/40' : isHidden ? 'border-gray-100 opacity-50' : 'border-gray-100 dark:border-dark-line'} overflow-hidden"
       data-a11y-spec-item data-a11y-category="${escapeHtml(spec.a11yType || '')}" data-a11y-search="${escapeHtml(searchText)}">
-      <div class="flex items-start px-2.5 py-dsc-nano gap-dsc-nano">
-        <div class="w-6 h-6 rounded-dsc-circ flex items-center justify-center text-dsc-label-tiny normal-case tracking-normal font-extrabold shrink-0 mt-0.5" style="background-color:${color};color:${badgeTextColor}">${escapeHtml(spec.letter || 'A')}</div>
+      <!-- items-center (2026-10-07, pedido do usuário): selo, título e ícones
+           de ação na mesma altura — antes items-start deixava o título colado
+           no topo, acima dos botões de 40px. -->
+      <div class="flex items-center px-2.5 py-dsc-nano gap-dsc-nano">
+        <div class="w-6 h-6 rounded-dsc-circ flex items-center justify-center text-dsc-label-tiny normal-case tracking-normal font-extrabold shrink-0" style="background-color:${color};color:${badgeTextColor}">${escapeHtml(spec.letter || 'A')}</div>
         <div class="flex-1 min-w-0">
           <p class="text-dsc-label-tiny normal-case tracking-normal font-semibold text-slate-700 dark:text-white truncate">${escapeHtml(cardName)}${group ? ` <span class="font-bold text-slate-500 dark:text-dark-muted">×${group.ids.length}</span>` : ''}</p>
-          <div class="flex items-center flex-wrap gap-dsc-quark mt-0.5">
-            ${showCategoryChip ? `
-            <span class="inline-flex items-center gap-dsc-quark px-1.5 py-0.5 rounded-dsc-circ border text-dsc-label-tiny normal-case tracking-normal font-bold" style="background-color:${fill};border-color:${textColor};color:${textColor};">
-              <i data-lucide="${meta.icon}" class="w-2.5 h-2.5"></i> ${escapeHtml(categoryLabel)}
-            </span>` : ''}
-            ${spec.a11ySourceLib ? `
-            <span class="inline-flex items-center px-1.5 py-0.5 rounded-dsc-circ border text-dsc-label-tiny normal-case tracking-normal font-medium bg-slate-50 dark:bg-dark-bg/60 border-slate-200 dark:border-dark-line text-slate-500 dark:text-dark-muted">
-              ${escapeHtml(spec.a11ySourceLib.label)}
-            </span>` : ''}
-            ${spec.needsReview ? `
-            <button type="button" title="Especificação precisa de revisão, clique para verificar" aria-label="Verificar especificação, precisa de revisão"
-              onclick="editA11ySpec('${escapeHtml(spec.id)}')"
-              class="inline-flex items-center gap-dsc-quark px-1.5 py-0.5 rounded-dsc-circ border text-dsc-label-tiny normal-case tracking-normal font-bold bg-amber-50/60 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/40 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/20 transition-colors">
-              <i data-lucide="alert-triangle" class="w-2.5 h-2.5"></i> Verificar
-            </button>` : ''}
-          </div>
         </div>
         <button type="button" title="Focar no elemento no canvas" aria-label="Focar no elemento no canvas"
-          onclick="_highlightSpecListItem('${escapeHtml(spec.targetNodeId)}', '${escapeHtml(spec.a11yAreaId || '')}')"
+          onclick="_highlightSpecListItem('${escapeHtml(spec.targetNodeId)}', '${escapeHtml(spec.a11yAreaId || '')}', '${escapeHtml(spec.id || '')}')"
           class="w-10 h-10 flex items-center justify-center rounded-2xl text-gray-400 hover:text-[#005ca9] transition-colors shrink-0">
           <i data-lucide="locate" class="w-5 h-5"></i>
         </button>
@@ -4124,6 +4111,25 @@ function _a11ySpecItemHtml(spec, showCategoryChip, group) {
           <i data-lucide="trash-2" class="w-5 h-5"></i>
         </button>
       </div>
+      <!-- Chips (categoria, lib, Verificar) em linha própria, abaixo do título —
+           a 1ª linha fica só selo + título + ações, alinhados (2026-10-07). -->
+      ${(showCategoryChip || spec.a11ySourceLib || spec.needsReview) ? `
+      <div class="flex items-center flex-wrap gap-dsc-quark px-2.5 pb-dsc-nano -mt-1" style="padding-left:42px">
+            ${showCategoryChip ? `
+            <span class="inline-flex items-center gap-dsc-quark px-1.5 py-0.5 rounded-dsc-circ border text-dsc-label-tiny normal-case tracking-normal font-bold" style="background-color:${fill};border-color:${textColor};color:${textColor};">
+              <i data-lucide="${meta.icon}" class="w-2.5 h-2.5"></i> ${escapeHtml(categoryLabel)}
+            </span>` : ''}
+            ${spec.a11ySourceLib ? `
+            <span class="inline-flex items-center px-1.5 py-0.5 rounded-dsc-circ border text-dsc-label-tiny normal-case tracking-normal font-medium bg-slate-50 dark:bg-dark-bg/60 border-slate-200 dark:border-dark-line text-slate-500 dark:text-dark-muted">
+              ${escapeHtml(spec.a11ySourceLib.label)}
+            </span>` : ''}
+            ${spec.needsReview ? `
+            <button type="button" title="Especificação precisa de revisão, clique para verificar" aria-label="Verificar especificação, precisa de revisão"
+              onclick="editA11ySpec('${escapeHtml(spec.id)}')"
+              class="inline-flex items-center gap-dsc-quark px-1.5 py-0.5 rounded-dsc-circ border text-dsc-label-tiny normal-case tracking-normal font-bold bg-amber-50/60 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/40 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/20 transition-colors">
+              <i data-lucide="alert-triangle" class="w-2.5 h-2.5"></i> Verificar
+            </button>` : ''}
+      </div>` : ''}
       ${spec.a11yType === 'titulo' && cardLabel ? `
       <p class="px-2.5 pb-2.5 -mt-1 text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-slate-300 break-words">“${escapeHtml(cardLabel)}”</p>` : ''}
       ${visibleProps.length > 0 ? `
@@ -7338,7 +7344,8 @@ function focusA11yWizardCurrentNode() {
   const nodeId = modal ? modal.dataset.pendingTargetNodeId : '';
   if (!nodeId) return;
   const areaId = modal ? modal.dataset.areaId : '';
-  parent.postMessage({ pluginMessage: { type: 'highlight-spec-copy-node', id: nodeId, areaId: areaId || null, shouldScroll: true } }, '*');
+  parent.postMessage({ pluginMessage: { type: 'highlight-spec-copy-node', id: nodeId, areaId: areaId || null,
+    areaTargetNodeId: (_findA11yAreaById(areaId) || {}).targetNodeId || null, shouldScroll: true } }, '*');
 }
 window.focusA11yWizardCurrentNode = focusA11yWizardCurrentNode;
 
@@ -7347,9 +7354,12 @@ window.focusA11yWizardCurrentNode = focusA11yWizardCurrentNode;
 // spec.targetNodeId é sempre o nodeId ORIGINAL (_originalTargetNodeId,
 // code.js), nunca o equivalente dentro do clone de trabalho do Leitor de
 // Tela. Usa o mesmo handler dedicado highlight-spec-copy-node.
-function _highlightSpecListItem(nodeId, areaId) {
+function _highlightSpecListItem(nodeId, areaId, specId) {
   if (!nodeId) return;
-  parent.postMessage({ pluginMessage: { type: 'highlight-spec-copy-node', id: nodeId, areaId: areaId || null, shouldScroll: true } }, '*');
+  // specId + areaTargetNodeId (2026-10-07): o backend acha o elemento na
+  // RÉPLICA mesmo sem o mapa em memória (ver _focusNodeInReplica).
+  parent.postMessage({ pluginMessage: { type: 'highlight-spec-copy-node', id: nodeId, areaId: areaId || null, specId: specId || null,
+    areaTargetNodeId: (_findA11yAreaById(areaId) || {}).targetNodeId || null, shouldScroll: true } }, '*');
 }
 window._highlightSpecListItem = _highlightSpecListItem;
 

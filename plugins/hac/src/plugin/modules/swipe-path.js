@@ -493,7 +493,9 @@ window.handleSwipePathAccumulatedSelectionResult = handleSwipePathAccumulatedSel
 // por este fluxo.
 function _highlightSwipePathListItem(nodeId) {
   if (!nodeId) return;
-  parent.postMessage({ pluginMessage: { type: 'highlight-swipe-path-copy-node', id: nodeId, areaId: window._swipePathPendingAreaId, highlight: true, color: '#005ca9', selectNode: false, shouldScroll: true } }, '*');
+  const areaId = window._swipePathPendingAreaId || window._a11yWorkspaceAreaId || null;
+  parent.postMessage({ pluginMessage: { type: 'highlight-swipe-path-copy-node', id: nodeId, areaId,
+    areaTargetNodeId: (_findA11yAreaById(areaId) || {}).targetNodeId || null, highlight: true, color: '#005ca9', selectNode: false, shouldScroll: true } }, '*');
 }
 window._highlightSwipePathListItem = _highlightSwipePathListItem;
 
