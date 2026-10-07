@@ -4896,6 +4896,8 @@ hr {
       <li>Frontend: <code>_finishA11ySpecConfirm</code> marca <code>window._a11yOfferSimilarFor</code> só em spec nova simples; o
       <code>spec-created</code> desse caminho chama <code>_offerA11ySimilarSpecs</code>; a confirmação usa <code>openA11yConfirmModal</code>
       com <code>bodyHtml</code> (novo) e aplica por <code>_createA11ySpecBatch</code>.</li>
+      <li>Agrupamento (beta.119): <code>_a11yGroupRepeatedSpecs</code> em todas as categorias; chave = nome da camada +
+      <code>_a11ySpecContentSignature</code> (componente DSC, subtipo, propriedades ordenadas).</li>
       <li>Grupos ×N: <code>_a11ySpecItemHtml</code> monta o accordion interno (<code>window._a11yOpenSpecGroups</code>, chave = 1º id;
       <code>_toggleA11ySpecGroup</code>).</li>
     </ul>

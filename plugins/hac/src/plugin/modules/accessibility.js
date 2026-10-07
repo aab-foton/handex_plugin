@@ -4220,6 +4220,7 @@ function _a11ySpecItemHtml(spec, showCategoryChip, group) {
           const gname = gs.targetText && gs.targetText !== gs.targetNodeName ? `${gs.targetNodeName || 'Elemento'} · ${gs.targetText}` : (gs.targetNodeName || gs.name || 'Elemento');
           return `
         <div class="flex items-center gap-dsc-nano pl-2 pr-1 py-0.5 bg-white dark:bg-dark-surface rounded-dsc-small" data-a11y-spec-group-item>
+          <span class="w-5 h-5 rounded-dsc-circ flex items-center justify-center text-[10px] font-extrabold shrink-0" style="background-color:${color};color:${badgeTextColor}" aria-hidden="true">${escapeHtml(gs.letter || '')}</span>
           <span class="flex-1 min-w-0 truncate text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-slate-300">${escapeHtml(gname)} <span class="text-slate-400 dark:text-dark-muted">(${gi + 1} de ${group.ids.length})</span></span>
           <button type="button" title="Focar este elemento no canvas" aria-label="Focar ${escapeHtml(gname)}, ${gi + 1} de ${group.ids.length}, no canvas"
             onclick="_highlightSpecListItem('${escapeHtml(gs.targetNodeId)}', '${escapeHtml(gs.a11yAreaId || '')}', '${escapeHtml(gs.id)}')"
@@ -4470,19 +4471,32 @@ function _a11yCategoryFixedTextsHtml(catKey, catSpecs) {
         </div>`;
 }
 
-// Decorativos repetidos (2026-10-06, pedido do usuário: "não precisamos
-// mostrar na interface do plugin as repetições"): specs da categoria com o
-// MESMO nome de camada viram uma linha só no plugin (×N). O canvas continua
-// com todas.
+// Specs repetidas viram uma linha só no plugin (×N); o canvas continua com
+// todas. Origem: decorativos (2026-10-06, "não precisamos mostrar as
+// repetições"), estendido às demais categorias em 2026-10-07.
+// Generalizado para TODAS as categorias (2026-10-07, pedido do usuário: "isso
+// vale pra título, decorativos e elementos interativos e imagens. Quando
+// tiver specs iguais, a gente só apresenta os detalhes dessa spec uma vez").
+// "Iguais" = mesmo nome de camada + mesmo conteúdo (componente, subtipo e
+// todos os campos) — duas specs do mesmo elemento com conteúdo diferente
+// NÃO se juntam. O grupo mostra os detalhes uma vez; a seta abre cada
+// elemento (foco/remoção individuais).
+function _a11ySpecContentSignature(spec) {
+  const props = (spec.properties || [])
+    .filter(p => p && p.key)
+    .map(p => [p.key, String(p.value == null ? '' : p.value).trim()])
+    .sort((x, y) => (x[0] + x[1]).localeCompare(y[0] + y[1]));
+  return JSON.stringify([spec.a11yDscComponentName || '', spec.a11ySubtype || null, props]);
+}
 function _a11yGroupRepeatedSpecs(catKey, catSpecs) {
-  if (catKey !== 'decorativo') return catSpecs.map(spec => ({ spec, ids: [spec.id] }));
-  const byName = new Map();
+  const groups = new Map();
   for (const spec of catSpecs) {
-    const key = (spec.targetNodeName || spec.name || '').trim().toLowerCase() || spec.id;
-    if (!byName.has(key)) byName.set(key, { spec, ids: [] });
-    byName.get(key).ids.push(spec.id);
+    const name = (spec.targetNodeName || spec.name || '').trim().toLowerCase();
+    const key = name ? name + '::' + _a11ySpecContentSignature(spec) : spec.id;
+    if (!groups.has(key)) groups.set(key, { spec, ids: [] });
+    groups.get(key).ids.push(spec.id);
   }
-  return Array.from(byName.values());
+  return Array.from(groups.values());
 }
 
 function deleteA11ySpecGroup(idsCsv) {
