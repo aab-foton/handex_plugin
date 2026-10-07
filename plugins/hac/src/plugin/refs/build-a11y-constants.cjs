@@ -653,6 +653,10 @@ const webComponentsWithNomeAcessivel = buildComponentsWithNomeAcessivel(mobileJS
 const webScreenReaderVariants = buildScreenReaderVariants(mobileJSON, WEB_ELEMENTOS_SET, webOpts);
 const webComponentToggles = buildComponentToggles(mobileJSON, WEB_ELEMENTOS_SET, webOpts);
 const webComponentExtraVariantProps = buildComponentExtraVariantProps(mobileJSON, WEB_ELEMENTOS_SET);
+// Mesma derivação para o mobile (2026-10-07): a lib mobile também só tem
+// "Texto Alternativo" com Componente="Imagem" — sem o par, o card mobile
+// tentava Variante="Componente" + Imagem, combinação inexistente.
+const mobileComponentExtraVariantProps = buildComponentExtraVariantProps(mobileJSON, MOBILE_ELEMENTOS_SET);
 const webEstrutura = buildWebEstrutura(mobileJSON);
 const webTituloNiveis = variantOptionsOf(findElementosSet(mobileJSON, WEB_BASE_SETS.titulos), 'Nível');
 const webAliasesLoaded = loadWebAliases(webLinkOptions);
@@ -763,6 +767,9 @@ fs.writeFileSync(MOBILE_WRAPPER_OUT, JSON.stringify({
   // plataformas de forma simétrica. O preenchimento mobile NÃO as consulta
   // (comportamento mobile intocado).
   componentOptions: mobileLinkOptions,
+  // Pares obrigatórios por componente (ex.: Imagem → Variante "Texto
+  // Alternativo"), derivados da lib — 2026-10-07.
+  componentExtraVariantProps: mobileComponentExtraVariantProps,
 }, null, 2), 'utf8');
 
 // design-acessivel-web-wrapper.generated.json — equivalente web. NULO (campo

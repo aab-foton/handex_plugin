@@ -254,7 +254,7 @@ export const PLATFORM_PROFILES = {
     // mobile segue o mecanismo original (nome detectado/escolhido direto).
     recognition: null,
     componentOptions: (MOBILE_WRAPPER_RAW && MOBILE_WRAPPER_RAW.componentOptions) || [],
-    componentExtraVariantProps: {},
+    componentExtraVariantProps: (MOBILE_WRAPPER_RAW && MOBILE_WRAPPER_RAW.componentExtraVariantProps) || {},
     // Mobile não tem blocos de Estrutura/Níveis próprios (título é "H" fixo).
     blockOptions: null,
     markers: { agrupamentoKeys: A11Y_AGRUPAMENTO_KEYS, conectorLinhaKeys: A11Y_CONECTOR_LINHA_KEYS },

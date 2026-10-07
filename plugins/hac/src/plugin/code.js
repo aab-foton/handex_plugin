@@ -850,11 +850,22 @@ async function _fillA11yMobileElementosEImagensFields(wrapperInstance, opts) {
     if (componenteFound) {
       // Nome sem opção VARIANT válida no card da lib (ex.: "Navigation Bar")
       // → o card ficaria com o default "Button". Aborta (2026-10-07).
+      // Variante vem do componente, como no web (2026-10-07): a lib só tem
+      // "Texto Alternativo" com Componente="Imagem" — o par vai na MESMA
+      // chamada (componentExtraVariantProps, derivado da lib).
+      const _extra = (getPlatformProfile('mobile').componentExtraVariantProps || {})[_componenteReal] || {};
+      const _setObj = { [componenteFound.key]: _componenteReal };
+      for (const [name, value] of Object.entries(_extra)) {
+        const k = _instancePropKey(componenteFound.instance, name);
+        if (k) _setObj[k] = value;
+      }
       let _ok = false;
       try {
-        componenteFound.instance.setProperties({ [componenteFound.key]: _componenteReal });
-        const _now = componenteFound.instance.componentProperties[componenteFound.key];
-        _ok = !!_now && String(_now.value).trim().toLowerCase() === String(_componenteReal).trim().toLowerCase();
+        componenteFound.instance.setProperties(_setObj);
+        _ok = Object.entries(_setObj).every(([k, v]) => {
+          const now = componenteFound.instance.componentProperties[k];
+          return !!now && String(now.value).trim().toLowerCase() === String(v).trim().toLowerCase();
+        });
       } catch (e) { _ok = false; }
       if (!_ok) throw new Error('a11y-elemento-componente-fora-da-base: ' + _componenteReal);
     }

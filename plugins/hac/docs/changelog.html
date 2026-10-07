@@ -3398,6 +3398,15 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-07 — Variante do card (Componente × Texto Alternativo) vem do componente, também no mobile (v0.1.0-beta.114)</h2>
+
+    <p>O card "Elementos Interativos e Imagens" tem duas variantes na lib: <strong>Componente</strong> (95 componentes) e <strong>Texto
+    Alternativo</strong> (só com o Componente "Imagem"). A variante não é escolha à parte do designer — decorre do componente
+    (a escolha manual saiu da UI em 2026-09-17). O web já aplicava o par Imagem → Texto Alternativo; o mobile não, e escolher
+    "Imagem" num projeto mobile tentaria uma combinação inexistente. Agora o par é derivado da lib também para o mobile
+    (<code>build-a11y-constants.cjs</code> → <code>componentExtraVariantProps</code> em
+    <code>design-acessivel-mobile-wrapper.generated.json</code>) e enviado junto com o Componente na mesma chamada.</p>
+
     <h2>2026-10-07 — Card da spec no canvas reflete o que foi editado no plugin, no mobile (v0.1.0-beta.113)</h2>
 
     <p>Editar uma spec mobile (ex.: trocar "Leitor de Tela" de Baseline para Select) mudava o plugin, mas o card no canvas
