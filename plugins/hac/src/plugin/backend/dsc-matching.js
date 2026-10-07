@@ -809,6 +809,8 @@ async function _a11yScanArea(rootNode) {
 //     de lista — 2026-10-07, print do usuário: a trilha virava uma reta
 //     passando só pelos blocos de largura total); aí entra e cada
 //     botão/card/item vira parada. Decorativo → fica de fora;
+//     Também entra quando há um componente INTERATIVO da lib dentro
+//     (List Heading = título + Button — 2026-10-07, beta.101).
 //   • componente não reconhecido → uma parada se não tiver outro componente
 //     com texto dentro (card, item de lista); senão é contêiner: entra nele;
 //   • texto solto e imagem → parada; ícone bruto → fica de fora (decorativo);
@@ -834,6 +836,20 @@ export async function _collectSwipeStops(root, orderFn) {
   const hasImageFill = (n) => n.type !== 'FRAME' && n.type !== 'GROUP' && n.type !== 'SECTION' &&
     Array.isArray(n.fills) && n.fills.some(f => f && f.type === 'IMAGE' && f.visible !== false);
 
+  // Categorias da lib que recebem foco próprio do leitor de tela (2026-10-07,
+  // print do usuário: o List Heading virava uma parada só e o "Button" de
+  // dentro ficava de fora). Badge, imagem, listas etc. não entram — o Saldo
+  // (Value Section) e o item de lista continuam UMA parada.
+  const INTERACTIVE = new Set(['button', 'checkbox', 'switch', 'radio button', 'inputs', 'accordion', 'stepper', 'tab group']);
+  async function hasNestedInteractive(n) {
+    const nested = n.findAll(c => c.type === 'INSTANCE' && c.visible !== false && !clipped(c));
+    for (const c of nested) {
+      const cm = await dscMatch(c);
+      if (cm && INTERACTIVE.has(cm.a11yCategory)) return true;
+    }
+    return false;
+  }
+
   async function dscMatch(n) {
     try {
       const mc = await n.getMainComponentAsync();
@@ -855,8 +871,9 @@ export async function _collectSwipeStops(root, orderFn) {
         : [];
       if (m) {
         if (m.a11yCategory === 'decorativo') return;
-        if (nestedWithText.length < 2) { stops.push(n); return; }
-        // Contêiner reconhecido (Button Row, Carousel, lista): entra nele.
+        if (nestedWithText.length < 2 && !(await hasNestedInteractive(n))) { stops.push(n); return; }
+        // Contêiner reconhecido (Button Row, Carousel, lista) ou com um
+        // componente interativo dentro (List Heading = título + Button): entra.
       } else if (await _isRawIcon(n)) {
         return;
       } else if (n.type === 'INSTANCE') {
