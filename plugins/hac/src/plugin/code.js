@@ -660,7 +660,7 @@ async function _tryImportA11yMobileWrapperComponent(opts, wrapperData) {
     // default da lib ("Button") — dado errado. Desfaz e sobe o erro para o
     // alerta "sem card" (nunca card desenhado). Demais falhas seguem
     // best-effort, como antes.
-    if (e && typeof e.message === 'string' && e.message.startsWith('a11y-elemento-componente-fora-da-base')) {
+    if (e && typeof e.message === 'string' && (e.message.startsWith('a11y-elemento-componente-fora-da-base') || e.message.startsWith('a11y-web-set-falhou'))) {
       try { instance.remove(); } catch (e2) { }
       throw e;
     }
@@ -704,7 +704,8 @@ async function _tryImportA11yMobileWrapperComponent(opts, wrapperData) {
 // pra isso, o Label do topo é a fonte única de accessibilityLabel.
 async function _fillA11yMobileElementosEImagensFields(wrapperInstance, opts) {
   const nested = _findNestedInstanceWithAnyProp(wrapperInstance, ['Descrição', 'Nome acessível', 'Dica Leitor de Tela', 'Observação']);
-  if (!nested) return; // best-effort — wrapper com Conector certo já é um resultado válido
+  // Sem return antecipado (2026-10-07): componente-folha sem esses campos
+  // ainda precisa do Componente e do bloco da estrutura atual (fim da função).
 
   const props = opts.properties || [];
   const getProp = key => {
@@ -712,7 +713,7 @@ async function _fillA11yMobileElementosEImagensFields(wrapperInstance, opts) {
     return p ? p.value : '';
   };
 
-  const rawKeys = Object.keys(nested.instance.componentProperties || {});
+  const rawKeys = nested ? Object.keys(nested.instance.componentProperties || {}) : [];
   const findRawKey = (name) => rawKeys.find(k => k.split('#')[0] === name);
 
   // Descrição — sempre visível por padrão na definição do componente base;
@@ -858,6 +859,24 @@ async function _fillA11yMobileElementosEImagensFields(wrapperInstance, opts) {
       if (!_ok) throw new Error('a11y-elemento-componente-fora-da-base: ' + _componenteReal);
     }
   }
+
+  // Estrutura ATUAL do card mobile da lib (2026-10-07, lida via REST:
+  // "Elementos e imagens" > instância do componente — ex. ".Button" — com a
+  // VARIANT "Leitor de Tela" e os BOOLEAN "Nome Acessível"/"Observações", igual
+  // ao card web). O preenchimento acima procura os nomes da estrutura ANTIGA e
+  // não acha nada — no mobile só o Componente chegava ao card, então editar
+  // "Leitor de Tela" (ou Nome Acessível/Observações) não mudava o card. Mesmo
+  // preenchimento do web (_fillA11yWebElementoFields). Valor que a lib não
+  // aceita aborta a spec (a11y-web-set-falhou → alerta), nunca card errado.
+  const _base = _findInstanceByPropNames(wrapperInstance, ['Leitor de Tela', 'Nome Acessível', 'Observações']);
+  if (_base) {
+    const _leitor = _webGetProp(opts, 'leitorDeTela');
+    if (_leitor && _instancePropKey(_base.instance, 'Leitor de Tela')) {
+      _setAndVerifyVariants(_base.instance, { 'Leitor de Tela': _leitor }, 'a11y-web-set-falhou');
+    }
+    _applyWebBooleanTextField(_base.instance, 'Nome Acessível', _webGetProp(opts, 'label'));
+    _applyWebBooleanTextField(_base.instance, 'Observações', _webGetProp(opts, 'observacoes'));
+  }
 }
 
 // "[dsc] Value Section" → "Value Section". A property VARIANT "Componente"
@@ -951,33 +970,15 @@ async function _fillA11yMobileTituloFields(wrapperInstance, opts) {
 // e 'observacoes' (toggle real, via _collectA11yFixedToggleProperties com
 // listId 'a11y-decorativo-toggles-list') — só este último é preenchido aqui.
 async function _fillA11yMobileDecorativoFields(wrapperInstance, opts) {
+  // Estrutura atual da lib (2026-10-07, lida via REST): "Elementos
+  // decorativos" {Observações#… BOOLEAN} > "Observações" {Texto#…}. Mesmo
+  // preenchimento do web (_applyWebBooleanTextField): liga/desliga e escreve
+  // pela property "Texto" — antes só trocava a camada se ela ainda tivesse o
+  // texto de exemplo da lib.
   const nested = _findNestedInstanceWithAnyProp(wrapperInstance, ['Observações']);
   if (!nested) return; // best-effort — wrapper com Conector certo já é um resultado válido
-
-  const props = opts.properties || [];
-  const getProp = key => {
-    const p = props.find(x => x && x.key === key);
-    return p ? p.value : '';
-  };
-
-  const observacaoTexto = getProp('observacoes');
-  if (nested.key) {
-    try { nested.instance.setProperties({ [nested.key]: !!observacaoTexto }); } catch (e) { /* best-effort */ }
-  }
-
-  // Sincroniza o TEXT visível da sub-instância "Observações" por valor-padrão
-  // atual ("Insira seu texto da observação."), não por nome de camada (nomes
-  // de camada "Text"/"Label" se repetem entre "Descrição" e "Observações"
-  // dentro da mesma variante).
-  if (observacaoTexto) {
-    try {
-      const defaultNode = _findTextNodeByCurrentValue(nested.instance, 'Insira seu texto da observação.');
-      if (defaultNode) {
-        await figma.loadFontAsync(defaultNode.fontName);
-        defaultNode.characters = observacaoTexto;
-      }
-    } catch (e) { /* best-effort */ }
-  }
+  const p = (opts.properties || []).find(x => x && x.key === 'observacoes');
+  _applyWebBooleanTextField(nested.instance, 'Observações', p ? p.value : '');
 }
 
 // ── Perfil WEB: wrapper "[hac web] Box specs leitor de tela" ──────────────────

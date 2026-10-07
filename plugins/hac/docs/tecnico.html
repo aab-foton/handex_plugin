@@ -4860,6 +4860,18 @@ hr {
       <li>Card da spec: cabeçalho <code>items-center</code>; chips em linha própria.</li>
     </ul>
 
+    <h3>Card mobile sincronizado com a edição (beta.113)</h3>
+    <ul>
+      <li>Estrutura atual do card mobile (REST, 2026-10-07): <code>Conector=Elementos Interativos e Imagens</code> → "Elementos e imagens"
+      {Variante, Componente} → instância do componente (ex. <code>.Button</code>) {Leitor de Tela (VARIANT), Nome Acessível#…,
+      Observações#…}. <code>_fillA11yMobileElementosEImagensFields</code> aplica <code>_setAndVerifyVariants</code> no "Leitor de Tela" e
+      <code>_applyWebBooleanTextField</code> em "Nome Acessível" (<code>label</code>) e "Observações" (<code>observacoes</code>); sem
+      <code>return</code> antecipado quando a estrutura antiga não é achada. <code>a11y-web-set-falhou</code> passa a abortar também no
+      mobile (alerta).</li>
+      <li>Decorativo mobile: <code>_applyWebBooleanTextField</code> no lugar da troca de texto por valor atual.</li>
+      <li>Títulos mobile: texto fixo da lib, sem property editável.</li>
+    </ul>
+
     <h3>Mensagens novas/alteradas desta rodada</h3>
     <ul>
       <li><code>a11y-spec-create-failed</code> (backend → UI) e <code>a11y-no-lib-card</code> (backend → UI) — ver 8af.</li>

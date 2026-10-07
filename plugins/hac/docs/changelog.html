@@ -3398,6 +3398,17 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-07 — Card da spec no canvas reflete o que foi editado no plugin, no mobile (v0.1.0-beta.113)</h2>
+
+    <p>Editar uma spec mobile (ex.: trocar "Leitor de Tela" de Baseline para Select) mudava o plugin, mas o card no canvas
+    continuava com o valor antigo. Causa: o card mobile da lib mudou de estrutura — agora tem, como o web, a instância do
+    componente com a variante <strong>"Leitor de Tela"</strong> e os campos <strong>"Nome Acessível"</strong> e <strong>"Observações"</strong> — e o preenchimento mobile
+    ainda procurava os nomes antigos; só o Componente chegava ao card, na criação e na edição (editar recria o card). Agora
+    <code>_fillA11yMobileElementosEImagensFields</code> preenche esses três campos com os mesmos auxiliares do web, e o card decorativo
+    mobile escreve a observação pela property "Texto" da lib (antes só trocava se ainda estivesse o texto de exemplo). Valor que
+    a lib não aceita aborta com o alerta "Sem card na lib" em vez de deixar o card errado. O card mobile de Títulos só tem texto
+    fixo da lib (nada a sincronizar); o web já preenchia todos os campos.</p>
+
     <h2>2026-10-07 — Foco sempre na réplica; card da spec alinhado (v0.1.0-beta.112)</h2>
 
     <p><strong>Foco na réplica</strong> (web e mobile): a mira de uma spec (e de um item de Tabulação/ponto de Swipe) selecionava o
