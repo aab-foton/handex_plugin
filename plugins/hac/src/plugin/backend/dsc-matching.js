@@ -791,6 +791,10 @@ async function _a11yScanArea(rootNode) {
 //     Icon Button reconhecido) → UMA parada;
 //   • componente com 2+ textos (Saldo, Button Row, Carousel, card, lista)
 //     → entra nele: cada texto, botão, chip e imagem vira parada;
+//   • Page Controller e outros reconhecidos sem texto → parada;
+//   • slot da DIREITA do DSC (".[base] Right Slot"/Trailing — seta de
+//     navegação, switch, checkbox) → parada, mesmo só com ícone; o slot/ícone
+//     da esquerda segue decorativo (pedido de 06/10: ícone = decorativo);
 //   • decorativo reconhecido e ícone bruto → ficam de fora;
 //   • texto solto e imagem → parada; frame/grupo → entra nele.
 export async function _collectSwipeStops(root, orderFn) {
@@ -822,6 +826,14 @@ export async function _collectSwipeStops(root, orderFn) {
     } catch (e) { return null; }
   }
 
+  async function componentName(n) {
+    try {
+      const mc = await n.getMainComponentAsync();
+      if (!mc) return n.name || '';
+      return (mc.parent && mc.parent.type === 'COMPONENT_SET') ? mc.parent.name : mc.name;
+    } catch (e) { return n.name || ''; }
+  }
+
   async function visit(n) {
     if (n.visible === false) return;
     if (n !== root) {
@@ -831,6 +843,10 @@ export async function _collectSwipeStops(root, orderFn) {
       // é pequeno e só tem vetor, mas é interativo e precisa ser parada.
       const m = n.type === 'INSTANCE' ? await dscMatch(n) : null;
       if (m && m.a11yCategory === 'decorativo') return;
+      if (!m && n.type === 'INSTANCE' && /right\s*slot|trailing/i.test(await componentName(n)) && n.findOne(c => c.visible !== false)) {
+        stops.push(n);
+        return;
+      }
       if (!m && await _isRawIcon(n)) return;
       if (n.type === 'INSTANCE') {
         const texts = n.findAll(c => visibleText(c) && !clipped(c));
