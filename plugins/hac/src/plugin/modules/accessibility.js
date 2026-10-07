@@ -6044,12 +6044,13 @@ window.openA11yConfirmModal = openA11yConfirmModal;
 // acessibilidade não tem card para a spec pedida, o plugin NÃO cria card
 // desenhado — abre esta modal explicando. Em lote, não reabre se já está
 // aberta (o motivo é o mesmo para todos os itens).
-function openA11yNoCardAlert(message) {
+function openA11yNoCardAlert(message, o) {
   const modal = document.getElementById('a11y-confirm-modal');
   if (modal && !modal.classList.contains('hidden')) return;
+  const noSpecSuffix = !!(o && o.noSpecSuffix);
   openA11yConfirmModal({
     title: 'Sem card na lib de acessibilidade',
-    body: (message || 'A lib de acessibilidade não tem card para essa especificação.') + ' Nenhuma especificação foi criada.',
+    body: (message || 'A lib de acessibilidade não tem card para essa especificação.') + (noSpecSuffix ? '' : ' Nenhuma especificação foi criada.'),
     confirmLabel: 'Entendi',
     alertOnly: true,
   });

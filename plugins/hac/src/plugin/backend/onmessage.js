@@ -4430,17 +4430,19 @@ figma.ui.onmessage = async (msg) => {
         await _swapInstructionCategoryBadges(inst, a11yOrigin);
         return inst;
       } catch (e) {
-        console.error('[hac] instrução web: import falhou, usando texto local.', e);
-        try { figma.notify('Instruções: não foi possível usar o componente da lib (' + ((e && e.message) || 'erro desconhecido').slice(0, 90) + ') — usado o texto local.', { timeout: 8000 }); } catch (e2) { }
+        console.error('[hac] instrução: import do componente da lib falhou.', e);
       }
     }
-    return _buildFichaLegendColumn(
-      _resolveFichaInstructionContent(FICHA_INSTRUCTION_CONTENT[cfg.instructionKey], a11yOrigin),
-      cfg.legendTitle,
-      cfg.legendFallback,
-      a11yOrigin,
-      cfg.instructionKey
-    );
+    // SEM instrução desenhada (2026-10-07, pedido do usuário: "pode trocar
+    // pela modal"): não há card da lib → nada é criado e a UI abre o alerta.
+    // A seção da Ficha segue sem o bloco de instrução.
+    try {
+      figma.ui.postMessage({
+        type: 'a11y-no-lib-card',
+        message: `As instruções de ${cfg.title} não puderam ser trazidas da lib de acessibilidade (componente indisponível ou lib desconectada). A seção foi gerada sem o card de instruções; gere de novo quando a lib estiver acessível.`,
+      });
+    } catch (e) { }
+    return null;
   }
 
   // Remove o "Título do bloco" externo de blocos de instrução criados antes
@@ -4512,8 +4514,9 @@ figma.ui.onmessage = async (msg) => {
     } else {
       // Web e mobile importam o componente de instrução PUBLICADO no arquivo
       // próprio (web 2026-10-05, mobile 2026-10-06) em vez de montar o texto —
-      // fica idêntico à lib. Falha de import cai na coluna montada, com aviso.
+      // fica idêntico à lib. Falha de import: nada desenhado, alerta na UI.
       const legend = await _createFichaInstructionLegend(sectionKey, cfg, a11yOrigin);
+      if (!legend) return instrucoes;
       legend.setPluginData('hacCategory', 'a11y');
       if (areaId) legend.setPluginData('hacLegendForArea', `${areaId}::${sectionKey}`);
       instrucoes.appendChild(legend);

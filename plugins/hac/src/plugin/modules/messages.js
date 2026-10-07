@@ -351,6 +351,12 @@
         if (typeof openA11yNoCardAlert === 'function') openA11yNoCardAlert(msg.message);
       }
 
+      // Componente da lib indisponível fora da criação de spec (ex.: card de
+      // instruções da Ficha) — mesmo alerta, sem a frase de spec (2026-10-07).
+      if (msg.type === "a11y-no-lib-card") {
+        if (typeof openA11yNoCardAlert === 'function') openA11yNoCardAlert(msg.message, { noSpecSuffix: true });
+      }
+
       if (msg.type === "selection-name") {
         // msg.mainText: code.js ecoa _findMainTextContent em get-selection-name.
         // msg.dscComponentName: nome cru do component set DSC (containingFrame)

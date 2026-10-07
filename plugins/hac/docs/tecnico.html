@@ -4747,6 +4747,12 @@ hr {
       <li><strong>Plataforma.</strong> <code>_setActiveProjectOrigin</code> (dsc-matching.js) restringe o reconhecimento às libs da
       plataforma do projeto; no mobile, <code>estrutura</code> do mapeamento curado (Top App Bar, Navigation Bar, Screen Footer)
       vira <code>elemento</code> — mobile não tem Estrutura da Página nem marco de navegação.</li>
+      <li><strong>Instruções da Ficha (beta.99).</strong> <code>_createFichaInstructionLegend</code> devolve <code>null</code> quando o
+      import falha (sem <code>_buildFichaLegendColumn</code>) e posta <code>a11y-no-lib-card</code> <code>{ message }</code> → UI abre
+      <code>openA11yNoCardAlert(message, { noSpecSuffix: true })</code>.</li>
+      <li><strong>Checklist da tela (beta.99).</strong> Campo aditivo <code>area.checklistClosedAt</code> (ISO) — fechado à mão pela
+      modal pós-handoff (<code>_fichaCloseAreaChecklist</code>, confirma se houver pendências) e reaberto no Resumo
+      (<code>_fichaReopenAreaChecklist</code>); <code>_fichaAreaIsComplete</code> o respeita.</li>
     </ul>
 
     <h2 id="s9">9. Contrato de mensagens (UI ↔ backend)</h2>

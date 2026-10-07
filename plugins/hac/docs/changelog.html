@@ -3398,6 +3398,17 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-07 — Fechar checklist da tela; instruções sem reserva desenhada (v0.1.0-beta.99)</h2>
+
+    <p><strong>Fechar checklist desta tela.</strong> A modal "Handoff da tela gerado" ganhou o botão "Fechar checklist desta tela".
+    Se a tela ainda tem pendências, a confirmação lista quais são antes de fechar. A tela fechada à mão conta como pronta para o
+    Finalizar handoff, e o Resumo da tela mostra "Checklist fechado manualmente" com a opção Reabrir. A lista de pendências
+    passou a apontar também seção inserida sem conteúdo ("Swipe sem conteúdo") — antes esse caso não tinha motivo nenhum.</p>
+
+    <p><strong>Instruções da Ficha sem reserva desenhada.</strong> Se o componente de instruções da lib não pode ser importado,
+    o plugin não desenha mais a coluna de texto própria: a seção é gerada sem o card de instruções e abre a modal de alerta
+    "Sem card na lib de acessibilidade".</p>
+
     <h2>2026-10-07 — Só cards da lib; mobile sem Estrutura da Página (v0.1.0-beta.98)</h2>
 
     <p><strong>Nenhum card desenhado pelo plugin.</strong> Quando a lib de acessibilidade não tinha card para a spec (componente

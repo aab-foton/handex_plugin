@@ -1094,6 +1094,12 @@
         <i data-lucide="scan" class="w-4 h-4 shrink-0" aria-hidden="true"></i>
         <span class="text-[12px] font-bold">Documentar outra tela</span>
       </button>
+      <!-- Fechar checklist desta tela (2026-10-07, pedido do usuário) — escondido
+           quando a tela já está fechada. Com pendências, pede confirmação. -->
+      <button type="button" id="a11y-after-handoff-close-checklist" onclick="_fichaAfterHandoffCloseChecklist()" class="w-full flex items-center gap-dsc-nano px-dsc-micro py-2.5 rounded-dsc-large text-left border border-[#005ca9] text-[#005ca9] dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+        <i data-lucide="list-checks" class="w-4 h-4 shrink-0" aria-hidden="true"></i>
+        <span class="text-[12px] font-bold">Fechar checklist desta tela</span>
+      </button>
       <div>
         <button type="button" id="a11y-after-handoff-finalize" onclick="_fichaAfterHandoffFinalize()" class="w-full flex items-center gap-dsc-nano px-dsc-micro py-2.5 rounded-dsc-large text-left bg-[#005ca9] text-white hover:bg-blue-700 transition-colors disabled:hover:bg-[#005ca9]">
           <i data-lucide="flag" class="w-4 h-4 shrink-0" aria-hidden="true"></i>

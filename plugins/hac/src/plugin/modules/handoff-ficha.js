@@ -537,6 +537,10 @@ function _fichaSectionKeysForProject() {
 
 function _fichaAreaIsComplete(area) {
   if (!area) return false;
+  // Checklist fechado À MÃO pelo designer (2026-10-07, pedido do usuário —
+  // modal pós-handoff ganhou "Fechar checklist desta tela"). Decisão
+  // explícita: vale mesmo com seção pendente; reabre pelo Resumo da tela.
+  if (area.checklistClosedAt) return true;
   return _fichaSectionKeysForProject().every(key => {
     const state = _fichaSectionState(area, key);
     if (!state || !state.insertedAt) return false;
@@ -586,6 +590,7 @@ function _fichaProjectCompletion() {
     for (const key of keys) {
       const state = _fichaSectionState(area, key);
       if (!state || !state.insertedAt) missing.push(`${_fichaSectionDisplayName(key)} não inserida`);
+      else if (_fichaCurrentSectionCount(area, key) === 0) missing.push(`${_fichaSectionDisplayName(key)} sem conteúdo`);
       else if (_fichaSectionIsStale(area, key)) missing.push(`${_fichaSectionDisplayName(key)} desatualizada`);
     }
     pending.push({ id: area.id, number: area.number, label: area.label || '', missing });
@@ -772,8 +777,18 @@ function _fichaDashboardHtml(area) {
   }
   cards.push(_fichaStatusCardHtml(area, 'leitor', 'Leitor de Tela', n => `${n} especificaç${n === 1 ? 'ão' : 'ões'} no handoff`));
 
+  // Checklist fechado à mão (2026-10-07): aviso + Reabrir.
+  const closedNote = area.checklistClosedAt ? `
+      <div class="flex items-center justify-between gap-2 px-dsc-micro py-2 rounded-dsc-medium bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
+        <span class="flex items-center gap-dsc-nano text-dsc-label-tiny normal-case tracking-normal font-bold text-green-800 dark:text-green-300">
+          <i data-lucide="circle-check" class="w-3.5 h-3.5 shrink-0" aria-hidden="true"></i> Checklist fechado manualmente
+        </span>
+        <button type="button" onclick="_fichaReopenAreaChecklist('${escapeHtml(area.id)}')" class="text-dsc-label-tiny normal-case tracking-normal font-bold text-[#005ca9] dark:text-blue-400 hover:underline">Reabrir</button>
+      </div>` : '';
+
   return `
     <div class="space-y-1.5">
+      ${closedNote}
       ${cards.join('')}
     </div>
   `;
@@ -870,7 +885,10 @@ async function _fichaGenerateCompleteHandoff(areaId) {
   // consolidar a tela, perguntar se vai documentar outra ou finalizar. Chega
   // aqui só quando a ÚLTIMA seção respondeu (o backend responde depois de
   // terminar o canvas). Só quando ao menos uma seção entrou.
-  if (anyOk) _fichaOpenAfterHandoffModal();
+  if (anyOk) {
+    window._fichaAfterHandoffAreaId = areaId;
+    _fichaOpenAfterHandoffModal();
+  }
 }
 window._fichaGenerateCompleteHandoff = _fichaGenerateCompleteHandoff;
 
@@ -893,6 +911,13 @@ function _fichaOpenAfterHandoffModal() {
     btn.classList.toggle('opacity-50', !completion.isComplete);
     btn.classList.toggle('cursor-not-allowed', !completion.isComplete);
   }
+  // "Fechar checklist desta tela" — só enquanto a tela ainda não está
+  // fechada (automática ou manualmente).
+  const closeBtn = document.getElementById('a11y-after-handoff-close-checklist');
+  if (closeBtn) {
+    const area = _fichaLiveArea(window._fichaAfterHandoffAreaId);
+    closeBtn.classList.toggle('hidden', !area || _fichaAreaIsComplete(area));
+  }
   if (hint) {
     const faltam = completion.total - completion.complete;
     hint.textContent = completion.isComplete
@@ -910,6 +935,49 @@ function _fichaAfterHandoffAnotherScreen() {
   setTimeout(() => { if (typeof openA11yAreaModal === 'function') openA11yAreaModal(); }, 80);
 }
 window._fichaAfterHandoffAnotherScreen = _fichaAfterHandoffAnotherScreen;
+
+// Fecha o checklist da tela À MÃO (2026-10-07). Com pendências, mostra quais
+// são e pede confirmação — fechar é decisão do designer, nunca silenciosa.
+function _fichaCloseAreaChecklist(areaId, onDone) {
+  const area = _fichaLiveArea(areaId);
+  if (!area) { showToast('Não foi possível localizar a tela.'); return; }
+  const doClose = () => {
+    area.checklistClosedAt = new Date().toISOString();
+    saveToStorage();
+    showToast('Checklist da tela fechado.');
+    if (typeof _renderA11yWorkspaceTab === 'function') { try { _renderA11yWorkspaceTab(); } catch (e) { } }
+    if (typeof onDone === 'function') onDone();
+  };
+  const entry = (_fichaProjectCompletion().pending || []).find(p => p.id === areaId);
+  const missing = entry ? entry.missing : [];
+  if (missing.length === 0) { doClose(); return; }
+  openA11yConfirmModal({
+    title: 'Fechar checklist com pendências?',
+    body: `Ainda falta nesta tela: ${missing.join('; ')}. Fechar o checklist mesmo assim? Você pode reabri-lo no Resumo da tela.`,
+    confirmLabel: 'Fechar checklist',
+    cancelLabel: 'Voltar',
+    onConfirm: doClose,
+  });
+}
+window._fichaCloseAreaChecklist = _fichaCloseAreaChecklist;
+
+function _fichaReopenAreaChecklist(areaId) {
+  const area = _fichaLiveArea(areaId);
+  if (!area) return;
+  delete area.checklistClosedAt;
+  saveToStorage();
+  showToast('Checklist da tela reaberto.');
+  if (typeof _renderA11yWorkspaceTab === 'function') { try { _renderA11yWorkspaceTab(); } catch (e) { } }
+}
+window._fichaReopenAreaChecklist = _fichaReopenAreaChecklist;
+
+function _fichaAfterHandoffCloseChecklist() {
+  const areaId = window._fichaAfterHandoffAreaId;
+  closeModal('a11y-after-handoff-modal');
+  // Depois de fechar, volta à modal com a contagem e o Finalizar atualizados.
+  _fichaCloseAreaChecklist(areaId, () => _fichaOpenAfterHandoffModal());
+}
+window._fichaAfterHandoffCloseChecklist = _fichaAfterHandoffCloseChecklist;
 
 function _fichaAfterHandoffFinalize() {
   closeModal('a11y-after-handoff-modal');
