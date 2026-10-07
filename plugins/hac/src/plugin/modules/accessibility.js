@@ -4429,10 +4429,45 @@ function _a11yCategoryAccordionEl(uid, catKey, catSpecs) {
         <i data-lucide="chevron-down" id="chevron-${uid}" class="w-3.5 h-3.5 text-gray-400 transition-transform shrink-0" style="transform:${expand ? 'rotate(180deg)' : 'rotate(0deg)'}"></i>
       </div>
       <div id="body-${uid}" class="accordion-content ${expand ? '' : 'hidden'} border-t border-gray-100 dark:border-dark-line p-1.5 space-y-1.5">
+        ${_a11yCategoryFixedTextsHtml(catKey, catSpecs)}
         ${_a11yGroupRepeatedSpecs(catKey, catSpecs).map(g => _a11ySpecItemHtml(g.spec, false, g.ids.length > 1 ? g : null)).join('')}
       </div>
     </div>
   `;
+}
+
+// Textos FIXOS da lib (Descrição, Nota de Código) de Títulos e Decorativos —
+// uma vez só, no topo da categoria (2026-10-07, pedido do usuário: "se eu
+// injetei 5 specs de título e todas elas teriam o mesmo texto fixo, exibe o
+// texto fixo uma vez só"). Textos diferentes entre as specs (ex.: níveis
+// H1/H2 no web) aparecem uma vez cada, com a contagem. Os cards dessas
+// categorias seguem sem repetir esses campos (isRepeatingType).
+const _A11Y_FIXED_TEXT_KEYS = [['descricao', 'Descrição'], ['notaCodigo', 'Nota de Código']];
+function _a11yCategoryFixedTextsHtml(catKey, catSpecs) {
+  if (catKey !== 'titulo' && catKey !== 'decorativo') return '';
+  const rows = [];
+  for (const [key, label] of _A11Y_FIXED_TEXT_KEYS) {
+    const counts = new Map();
+    for (const sp of (catSpecs || [])) {
+      const p = (sp && sp.properties || []).find(x => x && x.key === key);
+      const v = p && String(p.value || '').trim();
+      if (v) counts.set(v, (counts.get(v) || 0) + 1);
+    }
+    const multi = counts.size > 1;
+    for (const [v, n] of counts) rows.push({ label, v, n: multi ? n : 0 });
+  }
+  if (!rows.length) return '';
+  return `
+        <div class="rounded-dsc-medium border border-dashed border-gray-200 dark:border-dark-line bg-gray-50/60 dark:bg-dark-bg/40 px-2.5 py-2 space-y-1" data-a11y-fixed-texts>
+          <p class="flex items-center gap-dsc-quark text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-500 dark:text-dark-muted">
+            <i data-lucide="lock" class="w-3 h-3 shrink-0" aria-hidden="true"></i> Texto fixo da lib${catSpecs.length > 1 ? (rows.every(r => !r.n) ? ' (vale para todas)' : ' (varia entre as specs)') : ''}
+          </p>
+          ${rows.map(r => `
+          <div class="px-2 py-1 bg-white dark:bg-dark-surface rounded-dsc-small">
+            <span class="block text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-500 dark:text-dark-muted">${escapeHtml(r.label)}${r.n ? ` <span class="font-medium">(${r.n} spec${r.n === 1 ? '' : 's'})</span>` : ''}</span>
+            <span class="block text-dsc-label-tiny normal-case tracking-normal text-slate-700 dark:text-white break-words">${escapeHtml(r.v)}</span>
+          </div>`).join('')}
+        </div>`;
 }
 
 // Decorativos repetidos (2026-10-06, pedido do usuário: "não precisamos
