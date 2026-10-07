@@ -5109,13 +5109,10 @@ function _a11yAreaAccordionEl(area, areaSpecs) {
     </span>
   `;
 
-  const categoryBreakdownData = _a11yComputeCategoryBreakdown(areaSpecs);
-  const categoryBreakdown = categoryBreakdownData
-    .map(({ meta, categoryLabel, count }) => `
-      <span class="inline-flex items-center gap-dsc-quark h-5 px-2 rounded-dsc-circ text-dsc-label-tiny normal-case tracking-normal font-bold" style="background-color:${meta.fill};color:${meta.textColor || meta.color}">
-        ${count} ${escapeHtml(categoryLabel || meta.label)}
-      </span>
-    `).join('');
+  // Chips de categoria do Leitor de Tela REMOVIDOS do card (2026-10-07,
+  // pedido do usuário, web e mobile: "não precisa apresentar isso, até porque
+  // as cores parecem exibir erros" — quem quiser ver entra no card e vai até
+  // a aba). _a11yComputeCategoryBreakdown segue existindo para outros usos.
 
   const fichaState = area.handoffFicha && area.handoffFicha.sections ? area.handoffFicha.sections : null;
   // Havia uma 4ª chave ('review', Handoff Review/consolidado) — removida em
@@ -5184,8 +5181,6 @@ function _a11yAreaAccordionEl(area, areaSpecs) {
         ${isMobile ? statusPill(swipePointCount > 0 ? 'check-circle-2' : 'circle-dashed', swipePointCount > 0 ? `Ordem de Leitura (${swipePointCount} pontos)` : 'Ordem de Leitura pendente', swipePointCount > 0) : ''}
         ${statusPill(areaSpecs.length > 0 ? 'check-circle-2' : 'circle-dashed', areaSpecs.length > 0 ? `Leitor de Tela (${areaSpecs.length})` : 'Leitor de Tela pendente', areaSpecs.length > 0)}
       </div>
-
-      ${categoryBreakdown ? `<div class="flex items-center gap-dsc-quark flex-wrap pl-[38px]">${categoryBreakdown}</div>` : ''}
 
       <div class="flex items-center gap-1.5 pl-[38px]">
         <i data-lucide="file-output" class="w-3 h-3 shrink-0" style="color:${fichaInsertedCount > 0 ? '#005ca9' : '#64747a'}"></i>
@@ -5296,6 +5291,9 @@ function _a11yQueueLayerOrderResolution(areaId, targetNodeId, specsList) {
 }
 
 function renderA11yGroupedList() {
+  // Seções em dia com o canvas também na listagem (2026-10-07) — senão o card
+  // mostra "2/3 seções inseridas" até a tela ser aberta.
+  if (typeof _fichaSyncLiveSectionsAndCheck === 'function') { try { _fichaSyncLiveSectionsAndCheck(); } catch (e) { } }
   const list = document.getElementById('a11y-groups-results');
   if (!list) return;
   // Fecha/restaura qualquer menu "⋯" de card aberto ANTES de destruir a
