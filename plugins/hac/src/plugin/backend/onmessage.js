@@ -2469,7 +2469,7 @@ figma.ui.onmessage = async (msg) => {
 
       let clone, nodeMap;
       try {
-        ({ clone, nodeMap } = await _createSwipePathCloneForArea(root, msg.areaId, msg.sectionName, msg.designerName, msg.designerId));
+        ({ clone, nodeMap } = await _resolveActiveSwipePathClone(msg.areaId, msg.targetNodeId, msg.sectionName, msg.designerName, msg.designerId));
       } catch (e) {
         console.error('[hac] start-swipe-path-mode: falha ao criar a cópia.', e);
         figma.notify('Não foi possível criar a cópia da tela (' + ((e && e.message) || 'erro desconhecido').slice(0, 100) + ').', { error: true, timeout: 8000 });
@@ -2836,7 +2836,7 @@ figma.ui.onmessage = async (msg) => {
           return;
         }
 
-        const { clone, nodeMap } = await _createTabOrderCloneForArea(root, msg.areaId, msg.sectionName, msg.designerName, msg.designerId);
+        const { clone, nodeMap } = await _resolveActiveTabOrderClone(msg.areaId, msg.targetNodeId, msg.sectionName, msg.designerName, msg.designerId);
         if (msg.areaId) _activeTabOrderCloneMaps.set(msg.areaId, nodeMap);
 
         figma.currentPage.selection = [clone];
@@ -2957,7 +2957,7 @@ figma.ui.onmessage = async (msg) => {
           return;
         }
 
-        const { clone, nodeMap } = await _createSwipePathCloneForArea(root, msg.areaId, msg.sectionName, msg.designerName, msg.designerId);
+        const { clone, nodeMap } = await _resolveActiveSwipePathClone(msg.areaId, msg.targetNodeId, msg.sectionName, msg.designerName, msg.designerId);
         if (msg.areaId) _activeSwipePathCloneMaps.set(msg.areaId, nodeMap);
 
         figma.currentPage.selection = [clone];
@@ -3524,7 +3524,7 @@ figma.ui.onmessage = async (msg) => {
 
       let clone, nodeMap;
       try {
-        ({ clone, nodeMap } = await _createTabOrderCloneForArea(root, msg.areaId, msg.sectionName, msg.designerName, msg.designerId));
+        ({ clone, nodeMap } = await _resolveActiveTabOrderClone(msg.areaId, msg.targetNodeId, msg.sectionName, msg.designerName, msg.designerId));
       } catch (e) {
         // Antes sem try: uma falha aqui deixava o plugin preso em "Criando
         // cópia de trabalho…" até ser reaberto (relato de 2026-10-06).

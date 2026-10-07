@@ -3398,6 +3398,15 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-07 — Executar de novo não apaga mais a réplica (v0.1.0-beta.91)</h2>
+
+    <p>Iniciar de novo a Tabulação ou o Swipe (manual ou Mapeamento Automático) criava sempre uma cópia nova da tela e, para
+    isso, apagava a réplica existente da área — inclusive a que já estava dentro da Ficha, deixando selos/trilha soltos sem
+    a tela embaixo. Agora os quatro inícios (<code>start-tab-order-copy</code>, <code>start-swipe-path-mode</code>,
+    <code>generate-tab-order-from-layers</code>, <code>generate-swipe-path-from-layers</code>) reaproveitam a réplica existente
+    (<code>_resolveActiveTabOrderClone</code>/<code>_resolveActiveSwipePathClone</code>) e só criam uma nova se não houver
+    nenhuma. O Leitor de Tela já funcionava assim. A lixeira de cada etapa continua apagando a réplica de propósito.</p>
+
     <h2>2026-10-07 — Swipe automático pela estrutura de componentes (v0.1.0-beta.90)</h2>
 
     <p>O Swipe automático passa a percorrer a árvore de camadas (<code>_collectSwipeStops</code>, dsc-matching.js): dentro de
