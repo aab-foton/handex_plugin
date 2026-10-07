@@ -971,10 +971,35 @@ function _fichaReopenAreaChecklist(areaId) {
 }
 window._fichaReopenAreaChecklist = _fichaReopenAreaChecklist;
 
+// Primeira seção que ainda impede o checklist da tela de fechar (mesmos
+// critérios de _fichaAreaIsComplete), na ordem do fluxo.
+function _fichaFirstPendingSectionKey(area) {
+  if (!area) return null;
+  return _fichaSectionKeysForProject().find(key => {
+    const state = _fichaSectionState(area, key);
+    if (!state || !state.insertedAt) return true;
+    if (_fichaCurrentSectionCount(area, key) === 0) return true;
+    return _fichaSectionIsStale(area, key);
+  }) || null;
+}
+
+// "Fechar checklist desta tela" (2026-10-07, revisão pedida pelo usuário: "deve
+// levar para os itens que ainda precisam ser finalizados, não apenas
+// concluir"). Com pendência: abre a tela na aba da primeira seção que falta e
+// diz o que falta. Sem pendência: fecha o checklist.
 function _fichaAfterHandoffCloseChecklist() {
   const areaId = window._fichaAfterHandoffAreaId;
+  const area = _fichaLiveArea(areaId);
   closeModal('a11y-after-handoff-modal');
-  // Depois de fechar, volta à modal com a contagem e o Finalizar atualizados.
+  const pendingKey = _fichaFirstPendingSectionKey(area);
+  if (area && pendingKey) {
+    const entry = (_fichaProjectCompletion().pending || []).find(p => p.id === areaId);
+    const missing = entry && entry.missing.length ? entry.missing.join('; ') : _fichaSectionDisplayName(pendingKey);
+    openA11yAreaWorkspace(areaId, { initialTab: pendingKey });
+    showToast(`Para fechar o checklist desta tela, falta: ${missing}.`);
+    return;
+  }
+  // Nada pendente: fecha e volta à modal com a contagem atualizada.
   _fichaCloseAreaChecklist(areaId, () => _fichaOpenAfterHandoffModal());
 }
 window._fichaAfterHandoffCloseChecklist = _fichaAfterHandoffCloseChecklist;
