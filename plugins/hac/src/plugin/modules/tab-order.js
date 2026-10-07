@@ -1698,7 +1698,7 @@ function toggleSwipeNarration(areaId, uid) {
   const langSelect = document.getElementById(`tab-order-narration-lang-${uid}`);
   state.lang = (langSelect && langSelect.value === 'en') ? 'en' : 'pt';
   _setTabOrderNarrationButtonState(uid, true);
-  parent.postMessage({ pluginMessage: { type: 'resolve-tab-order-narration', areaId,
+  parent.postMessage({ pluginMessage: { type: 'resolve-tab-order-narration', areaId, mode: 'swipe',
     items: points.map((p, i) => ({ targetNodeId: p.nodeId, targetNodeName: p.nodeName, number: i + 1 })) } }, '*');
 }
 window.toggleSwipeNarration = toggleSwipeNarration;

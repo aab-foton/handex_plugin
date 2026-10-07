@@ -3018,7 +3018,7 @@ figma.ui.onmessage = async (msg) => {
           const originalId = cloneIdToOriginalId.get(c.id);
           if (!originalId) continue;
           const n = await _getSceneNodeById(originalId);
-          if (n) items.push({ nodeId: n.id, nodeName: _findVisibleLabelText(n) || n.name });
+          if (n) items.push({ nodeId: n.id, nodeName: await _swipeElementName(n) });
         }
 
         figma.ui.postMessage({ type: "swipe-path-generated-from-layers", areaId: msg.areaId, generation: msg.generation, items, cloneId: clone.id, nodeMap: plainNodeMap });
@@ -3044,6 +3044,40 @@ figma.ui.onmessage = async (msg) => {
   // desde então). Best-effort por item: um node apagado/movido, ou que
   // falhe getMainComponentAsync, nunca derruba o handler inteiro — só
   // aquele item narra sem tipo (shortName: null).
+  // Nome do ELEMENTO de uma parada do Swipe (2026-10-07, pedido do usuário:
+  // a lista mostrava o texto de dentro — "9:30", "Title" — em vez do
+  // componente). Componente → nome do componente na lib, sem o prefixo
+  // "[dsc]"/"[dsc-ts]" (ex.: "Top App Bar"); texto solto → o próprio texto;
+  // resto → nome da camada.
+  async function _swipeElementName(node) {
+    if (!node) return '';
+    if (node.type === 'TEXT') return String(node.characters || '').trim() || node.name;
+    if (node.type === 'INSTANCE') {
+      try {
+        const mc = await node.getMainComponentAsync();
+        const base = mc ? ((mc.parent && mc.parent.type === 'COMPONENT_SET') ? mc.parent.name : mc.name) : '';
+        const clean = String(base || '').replace(/^\s*(\[[^\]]*\]\s*)+/, '').trim();
+        if (clean) return clean;
+      } catch (e) { }
+    }
+    return String(node.name || '').replace(/^\s*(\[[^\]]*\]\s*)+/, '').trim() || node.name;
+  }
+
+  // Textos visíveis de um elemento, na ordem das camadas, sem repetir —
+  // o "conteúdo" lido depois do nome do elemento na narração do Swipe.
+  function _swipeElementTexts(node, max) {
+    if (!node || node.type === 'TEXT' || !('findAll' in node)) return [];
+    const out = [];
+    try {
+      for (const t of node.findAll(c => c.type === 'TEXT' && c.visible !== false)) {
+        const v = String(t.characters || '').trim();
+        if (v && !out.includes(v)) out.push(v);
+        if (out.length >= (max || 6)) break;
+      }
+    } catch (e) { }
+    return out;
+  }
+
   if (msg.type === "resolve-tab-order-narration") {
     (async () => {
       const items = [];
@@ -3080,7 +3114,15 @@ figma.ui.onmessage = async (msg) => {
             // layer/label depois que o item foi criado) — usa o nome atual
             // do node quando disponível, mesmo espírito de
             // generate-tab-order-from-layers usar _findVisibleLabelText.
-            out.targetNodeName = _findVisibleLabelText(node) || node.name || entry.targetNodeName;
+            if (msg.mode === 'swipe') {
+              // Swipe (2026-10-07): lê o ELEMENTO e depois o que há nele —
+              // "Top App Bar, 9:30, Title" — em vez de só o primeiro texto.
+              const elementName = await _swipeElementName(node);
+              const texts = _swipeElementTexts(node).filter(t => t !== elementName);
+              out.targetNodeName = [elementName, ...texts].filter(Boolean).join(', ') || entry.targetNodeName;
+            } else {
+              out.targetNodeName = _findVisibleLabelText(node) || node.name || entry.targetNodeName;
+            }
           }
         } catch (e) {
           // node sumiu ou getMainComponentAsync falhou — item já nasceu
