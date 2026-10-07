@@ -3398,6 +3398,15 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-07 — Swipe automático passa por cada componente (v0.1.0-beta.93)</h2>
+
+    <p>A trilha automática saía como uma reta: componentes do DSC reconhecidos que <strong>agrupam</strong> outros
+    (Button Row, Carousel, seção de lista) viravam uma parada só, e como todos ocupam a largura da tela, o centro a centro
+    ficava alinhado. Agora (<code>_collectSwipeStops</code>) um componente reconhecido com 2+ componentes com texto dentro é
+    percorrido por dentro — cada botão, card e item de lista vira parada. E um componente-folha (sem outro componente com
+    texto dentro) é sempre uma parada só, com seus textos lidos juntos — card e item de lista não se partem mais em
+    "Label"/"Text".</p>
+
     <h2>2026-10-07 — Instruções mobile na Tabulação/Swipe e título da tela maior (v0.1.0-beta.92)</h2>
 
     <p>Em projeto mobile, as instruções criadas ao lado da réplica na Tabulação e no Swipe saíam com o componente

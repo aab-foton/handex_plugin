@@ -786,10 +786,13 @@ async function _a11yScanArea(rootNode) {
 // os filhos na ordem de leitura (orderFn — linhas de cima para baixo, cada
 // uma da esquerda para a direita), de forma que o conteúdo de um card/lista
 // é lido junto antes do próximo bloco. Regras:
-//   • componente do DSC reconhecido → UMA parada (não entra nele);
-//     decorativo → fica de fora;
-//   • componente não reconhecido → uma parada se for simples (até 1 texto e
-//     nenhum componente com texto dentro); senão é contêiner: entra nele;
+//   • componente do DSC reconhecido → UMA parada (não entra nele), a não
+//     ser que agrupe 2+ componentes com texto (Button Row, Carousel, seção
+//     de lista — 2026-10-07, print do usuário: a trilha virava uma reta
+//     passando só pelos blocos de largura total); aí entra e cada
+//     botão/card/item vira parada. Decorativo → fica de fora;
+//   • componente não reconhecido → uma parada se não tiver outro componente
+//     com texto dentro (card, item de lista); senão é contêiner: entra nele;
 //   • texto solto e imagem → parada; ícone bruto → fica de fora (decorativo);
 //   • frame/grupo → entra nele.
 export async function _collectSwipeStops(root, orderFn) {
@@ -829,13 +832,21 @@ export async function _collectSwipeStops(root, orderFn) {
       // Componente do DSC reconhecido ANTES do teste de ícone: um Icon Button
       // é pequeno e só tem vetor, mas é interativo e precisa ser parada.
       const m = n.type === 'INSTANCE' ? await dscMatch(n) : null;
-      if (m) { if (m.a11yCategory !== 'decorativo') stops.push(n); return; }
-      if (await _isRawIcon(n)) return;
-      if (n.type === 'INSTANCE') {
-        const texts = n.findAll(visibleText);
-        const nestedWithText = n.findAll(c => c.type === 'INSTANCE' && c.visible !== false && c.findOne(visibleText));
-        if (texts.length <= 1 && nestedWithText.length === 0) {
-          if (texts.length === 1 || hasImageFill(n)) stops.push(n);
+      const nestedWithText = n.type === 'INSTANCE'
+        ? n.findAll(c => c.type === 'INSTANCE' && c.visible !== false && !clipped(c) && c.findOne(visibleText))
+        : [];
+      if (m) {
+        if (m.a11yCategory === 'decorativo') return;
+        if (nestedWithText.length < 2) { stops.push(n); return; }
+        // Contêiner reconhecido (Button Row, Carousel, lista): entra nele.
+      } else if (await _isRawIcon(n)) {
+        return;
+      } else if (n.type === 'INSTANCE') {
+        // Componente-folha (nenhum componente com texto dentro) = UMA parada,
+        // com todos os seus textos lidos juntos (2026-10-07: card e item de
+        // lista não se partem mais em "Label"/"Text" separados).
+        if (nestedWithText.length === 0) {
+          if (n.findOne(visibleText) || hasImageFill(n)) stops.push(n);
           return;
         }
       } else if (hasImageFill(n) && !('children' in n && n.children.length)) {
