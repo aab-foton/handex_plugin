@@ -3639,6 +3639,51 @@ figma.ui.onmessage = async (msg) => {
     if (msg.shouldScroll) figma.viewport.scrollAndZoomIntoView([node]);
   }
 
+  // Elementos iguais na mesma tela (2026-10-07, pedido do usuário: "busque
+  // na tela elementos similares e aplique a spec — evita ter que ficar
+  // clicando em vários"). Critério confirmado com o usuário: MESMO COMPONENTE
+  // da lib, em qualquer variante (mesmo component set); camada que não é
+  // instância = mesmo tipo + mesmo nome. Procura só dentro da tela ORIGINAL da
+  // área; ignora o próprio elemento, o que está dentro/acima dele, ocultos,
+  // já documentados (excludeIds) e candidatos aninhados em outro candidato.
+  if (msg.type === "find-similar-nodes") {
+    (async () => {
+      const reply = items => figma.ui.postMessage({ type: 'similar-nodes-found', requestId: msg.requestId || null, nodeId: msg.nodeId || null, items });
+      try {
+        const root = msg.areaTargetNodeId ? await _getSceneNodeById(msg.areaTargetNodeId) : null;
+        const target = msg.nodeId ? await _getSceneNodeById(msg.nodeId) : null;
+        if (!root || !target || !('findAll' in root)) return reply([]);
+        const exclude = new Set(msg.excludeIds || []);
+        const familyOf = async n => {
+          if (n.type !== 'INSTANCE') return null;
+          try {
+            const mc = await n.getMainComponentAsync();
+            if (!mc) return null;
+            return (mc.parent && mc.parent.type === 'COMPONENT_SET') ? 'set:' + (mc.parent.key || mc.parent.id) : 'comp:' + (mc.key || mc.id);
+          } catch (e) { return null; }
+        };
+        const targetFamily = await familyOf(target);
+        const isVisible = n => { for (let p = n; p && p !== root.parent; p = p.parent) { if (p.visible === false) return false; if (p === root) break; } return true; };
+        const raw = targetFamily
+          ? root.findAll(n => n.type === 'INSTANCE')
+          : root.findAll(n => n.type === target.type && n.name === target.name);
+        const found = [];
+        for (const n of raw) {
+          if (n.id === target.id || exclude.has(n.id) || !isVisible(n)) continue;
+          if (_isDescendantOf(n, target) || _isDescendantOf(target, n)) continue;
+          if (targetFamily && (await familyOf(n)) !== targetFamily) continue;
+          found.push(n);
+        }
+        const outer = found.filter(n => !found.some(o => o !== n && _isDescendantOf(n, o)));
+        reply(outer.map(n => ({ id: n.id, name: _findVisibleLabelText(n) || n.name })));
+      } catch (e) {
+        console.error('[hac] find-similar-nodes falhou:', e && e.message);
+        reply([]);
+      }
+    })();
+    return;
+  }
+
   if (msg.type === "highlight-spec-copy-node") {
     _focusNodeInReplica(msg, _activeSpecCloneMaps, _findSpecCloneForArea);
     return;

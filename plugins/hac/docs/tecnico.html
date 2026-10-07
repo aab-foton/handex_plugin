@@ -4887,6 +4887,19 @@ hr {
       <code>_restoreA11yElementoMobileToggles</code> zera Observações antes de aplicar o salvo.</li>
     </ul>
 
+    <h3>Elementos iguais e grupos (beta.116)</h3>
+    <ul>
+      <li><code>find-similar-nodes</code> <code>{ requestId, areaTargetNodeId, nodeId, excludeIds }</code> → <code>similar-nodes-found</code>
+      <code>{ requestId, nodeId, items[{id,name}] }</code>. "Igual" = mesmo component set (ou componente) via
+      <code>getMainComponentAsync</code>; fora de instância, mesmo tipo + nome. Só dentro da tela original; exclui o próprio, ancestrais/
+      descendentes, ocultos, <code>excludeIds</code> (specs já da área) e candidatos aninhados em outros.</li>
+      <li>Frontend: <code>_finishA11ySpecConfirm</code> marca <code>window._a11yOfferSimilarFor</code> só em spec nova simples; o
+      <code>spec-created</code> desse caminho chama <code>_offerA11ySimilarSpecs</code>; a confirmação usa <code>openA11yConfirmModal</code>
+      com <code>bodyHtml</code> (novo) e aplica por <code>_createA11ySpecBatch</code>.</li>
+      <li>Grupos ×N: <code>_a11ySpecItemHtml</code> monta o accordion interno (<code>window._a11yOpenSpecGroups</code>, chave = 1º id;
+      <code>_toggleA11ySpecGroup</code>).</li>
+    </ul>
+
     <h3>Mensagens novas/alteradas desta rodada</h3>
     <ul>
       <li><code>a11y-spec-create-failed</code> (backend → UI) e <code>a11y-no-lib-card</code> (backend → UI) — ver 8af.</li>

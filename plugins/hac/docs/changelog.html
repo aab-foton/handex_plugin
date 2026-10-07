@@ -3398,6 +3398,16 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-07 — Aplicar a spec em elementos iguais; focar cada elemento de um grupo (v0.1.0-beta.116)</h2>
+
+    <p><strong>Elementos iguais</strong> (pedido do usuário, fluxo e critério confirmados com ele): ao salvar uma spec nova, o plugin
+    procura na tela os elementos iguais ainda sem spec — mesmo componente da lib, em qualquer variante; fora de componente, mesmo
+    tipo e nome — e pergunta "Aplicar em elementos iguais?", com a lista para desmarcar algum. Ao aplicar, cria as specs em lote
+    (a tag numérica continua da maior já usada). Mensagens novas <code>find-similar-nodes</code>/<code>similar-nodes-found</code>.</p>
+
+    <p><strong>Grupos de repetidos</strong> ("Icon Container ×4"): ganham uma seta que abre a lista interna com cada elemento — nome,
+    posição ("2 de 4"), mira (foco na réplica) e lixeira (com confirmação). O estado aberto se mantém ao redesenhar a lista.</p>
+
     <h2>2026-10-07 — Observações do formulário espelha o componente da lib (v0.1.0-beta.115)</h2>
 
     <p>Pedido do usuário: o formulário tem que replicar o componente da lib — "se eu marco observações, abre-se o input com o

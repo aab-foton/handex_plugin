@@ -335,6 +335,10 @@
           return;
         }
         showToast('Especificação criada e posicionada, travada por padrão. Use o cadeado pra ajustar.');
+        // Oferece aplicar nos elementos iguais da tela (2026-10-07).
+        const _offer = window._a11yOfferSimilarFor;
+        window._a11yOfferSimilarFor = null;
+        if (_offer && typeof _offerA11ySimilarSpecs === 'function') _offerA11ySimilarSpecs(_offer.opts);
       }
 
       // Card da lib indisponível (2026-10-07): o backend não cria card
@@ -355,6 +359,10 @@
       // instruções da Ficha) — mesmo alerta, sem a frase de spec (2026-10-07).
       if (msg.type === "a11y-no-lib-card") {
         if (typeof openA11yNoCardAlert === 'function') openA11yNoCardAlert(msg.message, { noSpecSuffix: true });
+      }
+
+      if (msg.type === "similar-nodes-found") {
+        if (typeof _handleA11ySimilarNodesFound === 'function') _handleA11ySimilarNodesFound(msg);
       }
 
       if (msg.type === "selection-name") {

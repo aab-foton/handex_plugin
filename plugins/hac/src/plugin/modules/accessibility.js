@@ -4095,10 +4095,66 @@ function _finishA11ySpecConfirm() {
       _createA11ySpecBatch(opts, batch);
       return;
     }
+    // Spec nova, simples: ao voltar spec-created, oferecer os elementos iguais
+    // da tela (_offerA11ySimilarSpecs). Edição/lote/wizard não oferecem.
+    window._a11yOfferSimilarFor = (!editingSpecId && opts.a11yAreaId && opts.targetNodeId) ? { opts } : null;
     parent.postMessage({ pluginMessage: { type: 'create-unified-spec', opts } }, '*');
   }
 }
 window._finishA11ySpecConfirm = _finishA11ySpecConfirm;
+
+// ── Aplicar a spec nos elementos iguais da tela (2026-10-07) ────────────────
+// Fluxo confirmado com o usuário: perguntar ao SALVAR; "igual" = mesmo
+// componente da lib (qualquer variante) ou, fora de componente, mesmo
+// tipo+nome. A busca roda no backend (find-similar-nodes) sobre a tela
+// original da área, excluindo o que já tem spec nesta tela.
+function _offerA11ySimilarSpecs(opts) {
+  const area = _findA11yAreaById(opts.a11yAreaId);
+  if (!area || !area.targetNodeId) return;
+  const excludeIds = (a11ySpecs || []).filter(s => s && s.a11yAreaId === opts.a11yAreaId).map(s => s.targetNodeId).filter(Boolean);
+  const requestId = 'sim-' + Date.now();
+  window._a11ySimilarPending = { requestId, opts };
+  parent.postMessage({ pluginMessage: { type: 'find-similar-nodes', requestId, areaTargetNodeId: area.targetNodeId, nodeId: opts.targetNodeId, excludeIds } }, '*');
+}
+window._offerA11ySimilarSpecs = _offerA11ySimilarSpecs;
+
+function _handleA11ySimilarNodesFound(msg) {
+  const pending = window._a11ySimilarPending;
+  if (!pending || pending.requestId !== msg.requestId) return;
+  window._a11ySimilarPending = null;
+  const items = Array.isArray(msg.items) ? msg.items : [];
+  if (items.length === 0) return;
+  const n = items.length;
+  const list = items.map((it, i) => `
+    <label class="flex items-center gap-2 py-1 cursor-pointer">
+      <input type="checkbox" data-a11y-similar-id="${escapeHtml(it.id)}" data-a11y-similar-name="${escapeHtml(it.name || '')}" checked class="w-4 h-4 accent-[#005ca9] shrink-0">
+      <span class="truncate">${escapeHtml(it.name || ('Elemento ' + (i + 1)))}</span>
+    </label>`).join('');
+  openA11yConfirmModal({
+    title: 'Aplicar em elementos iguais?',
+    bodyHtml: `<span>Encontrei ${n} elemento${n === 1 ? '' : 's'} igua${n === 1 ? 'l' : 'is'} a este nesta tela, ainda sem spec. Aplicar a mesma spec?</span>
+      <span class="block mt-2 max-h-48 overflow-y-auto">${list}</span>`,
+    confirmLabel: 'Aplicar',
+    cancelLabel: 'Agora não',
+    onConfirm: () => {
+      // Lidos ANTES do modal fechar (o corpo é limpo no próximo uso).
+      const targets = Array.from(document.querySelectorAll('#a11y-confirm-modal-body [data-a11y-similar-id]'))
+        .filter(cb => cb.checked)
+        .map(cb => ({ id: cb.getAttribute('data-a11y-similar-id'), name: cb.getAttribute('data-a11y-similar-name') || '' }));
+      if (!targets.length) return;
+      const base = Object.assign({}, pending.opts);
+      delete base.pinnedPosition;
+      // Tag numérica continua a partir da maior já usada nesta tela/categoria.
+      if (/^\d+$/.test(String(base.letter || ''))) {
+        const used = (a11ySpecs || []).filter(s => s && s.a11yAreaId === base.a11yAreaId && s.a11yType === base.a11yType)
+          .map(s => parseInt(s.letter, 10)).filter(x => !isNaN(x));
+        base.letter = String((used.length ? Math.max(...used) : parseInt(base.letter, 10)) + 1);
+      }
+      _createA11ySpecBatch(base, targets);
+    },
+  });
+}
+window._handleA11ySimilarNodesFound = _handleA11ySimilarNodesFound;
 
 // ── Listagem ─────────────────────────────────────────────────────────────
 // Áreas Marcadas são o agrupamento principal (accordion). Toda spec de A11y
@@ -4151,6 +4207,33 @@ function _a11ySpecItemHtml(spec, showCategoryChip, group) {
   // texto do Figma tem o próprio texto como nome, e o card de Título mostrava
   // "Title" e “Title”).
   const cardName = spec.targetNodeName || spec.name || 'Elemento';
+  // Grupo de repetidos (×N): accordion interno com cada elemento, para focar
+  // ou remover um específico (2026-10-07, pedido do usuário). Estado aberto
+  // guardado por chave estável (1º id) — sobrevive aos re-renders da lista.
+  const groupKey = group ? group.ids[0] : '';
+  const groupOpen = !!(group && window._a11yOpenSpecGroups && window._a11yOpenSpecGroups.has(groupKey));
+  const groupItemsHtml = (group && groupOpen) ? `
+      <div class="px-2.5 pb-2.5 space-y-1">
+        ${group.ids.map((gid, gi) => {
+          const gs = (a11ySpecs || []).find(x => x && x.id === gid);
+          if (!gs) return '';
+          const gname = gs.targetText && gs.targetText !== gs.targetNodeName ? `${gs.targetNodeName || 'Elemento'} · ${gs.targetText}` : (gs.targetNodeName || gs.name || 'Elemento');
+          return `
+        <div class="flex items-center gap-dsc-nano pl-2 pr-1 py-0.5 bg-white dark:bg-dark-surface rounded-dsc-small" data-a11y-spec-group-item>
+          <span class="flex-1 min-w-0 truncate text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-slate-300">${escapeHtml(gname)} <span class="text-slate-400 dark:text-dark-muted">(${gi + 1} de ${group.ids.length})</span></span>
+          <button type="button" title="Focar este elemento no canvas" aria-label="Focar ${escapeHtml(gname)}, ${gi + 1} de ${group.ids.length}, no canvas"
+            onclick="_highlightSpecListItem('${escapeHtml(gs.targetNodeId)}', '${escapeHtml(gs.a11yAreaId || '')}', '${escapeHtml(gs.id)}')"
+            class="w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:text-[#005ca9] transition-colors shrink-0">
+            <i data-lucide="locate" class="w-4 h-4"></i>
+          </button>
+          <button type="button" title="Remover este elemento" aria-label="Remover especificação de ${escapeHtml(gname)}, ${gi + 1} de ${group.ids.length}"
+            onclick="deleteA11ySpec('${escapeHtml(gs.id)}')"
+            class="w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:text-red-500 transition-colors shrink-0">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        </div>`;
+        }).join('')}
+      </div>` : '';
   const _normLabel = v => String(v || '').replace(/\s+/g, ' ').trim().toLowerCase();
   const cardLabel = spec.targetText && _normLabel(spec.targetText) !== _normLabel(cardName) ? spec.targetText : null;
 
@@ -4172,6 +4255,11 @@ function _a11ySpecItemHtml(spec, showCategoryChip, group) {
         <div class="flex-1 min-w-0">
           <p class="text-dsc-label-tiny normal-case tracking-normal font-semibold text-slate-700 dark:text-white truncate">${escapeHtml(cardName)}${group ? ` <span class="font-bold text-slate-500 dark:text-dark-muted">×${group.ids.length}</span>` : ''}</p>
         </div>
+        ${group ? `<button type="button" title="${groupOpen ? 'Recolher' : 'Ver cada elemento'}" aria-label="${groupOpen ? 'Recolher elementos do grupo' : 'Ver cada elemento do grupo'}" aria-expanded="${groupOpen ? 'true' : 'false'}"
+          onclick="_toggleA11ySpecGroup('${escapeHtml(groupKey)}')"
+          class="w-10 h-10 flex items-center justify-center rounded-2xl text-gray-400 hover:text-[#005ca9] transition-colors shrink-0">
+          <i data-lucide="${groupOpen ? 'chevron-up' : 'chevron-down'}" class="w-5 h-5"></i>
+        </button>` : ''}
         <button type="button" title="Focar no elemento no canvas" aria-label="Focar no elemento no canvas"
           onclick="_highlightSpecListItem('${escapeHtml(spec.targetNodeId)}', '${escapeHtml(spec.a11yAreaId || '')}', '${escapeHtml(spec.id || '')}')"
           class="w-10 h-10 flex items-center justify-center rounded-2xl text-gray-400 hover:text-[#005ca9] transition-colors shrink-0">
@@ -4225,9 +4313,20 @@ function _a11ySpecItemHtml(spec, showCategoryChip, group) {
           </div>`;
         }).join('')}
       </div>` : ''}
+      ${groupItemsHtml}
     </div>
   `;
 }
+
+function _toggleA11ySpecGroup(key) {
+  if (!key) return;
+  window._a11yOpenSpecGroups = window._a11yOpenSpecGroups || new Set();
+  if (window._a11yOpenSpecGroups.has(key)) window._a11yOpenSpecGroups.delete(key);
+  else window._a11yOpenSpecGroups.add(key);
+  if (typeof _renderA11yWorkspaceTab === 'function') _renderA11yWorkspaceTab();
+  else if (typeof renderA11yGroupedList === 'function') renderA11yGroupedList();
+}
+window._toggleA11ySpecGroup = _toggleA11ySpecGroup;
 
 // Conjunto persistente de áreas expandidas — sobrevive a re-renders (ex.:
 // criar/editar qualquer spec dispara renderA11yGroupedList e reconstrói a
@@ -6123,7 +6222,7 @@ function openA11yConfirmModal(opts) {
   const confirmBtn = document.getElementById('a11y-confirm-modal-confirm-btn');
   const cancelBtn = document.getElementById('a11y-confirm-modal-cancel-btn');
   if (titleEl) titleEl.textContent = o.title || 'Confirmar ação';
-  if (bodyEl) bodyEl.textContent = o.body || '';
+  if (bodyEl) { if (o.bodyHtml) bodyEl.innerHTML = o.bodyHtml; else bodyEl.textContent = o.body || ''; }
   if (confirmBtn) confirmBtn.textContent = o.confirmLabel || 'Confirmar';
   if (cancelBtn) cancelBtn.textContent = o.cancelLabel || 'Cancelar';
   // Modo alerta (só um botão, sem Cancelar) — usado por openA11yNoCardAlert.
