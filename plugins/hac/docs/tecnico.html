@@ -4757,7 +4757,7 @@ hr {
       <li><strong>Seções "vivas" (beta.105).</strong> <code>_fichaAutoSyncLiveSections</code> grava em
       <code>handoffFicha.sections[key].itemCount/specCount</code> a contagem atual (seção já inserida, conteúdo &gt; 0) — a réplica
       de trabalho é a da Ficha. <code>_fichaSyncLiveSectionsAndCheck</code> roda em <code>_renderA11yWorkspaceTab</code> e abre a modal
-      pós-handoff na transição incompleto → completo (<code>window._fichaProjectWasComplete</code>).</li>
+      pós-handoff quando o checklist fecha <em>depois</em> de um handoff gerado com pendências (marca persistida <code>hacData.a11yHandoffAwaitingChecklist</code>, gravada por <code>_fichaMarkAwaitingChecklistIfIncomplete</code> e apagada ao abrir a modal).</li>
     </ul>
 
     <h2 id="s9">9. Contrato de mensagens (UI ↔ backend)</h2>

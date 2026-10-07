@@ -3398,6 +3398,15 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-07 — Modal de checklist fechado só depois de um handoff gerado (v0.1.0-beta.108)</h2>
+
+    <p>A modal "Checklist do projeto fechado" (beta.105) abria no meio da criação de specs, assim que o checklist fechava. A
+    jornada definida pelo usuário é outra: gera o handoff → é avisado das pendências → resolve → só então a modal aparece.
+    Agora gerar o handoff com o checklist aberto grava a marca <code>hacData.a11yHandoffAwaitingChecklist</code> (persistida); a
+    modal só abre quando o checklist fecha com essa marca presente, e a marca é apagada. "Gerar Handoff" com tudo já inserido
+    mas o checklist ainda aberto (ex.: seção vazia) também avisa as pendências na modal, em vez de só dizer que está
+    atualizado.</p>
+
     <h2>2026-10-07 — Card da tela sem chips de categoria (v0.1.0-beta.107)</h2>
 
     <p>Pedido do usuário, web e mobile: o card de cada tela na listagem não mostra mais os chips de categoria do Leitor de
