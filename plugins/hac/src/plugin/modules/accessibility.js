@@ -4319,15 +4319,19 @@ function _a11ySpecItemHtml(spec, showCategoryChip, group) {
       <p class="px-2.5 pb-2.5 -mt-1 text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-slate-300 break-words">“${escapeHtml(cardLabel)}”</p>` : ''}
       ${visibleProps.length > 0 ? `
       <div class="px-2.5 pb-2.5 space-y-1">
-        ${visibleProps.map(p => {
+        ${visibleProps.slice().sort((x, y) => (x.key === 'observacoes') - (y.key === 'observacoes')).map(p => {
+          // Mesmo formato do bloco "Texto fixo da lib" (2026-10-07, pedido do
+          // usuário): nome do campo em cima (pequeno, negrito), conteúdo embaixo
+          // em peso normal, quebrando por palavra — antes ficava lado a lado,
+          // em negrito e quebrando no meio das palavras. Observações por último.
           const isLink = (p.key === 'linkComponente' || p === componentProp) && /^https?:\/\//.test(String(linkUrl || ''));
           const linkHref = p.key === 'linkComponente' ? p.value : linkUrl;
           const valueHtml = isLink
-            ? `<a href="${escapeHtml(linkHref)}" target="_blank" rel="noopener noreferrer" title="Abrir componente no Figma" class="text-[12px] leading-snug font-semibold text-[#005ca9] dark:text-blue-300 text-right break-all min-w-0 underline hover:no-underline">${escapeHtml(String(p.value))}</a>`
-            : `<span class="text-dsc-label-tiny normal-case tracking-normal font-semibold text-slate-700 dark:text-white text-right break-all min-w-0">${escapeHtml(String(p.value))}</span>`;
+            ? `<a href="${escapeHtml(linkHref)}" target="_blank" rel="noopener noreferrer" title="Abrir componente no Figma" class="block text-dsc-label-tiny normal-case tracking-normal text-[#005ca9] dark:text-blue-300 break-words underline hover:no-underline">${escapeHtml(String(p.value))}</a>`
+            : `<span class="block text-dsc-label-tiny normal-case tracking-normal text-slate-700 dark:text-white break-words">${escapeHtml(String(p.value))}</span>`;
           return `
-          <div class="flex items-start justify-between gap-dsc-nano px-2 py-1 bg-white dark:bg-dark-surface rounded-dsc-small">
-            <span class="text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-500 dark:text-dark-muted shrink-0 pt-px">${escapeHtml(p.key === 'label' ? 'Nome Acessível' : (p === componentProp ? String(p.label || '').replace(/\s*\(Link\)\s*$/i, '') : p.label))}</span>
+          <div class="px-2 py-1 bg-white dark:bg-dark-surface rounded-dsc-small">
+            <span class="block text-dsc-label-tiny normal-case tracking-normal font-bold text-slate-500 dark:text-dark-muted">${escapeHtml(p.key === 'label' ? 'Nome Acessível' : (p === componentProp ? String(p.label || '').replace(/\s*\(Link\)\s*$/i, '') : p.label))}</span>
             ${valueHtml}
           </div>`;
         }).join('')}
