@@ -230,7 +230,7 @@
         "currentUserId"
       ],
       "senders": [
-        "src/plugin/modules/accessibility.js:5793"
+        "src/plugin/modules/accessibility.js:5860"
       ],
       "consumers": [
         "backend: _findOtherDesignersSessionSections"
@@ -261,7 +261,7 @@
         "currentUserId"
       ],
       "senders": [
-        "src/plugin/modules/accessibility.js:5794"
+        "src/plugin/modules/accessibility.js:5861"
       ],
       "consumers": [
         "backend: _findOwnPriorSessionSection"
@@ -292,7 +292,7 @@
         "currentUserId"
       ],
       "senders": [
-        "src/plugin/modules/accessibility.js:5880"
+        "src/plugin/modules/accessibility.js:5947"
       ],
       "consumers": [
         "backend: _surveyExistingHacDocumentation (code.js)"
@@ -528,16 +528,16 @@
         "id"
       ],
       "senders": [
-        "src/plugin/modules/accessibility.js:4014",
-        "src/plugin/modules/accessibility.js:4461",
-        "src/plugin/modules/accessibility.js:7650",
-        "src/plugin/modules/accessibility.js:8085",
-        "src/plugin/modules/accessibility.js:8097",
-        "src/plugin/modules/accessibility.js:8109",
+        "src/plugin/modules/accessibility.js:4032",
+        "src/plugin/modules/accessibility.js:4528",
+        "src/plugin/modules/accessibility.js:7717",
+        "src/plugin/modules/accessibility.js:8152",
+        "src/plugin/modules/accessibility.js:8164",
+        "src/plugin/modules/accessibility.js:8176",
         "src/plugin/modules/swipe-path.js:817",
         "src/plugin/modules/tab-order.js:924",
         "src/plugin/modules/tab-order.js:955",
-        "src/plugin/modules/tab-order.js:1784"
+        "src/plugin/modules/tab-order.js:1796"
       ],
       "consumers": [
         "backend: remove node do canvas por id"
@@ -583,7 +583,7 @@
       "handlerLocation": "src/plugin/backend/onmessage.js:915",
       "payloadFields": [],
       "senders": [
-        "src/plugin/modules/accessibility.js:3558"
+        "src/plugin/modules/accessibility.js:3576"
       ],
       "consumers": [
         "backend: resolve node selecionado (id/name)"
@@ -623,7 +623,7 @@
         "autoDetect"
       ],
       "senders": [
-        "src/plugin/modules/accessibility.js:8053"
+        "src/plugin/modules/accessibility.js:8120"
       ],
       "consumers": [
         "backend: cria grupo/selo da Área Marcada real da lib (_tryImportA11yAgrupamento)"
@@ -713,7 +713,7 @@
         "targetNodeId ou seleção implícita"
       ],
       "senders": [
-        "src/plugin/modules/accessibility.js:6727"
+        "src/plugin/modules/accessibility.js:6794"
       ],
       "consumers": [
         "backend: Detecção Automática — varre a árvore do frame contra o mapa dsc-component-a11y-mapping*.json (dsc-matching.js)"
@@ -774,8 +774,8 @@
         "opts"
       ],
       "senders": [
-        "src/plugin/modules/accessibility.js:4101",
-        "src/plugin/modules/accessibility.js:7130"
+        "src/plugin/modules/accessibility.js:4119",
+        "src/plugin/modules/accessibility.js:7197"
       ],
       "consumers": [
         "backend: resolve/cria clone da área, desenha card real ou procedural (fallback), grava opts em spec.*"
@@ -833,7 +833,7 @@
         "locked"
       ],
       "senders": [
-        "src/plugin/modules/accessibility.js:7759",
+        "src/plugin/modules/accessibility.js:7826",
         "src/plugin/modules/handoff-ficha.js:363"
       ],
       "consumers": [
@@ -1121,8 +1121,8 @@
         "mode"
       ],
       "senders": [
-        "src/plugin/modules/tab-order.js:1716",
-        "src/plugin/modules/tab-order.js:1753"
+        "src/plugin/modules/tab-order.js:1727",
+        "src/plugin/modules/tab-order.js:1765"
       ],
       "consumers": [
         "backend: resolve texto de narração por item"
@@ -1158,7 +1158,7 @@
       "senders": [
         "src/plugin/modules/tab-order.js:899",
         "src/plugin/modules/tab-order.js:1554",
-        "src/plugin/modules/tab-order.js:1800"
+        "src/plugin/modules/tab-order.js:1812"
       ],
       "consumers": [
         "backend: renumera badges no canvas"
@@ -1237,7 +1237,7 @@
       ],
       "senders": [
         "src/plugin/modules/accessibility.js:1121",
-        "src/plugin/modules/accessibility.js:7301"
+        "src/plugin/modules/accessibility.js:7368"
       ],
       "consumers": [
         "backend: _resolveActiveSpecClone / _createSpecCloneForArea"
@@ -1260,8 +1260,8 @@
         "areaTargetNodeId"
       ],
       "senders": [
-        "src/plugin/modules/accessibility.js:7524",
-        "src/plugin/modules/accessibility.js:7538"
+        "src/plugin/modules/accessibility.js:7591",
+        "src/plugin/modules/accessibility.js:7605"
       ],
       "consumers": [
         "backend: foca/destaca node dentro do clone de trabalho de Specs"
@@ -1445,8 +1445,8 @@
         "everywhere"
       ],
       "senders": [
-        "src/plugin/modules/accessibility.js:8101",
-        "src/plugin/modules/tab-order.js:1853"
+        "src/plugin/modules/accessibility.js:8168",
+        "src/plugin/modules/tab-order.js:1865"
       ],
       "consumers": [
         "backend: remove todas as cópias de Ordem de Tabulação da área"
@@ -1461,8 +1461,8 @@
         "everywhere"
       ],
       "senders": [
-        "src/plugin/modules/accessibility.js:7690",
-        "src/plugin/modules/accessibility.js:8093"
+        "src/plugin/modules/accessibility.js:7757",
+        "src/plugin/modules/accessibility.js:8160"
       ],
       "consumers": [
         "backend: remove specs da área do canvas"
@@ -1479,7 +1479,7 @@
         "visible"
       ],
       "senders": [
-        "src/plugin/modules/accessibility.js:7738"
+        "src/plugin/modules/accessibility.js:7805"
       ],
       "consumers": [
         "backend: mostra/esconde clone de Ordem de Tabulação"
@@ -1546,7 +1546,7 @@
         "everywhere"
       ],
       "senders": [
-        "src/plugin/modules/accessibility.js:8105",
+        "src/plugin/modules/accessibility.js:8172",
         "src/plugin/modules/swipe-path.js:819"
       ],
       "consumers": [
@@ -1580,7 +1580,7 @@
       "senders": [
         "src/plugin/modules/accessibility.js:1141",
         "src/plugin/modules/accessibility.js:1324",
-        "src/plugin/modules/accessibility.js:6705"
+        "src/plugin/modules/accessibility.js:6772"
       ],
       "consumers": [
         "backend: checa se a lib 'Design Acessível' está vinculada ao arquivo"
@@ -1663,7 +1663,7 @@
         "nodeIds"
       ],
       "senders": [
-        "src/plugin/modules/accessibility.js:5482"
+        "src/plugin/modules/accessibility.js:5549"
       ],
       "consumers": [
         "backend: DFS na árvore de camadas a partir de areaTargetNodeId, escopado à área"
@@ -1806,7 +1806,7 @@
         "areaId"
       ],
       "senders": [
-        "src/plugin/modules/accessibility.js:8106"
+        "src/plugin/modules/accessibility.js:8173"
       ],
       "consumers": [
         "backend: remove seções da Ficha desta área do Documento Final"
@@ -1822,7 +1822,7 @@
         "visible"
       ],
       "senders": [
-        "src/plugin/modules/accessibility.js:7744"
+        "src/plugin/modules/accessibility.js:7811"
       ],
       "consumers": [
         "backend: mostra/esconde seção da Ficha"
@@ -1879,7 +1879,7 @@
       "handlerLocation": "src/plugin/backend/onmessage.js:646",
       "payloadFields": [],
       "senders": [
-        "src/plugin/modules/accessibility.js:5801"
+        "src/plugin/modules/accessibility.js:5868"
       ],
       "consumers": [],
       "respondsWith": [],
@@ -2062,7 +2062,7 @@
         "excludeIds"
       ],
       "senders": [
-        "src/plugin/modules/accessibility.js:4117"
+        "src/plugin/modules/accessibility.js:4135"
       ],
       "consumers": [
         "backend: elementos iguais na tela original da área — mesmo component set (qualquer variante) ou mesmo tipo+nome; exclui o próprio, aninhados, ocultos e já documentados (beta.116)"

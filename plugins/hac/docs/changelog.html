@@ -3398,6 +3398,14 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-07 — Simular leitura destaca a réplica, não o frame principal (v0.1.0-beta.121)</h2>
+
+    <p>Pedido do usuário: "a simulação de leitura do swipe está lendo o frame principal, tem de ler a réplica, até pro designer
+    conseguir ver se os pontos marcados estão corretos". A cada passo, a narração chamava o foco genérico (<code>focusNode</code>),
+    que seleciona o elemento original. Agora usa o foco na réplica da etapa (<code>highlight-swipe-path-copy-node</code> no Swipe,
+    <code>highlight-tab-order-copy-node</code> na Tabulação — o mesmo da mira da lista, beta.112). Vale para Swipe e Tabulação, web e
+    mobile.</p>
+
     <h2>2026-10-07 — Novo scan das libs; Estrutura da Página web segue a lib atualizada (v0.1.0-beta.120)</h2>
 
     <p>Scan completo das libs (pedido do usuário: "temos atualizações"), com as mesmas opções de antes: libs DSC de produção

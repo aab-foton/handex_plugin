@@ -1635,7 +1635,17 @@ function _tabOrderNarrationAdvance() {
     return;
   }
   const item = state.queue[state.index];
-  if (item.targetNodeId) focusNode(item.targetNodeId);
+  // Foco na RÉPLICA da etapa, nunca no frame principal (2026-10-07, pedido do
+  // usuário: "a simulação do swipe está lendo o frame principal, tem de ler a
+  // réplica, até pro designer ver se os pontos marcados estão corretos").
+  // Mesmo foco da mira da lista (_focusNodeInReplica no backend).
+  if (item.targetNodeId) {
+    const area = (typeof _findA11yAreaById === 'function') ? _findA11yAreaById(state.areaId) : null;
+    parent.postMessage({ pluginMessage: {
+      type: state.mode === 'swipe' ? 'highlight-swipe-path-copy-node' : 'highlight-tab-order-copy-node',
+      id: item.targetNodeId, areaId: state.areaId || null,
+      areaTargetNodeId: (area && area.targetNodeId) || null, shouldScroll: true } }, '*');
+  }
 
   const lang = state.lang === 'en' ? 'en' : 'pt';
   // Velocidade relida a CADA item (2026-09-11, pedido do usuário) — mudar
@@ -1707,6 +1717,7 @@ function toggleSwipeNarration(areaId, uid) {
   if (points.length === 0) { showToast('Nenhum ponto na Ordem de Leitura para narrar.'); return; }
   state.active = true;
   state.areaId = areaId;
+  state.mode = 'swipe';
   state.uid = uid;
   state.queue = [];
   state.index = -1;
@@ -1736,6 +1747,7 @@ function toggleTabOrderNarration(areaId, uid) {
 
   state.active = true;
   state.areaId = areaId;
+  state.mode = 'tab';
   state.uid = uid;
   state.queue = [];
   state.index = -1;
