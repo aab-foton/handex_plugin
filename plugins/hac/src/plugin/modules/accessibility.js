@@ -4260,11 +4260,11 @@ function _a11ySpecItemHtml(spec, showCategoryChip, group) {
           class="w-10 h-10 flex items-center justify-center rounded-2xl text-gray-400 hover:text-[#005ca9] transition-colors shrink-0">
           <i data-lucide="${groupOpen ? 'chevron-up' : 'chevron-down'}" class="w-5 h-5"></i>
         </button>` : ''}
-        <button type="button" title="Focar no elemento no canvas" aria-label="Focar no elemento no canvas"
+        ${group ? '' : `<button type="button" title="Focar no elemento no canvas" aria-label="Focar no elemento no canvas"
           onclick="_highlightSpecListItem('${escapeHtml(spec.targetNodeId)}', '${escapeHtml(spec.a11yAreaId || '')}', '${escapeHtml(spec.id || '')}')"
           class="w-10 h-10 flex items-center justify-center rounded-2xl text-gray-400 hover:text-[#005ca9] transition-colors shrink-0">
           <i data-lucide="locate" class="w-5 h-5"></i>
-        </button>
+        </button>`}
         ${group ? '' : `        <button type="button" title="Editar" aria-label="Editar especificação de acessibilidade"
           onclick="editA11ySpec('${escapeHtml(spec.id)}')"
           class="w-10 h-10 flex items-center justify-center rounded-2xl text-gray-400 hover:text-[#005ca9] transition-colors shrink-0">
