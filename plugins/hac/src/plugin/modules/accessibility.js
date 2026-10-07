@@ -4224,15 +4224,16 @@ function _a11ySpecItemHtml(spec, showCategoryChip, group) {
   // e mobile: "estamos resgatando na spec duas vezes a label" — camada de
   // texto do Figma tem o próprio texto como nome, e o card de Título mostrava
   // "Title" e “Title”).
-  // Grupo com nomes diferentes (ex.: Wifi, Signal, Battery): o cabeçalho
-  // lista os nomes distintos, na ordem da lista.
+  // Grupo com nomes diferentes (ex.: Wifi, Signal, Battery): o cabeçalho diz
+  // "Itens Agrupados" (pedido do usuário, 2026-10-07 — não listar os nomes;
+  // cada um aparece ao abrir o grupo). Mesmo nome: mantém o nome ("Title ×2").
   const _groupNames = group
     ? Array.from(new Set(group.ids.map(gid => {
         const gs = (a11ySpecs || []).find(x => x && x.id === gid);
         return gs ? (gs.targetNodeName || gs.name || 'Elemento') : null;
       }).filter(Boolean)))
     : [];
-  const cardName = _groupNames.length > 1 ? _groupNames.join(', ') : (spec.targetNodeName || spec.name || 'Elemento');
+  const cardName = _groupNames.length > 1 ? 'Itens Agrupados' : (spec.targetNodeName || spec.name || 'Elemento');
   // Grupo de repetidos (×N): accordion interno com cada elemento, para focar
   // ou remover um específico (2026-10-07, pedido do usuário). Estado aberto
   // guardado por chave estável (1º id) — sobrevive aos re-renders da lista.
