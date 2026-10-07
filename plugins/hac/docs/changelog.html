@@ -3398,6 +3398,17 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-07 — Resumo acompanha o canvas; modal de finalização ao fechar o checklist (v0.1.0-beta.105)</h2>
+
+    <p><strong>Resumo em dia.</strong> Depois de atualizar a ordem de Tabulação, o Resumo seguia dizendo "7 agora, handoff tem
+    0. Clique Atualizar". A réplica de trabalho é a réplica da Ficha desde que nasce — selos, trilha e specs já são desenhados
+    no handoff —, então a contagem gravada na última inserção virou alarme falso. Seções já inseridas e com conteúdo passam a
+    acompanhar a contagem atual (<code>_fichaAutoSyncLiveSections</code>, a cada atualização da tela no plugin).</p>
+
+    <p><strong>Modal ao fechar o checklist.</strong> Quando o projeto passa de incompleto para completo (todas as telas com o
+    checklist fechado), abre a modal com "Finalizar handoff" liberado, com o título "Checklist do projeto fechado"
+    (<code>_fichaSyncLiveSectionsAndCheck</code>). Só na transição — abrir o plugin com o projeto já completo não abre nada.</p>
+
     <h2>2026-10-07 — "Fechar checklist" leva ao que falta (v0.1.0-beta.104)</h2>
 
     <p>Pedido do usuário: o botão "Fechar checklist desta tela" da modal pós-handoff "deve levar para os itens que ainda

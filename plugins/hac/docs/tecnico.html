@@ -4752,7 +4752,12 @@ hr {
       <code>openA11yNoCardAlert(message, { noSpecSuffix: true })</code>.</li>
       <li><strong>Checklist da tela (beta.99).</strong> Campo aditivo <code>area.checklistClosedAt</code> (ISO) — fechado à mão pela
       modal pós-handoff (<code>_fichaCloseAreaChecklist</code>, confirma se houver pendências) e reaberto no Resumo
-      (<code>_fichaReopenAreaChecklist</code>); <code>_fichaAreaIsComplete</code> o respeita.</li>
+      (<code>_fichaReopenAreaChecklist</code>); <code>_fichaAreaIsComplete</code> o respeita. Desde a beta.104 o botão da modal
+      leva à primeira seção pendente (<code>_fichaFirstPendingSectionKey</code>) em vez de fechar com pendência.</li>
+      <li><strong>Seções "vivas" (beta.105).</strong> <code>_fichaAutoSyncLiveSections</code> grava em
+      <code>handoffFicha.sections[key].itemCount/specCount</code> a contagem atual (seção já inserida, conteúdo &gt; 0) — a réplica
+      de trabalho é a da Ficha. <code>_fichaSyncLiveSectionsAndCheck</code> roda em <code>_renderA11yWorkspaceTab</code> e abre a modal
+      pós-handoff na transição incompleto → completo (<code>window._fichaProjectWasComplete</code>).</li>
     </ul>
 
     <h2 id="s9">9. Contrato de mensagens (UI ↔ backend)</h2>

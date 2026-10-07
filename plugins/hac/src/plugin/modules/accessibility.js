@@ -2908,6 +2908,9 @@ window.switchA11yWorkspaceTab = switchA11yWorkspaceTab;
 function _renderA11yWorkspaceTab() {
   const container = document.getElementById('a11y-workspace-tab-content');
   if (!container) return;
+  // Resumo em dia com o canvas + modal de finalização quando o checklist do
+  // projeto fecha (2026-10-07) — ver _fichaSyncLiveSectionsAndCheck.
+  if (typeof _fichaSyncLiveSectionsAndCheck === 'function') { try { _fichaSyncLiveSectionsAndCheck(); } catch (e) { } }
   const areaId = window._a11yWorkspaceAreaId;
   const area = (a11yAreas || [])
     .map((a, i) => (a ? Object.assign({}, a, { originalIndex: i }) : null))

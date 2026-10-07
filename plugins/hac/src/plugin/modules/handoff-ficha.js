@@ -492,6 +492,50 @@ function _fichaCurrentSectionCount(area, sectionKey) {
 // disso o card já mostra "Ainda não inserida", sem alerta separado. Limitação
 // aceita e intencional: editar o CONTEÚDO de um item já contado (sem mudar a
 // quantidade) não dispara o alerta.
+// Seções já inseridas acompanham o canvas (2026-10-07, print do usuário:
+// "Tabulação — 7 agora, handoff tem 0. Clique Atualizar" depois de atualizar a
+// ordem). A réplica de trabalho É a réplica da Ficha desde que nasce
+// (_ensureLegendBesideClone) — selos, trilha e specs são desenhados direto no
+// handoff, então a contagem atual já é a do canvas. Só sincroniza seção já
+// inserida e com conteúdo; seção vazia continua pendente ("sem conteúdo").
+function _fichaAutoSyncLiveSections(area) {
+  if (!area || !area.handoffFicha || !area.handoffFicha.sections) return false;
+  let changed = false;
+  for (const key of _fichaSectionKeysForProject()) {
+    const state = area.handoffFicha.sections[key];
+    if (!state || !state.insertedAt) continue;
+    const countKey = key === 'leitor' ? 'specCount' : 'itemCount';
+    const current = _fichaCurrentSectionCount(area, key);
+    if (current > 0 && (state[countKey] || 0) !== current) {
+      state[countKey] = current;
+      state.syncedAt = new Date().toISOString();
+      changed = true;
+    }
+  }
+  return changed;
+}
+
+// Sincroniza todas as telas e, quando o checklist do PROJETO passa de aberto
+// para fechado, abre a modal com "Finalizar handoff" (2026-10-07, pedido do
+// usuário: "quando todos os itens do checklist estiverem finalizados, pode ser
+// trazida a modal para gerar o handoff consolidado"). Só na TRANSIÇÃO — abrir o
+// plugin com o projeto já completo não abre nada.
+function _fichaSyncLiveSectionsAndCheck() {
+  let changed = false;
+  for (const area of _fichaAreasInScope()) {
+    if (_fichaAutoSyncLiveSections(area)) changed = true;
+  }
+  if (changed && typeof saveToStorage === 'function') saveToStorage();
+  const completion = _fichaProjectCompletion();
+  const was = window._fichaProjectWasComplete;
+  window._fichaProjectWasComplete = completion.isComplete;
+  if (was === false && completion.isComplete) {
+    if (!window._fichaAfterHandoffAreaId) window._fichaAfterHandoffAreaId = window._a11yWorkspaceAreaId || null;
+    setTimeout(() => { try { _fichaOpenAfterHandoffModal(); } catch (e) { } }, 0);
+  }
+}
+window._fichaSyncLiveSectionsAndCheck = _fichaSyncLiveSectionsAndCheck;
+
 function _fichaSectionIsStale(area, sectionKey) {
   const state = _fichaSectionState(area, sectionKey);
   if (!state || !state.insertedAt) return false;
@@ -900,6 +944,9 @@ window._fichaGenerateCompleteHandoff = _fichaGenerateCompleteHandoff;
 // do resumo; antes disso o botão fica desabilitado com o motivo à vista.
 function _fichaOpenAfterHandoffModal() {
   const completion = _fichaProjectCompletion();
+  // Título conforme o momento: projeto todo pronto → convite a finalizar.
+  const titleEl = document.getElementById('a11y-after-handoff-title-text');
+  if (titleEl) titleEl.textContent = completion.isComplete ? 'Checklist do projeto fechado' : 'Handoff da tela gerado';
   const info = document.getElementById('a11y-after-handoff-info');
   if (info) {
     info.textContent = `${completion.complete} de ${completion.total} tela${completion.total === 1 ? '' : 's'} com o checklist fechado.`;
