@@ -796,22 +796,23 @@ async function _a11yScanArea(rootNode) {
 }
 
 // ── Paradas do Swipe pela ESTRUTURA de componentes (2026-10-07) ─────────────
-// Percorre a árvore de camadas e, dentro de cada contêiner, lê os filhos na
-// ordem de leitura (orderFn — linhas de cima para baixo, cada uma da esquerda
-// para a direita), de forma que o conteúdo de um bloco é lido junto antes do
-// próximo. Critério de parada = o que o leitor de tela foca (3ª revisão no
-// mesmo dia, print do usuário: Saldo, Carousel e seções de lista ainda
-// viravam UMA parada cada e textos/chips/botões internos ficavam de fora):
-//   • componente com até 1 texto visível (botão, chip, link, status bar,
-//     Icon Button reconhecido) → UMA parada;
-//   • componente com 2+ textos (Saldo, Button Row, Carousel, card, lista)
-//     → entra nele: cada texto, botão, chip e imagem vira parada;
-//   • Page Controller e outros reconhecidos sem texto → parada;
-//   • slot da DIREITA do DSC (".[base] Right Slot"/Trailing — seta de
-//     navegação, switch, checkbox) → parada, mesmo só com ícone; o slot/ícone
-//     da esquerda segue decorativo (pedido de 06/10: ícone = decorativo);
-//   • decorativo reconhecido e ícone bruto → ficam de fora;
-//   • texto solto e imagem → parada; frame/grupo → entra nele.
+// Regra da beta.93, restaurada na beta.100 a pedido do usuário (print de
+// referência): as beta.95/96 aprofundavam demais (cada texto/chip/slot de
+// dentro de card e item de lista virava parada).
+// O leitor de tela no celular para em cada COMPONENTE, não em cada texto de
+// dentro dele. Percorre a árvore de camadas e, dentro de cada contêiner, lê
+// os filhos na ordem de leitura (orderFn — linhas de cima para baixo, cada
+// uma da esquerda para a direita), de forma que o conteúdo de um card/lista
+// é lido junto antes do próximo bloco. Regras:
+//   • componente do DSC reconhecido → UMA parada (não entra nele), a não
+//     ser que agrupe 2+ componentes com texto (Button Row, Carousel, seção
+//     de lista — 2026-10-07, print do usuário: a trilha virava uma reta
+//     passando só pelos blocos de largura total); aí entra e cada
+//     botão/card/item vira parada. Decorativo → fica de fora;
+//   • componente não reconhecido → uma parada se não tiver outro componente
+//     com texto dentro (card, item de lista); senão é contêiner: entra nele;
+//   • texto solto e imagem → parada; ícone bruto → fica de fora (decorativo);
+//   • frame/grupo → entra nele.
 export async function _collectSwipeStops(root, orderFn) {
   const stops = [];
   const order = typeof orderFn === 'function' ? orderFn : (xs => xs);
@@ -841,14 +842,6 @@ export async function _collectSwipeStops(root, orderFn) {
     } catch (e) { return null; }
   }
 
-  async function componentName(n) {
-    try {
-      const mc = await n.getMainComponentAsync();
-      if (!mc) return n.name || '';
-      return (mc.parent && mc.parent.type === 'COMPONENT_SET') ? mc.parent.name : mc.name;
-    } catch (e) { return n.name || ''; }
-  }
-
   async function visit(n) {
     if (n.visible === false) return;
     if (n !== root) {
@@ -857,19 +850,23 @@ export async function _collectSwipeStops(root, orderFn) {
       // Componente do DSC reconhecido ANTES do teste de ícone: um Icon Button
       // é pequeno e só tem vetor, mas é interativo e precisa ser parada.
       const m = n.type === 'INSTANCE' ? await dscMatch(n) : null;
-      if (m && m.a11yCategory === 'decorativo') return;
-      if (!m && n.type === 'INSTANCE' && /right\s*slot|trailing/i.test(await componentName(n)) && n.findOne(c => c.visible !== false)) {
-        stops.push(n);
+      const nestedWithText = n.type === 'INSTANCE'
+        ? n.findAll(c => c.type === 'INSTANCE' && c.visible !== false && !clipped(c) && c.findOne(visibleText))
+        : [];
+      if (m) {
+        if (m.a11yCategory === 'decorativo') return;
+        if (nestedWithText.length < 2) { stops.push(n); return; }
+        // Contêiner reconhecido (Button Row, Carousel, lista): entra nele.
+      } else if (await _isRawIcon(n)) {
         return;
-      }
-      if (!m && await _isRawIcon(n)) return;
-      if (n.type === 'INSTANCE') {
-        const texts = n.findAll(c => visibleText(c) && !clipped(c));
-        if (texts.length <= 1) {
-          if (m || texts.length === 1 || hasImageFill(n)) stops.push(n);
+      } else if (n.type === 'INSTANCE') {
+        // Componente-folha (nenhum componente com texto dentro) = UMA parada,
+        // com todos os seus textos lidos juntos (2026-10-07: card e item de
+        // lista não se partem mais em "Label"/"Text" separados).
+        if (nestedWithText.length === 0) {
+          if (n.findOne(visibleText) || hasImageFill(n)) stops.push(n);
           return;
         }
-        // 2+ textos: contêiner — segue para os filhos.
       } else if (hasImageFill(n) && !('children' in n && n.children.length)) {
         stops.push(n);
         return;

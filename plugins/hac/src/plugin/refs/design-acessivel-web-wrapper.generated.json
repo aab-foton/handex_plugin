@@ -2,7 +2,7 @@
   "_meta": {
     "description": "GERADO AUTOMATICAMENTE por build-a11y-constants.cjs — não editar à mão. Component set \"[hac web] Box specs leitor de tela\" (fileKey HhriLSpKnCB2dHhyiU16iB). componentKeyByA11yType traz a key IMPORTÁVEL de cada VARIANTE filha (elemento/titulo/decorativo/estrutura), lida de variantKeys/wrapperVariants do scan — nenhuma key escrita à mão. A web não tem \"Informações Adicionais\".",
     "source": "refs/design-acessivel-mobile-properties.json (variantKeys/wrapperVariants, gravados por fetch-component-properties.cjs) + refs/web-component-aliases.json",
-    "generatedAt": "2026-10-07T12:43:48.639Z"
+    "generatedAt": "2026-10-07T12:46:37.397Z"
   },
   "wrapper": {
     "setNodeId": "10330:4204",

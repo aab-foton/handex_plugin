@@ -3398,6 +3398,14 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-07 — Swipe automático volta à regra da beta.93 (v0.1.0-beta.100)</h2>
+
+    <p>A pedido do usuário, com print de referência: as beta.95/96 aprofundavam demais — cada texto, chip e slot de dentro
+    de card e item de lista virava parada. Volta a regra da beta.93 em <code>_collectSwipeStops</code>: componente sem outro
+    componente com texto dentro é UMA parada (Saldo, card do carrossel, item de lista); o plugin só entra nos que agrupam
+    componentes (Button Row, Carousel, seção de lista). Ficam a nomeação/leitura pelo elemento (beta.94), o filtro de
+    plataforma (beta.97) e o resto das versões seguintes.</p>
+
     <h2>2026-10-07 — Fechar checklist da tela; instruções sem reserva desenhada (v0.1.0-beta.99)</h2>
 
     <p><strong>Fechar checklist desta tela.</strong> A modal "Handoff da tela gerado" ganhou o botão "Fechar checklist desta tela".
