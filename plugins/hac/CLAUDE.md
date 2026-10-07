@@ -78,6 +78,7 @@ tokens que uma leitura de 5 minutos teria evitado.
 | `build-a11y-constants.cjs` | Deriva `A11Y_COMPONENT_PROPERTIES_GENERATED`/`A11Y_MOBILE_LINK_COMPONENT_OPTIONS_GENERATED` a partir dos JSONs de properties |
 | `build-ficha-instruction-constants.cjs` | Deriva `FICHA_INSTRUCTION_CONTENT_UI` a partir de `ficha-instruction-content.json` |
 | `fetch-instruction-frames.cjs` | Captura via REST API (`/v1/images/:file_key`) a imagem renderizada de frames de instrução didática da lib "Design Acessível" |
+| `fetch-a11y-default-texts.cjs` | (2026-10-07) Textos padrão dos campos de cada componente do card "Elementos e imagens" (Observações, Nome Acessível, Texto Alternativo…), por plataforma e opção de Leitor de Tela → `design-acessivel-default-texts.json` → `A11Y_{MOBILE,WEB}_DEFAULT_TEXTS_GENERATED`. Parte dos ids do scan de `fetch-component-properties.cjs` (rodar este antes, se a lib mudou) |
 
 Antes de propor um script novo: confirmar que nenhum destes já resolve o
 problema (mesmo que precise só ser reexecutado com dado atualizado, ou

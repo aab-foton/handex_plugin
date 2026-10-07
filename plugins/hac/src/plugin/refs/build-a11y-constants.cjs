@@ -722,7 +722,31 @@ const header = `// ============================================================
 
 `;
 
+// Textos padrão dos campos editáveis de cada componente, por opção de Leitor
+// de Tela (2026-10-07) — fonte: design-acessivel-default-texts.json
+// (fetch-a11y-default-texts.cjs). Só os campos que o designer edita; vazio se
+// o arquivo ainda não foi gerado (formulário segue sem prefill).
+const DEFAULT_TEXT_FIELDS = ['Observações', 'Nome Acessível', 'Texto Alternativo'];
+function loadDefaultTexts(platform) {
+  const p = path.join(REFS_DIR, 'design-acessivel-default-texts.json');
+  if (!fs.existsSync(p)) return {};
+  const src = (JSON.parse(fs.readFileSync(p, 'utf8'))[platform]) || {};
+  const out = {};
+  for (const [comp, byLeitor] of Object.entries(src)) {
+    for (const [leitor, fields] of Object.entries(byLeitor)) {
+      const keep = {};
+      for (const f of DEFAULT_TEXT_FIELDS) if (typeof fields[f] === 'string') keep[f] = fields[f];
+      if (Object.keys(keep).length) ((out[comp] = out[comp] || {})[leitor] = keep);
+    }
+  }
+  return out;
+}
+const mobileDefaultTexts = loadDefaultTexts('mobile');
+const webDefaultTexts = loadDefaultTexts('web');
+
 const body =
+  `const A11Y_MOBILE_DEFAULT_TEXTS_GENERATED = ${JSON.stringify(mobileDefaultTexts, null, 2)};\n\n` +
+  `const A11Y_WEB_DEFAULT_TEXTS_GENERATED = ${JSON.stringify(webDefaultTexts, null, 2)};\n\n` +
   `const A11Y_COMPONENT_PROPERTIES_GENERATED = ${JSON.stringify(componentProperties)};\n\n` +
   `const A11Y_MOBILE_LINK_COMPONENT_OPTIONS_GENERATED = ${JSON.stringify(mobileLinkOptions, null, 2)};\n\n` +
   `const A11Y_MOBILE_COMPONENT_LINK_NODE_IDS_GENERATED = ${JSON.stringify(mobileComponentLinkNodeIds, null, 2)};\n\n` +

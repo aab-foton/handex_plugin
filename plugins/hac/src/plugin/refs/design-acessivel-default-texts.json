@@ -1,0 +1,2054 @@
+{
+  "_meta": {
+    "description": "GERADO por fetch-a11y-default-texts.cjs — não editar à mão. Textos padrão por plataforma > componente > opção de Leitor de Tela (\"\" quando o componente não tem opções) > campo.",
+    "fileKey": "HhriLSpKnCB2dHhyiU16iB",
+    "generatedAt": "2026-10-07T14:53:45.382Z"
+  },
+  "mobile": {
+    "Accordion": {
+      "Baseline": {
+        "Componente": "Accordion",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Disabled": {
+        "Componente": "Accordion",
+        "Leitor de Tela": "Disabled",
+        "Observações": "O componente é removido da ordem de tabulação em estado Disabled, porém ao navegar pela aplicação via teclado no modo de leitura com setas, atalhos ou pelo modo de formulários, o leitor de tela identifica o componente de acordo com sua sequência lógica anunciando o seu conteúdo, mais o estado semântico."
+      }
+    },
+    "Account Select": {
+      "Baseline": {
+        "Componente": "Account Select",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Disabled": {
+        "Componente": "Account Select",
+        "Leitor de Tela": "Disabled",
+        "Observações": "O componente é removido da ordem de tabulação em estado Disabled, porém ao navegar pela aplicação via teclado no modo de leitura com setas, atalhos ou pelo modo de formulários, o leitor de tela identifica o componente de acordo com sua sequência lógica anunciando o seu conteúdo, mais o estado semântico."
+      },
+      "Without Expansion": {
+        "Componente": "Account Select",
+        "Leitor de Tela": "Without Expansion",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Avatar": {
+      "Interactive": {
+        "Componente": "Avatar",
+        "Leitor de Tela": "Interactive",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível].",
+        "Observações": "Insira seu texto da observação."
+      },
+      "With Badge Notification": {
+        "Componente": "Avatar",
+        "Leitor de Tela": "With Badge Notification",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível].",
+        "Observações": "Insira seu texto da observação."
+      },
+      "With Expansion": {
+        "Componente": "Avatar",
+        "Leitor de Tela": "With Expansion",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível].",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Avatar Hero": {
+      "With Base and Edit": {
+        "Componente": "Avatar Hero",
+        "Leitor de Tela": "With Badge and Edit",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível].",
+        "Observações": "Seguir orientações de nome acessível disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "With Feedbacks": {
+        "Componente": "Avatar Hero",
+        "Leitor de Tela": "With Feedbacks",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível].",
+        "Observações": "Seguir orientações de nome acessível disponíveis no handoff de acessibilidade do DSC para o componente."
+      }
+    },
+    "Alert Dialog": {
+      "": {
+        "Componente": "Alert Dialog",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Badge": {
+      "": {
+        "Componente": "Badge",
+        "Leitor de Tela": "Baseline",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível].",
+        "Observações": "Seguir orientações de nome acessível disponíveis no handoff de acessibilidade do DSC para o componente."
+      }
+    },
+    "Badge Notification": {
+      "Standard 9 to 999": {
+        "Componente": "Badge Notification",
+        "Leitor de Tela": "Standard 9 to 999",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível].",
+        "Observações": "Seguir orientações de nome acessível disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Standard 999+": {
+        "Componente": "Badge Notification",
+        "Leitor de Tela": "Standard 999+",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível].",
+        "Observações": "Seguir orientações de nome acessível disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Small": {
+        "Componente": "Badge Notification",
+        "Leitor de Tela": "Small",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível].",
+        "Observações": "Seguir orientações de nome acessível disponíveis no handoff de acessibilidade do DSC para o componente."
+      }
+    },
+    "Badge Text": {
+      "Baseline": {
+        "Componente": "Badge Text",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Trigger Attached": {
+        "Componente": "Badge Text",
+        "Leitor de Tela": "Trigger Attached",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Button": {
+      "Baseline": {
+        "Componente": "Button",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Disabled": {
+        "Componente": "Button",
+        "Leitor de Tela": "Disabled",
+        "Observações": "O componente é removido da ordem de tabulação em estado Disabled, porém ao navegar pela aplicação via teclado no modo de leitura com setas, atalhos ou pelo modo de formulários, o leitor de tela identifica o componente de acordo com sua sequência lógica anunciando o seu conteúdo, mais o estado semântico."
+      },
+      "Loading": {
+        "Componente": "Button",
+        "Leitor de Tela": "Loading",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [Carregando [ação]].",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Label in Name": {
+        "Componente": "Button",
+        "Leitor de Tela": "Label in Name",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "Seguir orientações de nome acessível disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "With Expansion": {
+        "Componente": "Button",
+        "Leitor de Tela": "With Expansion",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Card": {
+      "": {
+        "Componente": "Card",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Card Account": {
+      "": {
+        "Componente": "Card Account",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Card Alert": {
+      "": {
+        "Componente": "Card Alert",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Card Carousel Vertical": {
+      "": {
+        "Componente": "Card Carousel Vertical",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Card Feed": {
+      "Baseline": {
+        "Componente": "Card Feed",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Seguir orientações de nome acessível para os Button, disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Loading": {
+        "Componente": "Card Feed",
+        "Leitor de Tela": "Loading",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível].",
+        "Observações": "Seguir orientações de nome acessível, disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Error": {
+        "Componente": "Card Feed",
+        "Leitor de Tela": "Error",
+        "Observações": "Seguir orientações de nome acessível para os Button, disponíveis no handoff de acessibilidade do DSC para o componente."
+      }
+    },
+    "Card Notification": {
+      "": {
+        "Componente": "Card Notification",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Card Product Offer": {
+      "Baseline": {
+        "Componente": "Card Product Offer",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Sequencial": {
+        "Componente": "Card Product Offer",
+        "Leitor de Tela": "Sequencial",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível].",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Loading": {
+        "Componente": "Card Product Offer",
+        "Leitor de Tela": "Loading",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [Carregando card [nome do card]].",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Error": {
+        "Componente": "Card Product Offer",
+        "Leitor de Tela": "Error",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Card Wallet": {
+      "Card Info": {
+        "Componente": "Card Wallet",
+        "Leitor de Tela": "Card Info",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "Seguir orientações de nome acessível disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Credit Card Statement": {
+        "Componente": "Card Wallet",
+        "Leitor de Tela": "Credit Card Statement",
+        "Observações": "Seguir orientações de nome acessível disponíveis no handoff de acessibilidade do DSC para o componente."
+      }
+    },
+    "Card Widget": {
+      "Baseline": {
+        "Componente": "Card Widget",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Dragging": {
+        "Componente": "Card Widget",
+        "Leitor de Tela": "Dragging",
+        "Observações": "Seguir orientações de nome acessível disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Loading": {
+        "Componente": "Card Widget",
+        "Leitor de Tela": "Loading",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível].",
+        "Observações": "Seguir orientações de nome acessível disponíveis no handoff de acessibilidade do DSC para o componente."
+      }
+    },
+    "Checkbox": {
+      "Checkbox With Label": {
+        "Componente": "Checkbox",
+        "Leitor de Tela": "Checkbox With Label",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Only Checkbox": {
+        "Componente": "Checkbox",
+        "Leitor de Tela": "Only Checkbox",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Indeterminate": {
+        "Componente": "Checkbox",
+        "Leitor de Tela": "Indeterminate",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Disabled": {
+        "Componente": "Checkbox",
+        "Leitor de Tela": "Disabled",
+        "Observações": "O campo é removido da ordem de tabulação em estado Disabled, porém ao navegar pela aplicação via teclado no modo de leitura com setas, atalhos ou pelo modo de formulários, o leitor de tela identifica o componente de acordo com sua sequência lógica anunciando o seu conteúdo, mais o estado semântico."
+      }
+    },
+    "Chips": {
+      "Baseline": {
+        "Componente": "Chips",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Select Only": {
+        "Componente": "Chips",
+        "Leitor de Tela": "Select Only",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Multiselect": {
+        "Componente": "Chips",
+        "Leitor de Tela": "Multiselect",
+        "Observações": "Insira seu texto da observação."
+      },
+      "With Expansion": {
+        "Componente": "Chips",
+        "Leitor de Tela": "With Expansion",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Removable": {
+        "Componente": "Chips",
+        "Leitor de Tela": "Removable",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível].",
+        "Observações": "Seguir orientações de nome acessível para o Button, disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "With Badge Notification": {
+        "Componente": "Chips",
+        "Leitor de Tela": "With Badge Notification",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível].",
+        "Observações": "Seguir orientações de nome acessível, disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Disabled": {
+        "Componente": "Chips",
+        "Leitor de Tela": "Disabled",
+        "Observações": "O componente é removido da ordem de tabulação em estado Disabled, porém ao navegar pela aplicação via teclado no modo de leitura com setas, atalhos ou pelo modo de formulários, o leitor de tela identifica o componente de acordo com sua sequência lógica anunciando o seu conteúdo, mais o estado semântico."
+      }
+    },
+    "Comparison Table": {
+      "": {
+        "Componente": "Comparison Table",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Credit Card Button": {
+      "With Draggable": {
+        "Componente": "Credit Card Button",
+        "Leitor de Tela": "With Draggable",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível].",
+        "Observações": "Seguir orientações de nome acessível, disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Baseline": {
+        "Componente": "Credit Card Button",
+        "Leitor de Tela": "Baseline",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível].",
+        "Observações": "Seguir orientações de nome acessível, disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Without Draggable": {
+        "Componente": "Credit Card Button",
+        "Leitor de Tela": "Without Active",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível].",
+        "Observações": "Seguir orientações de nome acessível, disponíveis no handoff de acessibilidade do DSC para o componente."
+      }
+    },
+    "Date Picker": {
+      "Baseline": {
+        "Componente": "Date Picker",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Seguir orientações de nome acessível para os Buttons, disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Range Selected": {
+        "Componente": "Date Picker",
+        "Leitor de Tela": "Range Selected",
+        "Observações": "Seguir orientações de nome acessível para os Buttons, disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Month": {
+        "Componente": "Date Picker",
+        "Leitor de Tela": "Month",
+        "Observações": "Seguir orientações de nome acessível para os Buttons, disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Year": {
+        "Componente": "Date Picker",
+        "Leitor de Tela": "Year",
+        "Observações": "Seguir orientações de nome acessível para os Buttons, disponíveis no handoff de acessibilidade do DSC para o componente."
+      }
+    },
+    "Digital Wallet Button": {
+      "": {
+        "Componente": "Digital Wallet Button",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Icon Button": {
+      "Baseline": {
+        "Componente": "Icon Button",
+        "Leitor de Tela": "Baseline",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível].",
+        "Observações": "Insira seu texto da observação."
+      },
+      "With Badge": {
+        "Componente": "Icon Button",
+        "Leitor de Tela": "With Badge",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível].",
+        "Observações": "Ler o nome acessível do componente seguido do nome acessível da Badge. Ex.: “Nova notificação”, “Duas novas mensagens”"
+      },
+      "Disabled": {
+        "Componente": "Icon Button",
+        "Leitor de Tela": "Disabled",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível].",
+        "Observações": "O componente é removido da ordem de tabulação em estado Disabled, porém ao navegar pela aplicação via teclado no modo de leitura com setas, atalhos ou pelo modo de formulários, o leitor de tela identifica o componente de acordo com sua sequência lógica anunciando o seu conteúdo, mais o estado semântico."
+      },
+      "With Expansion": {
+        "Componente": "Icon Button",
+        "Leitor de Tela": "With Expansion",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível].",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Icon Button Text": {
+      "Baseline": {
+        "Componente": "Icon Button Text",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Loading": {
+        "Componente": "Icon Button Text",
+        "Leitor de Tela": "Loading",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Disabled": {
+        "Componente": "Icon Button Text",
+        "Leitor de Tela": "Disabled",
+        "Observações": "O componente é removido da ordem de tabulação em estado Disabled, porém ao navegar pela aplicação via teclado no modo de leitura com setas, atalhos ou pelo modo de formulários, o leitor de tela identifica o componente de acordo com sua sequência lógica anunciando o seu conteúdo, mais o estado semântico."
+      }
+    },
+    "Input Chat": {
+      "Baseline": {
+        "Componente": "Input Chat",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Seguir orientações de nome acessível para o Button disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Filled": {
+        "Componente": "Input Chat",
+        "Leitor de Tela": "Filled",
+        "Observações": "Seguir orientações de nome acessível para o Button disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Audio": {
+        "Componente": "Input Chat",
+        "Leitor de Tela": "Audio",
+        "Observações": "Seguir orientações de nome acessível para os Buttons disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Attachment Document": {
+        "Componente": "Input Chat",
+        "Leitor de Tela": "Attachment Document",
+        "Observações": "Seguir orientações de nome acessível para o Button disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Attachment Button": {
+        "Componente": "Input Chat",
+        "Leitor de Tela": "Attachment Button",
+        "Observações": "Seguir orientações de nome acessível para o Button disponíveis no handoff de acessibilidade do DSC para o componente."
+      }
+    },
+    "Input / Text Field Single": {
+      "Baseline": {
+        "Componente": "Input / Text Field - Single",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Disabled": {
+        "Componente": "Input / Text Field - Single",
+        "Leitor de Tela": "Disabled",
+        "Observações": "O componente é removido da ordem de tabulação em estado Disabled, porém ao navegar pela aplicação via teclado no modo de leitura com setas, atalhos ou pelo modo de formulários, o leitor de tela identifica o componente de acordo com sua sequência lógica anunciando o seu conteúdo, mais o estado semântico."
+      },
+      "Error": {
+        "Componente": "Input / Text Field - Single",
+        "Leitor de Tela": "Error",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Input / Text Field Form": {
+      "Baseline": {
+        "Componente": "Input / Text Field - Form",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Error": {
+        "Componente": "Input / Text Field - Form",
+        "Leitor de Tela": "Error",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Read Only": {
+        "Componente": "Input / Text Field - Form",
+        "Leitor de Tela": "Read Only",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Type Select": {
+        "Componente": "Input / Text Field - Form",
+        "Leitor de Tela": "Type Select",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Type Number": {
+        "Componente": "Input / Text Field - Form",
+        "Leitor de Tela": "Type Number",
+        "Observações": "Insira seu texto da observação."
+      },
+      "With Expansion": {
+        "Componente": "Input / Text Field - Form",
+        "Leitor de Tela": "With Expansion",
+        "Observações": "Seguir orientações de nome acessível disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Type Search": {
+        "Componente": "Input / Text Field - Form",
+        "Leitor de Tela": "Type Search",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Disabled": {
+        "Componente": "Input / Text Field - Form",
+        "Leitor de Tela": "Disabled",
+        "Observações": "O componente é removido da ordem de tabulação em estado Disabled, porém ao navegar pela aplicação via teclado no modo de leitura com setas, atalhos ou pelo modo de formulários, o leitor de tela identifica o componente de acordo com sua sequência lógica anunciando o seu conteúdo, mais o estado semântico."
+      },
+      "Type Password": {
+        "Componente": "Input / Text Field - Form",
+        "Leitor de Tela": "Type Password",
+        "Observações": "Seguir orientações de nome acessível disponíveis no handoff de acessibilidade do DSC para o componente."
+      }
+    },
+    "Input Money": {
+      "Baseline": {
+        "Componente": "Input Money",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      },
+      "With Feedback": {
+        "Componente": "Input Money",
+        "Leitor de Tela": "With Feedback",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Read Only": {
+        "Componente": "Input Money",
+        "Leitor de Tela": "Read Only",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Disabled": {
+        "Componente": "Input Money",
+        "Leitor de Tela": "Disabled",
+        "Observações": "O componente é removido da ordem de tabulação em estado Disabled, porém ao navegar pela aplicação via teclado no modo de leitura com setas, atalhos ou pelo modo de formulários, o leitor de tela identifica o componente de acordo com sua sequência lógica anunciando o seu conteúdo, mais o estado semântico."
+      }
+    },
+    "Input Pin": {
+      "Numeric": {
+        "Componente": "Input Pin",
+        "Leitor de Tela": "Numeric",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Token": {
+        "Componente": "Input Pin",
+        "Leitor de Tela": "Token",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Alphanumeric": {
+        "Componente": "Input Pin",
+        "Leitor de Tela": "Alphanumeric",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Error": {
+        "Componente": "Input Pin",
+        "Leitor de Tela": "Error",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Input Slider": {
+      "Baseline": {
+        "Componente": "Input Slider",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      },
+      "With Field": {
+        "Componente": "Input Slider",
+        "Leitor de Tela": "With Field",
+        "Observações": "Seguir orientações de nome acessível disponíveis no handoff de acessibilidade do DSC para o componente."
+      }
+    },
+    "Input Stepper": {
+      "Field": {
+        "Componente": "Input Stepper",
+        "Leitor de Tela": "Field",
+        "Observações": "Seguir orientações de nome acessível para os Icon Button, disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Feedback": {
+        "Componente": "Input Stepper",
+        "Leitor de Tela": "Feedback",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "List Accordion": {
+      "Baseline": {
+        "Componente": "List Accordion",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Loading": {
+        "Componente": "List Accordion",
+        "Leitor de Tela": "Loading",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível].",
+        "Observações": "Seguir orientações de nome acessível disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Disabled": {
+        "Componente": "List Accordion",
+        "Leitor de Tela": "Disabled",
+        "Observações": "O componente é removido da ordem de tabulação em estado Disabled, porém ao navegar pela aplicação via teclado no modo de leitura com setas, atalhos ou pelo modo de formulários, o leitor de tela identifica o componente de acordo com sua sequência lógica anunciando o seu conteúdo, mais o estado semântico."
+      }
+    },
+    "List Item": {
+      "ListBox": {
+        "Componente": "List Item",
+        "Leitor de Tela": "ListBox",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Icon / Chevron / Avatar / Image": {
+        "Componente": "List Item",
+        "Leitor de Tela": "Icon, Chevron, Avatar e Image",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Selectors": {
+        "Componente": "List Item",
+        "Leitor de Tela": "Selectors",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Input Stepper": {
+        "Componente": "List Item",
+        "Leitor de Tela": "Input Stepper",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Swipe Left / Right": {
+        "Componente": "List Item",
+        "Leitor de Tela": "Swipe Left / Right",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "Seguir orientações de nome acessível disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Disabled": {
+        "Componente": "List Item",
+        "Leitor de Tela": "Disabled",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Selectable / Selected": {
+        "Componente": "List Item",
+        "Leitor de Tela": "Selectable / Selected",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Swipe Left / Right End": {
+        "Componente": "List Item",
+        "Leitor de Tela": "Swipe Left / Right End",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "Seguir orientações de nome acessível disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Left Slot - Chart Legend": {
+        "Componente": "List Item",
+        "Leitor de Tela": "Left Slot - Chart Legend",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "Seguir orientações de nome acessível disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Switch": {
+        "Componente": "List Item",
+        "Leitor de Tela": "Switch",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Draggable": {
+        "Componente": "List Item",
+        "Leitor de Tela": "Draggable",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [Clique e arraste para reordenar].",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Action": {
+        "Componente": "List Item",
+        "Leitor de Tela": "Action",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "List Item Funds": {
+      "With Status": {
+        "Componente": "List Item Funds",
+        "Leitor de Tela": "With Status",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "Seguir orientações de nome acessível disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "With Avatar": {
+        "Componente": "List Item Funds",
+        "Leitor de Tela": "With Avatar",
+        "Observações": "Insira seu texto da observação."
+      },
+      "With Micro Chart": {
+        "Componente": "List Item Funds",
+        "Leitor de Tela": "With Micro Chart",
+        "Observações": "Insira seu texto da observação."
+      },
+      "With Image": {
+        "Componente": "List Item Funds",
+        "Leitor de Tela": "With Image",
+        "Observações": "Seguir orientações de nome acessível disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Disabled": {
+        "Componente": "List Item Funds",
+        "Leitor de Tela": "Disabled",
+        "Observações": "Seguir orientações de nome acessível disponíveis no handoff de acessibilidade do DSC para o componente."
+      }
+    },
+    "List Item Transaction": {
+      "": {
+        "Componente": "List Item Transaction",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Menu": {
+      "": {
+        "Componente": "Menu",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Page Controler": {
+      "Linked": {
+        "Componente": "Page Controller",
+        "Leitor de Tela": "Linked",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Interactive": {
+        "Componente": "Page Controller",
+        "Leitor de Tela": "Interactive",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Progress": {
+      "Baseline": {
+        "Componente": "Progress",
+        "Leitor de Tela": "Baseline",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível].",
+        "Observações": "Seguir orientações de nome acessível disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "With Labels": {
+        "Componente": "Progress",
+        "Leitor de Tela": "With Labels",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Radio": {
+      "Baseline": {
+        "Componente": "Radio",
+        "Leitor de Tela": "Only Radio",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível].",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Radio Group": {
+        "Componente": "Radio",
+        "Leitor de Tela": "Radio Group",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Radio With Label": {
+        "Componente": "Radio",
+        "Leitor de Tela": "Radio With Label",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Disabled": {
+        "Componente": "Radio",
+        "Leitor de Tela": "Disabled",
+        "Observações": "O componente é removido da ordem de tabulação em estado Disabled, porém ao navegar pela aplicação via teclado no modo de leitura com setas, atalhos ou pelo modo de formulários, o leitor de tela identifica o componente de acordo com sua sequência lógica anunciando o seu conteúdo, mais o estado semântico."
+      }
+    },
+    "Search Bar": {
+      "Baseline": {
+        "Componente": "Search Bar",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      },
+      "With Button": {
+        "Componente": "Search Bar",
+        "Leitor de Tela": "With Button",
+        "Observações": "Seguir orientações de nome acessível para o Button disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Disabled": {
+        "Componente": "Search Bar",
+        "Leitor de Tela": "Disabled",
+        "Observações": "O componente é removido da ordem de tabulação em estado Disabled, porém ao navegar pela aplicação via teclado no modo de leitura com setas, atalhos ou pelo modo de formulários, o leitor de tela identifica o componente de acordo com sua sequência lógica anunciando o seu conteúdo, mais o estado semântico."
+      }
+    },
+    "Selectable Media": {
+      "Group": {
+        "Componente": "Selectable Media",
+        "Leitor de Tela": "Group",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível].",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Baseline": {
+        "Componente": "Selectable Media",
+        "Leitor de Tela": "Baseline",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível].",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Disabled": {
+        "Componente": "Selectable Media",
+        "Leitor de Tela": "Disabled",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "O componente é removido da ordem de tabulação em estado Disabled, porém ao navegar pela aplicação via teclado no modo de leitura com setas, atalhos ou pelo modo de formulários, o leitor de tela identifica o componente de acordo com sua sequência lógica anunciando o seu conteúdo, mais o estado semântico."
+      },
+      "Loading": {
+        "Componente": "Selectable Media",
+        "Leitor de Tela": "Loading",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [Carregando imagem].",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Not Loading": {
+        "Componente": "Selectable Media",
+        "Leitor de Tela": "Not Loading",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [Imagem não carregada].",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Segmented Button": {
+      "Radio": {
+        "Componente": "Segmented Button",
+        "Leitor de Tela": "Radio",
+        "Observações": "Insira seu texto da observação."
+      },
+      "RadioGroup": {
+        "Componente": "Segmented Button",
+        "Leitor de Tela": "Radio Group",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Disabled": {
+        "Componente": "Segmented Button",
+        "Leitor de Tela": "Disabled",
+        "Observações": "O componente é removido da ordem de tabulação em estado Disabled, porém ao navegar pela aplicação via teclado no modo de leitura com setas, atalhos ou pelo modo de formulários, o leitor de tela identifica o componente de acordo com sua sequência lógica anunciando o seu conteúdo, mais o estado semântico."
+      }
+    },
+    "Sheet": {
+      "": {
+        "Componente": "Sheet",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Seguir orientações de nome acessível dos Buttons, disponíveis no handoff de acessibilidade do DSC para o componente."
+      }
+    },
+    "Skeleton Load / Shimmer": {
+      "": {
+        "Componente": "Skeleton Load / Shimmer",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Seguir orientações de nome acessível disponíveis no handoff de acessibilidade do DSC para o componente."
+      }
+    },
+    "Slider": {
+      "Baseline": {
+        "Componente": "Slider",
+        "Leitor de Tela": "Baseline",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "Insira seu texto da observação."
+      },
+      "With Steps": {
+        "Componente": "Slider",
+        "Leitor de Tela": "With Steps",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Spinner": {
+      "": {
+        "Componente": "Spinner",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Swap Preview": {
+      "Baseline": {
+        "Componente": "Swap Preview",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Loading": {
+        "Componente": "Swap Preview",
+        "Leitor de Tela": "Loading",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível].",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Switch": {
+      "Only Bullet": {
+        "Componente": "Switch",
+        "Leitor de Tela": "Only Bullet",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível].",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Disabled": {
+        "Componente": "Switch",
+        "Leitor de Tela": "Disabled",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Bullet With Label": {
+        "Componente": "Switch",
+        "Leitor de Tela": "Bullet With Label",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Tabs": {
+      "Tabgroup": {
+        "Componente": "Tabs",
+        "Leitor de Tela": "Tabgroup",
+        "Observações": "Insira seu texto da observação."
+      },
+      "With Badge": {
+        "Componente": "Tabs",
+        "Leitor de Tela": "With Badge",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível que transmita a informação do Badge].",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Tab": {
+        "Componente": "Tabs",
+        "Leitor de Tela": "Tab",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Disabled": {
+        "Componente": "Tabs",
+        "Leitor de Tela": "Disabled",
+        "Observações": "O componente é removido da ordem de tabulação em estado Disabled, porém ao navegar pela aplicação via teclado no modo de leitura com setas, atalhos ou pelo modo de formulários, o leitor de tela identifica o componente de acordo com sua sequência lógica anunciando o seu conteúdo, mais o estado semântico."
+      }
+    },
+    "Tile Button": {
+      "": {
+        "Componente": "Tile Button",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Timeline": {
+      "Baseline": {
+        "Componente": "Timeline",
+        "Leitor de Tela": "Baseline",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível].",
+        "Observações": "Seguir orientações de nome acessível dos Buttons, disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "With Status": {
+        "Componente": "Timeline",
+        "Leitor de Tela": "With Status",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível].",
+        "Observações": "Seguir orientações de nome acessível dos Buttons, disponíveis no handoff de acessibilidade do DSC para o componente."
+      }
+    },
+    "Popover": {
+      "": {
+        "Componente": "Popover",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Tipkit Inline": {
+      "": {
+        "Componente": "Tipkit Inline",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Tipkit Popover": {
+      "": {
+        "Componente": "Tipkit Popover",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Snackbar": {
+      "": {
+        "Componente": "Toast / Snackbar",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Toolbar": {
+      "": {
+        "Componente": "Toolbar",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Tooltip": {
+      "": {
+        "Componente": "Tooltip",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Top App Bar": {
+      "Baseline": {
+        "Componente": "Top App Bar",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Seguir orientações de nome acessível do Button, disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Select": {
+        "Componente": "Top App Bar",
+        "Leitor de Tela": "Select",
+        "Observações": "Seguir orientações de nome acessível do Button, disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Home": {
+        "Componente": "Top App Bar",
+        "Leitor de Tela": "Home",
+        "Observações": "Seguir orientações de nome acessível do Button, disponíveis no handoff de acessibilidade do DSC para o componente."
+      }
+    },
+    "Value Section": {
+      "Baseline": {
+        "Componente": "Value Section",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      },
+      "With Button": {
+        "Componente": "Value Section",
+        "Leitor de Tela": "With Button",
+        "Observações": "Insira seu texto da observação."
+      },
+      "With Navigation": {
+        "Componente": "Value Section",
+        "Leitor de Tela": "With Navigation",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Error": {
+        "Componente": "Value Section",
+        "Leitor de Tela": "Error",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Wheel Picker": {
+      "Single Column": {
+        "Componente": "Wheel Picker",
+        "Leitor de Tela": "Single Column",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "Seguir orientações de nome acessível disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Double Column": {
+        "Componente": "Wheel Picker",
+        "Leitor de Tela": "Double Column",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "Seguir orientações de nome acessível disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Triple Column": {
+        "Componente": "Wheel Picker",
+        "Leitor de Tela": "Triple Column",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "Seguir orientações de nome acessível disponíveis no handoff de acessibilidade do DSC para o componente."
+      }
+    },
+    "Product Card": {
+      "Baseline": {
+        "Componente": "Product Card",
+        "Leitor de Tela": "Baseline",
+        "Nome Acessível": "Inserir o seguinte accessibilityLabel no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "Seguir orientações de nome acessível disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Loading": {
+        "Componente": "Product Card",
+        "Leitor de Tela": "Loading",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Imagem": {
+      "": {
+        "Texto Alternativo": "Inserir o seguinte texto alternativo para a mídia:  [insira aqui o texto alternativo].",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Link": {
+      "Baseline": {
+        "Descrição": "Identificar como link e ler o seu rótulo visível em tela.",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "Insira seu texto da observação. ",
+        "Nota de código": "Utilizar accessibilityRole=\"link\" para o leitor de tela anunciar a função do elemento.\nQuando o conteúdo visual não for suficiente, definir a propriedade accessibilityLabel para contextualizar melhor o usuário de leitor de tela."
+      },
+      "Nova Janela": {
+        "Descrição": "Identificar como link e anunciar que o link abre uma nova janela e direciona o foco para ela.",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "Insira seu texto da observação. ",
+        "Nota de código": "Utilizar accessibilityRole=\"link\" e a API Linking.openURL(url) para abrir o link no navegador nativo do dispositivo. \nUse accessibilityLabel para informar com o nome acessível que o link abrirá externamente. "
+      },
+      "Enviar E-mail": {
+        "Descrição": "Agrupar e identificar como link, deve ler todo o conteúdo visível em tela seguido da sua função.",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "Insira seu texto da observação. ",
+        "Nota de código": "Utilizar accessibilityRole=\"link\" e a API Linking.openURL('mailto:exemplo@dominio.com') para abrir no app de e-mail padrão do dispositivo.\nUse accessibilityLabel para contextualizar melhor o usuário de leitor de tela sobre essa ação. "
+      }
+    }
+  },
+  "web": {
+    "Account Select": {
+      "Baseline": {
+        "Componente": "Account Select",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Without Expansion": {
+        "Componente": "Account Select",
+        "Leitor de Tela": "Without Expansion",
+        "Observações": "Insira seu texto da observação."
+      },
+      "With Badge": {
+        "Componente": "Account Select",
+        "Leitor de Tela": "With Badge",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Collapsed Baseline": {
+        "Componente": "Account Select",
+        "Leitor de Tela": "Collapsed Baseline",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Collapsed Without Expansion": {
+        "Componente": "Account Select",
+        "Leitor de Tela": "Collapsed Without Expansion",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Collapsed With Badge": {
+        "Componente": "Account Select",
+        "Leitor de Tela": "Collapsed With Badge",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Avatar": {
+      "Interactive": {
+        "Componente": "Avatar",
+        "Leitor de Tela": "Interactive",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [insira aqui o nome acessível].",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Interactive With Expansion": {
+        "Componente": "Avatar",
+        "Leitor de Tela": "Interactive With Expansion",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [insira aqui o nome acessível].",
+        "Observações": "Insira seu texto da observação."
+      },
+      "With Badge": {
+        "Componente": "Avatar",
+        "Leitor de Tela": "With Badge",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [insira aqui o nome acessível].",
+        "Observações": "Ler o nome acessível do componente seguido do nome acessível do Badge"
+      },
+      "Disabled": {
+        "Componente": "Avatar",
+        "Leitor de Tela": "Disabled",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [insira aqui o nome acessível].",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Badge Notification": {
+      "Standard (1 to 999)": {
+        "Componente": "Badge Notification",
+        "Leitor de Tela": "Standard (1 to 999)",
+        "Observações": "Deve ser lido após o rótulo do trigger ao qual o componente está atrelado."
+      },
+      "Standard (999+)": {
+        "Componente": "Badge Notification",
+        "Leitor de Tela": "Standard (999+)",
+        "Observações": "Deve ser lido após o rótulo do trigger ao qual o componente está atrelado."
+      },
+      "Small": {
+        "Componente": "Badge Notification",
+        "Leitor de Tela": "Small",
+        "Observações": "Deve ser lido após o rótulo do trigger ao qual o componente está atrelado. A leitura terá um padrão anunciando que houve atualização(as), ex.: “Novos e-mails” / “Novas notificações”"
+      }
+    },
+    "Badge Text": {
+      "Individual": {
+        "Componente": "Badge Text",
+        "Leitor de Tela": "Individual",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Trigger Attached": {
+        "Componente": "Badge Text",
+        "Leitor de Tela": "Trigger Attached",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Breadcrumb": {
+      "Landmark": {
+        "Componente": "Breadcrumb",
+        "Leitor de Tela": "Landmark",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Home": {
+        "Componente": "Breadcrumb",
+        "Leitor de Tela": "Home",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Links": {
+        "Componente": "Breadcrumb",
+        "Leitor de Tela": "Links",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Truncate Button": {
+        "Componente": "Breadcrumb",
+        "Leitor de Tela": "Truncate Button",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [Expandir mais links].",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Batch Button": {
+      "Baseline": {
+        "Componente": "Batch Button",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Especificar drag n’ drop como Button e adicionar o seguinte nome Acessível: [Posicionar botão na tela + Posição atual do elemento.]"
+      },
+      "Drag Activated": {
+        "Componente": "Batch Button",
+        "Leitor de Tela": "Drag Activated",
+        "Observações": "Especificar drag n’ drop como Button e adicionar o seguinte Nome Acessível:  Ao “ativar” o item: [Botão ativado, posição atual 1 de 4. Use as setas para mover]\nAo mover com as setas: [Movido para a posição 2 de 4.] Ao soltar/confirmar: [Item solto na posição 2 de 4. Reordenação concluída.]"
+      },
+      "Disabled": {
+        "Componente": "Batch Button",
+        "Leitor de Tela": "Disabled",
+        "Observações": "O componente é removido da ordem de tabulação em estado Disabled, porém ao navegar pela aplicação via teclado no modo de leitura com setas, atalhos ou pelo modo de formulários, o leitor de tela identifica o componente de acordo com sua sequência lógica anunciando o seu conteúdo, mais o estado semântico."
+      }
+    },
+    "Button": {
+      "Baseline": {
+        "Componente": "Button",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      },
+      "With Expansion": {
+        "Componente": "Button",
+        "Leitor de Tela": "With Expansion",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Disabled": {
+        "Componente": "Button",
+        "Leitor de Tela": "Disabled",
+        "Observações": "O componente é removido da ordem de tabulação em estado Disabled, porém ao navegar pela aplicação via teclado no modo de leitura com setas, atalhos ou pelo modo de formulários, o leitor de tela identifica o componente de acordo com sua sequência lógica anunciando o seu conteúdo, mais o estado semântico."
+      },
+      "Label in Name": {
+        "Componente": "Button",
+        "Leitor de Tela": "Label in Name",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Card Alert": {
+      "": {
+        "Componente": "Card Alert",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Card Horizontal": {
+      "Baseline": {
+        "Componente": "Card Horizontal",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Interactive": {
+        "Componente": "Card Horizontal",
+        "Leitor de Tela": "Interactive",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Card Notification": {
+      "": {
+        "Componente": "Card Notification",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Card Vertical": {
+      "Baseline": {
+        "Componente": "Card Vertical",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Interactive": {
+        "Componente": "Card Vertical",
+        "Leitor de Tela": "Interactive",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Card Widget": {
+      "Baseline": {
+        "Componente": "Card Widget",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Interactive": {
+        "Componente": "Card Widget",
+        "Leitor de Tela": "Interactive",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Checkbox": {
+      "Only Checkbox": {
+        "Componente": "Checkbox",
+        "Leitor de Tela": "Only Checkbox",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [insira aqui o nome acessível].",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Checkbox With Label": {
+        "Componente": "Checkbox",
+        "Leitor de Tela": "Checkbox With Label",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Group": {
+        "Componente": "Checkbox",
+        "Leitor de Tela": "Group",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Disabled": {
+        "Componente": "Checkbox",
+        "Leitor de Tela": "Disabled",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "O componente é removido da ordem de tabulação em estado Disabled, porém ao navegar pela aplicação via teclado no modo de leitura com setas, atalhos ou pelo modo de formulários, o leitor de tela identifica o componente de acordo com sua sequência lógica anunciando o seu conteúdo, mais o estado semântico."
+      }
+    },
+    "Chip": {
+      "Basic": {
+        "Componente": "Chip",
+        "Leitor de Tela": "Basic",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Multiselect": {
+        "Componente": "Chip",
+        "Leitor de Tela": "Multiselect",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Select Only": {
+        "Componente": "Chip",
+        "Leitor de Tela": "Select Only",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Removable": {
+        "Componente": "Chip",
+        "Leitor de Tela": "Removable",
+        "Observações": "Inserir a seguinte estrutura de nome acessível para o Button “x”: [Remover + Label do Chip]"
+      },
+      "With Expansion": {
+        "Componente": "Chip",
+        "Leitor de Tela": "With Expansion",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Removable Input Chip": {
+        "Componente": "Chip",
+        "Leitor de Tela": "Removable Input Chip",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [Remover + Label do Chip]",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Date Picker": {
+      "Baseline": {
+        "Componente": "Date Picker",
+        "Leitor de Tela": "Baseline",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [Selecionar data no calendário].",
+        "Observações": "Seguir orientações de nome acessível disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Range Selected": {
+        "Componente": "Date Picker",
+        "Leitor de Tela": "Range Selected",
+        "Observações": "Seguir orientações de nome acessível disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Month": {
+        "Componente": "Date Picker",
+        "Leitor de Tela": "Month",
+        "Observações": "Seguir orientações para o leitor de tela disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Year": {
+        "Componente": "Date Picker",
+        "Leitor de Tela": "Year",
+        "Observações": "Seguir orientações de nome acessível disponíveis no handoff de acessibilidade do DSC para o componente."
+      }
+    },
+    "Drawer Panel": {
+      "": {
+        "Componente": "Drawer Panel",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Dropdown Combobox": {
+      "Baseline": {
+        "Componente": "Dropdown Combobox",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Removable": {
+        "Componente": "Dropdown Combobox",
+        "Leitor de Tela": "Removable",
+        "Observações": "Insira seu texto da observação."
+      },
+      "No Results": {
+        "Componente": "Dropdown Combobox",
+        "Leitor de Tela": "No Results",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Dropdown Menu List": {
+      "": {
+        "Componente": "Dropdown Menu List",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "File Upload": {
+      "Dropzone": {
+        "Componente": "File Upload",
+        "Leitor de Tela": "Dropzone",
+        "Observações": "Seguir orientações de nome acessível disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Card File Success": {
+        "Componente": "File Upload",
+        "Leitor de Tela": "Card File Success",
+        "Observações": "Seguir orientações de nome acessível disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Card Error": {
+        "Componente": "File Upload",
+        "Leitor de Tela": "Card Error",
+        "Observações": "Seguir orientações de nome acessível disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Card Loading": {
+        "Componente": "File Upload",
+        "Leitor de Tela": "Card Loading",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Footer": {
+      "": {
+        "Componente": "Footer",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Header": {
+      "": {
+        "Componente": "Header",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Icon Button": {
+      "Baseline": {
+        "Componente": "Icon Button",
+        "Leitor de Tela": "Baseline",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "Insira seu texto da observação."
+      },
+      "With Badge": {
+        "Componente": "Icon Button",
+        "Leitor de Tela": "With Badge",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "Insira seu texto da observação."
+      },
+      "With Expansion": {
+        "Componente": "Icon Button",
+        "Leitor de Tela": "With Expansion",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Disabled": {
+        "Componente": "Icon Button",
+        "Leitor de Tela": "Disabled",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "O componente é removido da ordem de tabulação em estado Disabled, porém ao navegar pela aplicação via teclado no modo de leitura com setas, atalhos ou pelo modo de formulários, o leitor de tela identifica o componente de acordo com sua sequência lógica anunciando o seu conteúdo, mais o estado semântico."
+      }
+    },
+    "Icon Button Text": {
+      "Baseline": {
+        "Componente": "Icon Button Text",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Disabled": {
+        "Componente": "Icon Button Text",
+        "Leitor de Tela": "Disabled",
+        "Observações": "O componente é removido da ordem de tabulação em estado Disabled, porém ao navegar pela aplicação via teclado no modo de leitura com setas, atalhos ou pelo modo de formulários, o leitor de tela identifica o componente de acordo com sua sequência lógica anunciando o seu conteúdo, mais o estado semântico."
+      }
+    },
+    "Input / Chat": {
+      "Baseline": {
+        "Componente": "Input / Chat",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Seguir orientações de nome acessível para o Button de gravação de voz disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Filled": {
+        "Componente": "Input / Chat",
+        "Leitor de Tela": "Filled",
+        "Observações": "Seguir orientações de nome acessível para o Button disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Audio": {
+        "Componente": "Input / Chat",
+        "Leitor de Tela": "Audio",
+        "Observações": "Seguir orientações de nome acessível para os Buttons disponíveis no handoff de acessibilidade do DSC para o componente."
+      }
+    },
+    "Input / Date Field - Form": {
+      "Baseline": {
+        "Componente": "Input / Date Field - Form",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Seguir orientações de nome acessível para o Button de calendário disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Required": {
+        "Componente": "Input / Date Field - Form",
+        "Leitor de Tela": "Required",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Error": {
+        "Componente": "Input / Date Field - Form",
+        "Leitor de Tela": "Error",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Read Only": {
+        "Componente": "Input / Date Field - Form",
+        "Leitor de Tela": "Read Only",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Disabled": {
+        "Componente": "Input / Date Field - Form",
+        "Leitor de Tela": "Disabled",
+        "Observações": "O componente é removido da ordem de tabulação em estado Disabled, porém ao navegar pela aplicação via teclado no modo de leitura com setas, atalhos ou pelo modo de formulários, o leitor de tela identifica o componente de acordo com sua sequência lógica anunciando o seu conteúdo, mais o estado semântico."
+      }
+    },
+    "Input / Password Field - Form": {
+      "Baseline": {
+        "Componente": "Input / Password Field - Form",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Seguir orientações de nome acessível para os Buttons “Mostrar/Ocultar” disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Required": {
+        "Componente": "Input / Password Field - Form",
+        "Leitor de Tela": "Required",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Error": {
+        "Componente": "Input / Password Field - Form",
+        "Leitor de Tela": "Error",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Read Only": {
+        "Componente": "Input / Password Field - Form",
+        "Leitor de Tela": "Read Only",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Disabled": {
+        "Componente": "Input / Password Field - Form",
+        "Leitor de Tela": "Disabled",
+        "Observações": "O componente é removido da ordem de tabulação em estado Disabled, porém ao navegar pela aplicação via teclado no modo de leitura com setas, atalhos ou pelo modo de formulários, o leitor de tela identifica o componente de acordo com sua sequência lógica anunciando o seu conteúdo, mais o estado semântico."
+      }
+    },
+    "Input / Select Field - Form": {
+      "Select Only": {
+        "Componente": "Input / Select Field - Form",
+        "Leitor de Tela": "Select Only",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Required": {
+        "Componente": "Input / Select Field - Form",
+        "Leitor de Tela": "Required",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Editable (Autocomplete)": {
+        "Componente": "Input / Select Field - Form",
+        "Leitor de Tela": "Editable (Autocomplete)",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Disabled": {
+        "Componente": "Input / Select Field - Form",
+        "Leitor de Tela": "Disabled",
+        "Observações": "O componente é removido da ordem de tabulação em estado Disabled, porém ao navegar pela aplicação via teclado no modo de leitura com setas, atalhos ou pelo modo de formulários, o leitor de tela identifica o componente de acordo com sua sequência lógica anunciando o seu conteúdo, mais o estado semântico."
+      }
+    },
+    "Input / Text Area - Form": {
+      "Baseline": {
+        "Componente": "Input / Text Area - Form",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Required": {
+        "Componente": "Input / Text Area - Form",
+        "Leitor de Tela": "Required",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Error": {
+        "Componente": "Input / Text Area - Form",
+        "Leitor de Tela": "Error",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Read Only": {
+        "Componente": "Input / Text Area - Form",
+        "Leitor de Tela": "Read Only",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Disabled": {
+        "Componente": "Input / Text Area - Form",
+        "Leitor de Tela": "Disabled",
+        "Observações": "O componente é removido da ordem de tabulação em estado Disabled, porém ao navegar pela aplicação via teclado no modo de leitura com setas, atalhos ou pelo modo de formulários, o leitor de tela identifica o componente de acordo com sua sequência lógica anunciando o seu conteúdo, mais o estado semântico."
+      }
+    },
+    "Input / Text Field - Form": {
+      "Baseline": {
+        "Componente": "Input / Text Field - Form",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Typing With Suggestion": {
+        "Componente": "Input / Text Field - Form",
+        "Leitor de Tela": "Typing With Text Suggestion",
+        "Observações": "Seguir orientações de nome acessível para o Button “x” disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Required": {
+        "Componente": "Input / Text Field - Form",
+        "Leitor de Tela": "Required",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Error": {
+        "Componente": "Input / Text Field - Form",
+        "Leitor de Tela": "Error",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Read Only": {
+        "Componente": "Input / Text Field - Form",
+        "Leitor de Tela": "Read Only",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Disabled": {
+        "Componente": "Input / Text Field - Form",
+        "Leitor de Tela": "Disabled",
+        "Observações": "O componente é removido da ordem de tabulação em estado Disabled, porém ao navegar pela aplicação via teclado no modo de leitura com setas, atalhos ou pelo modo de formulários, o leitor de tela identifica o componente de acordo com sua sequência lógica anunciando o seu conteúdo, mais o estado semântico."
+      }
+    },
+    "Input Money": {
+      "Baseline": {
+        "Componente": "Input Money",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      },
+      "With Feedbacks": {
+        "Componente": "Input Money",
+        "Leitor de Tela": "With Feedbacks",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Read Only": {
+        "Componente": "Input Money",
+        "Leitor de Tela": "Read Only",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Disabled": {
+        "Componente": "Input Money",
+        "Leitor de Tela": "Disabled",
+        "Observações": "O componente é removido da ordem de tabulação em estado Disabled, porém ao navegar pela aplicação via teclado no modo de leitura com setas, atalhos ou pelo modo de formulários, o leitor de tela identifica o componente de acordo com sua sequência lógica anunciando o seu conteúdo, mais o estado semântico."
+      }
+    },
+    "Input Pin": {
+      "Numeric": {
+        "Componente": "Input Pin",
+        "Leitor de Tela": "Numeric",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Token": {
+        "Componente": "Input Pin",
+        "Leitor de Tela": "Token",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Alphanumeric": {
+        "Componente": "Input Pin",
+        "Leitor de Tela": "Alphanumeric",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Error": {
+        "Componente": "Input Pin",
+        "Leitor de Tela": "Error",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Input Slider": {
+      "Baseline": {
+        "Componente": "Input Slider",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      },
+      "With Field": {
+        "Componente": "Input Slider",
+        "Leitor de Tela": "With Field",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Input Stepper": {
+      "Min": {
+        "Componente": "Input Stepper",
+        "Leitor de Tela": "Min",
+        "Observações": "Seguir orientações de nome acessível para os Buttons disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Max": {
+        "Componente": "Input Stepper",
+        "Leitor de Tela": "Max",
+        "Observações": "Seguir orientações de nome acessível para os Buttons disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Field": {
+        "Componente": "Input Stepper",
+        "Leitor de Tela": "Field",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [Alterar Quantidade].",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Input With Chips - Form": {
+      "Baseline": {
+        "Componente": "Input With Chips - Form",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Filled": {
+        "Componente": "Input With Chips - Form",
+        "Leitor de Tela": "Filled",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Collapsed / Dropdown": {
+        "Componente": "Input With Chips - Form",
+        "Leitor de Tela": "Collapsed / Dropdown",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [Mais [quantidade] opções adicionadas no campo de texto].",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "List Item": {
+      "Group List Structure": {
+        "Componente": "List Item",
+        "Leitor de Tela": "Group List Structure",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Icon Button / Text Button": {
+        "Componente": "List Item",
+        "Leitor de Tela": "Icon Button / Text Button",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Checkbox": {
+        "Componente": "List Item",
+        "Leitor de Tela": "Checkbox",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Switch": {
+        "Componente": "List Item",
+        "Leitor de Tela": "Switch",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Expandable": {
+        "Componente": "List Item",
+        "Leitor de Tela": "Expandable",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Badge Notification": {
+        "Componente": "List Item",
+        "Leitor de Tela": "Badge Notification",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Badge Text": {
+        "Componente": "List Item",
+        "Leitor de Tela": "Badge Text",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Navigation": {
+        "Componente": "List Item",
+        "Leitor de Tela": "Navigation",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Modal": {
+      "": {
+        "Componente": "Modal",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Overflow Controller": {
+      "Left": {
+        "Componente": "Overflow Controller",
+        "Leitor de Tela": "Left",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Right": {
+        "Componente": "Overflow Controller",
+        "Leitor de Tela": "Right",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Paginator": {
+      "": {
+        "Componente": "Paginator",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Seguir orientações de nome acessível para os Buttons disponíveis no handoff de acessibilidade do DSC para o componente."
+      }
+    },
+    "Popover": {
+      "": {
+        "Componente": "Popover",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Progress": {
+      "Baseline": {
+        "Componente": "Progress",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      },
+      "With Labels": {
+        "Componente": "Progress",
+        "Leitor de Tela": "With Labels",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Progress List": {
+      "": {
+        "Componente": "Progress List",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Radio": {
+      "Only Radio": {
+        "Componente": "Radio",
+        "Leitor de Tela": "Only Radio",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Radio With Label": {
+        "Componente": "Radio",
+        "Leitor de Tela": "Radio With Label",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Radio Group": {
+        "Componente": "Radio",
+        "Leitor de Tela": "Radio Group",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Disabled": {
+        "Componente": "Radio",
+        "Leitor de Tela": "Disabled",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "O componente é removido da ordem de tabulação em estado Disabled, porém ao navegar pela aplicação via teclado no modo de leitura com setas, atalhos ou pelo modo de formulários, o leitor de tela identifica o componente de acordo com sua sequência lógica anunciando o seu conteúdo, mais o estado semântico."
+      }
+    },
+    "Searchbar": {
+      "Baseline": {
+        "Componente": "Search Bar",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Disabled": {
+        "Componente": "Search Bar",
+        "Leitor de Tela": "Disabled",
+        "Observações": "O componente é removido da ordem de tabulação em estado Disabled, porém ao navegar pela aplicação via teclado no modo de leitura com setas, atalhos ou pelo modo de formulários, o leitor de tela identifica o componente de acordo com sua sequência lógica anunciando o seu conteúdo, mais o estado semântico."
+      }
+    },
+    "Search Results": {
+      "Standard": {
+        "Componente": "Search Results",
+        "Leitor de Tela": "Standard",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Suggestions": {
+        "Componente": "Search Results",
+        "Leitor de Tela": "Suggestions",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Segmented Button": {
+      "Radio": {
+        "Componente": "Segmented Button",
+        "Leitor de Tela": "Radio",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Radio Group": {
+        "Componente": "Segmented Button",
+        "Leitor de Tela": "Radio Group",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Disabled": {
+        "Componente": "Segmented Button",
+        "Leitor de Tela": "Disabled",
+        "Observações": "O componente é removido da ordem de tabulação em estado Disabled, porém ao navegar pela aplicação via teclado no modo de leitura com setas, atalhos ou pelo modo de formulários, o leitor de tela identifica o componente de acordo com sua sequência lógica anunciando o seu conteúdo, mais o estado semântico."
+      }
+    },
+    "Sidebar Menu": {
+      "Baseline with Buttons": {
+        "Componente": "Sidebar Menu",
+        "Leitor de Tela": "Baseline With Buttons",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Item / Button Collapsed": {
+        "Componente": "Sidebar Menu",
+        "Leitor de Tela": "Item / Button Collapsed",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Submenu With Internal Links": {
+        "Componente": "Sidebar Menu",
+        "Leitor de Tela": "Submenu With Internal Links",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Submenu With External Links": {
+        "Componente": "Sidebar Menu",
+        "Leitor de Tela": "Submenu With External Links",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Compact": {
+        "Componente": "Sidebar Menu",
+        "Leitor de Tela": "Compact",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Skeleton Load": {
+      "": {
+        "Componente": "Skeleton Load / Shimmer",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Spinner": {
+      "": {
+        "Componente": "Spinner",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Stepper": {
+      "Baseline": {
+        "Componente": "Stepper",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Editable": {
+        "Componente": "Stepper",
+        "Leitor de Tela": "Editable",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Completed": {
+        "Componente": "Stepper",
+        "Leitor de Tela": "Completed",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Inactive": {
+        "Componente": "Stepper",
+        "Leitor de Tela": "Inactive",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Required / Danger": {
+        "Componente": "Stepper",
+        "Leitor de Tela": "Required / Danger",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Only Step": {
+        "Componente": "Stepper",
+        "Leitor de Tela": "Only Step",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Switch": {
+      "Only Bullet": {
+        "Componente": "Switch",
+        "Leitor de Tela": "Only Bullet",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Bullet With Label": {
+        "Componente": "Switch",
+        "Leitor de Tela": "Bullet With Label",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Disabled": {
+        "Componente": "Switch",
+        "Leitor de Tela": "Disabled",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "O componente é removido da ordem de tabulação em estado Disabled, porém ao navegar pela aplicação via teclado no modo de leitura com setas, atalhos ou pelo modo de formulários, o leitor de tela identifica o componente de acordo com sua sequência lógica anunciando o seu conteúdo, mais o estado semântico."
+      }
+    },
+    "Table / Header Cell": {
+      "Table Header": {
+        "Componente": "Table / Header Cell",
+        "Leitor de Tela": "Table Header",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Button Sorted + Icon Tooltip": {
+        "Componente": "Table / Header Cell",
+        "Leitor de Tela": "Button Sorted + Icon Tooltip",
+        "Observações": "Seguir orientações de nome acessível para os Buttons disponíveis no handoff de acessibilidade do DSC para o componente."
+      },
+      "Checkbox": {
+        "Componente": "Table / Header Cell",
+        "Leitor de Tela": "Checkbox",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Disabled": {
+        "Componente": "Table / Header Cell",
+        "Leitor de Tela": "Disabled",
+        "Observações": "O componente é removido da ordem de tabulação em estado Disabled, porém ao navegar pela aplicação via teclado no modo de leitura com setas, atalhos ou pelo modo de formulários, o leitor de tela identifica o componente de acordo com sua sequência lógica anunciando o seu conteúdo, mais o estado semântico."
+      }
+    },
+    "Table / Cell": {
+      "Table Cell": {
+        "Componente": "Table / Cell",
+        "Leitor de Tela": "Table Cell",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Actions": {
+        "Componente": "Table / Cell",
+        "Leitor de Tela": "Actions",
+        "Observações": "Seguir orientações de nome acessível para o Button disponíveis no handoff de acessibilidade do DSC para o componente."
+      }
+    },
+    "Tab": {
+      "TabGroup": {
+        "Componente": "Tab",
+        "Leitor de Tela": "TabGroup",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Tab": {
+        "Componente": "Tab",
+        "Leitor de Tela": "Tab",
+        "Observações": "Insira seu texto da observação."
+      },
+      "Disabled": {
+        "Componente": "Tab",
+        "Leitor de Tela": "Disabled",
+        "Observações": "O componente é removido da ordem de tabulação em estado Disabled, porém ao navegar pela aplicação via teclado no modo de leitura com setas, atalhos ou pelo modo de formulários, o leitor de tela identifica o componente de acordo com sua sequência lógica anunciando o seu conteúdo, mais o estado semântico."
+      }
+    },
+    "Title Bar": {
+      "": {
+        "Componente": "Title Bar",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Toast": {
+      "": {
+        "Componente": "Toast / Snackbar",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Tooltip": {
+      "": {
+        "Componente": "Tooltip",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Imagem": {
+      "": {
+        "Texto Alternativo": "Inserir o seguinte texto alternativo para a mídia:  [insira aqui o texto alternativo].",
+        "Observações": "Insira seu texto da observação."
+      }
+    },
+    "Link": {
+      "Baseline": {
+        "Descrição": "Identificar como link e ler o seu rótulo visível em tela, caso não seja atribuído nome acessível.",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "Insira seu texto da observação. ",
+        "Nota de código": "Quando o conteúdo visual não for suficiente, use o sr-only para contextualizar melhor o usuário de leitor de tela com o nome acessível."
+      },
+      "Nova Janela": {
+        "Descrição": "Identificar como link e anunciar que o link abre uma nova janela e direciona o foco para ela.",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "Insira seu texto da observação. ",
+        "Nota de código": "Em HTML, utilizar o atributo aria-label para acrescentar o nome acessível a ser lido pelo Leitor de Tela. Também anunciar que o link abre uma nova janela e direciona o foco para ela."
+      },
+      "Enviar E-mail": {
+        "Descrição": "Agrupar e identificar como link, deve ler todo o conteúdo visível em tela seguido da sua função.",
+        "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [insira aqui o nome acessível, se necessário].",
+        "Observações": "Insira seu texto da observação. ",
+        "Nota de código": "Em HTML, utilizar o atributo aria-label para desconsiderar o seu rótulo visível e acrescentar o nome acessível a ser lido pelo Leitor de Tela. Acrescente o protocolo mailto: à href da tag <a> para criar um link que irá abrir o programa de e-mail padrão do dispositivo. "
+      }
+    }
+  }
+}

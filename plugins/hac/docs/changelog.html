@@ -3398,6 +3398,24 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-07 — Observações do formulário espelha o componente da lib (v0.1.0-beta.115)</h2>
+
+    <p>Pedido do usuário: o formulário tem que replicar o componente da lib — "se eu marco observações, abre-se o input com o
+    texto resgatado do componente, e isso injeta o texto no card". Web e mobile:</p>
+    <ul>
+      <li><strong>Textos padrão extraídos da lib</strong> (novo <code>refs/fetch-a11y-default-texts.cjs</code> →
+      <code>design-acessivel-default-texts.json</code>): 65 componentes mobile e 58 web, por opção de Leitor de Tela. O scan de
+      propriedades já tinha toggles e variantes, mas não os textos.</li>
+      <li><strong>Observações</strong>: numa spec nova, começa no estado da lib — ligada com o texto do componente quando ele traz
+      texto pronto (ex.: Top App Bar), desligada quando só tem o exemplo "Insira seu texto da observação." (que vira dica do
+      campo). Ao ligar à mão, o campo abre com o texto do componente. Trocar componente/Leitor de Tela atualiza o texto se você
+      não o editou. Na edição, vale o que foi salvo. O texto vai para o card (beta.113).</li>
+      <li>Correção: a edição de uma spec salva sem observação reabria com ela ligada (o formulário era montado como spec nova antes
+      de virar edição).</li>
+    </ul>
+    <p>Pendente de decisão: "Nome Acessível" na lib é um modelo de frase ("Inserir o seguinte accessibilityLabel no elemento: [insira
+    aqui o nome acessível].") e hoje o plugin grava só o nome.</p>
+
     <h2>2026-10-07 — Variante do card (Componente × Texto Alternativo) vem do componente, também no mobile (v0.1.0-beta.114)</h2>
 
     <p>O card "Elementos Interativos e Imagens" tem duas variantes na lib: <strong>Componente</strong> (95 componentes) e <strong>Texto

@@ -1,0 +1,108 @@
+// ============================================================
+// src/plugin/refs/fetch-a11y-default-texts.cjs (2026-10-07)
+//
+// Extrai, da lib "Design Acessível | Super App" (fileKey da lib nova, o mesmo
+// de design-acessivel-mobile-properties.json), os TEXTOS PADRÃO que cada
+// componente traz dentro do card "Elementos e imagens" — por plataforma
+// (mobile/web), por componente e por opção de "Leitor de Tela". Ex.: no
+// Top App Bar mobile, "Observações" já vem com "Seguir orientações de nome
+// acessível do Button...".
+//
+// Por que existe (pedido do usuário, 2026-10-07): o formulário do plugin
+// precisa replicar o componente da lib exatamente — ao ligar "Observações",
+// o campo abre com o texto do componente, e esse texto vai para o card.
+// fetch-component-properties.cjs captura toggles/variantes/defaults booleanos,
+// mas NÃO os textos das sub-instâncias — por isso este script, focado, que
+// parte dos ids que aquele scan já levantou (não refaz descoberta).
+//
+// Saída: refs/design-acessivel-default-texts.json
+//   { _meta, mobile: { [componente]: { [leitor|'']: { [campo]: texto } } }, web: {...} }
+// Consumo: build-a11y-constants.cjs → A11Y_{MOBILE,WEB}_DEFAULT_TEXTS_GENERATED.
+//
+// Rodar:  FIGMA_TOKEN=... node src/plugin/refs/fetch-a11y-default-texts.cjs
+//         (token lido de process.env; nunca pedir ao usuário)
+// ============================================================
+const fs = require('fs');
+const path = require('path');
+const https = require('https');
+
+const REFS = __dirname;
+const SCAN = path.join(REFS, 'design-acessivel-mobile-properties.json');
+const OUT = path.join(REFS, 'design-acessivel-default-texts.json');
+const SETS = { mobile: '10206:2177', web: '10658:3627' }; // ".[hac mob base]/.[hac web base] Elementos e imagens" — ver build-a11y-constants.cjs
+const TOKEN = process.env.FIGMA_TOKEN;
+if (!TOKEN) { console.error('FIGMA_TOKEN ausente no ambiente — abortando (nada foi alterado).'); process.exit(1); }
+
+const scan = JSON.parse(fs.readFileSync(SCAN, 'utf8'));
+const fileKey = scan._meta && scan._meta.fileKey;
+const comps = Array.isArray(scan.components) ? scan.components : Object.values(scan.components || {});
+
+function get(url) {
+  return new Promise((resolve, reject) => {
+    https.get(url, { headers: { 'X-Figma-Token': TOKEN } }, res => {
+      let d = ''; res.on('data', c => (d += c)); res.on('end', () => {
+        if (res.statusCode !== 200) return reject(new Error(`HTTP ${res.statusCode}: ${d.slice(0, 200)}`));
+        try { resolve(JSON.parse(d)); } catch (e) { reject(e); }
+      });
+    }).on('error', reject);
+  });
+}
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// Texto de uma sub-instância de campo: a property TEXT "Texto" (override do
+// componente) ou, sem ela, o TEXT "Text" filho.
+function fieldText(inst) {
+  const props = inst.componentProperties || {};
+  const k = Object.keys(props).find(x => /^texto$/i.test(x.split('#')[0]));
+  if (k && props[k] && typeof props[k].value === 'string') return props[k].value;
+  const t = (inst.children || []).find(c => c.type === 'TEXT' && /^text$/i.test(c.name));
+  return t ? t.characters : null;
+}
+
+(async () => {
+  const out = { _meta: { description: 'GERADO por fetch-a11y-default-texts.cjs — não editar à mão. Textos padrão por plataforma > componente > opção de Leitor de Tela ("" quando o componente não tem opções) > campo.', fileKey, generatedAt: new Date().toISOString() } };
+  for (const [platform, setId] of Object.entries(SETS)) {
+    const set = comps.find(c => c.nodeId === setId);
+    if (!set) { console.warn(`⚠ conjunto ${platform} (${setId}) não está no scan — pulando`); continue; }
+    const jobs = []; // { componente, leitor, id }
+    for (const v of (set.perVariantProperties || [])) {
+      const m = /Componente=([^,]+)/.exec(v.variantName || '');
+      if (!m) continue;
+      const componente = m[1].trim();
+      const sr = v.screenReaderVariants && v.screenReaderVariants.variants;
+      if (sr && sr.length) {
+        for (const s of sr) jobs.push({ componente, leitor: (/=(.+)$/.exec(s.variantName) || [])[1] || '', id: s.variantId });
+      } else if (v.nestedComponentId) {
+        jobs.push({ componente, leitor: '', id: v.nestedComponentId });
+      }
+    }
+    const res = {};
+    for (let i = 0; i < jobs.length; i += 40) {
+      const batch = jobs.slice(i, i + 40);
+      const ids = [...new Set(batch.map(j => j.id))].join(',');
+      let data = null;
+      for (let attempt = 0; attempt < 3 && !data; attempt++) {
+        try { data = await get(`https://api.figma.com/v1/files/${fileKey}/nodes?ids=${encodeURIComponent(ids)}&depth=2`); }
+        catch (e) { console.warn(`  tentativa ${attempt + 1} falhou: ${e.message}`); await sleep(2000 * (attempt + 1)); }
+      }
+      if (!data) throw new Error(`lote ${i} falhou 3x — abortando sem gravar`);
+      for (const j of batch) {
+        const node = data.nodes[j.id] && data.nodes[j.id].document;
+        if (!node) continue;
+        const fields = {};
+        for (const c of (node.children || [])) {
+          if (c.type !== 'INSTANCE') continue;
+          const txt = fieldText(c);
+          if (txt != null) fields[c.name] = txt;
+        }
+        (res[j.componente] = res[j.componente] || {})[j.leitor] = fields;
+      }
+      process.stdout.write(`  ${platform}: ${Math.min(i + 40, jobs.length)}/${jobs.length}\r`);
+      await sleep(400);
+    }
+    out[platform] = res;
+    console.log(`\n✅ ${platform}: ${Object.keys(res).length} componentes, ${jobs.length} variantes lidas`);
+  }
+  fs.writeFileSync(OUT, JSON.stringify(out, null, 2) + '\n');
+  console.log(`✅ ${path.relative(process.cwd(), OUT)}`);
+})().catch(e => { console.error('❌', e.message); process.exit(1); });

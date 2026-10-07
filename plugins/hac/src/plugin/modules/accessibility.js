@@ -684,6 +684,9 @@ const A11Y_UI_PROFILES = {
     componentsWithNomeAcessivel: A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL,
     screenReaderVariants: A11Y_MOBILE_SCREEN_READER_VARIANTS,
     componentToggles: A11Y_MOBILE_COMPONENT_TOGGLES,
+    // Textos padrão da lib por componente > opção de Leitor de Tela > campo
+    // (2026-10-07, fetch-a11y-default-texts.cjs).
+    defaultTexts: (typeof A11Y_MOBILE_DEFAULT_TEXTS_GENERATED !== 'undefined') ? A11Y_MOBILE_DEFAULT_TEXTS_GENERATED : {},
     fileKey: A11Y_SUPER_APP_FILE_KEY,
     fileName: A11Y_SUPER_APP_FILE_NAME,
     // nome -> nodeId do deep-link: igualdade exata, minúsculas, sem espaços nas pontas.
@@ -714,6 +717,7 @@ const A11Y_UI_PROFILES = {
     componentsWithNomeAcessivel: A11Y_WEB_COMPONENTS_WITH_NOME_ACESSIVEL_GENERATED,
     screenReaderVariants: A11Y_WEB_SCREEN_READER_VARIANTS_GENERATED,
     componentToggles: A11Y_WEB_COMPONENT_TOGGLES_GENERATED,
+    defaultTexts: (typeof A11Y_WEB_DEFAULT_TEXTS_GENERATED !== 'undefined') ? A11Y_WEB_DEFAULT_TEXTS_GENERATED : {},
     fileKey: A11Y_WEB_FILE_KEY_GENERATED,
     fileName: A11Y_WEB_FILE_NAME_GENERATED,
     // Deep-link web: os nodeIds vêm da Super DSC | Web (única lib web que
@@ -1722,10 +1726,70 @@ function _onA11yElementoToggleChange(checkbox) {
   wrap.classList.toggle('hidden', !checkbox.checked);
   const ta = wrap.querySelector('[data-a11y-toggle-value]');
   if (!checkbox.checked) {
-    if (ta) ta.value = '';
+    if (ta) { ta.value = ''; delete ta.dataset.libDefault; }
+  } else if (checkbox.getAttribute('data-a11y-toggle-key') === 'observacoes') {
+    // Ligou "Observações": o campo abre com o texto do componente na lib.
+    _syncA11yLibObservacaoDefault('check');
   }
   if (ta) updateA11yCharCounterEl(ta, ta.nextElementSibling);
 }
+
+// Texto padrão de um campo do componente na lib (2026-10-07) — componente do
+// dropdown "Componente do DSC" + opção de "Leitor de Tela" atual.
+function _a11yLibDefaultText(field) {
+  const linkSelect = document.getElementById('a11y-el-mobile-link-select');
+  if (!linkSelect || !linkSelect.value) return null;
+  const byLeitor = (_a11yUiProfileForModal().defaultTexts || {})[linkSelect.value];
+  if (!byLeitor) return null;
+  const srWrap = document.getElementById('a11y-el-mobile-screen-reader-variant-wrap');
+  const srSelect = document.getElementById('a11y-el-mobile-screen-reader-variant-select');
+  const leitor = (srWrap && !srWrap.classList.contains('hidden') && srSelect) ? srSelect.value : '';
+  const entry = byLeitor[leitor] || byLeitor[''] || byLeitor[Object.keys(byLeitor)[0]];
+  return entry && typeof entry[field] === 'string' ? entry[field] : null;
+}
+// Texto de exemplo da lib ("Insira seu texto da observação.") não é conteúdo —
+// vira só o placeholder do campo, nunca valor.
+function _a11yIsLibPlaceholderText(t) {
+  return !t || /^\s*insira seu texto/i.test(t);
+}
+
+// "Observações" espelha o componente da lib (2026-10-07, pedido do usuário:
+// "se eu marco observações, abre-se o input com o texto resgatado do
+// componente. E isso injeta o texto no card do canvas"):
+//   • 'check'   — ligou o checkbox: campo vazio (ou ainda com o texto da lib)
+//                 recebe o texto do componente;
+//   • 'context' — trocou componente/Leitor de Tela ou abriu o formulário: numa
+//                 spec NOVA, o estado segue o padrão da lib (ligado com o texto
+//                 quando o componente traz texto pronto; desligado quando só
+//                 tem o exemplo). Texto já editado pelo designer nunca é
+//                 sobrescrito; na EDIÇÃO, o que foi salvo prevalece.
+function _syncA11yLibObservacaoDefault(reason) {
+  const inlineWrap = document.getElementById('a11y-el-mobile-observacoes-inline-wrap');
+  const textareaWrap = document.getElementById('a11y-el-mobile-observacoes-textarea-wrap');
+  const cb = inlineWrap ? inlineWrap.querySelector('[data-a11y-toggle-key="observacoes"]') : null;
+  const ta = textareaWrap ? textareaWrap.querySelector('[data-a11y-toggle-value]') : null;
+  if (!cb || !ta || inlineWrap.classList.contains('hidden')) return;
+  const modal = document.getElementById('a11y-spec-modal');
+  const editing = !!(modal && modal.dataset.editingSpecId);
+  const lib = _a11yLibDefaultText('Observações');
+  const real = !_a11yIsLibPlaceholderText(lib);
+  if (lib) ta.placeholder = lib;
+  const untouched = !ta.value.trim() || ta.value === ta.dataset.libDefault;
+  if (reason === 'check') {
+    if (real && untouched) { ta.value = lib; ta.dataset.libDefault = lib; }
+  } else if (!editing) {
+    if (real && (untouched || !cb.checked)) {
+      if (!cb.checked || untouched) { cb.checked = true; ta.value = lib; ta.dataset.libDefault = lib; }
+    } else if (!real && cb.checked && ta.dataset.libDefault && ta.value === ta.dataset.libDefault) {
+      cb.checked = false; ta.value = ''; delete ta.dataset.libDefault;
+    }
+  } else if (cb.checked && ta.dataset.libDefault && ta.value === ta.dataset.libDefault && real) {
+    ta.value = lib; ta.dataset.libDefault = lib;
+  }
+  textareaWrap.classList.toggle('hidden', !cb.checked);
+  updateA11yCharCounterEl(ta, ta.nextElementSibling);
+}
+window._syncA11yLibObservacaoDefault = _syncA11yLibObservacaoDefault;
 window._onA11yElementoToggleChange = _onA11yElementoToggleChange;
 
 // Lê o seletor de sub-variante mobile (radio a11y-el-mobile-variant) — só
@@ -2346,10 +2410,12 @@ function _updateA11yMobileObservacoesVisibility(preserveValue) {
     if (!preserveValue && checkbox && checkbox.checked) {
       checkbox.checked = false;
       const ta = textareaWrap ? textareaWrap.querySelector('[data-a11y-toggle-value]') : null;
-      if (ta) ta.value = '';
+      if (ta) { ta.value = ''; delete ta.dataset.libDefault; }
     }
   }
   _syncA11yMobileObservacoesPlacement(has);
+  // Estado/texto padrão da lib para o componente + Leitor de Tela atuais.
+  if (has) _syncA11yLibObservacaoDefault('context');
 }
 
 // Move o checkbox "Observações" pra linha da Tag quando ele é o ÚNICO campo
@@ -2600,6 +2666,18 @@ function _restoreA11yElementoMobileToggles(props) {
   // VariantOptions já terá marcado a 1ª option como default (fallback
   // gracioso, sem erro).
   let leitorDeTelaValue = null;
+  // Edição parte do que foi SALVO (2026-10-07): openA11yModal monta o
+  // formulário antes de dataset.editingSpecId existir e aplica o padrão da lib
+  // (Observações ligada com o texto do componente) — sem zerar aqui, uma spec
+  // salva sem observação reabria com ela ligada.
+  {
+    const obsCb = document.querySelector('#a11y-el-mobile-observacoes-inline-wrap [data-a11y-toggle-key="observacoes"]');
+    const obsWrap = document.getElementById('a11y-el-mobile-observacoes-textarea-wrap');
+    const obsTa = obsWrap ? obsWrap.querySelector('[data-a11y-toggle-value]') : null;
+    if (obsCb) obsCb.checked = false;
+    if (obsTa) { obsTa.value = ''; delete obsTa.dataset.libDefault; }
+    if (obsWrap) obsWrap.classList.add('hidden');
+  }
   (props || []).forEach(p => {
     if (!p) return;
     if (p.key === 'leitorDeTela') { leitorDeTelaValue = p.value || null; return; }

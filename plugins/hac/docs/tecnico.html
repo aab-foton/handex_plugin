@@ -4875,6 +4875,18 @@ hr {
       o preenchimento mobile manda o par junto com o Componente e confere os dois.</li>
     </ul>
 
+    <h3>Formulário espelha os textos da lib (beta.115)</h3>
+    <ul>
+      <li><code>refs/fetch-a11y-default-texts.cjs</code> lê, pelos ids de <code>design-acessivel-mobile-properties.json</code> (sets
+      <code>10206:2177</code> mobile e <code>10658:3627</code> web), o texto de cada sub-instância de campo de cada componente/opção de
+      Leitor de Tela; <code>build-a11y-constants.cjs</code> gera <code>A11Y_{MOBILE,WEB}_DEFAULT_TEXTS_GENERATED</code> (só Observações,
+      Nome Acessível, Texto Alternativo); perfis de UI expõem <code>defaultTexts</code>.</li>
+      <li><code>_syncA11yLibObservacaoDefault('check' | 'context')</code>: ligar o checkbox preenche com o texto da lib;
+      <code>'context'</code> (troca de componente/Leitor, render) aplica o padrão da lib só em spec nova e só sobre texto não editado
+      (<code>ta.dataset.libDefault</code>). Texto "Insira seu texto…" é tratado como exemplo (placeholder), nunca valor.
+      <code>_restoreA11yElementoMobileToggles</code> zera Observações antes de aplicar o salvo.</li>
+    </ul>
+
     <h3>Mensagens novas/alteradas desta rodada</h3>
     <ul>
       <li><code>a11y-spec-create-failed</code> (backend → UI) e <code>a11y-no-lib-card</code> (backend → UI) — ver 8af.</li>
