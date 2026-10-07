@@ -4224,7 +4224,15 @@ function _a11ySpecItemHtml(spec, showCategoryChip, group) {
   // e mobile: "estamos resgatando na spec duas vezes a label" — camada de
   // texto do Figma tem o próprio texto como nome, e o card de Título mostrava
   // "Title" e “Title”).
-  const cardName = spec.targetNodeName || spec.name || 'Elemento';
+  // Grupo com nomes diferentes (ex.: Wifi, Signal, Battery): o cabeçalho
+  // lista os nomes distintos, na ordem da lista.
+  const _groupNames = group
+    ? Array.from(new Set(group.ids.map(gid => {
+        const gs = (a11ySpecs || []).find(x => x && x.id === gid);
+        return gs ? (gs.targetNodeName || gs.name || 'Elemento') : null;
+      }).filter(Boolean)))
+    : [];
+  const cardName = _groupNames.length > 1 ? _groupNames.join(', ') : (spec.targetNodeName || spec.name || 'Elemento');
   // Grupo de repetidos (×N): accordion interno com cada elemento, para focar
   // ou remover um específico (2026-10-07, pedido do usuário). Estado aberto
   // guardado por chave estável (1º id) — sobrevive aos re-renders da lista.
@@ -4259,7 +4267,7 @@ function _a11ySpecItemHtml(spec, showCategoryChip, group) {
         }).join('')}
       </div>` : '';
   const _normLabel = v => String(v || '').replace(/\s+/g, ' ').trim().toLowerCase();
-  const cardLabel = spec.targetText && _normLabel(spec.targetText) !== _normLabel(cardName) ? spec.targetText : null;
+  const cardLabel = _groupNames.length <= 1 && spec.targetText && _normLabel(spec.targetText) !== _normLabel(cardName) ? spec.targetText : null;
 
   const searchText = _normalizeSearchText(
     [spec.letter, spec.targetNodeName, spec.name, categoryLabel, spec.a11yType, spec.a11ySourceLib?.label, dscComponentLabel]
@@ -4504,10 +4512,11 @@ function _a11yCategoryFixedTextsHtml(catKey, catSpecs) {
 // Generalizado para TODAS as categorias (2026-10-07, pedido do usuário: "isso
 // vale pra título, decorativos e elementos interativos e imagens. Quando
 // tiver specs iguais, a gente só apresenta os detalhes dessa spec uma vez").
-// "Iguais" = mesmo nome de camada + mesmo conteúdo (componente, subtipo e
-// todos os campos) — duas specs do mesmo elemento com conteúdo diferente
-// NÃO se juntam. O grupo mostra os detalhes uma vez; a seta abre cada
-// elemento (foco/remoção individuais).
+// "Iguais" = mesmo conteúdo (componente, subtipo e todos os campos), dentro
+// da mesma categoria — o NOME da camada não conta desde 2026-10-07 (usuário:
+// Wifi, Signal e Battery decorativos "em tese teriam de estar agrupados").
+// Specs com qualquer campo diferente NÃO se juntam. O grupo mostra os
+// detalhes uma vez; a seta abre cada elemento (foco/edição/remoção).
 function _a11ySpecContentSignature(spec) {
   const props = (spec.properties || [])
     .filter(p => p && p.key)
@@ -4518,8 +4527,7 @@ function _a11ySpecContentSignature(spec) {
 function _a11yGroupRepeatedSpecs(catKey, catSpecs) {
   const groups = new Map();
   for (const spec of catSpecs) {
-    const name = (spec.targetNodeName || spec.name || '').trim().toLowerCase();
-    const key = name ? name + '::' + _a11ySpecContentSignature(spec) : spec.id;
+    const key = _a11ySpecContentSignature(spec);
     if (!groups.has(key)) groups.set(key, { spec, ids: [] });
     groups.get(key).ids.push(spec.id);
   }
