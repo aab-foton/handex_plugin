@@ -168,9 +168,11 @@ ${css}
             <label class="flex items-start justify-between gap-2 cursor-pointer">
               <span>
                 <span class="block text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted">Espaçamento de texto</span>
-                <span class="block text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-snug">Mais espaço entre linhas, letras e palavras (WCAG 1.4.12)</span>
+                <span class="block text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-snug">Mais espaço entre linhas, letras e palavras</span>
               </span>
-              <input type="checkbox" id="hac-pz-text-spacing" onchange="setHacTextSpacing(this.checked)" class="mt-1 w-4 h-4 accent-[#005ca9] shrink-0">
+              <!-- Switch, não checkbox (2026-10-07, pedido do usuário): liga/desliga
+                   uma preferência com efeito imediato. -->
+              <input type="checkbox" role="switch" id="hac-pz-text-spacing" onchange="setHacTextSpacing(this.checked)" class="hac-switch mt-0.5 shrink-0">
             </label>
           </div>
         </div>

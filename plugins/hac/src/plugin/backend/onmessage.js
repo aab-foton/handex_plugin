@@ -133,6 +133,7 @@ import {
   _findVisibleLabelText,
   _a11yScanArea,
   _collectSwipeStops,
+  _setActiveProjectOrigin,
 } from './dsc-matching.js';
 
 // "Ordem de Tabulação": modo de clique — liga/desliga via
@@ -166,7 +167,10 @@ let _swipePathModeActive = false;
 // criada sem uma área completa da UI (ver _areaStubFromRoot).
 let _lastProjectOrigin = null;
 function _rememberProjectOrigin(data) {
-  if (data && (data.projectOrigin === 'web' || data.projectOrigin === 'mobile')) _lastProjectOrigin = data.projectOrigin;
+  if (data && (data.projectOrigin === 'web' || data.projectOrigin === 'mobile')) {
+    _lastProjectOrigin = data.projectOrigin;
+    _setActiveProjectOrigin(data.projectOrigin);
+  }
 }
 let _swipePathClickSequence = [];
 
@@ -1253,6 +1257,9 @@ figma.ui.onmessage = async (msg) => {
 
   // ── Detecção Automática — scan enxuto de uma Área Marcada ───────────────
   if (msg.type === "scan-frame") {
+    // A plataforma declarada nesta varredura vale para o matching (só a lib
+    // da plataforma do projeto — ver _setActiveProjectOrigin).
+    if (msg.declaredOrigin) _setActiveProjectOrigin(msg.declaredOrigin);
     (async () => {
       let selection;
       if (msg.nodeId) {
@@ -4297,6 +4304,14 @@ figma.ui.onmessage = async (msg) => {
           try { existing.remove(); } catch (e) { }
         }
 
+        // Aviso "Nenhuma trilha de swipe definida" da seção da Ficha onde a
+        // réplica vive (criado pelo handoff da aba Resumo) sai agora que a
+        // trilha existe (2026-10-07).
+        try {
+          let p = clone && !clone.removed ? clone.parent : null;
+          for (let i = 0; p && i < 4; i++, p = p.parent) _removeSwipeEmptyCards(p);
+        } catch (e) { }
+
         figma.currentPage.selection = [group];
         figma.viewport.scrollAndZoomIntoView([group]);
         // Ecoa os MESMOS `points` recebidos no payload (não relê nenhum
@@ -5002,6 +5017,9 @@ figma.ui.onmessage = async (msg) => {
       const section = await _getOrCreateFichaBlockSection(itensFrame, sectionKey, areaId, area && area.a11yOrigin);
       console.log('[hac][legenda] bloco', section && section.id, section && section.name);
       if (!section) return null;
+      // A trilha está nascendo: o aviso "Nenhuma trilha de swipe definida",
+      // criado quando o handoff foi gerado sem trilha (aba Resumo), sai.
+      if (sectionKey === 'swipe') _removeSwipeEmptyCards(section);
 
       // FRAME "[HAC] Handoff - {Func}" (2026-09-11, revisão 3) — cria/obtém
       // e reparenta o clone nele, preservando a posição visual. ORDEM
@@ -5294,6 +5312,23 @@ figma.ui.onmessage = async (msg) => {
   // desenhada no fluxo de trabalho: cada "Inserir na ficha" recriava um
   // overlay novo (e nesse ponto ainda clonava a área do zero, então nunca
   // se percebeu — bug latente exposto só agora, ao mover em vez de clonar).
+  // Card de aviso "Nenhuma trilha de swipe definida" (2026-10-07): marcado
+  // com hacFichaSwipeEmpty; os criados antes disso são reconhecidos pelo
+  // nome + texto.
+  function _isSwipeEmptyCard(c) {
+    try {
+      if (c.getPluginData && c.getPluginData('hacFichaSwipeEmpty')) return true;
+      return c.type === 'FRAME' && c.name === 'Trilha de Swipe' &&
+        (c.children || []).some(t => t.type === 'TEXT' && String(t.characters || '').indexOf('Nenhuma trilha de swipe') === 0);
+    } catch (e) { return false; }
+  }
+  function _removeSwipeEmptyCards(section) {
+    if (!section) return;
+    for (const c of (section.children || []).slice()) {
+      if (_isSwipeEmptyCard(c)) { try { c.remove(); } catch (e) { } }
+    }
+  }
+
   async function _buildFichaSwipeSection(fichaFrame, area, points, designerName, currentUserId) {
     // Reestruturação de árvore (2026-09-10) — ver comentário equivalente em
     // _buildFichaTabulacaoSection.
@@ -5301,12 +5336,16 @@ figma.ui.onmessage = async (msg) => {
     const section = await _getOrCreateFichaBlockSection(itensFrame, 'swipe', area.id, area.a11yOrigin);
 
     const hasPoints = Array.isArray(points) && points.length >= 2;
+    if (hasPoints) _removeSwipeEmptyCards(section);
     if (!hasPoints) {
+      // Um aviso só por seção (gerar o handoff de novo não empilha cards).
+      if ((section.children || []).some(c => _isSwipeEmptyCard(c))) return 0;
       // Sem pontos suficientes pra desenhar uma trilha real (0 ou 1
       // ponto) — mesmo fallback textual de antes, só que como aviso, não
       // mais como caminho normal.
       const card = figma.createFrame();
       card.name = 'Trilha de Swipe';
+      card.setPluginData('hacFichaSwipeEmpty', area.id || '1');
       card.layoutMode = 'VERTICAL';
       card.paddingLeft = 12; card.paddingRight = 12; card.paddingTop = 12; card.paddingBottom = 12;
       card.itemSpacing = 4;

@@ -3398,6 +3398,23 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-07 — Plataforma do projeto filtra o reconhecimento; aviso do Swipe some; switch na Personalização (v0.1.0-beta.97)</h2>
+
+    <p><strong>Mapeamento automático do Leitor de Tela só com a lib da plataforma.</strong> A origem de cada spec detectada
+    vinha da lib em que o componente foi achado (<code>match.origin</code>), não da plataforma do projeto — então um projeto
+    mobile podia receber specs web (e vice-versa). Agora, com a plataforma definida, o backend só reconhece componentes das
+    libs dessa plataforma (<code>_setActiveProjectOrigin</code> em dsc-matching.js, alimentado por
+    <code>save-storage</code>/abertura e pela <code>declaredOrigin</code> do <code>scan-frame</code>); componente da lib da outra
+    plataforma passa a ser tratado como não-DSC. No formulário/lote, a spec nasce sempre com a plataforma do projeto, e título
+    mobile não recebe nível H1–H6. Vale também para o reconhecimento manual, o Swipe e a narração.</p>
+
+    <p><strong>Aviso "Nenhuma trilha de swipe definida".</strong> O card criado quando o handoff é gerado pela aba Resumo sem
+    trilha sai assim que a trilha de Swipe da área é criada (ao nascer a réplica e ao desenhar a trilha). Gerar o handoff de
+    novo sem trilha não empilha mais avisos.</p>
+
+    <p><strong>Personalização.</strong> "Espaçamento de texto" vira um switch (<code>role="switch"</code>) em vez de checkbox, e o
+    texto de apoio perde a referência "(WCAG 1.4.12)".</p>
+
     <h2>2026-10-07 — Swipe inclui o slot da direita do item de lista (v0.1.0-beta.96)</h2>
 
     <p>O slot da direita do DSC (<code>.[base] Right Slot</code>/Trailing — seta de navegação, switch, checkbox) caía na regra

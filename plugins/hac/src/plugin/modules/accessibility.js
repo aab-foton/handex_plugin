@@ -6441,7 +6441,10 @@ function _resolveA11yFormPresetFromItem(item, kind) {
   // (handleA11yPostAreaDetectionResult, acima) — nunca fica undefined depois
   // do retropreenchimento, mas o fallback 'web' é mantido por segurança
   // (ex: item avulso fora do fluxo de Detecção Automática por Área).
-  const a11yOrigin = match.origin || 'web';
+  // A plataforma do PROJETO manda (2026-10-07, "origem filtra tudo"): a spec
+  // nunca nasce web num projeto mobile (nem o contrário) só porque o
+  // componente veio da lib da outra plataforma.
+  const a11yOrigin = getA11yProjectOrigin() || match.origin || 'web';
   // Nome real do component set DSC (ex: "[dsc] Button") — null nas
   // heurísticas de texto/ícone (titulo/decorativo/imagem não têm
   // componente DSC real por trás, ver _resolveTypographyA11yMatch/
@@ -6458,7 +6461,8 @@ function _resolveA11yFormPresetFromItem(item, kind) {
     return { category: 'elemento', options: { pendingTargetNodeId: item.nodeId, a11yOrigin, dscComponentName, targetNodeName, immediateParentName } };
   }
   if (category === 'titulo') {
-    return { category: 'titulo', options: { pendingTargetNodeId: item.nodeId, presetTituloNivel: match.suggestedLevel, a11yOrigin, dscComponentName, targetNodeName, immediateParentName } };
+    // Mobile não tem níveis H1–H6: título usa o marcador único.
+    return { category: 'titulo', options: { pendingTargetNodeId: item.nodeId, presetTituloNivel: a11yOrigin === 'mobile' ? undefined : match.suggestedLevel, a11yOrigin, dscComponentName, targetNodeName, immediateParentName } };
   }
   if (category === 'decorativo') {
     return { category: 'decorativo', options: { pendingTargetNodeId: item.nodeId, a11yOrigin, dscComponentName, targetNodeName, immediateParentName } };

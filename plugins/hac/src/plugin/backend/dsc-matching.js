@@ -167,11 +167,22 @@ function _getDscFrameToA11yMap(origin) {
 // ({id, label}), paralela a origin, para uso futuro de badge de UI —
 // propagada tal como veio do Map, sem lógica própria aqui.
 // componentKey deve ser o mainComp.key de uma INSTANCE remote — chamador garante isso.
+// Plataforma do PROJETO (web/mobile) — "origem filtra tudo" (2026-10-07,
+// pedido do usuário: o mapeamento automático do Leitor de Tela misturava web
+// e mobile). Com a plataforma definida, só componentes das libs DESSA
+// plataforma são reconhecidos; um componente da lib da outra plataforma é
+// tratado como não-DSC. Sem plataforma definida, aceita as duas (como antes).
+let _activeProjectOrigin = null;
+export function _setActiveProjectOrigin(origin) {
+  _activeProjectOrigin = (origin === 'web' || origin === 'mobile') ? origin : _activeProjectOrigin;
+}
+
 export function _resolveDscComponentA11yMatch(componentKey) {
   if (!componentKey) return null;
   const resolved = _getDscComponentKeyToFrameMap().get(componentKey);
   if (!resolved) return null;
   const { containingFrame, origin, sourceLib } = resolved;
+  if (_activeProjectOrigin && origin !== _activeProjectOrigin) return null;
   const a11yMatch = _getDscFrameToA11yMap(origin).get(containingFrame);
   if (!a11yMatch) {
     return { containingFrame, a11yCategory: null, confidence: null, isUnmapped: true, origin, sourceLib };

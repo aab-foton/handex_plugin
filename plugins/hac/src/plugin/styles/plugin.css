@@ -714,6 +714,26 @@ body {
 .dark .hac-pz-opt { border-color: #334155; color: #b4c6d8; background: transparent; }
 .hac-pz-opt[aria-pressed="true"] { background: #005ca9; border-color: #005ca9; color: #fff; }
 
+/* Switch (2026-10-07) — checkbox nativo com role="switch", desenhado como
+   trilho + botão. Mantém foco, teclado (Espaço) e estado lido pelo leitor de
+   tela ("ligado/desligado"). */
+.hac-switch {
+  appearance: none; -webkit-appearance: none;
+  position: relative; width: 36px; height: 20px; flex: none;
+  border-radius: 999px; background: #737f87; cursor: pointer;
+  transition: background-color .15s ease;
+}
+.hac-switch::after {
+  content: ""; position: absolute; top: 2px; left: 2px;
+  width: 16px; height: 16px; border-radius: 999px; background: #fff;
+  box-shadow: 0 1px 2px rgba(0,0,0,.25); transition: transform .15s ease;
+}
+.hac-switch:checked { background: #005ca9; }
+.hac-switch:checked::after { transform: translateX(16px); }
+.hac-switch:focus-visible { outline: 2px solid #005ca9; outline-offset: 2px; }
+.dark .hac-switch { background: #64748b; }
+.dark .hac-switch:checked { background: #3b8fd9; }
+
 /* Espaçamento de texto — WCAG 2.2, 1.4.12 (Text Spacing). Valores mínimos do
    critério; aplicado com !important para vencer utilitários de line-height e
    tracking. Texto que trunca (.truncate) passa a quebrar linha para não perder
