@@ -1416,207 +1416,42 @@ figma.ui.onmessage = async (msg) => {
         _a11yImportFailReason = e && e.message ? e.message : String(e);
       }
 
-      // Fallbacks AVISADOS (2026-10-01): a spec ainda é criada, como card
-      // genérico (procedural), mas o designer é AVISADO do motivo — nunca um
-      // card "real" com o componente/nível errado e nunca uma troca silenciosa
-      // (um fallback mudo foi o que escondeu o bug de 2026-09-22, "Value
-      // Section" virando "Button"). Cada prefixo vem de _tryImportA11yComponent
-      // (code.js). Qualquer outro motivo continua abortando com erro visível.
-      const _A11Y_WARNED_FALLBACKS = [
+      // SEM card desenhado (2026-10-07, regra do produto reafirmada pelo
+      // usuário: "não temos nada personalizado, usamos exclusivamente os
+      // cards da lib"). Antes, 3 motivos caíam num card genérico procedural
+      // (círculo + tag + DESCRIÇÃO/NOTA DE CÓDIGO); agora qualquer falha do
+      // card da lib aborta a spec e AVISA o designer do motivo e do que fazer.
+      const _A11Y_FAIL_MESSAGES = [
         {
           prefix: 'a11y-elemento-componente-fora-da-base',
-          message: (detail) => 'O componente "' + detail + '" não consta na base de acessibilidade. A especificação foi criada como card genérico.',
+          message: (detail) => 'O componente "' + detail + '" não tem card na lib de acessibilidade desta plataforma. Escolha um componente da lista em Elementos e Imagens ou outra categoria.',
         },
         {
           prefix: 'a11y-estrutura-sem-variante-na-base',
-          message: () => 'Essa variação de Estrutura da Página não existe na base de acessibilidade. A especificação foi criada como card genérico.',
+          message: () => 'Essa variação de Estrutura da Página não existe na lib de acessibilidade. Escolha outro tipo ou outra categoria.',
         },
         {
           prefix: 'a11y-web-set-falhou',
-          message: () => 'A base de acessibilidade mudou e o card não pôde ser preenchido com segurança. A especificação foi criada como card genérico.',
+          message: () => 'A lib de acessibilidade mudou e o card não pôde ser preenchido com segurança. Nada foi criado.',
+        },
+        {
+          prefix: 'a11y-sem-wrapper-no-perfil',
+          message: () => 'Essa categoria não tem card publicado na lib de acessibilidade desta plataforma. Escolha outra categoria.',
         },
       ];
-      const _warnedFallback = _a11yImportFailReason
-        ? _A11Y_WARNED_FALLBACKS.find(f => _a11yImportFailReason.startsWith(f.prefix))
-        : null;
-      if (_a11yImportFailReason && !_warnedFallback) {
-        figma.notify('Não foi possível criar a especificação de acessibilidade. (' + _a11yImportFailReason + ')', { error: true });
+      if (_a11yImportFailReason || !specCard) {
+        const _reason = _a11yImportFailReason || 'card não importado';
+        const _known = _A11Y_FAIL_MESSAGES.find(f => _reason.startsWith(f.prefix));
+        const _detail = _reason.indexOf(': ') >= 0 ? _reason.slice(_reason.indexOf(': ') + 2) : '';
+        console.error('[hac] create-unified-spec: card da lib indisponível —', _reason);
+        // Alerta em MODAL no plugin (pedido do usuário, 2026-10-07) — a UI
+        // abre a modal com `message`; nada é criado no canvas.
+        const _message = _known ? _known.message(_detail) : ('Não foi possível criar a especificação com o card da lib. (' + _reason + ')');
+        figma.ui.postMessage({ type: 'a11y-spec-create-failed', areaId: opts.a11yAreaId || null, targetNodeId: opts.targetNodeId || null, reason: _reason, message: _message });
         return;
       }
-      // Texto do aviso final (disparado mais abaixo, depois de a spec existir).
-      let _warnedFallbackMessage = null;
-      if (_warnedFallback) {
-        const _detail = _a11yImportFailReason.indexOf(': ') >= 0 ? _a11yImportFailReason.slice(_a11yImportFailReason.indexOf(': ') + 2) : '';
-        console.error('[hac] create-unified-spec: fallback para card genérico —', _a11yImportFailReason);
-        _warnedFallbackMessage = _warnedFallback.message(_detail);
-      }
+      const _warnedFallbackMessage = null;
 
-      if (!specCard) {
-        specCard = figma.createFrame();
-        specCard.name = 'Spec Notes';
-        specCard.layoutMode = "VERTICAL";
-        specCard.paddingLeft = 12;
-        specCard.paddingRight = 12;
-        specCard.paddingTop = 12;
-        specCard.paddingBottom = 12;
-        specCard.itemSpacing = 12;
-        specCard.cornerRadius = 8;
-        specCard.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
-        specCard.strokes = [{ type: "SOLID", color: themeColor }];
-        specCard.strokeWeight = 1.5;
-        specCard.primaryAxisSizingMode = "AUTO";
-        specCard.counterAxisSizingMode = "AUTO";
-
-        const headerRow = figma.createFrame();
-        headerRow.layoutMode = "HORIZONTAL";
-        headerRow.itemSpacing = 8;
-        headerRow.fills = [];
-        headerRow.primaryAxisSizingMode = "AUTO";
-        headerRow.counterAxisSizingMode = "AUTO";
-
-        const tagCircle = figma.createFrame();
-        tagCircle.name = 'Tag';
-        tagCircle.layoutMode = "HORIZONTAL";
-        tagCircle.primaryAxisSizingMode = "FIXED";
-        tagCircle.counterAxisSizingMode = "FIXED";
-        tagCircle.resize(42, 42);
-        tagCircle.cornerRadius = _tagRadius;
-        tagCircle.fills = [{ type: "SOLID", color: themeFill }];
-        tagCircle.strokes = [{ type: "SOLID", color: themeColor }];
-        tagCircle.strokeWeight = 1.5;
-        tagCircle.primaryAxisAlignItems = "CENTER";
-        tagCircle.counterAxisAlignItems = "CENTER";
-        const tagText = figma.createText();
-        tagText.characters = opts.letter;
-        // Escala real: mantido acima do piso da escala (não estava na lista
-        // de pontos fora de escala) — "title/small" (20px) é o token mais
-        // próximo de 18px disponível, usado aqui por ser o maior texto do
-        // card procedural (letra do selo).
-        await _applyFichaTypography(tagText, 'title/small');
-        tagText.fills = [{ type: "SOLID", color: themeColor }];
-        tagCircle.appendChild(tagText);
-        headerRow.appendChild(tagCircle);
-
-        headerRow.counterAxisAlignItems = "CENTER";
-
-        const title = figma.createText();
-        title.characters = node.name;
-        // Escala real (corrigido 2026-09-11, era 12px/Inter Bold — já no
-        // piso real, só faltava a família Roboto e o lineHeight/
-        // letterSpacing do token real): "label/tiny" (12px, peso 700/bold).
-        await _applyFichaTypography(title, 'label/tiny');
-        title.fills = [{ type: "SOLID", color: { r: 0.1, g: 0.1, b: 0.1 } }];
-        headerRow.appendChild(title);
-        specCard.appendChild(headerRow);
-
-        if (opts.categoryLabel) {
-          const pill = figma.createFrame();
-          pill.name = `Categoria/${opts.categoryLabel}`;
-          pill.layoutMode = "HORIZONTAL";
-          pill.paddingLeft = 8; pill.paddingRight = 8;
-          pill.paddingTop = 4; pill.paddingBottom = 4;
-          pill.cornerRadius = 12;
-          pill.primaryAxisSizingMode = "AUTO";
-          pill.counterAxisSizingMode = "AUTO";
-          pill.fills = [{ type: "SOLID", color: themeFill }];
-          pill.strokes = [{ type: "SOLID", color: themeColor }];
-          const pillText = figma.createText();
-          pillText.characters = opts.categoryLabel;
-          // Escala real (corrigido 2026-09-11, era 10px/Inter Medium —
-          // abaixo do piso real de 12px): elevado para "label/tiny" (12px),
-          // com weightOverride=500 pra manter o peso visual Medium.
-          await _applyFichaTypography(pillText, 'label/tiny', 500);
-          pillText.fills = [{ type: "SOLID", color: themeColor }];
-          pill.appendChild(pillText);
-          specCard.appendChild(pill);
-        }
-
-        if (opts.note) {
-          const desc = figma.createText();
-          desc.characters = opts.note;
-          desc.textAutoResize = "WIDTH_AND_HEIGHT";
-          // Escala real (corrigido 2026-09-11, era 11px/Inter Regular —
-          // abaixo do piso real de 12px): elevado para "label/tiny" (12px),
-          // com weightOverride=400 pra manter o peso visual Regular de
-          // texto corrido.
-          await _applyFichaTypography(desc, 'label/tiny', 400);
-          desc.fills = [{ type: "SOLID", color: { r: 0.4, g: 0.4, b: 0.4 } }];
-          specCard.appendChild(desc);
-        }
-
-        if (opts.properties && opts.properties.length > 0) {
-          const propsFrame = figma.createFrame();
-          propsFrame.layoutMode = "VERTICAL";
-          propsFrame.itemSpacing = 4;
-          propsFrame.fills = [];
-          propsFrame.primaryAxisSizingMode = "AUTO";
-          propsFrame.counterAxisSizingMode = "AUTO";
-          propsFrame.name = 'Propriedades';
-          propsFrame.layoutAlign = "INHERIT";
-
-          // for...of (não mais .forEach) — necessário pra poder `await` a
-          // aplicação de tipografia de cada linha em sequência.
-          for (const p of opts.properties) {
-            const row = figma.createFrame();
-            row.name = `Prop/${p.label}`;
-            row.layoutMode = "HORIZONTAL";
-            row.itemSpacing = 12;
-            row.fills = [];
-            row.primaryAxisSizingMode = "AUTO";
-            row.counterAxisSizingMode = "AUTO";
-            row.layoutAlign = "INHERIT";
-            row.counterAxisAlignItems = "CENTER";
-
-            const pLabel = figma.createText();
-            pLabel.characters = p.label.toUpperCase();
-            pLabel.textAutoResize = "WIDTH_AND_HEIGHT";
-            // Escala real (corrigido 2026-09-11, era 10px/Inter Medium —
-            // abaixo do piso real de 12px): elevado para "label/tiny"
-            // (12px), com weightOverride=500 pra manter o peso Medium.
-            await _applyFichaTypography(pLabel, 'label/tiny', 500);
-            pLabel.fills = [{ type: "SOLID", color: { r: 0.5, g: 0.5, b: 0.5 } }];
-
-            const pVal = figma.createText();
-            pVal.characters = p.token || String(p.value);
-            pVal.textAutoResize = "WIDTH_AND_HEIGHT";
-            // Escala real (corrigido 2026-09-11, era 11px/Inter Bold —
-            // abaixo do piso real de 12px): elevado para "label/tiny" (12px,
-            // peso 700/bold — já é o peso "oficial" do token).
-            await _applyFichaTypography(pVal, 'label/tiny');
-            pVal.fills = [{ type: "SOLID", color: p.token ? themeColor : { r: 0.1, g: 0.1, b: 0.1 } }];
-
-            row.appendChild(pLabel);
-            row.appendChild(pVal);
-
-            propsFrame.appendChild(row);
-          }
-          specCard.appendChild(propsFrame);
-        }
-
-        if (opts.link) {
-          const linkTxt = figma.createText();
-          // Ordem corrigida (2026-09-14, mesmo bug de "W 0"/texto quebrado
-          // letra por letra já documentado em _appendFichaBlockTitle):
-          // textAutoResize precisa ser setado ANTES de `.characters` — um
-          // TEXT recém-criado nasce em 'NONE' (largura/altura travadas em
-          // 0), e escrever texto nesse estado trava a largura nesse valor.
-          // Abandonado também o layoutAlign='STRETCH' legado — `specCard`
-          // (pai) é Hug/Hug (AUTO/AUTO), então não existe largura FIXED
-          // real pra esticar contra; 'WIDTH_AND_HEIGHT' (mesmo modo já
-          // usado pelos textos irmãos `pLabel`/`pVal` deste fallback)
-          // deixa o texto medir seu próprio tamanho natural.
-          linkTxt.textAutoResize = "WIDTH_AND_HEIGHT";
-          linkTxt.characters = opts.link;
-          linkTxt.textDecoration = "UNDERLINE";
-          linkTxt.hyperlink = { type: "URL", value: opts.link };
-          // Escala real (corrigido 2026-09-11, era 11px/Inter Regular —
-          // abaixo do piso real de 12px): elevado para "label/tiny" (12px),
-          // com weightOverride=400 pra manter o peso visual Regular.
-          await _applyFichaTypography(linkTxt, 'label/tiny', 400);
-          linkTxt.fills = [{ type: "SOLID", color: { r: 0, g: 0.4, b: 0.8 } }];
-          specCard.appendChild(linkTxt);
-        }
-      } // fim do fallback procedural (if (!specCard))
 
       let groupNodes = [];
       let _absCardX = 0, _absCardY = 0, _absCardW = 0, _absCardH = 0;

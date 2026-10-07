@@ -6032,11 +6032,29 @@ function openA11yConfirmModal(opts) {
   if (bodyEl) bodyEl.textContent = o.body || '';
   if (confirmBtn) confirmBtn.textContent = o.confirmLabel || 'Confirmar';
   if (cancelBtn) cancelBtn.textContent = o.cancelLabel || 'Cancelar';
+  // Modo alerta (só um botão, sem Cancelar) — usado por openA11yNoCardAlert.
+  if (cancelBtn) cancelBtn.classList.toggle('hidden', !!o.alertOnly);
   window._a11yConfirmModalOnConfirm = typeof o.onConfirm === 'function' ? o.onConfirm : null;
   if (typeof openModal === 'function') openModal('a11y-confirm-modal');
   if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
 }
 window.openA11yConfirmModal = openA11yConfirmModal;
+
+// Alerta "sem card" (2026-10-07, pedido do usuário): quando a lib de
+// acessibilidade não tem card para a spec pedida, o plugin NÃO cria card
+// desenhado — abre esta modal explicando. Em lote, não reabre se já está
+// aberta (o motivo é o mesmo para todos os itens).
+function openA11yNoCardAlert(message) {
+  const modal = document.getElementById('a11y-confirm-modal');
+  if (modal && !modal.classList.contains('hidden')) return;
+  openA11yConfirmModal({
+    title: 'Sem card na lib de acessibilidade',
+    body: (message || 'A lib de acessibilidade não tem card para essa especificação.') + ' Nenhuma especificação foi criada.',
+    confirmLabel: 'Entendi',
+    alertOnly: true,
+  });
+}
+window.openA11yNoCardAlert = openA11yNoCardAlert;
 
 // Botão "Confirmar" do #a11y-confirm-modal — dispara o callback guardado e
 // fecha. Fechar ANTES de chamar onConfirm (em vez de depois) porque
@@ -6432,7 +6450,10 @@ function _resolveA11yFormPresetFromItem(item, kind) {
   const match = item.dscComponentMatch;
   const isUnmapped = match.isUnmapped === true;
   const shortName = match.a11yCategory;
-  const category = (shortName === 'titulo' || shortName === 'decorativo' || shortName === 'estrutura') ? shortName : 'elemento';
+  let category = (shortName === 'titulo' || shortName === 'decorativo' || shortName === 'estrutura') ? shortName : 'elemento';
+  // Mobile não tem Estrutura da Página (2026-10-07) — mesma regra do seletor
+  // de categoria (_applyA11yCategoryPickerOriginFilter).
+  if (category === 'estrutura' && (getA11yProjectOrigin() || match.origin) === 'mobile') category = 'elemento';
   // Origem do componente DETECTADO — mesma fonte que o lote usa
   // (item.dscComponentMatch.origin). Em "elemento"/"estrutura" vem da lib do
   // componente DSC real (_resolveDscComponentA11yMatch, code.js). Em

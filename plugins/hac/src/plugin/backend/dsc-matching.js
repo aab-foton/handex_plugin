@@ -189,7 +189,11 @@ export function _resolveDscComponentA11yMatch(componentKey) {
   }
   return {
     containingFrame,
-    a11yCategory: a11yMatch.shortName,
+    // Mobile não tem Estrutura da Página (sem marco de navegação/landmark —
+    // a lib mobile só publica Elementos, Títulos e Decorativos). O
+    // mapeamento curado ainda marca Top App Bar/Navigation Bar/Screen Footer
+    // como 'estrutura'; no mobile eles são Elementos (2026-10-07).
+    a11yCategory: (origin === 'mobile' && a11yMatch.shortName === 'estrutura') ? 'elemento' : a11yMatch.shortName,
     confidence: a11yMatch.confidence,
     origin,
     sourceLib

@@ -4733,6 +4733,22 @@ hr {
     </ul>
     <p><code>docs/knowledge-graph.json</code> ainda não foi regenerado com estas mudanças.</p>
 
+    <h2 id="s8af">8af. Só cards da lib; plataforma do projeto filtra tudo (v0.1.0-beta.97–98)</h2>
+    <ul>
+      <li><strong>Sem card desenhado.</strong> <code>create-unified-spec</code> não monta mais o card procedural (círculo + tag +
+      DESCRIÇÃO/NOTA DE CÓDIGO). Qualquer falha de <code>_tryImportA11yComponent</code> aborta a spec e posta
+      <code>a11y-spec-create-failed</code> <code>{ areaId, targetNodeId, reason, message }</code>; <code>messages.js</code> libera o
+      loading e o lote (<code>_a11yBatchCreateResolve(false)</code>) e abre <code>openA11yNoCardAlert</code> (modal
+      <code>#a11y-confirm-modal</code> em modo <code>alertOnly</code>).</li>
+      <li><strong>Componente mobile sem opção no card.</strong> <code>_fillA11yMobileElementosEImagensFields</code> resolve o nome
+      contra <code>componentOptions</code> do perfil mobile (<code>_resolveMobileComponenteOption</code>: igual sem caixa, senão uma
+      única aproximada — "Page Controller" → "Page Controler") e lança <code>a11y-elemento-componente-fora-da-base</code> se não
+      houver opção, em vez de deixar o default "Button" da lib.</li>
+      <li><strong>Plataforma.</strong> <code>_setActiveProjectOrigin</code> (dsc-matching.js) restringe o reconhecimento às libs da
+      plataforma do projeto; no mobile, <code>estrutura</code> do mapeamento curado (Top App Bar, Navigation Bar, Screen Footer)
+      vira <code>elemento</code> — mobile não tem Estrutura da Página nem marco de navegação.</li>
+    </ul>
+
     <h2 id="s9">9. Contrato de mensagens (UI ↔ backend)</h2>
 
     <p>Toda comunicação passa por <code>postMessage</code>/<code>window.onmessage</code> — o frontend

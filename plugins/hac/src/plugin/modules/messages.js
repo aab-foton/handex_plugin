@@ -337,6 +337,20 @@
         showToast('Especificação criada e posicionada, travada por padrão. Use o cadeado pra ajustar.');
       }
 
+      // Card da lib indisponível (2026-10-07): o backend não cria card
+      // desenhado — avisa no canvas e responde aqui para liberar o loading
+      // e o lote (que esperaria 15s pelo spec-created).
+      if (msg.type === "a11y-spec-create-failed") {
+        if (window._a11yManualSpecLoadingTimeout) { clearTimeout(window._a11yManualSpecLoadingTimeout); window._a11yManualSpecLoadingTimeout = null; }
+        if (typeof hideA11yCanvasLoading === 'function') hideA11yCanvasLoading();
+        if (typeof window._a11yBatchCreateResolve === 'function') {
+          const resolve = window._a11yBatchCreateResolve;
+          window._a11yBatchCreateResolve = null;
+          resolve(false);
+        }
+        if (typeof openA11yNoCardAlert === 'function') openA11yNoCardAlert(msg.message);
+      }
+
       if (msg.type === "selection-name") {
         // msg.mainText: code.js ecoa _findMainTextContent em get-selection-name.
         // msg.dscComponentName: nome cru do component set DSC (containingFrame)

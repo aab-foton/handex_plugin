@@ -655,7 +655,16 @@ async function _tryImportA11yMobileWrapperComponent(opts, wrapperData) {
     } else if (type === 'decorativo') {
       await _fillA11yMobileDecorativoFields(instance, opts);
     }
-  } catch (e) { /* best-effort — a instância com a variante certa já foi criada */ }
+  } catch (e) {
+    // Componente sem opção no card da lib (2026-10-07): o card nasceria com o
+    // default da lib ("Button") — dado errado. Desfaz e sobe o erro para o
+    // alerta "sem card" (nunca card desenhado). Demais falhas seguem
+    // best-effort, como antes.
+    if (e && typeof e.message === 'string' && e.message.startsWith('a11y-elemento-componente-fora-da-base')) {
+      try { instance.remove(); } catch (e2) { }
+      throw e;
+    }
+  }
 
   // BUG REAL CORRIGIDO (2026-09-21, print do usuário: marcador standalone
   // mostrava "2" corretamente, mas o card do Leitor de Tela mobile
@@ -818,8 +827,15 @@ async function _fillA11yMobileElementosEImagensFields(wrapperInstance, opts) {
   // "Personalizado" (equivalente mobile de "Outro (fora do catálogo)", ver
   // _renderA11yElementoMobileFields em accessibility.js) nunca é um nome real
   // de componente e por isso não entra em nenhum dos dois caminhos.
-  const _componenteReal = _cleanDscFrameNameForVariant(opts.a11yDscComponentName)
+  const _componenteNome = _cleanDscFrameNameForVariant(opts.a11yDscComponentName)
     || (linkNome && linkNome !== 'Personalizado' ? linkNome : null);
+  // Resolve o nome contra as opções REAIS do card mobile (mesmo critério de
+  // matchOption no frontend: igual sem caixa; senão, uma única opção
+  // aproximada — a lib escreve "Page Controler", o DSC "Page Controller").
+  const _componenteReal = _componenteNome ? _resolveMobileComponenteOption(_componenteNome) : null;
+  if (_componenteNome && !_componenteReal) {
+    throw new Error('a11y-elemento-componente-fora-da-base: ' + _componenteNome);
+  }
   if (_componenteReal) {
     // `nested` (resolvido no topo desta função) É a instância "Elementos e
     // imagens" que expõe esta property — reusa em vez de varrer a árvore de
@@ -831,7 +847,15 @@ async function _fillA11yMobileElementosEImagensFields(wrapperInstance, opts) {
       ? { instance: nested.instance, key: _componenteKey }
       : _findNestedInstanceWithAnyProp(wrapperInstance, ['Componente']);
     if (componenteFound) {
-      try { componenteFound.instance.setProperties({ [componenteFound.key]: _componenteReal }); } catch (e) { /* best-effort — nome pode não bater 1:1 com uma opção VARIANT válida */ }
+      // Nome sem opção VARIANT válida no card da lib (ex.: "Navigation Bar")
+      // → o card ficaria com o default "Button". Aborta (2026-10-07).
+      let _ok = false;
+      try {
+        componenteFound.instance.setProperties({ [componenteFound.key]: _componenteReal });
+        const _now = componenteFound.instance.componentProperties[componenteFound.key];
+        _ok = !!_now && String(_now.value).trim().toLowerCase() === String(_componenteReal).trim().toLowerCase();
+      } catch (e) { _ok = false; }
+      if (!_ok) throw new Error('a11y-elemento-componente-fora-da-base: ' + _componenteReal);
     }
   }
 }
@@ -843,6 +867,20 @@ async function _fillA11yMobileElementosEImagensFields(wrapperInstance, opts) {
 // (accessibility.js), que faz o mesmo para exibição no frontend — aqui sem o
 // fallback de rótulo genérico: sem nome real, devolve null e quem chama
 // decide (nunca forçar um valor inventado numa property de variante).
+function _resolveMobileComponenteOption(name) {
+  const opts = getPlatformProfile('mobile').componentOptions || [];
+  if (!opts.length) return name; // sem lista gerada: mantém o comportamento antigo
+  const n = String(name || '').trim().toLowerCase();
+  if (!n) return null;
+  const exact = opts.find(o => o.trim().toLowerCase() === n);
+  if (exact) return exact;
+  const approx = opts.filter(o => {
+    const opt = o.trim().toLowerCase();
+    return opt.length > 2 && (n.includes(opt) || opt.includes(n) || (n.length > 4 && opt.replace(/(.)/g, '$1') === n.replace(/(.)/g, '$1')));
+  });
+  return approx.length === 1 ? approx[0] : null;
+}
+
 function _cleanDscFrameNameForVariant(containingFrame) {
   const cleaned = String(containingFrame || '').replace(/^\[dsc\]\s*/i, '').trim();
   return cleaned || null;
