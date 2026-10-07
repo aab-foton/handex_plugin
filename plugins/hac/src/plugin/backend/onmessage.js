@@ -3651,6 +3651,27 @@ figma.ui.onmessage = async (msg) => {
     if (msg.shouldScroll) figma.viewport.scrollAndZoomIntoView([node]);
   }
 
+  // Foco no CARD da spec (2026-10-07, pedido do usuário: "ao clicar no botão
+  // de editar, quero que foque no card específico daquele elemento"). spec.id
+  // é o grupo da spec; o card da lib dentro dele se chama sempre "Spec Notes"
+  // (create-unified-spec). Sem o card, cai no grupo inteiro. Foco programático
+  // — suprimido no listener de seleção, não conta como clique do designer.
+  if (msg.type === "focus-spec-card") {
+    (async () => {
+      const g = msg.specId ? await _getSceneNodeById(msg.specId) : null;
+      if (!g || g.removed || !_nodeOnCurrentPage(g)) {
+        figma.notify('Card desta spec não encontrado no canvas.');
+        return;
+      }
+      const card = ('findOne' in g) ? g.findOne(n => n.name === 'Spec Notes') : null;
+      const target = card || g;
+      _a11ySuppressNextSelectionChange = true;
+      figma.currentPage.selection = [target];
+      figma.viewport.scrollAndZoomIntoView([target]);
+    })();
+    return;
+  }
+
   // Elementos iguais na mesma tela (2026-10-07, pedido do usuário: "busque
   // na tela elementos similares e aplique a spec — evita ter que ficar
   // clicando em vários"). Critério confirmado com o usuário: MESMO COMPONENTE

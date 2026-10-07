@@ -190,7 +190,7 @@
     {
       "id": "message:ui-ready",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:424",
+      "handlerLocation": "src/plugin/backend/onmessage.js:436",
       "payloadFields": [],
       "senders": [
         "src/plugin/modules/core.js:1249"
@@ -214,8 +214,8 @@
         "onboardingSeen"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:477",
-        "src/plugin/backend/onmessage.js:499"
+        "src/plugin/backend/onmessage.js:489",
+        "src/plugin/backend/onmessage.js:511"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:31 (window.onmessage) e core.js (aplica tema, hidrata hacData, decide onboarding)"
@@ -225,12 +225,12 @@
     {
       "id": "message:check-other-designers-sections",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:516",
+      "handlerLocation": "src/plugin/backend/onmessage.js:528",
       "payloadFields": [
         "currentUserId"
       ],
       "senders": [
-        "src/plugin/modules/accessibility.js:5860"
+        "src/plugin/modules/accessibility.js:5864"
       ],
       "consumers": [
         "backend: _findOtherDesignersSessionSections"
@@ -247,7 +247,7 @@
         "otherDesignersSections"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:518"
+        "src/plugin/backend/onmessage.js:530"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:131"
@@ -256,12 +256,12 @@
     {
       "id": "message:check-my-prior-session",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:526",
+      "handlerLocation": "src/plugin/backend/onmessage.js:538",
       "payloadFields": [
         "currentUserId"
       ],
       "senders": [
-        "src/plugin/modules/accessibility.js:5861"
+        "src/plugin/modules/accessibility.js:5865"
       ],
       "consumers": [
         "backend: _findOwnPriorSessionSection"
@@ -278,7 +278,7 @@
         "priorSession"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:528"
+        "src/plugin/backend/onmessage.js:540"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:142"
@@ -287,12 +287,12 @@
     {
       "id": "message:survey-existing-documentation",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:541",
+      "handlerLocation": "src/plugin/backend/onmessage.js:553",
       "payloadFields": [
         "currentUserId"
       ],
       "senders": [
-        "src/plugin/modules/accessibility.js:5947"
+        "src/plugin/modules/accessibility.js:5951"
       ],
       "consumers": [
         "backend: _surveyExistingHacDocumentation (code.js)"
@@ -314,8 +314,8 @@
         "failed"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:544",
-        "src/plugin/backend/onmessage.js:547"
+        "src/plugin/backend/onmessage.js:556",
+        "src/plugin/backend/onmessage.js:559"
       ],
       "consumers": [
         "src/plugin/modules/messages.js: renderA11yExistingDocumentationSurvey (accessibility.js)"
@@ -325,7 +325,7 @@
     {
       "id": "message:resize",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:552",
+      "handlerLocation": "src/plugin/backend/onmessage.js:564",
       "payloadFields": [
         "width",
         "height"
@@ -340,7 +340,7 @@
     {
       "id": "message:resize-ui",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:557",
+      "handlerLocation": "src/plugin/backend/onmessage.js:569",
       "payloadFields": [
         "width",
         "height"
@@ -358,7 +358,7 @@
     {
       "id": "message:save-storage",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:562",
+      "handlerLocation": "src/plugin/backend/onmessage.js:574",
       "payloadFields": [
         "data (hacData completo serializado)",
         "data"
@@ -373,7 +373,7 @@
     {
       "id": "message:save-onboarding-state",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:587",
+      "handlerLocation": "src/plugin/backend/onmessage.js:599",
       "payloadFields": [
         "seen (booleano/estado do onboarding)",
         "data"
@@ -388,7 +388,7 @@
     {
       "id": "message:clear-cache",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:601",
+      "handlerLocation": "src/plugin/backend/onmessage.js:613",
       "payloadFields": [],
       "senders": [
         "src/plugin/modules/core.js:148"
@@ -408,8 +408,8 @@
         "failed"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:612",
-        "src/plugin/backend/onmessage.js:622"
+        "src/plugin/backend/onmessage.js:624",
+        "src/plugin/backend/onmessage.js:634"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:148"
@@ -418,7 +418,7 @@
     {
       "id": "message:highlight-node",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:691",
+      "handlerLocation": "src/plugin/backend/onmessage.js:703",
       "payloadFields": [
         "id",
         "selectNode",
@@ -457,7 +457,7 @@
     {
       "id": "message:resolve-a11y-focus-node",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:806",
+      "handlerLocation": "src/plugin/backend/onmessage.js:818",
       "payloadFields": [
         "areaId",
         "kind",
@@ -486,7 +486,7 @@
         "requestId"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:820"
+        "src/plugin/backend/onmessage.js:832"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:502 (chama focusNode(msg.nodeId, msg.areaId, msg.kind) — repasse novo 2026-09-29 — → dispara message:highlight-node já com areaId/kind)"
@@ -495,7 +495,7 @@
     {
       "id": "message:hide-node",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:829",
+      "handlerLocation": "src/plugin/backend/onmessage.js:841",
       "payloadFields": [
         "id"
       ],
@@ -509,7 +509,7 @@
     {
       "id": "message:show-node",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:837",
+      "handlerLocation": "src/plugin/backend/onmessage.js:849",
       "payloadFields": [
         "id"
       ],
@@ -523,17 +523,17 @@
     {
       "id": "message:delete-node",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:843",
+      "handlerLocation": "src/plugin/backend/onmessage.js:855",
       "payloadFields": [
         "id"
       ],
       "senders": [
         "src/plugin/modules/accessibility.js:4032",
-        "src/plugin/modules/accessibility.js:4528",
-        "src/plugin/modules/accessibility.js:7717",
-        "src/plugin/modules/accessibility.js:8152",
-        "src/plugin/modules/accessibility.js:8164",
-        "src/plugin/modules/accessibility.js:8176",
+        "src/plugin/modules/accessibility.js:4532",
+        "src/plugin/modules/accessibility.js:7721",
+        "src/plugin/modules/accessibility.js:8158",
+        "src/plugin/modules/accessibility.js:8170",
+        "src/plugin/modules/accessibility.js:8182",
         "src/plugin/modules/swipe-path.js:817",
         "src/plugin/modules/tab-order.js:924",
         "src/plugin/modules/tab-order.js:955",
@@ -547,7 +547,7 @@
     {
       "id": "message:get-selection-name",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:852",
+      "handlerLocation": "src/plugin/backend/onmessage.js:864",
       "payloadFields": [],
       "senders": [
         "src/plugin/modules/accessibility.js:1529"
@@ -571,7 +571,7 @@
         "dscComponentName"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:899"
+        "src/plugin/backend/onmessage.js:911"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:265 (usado por prefillA11yComponentName para avisar de duplicidade)"
@@ -580,7 +580,7 @@
     {
       "id": "message:get-a11y-selection-info",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:915",
+      "handlerLocation": "src/plugin/backend/onmessage.js:927",
       "payloadFields": [],
       "senders": [
         "src/plugin/modules/accessibility.js:3576"
@@ -601,7 +601,7 @@
         "name"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:926"
+        "src/plugin/backend/onmessage.js:938"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:279"
@@ -610,7 +610,7 @@
     {
       "id": "message:create-a11y-area",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:949",
+      "handlerLocation": "src/plugin/backend/onmessage.js:961",
       "payloadFields": [
         "targetNodeId",
         "label",
@@ -623,7 +623,7 @@
         "autoDetect"
       ],
       "senders": [
-        "src/plugin/modules/accessibility.js:8120"
+        "src/plugin/modules/accessibility.js:8126"
       ],
       "consumers": [
         "backend: cria grupo/selo da Área Marcada real da lib (_tryImportA11yAgrupamento)"
@@ -646,7 +646,7 @@
         "area.autoDetect"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:1070"
+        "src/plugin/backend/onmessage.js:1082"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:291 (grava em hacData.a11yAreas[])"
@@ -655,7 +655,7 @@
     {
       "id": "message:update-a11y-area-conector",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:1108",
+      "handlerLocation": "src/plugin/backend/onmessage.js:1120",
       "payloadFields": [
         "areaId",
         "conector (nova direção)"
@@ -680,7 +680,7 @@
         "conector"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:1247"
+        "src/plugin/backend/onmessage.js:1259"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:322"
@@ -695,9 +695,9 @@
         "reason"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:1123",
-        "src/plugin/backend/onmessage.js:1127",
-        "src/plugin/backend/onmessage.js:1185"
+        "src/plugin/backend/onmessage.js:1135",
+        "src/plugin/backend/onmessage.js:1139",
+        "src/plugin/backend/onmessage.js:1197"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:331"
@@ -707,13 +707,13 @@
     {
       "id": "message:scan-frame",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:1259",
+      "handlerLocation": "src/plugin/backend/onmessage.js:1271",
       "payloadFields": [
         "origin",
         "targetNodeId ou seleção implícita"
       ],
       "senders": [
-        "src/plugin/modules/accessibility.js:6794"
+        "src/plugin/modules/accessibility.js:6798"
       ],
       "consumers": [
         "backend: Detecção Automática — varre a árvore do frame contra o mapa dsc-component-a11y-mapping*.json (dsc-matching.js)"
@@ -731,8 +731,8 @@
         "data (merged) OU error"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:1282",
-        "src/plugin/backend/onmessage.js:1297"
+        "src/plugin/backend/onmessage.js:1294",
+        "src/plugin/backend/onmessage.js:1309"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:186"
@@ -742,7 +742,7 @@
     {
       "id": "message:create-unified-spec",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:1359",
+      "handlerLocation": "src/plugin/backend/onmessage.js:1371",
       "payloadFields": [
         "opts.category",
         "opts.categoryLabel",
@@ -775,7 +775,7 @@
       ],
       "senders": [
         "src/plugin/modules/accessibility.js:4119",
-        "src/plugin/modules/accessibility.js:7197"
+        "src/plugin/modules/accessibility.js:7201"
       ],
       "consumers": [
         "backend: resolve/cria clone da área, desenha card real ou procedural (fallback), grava opts em spec.*"
@@ -817,7 +817,7 @@
         "spec.needsReview"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:2286"
+        "src/plugin/backend/onmessage.js:2298"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:213 (grava em hacData.a11ySpecs[], chama _saveA11yAreaWorkAnchor se workAnchor presente)"
@@ -827,13 +827,13 @@
     {
       "id": "message:unlock-spec-group",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:2352",
+      "handlerLocation": "src/plugin/backend/onmessage.js:2364",
       "payloadFields": [
         "specIds",
         "locked"
       ],
       "senders": [
-        "src/plugin/modules/accessibility.js:7826",
+        "src/plugin/modules/accessibility.js:7830",
         "src/plugin/modules/handoff-ficha.js:363"
       ],
       "consumers": [
@@ -843,7 +843,7 @@
     {
       "id": "message:start-tab-order-mode",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:2374",
+      "handlerLocation": "src/plugin/backend/onmessage.js:2386",
       "payloadFields": [],
       "senders": [
         "src/plugin/modules/tab-order.js:546"
@@ -855,7 +855,7 @@
     {
       "id": "message:stop-tab-order-mode",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:2383",
+      "handlerLocation": "src/plugin/backend/onmessage.js:2395",
       "payloadFields": [],
       "senders": [
         "src/plugin/modules/tab-order.js:548"
@@ -867,7 +867,7 @@
     {
       "id": "message:start-swipe-path-mode",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:2395",
+      "handlerLocation": "src/plugin/backend/onmessage.js:2407",
       "payloadFields": [
         "areaId",
         "sectionName",
@@ -888,7 +888,7 @@
     {
       "id": "message:stop-swipe-path-mode",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:2434",
+      "handlerLocation": "src/plugin/backend/onmessage.js:2446",
       "payloadFields": [],
       "senders": [
         "src/plugin/modules/swipe-path.js:371",
@@ -906,10 +906,10 @@
         "cloneId"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:2400",
-        "src/plugin/backend/onmessage.js:2405",
-        "src/plugin/backend/onmessage.js:2415",
-        "src/plugin/backend/onmessage.js:2429"
+        "src/plugin/backend/onmessage.js:2412",
+        "src/plugin/backend/onmessage.js:2417",
+        "src/plugin/backend/onmessage.js:2427",
+        "src/plugin/backend/onmessage.js:2441"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:368"
@@ -919,7 +919,7 @@
     {
       "id": "message:delete-swipe-path-draft-copy",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:2443",
+      "handlerLocation": "src/plugin/backend/onmessage.js:2455",
       "payloadFields": [
         "areaId ou cloneId (confirmar no handler antes de propagar campo novo)",
         "areaId"
@@ -934,7 +934,7 @@
     {
       "id": "message:get-tab-order-accumulated-selection",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:2455",
+      "handlerLocation": "src/plugin/backend/onmessage.js:2467",
       "payloadFields": [],
       "senders": [
         "src/plugin/modules/tab-order.js:523",
@@ -956,7 +956,7 @@
         "points[].nodeName"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:2479"
+        "src/plugin/backend/onmessage.js:2491"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:350"
@@ -965,7 +965,7 @@
     {
       "id": "message:get-swipe-path-accumulated-selection",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:2486",
+      "handlerLocation": "src/plugin/backend/onmessage.js:2498",
       "payloadFields": [],
       "senders": [
         "src/plugin/modules/swipe-path.js:289",
@@ -987,7 +987,7 @@
         "points[].nodeName"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:2504"
+        "src/plugin/backend/onmessage.js:2516"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:521"
@@ -1001,7 +1001,7 @@
         "count"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:379"
+        "src/plugin/backend/onmessage.js:391"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:345"
@@ -1015,7 +1015,7 @@
         "count"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:388"
+        "src/plugin/backend/onmessage.js:400"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:516"
@@ -1024,7 +1024,7 @@
     {
       "id": "message:generate-tab-order-from-layers",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:2753",
+      "handlerLocation": "src/plugin/backend/onmessage.js:2765",
       "payloadFields": [
         "areaId",
         "generation",
@@ -1055,11 +1055,11 @@
         "nodeMap"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:2769",
-        "src/plugin/backend/onmessage.js:2774",
-        "src/plugin/backend/onmessage.js:2830",
+        "src/plugin/backend/onmessage.js:2781",
+        "src/plugin/backend/onmessage.js:2786",
         "src/plugin/backend/onmessage.js:2842",
-        "src/plugin/backend/onmessage.js:2847"
+        "src/plugin/backend/onmessage.js:2854",
+        "src/plugin/backend/onmessage.js:2859"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:459"
@@ -1069,7 +1069,7 @@
     {
       "id": "message:generate-swipe-path-from-layers",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:2881",
+      "handlerLocation": "src/plugin/backend/onmessage.js:2893",
       "payloadFields": [
         "areaId",
         "generation",
@@ -1100,11 +1100,11 @@
         "nodeMap"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:2890",
-        "src/plugin/backend/onmessage.js:2895",
-        "src/plugin/backend/onmessage.js:2941",
+        "src/plugin/backend/onmessage.js:2902",
+        "src/plugin/backend/onmessage.js:2907",
         "src/plugin/backend/onmessage.js:2953",
-        "src/plugin/backend/onmessage.js:2958"
+        "src/plugin/backend/onmessage.js:2965",
+        "src/plugin/backend/onmessage.js:2970"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:471"
@@ -1114,7 +1114,7 @@
     {
       "id": "message:resolve-tab-order-narration",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:3010",
+      "handlerLocation": "src/plugin/backend/onmessage.js:3022",
       "payloadFields": [
         "areaId",
         "items",
@@ -1141,7 +1141,7 @@
         "items"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:3062"
+        "src/plugin/backend/onmessage.js:3074"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:502"
@@ -1150,7 +1150,7 @@
     {
       "id": "message:renumber-tab-order-items",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:3067",
+      "handlerLocation": "src/plugin/backend/onmessage.js:3079",
       "payloadFields": [
         "areaId ou lista de items (confirmar no handler antes de propagar campo novo)",
         "items"
@@ -1176,7 +1176,7 @@
         "updated"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:3098"
+        "src/plugin/backend/onmessage.js:3110"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:494"
@@ -1185,7 +1185,7 @@
     {
       "id": "message:start-tab-order-copy",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:3492",
+      "handlerLocation": "src/plugin/backend/onmessage.js:3504",
       "payloadFields": [
         "areaId",
         "targetNodeId",
@@ -1213,10 +1213,10 @@
         "nodeMap"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:3497",
-        "src/plugin/backend/onmessage.js:3502",
+        "src/plugin/backend/onmessage.js:3509",
         "src/plugin/backend/onmessage.js:3514",
-        "src/plugin/backend/onmessage.js:3525"
+        "src/plugin/backend/onmessage.js:3526",
+        "src/plugin/backend/onmessage.js:3537"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:360"
@@ -1226,7 +1226,7 @@
     {
       "id": "message:start-spec-copy",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:3564",
+      "handlerLocation": "src/plugin/backend/onmessage.js:3576",
       "payloadFields": [
         "areaId",
         "targetNodeId",
@@ -1237,7 +1237,7 @@
       ],
       "senders": [
         "src/plugin/modules/accessibility.js:1121",
-        "src/plugin/modules/accessibility.js:7368"
+        "src/plugin/modules/accessibility.js:7372"
       ],
       "consumers": [
         "backend: _resolveActiveSpecClone / _createSpecCloneForArea"
@@ -1250,7 +1250,7 @@
     {
       "id": "message:highlight-spec-copy-node",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:3687",
+      "handlerLocation": "src/plugin/backend/onmessage.js:3720",
       "payloadFields": [
         "areaId ou nodeId (confirmar no handler)",
         "id",
@@ -1260,8 +1260,8 @@
         "areaTargetNodeId"
       ],
       "senders": [
-        "src/plugin/modules/accessibility.js:7591",
-        "src/plugin/modules/accessibility.js:7605"
+        "src/plugin/modules/accessibility.js:7595",
+        "src/plugin/modules/accessibility.js:7609"
       ],
       "consumers": [
         "backend: foca/destaca node dentro do clone de trabalho de Specs"
@@ -1271,7 +1271,7 @@
     {
       "id": "message:highlight-swipe-path-copy-node",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:3701",
+      "handlerLocation": "src/plugin/backend/onmessage.js:3734",
       "payloadFields": [
         "areaId ou nodeId (confirmar no handler)",
         "id",
@@ -1293,7 +1293,7 @@
     {
       "id": "message:delete-tab-order-draft-copy",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:3854",
+      "handlerLocation": "src/plugin/backend/onmessage.js:3887",
       "payloadFields": [
         "areaId ou cloneId (confirmar no handler)",
         "areaId"
@@ -1308,7 +1308,7 @@
     {
       "id": "message:resolve-tab-order-clone",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:3873",
+      "handlerLocation": "src/plugin/backend/onmessage.js:3906",
       "payloadFields": [
         "areaId",
         "targetNodeId",
@@ -1335,7 +1335,7 @@
         "ok"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:3876"
+        "src/plugin/backend/onmessage.js:3909"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:436"
@@ -1344,7 +1344,7 @@
     {
       "id": "message:resolve-swipe-path-clone",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:3895",
+      "handlerLocation": "src/plugin/backend/onmessage.js:3928",
       "payloadFields": [
         "areaId"
       ],
@@ -1367,7 +1367,7 @@
         "ok"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:3902"
+        "src/plugin/backend/onmessage.js:3935"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:446"
@@ -1376,7 +1376,7 @@
     {
       "id": "message:start-swipe-path-listen-only",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:3911",
+      "handlerLocation": "src/plugin/backend/onmessage.js:3944",
       "payloadFields": [],
       "senders": [
         "src/plugin/modules/swipe-path.js:353"
@@ -1388,7 +1388,7 @@
     {
       "id": "message:draw-tab-order-badge",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:3923",
+      "handlerLocation": "src/plugin/backend/onmessage.js:3956",
       "payloadFields": [
         "tempId",
         "areaId/item (confirmar no handler)"
@@ -1414,7 +1414,7 @@
         "item"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:3941"
+        "src/plugin/backend/onmessage.js:3974"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:480"
@@ -1428,9 +1428,9 @@
         "tempId"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:3927",
-        "src/plugin/backend/onmessage.js:3933",
-        "src/plugin/backend/onmessage.js:3944"
+        "src/plugin/backend/onmessage.js:3960",
+        "src/plugin/backend/onmessage.js:3966",
+        "src/plugin/backend/onmessage.js:3977"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:485"
@@ -1439,13 +1439,13 @@
     {
       "id": "message:delete-tab-order-copy-for-area",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:3953",
+      "handlerLocation": "src/plugin/backend/onmessage.js:3986",
       "payloadFields": [
         "areaId",
         "everywhere"
       ],
       "senders": [
-        "src/plugin/modules/accessibility.js:8168",
+        "src/plugin/modules/accessibility.js:8174",
         "src/plugin/modules/tab-order.js:1865"
       ],
       "consumers": [
@@ -1455,14 +1455,14 @@
     {
       "id": "message:delete-specs-for-area",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:3974",
+      "handlerLocation": "src/plugin/backend/onmessage.js:4007",
       "payloadFields": [
         "areaId",
         "everywhere"
       ],
       "senders": [
-        "src/plugin/modules/accessibility.js:7757",
-        "src/plugin/modules/accessibility.js:8160"
+        "src/plugin/modules/accessibility.js:7761",
+        "src/plugin/modules/accessibility.js:8166"
       ],
       "consumers": [
         "backend: remove specs da área do canvas"
@@ -1472,14 +1472,14 @@
     {
       "id": "message:toggle-tab-order-copy-visibility",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:4031",
+      "handlerLocation": "src/plugin/backend/onmessage.js:4064",
       "payloadFields": [
         "areaId",
         "visible (confirmar no handler)",
         "visible"
       ],
       "senders": [
-        "src/plugin/modules/accessibility.js:7805"
+        "src/plugin/modules/accessibility.js:7809"
       ],
       "consumers": [
         "backend: mostra/esconde clone de Ordem de Tabulação"
@@ -1488,7 +1488,7 @@
     {
       "id": "message:insert-swipe-path",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:4208",
+      "handlerLocation": "src/plugin/backend/onmessage.js:4241",
       "payloadFields": [
         "areaId",
         "targetNodeId (fallback pra recriar clone)",
@@ -1515,7 +1515,7 @@
         "points"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:4312"
+        "src/plugin/backend/onmessage.js:4345"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:528"
@@ -1530,8 +1530,8 @@
         "reason"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:4213",
-        "src/plugin/backend/onmessage.js:4320"
+        "src/plugin/backend/onmessage.js:4246",
+        "src/plugin/backend/onmessage.js:4353"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:533"
@@ -1540,13 +1540,13 @@
     {
       "id": "message:cleanup-swipe-path-for-area",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:4337",
+      "handlerLocation": "src/plugin/backend/onmessage.js:4370",
       "payloadFields": [
         "areaId",
         "everywhere"
       ],
       "senders": [
-        "src/plugin/modules/accessibility.js:8172",
+        "src/plugin/modules/accessibility.js:8178",
         "src/plugin/modules/swipe-path.js:819"
       ],
       "consumers": [
@@ -1564,7 +1564,7 @@
         "areaId"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:4349"
+        "src/plugin/backend/onmessage.js:4382"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:541"
@@ -1573,14 +1573,14 @@
     {
       "id": "message:check-a11y-library",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:4359",
+      "handlerLocation": "src/plugin/backend/onmessage.js:4392",
       "payloadFields": [
         "token"
       ],
       "senders": [
         "src/plugin/modules/accessibility.js:1141",
         "src/plugin/modules/accessibility.js:1324",
-        "src/plugin/modules/accessibility.js:6772"
+        "src/plugin/modules/accessibility.js:6776"
       ],
       "consumers": [
         "backend: checa se a lib 'Design Acessível' está vinculada ao arquivo"
@@ -1599,7 +1599,7 @@
         "token"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:4369"
+        "src/plugin/backend/onmessage.js:4402"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:584"
@@ -1608,7 +1608,7 @@
     {
       "id": "message:resolve-manual-spec-match",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:4385",
+      "handlerLocation": "src/plugin/backend/onmessage.js:4418",
       "payloadFields": [
         "token"
       ],
@@ -1644,7 +1644,7 @@
     {
       "id": "message:stop-manual-spec-match-mode",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:4414",
+      "handlerLocation": "src/plugin/backend/onmessage.js:4447",
       "payloadFields": [],
       "senders": [
         "src/plugin/modules/accessibility.js:1314"
@@ -1656,14 +1656,14 @@
     {
       "id": "message:resolve-layer-order",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:4428",
+      "handlerLocation": "src/plugin/backend/onmessage.js:4461",
       "payloadFields": [
         "areaId",
         "areaTargetNodeId",
         "nodeIds"
       ],
       "senders": [
-        "src/plugin/modules/accessibility.js:5549"
+        "src/plugin/modules/accessibility.js:5553"
       ],
       "consumers": [
         "backend: DFS na árvore de camadas a partir de areaTargetNodeId, escopado à área"
@@ -1682,7 +1682,7 @@
         "order"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:4476"
+        "src/plugin/backend/onmessage.js:4509"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:644"
@@ -1691,7 +1691,7 @@
     {
       "id": "message:insert-ficha-section",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:5690",
+      "handlerLocation": "src/plugin/backend/onmessage.js:5723",
       "payloadFields": [
         "areaId (via payload.areaId)",
         "sectionKey (via payload.sectionKey)",
@@ -1720,7 +1720,7 @@
         "frameId"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:5839"
+        "src/plugin/backend/onmessage.js:5872"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:550"
@@ -1736,10 +1736,10 @@
         "reason"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:5695",
-        "src/plugin/backend/onmessage.js:5707",
-        "src/plugin/backend/onmessage.js:5722",
-        "src/plugin/backend/onmessage.js:5739"
+        "src/plugin/backend/onmessage.js:5728",
+        "src/plugin/backend/onmessage.js:5740",
+        "src/plugin/backend/onmessage.js:5755",
+        "src/plugin/backend/onmessage.js:5772"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:555"
@@ -1748,7 +1748,7 @@
     {
       "id": "message:prepare-ficha-section-edit",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:5922",
+      "handlerLocation": "src/plugin/backend/onmessage.js:5955",
       "payloadFields": [
         "areaId",
         "sectionKey"
@@ -1774,7 +1774,7 @@
         "cloneId"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:5981"
+        "src/plugin/backend/onmessage.js:6014"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:562"
@@ -1790,9 +1790,9 @@
         "reason"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:5927",
-        "src/plugin/backend/onmessage.js:5934",
-        "src/plugin/backend/onmessage.js:5956"
+        "src/plugin/backend/onmessage.js:5960",
+        "src/plugin/backend/onmessage.js:5967",
+        "src/plugin/backend/onmessage.js:5989"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:567"
@@ -1801,12 +1801,12 @@
     {
       "id": "message:delete-ficha-for-area",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:5994",
+      "handlerLocation": "src/plugin/backend/onmessage.js:6027",
       "payloadFields": [
         "areaId"
       ],
       "senders": [
-        "src/plugin/modules/accessibility.js:8173"
+        "src/plugin/modules/accessibility.js:8179"
       ],
       "consumers": [
         "backend: remove seções da Ficha desta área do Documento Final"
@@ -1815,14 +1815,14 @@
     {
       "id": "message:toggle-ficha-visibility",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:6008",
+      "handlerLocation": "src/plugin/backend/onmessage.js:6041",
       "payloadFields": [
         "areaId",
         "visible (confirmar no handler)",
         "visible"
       ],
       "senders": [
-        "src/plugin/modules/accessibility.js:7811"
+        "src/plugin/modules/accessibility.js:7815"
       ],
       "consumers": [
         "backend: mostra/esconde seção da Ficha"
@@ -1831,7 +1831,7 @@
     {
       "id": "message:highlight-ficha-node",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:6022",
+      "handlerLocation": "src/plugin/backend/onmessage.js:6055",
       "payloadFields": [
         "areaId",
         "frameId"
@@ -1854,7 +1854,7 @@
         "areaId"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:6026"
+        "src/plugin/backend/onmessage.js:6059"
       ],
       "consumers": [
         "src/plugin/modules/messages.js:575"
@@ -1876,10 +1876,10 @@
     {
       "id": "message:ensure-hac-page",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:646",
+      "handlerLocation": "src/plugin/backend/onmessage.js:658",
       "payloadFields": [],
       "senders": [
-        "src/plugin/modules/accessibility.js:5868"
+        "src/plugin/modules/accessibility.js:5872"
       ],
       "consumers": [],
       "respondsWith": [],
@@ -1897,8 +1897,8 @@
         "failed"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:660",
-        "src/plugin/backend/onmessage.js:666"
+        "src/plugin/backend/onmessage.js:672",
+        "src/plugin/backend/onmessage.js:678"
       ],
       "consumers": [],
       "respondsWith": [],
@@ -1907,7 +1907,7 @@
     {
       "id": "message:clear-canvas-and-cache",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:671",
+      "handlerLocation": "src/plugin/backend/onmessage.js:683",
       "payloadFields": [],
       "senders": [
         "src/plugin/modules/core.js:169"
@@ -1926,8 +1926,8 @@
         "failed"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:679",
-        "src/plugin/backend/onmessage.js:686"
+        "src/plugin/backend/onmessage.js:691",
+        "src/plugin/backend/onmessage.js:698"
       ],
       "consumers": [],
       "respondsWith": [],
@@ -1944,7 +1944,7 @@
         "message"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:1526"
+        "src/plugin/backend/onmessage.js:1538"
       ],
       "consumers": [
         "frontend: libera loading e o lote (_a11yBatchCreateResolve(false)) e abre openA11yNoCardAlert(message) — sem card da lib, nada é criado no canvas (beta.98)"
@@ -1955,7 +1955,7 @@
     {
       "id": "message:highlight-tab-order-copy-node",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:3541",
+      "handlerLocation": "src/plugin/backend/onmessage.js:3553",
       "payloadFields": [
         "id",
         "areaId",
@@ -1983,9 +1983,9 @@
         "workAnchor"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:3568",
-        "src/plugin/backend/onmessage.js:3577",
-        "src/plugin/backend/onmessage.js:3579"
+        "src/plugin/backend/onmessage.js:3580",
+        "src/plugin/backend/onmessage.js:3589",
+        "src/plugin/backend/onmessage.js:3591"
       ],
       "consumers": [],
       "respondsWith": [],
@@ -2000,7 +2000,7 @@
         "removed"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:3962"
+        "src/plugin/backend/onmessage.js:3995"
       ],
       "consumers": [],
       "respondsWith": [],
@@ -2014,7 +2014,7 @@
         "message"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:4592"
+        "src/plugin/backend/onmessage.js:4625"
       ],
       "consumers": [
         "frontend: openA11yNoCardAlert(message, { noSpecSuffix: true }) — componente de instruções da Ficha indisponível, seção gerada sem o card (beta.99)"
@@ -2025,7 +2025,7 @@
     {
       "id": "message:bump-a11y-session-version",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:5878",
+      "handlerLocation": "src/plugin/backend/onmessage.js:5911",
       "payloadFields": [],
       "senders": [
         "src/plugin/modules/handoff-ficha.js:228"
@@ -2043,9 +2043,9 @@
         "kind"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:5882",
-        "src/plugin/backend/onmessage.js:5901",
-        "src/plugin/backend/onmessage.js:5906"
+        "src/plugin/backend/onmessage.js:5915",
+        "src/plugin/backend/onmessage.js:5934",
+        "src/plugin/backend/onmessage.js:5939"
       ],
       "consumers": [],
       "respondsWith": [],
@@ -2054,7 +2054,7 @@
     {
       "id": "message:find-similar-nodes",
       "direction": "frontend-to-backend",
-      "handlerLocation": "src/plugin/backend/onmessage.js:3649",
+      "handlerLocation": "src/plugin/backend/onmessage.js:3682",
       "payloadFields": [
         "requestId",
         "areaTargetNodeId",
@@ -2082,11 +2082,25 @@
         "items"
       ],
       "senders": [
-        "src/plugin/backend/onmessage.js:3651"
+        "src/plugin/backend/onmessage.js:3684"
       ],
       "consumers": [
         "frontend: _handleA11ySimilarNodesFound — confirmação \"Aplicar em elementos iguais?\" com lista; aplica via _createA11ySpecBatch"
       ],
+      "respondsWith": [],
+      "addedAt": "2026-10-07"
+    },
+    {
+      "id": "message:focus-spec-card",
+      "direction": "frontend-to-backend",
+      "handlerLocation": "src/plugin/backend/onmessage.js:3659",
+      "payloadFields": [
+        "specId"
+      ],
+      "senders": [
+        "src/plugin/modules/accessibility.js:7855"
+      ],
+      "consumers": [],
       "respondsWith": [],
       "addedAt": "2026-10-07"
     }

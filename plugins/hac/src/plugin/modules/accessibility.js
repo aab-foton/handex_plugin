@@ -7851,6 +7851,8 @@ function editA11ySpec(specId) {
     return;
   }
   window._a11yPendingAreaId = spec.a11yAreaId || null;
+  // Foca no canvas o card desta spec (2026-10-07, pedido do usuário).
+  parent.postMessage({ pluginMessage: { type: 'focus-spec-card', specId: spec.id } }, '*');
   // targetNodeName/dscComponentName (já salvos na spec) populam os 2 campos
   // read-only do topo do formulário também em modo edição — mesmos dados que
   // a criação exibe, sem depender de nova resolução via canvas/scan.
