@@ -3398,6 +3398,14 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-07 — Swipe automático mapeia textos, botões e chips internos (v0.1.0-beta.95)</h2>
+
+    <p>Depois da beta.93, blocos como Saldo, Carousel e as seções de lista ainda viravam uma parada só, e os textos, chips e
+    botões de dentro ficavam de fora da trilha. O critério de <code>_collectSwipeStops</code> passa a ser o que o leitor de
+    tela foca: componente com até 1 texto visível (botão, chip, link, status bar, Icon Button) é uma parada; componente com
+    2 ou mais textos é percorrido por dentro, e cada texto, botão, chip e imagem vira parada. Decorativos e ícones soltos
+    continuam de fora. Substitui a regra de "componente-folha" da beta.93 (item de lista volta a ser lido texto a texto).</p>
+
     <h2>2026-10-07 — Swipe nomeia e lê o elemento, não a label (v0.1.0-beta.94)</h2>
 
     <p>Os pontos do Swipe automático eram nomeados pelo primeiro texto de dentro ("9:30", "Title") e não pelo elemento.
