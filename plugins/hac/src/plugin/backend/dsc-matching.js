@@ -780,4 +780,77 @@ async function _a11yScanArea(rootNode) {
   return results;
 }
 
+// ── Paradas do Swipe pela ESTRUTURA de componentes (2026-10-07) ─────────────
+// O leitor de tela no celular para em cada COMPONENTE, não em cada texto de
+// dentro dele. Percorre a árvore de camadas e, dentro de cada contêiner, lê
+// os filhos na ordem de leitura (orderFn — linhas de cima para baixo, cada
+// uma da esquerda para a direita), de forma que o conteúdo de um card/lista
+// é lido junto antes do próximo bloco. Regras:
+//   • componente do DSC reconhecido → UMA parada (não entra nele);
+//     decorativo → fica de fora;
+//   • componente não reconhecido → uma parada se for simples (até 1 texto e
+//     nenhum componente com texto dentro); senão é contêiner: entra nele;
+//   • texto solto e imagem → parada; ícone bruto → fica de fora (decorativo);
+//   • frame/grupo → entra nele.
+export async function _collectSwipeStops(root, orderFn) {
+  const stops = [];
+  const order = typeof orderFn === 'function' ? orderFn : (xs => xs);
+  const clipped = (n) => {
+    const bb = n.absoluteBoundingBox;
+    if (!bb) return true;
+    let p = n.parent;
+    while (p && p !== root.parent) {
+      if (p.clipsContent && p.absoluteBoundingBox) {
+        const pb = p.absoluteBoundingBox;
+        if (bb.x + bb.width <= pb.x || bb.x >= pb.x + pb.width || bb.y + bb.height <= pb.y || bb.y >= pb.y + pb.height) return true;
+      }
+      if (p === root) break;
+      p = p.parent;
+    }
+    return false;
+  };
+  const visibleText = (t) => t.type === 'TEXT' && t.visible !== false && String(t.characters || '').trim().length > 0;
+  const hasImageFill = (n) => n.type !== 'FRAME' && n.type !== 'GROUP' && n.type !== 'SECTION' &&
+    Array.isArray(n.fills) && n.fills.some(f => f && f.type === 'IMAGE' && f.visible !== false);
+
+  async function dscMatch(n) {
+    try {
+      const mc = await n.getMainComponentAsync();
+      const m = mc && mc.key ? _resolveDscComponentA11yMatch(mc.key) : null;
+      return (m && !m.isUnmapped && m.a11yCategory) ? m : null;
+    } catch (e) { return null; }
+  }
+
+  async function visit(n) {
+    if (n.visible === false) return;
+    if (n !== root) {
+      if (clipped(n)) return;
+      if (n.type === 'TEXT') { if (visibleText(n)) stops.push(n); return; }
+      // Componente do DSC reconhecido ANTES do teste de ícone: um Icon Button
+      // é pequeno e só tem vetor, mas é interativo e precisa ser parada.
+      const m = n.type === 'INSTANCE' ? await dscMatch(n) : null;
+      if (m) { if (m.a11yCategory !== 'decorativo') stops.push(n); return; }
+      if (await _isRawIcon(n)) return;
+      if (n.type === 'INSTANCE') {
+        const texts = n.findAll(visibleText);
+        const nestedWithText = n.findAll(c => c.type === 'INSTANCE' && c.visible !== false && c.findOne(visibleText));
+        if (texts.length <= 1 && nestedWithText.length === 0) {
+          if (texts.length === 1 || hasImageFill(n)) stops.push(n);
+          return;
+        }
+      } else if (hasImageFill(n) && !('children' in n && n.children.length)) {
+        stops.push(n);
+        return;
+      }
+    }
+    if ('children' in n && n.children) {
+      const kids = n.children.filter(c => c.visible !== false && c.absoluteBoundingBox);
+      for (const c of order(kids)) await visit(c);
+    }
+  }
+
+  await visit(root);
+  return stops;
+}
+
 export { _a11yScanArea };

@@ -132,6 +132,7 @@ import {
   _isA11yInteractiveComponentKey,
   _findVisibleLabelText,
   _a11yScanArea,
+  _collectSwipeStops,
 } from './dsc-matching.js';
 
 // "Ordem de Tabulação": modo de clique — liga/desliga via
@@ -2985,30 +2986,10 @@ figma.ui.onmessage = async (msg) => {
         // que faltava, mesmo sentido de uso de plainNodeMap logo abaixo
         // (que serve só para o FRONTEND cachear _activeSwipePathCloneMaps,
         // não para esta tradução).
-        const scanned = await _a11yScanArea(clone);
-        // BUG REAL CORRIGIDO (2026-09-18, reportado com print: itens
-        // genéricos como "Actions - Button Row"/"Swap Slot" — nomes de
-        // FRAME/slot estrutural, não componentes de conteúdo real — na
-        // trilha final). `dscComponentMatch` truthy sozinho não basta como
-        // filtro: _a11yScanArea sempre preenche esse campo, mesmo para um
-        // container SEM nenhum match real (isUnmapped: true, a11yCategory:
-        // null, containingFrame: nome cru do node — ver comentário
-        // "instância sem match DSC resolvido" em dsc-matching.js), porque a
-        // varredura precisa continuar descendo dentro dele pra achar os
-        // componentes reais aninhados (ver _hasResolvedDscMatch logo
-        // abaixo, no mesmo arquivo). O container em si não é um ponto de
-        // conteúdo — só os filhos resolvidos são. Exigir a11yCategory
-        // truthy exclui esses containers estruturais sem descartar nenhum
-        // componente/texto/imagem com match real.
-        // O Swipe percorre TODOS os elementos lidos pelo leitor de tela
-        // (2026-10-06): componentes (reconhecidos ou não), textos e imagens —
-        // antes só entravam os de categoria reconhecida, e a trilha pulava
-        // textos comuns. Decorativos ficam de fora (o leitor os ignora).
-        const candidates = [
-          ...(scanned.components || []),
-          ...(scanned.typography || []),
-          ...(scanned.images || []),
-        ].filter(item => item && !(item.dscComponentMatch && item.dscComponentMatch.a11yCategory === 'decorativo'));
+        // Paradas pela estrutura de componentes (2026-10-07): ver
+        // _collectSwipeStops (dsc-matching.js). Percorre o clone e devolve os
+        // nós ORIGINAIS correspondentes, já na ordem da trilha.
+        const stopsInClone = await _collectSwipeStops(clone, _orderNodesInReadingOrder);
 
         const plainNodeMap = {};
         const cloneIdToOriginalId = new Map();
@@ -3017,20 +2998,18 @@ figma.ui.onmessage = async (msg) => {
           cloneIdToOriginalId.set(clonedNode.id, originalId);
         });
 
-        if (candidates.length === 0) {
+        if (stopsInClone.length === 0) {
           figma.ui.postMessage({ type: "swipe-path-generated-from-layers", areaId: msg.areaId, generation: msg.generation, items: [], cloneId: clone.id, nodeMap: plainNodeMap });
           return;
         }
 
-        const resolvedNodes = [];
-        for (const c of candidates) {
-          const originalId = cloneIdToOriginalId.get(c.nodeId);
-          if (!originalId) continue; // node do clone sem correspondente original mapeado (nunca deveria ocorrer, defesa silenciosa)
+        const items = [];
+        for (const c of stopsInClone) {
+          const originalId = cloneIdToOriginalId.get(c.id);
+          if (!originalId) continue;
           const n = await _getSceneNodeById(originalId);
-          if (n && n.absoluteBoundingBox) resolvedNodes.push(n);
+          if (n) items.push({ nodeId: n.id, nodeName: _findVisibleLabelText(n) || n.name });
         }
-        const items = _orderNodesInReadingOrder(resolvedNodes)
-          .map(node => ({ nodeId: node.id, nodeName: _findVisibleLabelText(node) || node.name }));
 
         figma.ui.postMessage({ type: "swipe-path-generated-from-layers", areaId: msg.areaId, generation: msg.generation, items, cloneId: clone.id, nodeMap: plainNodeMap });
         figma.notify(`${items.length} elemento${items.length === 1 ? '' : 's'} encontrado${items.length === 1 ? '' : 's'} — revise no modal antes de aplicar.`);

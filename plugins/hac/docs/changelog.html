@@ -3398,6 +3398,14 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-07 — Swipe automático pela estrutura de componentes (v0.1.0-beta.90)</h2>
+
+    <p>O Swipe automático passa a percorrer a árvore de camadas (<code>_collectSwipeStops</code>, dsc-matching.js): dentro de
+    cada contêiner, os filhos em ordem de leitura; componente do DSC reconhecido vira <strong>uma parada</strong> (sem entrar
+    nele); componente não reconhecido vira parada se for simples (até 1 texto e sem componente com texto dentro) e, se for
+    contêiner (card, lista), o plugin entra e lê o que há dentro; texto solto e imagem viram parada; decorativos e ícones
+    soltos ficam de fora. Antes, cada texto de dentro de um componente virava um ponto separado e a trilha ficava picotada.</p>
+
     <h2>2026-10-06 — Marcador de posição mais visível ao reordenar (v0.1.0-beta.89)</h2>
 
     <p>Ao arrastar um item para reordenar — modal e aba de Tabulação, modal e aba de Swipe, web e mobile — aparece uma barra
