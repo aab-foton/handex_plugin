@@ -4382,6 +4382,7 @@ function toggleA11yAreaAccordion(uid, areaId) {
     if (isHidden) window._a11yExpandedAreaIds.add(areaId);
     else window._a11yExpandedAreaIds.delete(areaId);
   }
+  _syncAccordionExpanded(`body-${uid}`, isHidden);
 }
 window.toggleA11yAreaAccordion = toggleA11yAreaAccordion;
 
@@ -4414,6 +4415,7 @@ function _a11ySetAllSubaccordions(btn, expand) {
       : 'chevron-';
     const chevron = document.getElementById(`${chevronPrefix}${idSuffix}`);
     if (chevron) chevron.style.transform = expand ? 'rotate(180deg)' : 'rotate(0deg)';
+    _syncAccordionExpanded(body.id, expand);
     if (body.id.startsWith('tab-order-body-')) {
       if (expand) window._a11yExpandedTabOrderIds.add(idSuffix);
       else window._a11yExpandedTabOrderIds.delete(idSuffix);
@@ -4444,6 +4446,7 @@ function toggleA11yCategoryAccordion(uid) {
   if (chevron) chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
   if (isHidden) window._a11yExpandedCategoryIds.add(uid);
   else window._a11yExpandedCategoryIds.delete(uid);
+  _syncAccordionExpanded(`body-${uid}`, isHidden);
 }
 window.toggleA11yCategoryAccordion = toggleA11yCategoryAccordion;
 
@@ -4458,6 +4461,7 @@ function _a11yCategoryAccordionEl(uid, catKey, catSpecs) {
   return `
     <div class="rounded-dsc-small border border-gray-100 dark:border-dark-line overflow-hidden ml-1 bg-white dark:bg-dark-surface" data-a11y-subcat="${escapeHtml(catKey)}">
       <div class="flex items-center gap-dsc-nano px-2.5 py-dsc-nano cursor-pointer select-none hover:bg-gray-50 dark:hover:bg-dark-line/20 transition-colors"
+        role="button" tabindex="0" data-kbd-activate aria-expanded="${expand ? 'true' : 'false'}" aria-controls="body-${uid}"
         onclick="toggleA11yCategoryAccordion('${uid}')">
         <div class="w-4.5 h-4.5 rounded-dsc-circ flex items-center justify-center shrink-0" style="background-color:${meta.fill}">
           <i data-lucide="${meta.icon}" class="w-2.5 h-2.5" style="color:${meta.textColor || meta.color}"></i>
@@ -4568,6 +4572,7 @@ function toggleA11yUndocumentedAccordion(uid) {
   if (chevron) chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
   if (isHidden) window._a11yExpandedUndocumentedIds.add(uid);
   else window._a11yExpandedUndocumentedIds.delete(uid);
+  _syncAccordionExpanded(`undoc-body-${uid}`, isHidden);
 }
 window.toggleA11yUndocumentedAccordion = toggleA11yUndocumentedAccordion;
 
@@ -4641,6 +4646,7 @@ function _a11yUndocumentedAccordionEl(uid, areaId, entries) {
   return `
     <div class="rounded-dsc-small border border-amber-200 dark:border-amber-800/40 overflow-hidden ml-1" data-a11y-subcat="nao-documentados">
       <div class="flex items-center gap-dsc-nano px-2 py-1.5 cursor-pointer select-none bg-amber-50/60 dark:bg-amber-900/10 hover:bg-amber-100/60 dark:hover:bg-amber-900/20 transition-colors"
+        role="button" tabindex="0" data-kbd-activate aria-expanded="${expand ? 'true' : 'false'}" aria-controls="undoc-body-${uid}"
         onclick="toggleA11yUndocumentedAccordion('${uid}')">
         <div class="w-4.5 h-4.5 rounded-dsc-circ flex items-center justify-center shrink-0 bg-amber-100 dark:bg-amber-900/30">
           <i data-lucide="circle-help" class="w-2.5 h-2.5 text-amber-600 dark:text-amber-400"></i>
@@ -5421,6 +5427,7 @@ function _a11yAreaAccordionEl(area, areaSpecs) {
   li.setAttribute('data-a11y-area-search', escapeHtml(_normalizeSearchText(area.label)));
   li.innerHTML = `
     <div class="flex flex-col gap-2.5 px-3.5 py-3 cursor-pointer select-none hover:bg-gray-50 dark:hover:bg-dark-line/20 transition-colors"
+      role="button" tabindex="0" data-kbd-activate aria-label="Abrir tela ${escapeHtml(String(area.number))} · ${escapeHtml(area.label || '')}"
       onclick="openA11yAreaWorkspace('${area.id}')" id="${uid}">
       <div class="flex items-center gap-2.5">
         <div class="w-7 h-7 rounded-dsc-circ flex items-center justify-center text-dsc-label-tiny normal-case tracking-normal font-extrabold text-white shrink-0" style="background-color:#005ca9">${escapeHtml(String(area.number))}</div>
@@ -5486,6 +5493,7 @@ function _a11ySemAreaAccordionEl(specs, tabItemsCount) {
   if (tabItemsCount > 0) parts.push(`${tabItemsCount} ${tabItemsCount === 1 ? 'item' : 'itens'} de ordem de tabulação`);
   li.innerHTML = `
     <div class="flex items-center gap-dsc-nano px-2.5 py-dsc-nano cursor-pointer select-none hover:bg-amber-50/50 dark:hover:bg-amber-900/10 transition-colors"
+      role="button" tabindex="0" data-kbd-activate aria-expanded="false" aria-controls="body-${uid}"
       onclick="toggleA11yAreaAccordion('${uid}')">
       <div class="w-6 h-6 rounded-dsc-circ flex items-center justify-center bg-amber-50 dark:bg-amber-900/30 text-amber-500 shrink-0">
         <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>

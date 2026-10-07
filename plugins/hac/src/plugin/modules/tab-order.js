@@ -17,6 +17,7 @@ function toggleA11yTabOrderAccordion(uid) {
   if (chevron) chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
   if (isHidden) window._a11yExpandedTabOrderIds.add(uid);
   else window._a11yExpandedTabOrderIds.delete(uid);
+  _syncAccordionExpanded(`tab-order-body-${uid}`, isHidden);
 }
 window.toggleA11yTabOrderAccordion = toggleA11yTabOrderAccordion;
 
@@ -39,6 +40,7 @@ function _tabOrderSectionHtml(uid, area) {
     return `
       <div class="rounded-dsc-small border border-gray-100 dark:border-dark-line overflow-hidden ml-1">
         <div class="flex items-center gap-2 px-2 py-1.5 cursor-pointer select-none bg-gray-50/60 dark:bg-dark-bg/30 hover:bg-gray-100/60 dark:hover:bg-dark-line/20 transition-colors"
+          role="button" tabindex="0" data-kbd-activate aria-expanded="${expand ? 'true' : 'false'}" aria-controls="tab-order-body-${uid}"
           onclick="toggleA11yTabOrderAccordion('${uid}')">
           <div class="w-4.5 h-4.5 rounded-dsc-circ flex items-center justify-center shrink-0 bg-gray-100 dark:bg-dark-line/40">
             <i data-lucide="list-ordered" class="w-2.5 h-2.5 text-gray-400"></i>
@@ -56,6 +58,7 @@ function _tabOrderSectionHtml(uid, area) {
   return `
     <div class="rounded-dsc-small border border-gray-100 dark:border-dark-line overflow-hidden ml-1">
       <div class="flex items-center gap-2 px-2 py-1.5 cursor-pointer select-none bg-gray-50/60 dark:bg-dark-bg/30 hover:bg-gray-100/60 dark:hover:bg-dark-line/20 transition-colors"
+        role="button" tabindex="0" data-kbd-activate aria-expanded="${expand ? 'true' : 'false'}" aria-controls="tab-order-body-${uid}"
         onclick="toggleA11yTabOrderAccordion('${uid}')">
         <div class="w-4.5 h-4.5 rounded-dsc-circ flex items-center justify-center shrink-0" style="background-color:#E0F5FA">
           <i data-lucide="list-ordered" class="w-2.5 h-2.5" style="color:#005ca9"></i>
@@ -828,6 +831,7 @@ function _renderTabOrderPendingList() {
       title="${it.drawFailed ? 'Falha ao desenhar o selo, remova e tente novamente' : 'Destacar este elemento no canvas'}"
       draggable="true"
       data-list-index="${listIndex}"
+      role="button" tabindex="0" data-kbd-activate aria-label="${listIndex + 1}. ${escapeHtml(it.nodeName || '')} — destacar no canvas"
       onclick="_highlightTabOrderListItem('${escapeHtml(it.nodeId)}')"
       ondragstart="_tabOrderPendingDragStart(event, ${listIndex})"
       ondragover="_tabOrderDragOver(event)"

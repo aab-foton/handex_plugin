@@ -157,6 +157,18 @@ body {
     .dark button:focus-visible {
       outline-color: #a0d2fc;
     }
+    /* Clicáveis que não são <button> (cabeçalhos de accordion, card da tela,
+       itens de lista) — contorno por dentro, porque o pai costuma ter
+       overflow-hidden e cortaria um contorno externo. */
+    [role="button"]:focus-visible,
+    summary:focus-visible {
+      outline: 2px solid #00437a;
+      outline-offset: -2px;
+    }
+    .dark [role="button"]:focus-visible,
+    .dark summary:focus-visible {
+      outline-color: #a0d2fc;
+    }
 
     /* Inline action button (sits in view header) — ícone + label sempre visíveis. */
     .fab-inline {

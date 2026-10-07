@@ -777,6 +777,12 @@ li { margin: 4px 0; }
     elemento</strong>; a label (texto do elemento, entre aspas) só aparece dentro do card quando for
     <strong>diferente</strong> do nome — numa camada de texto do Figma o nome costuma ser o próprio texto,
     e repetir os dois era ruído. Vale para web e mobile.</p>
+    <p><strong>Clicável que não é &lt;button&gt; (2026-10-07, v0.1.0-beta.128).</strong> Todo cabeçalho de accordion, card ou item de
+    lista clicável feito com <code>&lt;div&gt;</code>/<code>&lt;li&gt;</code> leva <code>role="button" tabindex="0" data-kbd-activate</code>
+    (Enter/Espaço disparam o onclick, via <code>core.js</code>), e accordions levam também <code>aria-expanded</code> +
+    <code>aria-controls</code> (sincronizados por <code>_syncAccordionExpanded</code>). Contorno de foco por dentro
+    (<code>outline-offset:-2px</code>), porque o pai costuma ter <code>overflow-hidden</code>. Preferir <code>&lt;button&gt;</code> quando
+    o conteúdo permitir.</p>
     <p><strong>Campos do card (2026-10-07, v0.1.0-beta.123).</strong> Cada campo é uma caixa branca com o nome em cima
     (<code>text-dsc-label-tiny</code>, negrito, cinza) e o conteúdo embaixo (mesmo tamanho, peso normal, <code>break-words</code>) — o mesmo
     formato do bloco "Texto fixo da lib". Observações é sempre o último campo. Componente do DSC continua como link.</p>

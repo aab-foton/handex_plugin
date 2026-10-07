@@ -3398,6 +3398,15 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-07 — Accordions e itens clicáveis alcançáveis pelo teclado (v0.1.0-beta.128)</h2>
+
+    <p>Reportado pelo usuário: os accordions não recebiam foco com Tab. Os cabeçalhos eram <code>&lt;div onclick&gt;</code>. Passam a
+    ter <code>role="button"</code>, <code>tabindex="0"</code>, <code>aria-expanded</code> e <code>aria-controls</code>, e Enter/Espaço
+    abrem e fecham (atalho global em <code>core.js</code>, atributo <code>data-kbd-activate</code>). Vale para: categorias do Leitor de
+    Tela, "Não documentados", "Sem tela", Ordem de Tabulação, o card de cada tela na Home ("Abrir tela N · nome") e os itens das listas
+    de Tabulação e Swipe ("N. nome — destacar no canvas"). <code>aria-expanded</code> acompanha também "Expandir todos"/"Recolher
+    todos". Contorno de foco visível (<code>:focus-visible</code>, por dentro, 2px) igual ao dos botões. Web e mobile.</p>
+
     <h2>2026-10-07 — Grupo com nomes diferentes se chama "Itens Agrupados" (v0.1.0-beta.127)</h2>
 
     <p>Pedido do usuário: o cabeçalho do grupo não lista mais os nomes ("Wifi, Signal, Battery ×3" virou "Itens Agrupados ×3");

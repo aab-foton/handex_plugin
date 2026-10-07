@@ -949,6 +949,27 @@ document.addEventListener('keydown', function (e) {
   }
 });
 
+// Teclado em elementos clicáveis que não são <button> (2026-10-07, pedido do
+// usuário: "os accordions não estão sendo tabulados"). Cabeçalhos de
+// accordion, card da tela e itens das listas de Tabulação/Swipe levam
+// role="button" + tabindex="0" + data-kbd-activate; Enter/Espaço disparam o
+// mesmo onclick. Só quando o foco está NO próprio elemento — botões internos
+// (menu, remover) seguem com o comportamento nativo deles.
+document.addEventListener('keydown', function (e) {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const el = e.target;
+  if (!el || !el.hasAttribute || !el.hasAttribute('data-kbd-activate')) return;
+  e.preventDefault();
+  el.click();
+});
+
+// aria-expanded do cabeçalho que controla um corpo de accordion (aria-controls).
+function _syncAccordionExpanded(bodyId, expanded) {
+  const header = document.querySelector(`[aria-controls="${bodyId}"]`);
+  if (header) header.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+}
+window._syncAccordionExpanded = _syncAccordionExpanded;
+
 // ── Navigation ─────────────────────────────────────────────────────────
 // O hac tem só duas views (view-home, view-specifications) — build.cjs
 // monta ambas dentro do mesmo container e alterna via classe `.active`,
