@@ -897,6 +897,17 @@ function _tabOrderRenumberPendingCanvas() {
 }
 
 function deleteTabOrderPendingItem(tempId) {
+  const it = (window._tabOrderPendingList || []).find(x => x.tempId === tempId);
+  if (!it) return;
+  openA11yConfirmModal({
+    title: 'Remover item da tabulação?',
+    body: `"${it.nodeName || 'Item'}" sairá da ordem e o selo será apagado do canvas.`,
+    confirmLabel: 'Remover',
+    onConfirm: () => _deleteTabOrderPendingItemNow(tempId),
+  });
+}
+
+function _deleteTabOrderPendingItemNow(tempId) {
   const list = window._tabOrderPendingList || [];
   const idx = list.findIndex(it => it.tempId === tempId);
   if (idx === -1) return;
@@ -1749,6 +1760,19 @@ window.toggleTabOrderNarration = toggleTabOrderNarration;
 function deleteTabOrderItem(originalIndex) {
   const raw = tabOrderItems[originalIndex];
   if (!raw) return;
+  openA11yConfirmModal({
+    title: 'Remover item da tabulação?',
+    body: `"${raw.targetNodeName || raw.nodeName || 'Item'}" sairá da ordem e o selo será apagado do canvas, inclusive do handoff. A numeração dos demais é refeita.`,
+    confirmLabel: 'Remover',
+    onConfirm: () => _deleteTabOrderItemNow(raw),
+  });
+}
+
+// Recebe o item (não o índice) — o índice pode mudar enquanto a confirmação
+// está aberta.
+function _deleteTabOrderItemNow(raw) {
+  const originalIndex = tabOrderItems.indexOf(raw);
+  if (originalIndex === -1) return;
 
   const areaId = raw.a11yAreaId || null;
 

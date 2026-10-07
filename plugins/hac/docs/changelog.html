@@ -3398,6 +3398,19 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-07 — Remover pede confirmação e apaga do canvas (v0.1.0-beta.109)</h2>
+
+    <p>Pedido do usuário, web e mobile:</p>
+    <ul>
+      <li><strong>"Excluir todas" do Leitor de Tela apaga do canvas.</strong> As specs saíam do plugin e ficavam no canvas: desde que
+      a réplica vive dentro da Ficha, <code>delete-specs-for-area</code> só procurava no 1º nível da Section. Agora, com
+      <code>everywhere</code>, procura na página inteira por pluginData (specs, overlay, réplica) e remove a seção "Leitor de Tela"
+      da Ficha — igual à Tabulação e ao Swipe.</li>
+      <li><strong>Confirmação em toda lixeira</strong>: spec do Leitor (individual e "excluir todas"), item da Tabulação (captura e
+      lista salva) e ponto do Swipe (rascunho e trilha salva). Grupos de specs repetidas e o "apagar tudo" de Tabulação/Swipe já
+      confirmavam.</li>
+    </ul>
+
     <h2>2026-10-07 — Modal de checklist fechado só depois de um handoff gerado (v0.1.0-beta.108)</h2>
 
     <p>A modal "Checklist do projeto fechado" (beta.105) abria no meio da criação de specs, assim que o checklist fechava. A

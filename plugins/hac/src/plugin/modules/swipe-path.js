@@ -621,6 +621,20 @@ function _swipePathPendingDrop(ev, targetListIndex, autoSave) {
 window._swipePathPendingDrop = _swipePathPendingDrop;
 
 function deleteSwipePathPendingItem(tempId, autoSave) {
+  if (window._swipePathLocked) return;
+  const it = (window._swipePathPendingList || []).find(x => x.tempId === tempId);
+  if (!it) return;
+  openA11yConfirmModal({
+    title: 'Remover ponto da ordem de leitura?',
+    body: autoSave
+      ? `"${it.nodeName || 'Ponto'}" sairá da trilha, que será redesenhada no canvas.`
+      : `"${it.nodeName || 'Ponto'}" sairá da trilha.`,
+    confirmLabel: 'Remover',
+    onConfirm: () => _deleteSwipePathPendingItemNow(tempId, autoSave),
+  });
+}
+
+function _deleteSwipePathPendingItemNow(tempId, autoSave) {
   if (window._swipePathLocked) return; // trilha já enviada pro backend, aguardando resposta — ver applySwipePathToCanvas
   const list = window._swipePathPendingList || [];
   const idx = list.findIndex(it => it.tempId === tempId);

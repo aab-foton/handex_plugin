@@ -7431,7 +7431,22 @@ window._resumeA11yBatchWizardForArea = _resumeA11yBatchWizardForArea;
 // errado silenciosamente. Agora recebe o id real e localiza a posição
 // atual no array na hora do clique — nunca confia num índice "congelado"
 // no HTML.
+// Confirmação antes de remover (2026-10-07, pedido do usuário: "ao clicar em
+// remover, em qualquer funcionalidade, tenho que ter uma modal de
+// confirmação" — web e mobile).
 function deleteA11ySpec(specId) {
+  const spec = (a11ySpecs || []).find(s => s && s.id === specId);
+  if (!spec) return;
+  const label = spec.name || spec.type || 'esta especificação';
+  openA11yConfirmModal({
+    title: 'Remover especificação?',
+    body: `"${label}" será removida do plugin e do canvas, inclusive do handoff. Esta ação não pode ser desfeita.`,
+    confirmLabel: 'Remover',
+    onConfirm: () => _deleteA11ySpecNow(specId),
+  });
+}
+
+function _deleteA11ySpecNow(specId) {
   const originalIndex = a11ySpecs.findIndex(s => s && s.id === specId);
   const spec = a11ySpecs[originalIndex];
   if (!spec) return;
@@ -7462,15 +7477,24 @@ window.deleteA11ySpec = deleteA11ySpec;
 // por spec).
 function deleteAllA11ySpecsForArea(areaId) {
   if (!areaId) return;
-  const hasSpecs = (a11ySpecs || []).some(s => s && s.a11yAreaId === areaId);
-  if (!hasSpecs) return;
+  const count = (a11ySpecs || []).filter(s => s && s.a11yAreaId === areaId).length;
+  if (!count) return;
+  // Confirmação + remoção em todo o canvas, inclusive a seção Leitor de Tela
+  // da Ficha (2026-10-07) — mesmo padrão de deleteAllTabOrderForArea/
+  // deleteSwipePathForArea.
+  openA11yConfirmModal({
+    title: 'Excluir especificações de Leitor de Tela?',
+    body: `As ${count} especificaç${count === 1 ? 'ão' : 'ões'} desta tela serão apagadas do plugin e do canvas, inclusive do handoff. Esta ação não pode ser desfeita.`,
+    confirmLabel: 'Excluir',
+    onConfirm: () => _deleteAllA11ySpecsForAreaNow(areaId),
+  });
+}
 
-  // Sem window.confirm (2026-09-24) — mesmo padrão de
-  // deleteAllTabOrderForArea/deleteSwipePathForArea/deleteA11yArea, nenhum
-  // pede confirmação: a ação é imediata, avisada só pelo texto do tooltip
-  // do botão ("Excluir todas as especificações... — não pode ser desfeito").
-  parent.postMessage({ pluginMessage: { type: 'delete-specs-for-area', areaId } }, '*');
+function _deleteAllA11ySpecsForAreaNow(areaId) {
+  parent.postMessage({ pluginMessage: { type: 'delete-specs-for-area', areaId, everywhere: true } }, '*');
   a11ySpecs = (a11ySpecs || []).filter(s => !(s && s.a11yAreaId === areaId));
+  const _area = (a11yAreas || []).find(a => a && a.id === areaId);
+  if (_area && _area.handoffFicha && _area.handoffFicha.sections) delete _area.handoffFicha.sections.leitor;
   saveToStorage();
   showToast('Especificações de Leitor de Tela removidas.');
   if (typeof _renderA11yWorkspaceTab === 'function') _renderA11yWorkspaceTab();

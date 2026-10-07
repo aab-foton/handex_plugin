@@ -3927,6 +3927,24 @@ figma.ui.onmessage = async (msg) => {
   // pluginData, nunca por nome/hierarquia.
   if (msg.type === "delete-specs-for-area") {
     _activeSpecCloneMaps.delete(msg.areaId);
+    // "Excluir todas" do Leitor de Tela (2026-10-07, print do usuário: as
+    // specs saíam do plugin mas ficavam no canvas). Desde que a réplica vive
+    // DENTRO da Ficha, specs/overlay/réplica não são mais filhos diretos da
+    // Section — a varredura abaixo (só 1º nível) não os achava. Com
+    // `everywhere`, procura na página inteira por pluginData, igual à
+    // Tabulação/Swipe, e remove também a seção "Leitor de Tela" da Ficha.
+    if (msg.everywhere) {
+      let removed = 0; // contagem só para depuração
+      for (const key of ['hacSpecForArea', 'hacSpecGroupForCloneForArea', 'hacSpecCloneForArea']) {
+        for (const n of figma.currentPage.findAllWithCriteria({ pluginData: { keys: [key] } })) {
+          try { if (!n.removed && n.getPluginData(key) === msg.areaId) { n.remove(); removed++; } } catch (e) { }
+        }
+      }
+      removed += _removeFichaSectionForArea(msg.areaId, 'leitor');
+      console.log('[hac] delete-specs-for-area: removidos', removed);
+      _clearOrphanedHighlightStrokes();
+      return;
+    }
     const cloneIdsToRemove = [];
     _forEachA11ySessionDirectChild(sibling => {
       try {
