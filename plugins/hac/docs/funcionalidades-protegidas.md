@@ -59,6 +59,29 @@
   legenda) já entrou na Seção 1 junto com Tabulação/Swipe — só o fluxo
   específico de EDITAR uma spec dentro do clone segue aqui.
 
+- **Rodada de 2026-10-07 (v0.1.0-beta.87–111) — tudo a pedido explícito do
+  usuário, nada testado no Figma ainda.** Tocou funções listadas no item 3 da
+  Seção 1 (fluxo completo/árvore da Ficha) — o item continua lá, mas precisa
+  ser **revalidado** com o teste completo descrito nele antes de ser
+  considerado confirmado de novo:
+  - Ficha: espaço instruções ↔ réplica (64px), título da tela 36px, sem
+    título externo nas instruções (`_removeFichaBlockTitle`), instruções sem
+    reserva desenhada (`_createFichaInstructionLegend` → modal), origem
+    mobile nas instruções de Tabulação/Swipe (`_areaStubFromRoot`).
+  - Leitor de Tela: sem card procedural (modal "Sem card na lib"), contorno
+    nunca na tela original (`_findEquivalentNodeInClone`) e reparo de
+    contornos antigos (`_repairMisplacedSpecMarkers`, chamado em
+    `_buildFichaLeitorSection`), "excluir todas" apagando em todo o canvas.
+  - Réplica reaproveitada ao reexecutar Tabulação/Swipe (resolvedores).
+  - Swipe automático pela estrutura de componentes (`_collectSwipeStops`,
+    regra confirmada pelo usuário por print em 2026-10-07 — ainda sem teste
+    no Figma da versão final).
+  - Reconhecimento: plataforma do projeto filtra o matching, mobile sem
+    Estrutura, slots do DSC pela variante, ícone puro × botão.
+  - Resumo/checklist: seções acompanham o canvas, fechar checklist leva à
+    pendência, modal de checklist fechado só ao Gerar Handoff, confirmação
+    em toda lixeira.
+
 Quando o usuário confirmar qualquer um destes como testado e aprovado,
 mover a linha correspondente pra Seção 1 com a data da confirmação.
 
@@ -159,3 +182,6 @@ mover a linha correspondente pra Seção 1 com a data da confirmação.
     certa. Onde isso importava de verdade, a propriedade passou a ser
     reafirmada **incondicionalmente**, fora do `if`/`else` de criação.
   - Detalhes completos, print a print, no `docs/changelog.html`.
+- **2026-10-07**: registrada na Seção 2 a rodada beta.87–111 (pedidos
+  explícitos do usuário, sem teste no Figma). O item 3 da Seção 1 foi tocado
+  e precisa de revalidação. Detalhes em `docs/tecnico.html` 8af/8ag.

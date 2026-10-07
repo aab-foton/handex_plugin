@@ -4067,6 +4067,15 @@ function _a11ySpecItemHtml(spec, showCategoryChip, group) {
 
   const dscComponentLabel = spec.a11yDscComponentName ? _cleanDscContainingFrameName(spec.a11yDscComponentName) : null;
 
+  // Nome do card = nome do ELEMENTO; a label (texto do elemento) fica DENTRO do
+  // card e só quando for diferente do nome (2026-10-07, pedido do usuário, web
+  // e mobile: "estamos resgatando na spec duas vezes a label" — camada de
+  // texto do Figma tem o próprio texto como nome, e o card de Título mostrava
+  // "Title" e “Title”).
+  const cardName = spec.targetNodeName || spec.name || 'Elemento';
+  const _normLabel = v => String(v || '').replace(/\s+/g, ' ').trim().toLowerCase();
+  const cardLabel = spec.targetText && _normLabel(spec.targetText) !== _normLabel(cardName) ? spec.targetText : null;
+
   const searchText = _normalizeSearchText(
     [spec.letter, spec.targetNodeName, spec.name, categoryLabel, spec.a11yType, spec.a11ySourceLib?.label, dscComponentLabel]
       .concat(props.flatMap(p => [p.label, p.value]))
@@ -4080,7 +4089,7 @@ function _a11ySpecItemHtml(spec, showCategoryChip, group) {
       <div class="flex items-start px-2.5 py-dsc-nano gap-dsc-nano">
         <div class="w-6 h-6 rounded-dsc-circ flex items-center justify-center text-dsc-label-tiny normal-case tracking-normal font-extrabold shrink-0 mt-0.5" style="background-color:${color};color:${badgeTextColor}">${escapeHtml(spec.letter || 'A')}</div>
         <div class="flex-1 min-w-0">
-          <p class="text-dsc-label-tiny normal-case tracking-normal font-semibold text-slate-700 dark:text-white truncate">${escapeHtml(spec.targetNodeName || spec.name || 'Elemento')}${group ? ` <span class="font-bold text-slate-500 dark:text-dark-muted">×${group.ids.length}</span>` : ''}</p>
+          <p class="text-dsc-label-tiny normal-case tracking-normal font-semibold text-slate-700 dark:text-white truncate">${escapeHtml(cardName)}${group ? ` <span class="font-bold text-slate-500 dark:text-dark-muted">×${group.ids.length}</span>` : ''}</p>
           <div class="flex items-center flex-wrap gap-dsc-quark mt-0.5">
             ${showCategoryChip ? `
             <span class="inline-flex items-center gap-dsc-quark px-1.5 py-0.5 rounded-dsc-circ border text-dsc-label-tiny normal-case tracking-normal font-bold" style="background-color:${fill};border-color:${textColor};color:${textColor};">
@@ -4115,8 +4124,8 @@ function _a11ySpecItemHtml(spec, showCategoryChip, group) {
           <i data-lucide="trash-2" class="w-5 h-5"></i>
         </button>
       </div>
-      ${spec.a11yType === 'titulo' && spec.targetText ? `
-      <p class="px-2.5 pb-2.5 -mt-1 text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-slate-300 break-words">“${escapeHtml(spec.targetText)}”</p>` : ''}
+      ${spec.a11yType === 'titulo' && cardLabel ? `
+      <p class="px-2.5 pb-2.5 -mt-1 text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-slate-300 break-words">“${escapeHtml(cardLabel)}”</p>` : ''}
       ${visibleProps.length > 0 ? `
       <div class="px-2.5 pb-2.5 space-y-1">
         ${visibleProps.map(p => {

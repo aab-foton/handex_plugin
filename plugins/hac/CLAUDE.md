@@ -153,6 +153,29 @@ algo parecido?" — a resposta quase sempre é sim.
 
 ---
 
+**Extensão (2026-10-07) — nunca card/elemento de reserva desenhado.** Se a
+lib não tem o componente para o caso (componente fora da lista do card,
+variação inexistente, import que falhou), o plugin **não cria nada** no
+canvas e abre uma **modal de alerta** explicando o motivo e o que escolher
+(`openA11yNoCardAlert`, mensagens `a11y-spec-create-failed`/`a11y-no-lib-card`).
+Card com o default errado da lib (ex.: "Button" no lugar de "Navigation
+Bar") também conta como falha — abortar, não aceitar. Usuário: *"não temos
+nada personalizado, usamos exclusivamente os cards da lib"*.
+
+---
+
+## Web e mobile sempre juntos
+
+Toda melhoria/correção de comportamento vale para **web e mobile**, salvo
+quando a lib define diferença real (ex.: mobile não tem Estrutura da Página
+nem marco de navegação; Swipe só existe no mobile). O usuário precisou
+repetir "isso vale pra web e mobile" várias vezes em 2026-10-07 — não
+implementar só na plataforma do print. A plataforma do projeto também
+**filtra** tudo: reconhecimento DSC só da lib da plataforma
+(`_setActiveProjectOrigin`), spec nasce com a plataforma do projeto.
+
+---
+
 ## FIGMA_TOKEN
 
 Vive em `.env` na raiz do repositório (`FIGMA_TOKEN=...`). Scripts de

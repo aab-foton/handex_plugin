@@ -268,7 +268,7 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
       <ol>
         <li><a href="#s1">Apresentação e finalidade do documento</a></li>
         <li><a href="#s2">O que é o hac, em termos gerais</a></li>
-        <li><a href="#s3">As cinco categorias de documentação de acessibilidade</a></li>
+        <li><a href="#s3">As categorias de documentação de acessibilidade</a></li>
         <li><a href="#s4">Web ou Mobile: uma decisão única por projeto</a></li>
         <li><a href="#s5">De onde vêm os componentes reconhecidos pelo plugin</a></li>
         <li><a href="#s6">Como uma especificação de acessibilidade é criada</a></li>
@@ -318,19 +318,21 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
     aplicações Mobile (aplicativo). Essa distinção é central em praticamente
     todas as regras deste documento — ver seção 4.</p>
 
-    <h2 id="s3">3. As cinco categorias de documentação de acessibilidade</h2>
+    <h2 id="s3">3. As categorias de documentação de acessibilidade</h2>
 
-    <p>Toda marcação de acessibilidade feita pelo designer pertence a uma de
-    cinco categorias. Cada categoria tem um propósito e um conjunto de campos
-    de preenchimento próprio.</p>
+    <p>Toda marcação de acessibilidade feita pelo designer pertence a uma das
+    categorias publicadas na biblioteca de acessibilidade da plataforma do
+    projeto: <strong>quatro no Web</strong> e <strong>três no Mobile</strong>. Cada categoria tem
+    um propósito e um conjunto de campos de preenchimento próprio. (Atualizado em
+    2026-10-07; a categoria "Informações Adicionais" deixou de existir em
+    2026-10-01.)</p>
 
     <table>
       <tr><th>Categoria</th><th>Para que serve</th><th>Existe versão mobile?</th></tr>
-      <tr><td>Elementos e Imagens</td><td>Componentes interativos (botões, campos, links) e imagens que precisam de nome acessível, descrição ou texto alternativo.</td><td>Sim — 3 formatos (Componente / Link / Texto Alternativo)</td></tr>
-      <tr><td>Estrutura da Página</td><td>Marcações de organização da página (regiões/landmarks) para navegação por leitor de tela.</td><td>Selo visual: não há equivalente publicado ainda. Texto de orientação ao desenvolvedor: sim, desde 2026-09-09 — o subtipo "Marco de Navegação" já orienta com o termo técnico correto de cada plataforma (ver nota técnica abaixo)</td></tr>
-      <tr><td>Nível de Título</td><td>Hierarquia de títulos da página, para leitura estruturada por tecnologia assistiva.</td><td>Sim, de forma simplificada (sem níveis hierárquicos)</td></tr>
-      <tr><td>Elemento Decorativo</td><td>Sinaliza elementos puramente visuais que devem ser ignorados por leitores de tela.</td><td>Sim</td></tr>
-      <tr><td>Informações Adicionais</td><td>Campo de formato livre para observações que não se encaixam nas demais categorias.</td><td>Não há equivalente mobile definido</td></tr>
+      <tr><td>Elementos Interativos e Imagens</td><td>Componentes interativos (botões, campos, links) e imagens que precisam de nome acessível, descrição ou texto alternativo.</td><td>Sim — o componente da lista da biblioteca mobile</td></tr>
+      <tr><td>Estrutura da Página</td><td>Marcações de organização da página (regiões/landmarks) para navegação por leitor de tela.</td><td><strong>Não.</strong> Mobile não tem Estrutura da Página nem marco de navegação; componentes como barra superior e rodapé são documentados como Elementos Interativos e Imagens (2026-10-07)</td></tr>
+      <tr><td>Nível de Título (Web) / Títulos (Mobile)</td><td>Hierarquia de títulos da página, para leitura estruturada por tecnologia assistiva.</td><td>Sim, de forma simplificada (sem níveis H1–H6)</td></tr>
+      <tr><td>Elementos Decorativos</td><td>Sinaliza elementos puramente visuais que devem ser ignorados por leitores de tela.</td><td>Sim</td></tr>
     </table>
 
     <p><em>Nota técnica: as diferenças entre Web e Mobile citadas acima decorrem de
@@ -344,7 +346,20 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
     em projeto Mobile, o atributo de papel semântico equivalente do React
     Native (<code>accessibilityRole</code>), já que essa plataforma não possui
     tags HTML. Antes dessa correção, o texto entregue a um projeto Mobile
-    mencionava indevidamente uma tag HTML que não existe nessa plataforma.</em></p>
+    mencionava indevidamente uma tag HTML que não existe nessa plataforma.
+    Desde 2026-10-07, projetos Mobile não usam mais a Estrutura da Página (ver
+    tabela acima).</em></p>
+
+    <div class="regra-box">
+      Ícone puro × botão: um ícone só é tratado como <strong>decorativo</strong> quando não
+      tem função. Se ele tem ação de clique no protótipo, ou é o único conteúdo de
+      um controle (botão só de ícone, seta de navegação de um item de lista), ele é
+      documentado como <strong>botão</strong>; um ícone ao lado de um texto que já nomeia o
+      botão continua decorativo. A função dos "slots" dos componentes do Design
+      System (ex.: seta de navegação, switch) vem da variante definida na própria
+      biblioteca, nunca do formato do desenho.
+      <span class="badge-decidido">DECIDIDO</span>
+    </div>
 
     <h2 id="s4">4. Web ou Mobile: uma decisão única por projeto</h2>
 
@@ -353,7 +368,10 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
     Essa escolha é feita uma única vez (na primeira ação que precisa dessa
     informação) e passa a valer para todo o projeto: catálogos de componentes
     sugeridos, textos padrão e o componente visual do próprio selo de marcação
-    passam a vir sempre da biblioteca correspondente à plataforma escolhida.</p>
+    passam a vir sempre da biblioteca correspondente à plataforma escolhida.
+    Desde 2026-10-07 isso vale também para o <strong>reconhecimento</strong>: num projeto
+    Mobile, só componentes das bibliotecas Mobile são reconhecidos (e vice-versa),
+    e toda especificação nasce com a plataforma do projeto.</p>
 
     <div class="regra-box">
       A origem (Web/Mobile) é uma configuração do projeto inteiro, não de uma
@@ -376,14 +394,15 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <h2 id="s5">5. De onde vêm os componentes reconhecidos pelo plugin</h2>
 
-    <p>O plugin trabalha com seis bibliotecas oficiais do Design System da CAIXA,
+    <p>O plugin trabalha com bibliotecas oficiais do Design System da CAIXA,
     divididas em dois grupos com propósitos diferentes:</p>
 
     <ul>
-      <li><strong>Quatro bibliotecas de reconhecimento</strong> — Reconhecem e classificam os
+      <li><strong>Bibliotecas de reconhecimento</strong> — Reconhecem e classificam os
       componentes que o designer já usou na tela, para sugerir automaticamente
-      a categoria de acessibilidade correta: Web Angular & React, Super DSC
-      Web, DSC Super App (mobile) e DSC Android (mobile).</li>
+      a categoria de acessibilidade correta: Super DSC Web (web), DSC Super App
+      e DSC Android (mobile). A biblioteca legada Web Angular &amp; React deixou de
+      fazer parte do hac (2026-10).</li>
       <li><strong>Duas bibliotecas de "Design Acessível"</strong> — São a fonte real dos selos
       e componentes de documentação que o plugin efetivamente insere no
       arquivo do designer: "Design Acessível" (versão Desktop/Web) e "Design
@@ -391,12 +410,14 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
     </ul>
 
     <div class="regra-box">
-      Princípio geral: o plugin nunca cria um componente "inventado" quando
-      existe um componente real equivalente disponível na biblioteca oficial
-      correspondente à plataforma do projeto. Uma versão simplificada (não
-      vinculada à biblioteca oficial) só é usada em um conjunto restrito e
-      conhecido de situações em que ainda não existe um componente oficial
-      publicado para aquele caso específico.
+      Princípio geral: o plugin usa <strong>exclusivamente</strong> os componentes da
+      biblioteca oficial de acessibilidade da plataforma do projeto — cards de
+      especificação, selos, marcadores e instruções. Quando a biblioteca não tem
+      componente para o caso (por exemplo, um componente que não está na lista do
+      card), nenhuma especificação é criada e o designer é avisado por uma
+      mensagem explicando o motivo e o que escolher no lugar. O plugin nunca
+      desenha um card próprio. (Revisto em 2026-10-07; antes existia uma versão
+      simplificada para casos restritos.)
       <span class="badge-decidido">DECIDIDO</span>
     </div>
 
@@ -476,6 +497,26 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
     <p>Em nenhum dos dois modos a tela original do designer é alterada durante a
     revisão: o plugin trabalha sobre uma cópia da tela, e só aplica as
     marcações definitivas quando o designer confirma.</p>
+
+    <h3>7.1 Ordem de Leitura (Swipe, só Mobile)</h3>
+
+    <p>Documenta em que ordem o leitor de tela do celular (VoiceOver/TalkBack)
+    percorre a tela no gesto de deslizar. Regra do modo automático
+    (2026-10-07): o leitor para em cada <strong>componente</strong>, na ordem de leitura
+    (linhas de cima para baixo, cada uma da esquerda para a direita). Um
+    componente que não contém outro componente com texto é uma parada só (um
+    card, um item de lista); um componente que agrupa outros (uma linha de
+    botões, um carrossel, uma seção de lista) ou que contém um controle
+    interativo (o botão de um título de seção) é percorrido por dentro.
+    Elementos decorativos ficam de fora. Cada parada é nomeada pelo elemento,
+    não pelo texto de dentro.</p>
+
+    <div class="regra-box">
+      Toda remoção (de uma especificação, de um item da ordem de tabulação, de
+      um ponto da ordem de leitura, ou de todos de uma vez) pede confirmação e
+      apaga também do canvas, inclusive do handoff.
+      <span class="badge-decidido">DECIDIDO</span>
+    </div>
 
     <h2 id="s8">8. Limites de caracteres nos campos de texto</h2>
 

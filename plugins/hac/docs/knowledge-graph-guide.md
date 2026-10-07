@@ -119,6 +119,25 @@ leia antes de assumir que é bug.
 
 ---
 
+## Atualização 2026-10-07 (v0.1.0-beta.111)
+
+- Grafo atualizado por `docs/refresh-knowledge-graph.cjs` (novo): varre
+  `msg.type ===` e `postMessage({ type })` no código real, recalcula
+  `handlerLocation`/`senders` (as linhas tinham derivado bastante desde
+  2026-09-22), acrescenta mensagens que faltavam (`addedAt`) e marca as que
+  sumiram (`notFoundInCode`). Descrições escritas à mão são preservadas.
+  Fluxo: `node docs/refresh-knowledge-graph.cjs && node docs/build-knowledge-graph-page.cjs`.
+- 95 → 106 mensagens. Desta rodada: `a11y-spec-create-failed` e
+  `a11y-no-lib-card` (backend → UI, alerta "Sem card na lib"); campos novos
+  `mode` em `resolve-tab-order-narration` e `everywhere` em
+  `delete-specs-for-area`. As outras 9 já existiam no código e nunca tinham
+  sido mapeadas (`ensure-hac-page`, `hac-page-ready`, `clear-canvas-and-cache`,
+  `canvas-and-cache-cleared`, `highlight-tab-order-copy-node`,
+  `spec-copy-started`, `tab-order-deleted-for-area`,
+  `bump-a11y-session-version`, `a11y-session-version-bumped`) — completar a
+  descrição de `consumers` delas quando forem tocadas.
+- Nenhuma mensagem marcada como `notFoundInCode` nesta atualização.
+
 ## Estado atual (resumo, 2026-09-22)
 
 - **93 mensagens mapeadas** (tipos distintos, contando direções

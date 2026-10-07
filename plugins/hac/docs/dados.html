@@ -319,6 +319,16 @@ hr {
     <a href="tecnico.html#s3">tecnico.html, seção 3</a>); hoje é uma
     característica do projeto inteiro (seção 5 abaixo).</p>
 
+    <p><strong>Situação do handoff da tela</strong> (atualizado em 2026-10-07): cada área
+    guarda, por etapa (Tabulação, Ordem de Leitura no mobile, Leitor de Tela), se
+    a etapa já entrou no Handoff de Acessibilidade e com quantos itens. Desde a
+    v0.1.0-beta.105 essa contagem acompanha o canvas sozinha — a réplica de
+    trabalho já é a réplica do handoff, então o que o designer documenta já está
+    lá. A tela tem o <strong>checklist fechado</strong> quando todas as etapas
+    entraram com conteúdo; o designer também pode fechá-lo à mão (registro
+    <code>checklistClosedAt</code>) e reabri-lo no Resumo da tela. O handoff do
+    projeto só pode ser finalizado com todas as telas com o checklist fechado.</p>
+
     <h2 id="s3">3. Especificações de Acessibilidade (<code>a11ySpecs[]</code>)</h2>
 
     <p><strong>O que representa:</strong> este é o dado central do hac. Cada spec é uma
@@ -402,6 +412,14 @@ hr {
     deliberada via modal "Sobre o hac" ou no "Reescanear" pontual dentro do
     resumo da Detecção Automática (exceção documentada em
     <a href="tecnico.html#s3">tecnico.html, seção 3</a>).</p>
+
+    <p><strong>O que a plataforma filtra</strong> (2026-10-07): com a plataforma definida,
+    o hac só reconhece componentes das libs dessa plataforma (um componente da
+    lib da outra plataforma é tratado como não-DSC), toda especificação nasce
+    com a plataforma do projeto, e as categorias seguem a lib de acessibilidade
+    da plataforma — no mobile não existe Estrutura da Página (nem marco de
+    navegação). Quando a lib não tem card para o caso, nenhuma especificação é
+    criada e o designer é avisado — o hac não desenha card próprio.</p>
 
     <h2 id="s6">6. Usuário identificado (<code>currentUser</code>)</h2>
 

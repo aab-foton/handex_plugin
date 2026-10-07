@@ -773,6 +773,10 @@ li { margin: 4px 0; }
       capturadas em pares label/valor. Borda âmbar quando <code>locked === false</code> (destravado —
       estado de atenção), opacidade reduzida quando oculto no canvas.</p>
     </div>
+    <p><strong>Nome × label (2026-10-07, v0.1.0-beta.111).</strong> O nome do card é o <strong>nome do
+    elemento</strong>; a label (texto do elemento, entre aspas) só aparece dentro do card quando for
+    <strong>diferente</strong> do nome — numa camada de texto do Figma o nome costuma ser o próprio texto,
+    e repetir os dois era ruído. Vale para web e mobile.</p>
 
     <h2 id="s7">7. Componentes — Badges de categoria</h2>
     <p class="evidence">Fonte: <code>A11Y_CATEGORIES</code>, mesma estrutura de badge usada em
@@ -842,6 +846,18 @@ li { margin: 4px 0; }
       tamanho. Fechar: botão X do cabeçalho, clique no backdrop, ou Esc (ver Documentação Técnica).</p>
     </div>
 
+    <h3>Confirmação e alerta (<code>#a11y-confirm-modal</code>, 2026-10-07)</h3>
+    <p>Um único modal genérico (<code>openA11yConfirmModal</code>) cobre os dois padrões:</p>
+    <ul>
+      <li><strong>Confirmação antes de remover</strong> — obrigatória em <strong>toda</strong> lixeira (spec, item
+      de Tabulação, ponto de Swipe, "apagar/excluir todos"). Título em pergunta ("Remover
+      especificação?"), corpo com o nome do item e o que acontece ("será removida do plugin e do canvas,
+      inclusive do handoff"), botões <em>Cancelar</em> e verbo da ação (<em>Remover</em>/<em>Apagar</em>/<em>Excluir</em>).</li>
+      <li><strong>Alerta</strong> (<code>alertOnly: true</code>, um botão só, <em>Entendi</em>) — usado quando a lib de
+      acessibilidade não tem card para o caso ("Sem card na lib de acessibilidade", <code>openA11yNoCardAlert</code>).
+      O hac nunca desenha card próprio no lugar: explica o motivo e o que escolher.</li>
+    </ul>
+
     <h2 id="s9">9. Componentes — Toggles/seletores</h2>
     <p class="evidence">Fonte: <code>src/plugin/views/modals.html</code> linhas 524–539 (seletor
     "Detecção Automática / Manual" do modal Marcar Área) — <code>&lt;input type="radio"&gt;</code> visualmente
@@ -864,6 +880,25 @@ li { margin: 4px 0; }
       acento do contexto (azul institucional aqui — dentro de modal). Sem depender de JS para o
       estilo, só <code>has-[:checked]</code> do Tailwind; JS cuida apenas da lógica de negócio.</p>
     </div>
+
+    <h3>Switch (<code>.hac-switch</code>, 2026-10-07)</h3>
+    <p class="evidence">Fonte: <code>src/plugin/styles/plugin.css</code> (<code>.hac-switch</code>) e o item
+    "Espaçamento de texto" do menu Personalização (<code>build.cjs</code>).</p>
+    <div class="stage">
+      <div class="stage-row" style="gap:16px;align-items:center">
+        <span style="position:relative;display:inline-block;width:36px;height:20px;border-radius:999px;background:#737f87"><span style="position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:999px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25)"></span></span>
+        <span style="position:relative;display:inline-block;width:36px;height:20px;border-radius:999px;background:#005ca9"><span style="position:absolute;top:2px;left:18px;width:16px;height:16px;border-radius:999px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25)"></span></span>
+      </div>
+      <p class="caption">Para preferência liga/desliga de efeito imediato (nunca checkbox). Checkbox
+      nativo com <code>role="switch"</code> — mantém foco, Espaço e o anúncio "ligado/desligado". Trilho
+      desligado <code>#737f87</code> (4,1:1 sobre branco) e <code>#64748b</code> no escuro (3,1:1); ligado
+      <code>#005ca9</code> / <code>#3b8fd9</code>. Foco: contorno 2px <code>#005ca9</code>.</p>
+    </div>
+
+    <h3>Marcador de posição ao reordenar (<code>#a11y-drop-indicator</code>, 2026-10-06)</h3>
+    <p>Ao arrastar um item de lista (Tabulação e Swipe, na modal e na aba), uma barra azul de 3px com
+    uma bolinha marca o vão exato onde o item vai entrar; o item arrastado fica com opacidade 0,4. A
+    posição é limitada às bordas da lista para não ser cortada pela rolagem.</p>
 
     <h2 id="s9b">9.1 Componentes — Select nativo (<code>dsc-select</code>)</h2>
     <p class="evidence">Fonte: <code>src/plugin/styles/plugin.css</code> (classe <code>.dsc-select</code>,

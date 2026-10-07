@@ -25,6 +25,12 @@
 > mensagens, ou uma regra de negócio central mudar de forma estrutural —
 > mas priorize atualizar `docs/tecnico.html` (ver aviso acima) como destino
 > principal.
+> **Atualização pontual 2026-10-07 (v0.1.0-beta.87–111)** — regras que
+> mudaram e que este arquivo afirmava diferente: (1) **não existe mais card
+> procedural de spec nem instrução desenhada** — sem card na lib, abre modal
+> de alerta (seção 6, reescrita); (2) a **plataforma do projeto filtra o
+> reconhecimento DSC** e mobile não tem Estrutura da Página; (3) campos novos
+> no schema (seção 1). Detalhe completo: `tecnico.html` 8af/8ag.
 > Última revisão completa: 2026-09-02 (branch `beta/a11y-mobile-handoff`) —
 > reescrito do zero após uma sessão que corrigiu 3 bugs estruturais reais no
 > matching DSC→a11y e mudou a arquitetura de origem web/mobile 3 vezes no
@@ -68,6 +74,11 @@ Selo numerado de seção/tela marcado no canvas. Campos: `id`, `number`,
 `label`, `targetNodeId`. **Não tem mais campo `origin` próprio** — a
 origem web/mobile deixou de ser calculada por área (ver seção 3, histórico
 completo da mudança).
+
+Campos aditivos posteriores relevantes: `handoffFicha.sections[key]`
+(`insertedAt`, `itemCount`/`specCount`, `syncedAt` — desde 2026-10-07 a
+contagem acompanha o canvas, ver `tecnico.html` 8af) e `checklistClosedAt`
+(ISO, checklist da tela fechado à mão; reaberto pelo Resumo).
 
 Na UI, cada área é renderizada como **card clicável** na listagem
 principal (não mais accordion expansível in-line) — clicar abre a
@@ -560,20 +571,25 @@ agora consulta só o mapa da própria plataforma. Um componente que só
 bate por nome na lib da plataforma errada agora corretamente vira
 `isUnmapped: true` em vez de herdar uma categoria da lib errada.
 
-### Princípio: componente real sempre, procedural só como último recurso
+### Princípio: só componente real da lib — nunca card desenhado (2026-10-07)
 
-`_tryImportA11yComponent` lança exceção em qualquer ponto de incerteza; o
-chamador trata como "cai no card procedural" **só** para uma lista fixa de
-razões esperadas, e **sempre com aviso** (`_A11Y_WARNED_FALLBACKS`,
-`onmessage.js`, desde 2026-10-01): `a11y-elemento-componente-fora-da-base`
-(componente sem opção na base), `a11y-estrutura-sem-variante-na-base`
-(Header/Footer/Customizável) e `a11y-web-set-falhou` (a base mudou e o
-`setProperties` não confirmou). As razões antigas (`a11y-elemento-outro-
-sem-componente-real`, `a11y-titulo-mobile-sem-variante-real`,
-`a11y-informacoes-customizavel-sem-variante-real`, `a11y-estrutura-variacao-
-sem-import-real`, `a11y-estrutura-marco-customizavel-sem-conteudo-catalogado`)
-saíram junto com o caminho do wrapper desktop antigo. Qualquer
-outra falha gera erro visível ao designer (nunca falha silenciosa).
+Regra do produto reafirmada pelo usuário em 2026-10-07: *"não temos nada
+personalizado, usamos exclusivamente os cards da lib"*. `_tryImportA11yComponent`
+continua lançando exceção em qualquer ponto de incerteza, mas **não existe
+mais card procedural**: qualquer falha aborta a spec, nada é criado no
+canvas, e o backend posta `a11y-spec-create-failed` `{ reason, message }` —
+a UI abre a modal "Sem card na lib de acessibilidade"
+(`openA11yNoCardAlert`) e libera o lote. Razões conhecidas, com texto
+próprio: `a11y-elemento-componente-fora-da-base` (inclui o mobile quando o
+nome não é opção VARIANT do card — antes o card nascia com o default
+"Button"), `a11y-estrutura-sem-variante-na-base`, `a11y-web-set-falhou`,
+`a11y-sem-wrapper-no-perfil`. O mesmo vale para as instruções da Ficha
+(`a11y-no-lib-card`, sem `_buildFichaLegendColumn`).
+
+Relacionado: com a plataforma do projeto definida, só as libs dessa
+plataforma são reconhecidas (`_setActiveProjectOrigin`), e no mobile a
+categoria `estrutura` do mapeamento curado vira `elemento` (mobile não tem
+Estrutura da Página nem marco de navegação).
 
 **Bug real corrigido em 2026-09-02**: a key usada para importar o wrapper
 mobile do card de spec (`[a11y mob] Box specs leitor de tela`) era a key

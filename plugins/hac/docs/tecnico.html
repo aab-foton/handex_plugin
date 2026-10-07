@@ -283,6 +283,17 @@ hr {
         <li><a href="#s8t">Correção de tipografia da Ficha: escala real do DSC (2026-09-11)</a></li>
         <li><a href="#s8u"><strong>Árvore de layers atual da Ficha e dimensionamento — ESTÁVEL (2026-09-11 a 2026-09-14)</strong></a></li>
         <li><a href="#s8v">Badge da lib errada na Ficha, Mapeamento Automático do Swipe recuperado, Design System alinhado ao Handex (2026-09-18)</a></li>
+        <li><a href="#s8w">Levantamento de documentação hac já existente no arquivo (2026-09-29)</a></li>
+        <li><a href="#s8x">Seleção herdada vence no fluxo manual "+ Nova spec" (2026-09-29)</a></li>
+        <li><a href="#s8y">Base de conhecimento da lib "DSC | Fundamentos Visuais" (2026-09-30)</a></li>
+        <li><a href="#s8z">Alinhamento visual à lib "DSC | Fundamentos Visuais" (2026-09-30, v0.1.0-beta.64)</a></li>
+        <li><a href="#s8aa">Selos web migrados para o arquivo próprio; 4 constantes do Item Number viram uma (2026-10-01, v0.1.0-beta.68)</a></li>
+        <li><a href="#s8ab">Web segue a base do arquivo próprio: Box specs web, fim de "Informações Adicionais" e perfis por plataforma (2026-10-01, v0.1.0-beta.69)</a></li>
+        <li><a href="#s8ac">Instruções da Ficha na web vêm do componente publicado (2026-10-05, v0.1.0-beta.76)</a></li>
+        <li><a href="#s8ad">Ícones das categorias na instrução web e tamanho do selo de tabulação (2026-10-06, v0.1.0-beta.77)</a></li>
+        <li><a href="#s8ae">Rodada de 06/10: contrato de mensagens e regras novas (v0.1.0-beta.80–86)</a></li>
+        <li><a href="#s8af">Só cards da lib; plataforma do projeto filtra tudo; checklist (v0.1.0-beta.97–110)</a></li>
+        <li><a href="#s8ag">Rodada de 07/10: Ficha, Swipe, réplica, ícone × botão e contornos (v0.1.0-beta.87–111)</a></li>
         <li><a href="#s9">Contrato de mensagens (UI ↔ backend)</a></li>
         <li><a href="#s10">Escala da UI e <code>position</code> dos modais</a></li>
         <li><a href="#s10a">Onboarding — 1 jornada por origem</a></li>
@@ -4733,7 +4744,7 @@ hr {
     </ul>
     <p><code>docs/knowledge-graph.json</code> ainda não foi regenerado com estas mudanças.</p>
 
-    <h2 id="s8af">8af. Só cards da lib; plataforma do projeto filtra tudo (v0.1.0-beta.97–98)</h2>
+    <h2 id="s8af">8af. Só cards da lib; plataforma do projeto filtra tudo; checklist (v0.1.0-beta.97–110)</h2>
     <ul>
       <li><strong>Sem card desenhado.</strong> <code>create-unified-spec</code> não monta mais o card procedural (círculo + tag +
       DESCRIÇÃO/NOTA DE CÓDIGO). Qualquer falha de <code>_tryImportA11yComponent</code> aborta a spec e posta
@@ -4760,10 +4771,90 @@ hr {
       resposta ao frontend (fire-and-forget, como antes).</li>
       <li><strong>Seções "vivas" (beta.105).</strong> <code>_fichaAutoSyncLiveSections</code> grava em
       <code>handoffFicha.sections[key].itemCount/specCount</code> a contagem atual (seção já inserida, conteúdo &gt; 0) — a réplica
-      de trabalho é a da Ficha. <code>_fichaSyncLiveSectionsAndCheck</code> roda em <code>_renderA11yWorkspaceTab</code> e abre a modal
-      — <em>até a beta.109</em> abria a modal pós-handoff sozinha; desde a beta.110 só sincroniza (e apaga a antiga marca
+      de trabalho é a da Ficha. <code>_fichaSyncLiveSectionsAndCheck</code> roda em <code>_renderA11yWorkspaceTab</code> e em
+      <code>renderA11yGroupedList</code> (beta.107). <em>Até a beta.109</em> também abria a modal pós-handoff sozinha; desde a
+      beta.110 só sincroniza (e apaga a antiga marca
       <code>hacData.a11yHandoffAwaitingChecklist</code>). A modal pós-handoff abre só ao fim de <code>_fichaGenerateCompleteHandoff</code>,
       inclusive sem seções a inserir.</li>
+    </ul>
+
+    <h2 id="s8ag">8ag. Rodada de 07/10: Ficha, Swipe, réplica, ícone × botão e contornos (v0.1.0-beta.87–111)</h2>
+    <p>Complementa a 8af. Tudo vale para web e mobile (mesmo código), salvo onde indicado. Nada desta rodada foi testado no
+    Figma pelo usuário ainda — por isso nenhum item entrou na Seção 1 de <code>funcionalidades-protegidas.md</code>.</p>
+
+    <h3>Ficha</h3>
+    <ul>
+      <li><strong>Espaço instruções ↔ réplica</strong>: <code>itemSpacing = 64</code> na seção de bloco (era 16), reafirmado em seções
+      existentes (beta.87/88).</li>
+      <li><strong>Origem nas instruções de Tabulação/Swipe</strong> (beta.92): a cópia de trabalho monta a área por
+      <code>_areaStubFromRoot</code>, que agora leva <code>a11yOrigin</code> (o backend lembra a plataforma via
+      <code>_rememberProjectOrigin</code>, em <code>save-storage</code> e <code>ui-ready</code>). Antes caía em web.</li>
+      <li><strong>Título da tela</strong> "Documentação da Tela N - …": fonte 36, negrito, padding 24/20 (beta.92).</li>
+      <li><strong>Sem título externo</strong> acima do card de instrução (repetia o do componente); blocos antigos convergem por
+      <code>_removeFichaBlockTitle</code> (beta.92).</li>
+      <li><strong>Aviso de Swipe vazio</strong>: card "Nenhuma trilha de swipe definida" marcado com
+      <code>hacFichaSwipeEmpty</code>; sai ao nascer a réplica de Swipe e ao desenhar a trilha (<code>_removeSwipeEmptyCards</code>);
+      não empilha ao regerar (beta.97).</li>
+      <li><strong>Contornos sobre a tela original</strong> (beta.103/106): <code>create-unified-spec</code> recupera o elemento na réplica
+      (<code>_findEquivalentNodeInClone</code>: caminho na árvore → nome+tipo+posição) e, se não achar, não desenha o contorno
+      (nunca no original) e avisa o motivo (<code>_specMapFailReason</code>). <code>_repairMisplacedSpecMarkers</code> reencaixa
+      contornos antigos fora da réplica (id <code>hacSpecTargetCloneNodeId</code> gravado na spec ou nome do grupo) — roda em
+      <code>_buildFichaLeitorSection</code> e a cada spec nova. Causa do "espaço vazio no fim da Ficha" (overlay de 4.427px no arquivo
+      de teste, lido via REST).</li>
+    </ul>
+
+    <h3>Réplica de trabalho</h3>
+    <ul>
+      <li>Os 4 inícios de Tabulação/Swipe (manual e automático) reaproveitam a réplica existente
+      (<code>_resolveActiveTabOrderClone</code>/<code>_resolveActiveSwipePathClone</code>) em vez de apagá-la (beta.91). A lixeira de
+      cada etapa continua apagando de propósito.</li>
+    </ul>
+
+    <h3>Swipe automático (<code>_collectSwipeStops</code>, dsc-matching.js)</h3>
+    <ul>
+      <li><strong>Regra vigente</strong> (beta.93, restaurada na beta.100 a pedido do usuário + beta.101): componente sem outro
+      componente com texto dentro = <strong>uma parada</strong> (Saldo, card, item de lista); componente do DSC reconhecido com 2+
+      componentes com texto <strong>ou</strong> com um componente <strong>interativo</strong> da lib dentro (button, checkbox, switch,
+      radio button, inputs, accordion, stepper, tab group) é percorrido por dentro (Button Row, Carousel, List Heading = Title +
+      Button). Decorativos e ícones soltos ficam de fora. As beta.95/96 (cada texto/chip/slot vira parada) foram revertidas.</li>
+      <li><strong>Nome e leitura pelo elemento</strong> (beta.94): <code>_swipeElementName</code> (nome do componente na lib sem prefixo
+      <code>[dsc]</code>; texto solto = o texto) e narração com <code>mode: 'swipe'</code> em <code>resolve-tab-order-narration</code>
+      ("Top App Bar, 9:30, Title").</li>
+      <li>Trilha desenhada centro a centro (<code>_buildSwipePathConnection</code>) — sem mudança.</li>
+    </ul>
+
+    <h3>Reconhecimento: ícone puro × botão (beta.102)</h3>
+    <ul>
+      <li><code>_resolveSlotA11yMatch</code>: slots do DSC pela variante da lib — Right Slot (<code>variant</code>) e Left Slot
+      (<code>configuration</code>): navigation/drag-handle → Button, switch → Switch, input stepper → Input Stepper,
+      checkbox/radio → Checkbox/Radio, avatar/image → imagem; icon/icon neutral/slot seguem a regra de ícone.</li>
+      <li><code>_classifyIconRole</code>: ícone com reação On click/On press = botão (<code>[dsc] Icon Button</code>); glifo dentro de
+      controle sem texto não vira item (o controle é documentado); ícone ao lado de rótulo ou sem sinal = decorativo. Usado em
+      <code>_a11yScanArea</code> e <code>_resolveDeterministicA11yMatch</code>. Efeito colateral: esses itens passam a entrar na
+      Tabulação automática.</li>
+    </ul>
+
+    <h3>Interface</h3>
+    <ul>
+      <li><strong>Marcador de posição ao reordenar</strong> (<code>#a11y-drop-indicator</code>, beta.89): barra azul com bolinha no vão,
+      item arrastado esmaecido — modal e aba, Tabulação e Swipe.</li>
+      <li><strong>Menu de Ajuda</strong> sem "Como funciona o handoff" (beta.88). A modal <code>#a11y-categories-help-modal</code> continua
+      no código, sem caminho de abertura.</li>
+      <li><strong>Personalização</strong>: "Espaçamento de texto" vira switch (<code>.hac-switch</code>, <code>role="switch"</code>), sem
+      "(WCAG 1.4.12)" no texto (beta.97).</li>
+      <li><strong>Card da tela na listagem</strong> sem chips de categoria do Leitor (beta.107).</li>
+      <li><strong>Card da spec</strong> (beta.111): nome = nome do elemento; a label (<code>targetText</code>) só aparece dentro do card
+      quando difere do nome — camada de texto do Figma tem o próprio texto como nome.</li>
+      <li><strong>Remoção</strong> (beta.109): toda lixeira confirma (<code>openA11yConfirmModal</code>) — spec, item de Tabulação
+      (captura e salvo), ponto de Swipe (rascunho e trilha), "excluir todas". As funções públicas abrem a confirmação; a ação real
+      fica em <code>_…Now</code>.</li>
+    </ul>
+
+    <h3>Mensagens novas/alteradas desta rodada</h3>
+    <ul>
+      <li><code>a11y-spec-create-failed</code> (backend → UI) e <code>a11y-no-lib-card</code> (backend → UI) — ver 8af.</li>
+      <li><code>resolve-tab-order-narration</code> + <code>mode</code>; <code>delete-specs-for-area</code> + <code>everywhere</code>.</li>
+      <li><code>docs/knowledge-graph.json</code> atualizado em 2026-10-07 (localizações e 11 mensagens que faltavam).</li>
     </ul>
 
     <h2 id="s9">9. Contrato de mensagens (UI ↔ backend)</h2>
