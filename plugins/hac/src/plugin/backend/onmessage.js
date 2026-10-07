@@ -160,6 +160,14 @@ let _tabOrderClickSequence = [];
 // _swipePathClickSequence). Mesmo modelo de sequência rastreada
 // (2026-09-11) espelhado de Ordem de Tabulação acima.
 let _swipePathModeActive = false;
+
+// Origem do projeto (web/mobile) conhecida pelo backend — atualizada a cada
+// save-storage e na abertura (2026-10-07). Usada onde a cópia de trabalho é
+// criada sem uma área completa da UI (ver _areaStubFromRoot).
+let _lastProjectOrigin = null;
+function _rememberProjectOrigin(data) {
+  if (data && (data.projectOrigin === 'web' || data.projectOrigin === 'mobile')) _lastProjectOrigin = data.projectOrigin;
+}
 let _swipePathClickSequence = [];
 
 // Matching determinístico do gate de seleção "+ Nova spec" (2026-09-11) —
@@ -460,6 +468,7 @@ figma.ui.onmessage = async (msg) => {
       // não por projeto/hacData, e sobrevive a "Limpar Cache" (mesmo padrão
       // do onboarding do Handex).
       const onboardingSeen = await figma.clientStorage.getAsync('hac-onboarding-seen');
+      _rememberProjectOrigin(savedState);
       figma.ui.postMessage({
         type: 'init-plugin',
         version: PLUGIN_VERSION,
@@ -547,6 +556,7 @@ figma.ui.onmessage = async (msg) => {
   }
 
   if (msg.type === 'save-storage') {
+    _rememberProjectOrigin(msg.data);
     // Backup NO DOCUMENTO (2026-09-22) — roda SEMPRE, inclusive quando não há
     // scopedKey (arquivo ainda não salvo), que era justamente o caso de perda
     // total silenciosa relatado pelo usuário. Ver comentário completo em
@@ -4541,6 +4551,14 @@ figma.ui.onmessage = async (msg) => {
     );
   }
 
+  // Remove o "Título do bloco" externo de blocos de instrução criados antes
+  // de 2026-10-07 — o título repetia o que o card de instrução já mostra.
+  function _removeFichaBlockTitle(instrucoes) {
+    for (const c of (instrucoes.children || []).slice()) {
+      try { if (c.type === 'TEXT' && c.name === 'Título do bloco') c.remove(); } catch (e) { }
+    }
+  }
+
   async function _getOrCreateFichaInstrucoesFrame(section, sectionKey, areaId, a11yOrigin) {
     const cfg = _FICHA_BLOCK_CONFIG[sectionKey];
     if (!cfg || !section) return null;
@@ -4548,6 +4566,7 @@ figma.ui.onmessage = async (msg) => {
     for (const child of (section.children || [])) {
       try {
         if (child.getPluginData && child.getPluginData('hacFichaInstrucoes') === sectionKey) {
+          _removeFichaBlockTitle(child);
           return child;
         }
       } catch (e) { }
@@ -4587,7 +4606,9 @@ figma.ui.onmessage = async (msg) => {
     instrucoes.setPluginData('hacFichaInstrucoes', sectionKey);
     section.insertChild(0, instrucoes);
 
-    await _appendFichaBlockTitle(instrucoes, cfg.title);
+    // Sem título externo (2026-10-07, pedido do usuário): o componente de
+    // instrução já traz o próprio título ("Ordem de Tabulação", "Ordem de
+    // Leitura Mobile (Swipe)"...) — o texto acima dele só repetia.
 
     // Reaproveita a legenda que já nasceu junto da réplica de trabalho
     // (_ensureLegendBesideClone) em vez de criar uma segunda — é a MESMA
@@ -4794,6 +4815,9 @@ figma.ui.onmessage = async (msg) => {
       targetNodeName: root ? root.name : null,
       sectionName: sectionName || null,
       number,
+      // Origem do projeto (2026-10-07): sem ela o perfil caía em 'web' e a
+      // Tabulação/Swipe de um projeto MOBILE nasciam com as instruções da web.
+      a11yOrigin: _lastProjectOrigin,
     };
   }
 

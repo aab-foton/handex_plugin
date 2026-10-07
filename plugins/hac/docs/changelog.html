@@ -3398,6 +3398,22 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-07 — Instruções mobile na Tabulação/Swipe e título da tela maior (v0.1.0-beta.92)</h2>
+
+    <p>Em projeto mobile, as instruções criadas ao lado da réplica na Tabulação e no Swipe saíam com o componente
+    <strong>web</strong> (Tabulação) e no formato antigo desenhado pelo plugin (Swipe). O motivo: a cópia de trabalho monta
+    a área a partir de um esboço (<code>_areaStubFromRoot</code>) que não trazia a origem, e o perfil caía em web. O backend
+    agora guarda a origem do projeto (<code>save-storage</code> e abertura do plugin), e o esboço passa a trazer
+    <code>a11yOrigin</code>, então os componentes mobile publicados são importados. O Leitor de Tela já usava a área completa.
+    Em Fichas já criadas, o bloco de instruções é reaproveitado como está: para trocar, apague a seção e gere de novo.</p>
+
+    <p>O título "Documentação da Tela N - …" na barra azul passa a usar fonte 36 em negrito, com mais respiro na barra.
+    Também vale para títulos de Fichas já existentes na próxima atualização da tela.</p>
+
+    <p>O título solto acima do card de instrução ("Ordem de Tabulação", "Ordem de Leitura | Swipe", "Leitor de Tela") saiu:
+    repetia o título que o próprio card já traz. Fica só o conteúdo interno do card. Blocos já existentes perdem o título
+    externo quando a seção é atualizada (<code>_removeFichaBlockTitle</code>).</p>
+
     <h2>2026-10-07 — Executar de novo não apaga mais a réplica (v0.1.0-beta.91)</h2>
 
     <p>Iniciar de novo a Tabulação ou o Swipe (manual ou Mapeamento Automático) criava sempre uma cópia nova da tela e, para

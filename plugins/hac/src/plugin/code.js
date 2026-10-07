@@ -4010,7 +4010,15 @@ async function _ensureTelaTituloCard(telaFrame, area) {
     titulo.setPluginData('hacFichaTelaTituloText', areaId);
     card.appendChild(titulo);
   }
-  await _applyFichaTypography(titulo, 'label/standard');
+  // Título com mais destaque (2026-10-07, pedido do usuário: fonte 36, era o
+  // token label/standard). Negrito e respiro maior na barra; reafirmado a
+  // cada chamada para convergir títulos de Fichas já criadas.
+  await _applyFichaTypography(titulo, 'label/standard', 700);
+  titulo.fontSize = 36;
+  try { titulo.lineHeight = { unit: 'PERCENT', value: 120 }; } catch (e) { }
+  try { titulo.letterSpacing = { unit: 'PIXELS', value: 0 }; } catch (e) { }
+  card.paddingLeft = 24; card.paddingRight = 24;
+  card.paddingTop = 20; card.paddingBottom = 20;
   titulo.characters = `Documentação da Tela ${areaNumber} - ${frameLabel}`;
   // Texto branco sobre fundo azul-escuro (referência visual).
   titulo.fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }];
