@@ -527,16 +527,14 @@ function _fichaSyncLiveSectionsAndCheck() {
     if (_fichaAutoSyncLiveSections(area)) changed = true;
   }
   if (changed && typeof saveToStorage === 'function') saveToStorage();
-  // Só depois de um handoff gerado com pendências (marca
-  // a11yHandoffAwaitingChecklist) — criar specs com o checklist fechando no
-  // meio do caminho não abre nada (2026-10-07, print do usuário).
-  if (!hacData.a11yHandoffAwaitingChecklist) return;
-  const completion = _fichaProjectCompletion();
-  if (completion.isComplete) {
-    hacData.a11yHandoffAwaitingChecklist = false;
+  // SEM disparo automático da modal (2026-10-07, 2ª reclamação do usuário:
+  // "fiz a criação de uma spec e já disparou a modal do checklist fechado").
+  // A modal "Checklist do projeto fechado" só aparece como RESPOSTA ao
+  // "Gerar Handoff" (_fichaGenerateCompleteHandoff) — editar nunca a abre.
+  // A marca a11yHandoffAwaitingChecklist (beta.108) deixou de existir.
+  if (hacData.a11yHandoffAwaitingChecklist) {
+    delete hacData.a11yHandoffAwaitingChecklist;
     if (typeof saveToStorage === 'function') saveToStorage();
-    if (!window._fichaAfterHandoffAreaId) window._fichaAfterHandoffAreaId = window._a11yWorkspaceAreaId || null;
-    setTimeout(() => { try { _fichaOpenAfterHandoffModal(); } catch (e) { } }, 0);
   }
 }
 window._fichaSyncLiveSectionsAndCheck = _fichaSyncLiveSectionsAndCheck;
@@ -893,17 +891,11 @@ async function _fichaGenerateCompleteHandoff(areaId) {
   pendingKeys = order.filter(key => pendingKeys.includes(key));
 
   if (pendingKeys.length === 0) {
-    // Nada gerado = sem modal de próximo passo (2026-10-06, pedido do
-    // usuário: ela só aparece quando a geração do handoff TERMINA). Com o
-    // checklist ainda aberto (ex.: seção inserida vazia), avisa as
-    // pendências na mesma modal e passa a aguardar o checklist (2026-10-07).
-    if (!_fichaProjectCompletion().isComplete) {
-      window._fichaAfterHandoffAreaId = areaId;
-      _fichaMarkAwaitingChecklistIfIncomplete();
-      _fichaOpenAfterHandoffModal();
-      return;
-    }
-    showToast('O Handoff de Acessibilidade já está atualizado.');
+    // Nada novo a inserir: o "Gerar Handoff" ainda responde com a modal
+    // (2026-10-07) — com pendências, mostra o que falta; com o checklist do
+    // projeto fechado, "Checklist do projeto fechado" + Finalizar handoff.
+    window._fichaAfterHandoffAreaId = areaId;
+    _fichaOpenAfterHandoffModal();
     return;
   }
 
@@ -944,20 +936,7 @@ async function _fichaGenerateCompleteHandoff(areaId) {
   // terminar o canvas). Só quando ao menos uma seção entrou.
   if (anyOk) {
     window._fichaAfterHandoffAreaId = areaId;
-    _fichaMarkAwaitingChecklistIfIncomplete();
     _fichaOpenAfterHandoffModal();
-  }
-}
-
-// Marca "handoff gerado, aguardando o checklist fechar" (2026-10-07, jornada
-// definida pelo usuário: gera o handoff → é avisado das pendências → resolve →
-// SÓ ENTÃO a modal de checklist fechado aparece). Persistida em hacData para
-// sobreviver a fechar/reabrir o plugin.
-function _fichaMarkAwaitingChecklistIfIncomplete() {
-  if (_fichaProjectCompletion().isComplete) return;
-  if (!hacData.a11yHandoffAwaitingChecklist) {
-    hacData.a11yHandoffAwaitingChecklist = true;
-    if (typeof saveToStorage === 'function') saveToStorage();
   }
 }
 window._fichaGenerateCompleteHandoff = _fichaGenerateCompleteHandoff;

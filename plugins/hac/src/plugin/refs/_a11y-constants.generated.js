@@ -7,7 +7,7 @@
 // Regenerar via: node src/plugin/refs/build-a11y-constants.cjs
 //            ou: npm run refs:a11y-constants
 //
-// Gerado em: 2026-10-07T14:14:59.289Z
+// Gerado em: 2026-10-07T14:20:40.439Z
 //
 // Consumido via alias em src/plugin/modules/accessibility.js:
 //   const A11Y_COMPONENT_PROPERTIES = A11Y_COMPONENT_PROPERTIES_GENERATED;
