@@ -1315,6 +1315,47 @@ figma.ui.onmessage = async (msg) => {
   // reenvia ao criar a spec, análogo a opts.a11yOrigin. Usado só para o
   // badge de origem de UI (accessibility.js, _a11ySpecItemHtml) — nunca
   // decide marcador/dicionário de import, só opts.a11yOrigin faz isso.
+  // Equivalente de um nó do ORIGINAL dentro da réplica (2026-10-07). 1º pelo
+  // caminho de índices desde a raiz da área (o mesmo critério do nodeMap,
+  // recalculado na hora — cobre mapa em cache desatualizado); 2º por nome +
+  // tipo + posição relativa à raiz (cobre réplica com estrutura levemente
+  // diferente). Nunca devolve um nó fora da réplica.
+  function _isDescendantOf(node, root) {
+    let p = node;
+    for (let i = 0; p && i < 64; i++, p = p.parent) if (p === root || (p && root && p.id === root.id)) return true;
+    return false;
+  }
+  function _findEquivalentNodeInClone(node, root, clone) {
+    try {
+      if (!node || !root || !clone) return null;
+      // Réplica e original não podem ser o mesmo nó nem um conter o outro.
+      if (clone.id === root.id || _isDescendantOf(clone, root) || _isDescendantOf(root, clone)) return null;
+      if (_isDescendantOf(node, clone)) return { node, via: 'já na réplica' };
+      if (_isDescendantOf(node, root)) {
+        const path = [];
+        let p = node;
+        while (p && p.id !== root.id) {
+          const parent = p.parent;
+          if (!parent || !parent.children) break;
+          path.unshift(parent.children.indexOf(p));
+          p = parent;
+        }
+        let c = clone;
+        for (const idx of path) { c = c && c.children ? c.children[idx] : null; if (!c) break; }
+        if (c && c.type === node.type && c.name === node.name && c.absoluteBoundingBox) return { node: c, via: 'caminho' };
+      }
+      const nb = node.absoluteBoundingBox, rb = root.absoluteBoundingBox, cb = clone.absoluteBoundingBox;
+      if (nb && rb && cb && 'findAll' in clone) {
+        const dx = nb.x - rb.x, dy = nb.y - rb.y;
+        const hit = clone.findAll(n => n.type === node.type && n.name === node.name && n.absoluteBoundingBox &&
+          Math.abs((n.absoluteBoundingBox.x - cb.x) - dx) < 2 && Math.abs((n.absoluteBoundingBox.y - cb.y) - dy) < 2 &&
+          Math.abs(n.absoluteBoundingBox.width - nb.width) < 2 && Math.abs(n.absoluteBoundingBox.height - nb.height) < 2);
+        if (hit.length >= 1) return { node: hit[0], via: 'posição' };
+      }
+    } catch (e) { }
+    return null;
+  }
+
   if (msg.type === "create-unified-spec") {
     (async () => {
      try {
@@ -1351,6 +1392,9 @@ figma.ui.onmessage = async (msg) => {
       // do formulário/seleção) é traduzido pro node EQUIVALENTE dentro do
       // clone via nodeMap — mesma tradução que Tabulação já faz.
       let specClone = null;
+      // Motivo de o elemento não ter sido traduzido pra réplica (2026-10-07) —
+      // quando preenchido, o contorno NÃO é desenhado (seria no original).
+      let _specMapFailReason = null;
       // workAnchor devolvido pra que o frontend grave, se esta chamada
       // acabou de CRIAR o clone da área pela 1ª vez (2026-09-21) — ver
       // comentário completo em start-spec-copy/_findFreeTabOrderCopyPosition.
@@ -1373,7 +1417,8 @@ figma.ui.onmessage = async (msg) => {
               node = mappedNode;
               specClone = resolved.clone;
             } else {
-              console.error('[hac] create-unified-spec: node não encontrado no clone da área — desenhando sobre o original.', JSON.stringify({ targetNodeId: node.id }));
+              console.error('[hac] create-unified-spec: node não encontrado no clone da área.', JSON.stringify({ targetNodeId: node.id }));
+              _specMapFailReason = 'elemento fora do mapa da réplica';
             }
             if (_manualAnchorNode) {
               const mappedAnchor = resolved.nodeMap.get(_manualAnchorNode.id);
@@ -1388,6 +1433,37 @@ figma.ui.onmessage = async (msg) => {
           }
         } catch (e) {
           console.error('[hac] create-unified-spec: falha ao resolver/criar o clone da área — desenhando sobre o original.', e && e.message);
+          _specMapFailReason = 'réplica não resolvida (' + ((e && e.message) || 'erro') + ')';
+        }
+      }
+
+      // Recuperação + nunca desenhar no original (2026-10-07, print do
+      // usuário: contornos saindo na TELA PRINCIPAL, não na réplica do
+      // Leitor de Tela, enquanto os cards iam certos — o card é resgatado
+      // pela réplica da área, o contorno usa `node`, que ficava sendo o
+      // ORIGINAL quando o nodeMap não achava o elemento). Tenta achar o
+      // equivalente na réplica da área (caminho na árvore; depois nome+tipo+
+      // posição relativa). Se não achar, o contorno NÃO é desenhado e o
+      // motivo é avisado — nunca mais sobre o design original.
+      if (!specClone && opts.a11yAreaId) {
+        const _hostForMap = _findSpecCloneForArea(opts.a11yAreaId);
+        const _rootForMap = opts.a11yAreaTargetNodeId ? await _getSceneNodeById(opts.a11yAreaTargetNodeId) : null;
+        if (!_hostForMap) {
+          _specMapFailReason = _specMapFailReason || 'réplica do Leitor de Tela não encontrada';
+        } else if (!_rootForMap) {
+          _specMapFailReason = _specMapFailReason || 'tela original da área não encontrada';
+        } else {
+          const _eq = _findEquivalentNodeInClone(node, _rootForMap, _hostForMap);
+          if (_eq) {
+            console.log('[hac] create-unified-spec: elemento recuperado na réplica via', _eq.via);
+            node = _eq.node;
+            specClone = _hostForMap;
+            _specMapFailReason = null;
+          } else {
+            _specMapFailReason = _specMapFailReason || (_isDescendantOf(node, _rootForMap)
+              ? 'elemento sem equivalente na réplica'
+              : 'elemento fora da tela da área');
+          }
         }
       }
 
@@ -1477,6 +1553,7 @@ figma.ui.onmessage = async (msg) => {
       if (bounds) {
         let marker = null;
         try {
+          if (_specMapFailReason) throw new Error('contorno não desenhado na tela original — ' + _specMapFailReason);
           marker = opts.drawMode === 'linha'
             ? await _tryImportA11yConectorLinha(opts)
             : await _tryImportA11yAgrupamento(opts);
@@ -2240,7 +2317,9 @@ figma.ui.onmessage = async (msg) => {
         // (contorno/conector) não pôde ser importado — ver fallback brando
         // acima. Nunca deixa a spec sumir por causa disso; só avisa que falta
         // revisar o destaque visual manualmente.
-        figma.notify(`Especificação criada sem o marcador visual (contorno/conector) — não foi possível importá-lo (${_markerImportFailReason}). Revise o destaque manualmente.`, { error: true, timeout: 6000 });
+        figma.notify(_markerImportFailReason.indexOf('contorno não desenhado') === 0
+          ? `Especificação criada sem o marcador: o elemento não foi encontrado na réplica do Leitor de Tela (${_specMapFailReason}). Nada foi desenhado na tela original.`
+          : `Especificação criada sem o marcador visual (contorno/conector) — não foi possível importá-lo (${_markerImportFailReason}). Revise o destaque manualmente.`, { error: true, timeout: 8000 });
       } else if (_warnedFallbackMessage) {
         figma.notify(_warnedFallbackMessage + ' Arraste para posicionar.', { timeout: 6000 });
       } else if (!opts.silent) {

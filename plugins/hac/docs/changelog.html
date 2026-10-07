@@ -3398,6 +3398,21 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-07 — Contornos nunca mais na tela original (v0.1.0-beta.103)</h2>
+
+    <p>Print do usuário: os contornos (marcadores) das specs do Leitor de Tela saíam sobre a <strong>tela principal</strong>, não
+    sobre a réplica — enquanto os cards iam certos. O card é posicionado pela réplica da área (resgatada por
+    <code>_findSpecCloneForArea</code>); o contorno usa o nó do elemento, que continuava sendo o ORIGINAL quando o mapa
+    original→réplica não o encontrava (antes, só um <code>console.error</code>). Agora, em <code>create-unified-spec</code>:</p>
+    <ul>
+      <li>se o mapa falha, o elemento é procurado na réplica da área pelo caminho na árvore e, se preciso, por nome + tipo +
+      posição relativa à tela (<code>_findEquivalentNodeInClone</code>);</li>
+      <li>se mesmo assim não for encontrado, o contorno <strong>não</strong> é desenhado (nunca na tela original) e o plugin avisa o
+      motivo (elemento fora do mapa, fora da tela da área, réplica/tela não encontrada).</li>
+    </ul>
+    <p>Vale para web e mobile (mesmo caminho). A causa exata da falha do mapa no arquivo do usuário ainda não foi confirmada —
+    o aviso com o motivo serve para fechar isso no próximo teste.</p>
+
     <h2>2026-10-07 — Ícone puro × botão; Right Slot de navegação é botão (v0.1.0-beta.102)</h2>
 
     <p>O reconhecimento tratava como Elemento Decorativo tudo que tinha <em>formato</em> de ícone (pequeno, sem texto, só
