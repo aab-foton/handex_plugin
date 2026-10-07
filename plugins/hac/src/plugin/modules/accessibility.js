@@ -4245,6 +4245,11 @@ function _a11ySpecItemHtml(spec, showCategoryChip, group) {
             class="w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:text-[#005ca9] transition-colors shrink-0">
             <i data-lucide="locate" class="w-4 h-4"></i>
           </button>
+          <button type="button" title="Editar este elemento" aria-label="Editar especificação de ${escapeHtml(gname)}, ${gi + 1} de ${group.ids.length}"
+            onclick="editA11ySpec('${escapeHtml(gs.id)}')"
+            class="w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:text-[#005ca9] transition-colors shrink-0">
+            <i data-lucide="pencil" class="w-4 h-4"></i>
+          </button>
           <button type="button" title="Remover este elemento" aria-label="Remover especificação de ${escapeHtml(gname)}, ${gi + 1} de ${group.ids.length}"
             onclick="deleteA11ySpec('${escapeHtml(gs.id)}')"
             class="w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:text-red-500 transition-colors shrink-0">
