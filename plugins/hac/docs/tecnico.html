@@ -4850,6 +4850,14 @@ hr {
       fica em <code>_…Now</code>.</li>
     </ul>
 
+    <h3>Causa raiz: TDZ em <code>_specCloneResolutionInFlight</code> (beta.122)</h3>
+    <ul>
+      <li>O <code>Map</code> de serialização de <code>_resolveActiveSpecClone</code> era <code>const</code> dentro de <code>figma.ui.onmessage</code>, depois do
+      ramo <code>create-unified-spec</code> → ReferenceError ao criar spec, réplica não resolvida, <code>_specMapFailReason</code>. Agora no escopo do
+      módulo. <strong>Regra</strong>: estado compartilhado entre mensagens nunca com <code>const</code>/<code>let</code> dentro do handler (zona morta para
+      ramos anteriores e recriação a cada mensagem) — sempre no topo do módulo.</li>
+    </ul>
+
     <h3>Foco na réplica (beta.112)</h3>
     <ul>
       <li><code>highlight-spec-copy-node</code>, <code>highlight-tab-order-copy-node</code> e <code>highlight-swipe-path-copy-node</code> usam

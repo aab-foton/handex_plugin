@@ -3398,6 +3398,16 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-07 — Causa raiz dos contornos fora da réplica corrigida (v0.1.0-beta.122)</h2>
+
+    <p>O aviso "Especificação criada sem o marcador… (réplica não resolvida (_specCloneResolutionInFlight is not initialized))" (print do
+    usuário) revelou a causa raiz que faltava desde a beta.103: o <code>Map</code> que serializa a resolução da réplica do Leitor de
+    Tela estava declarado com <code>const</code> <strong>dentro</strong> do <code>figma.ui.onmessage</code>, ~3.000 linhas depois do tratamento de
+    <code>create-unified-spec</code>. Chamado dali, caía na zona morta do <code>const</code> (ReferenceError): a réplica nunca era resolvida e
+    o elemento nunca era traduzido para ela — o card ia certo (resgatado por outro caminho) e o contorno ia para a tela original
+    (até a beta.102) ou não era desenhado (beta.103+). Recriado a cada mensagem, o <code>Map</code> também nunca serializava nada.
+    Movido para o escopo do módulo. A recuperação da beta.103 e o reparo da beta.106 continuam como rede de segurança.</p>
+
     <h2>2026-10-07 — Simular leitura destaca a réplica, não o frame principal (v0.1.0-beta.121)</h2>
 
     <p>Pedido do usuário: "a simulação de leitura do swipe está lendo o frame principal, tem de ler a réplica, até pro designer

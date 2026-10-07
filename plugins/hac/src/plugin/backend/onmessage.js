@@ -166,6 +166,18 @@ let _swipePathModeActive = false;
 // save-storage e na abertura (2026-10-07). Usada onde a cópia de trabalho é
 // criada sem uma área completa da UI (ver _areaStubFromRoot).
 let _lastProjectOrigin = null;
+
+// Fila de resolução da réplica do Leitor de Tela por área (ver
+// _resolveActiveSpecClone). BUG REAL CORRIGIDO (2026-10-07, aviso no print do
+// usuário: "_specCloneResolutionInFlight is not initialized"): o Map era
+// declarado com `const` DENTRO do figma.ui.onmessage, ~3.000 linhas depois do
+// tratamento de create-unified-spec — chamado dali, caía na zona morta do
+// `const` (ReferenceError), a réplica nunca era resolvida e o elemento nunca
+// era traduzido para ela (causa raiz dos contornos sobre a tela original,
+// beta.103/106). Além disso, recriado a cada mensagem, a fila nunca
+// serializava nada. No escopo do módulo, existe desde o carregamento e é
+// compartilhado entre mensagens.
+const _specCloneResolutionInFlight = new Map();
 function _rememberProjectOrigin(data) {
   if (data && (data.projectOrigin === 'web' || data.projectOrigin === 'mobile')) {
     _lastProjectOrigin = data.projectOrigin;
@@ -3407,7 +3419,7 @@ figma.ui.onmessage = async (msg) => {
   // _resolveActiveTabOrderClone/_resolveActiveSwipePathClone (nenhuma delas
   // tem hoje qualquer serialização), mas só Leitor de Tela foi reportado com
   // sintoma real — escopo da correção restrito a ele.
-  const _specCloneResolutionInFlight = new Map();
+  // (Map no escopo do MÓDULO — ver declaração junto de _lastProjectOrigin.)
   function _resolveActiveSpecClone(areaId, targetNodeId, sectionName, designerName, currentUserId, savedAnchor) {
     if (!areaId) return _resolveActiveSpecCloneInner(areaId, targetNodeId, sectionName, designerName, currentUserId, savedAnchor);
     const pending = _specCloneResolutionInFlight.get(areaId);
