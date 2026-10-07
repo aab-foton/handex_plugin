@@ -3253,6 +3253,16 @@ function _applyA11yEstruturaWebLock(modal) {
       if (first) select.value = first.value;
     }
   };
+  // Opções de Marco vindas da LIB (2026-10-07: a lib passou a ter também
+  // Section e Form) — acrescenta as que o HTML não tem; lockSelect abaixo
+  // esconde as que a lib não tem.
+  const marcoSel = document.getElementById('a11y-estrutura-marco-select');
+  if (marcoSel) {
+    (est.marcoTipos || []).forEach(t => {
+      const exists = Array.prototype.some.call(marcoSel.options, o => normalizeA11yRecognitionName(o.value) === normalizeA11yRecognitionName(t));
+      if (!exists) { const o = document.createElement('option'); o.value = String(t).toLowerCase(); o.textContent = t; marcoSel.appendChild(o); }
+    });
+  }
   lockSelect('a11y-estrutura-subtipo-select', v => !!A11Y_WEB_ESTRUTURA_FORM_VARIACAO[v] && est.variacoes.includes(A11Y_WEB_ESTRUTURA_FORM_VARIACAO[v]));
   lockSelect('a11y-estrutura-marco-select', v => est.marcoTipos.some(t => normalizeA11yRecognitionName(t) === normalizeA11yRecognitionName(v)));
   lockSelect('a11y-estrutura-idiomas-select', v => !!A11Y_WEB_ESTRUTURA_FORM_IDIOMA_TIPO[v] && est.idiomaTipos.includes(A11Y_WEB_ESTRUTURA_FORM_IDIOMA_TIPO[v]));
@@ -3279,21 +3289,29 @@ function updateA11yEstruturaFields() {
 
   const idiomasWrap = document.getElementById('a11y-estrutura-idiomas-wrap');
   const marcoWrap = document.getElementById('a11y-estrutura-marco-wrap');
-  if (idiomasWrap) idiomasWrap.classList.toggle('hidden', val !== 'idiomas');
+  // Idioma sem tipos na lib (2026-10-07: a lib retirou Página/Parte) — o
+  // seletor de tipo some no web.
+  const _webEst = (typeof A11Y_WEB_ESTRUTURA_GENERATED !== 'undefined') ? A11Y_WEB_ESTRUTURA_GENERATED : null;
+  const _libEstTexts = (!isMobile && typeof A11Y_WEB_ESTRUTURA_TEXTS_GENERATED !== 'undefined') ? A11Y_WEB_ESTRUTURA_TEXTS_GENERATED : {};
+  const _idiomaSemTipo = !isMobile && _webEst && Array.isArray(_webEst.idiomaTipos) && _webEst.idiomaTipos.length === 0;
+  const _fromLib = f => f ? { descricao: f['Descrição'] || '', notasCodigo: f['Notas de Código'] || '' } : null;
+  if (idiomasWrap) idiomasWrap.classList.toggle('hidden', val !== 'idiomas' || _idiomaSemTipo);
   if (marcoWrap) marcoWrap.classList.toggle('hidden', val !== 'marco de navegacao');
 
   let entry = null;
   let isCustomizavel = val === 'customizavel';
   if (val === 'idiomas') {
     const sub = document.getElementById('a11y-estrutura-idiomas-select');
-    entry = A11Y_CONTENT.estrutura.idiomas[sub ? sub.value : 'da pagina'];
+    // Texto da LIB primeiro (a lib é a referência); tabela local só sem ele.
+    entry = (_idiomaSemTipo && _fromLib(_libEstTexts.idioma)) || A11Y_CONTENT.estrutura.idiomas[sub ? sub.value : 'da pagina'];
   } else if (val === 'marco de navegacao') {
     const sub = document.getElementById('a11y-estrutura-marco-select');
     const subVal = sub ? sub.value : 'header';
     if (subVal === 'customizavel') {
       isCustomizavel = true;
     } else {
-      entry = A11Y_CONTENT.estrutura.marco[subVal];
+      const libTipo = Object.keys((_libEstTexts && _libEstTexts.marco) || {}).find(t => t.toLowerCase() === subVal);
+      entry = (libTipo && _fromLib(_libEstTexts.marco[libTipo])) || A11Y_CONTENT.estrutura.marco[subVal];
       // Mobile: mesma Descrição (papel semântico é o mesmo, independe de
       // plataforma), mas Nota de Código troca para accessibilityRole — nunca
       // mencionar tag HTML numa spec de origem mobile.
@@ -4430,8 +4448,8 @@ function _a11yCategoryAccordionEl(uid, catKey, catSpecs) {
         <i data-lucide="chevron-down" id="chevron-${uid}" class="w-3.5 h-3.5 text-gray-400 transition-transform shrink-0" style="transform:${expand ? 'rotate(180deg)' : 'rotate(0deg)'}"></i>
       </div>
       <div id="body-${uid}" class="accordion-content ${expand ? '' : 'hidden'} border-t border-gray-100 dark:border-dark-line p-1.5 space-y-1.5">
-        ${_a11yCategoryFixedTextsHtml(catKey, catSpecs)}
         ${_a11yGroupRepeatedSpecs(catKey, catSpecs).map(g => _a11ySpecItemHtml(g.spec, false, g.ids.length > 1 ? g : null)).join('')}
+        ${_a11yCategoryFixedTextsHtml(catKey, catSpecs)}
       </div>
     </div>
   `;

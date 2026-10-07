@@ -4,13 +4,13 @@
     "slug": "design-acessivel-mobile",
     "libraryName": "Design Acessível (mobile)",
     "fileKey": "HhriLSpKnCB2dHhyiU16iB",
-    "generatedAt": "2026-10-06T00:44:26.900Z",
+    "generatedAt": "2026-10-07T17:39:25.544Z",
     "generator": "fetch-component-properties.cjs",
     "deepScan": true,
-    "discoverySignature": "95178d90b7d71421262d6d2ffcf1b33c2e4a3a000c0697ef38e3c76c31dd4eb8",
+    "discoverySignature": "55a735c60e7765c09ac20e4f1ff32bab846ac239782d868d79b63ad4cdd05895",
     "counts": {
-      "totalComponentSets": 14,
-      "resolved": 14,
+      "totalComponentSets": 13,
+      "resolved": 13,
       "failed": 0
     },
     "schema": {
@@ -456,192 +456,6 @@
       ]
     },
     {
-      "nodeId": "10330:4204",
-      "key": "e2c3162d5c9d3fb22096d9bb7c949a18a7f45add",
-      "fullName": "[hac web] Box specs leitor de tela",
-      "shortName": "Box specs leitor de tela",
-      "source": "component_sets",
-      "properties": [
-        {
-          "rawKey": "Conector",
-          "name": "Conector",
-          "syncId": null,
-          "type": "VARIANT",
-          "defaultValue": "Elementos Interativos e Imagens",
-          "variantOptions": [
-            "Elementos Interativos e Imagens",
-            "Títulos",
-            "Estrutura da Página",
-            "Elementos Decorativos"
-          ]
-        }
-      ],
-      "propertiesByType": {
-        "toggles": [],
-        "texts": [],
-        "variants": [
-          "Conector"
-        ],
-        "instanceSwaps": []
-      },
-      "perVariantProperties": [],
-      "variantKeys": [
-        {
-          "nodeId": "10330:4205",
-          "name": "Conector=Elementos Decorativos",
-          "key": "032c77f3a9a16fcd4ae4896c37e444202ecedf84"
-        },
-        {
-          "nodeId": "10757:5871",
-          "name": "Conector=Estrutura da Página",
-          "key": "393eccad3c607c49c1b30ac350e0bcb94f1b833e"
-        },
-        {
-          "nodeId": "10330:4208",
-          "name": "Conector=Títulos",
-          "key": "62d3431afd26807e9ce5ff4f6ba48835d793f481"
-        },
-        {
-          "nodeId": "10330:4211",
-          "name": "Conector=Elementos Interativos e Imagens",
-          "key": "8406b0ecfe7e38a3174198953ba13bf3a52630af"
-        }
-      ],
-      "wrapperVariants": [
-        {
-          "nodeId": "10330:4205",
-          "name": "Conector=Elementos Decorativos",
-          "key": "032c77f3a9a16fcd4ae4896c37e444202ecedf84",
-          "instances": [
-            {
-              "name": "Conector",
-              "componentId": "1248:2426",
-              "properties": []
-            },
-            {
-              "name": "Elementos decorativos",
-              "componentId": "10734:3823",
-              "properties": [
-                {
-                  "rawKey": "Observações#10746:8",
-                  "name": "Observações",
-                  "syncId": "10746:8",
-                  "type": "BOOLEAN",
-                  "value": true
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "nodeId": "10330:4208",
-          "name": "Conector=Títulos",
-          "key": "62d3431afd26807e9ce5ff4f6ba48835d793f481",
-          "instances": [
-            {
-              "name": "Conector",
-              "componentId": "1248:2330",
-              "properties": [
-                {
-                  "rawKey": "Nível#10766:1",
-                  "name": "Nível",
-                  "syncId": "10766:1",
-                  "type": "TEXT",
-                  "value": "H1"
-                }
-              ]
-            },
-            {
-              "name": "Títulos",
-              "componentId": "10740:4662",
-              "properties": [
-                {
-                  "rawKey": "Nível",
-                  "name": "Nível",
-                  "syncId": null,
-                  "type": "VARIANT",
-                  "value": "H1"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "nodeId": "10330:4211",
-          "name": "Conector=Elementos Interativos e Imagens",
-          "key": "8406b0ecfe7e38a3174198953ba13bf3a52630af",
-          "instances": [
-            {
-              "name": "Conector",
-              "componentId": "1248:2328",
-              "properties": [
-                {
-                  "rawKey": "Número#10766:0",
-                  "name": "Número",
-                  "syncId": "10766:0",
-                  "type": "TEXT",
-                  "value": "1"
-                }
-              ]
-            },
-            {
-              "name": "Elementos e imagens",
-              "componentId": "10658:3626",
-              "properties": [
-                {
-                  "rawKey": "Variante",
-                  "name": "Variante",
-                  "syncId": null,
-                  "type": "VARIANT",
-                  "value": "Componente"
-                },
-                {
-                  "rawKey": "Componente",
-                  "name": "Componente",
-                  "syncId": null,
-                  "type": "VARIANT",
-                  "value": "Button"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "nodeId": "10757:5871",
-          "name": "Conector=Estrutura da Página",
-          "key": "393eccad3c607c49c1b30ac350e0bcb94f1b833e",
-          "instances": [
-            {
-              "name": "Conector",
-              "componentId": "10766:112",
-              "properties": [
-                {
-                  "rawKey": "Número#10766:2",
-                  "name": "Número",
-                  "syncId": "10766:2",
-                  "type": "TEXT",
-                  "value": "1"
-                }
-              ]
-            },
-            {
-              "name": "Estrutura da Página",
-              "componentId": "10745:5009",
-              "properties": [
-                {
-                  "rawKey": "Variação",
-                  "name": "Variação",
-                  "syncId": null,
-                  "type": "VARIANT",
-                  "value": "Marco de navegação"
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    {
       "nodeId": "1:50",
       "key": "ef1080dfa99432945fb7e45b88ac95bec02e85ec",
       "fullName": "[hac] Conectores",
@@ -1043,6 +857,192 @@
           "nodeId": "1:125",
           "name": "tipo=Títulos, conector=Inferior",
           "key": "ef9578ce7fd51d26cdccc22fbc862bdd716050ce"
+        }
+      ]
+    },
+    {
+      "nodeId": "10330:4204",
+      "key": "e2c3162d5c9d3fb22096d9bb7c949a18a7f45add",
+      "fullName": "[hac web] Box specs leitor de tela",
+      "shortName": "Box specs leitor de tela",
+      "source": "component_sets",
+      "properties": [
+        {
+          "rawKey": "Conector",
+          "name": "Conector",
+          "syncId": null,
+          "type": "VARIANT",
+          "defaultValue": "Elementos Interativos e Imagens",
+          "variantOptions": [
+            "Elementos Interativos e Imagens",
+            "Títulos",
+            "Estrutura da Página",
+            "Elementos Decorativos"
+          ]
+        }
+      ],
+      "propertiesByType": {
+        "toggles": [],
+        "texts": [],
+        "variants": [
+          "Conector"
+        ],
+        "instanceSwaps": []
+      },
+      "perVariantProperties": [],
+      "variantKeys": [
+        {
+          "nodeId": "10330:4205",
+          "name": "Conector=Elementos Decorativos",
+          "key": "032c77f3a9a16fcd4ae4896c37e444202ecedf84"
+        },
+        {
+          "nodeId": "10757:5871",
+          "name": "Conector=Estrutura da Página",
+          "key": "393eccad3c607c49c1b30ac350e0bcb94f1b833e"
+        },
+        {
+          "nodeId": "10330:4208",
+          "name": "Conector=Títulos",
+          "key": "62d3431afd26807e9ce5ff4f6ba48835d793f481"
+        },
+        {
+          "nodeId": "10330:4211",
+          "name": "Conector=Elementos Interativos e Imagens",
+          "key": "8406b0ecfe7e38a3174198953ba13bf3a52630af"
+        }
+      ],
+      "wrapperVariants": [
+        {
+          "nodeId": "10330:4205",
+          "name": "Conector=Elementos Decorativos",
+          "key": "032c77f3a9a16fcd4ae4896c37e444202ecedf84",
+          "instances": [
+            {
+              "name": "Conector",
+              "componentId": "1248:2426",
+              "properties": []
+            },
+            {
+              "name": "Elementos decorativos",
+              "componentId": "10734:3823",
+              "properties": [
+                {
+                  "rawKey": "Observações#10746:8",
+                  "name": "Observações",
+                  "syncId": "10746:8",
+                  "type": "BOOLEAN",
+                  "value": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "nodeId": "10330:4208",
+          "name": "Conector=Títulos",
+          "key": "62d3431afd26807e9ce5ff4f6ba48835d793f481",
+          "instances": [
+            {
+              "name": "Conector",
+              "componentId": "1248:2330",
+              "properties": [
+                {
+                  "rawKey": "Nível#10766:1",
+                  "name": "Nível",
+                  "syncId": "10766:1",
+                  "type": "TEXT",
+                  "value": "H1"
+                }
+              ]
+            },
+            {
+              "name": "Títulos",
+              "componentId": "10740:4662",
+              "properties": [
+                {
+                  "rawKey": "Nível",
+                  "name": "Nível",
+                  "syncId": null,
+                  "type": "VARIANT",
+                  "value": "H1"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "nodeId": "10330:4211",
+          "name": "Conector=Elementos Interativos e Imagens",
+          "key": "8406b0ecfe7e38a3174198953ba13bf3a52630af",
+          "instances": [
+            {
+              "name": "Conector",
+              "componentId": "1248:2328",
+              "properties": [
+                {
+                  "rawKey": "Número#10766:0",
+                  "name": "Número",
+                  "syncId": "10766:0",
+                  "type": "TEXT",
+                  "value": "1"
+                }
+              ]
+            },
+            {
+              "name": "Elementos e imagens",
+              "componentId": "10658:3626",
+              "properties": [
+                {
+                  "rawKey": "Variante",
+                  "name": "Variante",
+                  "syncId": null,
+                  "type": "VARIANT",
+                  "value": "Componente"
+                },
+                {
+                  "rawKey": "Componente",
+                  "name": "Componente",
+                  "syncId": null,
+                  "type": "VARIANT",
+                  "value": "Button"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "nodeId": "10757:5871",
+          "name": "Conector=Estrutura da Página",
+          "key": "393eccad3c607c49c1b30ac350e0bcb94f1b833e",
+          "instances": [
+            {
+              "name": "Conector",
+              "componentId": "10766:112",
+              "properties": [
+                {
+                  "rawKey": "Número#10766:2",
+                  "name": "Número",
+                  "syncId": "10766:2",
+                  "type": "TEXT",
+                  "value": "1"
+                }
+              ]
+            },
+            {
+              "name": "Estrutura da Página",
+              "componentId": "10745:5009",
+              "properties": [
+                {
+                  "rawKey": "Variação",
+                  "name": "Variação",
+                  "syncId": null,
+                  "type": "VARIANT",
+                  "value": "Marco de navegação"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -8144,44 +8144,6 @@
       "perVariantProperties": []
     },
     {
-      "nodeId": "10740:4664",
-      "key": null,
-      "fullName": ".[hac web base] Idiomas",
-      "shortName": "Idiomas",
-      "source": "tree-walk",
-      "properties": [
-        {
-          "rawKey": "Observações#10753:9",
-          "name": "Observações",
-          "syncId": "10753:9",
-          "type": "BOOLEAN",
-          "defaultValue": true
-        },
-        {
-          "rawKey": "Tipo",
-          "name": "Tipo",
-          "syncId": null,
-          "type": "VARIANT",
-          "defaultValue": "Página",
-          "variantOptions": [
-            "Página",
-            "Parte"
-          ]
-        }
-      ],
-      "propertiesByType": {
-        "toggles": [
-          "Observações"
-        ],
-        "texts": [],
-        "variants": [
-          "Tipo"
-        ],
-        "instanceSwaps": []
-      },
-      "perVariantProperties": []
-    },
-    {
       "nodeId": "10740:4680",
       "key": null,
       "fullName": ".[hac web base] Marco de navegação",
@@ -8197,7 +8159,9 @@
           "variantOptions": [
             "Nav",
             "Main",
-            "Aside"
+            "Aside",
+            "Section",
+            "Form"
           ]
         }
       ],
@@ -8226,7 +8190,6 @@
           "defaultValue": "Marco de navegação",
           "variantOptions": [
             "Marco de navegação",
-            "Título da Página",
             "Idioma"
           ]
         }
@@ -8275,6 +8238,16 @@
                 "variantName": "Tipo=Aside",
                 "variantId": "10740:4696",
                 "activeToggles": []
+              },
+              {
+                "variantName": "Tipo=Section",
+                "variantId": "11207:1759",
+                "activeToggles": []
+              },
+              {
+                "variantName": "Tipo=Form",
+                "variantId": "11207:1770",
+                "activeToggles": []
               }
             ]
           }
@@ -8282,23 +8255,16 @@
         {
           "variantName": "Variação=Idioma",
           "variantId": "10745:5010",
-          "nestedInstanceName": "Idiomas",
-          "nestedInstanceId": "10745:4997",
-          "nestedComponentId": "10740:4665",
+          "nestedInstanceName": ".[hac web base] Idioma",
+          "nestedInstanceId": "11171:29459",
+          "nestedComponentId": "10740:4670",
           "properties": [
             {
-              "rawKey": "Observações#10753:9",
+              "rawKey": "Observações#10753:11",
               "name": "Observações",
-              "syncId": "10753:9",
+              "syncId": "10753:11",
               "type": "BOOLEAN",
               "value": true
-            },
-            {
-              "rawKey": "Tipo",
-              "name": "Tipo",
-              "syncId": null,
-              "type": "VARIANT",
-              "value": "Página"
             }
           ],
           "toggles": [
@@ -8306,26 +8272,7 @@
               "name": "Observações",
               "value": true
             }
-          ],
-          "screenReaderVariants": {
-            "setName": ".[hac web base] Idiomas",
-            "setId": "10740:4664",
-            "subModeProperty": "Tipo",
-            "variants": [
-              {
-                "variantName": "Tipo=Página",
-                "variantId": "10740:4665",
-                "activeToggles": [
-                  "Observações"
-                ]
-              },
-              {
-                "variantName": "Tipo=Parte",
-                "variantId": "10740:4670",
-                "activeToggles": []
-              }
-            ]
-          }
+          ]
         }
       ]
     }

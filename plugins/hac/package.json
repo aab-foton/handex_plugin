@@ -1,7 +1,7 @@
 {
   "name": "hac",
   "private": true,
-  "version": "0.1.0-beta.119",
+  "version": "0.1.0-beta.120",
   "type": "commonjs",
   "scripts": {
     "lint": "tsc --noEmit && npm run lint:figma-api",
@@ -11,7 +11,7 @@
     "check:lib-sources": "node src/plugin/refs/check-lib-sources.cjs",
     "refs:web-recognition-report": "node src/plugin/refs/report-web-recognition.cjs",
     "refs:fetch": "node src/plugin/refs/fetch-design-refs.cjs",
-    "refs:a11y-mapping": "node src/plugin/refs/build-dsc-a11y-mapping.cjs",
+    "refs:a11y-mapping": "node src/plugin/refs/build-dsc-a11y-mapping.cjs --src super-app.json --out dsc-component-a11y-mapping-mobile.json && node src/plugin/refs/build-dsc-a11y-mapping.cjs --src super-dsc-web.json --out dsc-component-a11y-mapping-superdscweb.json && node src/plugin/refs/build-dsc-a11y-mapping.cjs --src dsc-android.json --out dsc-component-a11y-mapping-android.json",
     "refs:a11y-constants": "node src/plugin/refs/build-a11y-constants.cjs",
     "refs:ficha-instruction": "node src/plugin/refs/build-ficha-instruction-constants.cjs",
     "refs:rebuild": "npm run refs:fetch && node src/plugin/refs/build-skeleton.cjs && npm run refs:a11y-mapping",

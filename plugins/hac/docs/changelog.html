@@ -3398,6 +3398,23 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-07 — Novo scan das libs; Estrutura da Página web segue a lib atualizada (v0.1.0-beta.120)</h2>
+
+    <p>Scan completo das libs (pedido do usuário: "temos atualizações"), com as mesmas opções de antes: libs DSC de produção
+    (Super App, Super DSC Web, DSC Android, Fundamentos Visuais), mapeamento DSC → a11y, propriedades (lib de acessibilidade e
+    Super App com deep-scan; Super DSC Web e Android sem), textos padrão da lib e constantes.</p>
+    <ul>
+      <li><strong>Mudança real na lib de acessibilidade (Estrutura da Página web)</strong>: o componente "Idiomas" (Página/Parte) foi
+      apagado — Idioma virou componente único, com Observações; "Título da Página" saiu das variações; Marco de navegação ganhou
+      <strong>Section</strong> e <strong>Form</strong> (era Nav/Main/Aside). O gerador exigia o "Idiomas" e teria zerado todas as opções de
+      Estrutura web — corrigido para a estrutura nova. O formulário passa a montar os tipos de Marco a partir da lib, esconde o
+      tipo de Idioma quando a lib não tem, e usa a Descrição/Nota de Código da lib (lidas por <code>fetch-a11y-default-texts.cjs</code>,
+      agora também para a Estrutura web) antes da tabela local. O card web de Idioma é preenchido sem tipo.</li>
+      <li><code>npm run refs:a11y-mapping</code> quebrava procurando a lib legada Web Angular &amp; React (retirada do hac); agora roda
+      o mapeamento das três libs atuais.</li>
+      <li>Bloco "Texto fixo da lib" (beta.118) passa para baixo dos cards da categoria (pedido do usuário).</li>
+    </ul>
+
     <h2>2026-10-07 — Specs iguais agrupadas em todas as categorias (v0.1.0-beta.119)</h2>
 
     <p>Pedido do usuário: o agrupamento vale para Títulos, Elementos Decorativos e Elementos Interativos e Imagens — "quando tiver

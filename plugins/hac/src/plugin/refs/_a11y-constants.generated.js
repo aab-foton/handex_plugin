@@ -1,13 +1,13 @@
 // ============================================================
 // GERADO AUTOMATICAMENTE por build-a11y-constants.cjs — não editar à mão.
 // Fonte: refs/design-acessivel-properties.json (2026-09-30T13:57:57.953Z)
-//      + refs/design-acessivel-mobile-properties.json (2026-10-06T00:44:26.900Z)
-//      + refs/super-app.json (2026-10-06T00:39:37.584Z)
+//      + refs/design-acessivel-mobile-properties.json (2026-10-07T17:39:25.544Z)
+//      + refs/super-app.json (2026-10-07T17:28:26.372Z)
 //      + refs/_manifest.json (fileKey da lib 'super-app')
 // Regenerar via: node src/plugin/refs/build-a11y-constants.cjs
 //            ou: npm run refs:a11y-constants
 //
-// Gerado em: 2026-10-07T17:18:50.037Z
+// Gerado em: 2026-10-07T17:53:16.093Z
 //
 // Consumido via alias em src/plugin/modules/accessibility.js:
 //   const A11Y_COMPONENT_PROPERTIES = A11Y_COMPONENT_PROPERTIES_GENERATED;
@@ -1391,6 +1391,41 @@ const A11Y_WEB_DEFAULT_TEXTS_GENERATED = {
       "Observações": "Insira seu texto da observação. ",
       "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [insira aqui o nome acessível, se necessário]."
     }
+  }
+};
+
+const A11Y_WEB_ESTRUTURA_TEXTS_GENERATED = {
+  "marco": {
+    "Nav": {
+      "Descrição": "Indicar como navegação.",
+      "Observações": "Com a tag <nav> os Leitores de Tela anunciam que a seção é uma navegação para que a pessoa usuária identifique que é uma sequência de links.",
+      "Notas de Código": "Em HTML use a tag <nav> para agrupar os link."
+    },
+    "Main": {
+      "Descrição": "Indicar o conteúdo como principal da página.",
+      "Observações": "O elemento <main> deve ser o conteúdo mais importante e exclusivo da página.",
+      "Notas de Código": "Em HTML <main> não deve ser usado dentro de elementos como <article>, <aside>, <footer>, <header> ou <nav>. "
+    },
+    "Aside": {
+      "Descrição": "Indicar como aside.",
+      "Observações": "O conteúdo da <aside> enriquece a experiência com o Leitor de Tela e são complementares à navegação principal. ",
+      "Notas de Código": "Em HTML <aside> possui um significado semântico, indicando que o conteúdo é \"à parte\",  mas relacionado. "
+    },
+    "Section": {
+      "Descrição": "Indicar como section.",
+      "Observações": "A tag <section> no HTML5 serve para agrupar conteúdos relacionados que possuem um mesmo tema ou assunto dentro de uma página. ",
+      "Notas de Código": "Em HTML <section> ajuda a organizar o documento de forma lógica tanto para navegadores quanto para motores de busca e leitores de tela."
+    },
+    "Form": {
+      "Descrição": "Indicar como form.",
+      "Observações": "Tag utilizada para estruturar formulários e comunicar a leitores de tela e navegadores uma área de entrada de dados.",
+      "Notas de Código": "Em HTML a tag <form> serve para agrupar campos de entrada de dados interativos para envio ou processamento."
+    }
+  },
+  "idioma": {
+    "Descrição": "Indicar a(s) palavra(s) em outro idioma: [insira aqui o trecho ou palavra].",
+    "Observações": "Elementos que contenham texto num idioma diferente do idioma principal da página devem estar declarados no HTML.",
+    "Notas de Código": "Em HTML, use o atributo lang para declarar o conteúdo circundante como links ou outras partes do texto. Exemplos: \n<p>Este é um parágrafo em português.</p> <a href=\"https://example.com\" lang=\"en\">Link em inglês</a> \n<p>Aqui temos um exemplo de <span lang=\"fr\">bonjour</span>, que significa \"olá\" em francês.</p>"
   }
 };
 
@@ -4709,21 +4744,18 @@ const A11Y_WEB_COMPONENT_ALIASES_GENERATED = {};
 const A11Y_WEB_ESTRUTURA_GENERATED = {
   "variacoes": [
     "Marco de navegação",
-    "Título da Página",
     "Idioma"
   ],
   "marcoTipos": [
     "Nav",
     "Main",
-    "Aside"
+    "Aside",
+    "Section",
+    "Form"
   ],
-  "idiomaTipos": [
-    "Página",
-    "Parte"
-  ],
+  "idiomaTipos": [],
   "togglesByVariacao": {
     "Marco de navegação": [],
-    "Título da Página": [],
     "Idioma": [
       "Observações"
     ]

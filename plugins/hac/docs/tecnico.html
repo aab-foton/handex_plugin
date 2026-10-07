@@ -4908,6 +4908,17 @@ hr {
       de <code>spec.properties</code> e mostra cada valor distinto uma vez no topo da categoria (<code>_a11yCategoryAccordionEl</code>).</li>
     </ul>
 
+    <h3>Scan de 2026-10-07 e Estrutura web (beta.120)</h3>
+    <ul>
+      <li>Lib de acessibilidade: set <code>10740:4664</code> (".[hac web base] Idiomas") apagado; ".[hac web base] Estrutura da Página"
+      só com <code>Variação</code> = Marco de navegação/Idioma; Marco com <code>Tipo</code> Nav/Main/Aside/Section/Form; Idioma = componente
+      único com Observações. <code>buildWebEstrutura</code> trata "Idiomas" como opcional (<code>idiomaTipos: []</code>).</li>
+      <li><code>A11Y_WEB_ESTRUTURA_TEXTS_GENERATED</code> (de <code>design-acessivel-default-texts.json</code> → <code>webEstrutura</code>) com
+      Descrição/Observações/Notas de Código por Tipo de Marco e do Idioma; <code>updateA11yEstruturaFields</code> prefere esses textos.</li>
+      <li><code>_fillA11yWebEstruturaFields</code>: Idioma sem tipo aplica só Observações na instância interna.</li>
+      <li><code>refs:a11y-mapping</code> roda <code>build-dsc-a11y-mapping.cjs</code> para super-app, super-dsc-web e dsc-android.</li>
+    </ul>
+
     <h3>Mensagens novas/alteradas desta rodada</h3>
     <ul>
       <li><code>a11y-spec-create-failed</code> (backend → UI) e <code>a11y-no-lib-card</code> (backend → UI) — ver 8af.</li>

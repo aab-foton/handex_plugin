@@ -577,10 +577,13 @@ function buildWebWrapper(json) {
 // perVariantProperties do set ".[hac web base] Estrutura da Página".
 function buildWebEstrutura(json) {
   const set = findElementosSet(json, WEB_BASE_SETS.estrutura);
+  // "Idiomas" (Página/Parte) foi retirado da lib em 2026-10 — Idioma virou
+  // componente único. Opcional: sem ele, idiomaTipos fica vazio e o
+  // formulário/card tratam Idioma sem tipo.
   const idiomas = findElementosSet(json, WEB_BASE_SETS.idiomas);
   const marco = findElementosSet(json, WEB_BASE_SETS.marco);
-  if (!set || !idiomas || !marco) {
-    console.warn('⚠  sets web de Estrutura da Página (Estrutura/Idiomas/Marco de navegação) não encontrados — A11Y_WEB_ESTRUTURA ficará vazio');
+  if (!set || !marco) {
+    console.warn('⚠  sets web de Estrutura da Página (Estrutura/Marco de navegação) não encontrados — A11Y_WEB_ESTRUTURA ficará vazio');
     return { variacoes: [], marcoTipos: [], idiomaTipos: [], togglesByVariacao: {} };
   }
   const variacoes = variantOptionsOf(set, 'Variação');
@@ -594,7 +597,7 @@ function buildWebEstrutura(json) {
   return {
     variacoes,
     marcoTipos: variantOptionsOf(marco, 'Tipo'),
-    idiomaTipos: variantOptionsOf(idiomas, 'Tipo'),
+    idiomaTipos: idiomas ? variantOptionsOf(idiomas, 'Tipo') : [],
     togglesByVariacao,
   };
 }
@@ -742,11 +745,19 @@ function loadDefaultTexts(platform) {
   return out;
 }
 const mobileDefaultTexts = loadDefaultTexts('mobile');
+// Textos fixos da Estrutura web por Tipo de Marco e do Idioma (2026-10-07).
+function loadWebEstruturaTexts() {
+  const p = path.join(REFS_DIR, 'design-acessivel-default-texts.json');
+  if (!fs.existsSync(p)) return {};
+  return JSON.parse(fs.readFileSync(p, 'utf8')).webEstrutura || {};
+}
+const webEstruturaTexts = loadWebEstruturaTexts();
 const webDefaultTexts = loadDefaultTexts('web');
 
 const body =
   `const A11Y_MOBILE_DEFAULT_TEXTS_GENERATED = ${JSON.stringify(mobileDefaultTexts, null, 2)};\n\n` +
   `const A11Y_WEB_DEFAULT_TEXTS_GENERATED = ${JSON.stringify(webDefaultTexts, null, 2)};\n\n` +
+  `const A11Y_WEB_ESTRUTURA_TEXTS_GENERATED = ${JSON.stringify(webEstruturaTexts, null, 2)};\n\n` +
   `const A11Y_COMPONENT_PROPERTIES_GENERATED = ${JSON.stringify(componentProperties)};\n\n` +
   `const A11Y_MOBILE_LINK_COMPONENT_OPTIONS_GENERATED = ${JSON.stringify(mobileLinkOptions, null, 2)};\n\n` +
   `const A11Y_MOBILE_COMPONENT_LINK_NODE_IDS_GENERATED = ${JSON.stringify(mobileComponentLinkNodeIds, null, 2)};\n\n` +

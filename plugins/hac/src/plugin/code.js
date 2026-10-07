@@ -1206,7 +1206,9 @@ function _fillA11yWebEstruturaFields(instance, opts, profile, wrapper) {
   if (variacao === 'Marco de navegação') {
     tipo = est.marcoTipos.find(t => normalizeRecognitionName(t) === normalizeRecognitionName(sub.tipo)) || null;
     if (!tipo) throw new Error('a11y-estrutura-sem-variante-na-base: marco de navegação "' + (sub.tipo || '(vazio)') + '"');
-  } else if (variacao === 'Idioma') {
+  } else if (variacao === 'Idioma' && (est.idiomaTipos || []).length) {
+    // Só quando a lib ainda tiver tipos de Idioma (Página/Parte) — retirados
+    // em 2026-10, Idioma virou componente único (ver bloco abaixo).
     tipo = _WEB_ESTRUTURA_IDIOMA_TIPO_BY_FORM[sub.idioma] || null;
     if (!tipo || !est.idiomaTipos.includes(tipo)) throw new Error('a11y-estrutura-sem-variante-na-base: idioma "' + (sub.idioma || '(vazio)') + '"');
   }
@@ -1225,6 +1227,10 @@ function _fillA11yWebEstruturaFields(instance, opts, profile, wrapper) {
     if (variacao === 'Idioma') {
       _applyWebBooleanTextField(inner.instance, 'Observações', _webGetProp(opts, 'observacoes'));
     }
+  } else if (variacao === 'Idioma') {
+    // Idioma sem tipo (lib atual): a instância interna tem só Observações.
+    const inner = _findInstanceByPropNames(content, ['Observações']);
+    if (inner) _applyWebBooleanTextField(inner.instance, 'Observações', _webGetProp(opts, 'observacoes'));
   }
 }
 

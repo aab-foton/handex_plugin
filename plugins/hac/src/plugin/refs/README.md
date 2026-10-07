@@ -128,6 +128,9 @@ do próprio script — preencher antes de rodar em produção/CI.
 # Atualizar refs do Figma (precisa FIGMA_TOKEN)
 FIGMA_TOKEN=<seu_token> npm run refs:fetch
 
+# Mapping DSC → a11y das 3 libs atuais (a legada web-angular-react saiu do hac)
+npm run refs:a11y-mapping
+
 # Refazer o skeleton + mapping a partir das refs já baixadas
 npm run refs:rebuild
 

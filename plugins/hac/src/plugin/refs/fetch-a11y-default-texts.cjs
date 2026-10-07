@@ -29,7 +29,8 @@ const https = require('https');
 const REFS = __dirname;
 const SCAN = path.join(REFS, 'design-acessivel-mobile-properties.json');
 const OUT = path.join(REFS, 'design-acessivel-default-texts.json');
-const SETS = { mobile: '10206:2177', web: '10658:3627' }; // ".[hac mob base]/.[hac web base] Elementos e imagens" — ver build-a11y-constants.cjs
+const SETS = { mobile: '10206:2177', web: '10658:3627' };
+const EST_SETS = { marco: '10740:4680', estrutura: '10745:5011' }; // ".[hac web base] Marco de navegação" / "Estrutura da Página" // ".[hac mob base]/.[hac web base] Elementos e imagens" — ver build-a11y-constants.cjs
 const TOKEN = process.env.FIGMA_TOKEN;
 if (!TOKEN) { console.error('FIGMA_TOKEN ausente no ambiente — abortando (nada foi alterado).'); process.exit(1); }
 
@@ -102,6 +103,39 @@ function fieldText(inst) {
     }
     out[platform] = res;
     console.log(`\n✅ ${platform}: ${Object.keys(res).length} componentes, ${jobs.length} variantes lidas`);
+  }
+
+  // Estrutura da Página WEB (2026-10-07): textos fixos de cada Tipo do
+  // "Marco de navegação" e do "Idioma" (a lib passou a ter Idioma como
+  // componente único, sem Página/Parte, e Marco ganhou Section/Form).
+  const fieldsDeep = (node, depth = 0, acc = {}) => {
+    for (const c of (node.children || [])) {
+      if (c.type === 'INSTANCE') { const t = fieldText(c); if (t != null && acc[c.name] == null) acc[c.name] = t; }
+      if (depth < 3) fieldsDeep(c, depth + 1, acc);
+    }
+    return acc;
+  };
+  try {
+    const est = { marco: {}, idioma: null };
+    const d1 = await get(`https://api.figma.com/v1/files/${fileKey}/nodes?ids=${encodeURIComponent(EST_SETS.marco + ',' + EST_SETS.estrutura)}&depth=4`);
+    const marcoSet = d1.nodes[EST_SETS.marco] && d1.nodes[EST_SETS.marco].document;
+    for (const v of ((marcoSet && marcoSet.children) || [])) {
+      const m = /Tipo=(.+)$/.exec(v.name || '');
+      if (m) est.marco[m[1].trim()] = fieldsDeep(v);
+    }
+    const estSet = d1.nodes[EST_SETS.estrutura] && d1.nodes[EST_SETS.estrutura].document;
+    const idiomaVar = ((estSet && estSet.children) || []).find(c => /Varia[cç][aã]o=Idioma/i.test(c.name || ''));
+    const idiomaInst = idiomaVar && (idiomaVar.children || []).find(c => c.type === 'INSTANCE');
+    if (idiomaInst && idiomaInst.componentId) {
+      await sleep(400);
+      const d2 = await get(`https://api.figma.com/v1/files/${fileKey}/nodes?ids=${encodeURIComponent(idiomaInst.componentId)}&depth=4`);
+      const comp = d2.nodes[idiomaInst.componentId] && d2.nodes[idiomaInst.componentId].document;
+      if (comp) est.idioma = fieldsDeep(comp);
+    }
+    out.webEstrutura = est;
+    console.log(`✅ estrutura web: marco ${Object.keys(est.marco).join('/')}, idioma ${est.idioma ? 'ok' : 'não achado'}`);
+  } catch (e) {
+    console.warn('⚠ textos de Estrutura web não lidos:', e.message);
   }
   fs.writeFileSync(OUT, JSON.stringify(out, null, 2) + '\n');
   console.log(`✅ ${path.relative(process.cwd(), OUT)}`);
