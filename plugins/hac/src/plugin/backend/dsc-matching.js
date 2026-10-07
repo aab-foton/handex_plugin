@@ -274,14 +274,111 @@ async function _headingLevelForText(node) {
   return _FUND_HEADING_LEVELS.length ? _FUND_HEADING_LEVELS[_FUND_HEADING_LEVELS.length - 1].level : 1;
 }
 
+// Slots do DSC (".[base] Right Slot"/"Left Slot", 2026-10-07, print do
+// usuário: o Right Slot "navigation" do List Item era classificado como
+// Elemento Decorativo pela regra de ícone bruto — "Right slot não é ícone, ele
+// é um botão de navegação"). A FUNÇÃO vem da variante da lib (property
+// "variant" no Right Slot, "configuration" no Left Slot), não do formato.
+// Só as variantes com função própria viram match; "icon"/"icon neutral"/
+// "slot" devolvem null e seguem a regra de sempre (ícone → decorativo).
+const _SLOT_VARIANT_MATCH = {
+  'navigation':    { containingFrame: '[dsc] Button',        a11yCategory: 'button' },
+  'drag-handle':   { containingFrame: '[dsc] Button',        a11yCategory: 'button' },
+  'switch':        { containingFrame: '[dsc] Switch',        a11yCategory: 'switch' },
+  'input stepper': { containingFrame: '[dsc] Input Stepper', a11yCategory: 'stepper' },
+  'checkbox':      { containingFrame: '[dsc] Checkbox',      a11yCategory: 'checkbox' },
+  'radio':         { containingFrame: '[dsc] Radio',         a11yCategory: 'radio button' },
+  'avatar':        { containingFrame: '[dsc] Avatar',        a11yCategory: 'imagem' },
+  'image':         { containingFrame: 'Imagem',              a11yCategory: 'imagem' },
+};
+async function _resolveSlotA11yMatch(node) {
+  if (!node || node.type !== 'INSTANCE') return null;
+  try {
+    const mc = await node.getMainComponentAsync();
+    const setName = mc ? ((mc.parent && mc.parent.type === 'COMPONENT_SET') ? mc.parent.name : mc.name) : node.name;
+    if (!/\b(left|right|leading|trailing)\s*slot\b/i.test(String(setName || ''))) return null;
+    const props = node.componentProperties || {};
+    const key = Object.keys(props).find(k => /^(variant|configuration)$/i.test(k.split('#')[0]));
+    const value = key ? String(props[key].value || '').trim().toLowerCase() : '';
+    const hit = _SLOT_VARIANT_MATCH[value];
+    if (!hit) return null;
+    return Object.assign({ confidence: 'alta', origin: _activeProjectOrigin || 'mobile', source: 'slot-variante', slotVariant: value }, hit);
+  } catch (e) { return null; }
+}
+
+// ── Ícone puro × botão (2026-10-07, pedido do usuário: "temos que conseguir
+// identificar o que é um ícone puro e o que é um botão") ──────────────────
+// O formato (pequeno, sem texto, só vetor) não diz se é botão. Sinais usados,
+// na ordem:
+//   1. o próprio nó tem ação de clique no protótipo (On click/On press) →
+//      é um BOTÃO;
+//   2. está dentro de um CONTROLE (ação de clique, componente interativo do
+//      DSC, slot com variante de navegação/switch...) → se o controle não tem
+//      texto, o ícone É o conteúdo do botão (não vira item à parte); se tem
+//      texto, o ícone é decorativo (o rótulo já nomeia o botão);
+//   3. nenhum sinal → ícone puro (decorativo).
+const _INTERACTIVE_CATEGORIES = new Set(['button', 'checkbox', 'switch', 'radio button', 'inputs', 'accordion', 'stepper', 'tab group']);
+function _hasClickReaction(node) {
+  try {
+    const rs = node && node.reactions;
+    return Array.isArray(rs) && rs.some(r => r && r.trigger && (r.trigger.type === 'ON_CLICK' || r.trigger.type === 'ON_PRESS'));
+  } catch (e) { return false; }
+}
+function _hasVisibleText(node) {
+  try {
+    if (!node) return false;
+    if (node.type === 'TEXT') return String(node.characters || '').trim().length > 0;
+    return 'findOne' in node && !!node.findOne(t => t.type === 'TEXT' && t.visible !== false && String(t.characters || '').trim().length > 0);
+  } catch (e) { return false; }
+}
+async function _interactiveHostOf(node, stopAt) {
+  let p = node;
+  for (let depth = 0; p && p !== stopAt && p.type !== 'PAGE' && depth < 8; depth++, p = p.parent) {
+    if (_hasClickReaction(p)) return { host: p, match: null };
+    if (p.type === 'INSTANCE') {
+      const slot = await _resolveSlotA11yMatch(p);
+      if (slot && _INTERACTIVE_CATEGORIES.has(slot.a11yCategory)) return { host: p, match: slot };
+      try {
+        const mc = await p.getMainComponentAsync();
+        const m = mc && mc.remote && mc.key ? _resolveDscComponentA11yMatch(mc.key) : null;
+        if (m && _INTERACTIVE_CATEGORIES.has(m.a11yCategory)) return { host: p, match: m };
+      } catch (e) { }
+    }
+  }
+  return null;
+}
+// 'button' (o nó é um botão), 'part-of-button' (conteúdo de um botão sem
+// texto — não documentar à parte), 'decorative' (ícone puro ou ícone ao
+// lado do rótulo de um botão).
+async function _classifyIconRole(node, stopAt) {
+  const ctx = await _interactiveHostOf(node, stopAt);
+  if (!ctx) return { role: 'decorative' };
+  if (ctx.host === node) return { role: 'button', match: ctx.match };
+  return { role: _hasVisibleText(ctx.host) ? 'decorative' : 'part-of-button', host: ctx.host };
+}
+const _ICON_BUTTON_MATCH = { containingFrame: '[dsc] Icon Button', a11yCategory: 'button', confidence: 'alta', source: 'icone-com-acao' };
+
 async function _resolveDeterministicA11yMatch(node) {
   if (!node) return null;
+  const slot = await _resolveSlotA11yMatch(node);
+  if (slot) return slot;
   if (node.type === 'TEXT') {
     const level = await _headingLevelForText(node);
     return { containingFrame: null, a11yCategory: 'titulo', confidence: 'alta', source: 'texto-fundamentos', suggestedLevel: 'h' + level, autoOpen: true };
   }
   const icon = await _isRawIcon(node);
-  if (icon) return { containingFrame: null, a11yCategory: 'decorativo', confidence: 'alta', source: icon, autoOpen: true };
+  if (icon) {
+    // Ícone puro × botão (ver _classifyIconRole).
+    const role = await _classifyIconRole(node, null);
+    if (role.role === 'button') return Object.assign({ origin: _activeProjectOrigin || null }, role.match || _ICON_BUTTON_MATCH);
+    if (role.role === 'part-of-button') {
+      // Selecionou o glifo de um botão só-ícone: documenta o BOTÃO (o
+      // controle que o contém), não o desenho.
+      const host = await _interactiveHostOf(node, null);
+      if (host) return Object.assign({ origin: _activeProjectOrigin || null, source: 'conteudo-de-botao' }, host.match || _ICON_BUTTON_MATCH);
+    }
+    return { containingFrame: null, a11yCategory: 'decorativo', confidence: 'alta', source: icon, autoOpen: true };
+  }
   return null;
 }
 
@@ -637,8 +734,20 @@ async function _a11yScanArea(rootNode) {
           dscComponentMatch = _resolveDscComponentA11yMatch(componentKey);
           _dscRemoteMatch = dscComponentMatch;
         }
+        // Slot do DSC com função (seta de navegação, switch...) — pela
+        // variante da lib, antes da regra de ícone (2026-10-07).
+        if (!dscComponentMatch && n.type === 'INSTANCE') {
+          dscComponentMatch = await _resolveSlotA11yMatch(n);
+        }
+        let _skipItem = false;
         if (!dscComponentMatch && (category === 'icons' || category === 'vectors')) {
-          dscComponentMatch = _resolveDecorativeA11yMatch(n);
+          // Ícone puro × botão (2026-10-07, ver _classifyIconRole): ícone com
+          // ação de clique é botão; glifo de botão só-ícone não vira item à
+          // parte (o controle é que é documentado); o resto é decorativo.
+          const _role = await _classifyIconRole(n, rootNode);
+          if (_role.role === 'button') dscComponentMatch = Object.assign({ origin: _activeProjectOrigin || null }, _role.match || _ICON_BUTTON_MATCH);
+          else if (_role.role === 'part-of-button') _skipItem = true;
+          else dscComponentMatch = _resolveDecorativeA11yMatch(n);
         } else if (!dscComponentMatch && category === 'images') {
           dscComponentMatch = _resolveImageA11yMatch(n);
         } else if (!dscComponentMatch && category === 'components') {
@@ -684,7 +793,7 @@ async function _a11yScanArea(rootNode) {
           }
         }
 
-        results[category].push({
+        if (!_skipItem) results[category].push({
           name: n.name,
           type: category,
           nodeType: n.type,

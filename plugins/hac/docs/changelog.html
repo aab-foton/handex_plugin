@@ -3398,6 +3398,21 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-07 — Ícone puro × botão; Right Slot de navegação é botão (v0.1.0-beta.102)</h2>
+
+    <p>O reconhecimento tratava como Elemento Decorativo tudo que tinha <em>formato</em> de ícone (pequeno, sem texto, só
+    vetor) — inclusive o <code>.[base] Right Slot</code> "navigation" do List Item, que é um botão de navegação. Agora:</p>
+    <ul>
+      <li><strong>Slots do DSC pela variante da lib</strong> (<code>_resolveSlotA11yMatch</code>): Right Slot (<code>variant</code>) e
+      Left Slot (<code>configuration</code>) — navigation/drag-handle → Button, switch → Switch, input stepper → Input Stepper,
+      checkbox/radio → Checkbox/Radio, avatar/image → imagem; icon/icon neutral/slot seguem decorativos.</li>
+      <li><strong>Ícone puro × botão</strong> (<code>_classifyIconRole</code>): ícone com ação de clique no protótipo (On click/On
+      press) é botão; ícone dentro de um controle sem texto (botão só-ícone) não vira item à parte — o controle é que é
+      documentado; ícone ao lado do rótulo de um botão, ou sem nenhum desses sinais, é decorativo.</li>
+    </ul>
+    <p>Vale para o mapeamento automático do Leitor de Tela e para a seleção manual. Como o Right Slot e os ícones clicáveis
+    passam a ser "button", a Tabulação automática também os inclui na ordem de foco.</p>
+
     <h2>2026-10-07 — Swipe percorre título e botão do List Heading (v0.1.0-beta.101)</h2>
 
     <p>O <code>[dsc] List Heading</code> (título da seção + "Button") virava uma parada só — reconhecido pela lib e com um único
