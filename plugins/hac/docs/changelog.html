@@ -3398,6 +3398,21 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-07 — Espaço vazio na Ficha: contornos antigos voltam para a réplica (v0.1.0-beta.106)</h2>
+
+    <p>Leitura do arquivo do usuário via REST (sem alterar nada): o "[HAC] Handoff - Leitor de Tela" tinha 4.427px de largura
+    porque os contornos das specs criadas antes da beta.103 estavam ~3.600px à esquerda, sobre a tela original — cada grupo de
+    spec ia do contorno até o card e esticava o quadro, deixando o espaço vazio no fim da Ficha.</p>
+    <ul>
+      <li><code>_repairMisplacedSpecMarkers</code>: contorno fora da réplica é encaixado no elemento equivalente da réplica (id
+      gravado na spec; em specs antigas, pelo nome do grupo, desempatando por posição), com a margem de 16px da criação. Roda ao
+      montar a seção do Leitor ("Atualizar Leitor de Tela"/"Gerar Handoff") e a cada spec nova da tela. Com os dados reais: 6
+      contornos no lugar e o grupo de specs de 4.427px para 812px.</li>
+      <li>Specs novas gravam <code>hacSpecTargetCloneNodeId</code> (elemento na réplica).</li>
+      <li>O reajuste do tamanho do quadro depois de uma spec nova também roda quando a réplica foi resgatada (antes, só com o
+      mapa).</li>
+    </ul>
+
     <h2>2026-10-07 — Resumo acompanha o canvas; modal de finalização ao fechar o checklist (v0.1.0-beta.105)</h2>
 
     <p><strong>Resumo em dia.</strong> Depois de atualizar a ordem de Tabulação, o Resumo seguia dizendo "7 agora, handoff tem

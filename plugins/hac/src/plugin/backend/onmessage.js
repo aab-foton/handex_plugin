@@ -2190,6 +2190,9 @@ figma.ui.onmessage = async (msg) => {
       // remover specs de uma área só pelo canvas, sem depender do estado
       // local (mesmo padrão já usado por Tabulação/Swipe/Ficha).
       if (opts.a11yAreaId) specGroup.setPluginData('hacSpecForArea', opts.a11yAreaId);
+      // Elemento-alvo DENTRO da réplica (2026-10-07) — permite reparar o
+      // contorno com exatidão se ele sair do lugar (_repairMisplacedSpecMarkers).
+      if (specClone && !specClone.removed) { try { specGroup.setPluginData('hacSpecTargetCloneNodeId', node.id); } catch (e) { } }
 
       // Reparenting (2026-09-08, pedido do usuário: artefatos de uma Área
       // não precisam mais estar aninhados dentro de um Grupo específico
@@ -2223,6 +2226,10 @@ figma.ui.onmessage = async (msg) => {
           const specOverlayGroup = _getOrCreateCloneOverlayGroup(_specHostClone, 'hacSpecGroupForClone', '[Specs de Leitor de Tela]', opts.a11yAreaId);
           _reparentIntoAreaGroup(specGroup, specOverlayGroup);
           _reparentedIntoOverlay = true;
+          // Conserta contornos antigos desta tela que caíram no original.
+          if (opts.a11yAreaTargetNodeId) {
+            try { await _repairMisplacedSpecMarkers(specOverlayGroup, _specHostClone, await _getSceneNodeById(opts.a11yAreaTargetNodeId)); } catch (e) { }
+          }
           await _ensureCloneWorkFrame(_specHostClone, specOverlayGroup, 'Réplica de Trabalho — Leitor de Tela');
         } catch (e) {
           console.error('[hac] create-unified-spec: reparenting pro grupo overlay falhou, caindo pra Section de sessão.', e && e.message);
@@ -2257,9 +2264,10 @@ figma.ui.onmessage = async (msg) => {
       // Refaz a cadeia de fit (handoffFrame → itensFrame/telaFrame →
       // Section de sessão) toda vez que um specGroup novo entra, mesmo
       // princípio já usado pelos 3 builders da Ficha ao final de cada um.
-      if (_reparentedIntoOverlay && specClone && !specClone.removed) {
+      const _hostForFit = (specClone && !specClone.removed) ? specClone : _specHostClone;
+      if (_reparentedIntoOverlay && _hostForFit && !_hostForFit.removed) {
         try {
-          const handoffFrame = specClone.parent;
+          const handoffFrame = _hostForFit.parent;
           if (handoffFrame && !handoffFrame.removed) {
             _fitFichaHandoffFrameToChildren(handoffFrame);
             const section = handoffFrame.parent;
@@ -5443,6 +5451,80 @@ figma.ui.onmessage = async (msg) => {
   // via _getOrCreateCloneOverlayGroup(clone, 'hacSpecGroupForClone', ...)
   // — mesma chave já usada pelo fluxo de trabalho (create-unified-spec),
   // reaproveitada sem duplicar.
+  // Reparo de contornos que caíram sobre a TELA ORIGINAL (2026-10-07, dados
+  // reais do arquivo do usuário via REST: os "Agrupamento" das specs criadas
+  // antes da beta.103 estavam ~3.600px à esquerda, sobre a tela original,
+  // dentro do overlay da réplica — cada specGroup ia do contorno ao card e
+  // esticava o "[HAC] Handoff - Leitor de Tela" para 4.427px, deixando o
+  // espaço vazio no fim da Ficha). A réplica é cópia idêntica e do mesmo
+  // tamanho: um marcador sobre o original vai para o mesmo ponto na réplica
+  // deslocando pela diferença de posição entre as duas. Só mexe no que está
+  // sobre o original e fora da réplica; o card ("Spec Notes") nunca.
+  async function _repairMisplacedSpecMarkers(overlay, clone, root) {
+    try {
+      if (!overlay || !clone || overlay.removed || clone.removed) return 0;
+      const cb = clone.absoluteBoundingBox;
+      if (!cb) return 0;
+      const rb = root && !root.removed ? root.absoluteBoundingBox : null;
+      const near = (b, r) => b.x + b.width > r.x - 40 && b.x < r.x + r.width + 40 && b.y + b.height > r.y - 40 && b.y < r.y + r.height + 40;
+      let moved = 0;
+      for (const g of (overlay.children || [])) {
+        if (!g || g.type !== 'GROUP' || String(g.name || '').indexOf('[SpecA11y') !== 0) continue;
+        const marks = (g.children || []).filter(c => c && c.name !== 'Spec Notes' && c.absoluteBoundingBox);
+        const off = marks.filter(c => !near(c.absoluteBoundingBox, cb));
+        if (off.length === 0) continue;
+        // Elemento-alvo NA RÉPLICA: id gravado na criação (beta.106+) ou,
+        // em specs antigas, pelo nome do grupo "[SpecA11y | x | lado] Nome".
+        let target = null;
+        const savedId = g.getPluginData ? g.getPluginData('hacSpecTargetCloneNodeId') : '';
+        if (savedId) {
+          const t = await _getSceneNodeById(savedId);
+          if (t && !t.removed && _isDescendantOf(t, clone)) target = t;
+        }
+        if (!target) {
+          const nm = String(g.name).replace(/^\[SpecA11y[^\]]*\]\s*/, '');
+          const cands = 'findAll' in clone ? clone.findAll(n => n.name === nm && n.absoluteBoundingBox) : [];
+          if (cands.length === 1) target = cands[0];
+          else if (cands.length > 1) {
+            // Repetidos: o mais próximo da posição relativa que o contorno
+            // tinha em relação à tela original (ou à réplica, sem original).
+            const ref = rb || cb;
+            const m0 = off[0].absoluteBoundingBox;
+            const rx = m0.x + 16 - ref.x, ry = m0.y + 16 - ref.y;
+            let best = null, bestD = Infinity;
+            for (const c of cands) {
+              const d = Math.hypot((c.absoluteBoundingBox.x - cb.x) - rx, (c.absoluteBoundingBox.y - cb.y) - ry);
+              if (d < bestD) { bestD = d; best = c; }
+            }
+            target = best;
+          }
+        }
+        if (!target) continue;
+        const tb = target.absoluteBoundingBox;
+        // Contorno ("Agrupamento"): encaixa no elemento com a margem de 16px
+        // da criação. Demais peças (conector/pontos do modo Linha) seguem o
+        // mesmo deslocamento do contorno ou, sem ele, o do centro.
+        const agr = off.find(c => c.name === 'Agrupamento');
+        let dx, dy;
+        if (agr) {
+          const ab = agr.absoluteBoundingBox;
+          dx = Math.round(tb.x - 16 - ab.x); dy = Math.round(tb.y - 16 - ab.y);
+        } else {
+          const ab = off[0].absoluteBoundingBox;
+          dx = Math.round((tb.x + tb.width / 2) - (ab.x + ab.width / 2)); dy = Math.round((tb.y + tb.height / 2) - (ab.y + ab.height / 2));
+        }
+        for (const c of off) { c.x += dx; c.y += dy; moved++; }
+        if (agr) { try { agr.resize(Math.max(tb.width + 32, 40), Math.max(tb.height + 32, 40)); } catch (e) { } }
+        try { g.setPluginData('hacSpecTargetCloneNodeId', target.id); } catch (e) { }
+      }
+      if (moved) console.log('[hac] contornos reposicionados da tela original para a réplica:', moved);
+      return moved;
+    } catch (e) {
+      console.error('[hac] _repairMisplacedSpecMarkers falhou (segue sem reparo).', e && e.message);
+      return 0;
+    }
+  }
+
   async function _buildFichaLeitorSection(fichaFrame, area, specs, designerName, currentUserId) {
     // Reestruturação de árvore (2026-09-10) — ver comentário equivalente em
     // _buildFichaTabulacaoSection.
@@ -5483,6 +5565,12 @@ figma.ui.onmessage = async (msg) => {
           specOverlayGroup.y += Math.round(beforeBB.y - afterBB.y);
         }
       }
+      // Contornos antigos sobre a tela original voltam para a réplica antes
+      // de medir o FRAME (2026-10-07).
+      try {
+        const _origRoot = await _getSceneNodeById(area.targetNodeId);
+        await _repairMisplacedSpecMarkers(specOverlayGroup, resolved.clone, _origRoot);
+      } catch (e) { }
       // Reafirma ABSOLUTE em todos os filhos do FRAME de Handoff. As specs
       // já estão desenhadas no overlay desde o fluxo de trabalho, então o
       // Hug do FRAME já reflete o tamanho final sozinho.
