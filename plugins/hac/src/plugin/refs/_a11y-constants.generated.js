@@ -1,12 +1,12 @@
 // ============================================================
 // GERADO AUTOMATICAMENTE por build-a11y-constants.cjs — não editar à mão.
-// Fonte: refs/design-acessivel-mobile-properties.json (2026-10-07T20:03:58.486Z)
+// Fonte: refs/design-acessivel-mobile-properties.json (2026-10-08T17:47:18.949Z)
 //      + refs/super-app.json (2026-10-07T17:28:26.372Z)
 //      + refs/_manifest.json (fileKey da lib 'super-app')
 // Regenerar via: node src/plugin/refs/build-a11y-constants.cjs
 //            ou: npm run refs:a11y-constants
 //
-// Gerado em: 2026-10-08T17:41:20.918Z
+// Gerado em: 2026-10-08T17:53:57.605Z
 //
 // Consumido via alias em src/plugin/modules/accessibility.js:
 //   const A11Y_MOBILE_LINK_COMPONENT_OPTIONS = A11Y_MOBILE_LINK_COMPONENT_OPTIONS_GENERATED;
@@ -1388,6 +1388,11 @@ const A11Y_WEB_DEFAULT_TEXTS_GENERATED = {
     "Enviar E-mail": {
       "Observações": "Insira seu texto da observação. ",
       "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [insira aqui o nome acessível, se necessário]."
+    }
+  },
+  "Header / Skip Button": {
+    "": {
+      "Observações": "Insira seu texto da observação."
     }
   }
 };
@@ -3301,6 +3306,7 @@ const A11Y_WEB_LINK_COMPONENT_OPTIONS_GENERATED = [
   "File Upload",
   "Footer",
   "Header",
+  "Header / Skip Button",
   "Icon Button",
   "Icon Button Text",
   "Input / Chat",
@@ -4867,6 +4873,9 @@ const A11Y_WEB_COMPONENT_TOGGLES_GENERATED = {
   ],
   "Link": [
     "Nome Acessível",
+    "Observações"
+  ],
+  "Header / Skip Button": [
     "Observações"
   ]
 };

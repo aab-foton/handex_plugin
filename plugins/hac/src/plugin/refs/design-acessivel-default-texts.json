@@ -2,7 +2,7 @@
   "_meta": {
     "description": "GERADO por fetch-a11y-default-texts.cjs — não editar à mão. Textos padrão por plataforma > componente > opção de Leitor de Tela (\"\" quando o componente não tem opções) > campo.",
     "fileKey": "HhriLSpKnCB2dHhyiU16iB",
-    "generatedAt": "2026-10-08T12:37:03.106Z"
+    "generatedAt": "2026-10-08T17:47:19.080Z"
   },
   "mobile": {
     "Accordion": {
@@ -2048,6 +2048,13 @@
         "Nome Acessível": "Inserir o seguinte nome acessível no elemento: [insira aqui o nome acessível, se necessário].",
         "Observações": "Insira seu texto da observação. ",
         "Nota de código": "Em HTML, utilizar o atributo aria-label para desconsiderar o seu rótulo visível e acrescentar o nome acessível a ser lido pelo Leitor de Tela. Acrescente o protocolo mailto: à href da tag <a> para criar um link que irá abrir o programa de e-mail padrão do dispositivo. "
+      }
+    },
+    "Header / Skip Button": {
+      "": {
+        "Componente": "Header / Skip Button",
+        "Leitor de Tela": "Baseline",
+        "Observações": "Insira seu texto da observação."
       }
     }
   },

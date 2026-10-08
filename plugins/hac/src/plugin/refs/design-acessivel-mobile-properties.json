@@ -4,7 +4,7 @@
     "slug": "design-acessivel-mobile",
     "libraryName": "Design Acessível (mobile)",
     "fileKey": "HhriLSpKnCB2dHhyiU16iB",
-    "generatedAt": "2026-10-07T20:03:58.486Z",
+    "generatedAt": "2026-10-08T17:47:18.949Z",
     "generator": "fetch-component-properties.cjs",
     "deepScan": true,
     "discoverySignature": "55a735c60e7765c09ac20e4f1ff32bab846ac239782d868d79b63ad4cdd05895",
@@ -892,14 +892,14 @@
       "perVariantProperties": [],
       "variantKeys": [
         {
-          "nodeId": "10330:4205",
-          "name": "Conector=Elementos Decorativos",
-          "key": "032c77f3a9a16fcd4ae4896c37e444202ecedf84"
-        },
-        {
           "nodeId": "10757:5871",
           "name": "Conector=Estrutura da Página",
           "key": "393eccad3c607c49c1b30ac350e0bcb94f1b833e"
+        },
+        {
+          "nodeId": "10330:4205",
+          "name": "Conector=Elementos Decorativos",
+          "key": "032c77f3a9a16fcd4ae4896c37e444202ecedf84"
         },
         {
           "nodeId": "10330:4208",
@@ -5002,6 +5002,7 @@
             "File Upload",
             "Footer",
             "Header",
+            "Header / Skip Button",
             "Icon Button",
             "Icon Button Text",
             "Input / Chat",
@@ -8107,6 +8108,28 @@
               }
             ]
           }
+        },
+        {
+          "variantName": "Variante=Componente, Componente=Header / Skip Button",
+          "variantId": "11247:3629",
+          "nestedInstanceName": ".Header / Skip Button",
+          "nestedInstanceId": "11247:3640",
+          "nestedComponentId": "11247:3549",
+          "properties": [
+            {
+              "rawKey": "Observações#11247:0",
+              "name": "Observações",
+              "syncId": "11247:0",
+              "type": "BOOLEAN",
+              "value": true
+            }
+          ],
+          "toggles": [
+            {
+              "name": "Observações",
+              "value": true
+            }
+          ]
         }
       ]
     },
