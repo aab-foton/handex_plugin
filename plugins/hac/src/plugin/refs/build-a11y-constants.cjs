@@ -2,14 +2,14 @@
 // HAC — build-a11y-constants.cjs
 //
 // Codegen que deriva, a partir do dado bruto extraído via REST API
-// (refs/design-acessivel-properties.json e
-// refs/design-acessivel-mobile-properties.json — gerados por
-// fetch-component-properties.cjs), as constantes hoje consumidas por
-// src/plugin/modules/accessibility.js via alias:
+// (refs/design-acessivel-mobile-properties.json — lib NOVA, mobile e web,
+// gerado por fetch-component-properties.cjs — e refs/design-acessivel-
+// default-texts.json, de fetch-a11y-default-texts.cjs), as constantes hoje
+// consumidas por src/plugin/modules/accessibility.js via alias. A lib ANTIGA
+// (design-acessivel-properties.json) não é mais lida desde 2026-10-08.
 //
-//   - A11Y_COMPONENT_PROPERTIES        (25 component sets "[a11y base]"
-//     desktop — accessibility.js: const A11Y_COMPONENT_PROPERTIES =
-//     A11Y_COMPONENT_PROPERTIES_GENERATED;)
+//   - A11Y_FIXED_TEXTS / A11Y_MOBILE_FIXED_TOGGLES (2026-10-08) — textos
+//     fixos e campos opcionais dos cards de Títulos e Decorativos
 //   - A11Y_MOBILE_LINK_COMPONENT_OPTIONS (64 opções do dropdown VARIANT
 //     "Link" do component set interno ".[a11y mob base] Link do
 //     Componente" — accessibility.js: const
@@ -629,12 +629,13 @@ function buildComponentExtraVariantProps(json, setSpec) {
 }
 
 // ── Geração ──────────────────────────────────────────────────────────────
-const desktopJSON = readJSON(DESKTOP_SRC, 'design-acessivel-properties.json');
+// Lib ANTIGA (design-acessivel-properties.json) não é mais lida (2026-10-08,
+// usuário: "o plugin inteiro deve ter como base a lib nova") — o catálogo
+// A11Y_COMPONENT_PROPERTIES_GENERATED, que vinha dela, deixou de existir.
 const mobileJSON = readJSON(MOBILE_SRC, 'design-acessivel-mobile-properties.json');
 const superAppJSON = readJSON(SUPER_APP_SRC, 'super-app.json');
 const manifestJSON = readJSON(MANIFEST_SRC, '_manifest.json');
 
-const componentProperties = buildComponentProperties(desktopJSON);
 const mobileWrapper = buildMobileWrapper(mobileJSON);
 const mobileLinkOptions = buildLinkOptions(mobileJSON, MOBILE_ELEMENTOS_SET, 'mobile');
 const mobileComponentLinkNodeIds = buildComponentLinkNodeIds(superAppJSON, mobileLinkOptions);
@@ -696,8 +697,7 @@ const superDscWebFileName = slugifyFileName((superDscWebLibMeta && superDscWebLi
 
 const header = `// ============================================================
 // GERADO AUTOMATICAMENTE por build-a11y-constants.cjs — não editar à mão.
-// Fonte: refs/design-acessivel-properties.json (${desktopJSON ? desktopJSON._meta.generatedAt : 'ausente'})
-//      + refs/design-acessivel-mobile-properties.json (${mobileJSON ? mobileJSON._meta.generatedAt : 'ausente'})
+// Fonte: refs/design-acessivel-mobile-properties.json (${mobileJSON ? mobileJSON._meta.generatedAt : 'ausente'})
 //      + refs/super-app.json (${superAppJSON ? superAppJSON.meta.exportedAt : 'ausente'})
 //      + refs/_manifest.json (fileKey da lib 'super-app')
 // Regenerar via: node src/plugin/refs/build-a11y-constants.cjs
@@ -706,7 +706,6 @@ const header = `// ============================================================
 // Gerado em: ${new Date().toISOString()}
 //
 // Consumido via alias em src/plugin/modules/accessibility.js:
-//   const A11Y_COMPONENT_PROPERTIES = A11Y_COMPONENT_PROPERTIES_GENERATED;
 //   const A11Y_MOBILE_LINK_COMPONENT_OPTIONS = A11Y_MOBILE_LINK_COMPONENT_OPTIONS_GENERATED;
 //   const A11Y_MOBILE_COMPONENT_LINK_NODE_IDS = A11Y_MOBILE_COMPONENT_LINK_NODE_IDS_GENERATED;
 //   const A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL = A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL_GENERATED;
@@ -752,13 +751,35 @@ function loadWebEstruturaTexts() {
   return JSON.parse(fs.readFileSync(p, 'utf8')).webEstrutura || {};
 }
 const webEstruturaTexts = loadWebEstruturaTexts();
+// Textos fixos + campos opcionais dos cards de Títulos e Decorativos, por
+// plataforma (2026-10-08) — fonte: fixedTexts de design-acessivel-default-
+// texts.json (fetch-a11y-default-texts.cjs, lê o card real da lib nova).
+function loadFixedTexts() {
+  const p = path.join(REFS_DIR, 'design-acessivel-default-texts.json');
+  if (!fs.existsSync(p)) return {};
+  return JSON.parse(fs.readFileSync(p, 'utf8')).fixedTexts || {};
+}
+const fixedTexts = loadFixedTexts();
+// BOOLEANs reais do card MOBILE por categoria — mesmo desenho de
+// webFixedToggles, lido de wrapperVariants do "[hac mob] Box specs".
+const mobileFixedToggles = {};
+{
+  const box = mobileJSON && (mobileJSON.components || []).find(c => c.shortName === 'Box specs leitor de tela' && /^\.?\[hac mob\]/i.test(c.fullName || ''));
+  const OPT = { elemento: 'Elementos Interativos e Imagens', titulo: 'Títulos', decorativo: 'Elementos Decorativos' };
+  for (const [t, opt] of Object.entries(OPT)) {
+    const v = box && (box.wrapperVariants || []).find(w => w.name === `Conector=${opt}`);
+    const content = v && (v.instances || []).find(i => i.name !== 'Conector');
+    mobileFixedToggles[t] = content ? content.properties.filter(p => p.type === 'BOOLEAN').map(p => String(p.name).trim()) : [];
+  }
+}
 const webDefaultTexts = loadDefaultTexts('web');
 
 const body =
   `const A11Y_MOBILE_DEFAULT_TEXTS_GENERATED = ${JSON.stringify(mobileDefaultTexts, null, 2)};\n\n` +
   `const A11Y_WEB_DEFAULT_TEXTS_GENERATED = ${JSON.stringify(webDefaultTexts, null, 2)};\n\n` +
   `const A11Y_WEB_ESTRUTURA_TEXTS_GENERATED = ${JSON.stringify(webEstruturaTexts, null, 2)};\n\n` +
-  `const A11Y_COMPONENT_PROPERTIES_GENERATED = ${JSON.stringify(componentProperties)};\n\n` +
+  `const A11Y_FIXED_TEXTS_GENERATED = ${JSON.stringify(fixedTexts, null, 2)};\n\n` +
+  `const A11Y_MOBILE_FIXED_TOGGLES_GENERATED = ${JSON.stringify(mobileFixedToggles, null, 2)};\n\n` +
   `const A11Y_MOBILE_LINK_COMPONENT_OPTIONS_GENERATED = ${JSON.stringify(mobileLinkOptions, null, 2)};\n\n` +
   `const A11Y_MOBILE_COMPONENT_LINK_NODE_IDS_GENERATED = ${JSON.stringify(mobileComponentLinkNodeIds, null, 2)};\n\n` +
   `const A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL_GENERATED = ${JSON.stringify(mobileComponentsWithNomeAcessivel, null, 2)};\n\n` +
@@ -824,7 +845,8 @@ fs.writeFileSync(WEB_WRAPPER_OUT, JSON.stringify({
 }, null, 2), 'utf8');
 
 console.log(`✅ _a11y-constants.generated.js`);
-console.log(`   A11Y_COMPONENT_PROPERTIES_GENERATED: ${componentProperties.length} component sets`);
+console.log(`   A11Y_FIXED_TEXTS_GENERATED: ${Object.entries(fixedTexts).map(([p, t]) => p + '(' + Object.keys(t).join('/') + ')').join(' ') || 'vazio'}`);
+console.log(`   A11Y_MOBILE_FIXED_TOGGLES_GENERATED: ${JSON.stringify(mobileFixedToggles)}`);
 console.log(`   A11Y_MOBILE_LINK_COMPONENT_OPTIONS_GENERATED: ${mobileLinkOptions.length} opções`);
 console.log(`   A11Y_MOBILE_COMPONENT_LINK_NODE_IDS_GENERATED: ${Object.keys(mobileComponentLinkNodeIds).length} nomes com nodeId real (de ${mobileLinkOptions.length} opções)`);
 console.log(`   A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL_GENERATED: ${mobileComponentsWithNomeAcessivel.length} componentes com property real`);

@@ -41,7 +41,10 @@ const comps = Array.isArray(scan.components) ? scan.components : Object.values(s
 function get(url) {
   return new Promise((resolve, reject) => {
     https.get(url, { headers: { 'X-Figma-Token': TOKEN } }, res => {
-      let d = ''; res.on('data', c => (d += c)); res.on('end', () => {
+      // Bytes juntos e decodificados UMA vez: concatenar pedaços como texto
+      // partia caracteres acentuados na fronteira ("Acess��vel", 2026-10-07).
+      const chunks = []; res.on('data', c => chunks.push(c)); res.on('end', () => {
+        const d = Buffer.concat(chunks).toString('utf8');
         if (res.statusCode !== 200) return reject(new Error(`HTTP ${res.statusCode}: ${d.slice(0, 200)}`));
         try { resolve(JSON.parse(d)); } catch (e) { reject(e); }
       });
@@ -136,6 +139,68 @@ function fieldText(inst) {
     console.log(`✅ estrutura web: marco ${Object.keys(est.marco).join('/')}, idioma ${est.idioma ? 'ok' : 'não achado'}`);
   } catch (e) {
     console.warn('⚠ textos de Estrutura web não lidos:', e.message);
+  }
+  // Textos FIXOS e campos opcionais dos cards de Títulos e Decorativos, por
+  // plataforma (2026-10-08, pedido do usuário: "o plugin inteiro deve ter como
+  // base a lib nova"). O componente de conteúdo de cada card é o que o scan
+  // aponta em wrapperVariants do "[hac mob|web] Box specs leitor de tela"
+  // (instância que não é o "Conector") — nenhum id escrito aqui. Cada campo:
+  // { label, text, toggle } — label lido do TEXT "Label" (o nome da camada não
+  // é confiável: no Título mobile a camada "Descrição" traz "Observações:"),
+  // toggle=true quando o componente declara um BOOLEAN com esse nome.
+  // Componente variante de um set (Títulos web: Nível=H1..H6) → um bloco por
+  // valor da variante; senão, chave "".
+  const BOX_RE = { mobile: /\[hac mob\]/i, web: /\[hac web\]/i };
+  const FIXED_TYPES = { titulo: 'Títulos', decorativo: 'Elementos Decorativos' };
+  const labelOf = inst => {
+    const t = (inst.children || []).find(c => c.type === 'TEXT' && /^label$/i.test(c.name));
+    return t ? String(t.characters || '').replace(/:\s*$/, '').trim() : String(inst.name || '').trim();
+  };
+  const fieldsOf = (node, booleanNames) => (node.children || [])
+    .filter(c => c.type === 'INSTANCE')
+    .map(c => {
+      const label = labelOf(c);
+      const text = fieldText(c);
+      return text == null ? null : { label, text, toggle: booleanNames.includes(label) };
+    })
+    .filter(Boolean);
+  const booleansOf = defs => Object.entries(defs || {}).filter(([, d]) => d.type === 'BOOLEAN').map(([k]) => k.split('#')[0].trim());
+  try {
+    const fixed = {};
+    for (const [platform, re] of Object.entries(BOX_RE)) {
+      const box = comps.find(c => c.shortName === 'Box specs leitor de tela' && re.test(c.fullName || ''));
+      if (!box || !Array.isArray(box.wrapperVariants)) { console.warn(`⚠ Box specs ${platform} sem wrapperVariants no scan — pulando textos fixos`); continue; }
+      fixed[platform] = {};
+      for (const [type, option] of Object.entries(FIXED_TYPES)) {
+        const v = box.wrapperVariants.find(w => w.name === `Conector=${option}`);
+        const content = v && (v.instances || []).find(i => i.name !== 'Conector');
+        if (!content || !content.componentId) { console.warn(`⚠ ${platform}/${type}: conteúdo do card não achado`); continue; }
+        await sleep(400);
+        const d = await get(`https://api.figma.com/v1/files/${fileKey}/nodes?ids=${encodeURIComponent(content.componentId)}&depth=3`);
+        const entry = d.nodes[content.componentId];
+        const meta = entry && entry.components && entry.components[content.componentId];
+        const setId = meta && meta.componentSetId;
+        const byVariant = {};
+        if (setId) {
+          await sleep(400);
+          const ds = await get(`https://api.figma.com/v1/files/${fileKey}/nodes?ids=${encodeURIComponent(setId)}&depth=4`);
+          const set = ds.nodes[setId] && ds.nodes[setId].document;
+          const bools = booleansOf(set && set.componentPropertyDefinitions);
+          for (const comp of ((set && set.children) || [])) {
+            const val = String(comp.name || '').split(',').map(x => x.split('=')[1]).filter(Boolean).join(', ').trim();
+            byVariant[val] = fieldsOf(comp, bools);
+          }
+        } else {
+          const comp = entry && entry.document;
+          byVariant[''] = comp ? fieldsOf(comp, booleansOf(comp.componentPropertyDefinitions)) : [];
+        }
+        fixed[platform][type] = byVariant;
+      }
+    }
+    out.fixedTexts = fixed;
+    console.log('✅ textos fixos:', Object.entries(fixed).map(([p, t]) => `${p}(${Object.keys(t).join('/')})`).join(' '));
+  } catch (e) {
+    console.warn('⚠ textos fixos de Títulos/Decorativos não lidos:', e.message);
   }
   fs.writeFileSync(OUT, JSON.stringify(out, null, 2) + '\n');
   console.log(`✅ ${path.relative(process.cwd(), OUT)}`);

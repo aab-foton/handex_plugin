@@ -346,7 +346,7 @@ ${modMsgs}
 
 // ============================================================
 // GENERATED: refs/_a11y-constants.generated.js
-// (fonte de verdade de A11Y_COMPONENT_PROPERTIES_GENERATED e
+// (fonte de verdade de A11Y_FIXED_TEXTS_GENERATED e
 // A11Y_MOBILE_LINK_COMPONENT_OPTIONS_GENERATED — precisa vir ANTES de
 // accessibility.js, que referencia essas constantes. Regenerar via:
 // npm run refs:a11y-constants)

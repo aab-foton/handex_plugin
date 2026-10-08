@@ -1,16 +1,14 @@
 // ============================================================
 // GERADO AUTOMATICAMENTE por build-a11y-constants.cjs — não editar à mão.
-// Fonte: refs/design-acessivel-properties.json (2026-09-30T13:57:57.953Z)
-//      + refs/design-acessivel-mobile-properties.json (2026-10-07T17:39:25.544Z)
+// Fonte: refs/design-acessivel-mobile-properties.json (2026-10-07T20:03:58.486Z)
 //      + refs/super-app.json (2026-10-07T17:28:26.372Z)
 //      + refs/_manifest.json (fileKey da lib 'super-app')
 // Regenerar via: node src/plugin/refs/build-a11y-constants.cjs
 //            ou: npm run refs:a11y-constants
 //
-// Gerado em: 2026-10-07T18:59:32.623Z
+// Gerado em: 2026-10-08T12:51:40.046Z
 //
 // Consumido via alias em src/plugin/modules/accessibility.js:
-//   const A11Y_COMPONENT_PROPERTIES = A11Y_COMPONENT_PROPERTIES_GENERATED;
 //   const A11Y_MOBILE_LINK_COMPONENT_OPTIONS = A11Y_MOBILE_LINK_COMPONENT_OPTIONS_GENERATED;
 //   const A11Y_MOBILE_COMPONENT_LINK_NODE_IDS = A11Y_MOBILE_COMPONENT_LINK_NODE_IDS_GENERATED;
 //   const A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL = A11Y_MOBILE_COMPONENTS_WITH_NOME_ACESSIVEL_GENERATED;
@@ -1429,7 +1427,141 @@ const A11Y_WEB_ESTRUTURA_TEXTS_GENERATED = {
   }
 };
 
-const A11Y_COMPONENT_PROPERTIES_GENERATED = [{"shortName":"niveis de titulo","properties":[{"name":"observacoes","syncId":"7489:0","type":"BOOLEAN"},{"name":"nivel","syncId":null,"type":"VARIANT","variantOptions":["h1","h2","h3","h4","h5","h6"],"defaultValue":"h1"}]},{"shortName":"ED gerais","properties":[{"name":"observacoes","syncId":"7489:0","type":"BOOLEAN"},{"name":"notas","syncId":"7489:18","type":"BOOLEAN"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["ignorar pelo LT","customizável"],"defaultValue":"ignorar pelo LT"}]},{"shortName":"estrutura da página","properties":[{"name":"variacao","syncId":null,"type":"VARIANT","variantOptions":["idiomas","marco de navegacao","titulo da pagina"],"defaultValue":"marco de navegacao"}]},{"shortName":"tab group","properties":[{"name":"nome acessivel","syncId":"742:10","type":"BOOLEAN"},{"name":"letter","syncId":"1303:0","type":"TEXT"},{"name":"observacoes","syncId":"1327:115","type":"BOOLEAN"},{"name":"notas","syncId":"1327:118","type":"BOOLEAN"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["tabs","customizável"],"defaultValue":"tabs"}]},{"shortName":"breadcrumb","properties":[{"name":"nome acessível","syncId":"741:15","type":"BOOLEAN"},{"name":"letter","syncId":"1303:0","type":"TEXT"},{"name":"observacao","syncId":"1325:19","type":"BOOLEAN"},{"name":"notas","syncId":"1325:25","type":"BOOLEAN"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["link inicio","link secundario","texto truncado","pagina atual","customizável"],"defaultValue":"link inicio"}]},{"shortName":"stepper","properties":[{"name":"nome acessivel","syncId":"742:22","type":"BOOLEAN"},{"name":"letter","syncId":"1303:0","type":"TEXT"},{"name":"observacoes","syncId":"1327:93","type":"BOOLEAN"},{"name":"notas","syncId":"1327:99","type":"BOOLEAN"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["atual","editavel","preenchido","inativo","customizável"],"defaultValue":"atual"}]},{"shortName":"EE marco de navegacao","properties":[{"name":"observacoes","syncId":"7489:0","type":"BOOLEAN"},{"name":"letter","syncId":"7500:37","type":"TEXT"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["header","nav","main","aside","footer","customizável"],"defaultValue":"header"}]},{"shortName":"button","properties":[{"name":"nome acessivel","syncId":"742:67","type":"BOOLEAN"},{"name":"observacoes","syncId":"7489:0","type":"BOOLEAN"},{"name":"letter","syncId":"7489:9","type":"TEXT"},{"name":"notas","syncId":"7489:18","type":"BOOLEAN"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["default","desabilitado","com expansao","agrupado","de icone","de icone com expansao","com nome acessivel","customizável"],"defaultValue":"default"}]},{"shortName":"inputs","properties":[{"name":"nome acessivel","syncId":"742:0","type":"BOOLEAN"},{"name":"letter","syncId":"1303:0","type":"TEXT"},{"name":"observacoes","syncId":"1325:49","type":"BOOLEAN"},{"name":"notas","syncId":"1325:59","type":"BOOLEAN"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["default","tipo numero","tipo data","tipo selecao","tipo senha","somente leitura","botao (i) e tooltip","botao visualizar senha","customizável"],"defaultValue":"default"}]},{"shortName":"paginator","properties":[{"name":"nome acessivel","syncId":"742:31","type":"BOOLEAN"},{"name":"letter","syncId":"1303:0","type":"TEXT"},{"name":"observacoes","syncId":"1327:69","type":"BOOLEAN"},{"name":"notas","syncId":"1327:73","type":"BOOLEAN"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["caixa de selecao","listagem","customizável"],"defaultValue":"caixa de selecao"}]},{"shortName":"snackbar","properties":[{"name":"nome acessivel","syncId":"742:28","type":"BOOLEAN"},{"name":"letter","syncId":"1303:0","type":"TEXT"},{"name":"observacoes","syncId":"1327:87","type":"BOOLEAN"},{"name":"notas de codigo","syncId":"1327:90","type":"BOOLEAN"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["notificacao imediata","customizável"],"defaultValue":"notificacao imediata"}]},{"shortName":"checkbox","properties":[{"name":"nome acessivel","syncId":"742:46","type":"BOOLEAN"},{"name":"letter","syncId":"1303:0","type":"TEXT"},{"name":"observacoes","syncId":"1325:31","type":"BOOLEAN"},{"name":"notas","syncId":"1325:37","type":"BOOLEAN"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["somente caixa","Indeterminada em grupo","caixa e rotulo","customizável"],"defaultValue":"somente caixa"}]},{"shortName":"listas","properties":[{"name":"observacoes","syncId":"7489:0","type":"BOOLEAN"},{"name":"letter","syncId":"7500:37","type":"TEXT"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["ordenada","nao ordenada","de definicao","customizável"],"defaultValue":"ordenada"}]},{"shortName":"EE idiomas","properties":[{"name":"notas","syncId":"1417:0","type":"BOOLEAN"},{"name":"observacoes","syncId":"7489:0","type":"BOOLEAN"},{"name":"letter","syncId":"7500:37","type":"TEXT"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["da pagina","das partes","customizável"],"defaultValue":"da pagina"}]},{"shortName":"table","properties":[{"name":"nome acessivel","syncId":"742:16","type":"BOOLEAN"},{"name":"letter","syncId":"1303:0","type":"TEXT"},{"name":"observacoes","syncId":"1327:121","type":"BOOLEAN"},{"name":"notas","syncId":"1327:127","type":"BOOLEAN"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["estruturada","cabecalho","celula","botao de ordenacao","customizável"],"defaultValue":"estruturada"}]},{"shortName":"accordion","properties":[{"name":"nome acessivel","syncId":"742:51","type":"BOOLEAN"},{"name":"notas de codigo","syncId":"742:54","type":"BOOLEAN"},{"name":"observacoes","syncId":"742:57","type":"BOOLEAN"},{"name":"letter","syncId":"1325:12","type":"TEXT"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["default","customizável"],"defaultValue":"default"}]},{"shortName":"informações adicionais","properties":[{"name":"observacoes","syncId":"7489:0","type":"BOOLEAN"},{"name":"letter","syncId":"7500:37","type":"TEXT"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["handoffs","conteudo extra","customizável"],"defaultValue":"handoffs"}]},{"shortName":"radio button","properties":[{"name":"nome acessivel","syncId":"742:42","type":"BOOLEAN"},{"name":"letter","syncId":"1303:0","type":"TEXT"},{"name":"observacoes","syncId":"1327:77","type":"BOOLEAN"},{"name":"notas","syncId":"1327:82","type":"BOOLEAN"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["Somente rádio","radio e rotulo","customizável"],"defaultValue":"Somente rádio"}]},{"shortName":"switch","properties":[{"name":"nome acesivel","syncId":"742:38","type":"BOOLEAN"},{"name":"letter","syncId":"1303:0","type":"TEXT"},{"name":"observacoes","syncId":"1327:105","type":"BOOLEAN"},{"name":"notas","syncId":"1327:110","type":"BOOLEAN"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["Somente switch","switch e rotulo","customizável"],"defaultValue":"Somente switch"}]},{"shortName":"texto alternativo para imagens","properties":[{"name":"nome acesivel","syncId":"742:13","type":"BOOLEAN"},{"name":"observacoes","syncId":"7500:34","type":"BOOLEAN"},{"name":"notas","syncId":"7500:35","type":"BOOLEAN"},{"name":"letter","syncId":"7500:36","type":"TEXT"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["texto alternativo","customizável"],"defaultValue":"texto alternativo"}]},{"shortName":"link","properties":[{"name":"nome acessivel","syncId":"742:60","type":"BOOLEAN"},{"name":"letter","syncId":"1303:0","type":"TEXT"},{"name":"notas","syncId":"1325:0","type":"BOOLEAN"},{"name":"observacoes","syncId":"1325:6","type":"BOOLEAN"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["default","nova janela","com nome acessivel","agrupado","enviar email","customizável"],"defaultValue":"default"}]},{"shortName":"dialog","properties":[{"name":"nome acessivel","syncId":"742:35","type":"BOOLEAN"},{"name":"letter","syncId":"1303:0","type":"TEXT"},{"name":"observacoes","syncId":"1325:43","type":"BOOLEAN"},{"name":"notas","syncId":"1325:46","type":"BOOLEAN"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["default","customizável"],"defaultValue":"default"}]},{"shortName":"ED imagem","properties":[{"name":"observacoes","syncId":"7500:31","type":"BOOLEAN"},{"name":"notas","syncId":"7500:32","type":"BOOLEAN"},{"name":"tipo","syncId":null,"type":"VARIANT","variantOptions":["texto alternativo","customizável"],"defaultValue":"texto alternativo"}]},{"shortName":"componentes/icones/imagens","properties":[{"name":"variante","syncId":null,"type":"VARIANT","variantOptions":["componente","texto alternativo para imagens"],"defaultValue":"componente"},{"name":"componente","syncId":null,"type":"VARIANT","variantOptions":["accordion","breadcrumb","button","checkbox","dialog","inputs","link","listas","paginator","radio button","snackbar","stepper","switch","tab group","table","imagem"],"defaultValue":"accordion"}]},{"shortName":"elementos decorativos","properties":[{"name":"variacao","syncId":null,"type":"VARIANT","variantOptions":["gerais","imagem"],"defaultValue":"gerais"}]}];
+const A11Y_FIXED_TEXTS_GENERATED = {
+  "mobile": {
+    "titulo": {
+      "": [
+        {
+          "label": "Descrição",
+          "text": "Identificar como título.",
+          "toggle": false
+        },
+        {
+          "label": "Observações",
+          "text": "É um elemento que ajuda a organizar o conteúdo da página, fornecendo uma estrutura clara e semântica.",
+          "toggle": false
+        },
+        {
+          "label": "Notas de Código",
+          "text": "Aplicar a propriedade  accessibilityRole=\"header\" no elemento.",
+          "toggle": false
+        }
+      ]
+    },
+    "decorativo": {
+      "": [
+        {
+          "label": "Descrição",
+          "text": "Não deve ser anunciado pelo Leitor de Tela.",
+          "toggle": false
+        },
+        {
+          "label": "Observações",
+          "text": "Insira seu texto da observação.",
+          "toggle": true
+        }
+      ]
+    }
+  },
+  "web": {
+    "titulo": {
+      "H1": [
+        {
+          "label": "Descrição",
+          "text": "Identificar como título de nível 1.",
+          "toggle": false
+        },
+        {
+          "label": "Observações",
+          "text": "Só deve ser utilizado um <h1> por página.",
+          "toggle": false
+        }
+      ],
+      "H2": [
+        {
+          "label": "Descrição",
+          "text": "Identificar como título de nível 2.",
+          "toggle": false
+        },
+        {
+          "label": "Observações",
+          "text": "É um sub-assunto da <h1>.",
+          "toggle": false
+        }
+      ],
+      "H3": [
+        {
+          "label": "Descrição",
+          "text": "Identificar como título de nível 3.",
+          "toggle": false
+        },
+        {
+          "label": "Observações",
+          "text": "É um sub-assunto da <h2>.",
+          "toggle": false
+        }
+      ],
+      "H4": [
+        {
+          "label": "Descrição",
+          "text": "Identificar como título de nível 4.",
+          "toggle": false
+        },
+        {
+          "label": "Observações",
+          "text": "É um sub-assunto da <h3>.",
+          "toggle": false
+        }
+      ],
+      "H5": [
+        {
+          "label": "Descrição",
+          "text": "Identificar como título de nível 5.",
+          "toggle": false
+        },
+        {
+          "label": "Observações",
+          "text": "É um sub-assunto da <h4>.",
+          "toggle": false
+        }
+      ],
+      "H6": [
+        {
+          "label": "Descrição",
+          "text": "Identificar como título de nível 6.",
+          "toggle": false
+        },
+        {
+          "label": "Observações",
+          "text": "É um sub-assunto da <h5>.",
+          "toggle": false
+        }
+      ]
+    },
+    "decorativo": {
+      "": [
+        {
+          "label": "Descrição",
+          "text": "Não deve ser anunciado pelo Leitor de Tela.",
+          "toggle": false
+        },
+        {
+          "label": "Observações",
+          "text": "Insira seu texto da observação.",
+          "toggle": true
+        }
+      ]
+    }
+  }
+};
+
+const A11Y_MOBILE_FIXED_TOGGLES_GENERATED = {
+  "elemento": [],
+  "titulo": [],
+  "decorativo": [
+    "Observações"
+  ]
+};
 
 const A11Y_MOBILE_LINK_COMPONENT_OPTIONS_GENERATED = [
   "Accordion",

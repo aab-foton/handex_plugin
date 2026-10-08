@@ -2,7 +2,7 @@
   "_meta": {
     "description": "GERADO por fetch-a11y-default-texts.cjs — não editar à mão. Textos padrão por plataforma > componente > opção de Leitor de Tela (\"\" quando o componente não tem opções) > campo.",
     "fileKey": "HhriLSpKnCB2dHhyiU16iB",
-    "generatedAt": "2026-10-07T17:42:20.693Z"
+    "generatedAt": "2026-10-08T12:37:03.106Z"
   },
   "mobile": {
     "Accordion": {
@@ -2083,6 +2083,133 @@
       "Descrição": "Indicar a(s) palavra(s) em outro idioma: [insira aqui o trecho ou palavra].",
       "Observações": "Elementos que contenham texto num idioma diferente do idioma principal da página devem estar declarados no HTML.",
       "Notas de Código": "Em HTML, use o atributo lang para declarar o conteúdo circundante como links ou outras partes do texto. Exemplos: \n<p>Este é um parágrafo em português.</p> <a href=\"https://example.com\" lang=\"en\">Link em inglês</a> \n<p>Aqui temos um exemplo de <span lang=\"fr\">bonjour</span>, que significa \"olá\" em francês.</p>"
+    }
+  },
+  "fixedTexts": {
+    "mobile": {
+      "titulo": {
+        "": [
+          {
+            "label": "Descrição",
+            "text": "Identificar como título.",
+            "toggle": false
+          },
+          {
+            "label": "Observações",
+            "text": "É um elemento que ajuda a organizar o conteúdo da página, fornecendo uma estrutura clara e semântica.",
+            "toggle": false
+          },
+          {
+            "label": "Notas de Código",
+            "text": "Aplicar a propriedade  accessibilityRole=\"header\" no elemento.",
+            "toggle": false
+          }
+        ]
+      },
+      "decorativo": {
+        "": [
+          {
+            "label": "Descrição",
+            "text": "Não deve ser anunciado pelo Leitor de Tela.",
+            "toggle": false
+          },
+          {
+            "label": "Observações",
+            "text": "Insira seu texto da observação.",
+            "toggle": true
+          }
+        ]
+      }
+    },
+    "web": {
+      "titulo": {
+        "H1": [
+          {
+            "label": "Descrição",
+            "text": "Identificar como título de nível 1.",
+            "toggle": false
+          },
+          {
+            "label": "Observações",
+            "text": "Só deve ser utilizado um <h1> por página.",
+            "toggle": false
+          }
+        ],
+        "H2": [
+          {
+            "label": "Descrição",
+            "text": "Identificar como título de nível 2.",
+            "toggle": false
+          },
+          {
+            "label": "Observações",
+            "text": "É um sub-assunto da <h1>.",
+            "toggle": false
+          }
+        ],
+        "H3": [
+          {
+            "label": "Descrição",
+            "text": "Identificar como título de nível 3.",
+            "toggle": false
+          },
+          {
+            "label": "Observações",
+            "text": "É um sub-assunto da <h2>.",
+            "toggle": false
+          }
+        ],
+        "H4": [
+          {
+            "label": "Descrição",
+            "text": "Identificar como título de nível 4.",
+            "toggle": false
+          },
+          {
+            "label": "Observações",
+            "text": "É um sub-assunto da <h3>.",
+            "toggle": false
+          }
+        ],
+        "H5": [
+          {
+            "label": "Descrição",
+            "text": "Identificar como título de nível 5.",
+            "toggle": false
+          },
+          {
+            "label": "Observações",
+            "text": "É um sub-assunto da <h4>.",
+            "toggle": false
+          }
+        ],
+        "H6": [
+          {
+            "label": "Descrição",
+            "text": "Identificar como título de nível 6.",
+            "toggle": false
+          },
+          {
+            "label": "Observações",
+            "text": "É um sub-assunto da <h5>.",
+            "toggle": false
+          }
+        ]
+      },
+      "decorativo": {
+        "": [
+          {
+            "label": "Descrição",
+            "text": "Não deve ser anunciado pelo Leitor de Tela.",
+            "toggle": false
+          },
+          {
+            "label": "Observações",
+            "text": "Insira seu texto da observação.",
+            "toggle": true
+          }
+        ]
+      }
     }
   }
 }

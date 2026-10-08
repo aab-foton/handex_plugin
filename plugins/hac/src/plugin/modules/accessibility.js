@@ -318,6 +318,10 @@ function _a11yBanIconSvg(cx, cy, r) {
 // Tela/Observações). Os textos foram MANTIDOS aqui, sem alteração, por decisão
 // explícita de não apagar conteúdo autoral; ficam sem consumidor até o dono do
 // produto definir o destino deles.
+// 2026-10-08: `titulo` e `decorativo` também ficaram sem consumidor — o
+// formulário lê os textos fixos do card real da lib nova
+// (A11Y_FIXED_TEXTS_GENERATED, ver _a11yLibFixedFields). Mantidos pelo mesmo
+// motivo acima. `estrutura` segue só como reserva quando a lib não traz o tipo.
 const A11Y_CONTENT = {
   elemento: {
     componentes: {
@@ -462,24 +466,10 @@ const A11Y_NARRATION_TYPE_LABELS_EN = {
   texto: 'Text',
 };
 
-// ── Component properties reais dos 25 component sets internos "[a11y base]"
-// da lib "Design Acessível" — extraído via REST API. Fonte de verdade agora é
-// o arquivo GERADO refs/_a11y-constants.generated.js (concatenado no bundle
-// ANTES deste módulo, ver build.cjs), produzido por
-// refs/build-a11y-constants.cjs a partir de refs/design-acessivel-
-// properties.json. Alias mantido com o nome histórico para não exigir
-// alterar todos os pontos de consumo já espalhados neste arquivo. Regenerar
-// via: npm run refs:a11y-constants (NÃO editar A11Y_COMPONENT_PROPERTIES à
-// mão — a fonte real é o JSON extraído da API).
-const A11Y_COMPONENT_PROPERTIES = A11Y_COMPONENT_PROPERTIES_GENERATED;
-
-// O <select> de "Elementos e Imagens" usa a chave "imagem" (mesma de
-// A11Y_CONTENT.elemento.componentes), mas o component set real correspondente
-// na lib se chama "texto alternativo para imagens" — os outros 15 valores do
-// select já casam 1:1 com o shortName do component set.
-const _A11Y_SELECT_TO_SHORTNAME = {
-  imagem: 'texto alternativo para imagens',
-};
+// O catálogo A11Y_COMPONENT_PROPERTIES (25 component sets "[a11y base]" da lib
+// ANTIGA) saiu em 2026-10-08 — usuário: "o plugin inteiro deve ter como base a
+// lib nova". Os campos de cada card vêm agora do scan da lib nova
+// (A11Y_*_COMPONENT_TOGGLES, A11Y_FIXED_TEXTS, A11Y_*_FIXED_TOGGLES).
 
 // Vocabulário canônico dos toggles booleanos encontrados nos 25 component
 // sets — a lib tem erros de digitação inconsistentes entre componentes:
@@ -897,57 +887,12 @@ function _migrateA11yElementoMobileVariants(specs) {
 }
 window._migrateA11yElementoMobileVariants = _migrateA11yElementoMobileVariants;
 
-// Properties VARIANT que já são controladas pelo próprio <select> de
-// "Componente" (nível 1, wrapper "componentes/icones/imagens") — nunca viram
-// um segundo seletor redundante no formulário, mesmo aparecendo no array
-// bruto de properties do catálogo.
-const _A11Y_VARIANT_BLOCKLIST = new Set(['componente', 'variante']);
-
 // Capitaliza só a primeira letra — suficiente pra rotular opções de variante
 // (ex: "de icone" → "De icone").
 function _capitalizeFirst(s) {
   const str = String(s || '');
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
-
-// Dado o shortName do <select> de "Elementos e Imagens" (ex: 'button',
-// 'imagem'), retorna { toggles: [{ key, label, syncId }], texts: [...],
-// variants: [...], variantFields: [{ name, syncId, options, rawName }] } com
-// os toggles/variantes canônicos DISPONÍVEIS naquele componente real, ou null
-// se o componente não estiver catalogado (fallback gracioso).
-function _getA11yComponentToggles(selectValue) {
-  const shortName = _A11Y_SELECT_TO_SHORTNAME[selectValue] || selectValue;
-  const entry = A11Y_COMPONENT_PROPERTIES.find(c => c.shortName === shortName);
-  if (!entry) return null;
-
-  const toggles = [];
-  const seen = new Set();
-  entry.properties.forEach(p => {
-    if (p.type !== 'BOOLEAN') return;
-    const canonical = _normalizeA11yToggleName(p.name);
-    if (!canonical || seen.has(canonical)) return;
-    seen.add(canonical);
-    toggles.push({ key: canonical, label: A11Y_TOGGLE_LABELS[canonical] || canonical, syncId: p.syncId, rawName: p.name });
-  });
-
-  const variantFields = entry.properties
-    .filter(p => p.type === 'VARIANT' && !_A11Y_VARIANT_BLOCKLIST.has(String(p.name || '').toLowerCase()))
-    .map(p => ({
-      name: p.name,
-      syncId: p.syncId,
-      rawName: p.name,
-      options: (p.variantOptions || []).map(v => ({ value: v, label: _capitalizeFirst(v) })),
-      defaultValue: p.defaultValue,
-    }));
-
-  return {
-    toggles,
-    texts: entry.properties.filter(p => p.type === 'TEXT').map(p => p.name),
-    variants: entry.properties.filter(p => p.type === 'VARIANT').map(p => p.name),
-    variantFields,
-  };
-}
-window._getA11yComponentToggles = _getA11yComponentToggles;
 
 // Procura uma Área Marcada pelo id — array único, sem escopos avulso/
 // por-frame (diferença de schema em relação ao Handex).
@@ -2534,9 +2479,9 @@ function _syncA11yMobileObservacoesPlacement(hasObservacoes) {
 // no componente selecionado (só o RÓTULO "Nome Acessível" no payload salvo
 // era condicional, ver _buildA11yElementoPayload). Decisão confirmada:
 // campo inteiro segue o mesmo padrão do mobile — sem a property real, sem
-// campo na tela. Fonte: _getA11yComponentToggles(selectValue), MESMA função
-// já usada por _renderA11yElementoToggles (lista de toggles reais) e pelo
-// payload de salvamento — nenhuma lógica nova, só aplicada também aqui.
+// campo na tela. Fonte: as properties reais do componente na lib nova
+// (A11Y_*_COMPONENTS_WITH_NOME_ACESSIVEL) — o catálogo da lib antiga usado
+// aqui até 2026-10-08 saiu.
 function _updateA11yMobileLabelVisibility(preserveValue) {
   const labelWrap = document.getElementById('a11y-el-label-wrap');
   const slot = document.getElementById('a11y-el-mobile-nome-acessivel-slot');
@@ -3120,18 +3065,45 @@ function _fillA11yLabelIfEmpty(mainText) {
   if (labelInput && !labelInput.value.trim()) { labelInput.value = mainText; updateA11yCharCounter(labelInput); }
 }
 
-// ── Toggles dinâmicos genéricos (Título/Decorativo/Estrutura/Informações) ──
-// Mesmo padrão de _renderA11yElementoToggles/_collectA11yElementoToggleProperties/
-// _restoreA11yElementoToggles, mas parametrizado por wrapId/listId/shortName
-// em vez de fixo em "a11y-el-*" — usado pelas 4 categorias que não têm um
-// <select> de "Componente" dinâmico. Reaproveita _getA11yComponentToggles
-// inteiramente: essa função já faz `_A11Y_SELECT_TO_SHORTNAME[selectValue] ||
-// selectValue`, então passar o shortName exato do catálogo (ex: 'niveis de
-// titulo', 'ED gerais') cai direto no fallback `|| selectValue` e funciona
-// sem nenhuma mudança lá.
-function _renderA11yFixedToggles(wrapId, listId, shortName) {
-  const info = shortName ? _getA11yComponentToggles(shortName) : null;
-  _renderA11yToggleRows(wrapId, listId, (info && info.toggles) || []);
+// ── Toggles dinâmicos genéricos (Título/Decorativo/Estrutura) ──
+// Linhas checkbox + textarea parametrizadas por wrapId/listId. Desde
+// 2026-10-08 a lista vem só de nomes REAIS de property da lib nova
+// (_renderA11yFixedTogglesFromNames); a versão por shortName da lib antiga saiu.
+// ── Textos fixos e campos opcionais da LIB NOVA (2026-10-08) ──────────────
+// Usuário: "o plugin inteiro deve ter como base a lib nova, não a velha".
+// Títulos e Decorativos (mobile e web) leem o card real da lib nova:
+// A11Y_FIXED_TEXTS_GENERATED (fetch-a11y-default-texts.cjs → build-a11y-
+// constants.cjs) traz cada campo { label, text, toggle } do componente de
+// conteúdo do card; toggle=true é campo opcional (vira checkbox), o resto é
+// texto fixo. Chave da property por rótulo da lib — "Observações" FIXA vira
+// observacoesLib para não colidir com a Observação que o designer escreve.
+const _A11Y_LIB_FIXED_FIELD_KEY = { 'descrição': 'descricao', 'observações': 'observacoesLib', 'notas de código': 'notaCodigo' };
+function _a11yLibFixedFields(origin, type, variant) {
+  const all = (typeof A11Y_FIXED_TEXTS_GENERATED !== 'undefined' && A11Y_FIXED_TEXTS_GENERATED) || {};
+  const byVariant = (all[origin === 'mobile' ? 'mobile' : 'web'] || {})[type] || {};
+  const list = byVariant[variant || ''] || byVariant[''] || [];
+  return list
+    .filter(f => f && !f.toggle && String(f.text || '').trim())
+    .map(f => ({ key: _A11Y_LIB_FIXED_FIELD_KEY[String(f.label).toLowerCase()] || ('lib:' + f.label), label: f.label, value: f.text }));
+}
+// Nomes dos BOOLEANs reais do card (campos opcionais) por plataforma.
+function _a11yLibToggleNames(origin, type) {
+  if (origin === 'mobile') return (typeof A11Y_MOBILE_FIXED_TOGGLES_GENERATED !== 'undefined' && A11Y_MOBILE_FIXED_TOGGLES_GENERATED[type]) || [];
+  return (typeof A11Y_WEB_FIXED_TOGGLES_GENERATED !== 'undefined' && A11Y_WEB_FIXED_TOGGLES_GENERATED[type]) || [];
+}
+// Desenha os textos fixos no bloco do formulário (some quando não há nenhum).
+function _renderA11yLibFixedTexts(containerId, fields) {
+  const box = document.getElementById(containerId);
+  if (!box) return;
+  box.innerHTML = (fields || []).map(f => `
+          <div>
+            <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1">${escapeHtml(f.label)}</p>
+            <p class="text-[12px] ${f.key === 'notaCodigo' ? 'font-mono ' : ''}text-slate-700 dark:text-white leading-snug">${escapeHtml(f.value)}</p>
+          </div>`).join('');
+  // data-keep-hidden: o bloco de Títulos segue oculto no formulário
+  // (simplificação de 2026-09-17) — só alimenta as properties da spec.
+  if (!fields || !fields.length) box.classList.add('hidden');
+  else if (!box.hasAttribute('data-keep-hidden')) box.classList.remove('hidden');
 }
 
 // Versão por NOMES REAIS de property (2026-10-01, perfil web): o catálogo da
@@ -3294,7 +3266,16 @@ function updateA11yEstruturaFields() {
   const _webEst = (typeof A11Y_WEB_ESTRUTURA_GENERATED !== 'undefined') ? A11Y_WEB_ESTRUTURA_GENERATED : null;
   const _libEstTexts = (!isMobile && typeof A11Y_WEB_ESTRUTURA_TEXTS_GENERATED !== 'undefined') ? A11Y_WEB_ESTRUTURA_TEXTS_GENERATED : {};
   const _idiomaSemTipo = !isMobile && _webEst && Array.isArray(_webEst.idiomaTipos) && _webEst.idiomaTipos.length === 0;
-  const _fromLib = f => f ? { descricao: f['Descrição'] || '', notasCodigo: f['Notas de Código'] || '' } : null;
+  // Observações FIXA da lib (2026-10-08): o Marco traz Descrição, Observações
+  // e Notas de Código fixas; no Idioma, "Observações" é campo opcional
+  // (toggle), então não entra aqui.
+  const _baseVariacaoAtual = A11Y_WEB_ESTRUTURA_FORM_VARIACAO[val];
+  const _togglesAtuais = (!isMobile && _webEst && _webEst.togglesByVariacao && _webEst.togglesByVariacao[_baseVariacaoAtual]) || [];
+  const _fromLib = f => f ? {
+    descricao: f['Descrição'] || '',
+    notasCodigo: f['Notas de Código'] || '',
+    observacoesLib: _togglesAtuais.includes('Observações') ? '' : (f['Observações'] || ''),
+  } : null;
   if (idiomasWrap) idiomasWrap.classList.toggle('hidden', val !== 'idiomas' || _idiomaSemTipo);
   if (marcoWrap) marcoWrap.classList.toggle('hidden', val !== 'marco de navegacao');
 
@@ -3344,19 +3325,20 @@ function updateA11yEstruturaFields() {
   }
   if (notaWrap) notaWrap.classList.toggle('hidden', !(entry && entry.notasCodigo));
   if (notaEl) notaEl.textContent = (entry && entry.notasCodigo) || '';
+  const obsWrap = document.getElementById('a11y-estrutura-obs-wrap');
+  const obsEl = document.getElementById('a11y-estrutura-obs');
+  if (obsWrap) obsWrap.classList.toggle('hidden', !(entry && entry.observacoesLib));
+  if (obsEl) obsEl.textContent = (entry && entry.observacoesLib) || '';
 
   // Toggles dos sub-níveis reais ("EE idiomas": notas+observacoes; "EE marco
   // de navegacao": observacoes) — só existem quando o import real é possível
   // ("customizavel" no nível 1 e "customizavel" dentro de marco de navegação
   // não têm componente catalogado).
   if (isMobile) {
-    let _estruturaToggleShortName = null;
-    if (!isCustomizavel) {
-      if (val === 'idiomas') _estruturaToggleShortName = 'EE idiomas';
-      else if (val === 'marco de navegacao') _estruturaToggleShortName = 'EE marco de navegacao';
-      // "titulo da pagina" não tem sub-nível catalogado — permanece null.
-    }
-    _renderA11yFixedToggles('a11y-estrutura-toggles-wrap', 'a11y-estrutura-toggles-list', _estruturaToggleShortName);
+    // A lib nova não tem Estrutura da Página no mobile — sem campos (o
+    // catálogo da lib ANTIGA, 'EE idiomas'/'EE marco de navegacao', saiu em
+    // 2026-10-08).
+    _renderA11yToggleRows('a11y-estrutura-toggles-wrap', 'a11y-estrutura-toggles-list', []);
   } else {
     // Web: os BOOLEANs vêm da base (hoje só "Idioma" expõe "Observações").
     const baseVariacao = A11Y_WEB_ESTRUTURA_FORM_VARIACAO[val];
@@ -3405,36 +3387,15 @@ function updateA11yTituloFields() {
   const originIsMobile = modal && modal.dataset.a11yOrigin === 'mobile';
   _applyA11yTituloOriginLock(select, originIsMobile);
   const isMobile = select.value === 'mobile';
-  const entry = isMobile ? A11Y_CONTENT.titulo.mobile : A11Y_CONTENT.titulo.niveis[select.value];
-
-  const descEl = document.getElementById('a11y-fixed-descricao');
-  const notaWrap = document.getElementById('a11y-fixed-nota-wrap');
-  const notaEl = document.getElementById('a11y-fixed-nota');
-  if (descEl) descEl.textContent = (entry && entry.descricao) || '';
-  if (notaWrap) notaWrap.classList.toggle('hidden', !isMobile);
-  if (notaEl) notaEl.textContent = (isMobile && entry && entry.notaCodigo) || '';
-
-  // REABERTO em 2026-09-24 (pedido explícito do usuário: "cada propriedade
-  // específica [deve] ser apresentada da maneira correta quando selecionado
-  // o componente" — reafirmado após auditoria confirmar que o shortName
-  // real 'niveis de titulo' declara um BOOLEAN "observacoes" verdadeiro na
-  // lib, que ficava escondido incondicionalmente). Histórico: entre
-  // 2026-09-17 e 2026-09-24 o accordion "Campos do componente" desta
-  // categoria ficava sempre oculto pra specs NOVAS (shortName forçado a
-  // null, decisão de simplificação de UX). Revertido — mesmo shortName real
-  // usado por Informações Adicionais/Estrutura da Página, sem gambiarra:
-  // 'niveis de titulo' é o único shortName real desta categoria (não varia
-  // por nível h1-h6 escolhido, confirmado no dado gerado). Descrição/Nota de
-  // Código continuam vindo do catálogo fixo A11Y_CONTENT.titulo (não são
-  // property BOOLEAN/TEXT opcional, são conteúdo didático por role — nunca
-  // foram o alvo desta reabertura).
-  if (originIsMobile) {
-    _renderA11yFixedToggles('a11y-titulo-toggles-wrap', 'a11y-titulo-toggles-list', 'niveis de titulo');
-  } else {
-    // Web (2026-10-01): a base não tem toggle em "Títulos" — Descrição e
-    // Observações de cada nível vêm fixas da lib. Lista vem do dado (hoje []).
-    _renderA11yFixedTogglesFromNames('a11y-titulo-toggles-wrap', 'a11y-titulo-toggles-list', A11Y_WEB_FIXED_TOGGLES_GENERATED.titulo);
-  }
+  // Lib NOVA (2026-10-08): textos fixos do card de Títulos — mobile (sem
+  // nível): Descrição, Observações e Notas de Código; web: Descrição e
+  // Observações próprias de cada nível (H1–H6). Campos opcionais: os BOOLEANs
+  // reais do card (hoje nenhum nas duas plataformas). Antes vinham da lib
+  // ANTIGA (shortName 'niveis de titulo', com um toggle "Observações" que o
+  // card novo não tem).
+  const origin = originIsMobile ? 'mobile' : 'web';
+  _renderA11yLibFixedTexts('a11y-titulo-fixed-list', _a11yLibFixedFields(origin, 'titulo', isMobile ? '' : String(select.value).toUpperCase()));
+  _renderA11yFixedTogglesFromNames('a11y-titulo-toggles-wrap', 'a11y-titulo-toggles-list', _a11yLibToggleNames(origin, 'titulo'));
 }
 window.updateA11yTituloFields = updateA11yTituloFields;
 
@@ -3465,33 +3426,13 @@ function updateA11yDecorativoFields() {
   // Web e mobile travam o subtipo: nenhuma das duas bases tem "Gerais"/"Imagem"
   // (web desde 2026-10-01; mobile desde 2026-09-22).
   _applyA11yDecorativoOriginLock(select, originIsMobile);
-  const entry = A11Y_CONTENT.decorativo.base;
-  const descEl = document.getElementById('a11y-fixed-descricao-dec');
-  const notaWrap = document.getElementById('a11y-fixed-nota-dec-wrap');
-  const notaEl = document.getElementById('a11y-fixed-nota-dec');
-  if (descEl) descEl.textContent = (entry && entry.descricao) || '';
-  const notaTexto = (entry && entry.notasCodigo) || '';
-  if (notaWrap) notaWrap.classList.toggle('hidden', !notaTexto);
-  if (notaEl) notaEl.textContent = notaTexto;
-
-  // REABERTO em 2026-09-24 (mesmo motivo de updateA11yTituloFields — ver
-  // comentário lá). Entre 2026-09-17 e hoje o accordion "Campos do
-  // componente" ficava sempre oculto pra specs NOVAS (shortName forçado a
-  // null), mesmo os shortNames reais 'ED gerais'/'ED imagem' declarando
-  // BOOLEAN "observacoes" (os dois) e "notas" (os dois) na lib.
-  // select.value já é 'gerais'/'imagem' — bate 1:1 com os shortNames reais
-  // 'ED gerais'/'ED imagem' (confirmado no dado gerado), sem precisar de
-  // dicionário de tradução. Em mobile, _applyA11yDecorativoOriginLock (logo
-  // acima) já trava select.value em 'gerais' antes desta linha rodar — a
-  // mesma distinção real que a lib desktop declara (mobile não tem os 2
-  // subtipos, só 1 toggle "Observações" no wrapper "[hac mob] Box specs
-  // leitor de tela", ver comentário 2026-09-22 acima).
-  if (originIsMobile) {
-    _renderA11yFixedToggles('a11y-decorativo-toggles-wrap', 'a11y-decorativo-toggles-list', select.value === 'imagem' ? 'ED imagem' : 'ED gerais');
-  } else {
-    // Web: o único BOOLEAN real da base é "Observações".
-    _renderA11yFixedTogglesFromNames('a11y-decorativo-toggles-wrap', 'a11y-decorativo-toggles-list', A11Y_WEB_FIXED_TOGGLES_GENERATED.decorativo);
-  }
+  // Lib NOVA (2026-10-08, usuário: "Elementos decorativos, pelo que vi na lib
+  // mobile, não tem mais notas de código"): texto fixo = Descrição; único
+  // campo opcional = "Observações", nas duas plataformas. Antes o mobile
+  // usava a lib ANTIGA (shortName 'ED gerais': Observações + Notas de Código).
+  const origin = originIsMobile ? 'mobile' : 'web';
+  _renderA11yLibFixedTexts('a11y-decorativo-fixed-list', _a11yLibFixedFields(origin, 'decorativo', ''));
+  _renderA11yFixedTogglesFromNames('a11y-decorativo-toggles-wrap', 'a11y-decorativo-toggles-list', _a11yLibToggleNames(origin, 'decorativo'));
 }
 
 // Trava o select "Subtipo" (Gerais/Imagem) por origem — mesmo padrão de
@@ -3812,8 +3753,13 @@ function _finishA11ySpecConfirm() {
     properties = [
       { key: 'descricao', label: 'Descrição', value: descricao },
     ];
+    const obsWrapEst = document.getElementById('a11y-estrutura-obs-wrap');
+    const obsElEst = document.getElementById('a11y-estrutura-obs');
+    if (obsWrapEst && !obsWrapEst.classList.contains('hidden') && obsElEst && obsElEst.textContent) {
+      properties.push({ key: 'observacoesLib', label: 'Observações', value: obsElEst.textContent });
+    }
     if (notaWrap && !notaWrap.classList.contains('hidden') && notaEl && notaEl.textContent) {
-      properties.push({ key: 'notaCodigo', label: 'Nota de Código', value: notaEl.textContent });
+      properties.push({ key: 'notaCodigo', label: 'Notas de Código', value: notaEl.textContent });
     }
     const subtipoSelect = document.getElementById('a11y-estrutura-subtipo-select');
     const marcoSelect = document.getElementById('a11y-estrutura-marco-select');
@@ -3832,44 +3778,20 @@ function _finishA11ySpecConfirm() {
     const nivelSelect = document.getElementById('a11y-titulo-nivel-select');
     const nivel = nivelSelect ? nivelSelect.value : 'h1';
     letter = nivel === 'mobile' ? 'H' : nivel.toUpperCase();
-    const descEl = document.getElementById('a11y-fixed-descricao');
-    properties = [
-      { key: 'descricao', label: 'Descrição', value: descEl ? descEl.textContent : '' },
-    ];
-    if (nivel === 'mobile') {
-      const notaEl = document.getElementById('a11y-fixed-nota');
-      if (notaEl && notaEl.textContent) properties.push({ key: 'notaCodigo', label: 'Nota de Código', value: notaEl.textContent });
-    }
-    // Toggle real "observacoes" do set "niveis de titulo" — formulário
-    // simplificado (2026-09-17, pedido explícito do usuário) escondeu o
-    // accordion "Campos do componente" pra sempre, então
-    // _collectA11yFixedToggleProperties nunca mais encontra o checkbox (a
-    // lista nem é renderizada, ver updateA11yTituloFields) e retornaria
-    // sempre []. Sem este fallback, reabrir e salvar de novo uma spec de
-    // Título ANTIGA que já tinha Observações preenchidas apagaria esse dado
-    // silenciosamente. Preserva o valor salvo anteriormente (se houver)
-    // quando editando; specs novas simplesmente não têm essa property.
-    const collectedToggles = _collectA11yFixedToggleProperties('a11y-titulo-toggles-list');
-    if (collectedToggles.length) {
-      properties.push(...collectedToggles);
-    } else if (editingOriginalIndex > -1) {
-      const previousSpec = a11ySpecs[editingOriginalIndex];
-      const previousObservacoes = previousSpec && Array.isArray(previousSpec.properties)
-        ? previousSpec.properties.find(p => p && p.key === 'observacoes')
-        : null;
-      if (previousObservacoes) properties.push(previousObservacoes);
-    }
+    // Textos fixos da LIB NOVA (2026-10-08) — mesma fonte do formulário
+    // (updateA11yTituloFields), recalculada aqui em vez de lida do DOM. O card
+    // de Títulos da lib nova não tem campo opcional: a Observação que specs
+    // antigas tinham (toggle da lib ANTIGA) não vai para o card novo e não é
+    // mais regravada.
+    const tituloOrigin = (modal && modal.dataset.a11yOrigin === 'mobile') ? 'mobile' : 'web';
+    properties = _a11yLibFixedFields(tituloOrigin, 'titulo', nivel === 'mobile' ? '' : nivel.toUpperCase());
+    properties.push(..._collectA11yFixedToggleProperties('a11y-titulo-toggles-list'));
     a11ySubtype = { nivel };
   } else if (category === 'decorativo') {
     letter = meta.badge;
-    const descEl = document.getElementById('a11y-fixed-descricao-dec');
-    const notaEl = document.getElementById('a11y-fixed-nota-dec');
-    properties = [
-      { key: 'descricao', label: 'Descrição', value: descEl ? descEl.textContent : '' },
-    ];
-    if (notaEl && notaEl.textContent) properties.push({ key: 'notaCodigo', label: 'Nota de Código', value: notaEl.textContent });
-    // Toggles reais "observacoes"/"notas" do set correspondente ao subtipo
-    // (ED gerais / ED imagem).
+    // Texto fixo + campo opcional ("Observações") do card da LIB NOVA (2026-10-08).
+    const decOrigin = (modal && modal.dataset.a11yOrigin === 'mobile') ? 'mobile' : 'web';
+    properties = _a11yLibFixedFields(decOrigin, 'decorativo', '');
     properties.push(..._collectA11yFixedToggleProperties('a11y-decorativo-toggles-list'));
     // 2026-09-22 (bug real confirmado via REST API): "Gerais"/"Imagem" só
     // existe na lib DESKTOP (ver comentário grande em
@@ -4213,7 +4135,13 @@ function _a11ySpecItemHtml(spec, showCategoryChip, group) {
   const linkUrl = linkProp && /^https?:\/\//.test(String(linkProp.value || '')) ? linkProp.value : null;
   const componentProp = linkUrl ? (props.find(p => p && p.key !== 'linkComponente' && /componente/i.test(p.label || '')) || null) : null;
   const isRepeatingType = spec.a11yType === 'titulo' || spec.a11yType === 'decorativo';
-  const visibleProps = isRepeatingType ? [] : props.filter(p => !(linkUrl && componentProp && p === linkProp));
+  // Títulos/Decorativos: os textos FIXOS da lib vão para o bloco único da
+  // categoria (_a11yCategoryFixedTextsHtml); o que o designer escreveu (ex.:
+  // Observações do Decorativo) aparece no card (2026-10-08 — antes sumia).
+  const _fixedKeys = new Set(_A11Y_FIXED_TEXT_KEYS.map(([k]) => k));
+  const visibleProps = isRepeatingType
+    ? props.filter(p => p && !_fixedKeys.has(p.key))
+    : props.filter(p => !(linkUrl && componentProp && p === linkProp));
   const isHidden = spec.visible === false;
   const isUnlocked = spec.locked === false;
 
@@ -4483,7 +4411,10 @@ function _a11yCategoryAccordionEl(uid, catKey, catSpecs) {
 // texto fixo uma vez só"). Textos diferentes entre as specs (ex.: níveis
 // H1/H2 no web) aparecem uma vez cada, com a contagem. Os cards dessas
 // categorias seguem sem repetir esses campos (isRepeatingType).
-const _A11Y_FIXED_TEXT_KEYS = [['descricao', 'Descrição'], ['notaCodigo', 'Nota de Código']];
+// Ordem e rótulos da lib nova (2026-10-08): Descrição, Observações (fixa,
+// observacoesLib) e Notas de Código. O rótulo exibido vem da própria property
+// quando ela o traz (texto da lib).
+const _A11Y_FIXED_TEXT_KEYS = [['descricao', 'Descrição'], ['observacoesLib', 'Observações'], ['notaCodigo', 'Notas de Código']];
 function _a11yCategoryFixedTextsHtml(catKey, catSpecs) {
   if (catKey !== 'titulo' && catKey !== 'decorativo') return '';
   const rows = [];

@@ -471,8 +471,14 @@
             oninput="updateA11yCharCounter(this)"
             class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-100 transition-all" />
         </div>
+        <!-- Observações FIXA do Marco de navegação (2026-10-08) — texto da lib
+             nova, sem toggle (o Idioma tem Observações como toggle, abaixo). -->
+        <div id="a11y-estrutura-obs-wrap" class="hidden p-3 bg-gray-50 dark:bg-dark-bg rounded-dsc-medium border border-gray-200 dark:border-dark-line">
+          <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1">Observações</p>
+          <p id="a11y-estrutura-obs" class="text-[12px] text-slate-700 dark:text-white leading-snug"></p>
+        </div>
         <div id="a11y-estrutura-nota-wrap" class="p-3 bg-gray-50 dark:bg-dark-bg rounded-dsc-medium border border-gray-200 dark:border-dark-line">
-          <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1">Nota de Código</p>
+          <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1">Notas de Código</p>
           <p id="a11y-estrutura-nota" class="text-[12px] font-mono text-slate-700 dark:text-white leading-snug"></p>
         </div>
         <!-- Campos dinâmicos reais dos sub-níveis "EE idiomas"/"EE marco de
@@ -529,16 +535,11 @@
                ainda leem select.value — nenhuma outra função precisou mudar. -->
           <div id="a11y-titulo-nivel-fixed" class="hidden w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white">H (mobile, sem nível)</div>
         </div>
-        <div class="hidden p-3 bg-gray-50 dark:bg-dark-bg rounded-dsc-medium border border-gray-200 dark:border-dark-line space-y-2.5">
-          <div>
-            <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1">Descrição</p>
-            <p id="a11y-fixed-descricao" class="text-[12px] text-slate-700 dark:text-white leading-snug"></p>
-          </div>
-          <div id="a11y-fixed-nota-wrap" class="hidden">
-            <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1">Nota de Código</p>
-            <p id="a11y-fixed-nota" class="text-[12px] font-mono text-slate-700 dark:text-white leading-snug"></p>
-          </div>
-        </div>
+        <!-- Textos fixos do card de Títulos da LIB NOVA (2026-10-08) — linhas
+             montadas por _renderA11yLibFixedTexts a partir de
+             A11Y_FIXED_TEXTS_GENERATED (mobile: Descrição/Observações/Notas de
+             Código; web: Descrição/Observações por nível). -->
+        <div id="a11y-titulo-fixed-list" data-keep-hidden class="hidden p-3 bg-gray-50 dark:bg-dark-bg rounded-dsc-medium border border-gray-200 dark:border-dark-line space-y-2.5"></div>
         <!-- Campo dinâmico real do shortName "niveis de titulo" (BOOLEAN
              "observacoes" confirmado no scan da lib) — REABERTO em
              2026-09-24 (ver updateA11yTituloFields, accessibility.js, pra
@@ -589,19 +590,10 @@
                confirmA11ySpec ainda leem select.value. -->
           <div id="a11y-decorativo-subtipo-fixed" class="hidden w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium px-dsc-micro py-2.5 text-[12px] text-slate-700 dark:text-white">Elemento Decorativo (mobile, sem subtipo)</div>
         </div>
-        <div class="p-3 bg-gray-50 dark:bg-dark-bg rounded-dsc-medium border border-gray-200 dark:border-dark-line space-y-2.5">
-          <div>
-            <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1">Descrição</p>
-            <p id="a11y-fixed-descricao-dec" class="text-[12px] text-slate-700 dark:text-white leading-snug">Não deve ser anunciado pelo Leitor de Tela.</p>
-          </div>
-          <!-- Nota de Código não existe na lib mobile (nem HTML nem RN) —
-               este wrapper some no formulário mobile (ver
-               A11Y_CONTENT.decorativo.base/updateA11yDecorativoFields). -->
-          <div id="a11y-fixed-nota-dec-wrap">
-            <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted normal-case tracking-normal mb-1">Nota de Código</p>
-            <p id="a11y-fixed-nota-dec" class="text-[12px] font-mono text-slate-700 dark:text-white leading-snug"></p>
-          </div>
-        </div>
+        <!-- Textos fixos do card de Decorativos da LIB NOVA (2026-10-08):
+             hoje só a Descrição, nas duas plataformas — linhas montadas por
+             _renderA11yLibFixedTexts a partir de A11Y_FIXED_TEXTS_GENERATED. -->
+        <div id="a11y-decorativo-fixed-list" class="p-3 bg-gray-50 dark:bg-dark-bg rounded-dsc-medium border border-gray-200 dark:border-dark-line space-y-2.5"></div>
         <!-- Campos dinâmicos reais do shortName correspondente ao subtipo
              ('ED gerais'/'ED imagem') — Observações e Notas de Código,
              ambos BOOLEAN confirmados no scan da lib pros 2 shortNames.

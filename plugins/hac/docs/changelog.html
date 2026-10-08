@@ -3398,6 +3398,28 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-08 — O plugin inteiro passa a usar só a lib nova (v0.1.0-beta.129)</h2>
+
+    <p>Pedido do usuário: "Elementos decorativos, pelo que vi na lib mobile, não tem mais notas de código" e "o plugin inteiro deve
+    ter como base a lib nova, não a velha". Novo scan profundo da lib (mobile e web, sem mudança estrutural desde 07/10) e auditoria
+    do que ainda vinha da lib antiga: os campos de Títulos e Decorativos no MOBILE (catálogo antigo, shortNames "ED gerais" e
+    "niveis de titulo") e os textos fixos dos dois (catálogo escrito à mão).</p>
+    <ul>
+      <li><strong>Decorativo (mobile e web):</strong> texto fixo = Descrição; único campo opcional = Observações. "Notas de Código"
+      saiu do mobile.</li>
+      <li><strong>Título mobile:</strong> sem campo opcional (o card novo não tem). Textos fixos da lib nova: Descrição,
+      Observações e Notas de Código ("Aplicar a propriedade accessibilityRole="header" no elemento.").</li>
+      <li><strong>Título web:</strong> Descrição e Observações próprias de cada nível (H1–H6), como na lib.</li>
+      <li><strong>Estrutura web (Marco):</strong> a Observação fixa da lib passa a aparecer no formulário, no card e na Ficha.</li>
+      <li><strong>Lista:</strong> o bloco "Texto fixo da lib" mostra Descrição, Observações e Notas de Código; a Observação escrita
+      pelo designer no Decorativo passa a aparecer no card (antes sumia).</li>
+      <li><strong>Dados:</strong> <code>fetch-a11y-default-texts.cjs</code> extrai também os textos fixos e campos opcionais dos cards
+      (<code>fixedTexts</code>, seguindo o card que o scan aponta, sem id fixo) e deixou de partir caracteres acentuados na leitura;
+      <code>build-a11y-constants.cjs</code> gera <code>A11Y_FIXED_TEXTS_GENERATED</code>/<code>A11Y_MOBILE_FIXED_TOGGLES_GENERATED</code>
+      e não lê mais a lib antiga. O catálogo <code>A11Y_COMPONENT_PROPERTIES</code> foi removido.
+      <code>check-lib-sources --strict</code>: as 54 keys do código são do arquivo novo.</li>
+    </ul>
+
     <h2>2026-10-07 — Accordions e itens clicáveis alcançáveis pelo teclado (v0.1.0-beta.128)</h2>
 
     <p>Reportado pelo usuário: os accordions não recebiam foco com Tab. Os cabeçalhos eram <code>&lt;div onclick&gt;</code>. Passam a

@@ -142,6 +142,11 @@ function _fichaBuildSpecFields(spec) {
   const descricao = getProp('descricao');
   if (descricao) fields.push({ label: 'Descrição', value: descricao });
 
+  // Observações FIXA do card da lib nova (Títulos, Marco de navegação) —
+  // 2026-10-08. Distinta da Observação escrita pelo designer (observacoes).
+  const observacoesLib = getProp('observacoesLib');
+  if (observacoesLib) fields.push({ label: 'Observações', value: observacoesLib });
+
   const nomeAcessivel = getProp('nomeAcessivel');
   if (nomeAcessivel) fields.push({ label: 'Nome Acessível', value: nomeAcessivel });
 

@@ -75,7 +75,7 @@ tokens que uma leitura de 5 minutos teria evitado.
 | `build-skeleton.cjs` | Agrega `{slug}.json` em `_skeleton.json`, embarcado no `ui.html` |
 | `fetch-component-properties.cjs` | Extração PROFUNDA de component property definitions (BOOLEAN/TEXT/VARIANT/INSTANCE_SWAP) para QUALQUER lib cadastrada, incluindo as 2 de a11y (`design-acessivel`, `design-acessivel-mobile`) — paginação, checkpoint, retry, descoberta de component sets ocultos via `--deep-scan` |
 | `build-dsc-a11y-mapping.cjs` | Mapa `containingFrame → {shortName, confidence}` por lib, usado em runtime pela Detecção Automática |
-| `build-a11y-constants.cjs` | Deriva `A11Y_COMPONENT_PROPERTIES_GENERATED`/`A11Y_MOBILE_LINK_COMPONENT_OPTIONS_GENERATED` a partir dos JSONs de properties |
+| `build-a11y-constants.cjs` | Deriva as constantes `A11Y_*_GENERATED` (opções, toggles, textos fixos de cada card) a partir do scan da lib NOVA e de `design-acessivel-default-texts.json`. A lib antiga (`design-acessivel-properties.json`) não é mais lida desde 2026-10-08 |
 | `build-ficha-instruction-constants.cjs` | Deriva `FICHA_INSTRUCTION_CONTENT_UI` a partir de `ficha-instruction-content.json` |
 | `fetch-instruction-frames.cjs` | Captura via REST API (`/v1/images/:file_key`) a imagem renderizada de frames de instrução didática da lib "Design Acessível" |
 | `fetch-a11y-default-texts.cjs` | (2026-10-07) Textos padrão dos campos de cada componente do card "Elementos e imagens" (Observações, Nome Acessível, Texto Alternativo…), por plataforma e opção de Leitor de Tela → `design-acessivel-default-texts.json` → `A11Y_{MOBILE,WEB}_DEFAULT_TEXTS_GENERATED`. Parte dos ids do scan de `fetch-component-properties.cjs` (rodar este antes, se a lib mudou) |
@@ -164,6 +164,18 @@ Bar") também conta como falha — abortar, não aceitar. Usuário: *"não temos
 nada personalizado, usamos exclusivamente os cards da lib"*.
 
 ---
+
+## Só a lib nova (2026-10-08)
+
+O plugin inteiro usa como base a lib NOVA ("[HAC] Handoff Super DSC Mobile e
+Web", `HhriLSpKnCB2dHhyiU16iB`) — usuário: *"o plugin inteiro deve ter como
+base a lib nova, não a velha"*. Campos, textos fixos e campos opcionais de cada
+card vêm do scan dela (`fetch-component-properties.cjs` +
+`fetch-a11y-default-texts.cjs` → `build-a11y-constants.cjs`). O catálogo da lib
+antiga (`A11Y_COMPONENT_PROPERTIES`, shortNames como `ED gerais`/`niveis de
+titulo`) foi removido; `check-lib-sources.cjs --strict` confirma que toda key
+de componente no código é do arquivo novo. Antes de reintroduzir qualquer texto
+ou toggle escrito à mão, conferir se a lib nova já o publica.
 
 ## Web e mobile sempre juntos
 
