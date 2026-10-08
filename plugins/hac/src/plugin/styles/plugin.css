@@ -504,6 +504,19 @@ body {
       min-height: 0;
     }
 
+    /* Menus "Mais ações" aparecem na hora, sem animação (2026-10-08, pedido
+       do usuário: o dropdown do card "vinha de baixo pra cima"). Causa: eles
+       usam .bg-white.dark:bg-dark-surface e herdavam o `transition: all`
+       da regra de cards abaixo — ao posicionar o menu (top/left via JS), a
+       posição era animada. Seletores mais específicos que os daquela regra
+       (ambas com !important). */
+    div[id^="a11y-card-menu-"].bg-white,
+    #a11y-more-actions-menu,
+    #a11y-workspace-more-actions-menu {
+      transition: none !important;
+      animation: none !important;
+    }
+
     /* ── DESIGN SYSTEM UNIFORMITY RULES ── */
 
     /* 1. Uniform Cards & Containers */

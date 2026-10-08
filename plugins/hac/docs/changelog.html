@@ -3398,6 +3398,13 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-08 — Menus "Mais ações" abrem sem animação (v0.1.0-beta.136)</h2>
+
+    <p>Pedido do usuário: o dropdown de "Mais ações" do card da tela "vinha de baixo pra cima". O JS não anima nada — a causa era
+    a regra global de cards (<code>.bg-white.dark:bg-dark-surface</code>, com <code>transition: all 0.3s</code>), que o menu herdava:
+    ao ser posicionado, a posição era animada. Os três menus "Mais ações" (card da tela, Ajuda e o da tela aberta) agora têm
+    <code>transition: none</code> e aparecem na hora, no clique.</p>
+
     <h2>2026-10-08 — Novo scan das libs: "Header / Skip Button" no web (v0.1.0-beta.135)</h2>
 
     <p>Verificação pedida pelo usuário antes do push. Lib de acessibilidade (scan profundo + textos padrão): o card
