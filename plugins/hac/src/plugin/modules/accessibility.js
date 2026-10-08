@@ -65,7 +65,12 @@
 // 2026-09-18 (pedido do usuário: testar SÓ o Swipe automático de novo, sem
 // reativar o Mapeamento Automático de Tabulação) — cada botão agora tem sua
 // própria flag, independentes.
-const A11Y_AUTO_MAPPING_HIDDEN_LEITOR = false;
+// Leitor de Tela RETIRADO (2026-10-08, pedido do usuário, web e mobile: "vamos
+// tirar a proposta de mapeamento automático do leitor de tela — está trazendo
+// coisas erradas e sugerindo coisas que não fazem sentido"). Sem o botão, a
+// lista "Não documentados" (resultado desse scan) também some da aba — ver
+// _a11yWorkspaceTabLeitorDeTela. Lógica preservada, mesmo padrão das outras flags.
+const A11Y_AUTO_MAPPING_HIDDEN_LEITOR = true;
 const A11Y_AUTO_MAPPING_HIDDEN_TABULACAO = true;
 // Ocultado de novo (2026-09-18, pedido do usuário): o scan próprio
 // (generate-swipe-path-from-layers) ficou funcional depois da correção de
@@ -4969,7 +4974,9 @@ function _a11yWorkspaceTabLeitorDeTela(area, areaSpecs) {
   // antigo ficava órfão) e fechava sozinho, escondendo as ações de cada
   // item mesmo o usuário tendo acabado de abri-lo. area.id nunca muda.
   const uid = `workspace-${area.id}`;
-  const undocumentedEntries = _collectA11yUndocumentedForArea(area.id);
+  // "Não documentados" é o resultado do mapeamento automático — some junto
+  // com ele (A11Y_AUTO_MAPPING_HIDDEN_LEITOR, 2026-10-08).
+  const undocumentedEntries = A11Y_AUTO_MAPPING_HIDDEN_LEITOR ? [] : _collectA11yUndocumentedForArea(area.id);
 
   const focusSpecId = window._a11yWorkspaceFocusSpecId;
   let focusCatKey = null;
