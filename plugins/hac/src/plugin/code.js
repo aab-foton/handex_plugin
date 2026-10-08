@@ -1666,7 +1666,7 @@ export function _getOrCreateA11ySessionSection(designerName, currentUserId, refe
     // sinal de "já foi finalizado alguma vez", consumido pelo handler
     // bump-a11y-session-version (ver comentário completo lá) e pelo
     // frontend (_fichaSessionVersionLabel, handoff-ficha.js).
-    section.name = `[HAC] Handoff de Acessibilidade | ${_timestamp} | ${designerName || 'Designer não identificado'} | rascunho`;
+    section.name = `[HAC] Handoff de Acessibilidade | ${_timestamp} | ${designerName || 'Autoria não identificada'} | rascunho`;
     section.setPluginData('hacSessionSection', 'true');
     if (currentUserId) section.setPluginData('hacSessionOwnerId', currentUserId);
     section.x = 0;

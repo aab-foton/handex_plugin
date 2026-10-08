@@ -5970,7 +5970,7 @@ function renderA11yExistingDocumentationSurvey(msg) {
     const accent = s.isOwn ? '#005ca9' : '#64747a';
     const ownBadge = s.isOwn
       ? `<span class="text-[12px] font-bold uppercase tracking-wide text-[#005ca9] dark:text-blue-300">Seu handoff</span>`
-      : `<span class="text-[12px] font-bold uppercase tracking-wide text-slate-500 dark:text-dark-muted">Handoff de outro designer</span>`;
+      : `<span class="text-[12px] font-bold uppercase tracking-wide text-slate-500 dark:text-dark-muted">Handoff de outra pessoa</span>`;
     const otherDesignerNote = s.isOwn ? '' : `
       <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-relaxed mt-1.5 italic">Seu trabalho continuará em uma Section própria — este handoff não será editado por você.</p>`;
 
@@ -6328,7 +6328,7 @@ function openA11yOtherDesignerModal(sections) {
   // pré-2026-09-10, sem esse separador) caem no fallback genérico.
   const extractDesignerName = (sectionName) => {
     const parts = String(sectionName || '').split('|').map(s => s.trim());
-    return (parts.length >= 3 && parts[2]) ? parts[2] : 'outro designer';
+    return (parts.length >= 3 && parts[2]) ? parts[2] : 'outra pessoa';
   };
   const names = list.map(s => extractDesignerName(s.name));
 
@@ -6337,7 +6337,7 @@ function openA11yOtherDesignerModal(sections) {
     message = `Já existe documentação do HAC feita por <strong>${names[0]}</strong> neste arquivo.`;
   } else {
     const [first, ...rest] = names;
-    message = `Já existe documentação do HAC feita por <strong>${first}</strong> e outros ${rest.length} designer${rest.length > 1 ? 's' : ''} neste arquivo.`;
+    message = `Já existe documentação do HAC feita por <strong>${first}</strong> e mais ${rest.length} pessoa${rest.length > 1 ? 's' : ''} neste arquivo.`;
   }
 
   body.innerHTML = `

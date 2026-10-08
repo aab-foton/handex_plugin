@@ -198,7 +198,7 @@ ${css}
               <i data-lucide="download" class="w-4 h-4 mt-0.5 text-slate-500 dark:text-dark-muted shrink-0" aria-hidden="true"></i>
               <span class="min-w-0">
                 <span class="block">Baixar backup (.json)</span>
-                <span class="block text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted leading-snug">Restaurável neste arquivo, inclusive por outro designer.</span>
+                <span class="block text-dsc-label-tiny normal-case tracking-normal text-slate-400 dark:text-dark-muted leading-snug">Restaurável neste arquivo, inclusive por outra pessoa.</span>
               </span>
             </button>
             <button type="button" onclick="closeHacBackupMenu(); exportHacHandoffDoc()"

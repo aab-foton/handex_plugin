@@ -141,7 +141,7 @@ function clearPluginCache() {
   closeModal('hac-autosave-modal');
   openA11yConfirmModal({
     title: 'Limpar cache deste arquivo?',
-    body: 'Apaga a sua documentação deste arquivo (telas, especificações, tabulação e swipe), inclusive a cópia guardada dentro dele. O que está no canvas permanece, e a documentação dos outros designers não é afetada. Não dá para desfazer.',
+    body: 'Apaga a sua documentação deste arquivo (telas, especificações, tabulação e swipe), inclusive a cópia guardada no arquivo. O que está no canvas permanece, e a documentação das outras pessoas que usam o arquivo não é afetada. Não dá para desfazer.',
     confirmLabel: 'Limpar cache',
     onConfirm: _clearPluginCacheNow,
   });
@@ -167,7 +167,7 @@ function clearPluginCanvasAndCache() {
   closeModal('hac-autosave-modal');
   openA11yConfirmModal({
     title: 'Limpar tudo (cache + canvas)?',
-    body: 'Apaga a sua documentação deste arquivo e remove do canvas o que você criou com o hac (selos, réplicas e o handoff). O trabalho de outros designers no mesmo arquivo não é afetado. Não dá para desfazer.',
+    body: 'Apaga a sua documentação deste arquivo e remove do canvas o que você criou com o hac (selos, réplicas e o handoff). O trabalho das outras pessoas que usam o arquivo não é afetado. Não dá para desfazer.',
     confirmLabel: 'Limpar tudo',
     onConfirm: _clearPluginCanvasAndCacheNow,
   });
