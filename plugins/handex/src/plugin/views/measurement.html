@@ -72,32 +72,6 @@
                ocupado no dia a dia); cabeçalho sempre visível com hint fixo em
                tooltip nativo (title), corpo (select + hint em texto) só
                aparece expandido. -->
-          <div data-frame-selector-card class="bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line rounded-2xl shadow-sm">
-            <button type="button" id="measure-frame-selector-toggle" onclick="toggleFrameSelectorCard('measure')"
-              aria-expanded="false" aria-controls="measure-frame-selector-body"
-              class="w-full flex items-center gap-2 p-3.5 text-left">
-              <i data-lucide="scan-line" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted shrink-0"></i>
-              <h4 id="measure-frame-selector-label" class="flex-1 text-[11px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Frames Mapeados</h4>
-              <span id="measure-frame-selector-alert" class="hidden w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" title="Nenhum frame selecionado — a medida ficará avulsa"></span>
-              <span class="shrink-0" title="Escolha a qual frame mapeado uma nova medida fica vinculada. Sem seleção, a medida fica avulsa (sem frame).">
-                <i data-lucide="help-circle" class="w-3.5 h-3.5 text-slate-300 dark:text-dark-muted block pointer-events-none"></i>
-              </span>
-              <i data-lucide="chevron-down" id="measure-frame-selector-chevron" class="w-3.5 h-3.5 text-gray-400 dark:text-dark-muted shrink-0 transition-transform"></i>
-            </button>
-            <div id="measure-frame-selector-body" class="hidden px-3.5 pb-3.5">
-              <div class="relative">
-                <select id="measure-frame-selector" onchange="setMeasureActiveFrame(this.value)"
-                  class="w-full appearance-none text-[12px] bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-dark-line rounded-xl pl-3 pr-9 py-2.5 text-slate-700 dark:text-white outline-none focus:border-[#005ca9]/50 transition-colors">
-                  <option value="">Sem vínculo (medida avulsa)</option>
-                </select>
-                <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-gray-500 dark:text-dark-muted absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-              </div>
-              <p id="measure-frame-selector-hint" class="text-[10px] text-slate-500 dark:text-dark-muted mt-2 leading-tight">
-                Selecione um frame para focá-lo no canvas e associar esta medida a ele.
-              </p>
-            </div>
-          </div>
-
           <!-- Results -->
           <div>
             <div class="flex items-center justify-end gap-3 mb-3">

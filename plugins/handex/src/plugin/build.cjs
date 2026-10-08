@@ -166,19 +166,78 @@ ${css}
           class="p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
           <i data-lucide="clipboard-list" class="w-4 h-4" aria-hidden="true"></i>
         </button>
-        <button id="btn-zoom-out" onclick="ensureExpanded(); zoomOut()" title="Diminuir escala" aria-label="Diminuir escala da interface"
-          class="hidden p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
-          <i data-lucide="zoom-out" class="w-5 h-5" aria-hidden="true"></i>
-        </button>
-        <button id="btn-zoom-in" onclick="ensureExpanded(); zoomIn()" title="Aumentar escala" aria-label="Aumentar escala da interface"
-          class="p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
-          <i data-lucide="zoom-in" class="w-5 h-5" aria-hidden="true"></i>
-        </button>
-        <button onclick="toggleTheme()" title="Alternar tema" aria-label="Alternar tema claro/escuro"
-          class="p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
-          <i data-lucide="sun" class="sun-icon w-5 h-5" aria-hidden="true"></i>
-          <i data-lucide="moon" class="moon-icon w-5 h-5 hidden" aria-hidden="true"></i>
-        </button>
+        <!-- Backup (2026-10-08, mesmo padrão do hac): baixar e restaurar o
+             projeto saíram do rodapé da home para este menu. Limpar dados
+             fica no modal de salvamento automático (rodapé). -->
+        <div class="relative">
+          <button type="button" id="btn-hx-backup-menu" onclick="ensureExpanded(); toggleHxBackupMenu()"
+            title="Backup do projeto" aria-label="Baixar ou restaurar backup do projeto" aria-haspopup="true" aria-expanded="false" aria-controls="hx-backup-menu"
+            class="p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
+            <i data-lucide="hard-drive-download" class="w-4 h-4" aria-hidden="true"></i>
+          </button>
+          <div id="hx-backup-menu" class="hidden absolute right-0 top-full mt-1 w-64 py-1.5 bg-white dark:bg-dark-surface rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line z-[1100]">
+            <button type="button" onclick="toggleHxBackupMenu(false); exportHandoffData()"
+              class="w-full flex items-start gap-2.5 px-3.5 py-2.5 text-[12px] font-semibold text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors text-left">
+              <i data-lucide="download" class="w-4 h-4 mt-0.5 text-slate-500 dark:text-dark-muted shrink-0" aria-hidden="true"></i>
+              <span class="min-w-0">
+                <span class="block">Baixar backup (.json)</span>
+                <span class="block text-[11px] font-normal text-slate-500 dark:text-dark-muted leading-snug">Guarda o projeto ou passa para outro designer.</span>
+              </span>
+            </button>
+            <button type="button" onclick="toggleHxBackupMenu(false); navigate('view-handoff-summary'); setTimeout(() => openModal('export-modal'), 50)"
+              class="w-full flex items-start gap-2.5 px-3.5 py-2.5 text-[12px] font-semibold text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors text-left">
+              <i data-lucide="file-text" class="w-4 h-4 mt-0.5 text-slate-500 dark:text-dark-muted shrink-0" aria-hidden="true"></i>
+              <span class="min-w-0">
+                <span class="block">Outras exportações</span>
+                <span class="block text-[11px] font-normal text-slate-500 dark:text-dark-muted leading-snug">Ficha em PDF, Markdown, briefing, contexto para IA.</span>
+              </span>
+            </button>
+            <div class="my-1 border-t border-gray-100 dark:border-dark-line"></div>
+            <button type="button" onclick="toggleHxBackupMenu(false); importHandoffData()"
+              class="w-full flex items-start gap-2.5 px-3.5 py-2.5 text-[12px] font-semibold text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors text-left">
+              <i data-lucide="upload" class="w-4 h-4 mt-0.5 text-slate-500 dark:text-dark-muted shrink-0" aria-hidden="true"></i>
+              <span class="min-w-0">
+                <span class="block">Restaurar backup (.json)</span>
+                <span class="block text-[11px] font-normal text-slate-500 dark:text-dark-muted leading-snug">Substitui a sua documentação atual neste arquivo.</span>
+              </span>
+            </button>
+          </div>
+        </div>
+        <!-- Personalização (2026-10-08, mesmo padrão do hac): escala da
+             interface, tema e espaçamento de texto (WCAG 2.2, 1.4.12) num menu
+             só, no lugar dos botões soltos de zoom e tema. -->
+        <div class="relative">
+          <button type="button" id="btn-hx-personalize" onclick="ensureExpanded(); toggleHxPersonalizeMenu()"
+            title="Personalização" aria-label="Personalização" aria-haspopup="true" aria-expanded="false" aria-controls="hx-personalize-menu"
+            class="p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
+            <i data-lucide="sliders-horizontal" class="w-5 h-5" aria-hidden="true"></i>
+          </button>
+          <div id="hx-personalize-menu" role="dialog" aria-label="Personalização" class="hidden absolute right-0 top-full mt-1 w-64 p-3 space-y-3 bg-white dark:bg-dark-surface rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line z-[1100]">
+            <p class="text-[12px] font-bold text-slate-800 dark:text-white">Personalização</p>
+            <div>
+              <p class="text-[11px] font-bold text-slate-500 dark:text-dark-muted mb-1.5" id="hx-pz-scale-label">Escala da interface</p>
+              <div class="grid grid-cols-3 gap-1" role="group" aria-labelledby="hx-pz-scale-label">
+                <button type="button" data-hx-scale="1" onclick="setUiScale(1)" class="hx-pz-opt">100%</button>
+                <button type="button" data-hx-scale="1.15" onclick="setUiScale(1.15)" class="hx-pz-opt">115%</button>
+                <button type="button" data-hx-scale="1.3" onclick="setUiScale(1.3)" class="hx-pz-opt">130%</button>
+              </div>
+            </div>
+            <div>
+              <p class="text-[11px] font-bold text-slate-500 dark:text-dark-muted mb-1.5" id="hx-pz-theme-label">Tema</p>
+              <div class="grid grid-cols-2 gap-1" role="group" aria-labelledby="hx-pz-theme-label">
+                <button type="button" data-hx-theme="light" onclick="setHxTheme('light')" class="hx-pz-opt">Claro</button>
+                <button type="button" data-hx-theme="dark" onclick="setHxTheme('dark')" class="hx-pz-opt">Escuro</button>
+              </div>
+            </div>
+            <label class="flex items-start justify-between gap-2 cursor-pointer">
+              <span>
+                <span class="block text-[11px] font-bold text-slate-500 dark:text-dark-muted">Espaçamento de texto</span>
+                <span class="block text-[11px] text-slate-500 dark:text-dark-muted leading-snug">Mais espaço entre linhas, letras e palavras</span>
+              </span>
+              <input type="checkbox" role="switch" id="hx-pz-text-spacing" onchange="setHxTextSpacing(this.checked)" class="hx-switch mt-0.5 shrink-0">
+            </label>
+          </div>
+        </div>
         <button onclick="toggleCollapse()" id="btn-collapse" aria-label="Minimizar plugin"
           title="Minimizar — clique no ícone para expandir novamente"
           class="p-1.5 hover:bg-light-line dark:hover:bg-dark-surface rounded-md transition-colors cursor-pointer text-slate-600 dark:text-dark-muted">
@@ -201,6 +260,21 @@ ${viewHandoffSummary}
 ${viewQuickSpec}
 ${modalsShared}
   </div>
+
+  <!-- Rodapé de salvamento automático (2026-10-08, mesmo padrão do hac):
+       sempre visível, mostra o estado real ('storage-saved'/'storage-save-failed')
+       e abre a orientação sobre salvamento e limpeza (autosave-modal).
+       Oculto com o plugin recolhido e na captura do Detalhar UI (plugin.css). -->
+  <footer id="hx-autosave-bar" class="shrink-0 h-8 border-t border-gray-100 dark:border-dark-line bg-white dark:bg-dark-surface">
+    <button type="button" id="hx-autosave-btn" onclick="openModal('autosave-modal')" aria-haspopup="dialog"
+      aria-label="Salvamento automático ativo. Abrir orientações sobre salvamento e limpeza"
+      class="w-full h-full flex items-center gap-1.5 px-4 text-[11px] hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
+      <span id="hx-autosave-icon" class="shrink-0 flex items-center text-green-600 dark:text-green-400" aria-hidden="true"><i data-lucide="cloud-check" class="w-3.5 h-3.5"></i></span>
+      <span id="hx-autosave-text" class="flex-1 min-w-0 text-left truncate font-semibold text-slate-600 dark:text-dark-muted">Salvamento automático ativo</span>
+      <span class="shrink-0 flex items-center gap-0.5 font-bold text-[#005ca9] dark:text-blue-300">Como funciona <i data-lucide="chevron-up" class="w-3 h-3" aria-hidden="true"></i></span>
+    </button>
+    <span id="hx-autosave-live" class="sr-only" role="status" aria-live="polite"></span>
+  </footer>
 
   <!--
     Plugin runtime — concatenado em um único <script> para que todos os

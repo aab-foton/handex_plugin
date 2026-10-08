@@ -65,47 +65,46 @@ const ONBOARDING_TOOLS = {
   },
   handoff: {
     view: 'view-frames',
-    title: 'Escanear Tokens',
+    title: 'Escanear Frames',
     icon: 'scan-line',
     color: '#006480',
     format: 'stepper',
     docUrl: 'https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=117-342',
-    purpose: 'Escaneia o frame e compara cores, tipografia e componentes com o Design System CAIXA. Você revisa os desvios e marca o que o dev precisa construir.',
+    purpose: 'Escaneei sua estrutura: revise os tokens e amplie o alinhamento com o DSC. O plugin lê os tokens das camadas internas do frame e mostra o que vem pronto da lib, o que está fora do padrão e o que precisa de revisão. Você justifica os desvios e marca o que o dev precisa construir.',
     steps: [
       { text: 'Selecione um frame no canvas e clique em <strong>+ Escanear Frame</strong>.' },
       { text: 'Expanda o item para ver o token; props desligadas ficam em <strong>Mostrar N inativas</strong>.' },
       { text: 'No que o dev precisa <strong>construir</strong>, ligue <strong>Vai para a Ficha</strong>; use <strong>Detalhamento completo</strong> se ele precisar de mais.' },
       { text: 'Declare a <strong>Conformidade DSC</strong> e justifique por escrito os desvios.' },
-      { text: 'Se o frame é um componente inédito, ligue <strong>Novo Componente</strong>: os itens personalizados já saem com <strong>Vai para a Ficha</strong> ligado, e você desmarca item a item.' }
+      { text: 'Se o frame documenta um componente não existente no DSC, ligue <strong>Novo Componente</strong>: os itens personalizados já saem com <strong>Vai para a Ficha</strong> ligado, e você desmarca item a item.' }
     ]
   },
   quickSpec: {
     view: 'view-quick-spec',
-    title: 'Inserir Anotações',
+    title: 'Detalhar UI',
     icon: 'zap',
     color: '#216e62',
     format: 'stepper',
-    purpose: 'Mostra os valores reais de um elemento (cor, espaçamento, tipografia, medidas) para o dev sem DevMode. É consulta pontual e não entra na Ficha.',
+    purpose: 'Reúne toda a informação visual da interface de um elemento (cores, espaçamentos, auto layout, tipografia, efeitos, tokens e até o CSS, tudo o que o Dev Mode mostra) em cards no canvas, para o dev que não tem Dev Mode. A informação visual fica só nesses cards; não entra na Ficha.',
     steps: [
-      { text: 'Precisa de regra, comportamento ou exceção? Use <strong>Inserir Especificações</strong>.' },
+      { text: 'Precisa de regra de negócio, comportamento, dados da API, exceção ou link? Use <strong>Detalhar Fluxos/Jornadas</strong>.' },
       { text: 'Clique em <strong>Escanear</strong>, escolha as propriedades e <strong>segure Shift e clique</strong> nos elementos no canvas.' },
       { text: 'Clique em <strong>Concluir</strong> e expanda os itens para ver os valores, com token e biblioteca quando houver.' },
-      { text: 'Use <strong>Inserir no canvas</strong> para deixar um card ao lado de cada elemento. A <strong>Observação</strong> fica só no card; para levá-la à Ficha, use <strong>Converter em Especificação</strong>: a anotação vira uma especificação e a observação vira a nota.' }
+      { text: 'Use <strong>Inserir no canvas</strong> para deixar um card ao lado de cada elemento. A <strong>Observação</strong> fica só no card; para levá-la à Ficha, use <strong>Levar para Detalhar Fluxos/Jornadas</strong>: o card de UI é substituído por uma especificação e a observação vira a nota.' }
     ]
   },
   specs: {
     view: 'view-specifications',
-    title: 'Inserir Especificações',
+    title: 'Detalhar Fluxos/Jornadas',
     icon: 'tag',
     color: '#00437a',
     format: 'stepper',
     docUrl: 'https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=117-431',
-    purpose: 'Registra o que o dev precisa saber e implementar sobre um elemento: regra, comportamento, exceção. Entra na Ficha e fica ancorada no elemento do canvas.',
+    purpose: 'Registra toda a informação técnica do projeto que o dev precisa saber e implementar: regra de negócio, comportamento, dados da API, informação extra, exceções e links. Entra na Ficha e fica ancorada no elemento do canvas.',
     steps: [
-      { text: 'Só precisa dos valores do elemento? Use <strong>Inserir Anotações</strong>.' },
-      { text: 'Itens fora do padrão no scan aparecem em <strong>Vindos do scan</strong> para você especificar ou dispensar.' },
+      { text: 'Só precisa dos valores visuais do elemento (cores, medidas, tokens)? Use <strong>Detalhar UI</strong>.' },
       { text: 'Selecione um elemento no canvas e clique no <strong>botão +</strong> no topo.' },
-      { text: 'Defina a <strong>Tag</strong> e a <strong>Categoria</strong>; nota e propriedades são opcionais.' },
+      { text: 'Defina a <strong>Tag</strong> e a <strong>Categoria</strong> e escreva a nota; link e exceção são opcionais.' },
       { text: 'Arraste a prévia até onde quiser e clique em <strong>Usar esta posição</strong> (ou em Pular).' }
     ],
     // Conteúdo migrado do popover "Tipo de especificação" (circle-help do
@@ -155,7 +154,7 @@ const ONBOARDING_TOOLS = {
   },
   fluxos: {
     view: 'view-flows',
-    title: 'Fluxos de Tela',
+    title: 'Conectar Telas',
     icon: 'git-branch',
     color: '#a65e00',
     format: 'single',
@@ -283,7 +282,7 @@ function _onboardingPurposeHTML(tool) {
 
 // Seção de referência rápida, sempre visível abaixo dos steps (não é mais
 // um step do stepper — não força navegação). Migrada dos antigos popovers
-// "?" de Fluxos de Tela e Anotar Medidas, únicas ferramentas com esse
+// "?" de Conectar Telas (antes Fluxos de Tela) e Anotar Medidas, únicas ferramentas com esse
 // conteúdo (ver ONBOARDING_TOOLS.fluxos/medidas.reference). Suporta dois
 // formatos: `items` (lista ícone + texto, o caso comum) ou `html` bruto
 // (para conteúdo rico demais pro formato item-a-item — nenhuma ferramenta

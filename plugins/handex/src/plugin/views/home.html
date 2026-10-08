@@ -91,8 +91,8 @@
           <i data-lucide="scan-line" class="w-5 h-5 text-ceu-600 dark:text-ceu-400" aria-hidden="true"></i>
         </div>
         <div class="min-w-0">
-          <p class="font-extrabold text-[11px] tracking-tight text-slate-800 dark:text-white leading-tight">Escanear Tokens</p>
-          <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-0.5 leading-tight">Lê tokens e valida o Design System</p>
+          <p class="font-extrabold text-[11px] tracking-tight text-slate-800 dark:text-white leading-tight">Escanear Frames</p>
+          <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-0.5 leading-tight">Revise os tokens e amplie o alinhamento com o DSC</p>
         </div>
       </button>
       <div class="absolute top-3 left-3 right-3 flex items-start justify-start gap-1 pointer-events-none">
@@ -106,26 +106,26 @@
       </div>
     </div>
 
-    <!-- Inserir Anotações -- módulo isolado (ver quick-spec.js/quick-spec.html):
-         o essencial de um elemento para o dev sem DevMode (valores + token/
-         biblioteca), sem conformidade DSC, fora da Ficha. Badge de check conta os
-         cards de Anotações que estão no canvas (2026-10-05). -->
+    <!-- Detalhar UI (antes "Inserir Anotações") -- módulo isolado (ver quick-spec.js/quick-spec.html):
+         informação visual da interface (valores + token/biblioteca) para o dev sem DevMode,
+         sem conformidade DSC, fora da Ficha. Badge de check conta os
+         cards de Detalhar UI que estão no canvas (2026-10-05). -->
     <div data-home-card-id="quick-spec" draggable="true"
       class="home-card-draggable relative group/card"
       ondragstart="_onHomeCardDragStart(event)" ondragover="_onHomeCardDragOver(event)"
       ondrop="_onHomeCardDrop(event)" ondragend="_onHomeCardDragEnd(event)">
-      <button onclick="navigate('view-quick-spec')" aria-label="Inserir Anotações"
+      <button onclick="navigate('view-quick-spec')" aria-label="Detalhar UI"
         class="flex flex-col items-start justify-center gap-1.5 p-3 w-full h-full bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line hover:border-turquesa-400 dark:hover:border-turquesa-500 hover:bg-turquesa-100 dark:hover:bg-turquesa-900/40 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all focus:ring-2 focus:ring-turquesa-300/30 outline-none group text-left">
         <div class="w-10 h-10 flex items-center justify-center bg-turquesa-50 dark:bg-turquesa-900/20 rounded-xl shrink-0">
           <i data-lucide="zap" class="w-5 h-5 text-turquesa-600 dark:text-turquesa-400" aria-hidden="true"></i>
         </div>
         <div class="min-w-0">
-          <p class="font-extrabold text-[11px] tracking-tight text-slate-800 dark:text-white leading-tight">Inserir Anotações</p>
-          <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-0.5 leading-tight">O essencial para o dev sem DevMode, fora da Ficha</p>
+          <p class="font-extrabold text-[11px] tracking-tight text-slate-800 dark:text-white leading-tight">Detalhar UI</p>
+          <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-0.5 leading-tight">Informação visual da interface, fora da Ficha</p>
         </div>
       </button>
       <div class="absolute top-3 left-3 right-3 flex items-start justify-start gap-1 pointer-events-none">
-        <div class="home-card-check-badge hidden w-4.5 h-4.5 flex items-center justify-center bg-green-500 rounded-full shrink-0" title="Anotações no canvas" aria-label="Anotações no canvas">
+        <div class="home-card-check-badge hidden w-4.5 h-4.5 flex items-center justify-center bg-green-500 rounded-full shrink-0" title="Detalhes de UI no canvas" aria-label="Detalhes de UI no canvas">
           <i data-lucide="check" class="w-3 h-3 text-white" aria-hidden="true"></i>
         </div>
         <span class="home-card-check-text hidden text-[9px] leading-tight font-bold text-left text-st-ok dark:text-st-ok-dark"></span>
@@ -135,19 +135,19 @@
       </div>
     </div>
 
-    <!-- Especificações -->
+    <!-- Detalhar Fluxos/Jornadas (antes "Inserir Especificações") -->
     <div data-home-card-id="specs" draggable="true"
       class="home-card-draggable relative group/card"
       ondragstart="_onHomeCardDragStart(event)" ondragover="_onHomeCardDragOver(event)"
       ondrop="_onHomeCardDrop(event)" ondragend="_onHomeCardDragEnd(event)">
-      <button onclick="navigate('view-specifications')" aria-label="Especificações"
+      <button onclick="navigate('view-specifications')" aria-label="Detalhar Fluxos/Jornadas"
         class="flex flex-col items-start justify-center gap-1.5 p-3 w-full h-full bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all focus:ring-2 focus:ring-blue-300/30 outline-none group text-left">
         <div class="w-10 h-10 flex items-center justify-center bg-blue-50 dark:bg-blue-900/20 rounded-xl shrink-0">
           <i data-lucide="tag" class="w-5 h-5 text-blue-600 dark:text-blue-400" aria-hidden="true"></i>
         </div>
         <div class="min-w-0">
-          <p class="font-extrabold text-[11px] tracking-tight text-slate-800 dark:text-white leading-tight">Inserir Especificações</p>
-          <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-0.5 leading-tight">Aprofunda com notas e exceções e entra na Ficha</p>
+          <p class="font-extrabold text-[11px] tracking-tight text-slate-800 dark:text-white leading-tight">Detalhar Fluxos/Jornadas</p>
+          <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-0.5 leading-tight">Informação técnica do projeto, entra na Ficha</p>
         </div>
       </button>
       <div class="absolute top-3 left-3 right-3 flex items-start justify-start gap-1 pointer-events-none">
@@ -187,18 +187,18 @@
       </div>
     </div>
 
-    <!-- Fluxos -->
+    <!-- Conectar Telas (antes "Fluxos de Tela") -->
     <div data-home-card-id="flows" draggable="true"
       class="home-card-draggable relative group/card"
       ondragstart="_onHomeCardDragStart(event)" ondragover="_onHomeCardDragOver(event)"
       ondrop="_onHomeCardDrop(event)" ondragend="_onHomeCardDragEnd(event)">
-      <button onclick="navigate('view-flows')" aria-label="Fluxos"
+      <button onclick="navigate('view-flows')" aria-label="Conectar Telas"
         class="flex flex-col items-start justify-center gap-1.5 p-3 w-full h-full bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line hover:border-orange-400 dark:hover:border-orange-500 hover:bg-orange-100 dark:hover:bg-orange-900/40 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all focus:ring-2 focus:ring-orange-300/30 outline-none group text-left">
         <div class="w-10 h-10 flex items-center justify-center bg-orange-50 dark:bg-orange-900/20 rounded-xl shrink-0">
           <i data-lucide="git-branch" class="w-5 h-5 text-orange-800 dark:text-orange-400" aria-hidden="true"></i>
         </div>
         <div class="min-w-0">
-          <p class="font-extrabold text-[11px] tracking-tight text-slate-800 dark:text-white leading-tight">Fluxos de Tela</p>
+          <p class="font-extrabold text-[11px] tracking-tight text-slate-800 dark:text-white leading-tight">Conectar Telas</p>
           <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-0.5 leading-tight">Mapeia conexões entre telas e estados</p>
         </div>
       </button>
@@ -223,33 +223,9 @@
       Gerar Ficha de Handoff
     </button>
 
-    <div class="flex gap-2">
-      <!-- Baixar/Limpar ficam desabilitados sem nenhum insumo documentado
-           (frames/specs/medidas/fluxos) -- não há o que exportar nem o que
-           apagar. Estado sincronizado por updateHomeFooterButtonsState()
-           (core.js), chamada ao entrar na home e a cada mudança de dados.
-           Importar nunca desabilita: é sempre uma ação válida, mesmo com o
-           projeto vazio. disabled:opacity-40 é o padrão do Design System do
-           Handex (ver docs/site/design-system.html, seção Botões). -->
-      <button id="btn-home-export" onclick="exportHandoffData()" aria-label="Baixar backup completo em JSON"
-        title="Baixar backup completo em JSON — mesmo conteúdo salvo, para restaurar ou compartilhar o projeto depois"
-        class="flex-1 min-w-0 min-h-[40px] flex items-center justify-center gap-1.5 px-2 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl text-[11px] font-bold text-slate-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 outline-none transition-all shadow-sm disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-dark-surface">
-        <i data-lucide="download" class="w-4 h-4 shrink-0" aria-hidden="true"></i>
-        <span class="truncate">Baixar</span>
-      </button>
-      <button onclick="importHandoffData()" aria-label="Importar dados de um arquivo JSON"
-        title="Importar dados de um arquivo JSON — restaura especificações, medidas e fluxos de um backup"
-        class="flex-1 min-w-0 min-h-[40px] flex items-center justify-center gap-1.5 px-2 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl text-[11px] font-bold text-slate-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-slate-800 outline-none transition-all shadow-sm">
-        <i data-lucide="upload" class="w-4 h-4 shrink-0" aria-hidden="true"></i>
-        <span class="truncate">Importar</span>
-      </button>
-      <button id="btn-home-clear" onclick="clearAllData()" aria-label="Limpar todos os dados do projeto"
-        title="Limpar todos os dados"
-        class="flex-1 min-w-0 min-h-[40px] flex items-center justify-center gap-1.5 px-2 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line rounded-2xl text-[11px] font-bold text-slate-500 dark:text-dark-muted hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-200 dark:hover:border-red-800/40 hover:text-red-500 outline-none transition-all shadow-sm disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-dark-surface disabled:hover:border-gray-200 dark:disabled:hover:border-dark-line disabled:hover:text-slate-500 dark:disabled:hover:text-dark-muted">
-        <i data-lucide="trash-2" class="w-4 h-4 shrink-0" aria-hidden="true"></i>
-        <span class="truncate">Limpar</span>
-      </button>
-    </div>
+    <!-- Baixar, Importar e Limpar saíram daqui em 2026-10-08 (mesmo padrão do
+         hac): backup e restauração no menu de backup do header; limpar no
+         modal de salvamento automático (rodapé). -->
   </div>
 
 </main>

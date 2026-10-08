@@ -21,7 +21,8 @@
     window.onmessage = (event) => {
       const msg = event.data.pluginMessage;
       if (!msg) return;
-      
+      if (typeof _canvasLoadingCheck === 'function') _canvasLoadingCheck(msg.type);
+
       if (msg.type === 'init-plugin') {
         window._handexRefSkeletonSent = !!msg.hasRefSkeleton;
         window._handexLegacyLibHint = !!msg.legacyLibHintEnabled;
@@ -79,6 +80,7 @@
           if (typeof _restoreStep1Fields === 'function') _restoreStep1Fields();
         }
 
+        if (msg.legacyCandidate && typeof openLegacyProjectModal === 'function') openLegacyProjectModal(msg.legacyCandidate);
         if (typeof setOnboardingSeenState === 'function') setOnboardingSeenState(msg.onboardingSeen);
         // Home é a view ativa por padrão no boot (não passa por navigate()
         // na primeira carga) -- dispara o banner aqui, só depois do estado
@@ -105,11 +107,13 @@
         // equipe (papel Designer), uma única vez por arquivo — a flag garante que,
         // se o usuário remover esse membro de propósito depois, ele não "ressuscita"
         // sozinho na próxima abertura do plugin.
+        // 2026-10-08: vale também quando a equipe já tem outros papéis mas
+        // nenhum Designer com nome -- o designer é sempre quem usa o plugin.
+        const _hasNamedDesigner = (handoffData.step1.equipe || []).some(m => (m.papel || '').toLowerCase() === 'designer' && (m.nome || '').trim());
         if (msg.currentUser && msg.currentUser.name &&
-            !handoffData.step1._autoTeamAdded &&
-            (!handoffData.step1.equipe || handoffData.step1.equipe.length === 0) &&
-            typeof addTeamMember === 'function') {
-          addTeamMember('Designer', msg.currentUser.name, '', true);
+            !handoffData.step1._autoTeamAdded && !_hasNamedDesigner &&
+            typeof qpUpdateDesigner === 'function') {
+          qpUpdateDesigner('nome', msg.currentUser.name.slice(0, 80));
           handoffData.step1._autoTeamAdded = true;
           if (typeof saveToStorage === 'function') saveToStorage();
         }
@@ -223,7 +227,7 @@
       }
 
       if (msg.type === 'annotations-added') {
-        showToast(`Anotações criadas`);
+        showToast(`Detalhar UI: cards criados`);
       }
 
       if (msg.type === 'toast') {
@@ -264,6 +268,10 @@
           if (tn && tn !== 'Tela removida' && f.targetName !== tn) { f.targetName = tn; changed = true; }
         });
         if (changed) saveToStorage();
+      }
+      if (msg.type === 'scan-depth-check') {
+        if (typeof handleScanDepthCheck === 'function') handleScanDepthCheck(msg);
+        return;
       }
       if (msg.type === 'quick-spec-children-read') {
         if (typeof handleQuickSpecChildrenRead === 'function') handleQuickSpecChildrenRead(msg);
@@ -316,7 +324,7 @@
         if (c.spec) parts.push(`${c.spec} ${c.spec > 1 ? 'especificações' : 'especificação'}`);
         if (c.medida) parts.push(`${c.medida} medida${c.medida > 1 ? 's' : ''}`);
         if (c.fluxo) parts.push(`${c.fluxo} fluxo${c.fluxo > 1 ? 's' : ''}`);
-        if (c.quickspec) parts.push(`${c.quickspec} card${c.quickspec > 1 ? 's' : ''} de Anotações`);
+        if (c.quickspec) parts.push(`${c.quickspec} card${c.quickspec > 1 ? 's' : ''} de Detalhar UI`);
         showToast(parts.length ? `${parts.join(', ')} removido(s) do canvas.` : 'Nenhum elemento correspondente encontrado no canvas.');
         return;
       }
@@ -335,60 +343,34 @@
         showToast((_none ? 'Nenhuma medida criada. ' : 'Algumas medidas não foram criadas. ') + _lines.slice(0, 3).join(' · ') + (_lines.length > 3 ? ` · +${_lines.length - 3}` : ''), _none ? 'error' : 'warning');
       }
       if (msg.type === "measurements-applied") {
-        const _mFrame = activeFrameId ? getFrame(activeFrameId) : null;
-        console.log('[Handex medidas] applied', { n: (msg.data || []).length, activeFrameId, frameFound: !!_mFrame });
-        if (activeFrameId && !_mFrame) activeFrameId = null;
-        if (activeFrameId) {
-          const frame = _mFrame;
-          if (frame) {
-            frame.measurements = (frame.measurements || []).concat(msg.data);
-            const maxNum = frame.measurements.reduce((max, m) => Math.max(max, m.number || 0), 0);
-            frame.nextMeasurementNumber = maxNum + 1;
-            renderMeasurementsResults(frame.measurements, activeFrameId);
-            if (typeof renderAllMeasurements === 'function') renderAllMeasurements();
-            if (typeof showFrameSection === 'function') showFrameSection(activeFrameId, 'medidas');
-            setTimeout(() => {
-              const list = document.getElementById(`measurements-list-${activeFrameId}`);
-              const last = list && list.lastElementChild;
-              if (last) autoScrollToNewItem('handoff-scroll-container', last);
-            }, 100);
-          }
+        // Medida vai para a especificação escolhida (botão do card ou lista do
+        // modal) ou fica solta; nunca para frame escaneado (2026-10-07).
+        const _spec = window._measureTargetSpecId && typeof _allSpecsUnique === 'function'
+          ? _allSpecsUnique().find(s => s.id === window._measureTargetSpecId) : null;
+        window._measureTargetSpecId = null;
+        if (_spec) {
+          _spec.measurements = (_spec.measurements || []).concat(msg.data || []);
+          if (typeof saveSpecsToStorage === 'function') saveSpecsToStorage();
+          if (typeof renderSpecsList === 'function') renderSpecsList();
         } else {
-          handoffData.measurements = (handoffData.measurements || []).concat(msg.data);
+          handoffData.measurements = (handoffData.measurements || []).concat(msg.data || []);
           lastMeasurements = handoffData.measurements;
-          const maxNum = handoffData.measurements.reduce((max, m) => Math.max(max, m.number || 0), 0);
-          handoffData.nextMeasurementNumber = maxNum + 1;
-          nextMeasurementNumber = handoffData.nextMeasurementNumber;
-          renderAllMeasurements();
         }
+        const _allNums = (typeof _getAllMeasurements === 'function' ? _getAllMeasurements() : (handoffData.measurements || [])).map(m => m.number || 0);
+        handoffData.nextMeasurementNumber = (_allNums.length ? Math.max(..._allNums) : 0) + 1;
+        nextMeasurementNumber = handoffData.nextMeasurementNumber;
+        renderAllMeasurements();
         saveToStorage();
         if (window._toastSaved) _toastSaved();
       }
 
       if (msg.type === "spec-created") {
         const newSpec = Object.assign({ pendingConfirmation: true }, msg.spec || msg.data);
-        // activeFrameId é estado do módulo, nunca resetado por navegação --
-        // pode sobreviver "fantasma" apontando pra um frame já excluído
-        // (ou de outro arquivo .fig). Sem este else, a spec não caía em
-        // nenhum array (nem frame.createdSpecs, nem createdSpecs global) e
-        // sumia silenciosamente da lista, mesmo com toast de sucesso.
-        const frame = activeFrameId ? getFrame(activeFrameId) : null;
-        if (frame) {
-          if (!frame.createdSpecs) frame.createdSpecs = [];
-          frame.createdSpecs.push(newSpec);
-          renderSpecsListForFrame(activeFrameId);
-          if (typeof syncAndRenderSpecs === 'function') syncAndRenderSpecs();
-          if (typeof showFrameSection === 'function') showFrameSection(activeFrameId, 'specs');
-          setTimeout(() => {
-            const list = document.getElementById(`specs-list-${activeFrameId}`);
-            const last = list && list.lastElementChild;
-            if (last) autoScrollToNewItem('handoff-scroll-container', last);
-          }, 100);
-        } else {
-          if (activeFrameId) activeFrameId = null;
-          createdSpecs.push(newSpec);
-          renderSpecsList();
-        }
+        // Especificação é independente do Escanear Tokens (2026-10-07,
+        // decisão do Augusto: "se eu quiser criar spec, eu seleciono e crio"):
+        // nunca é vinculada a frame escaneado, vai sempre para a lista própria.
+        createdSpecs.push(newSpec);
+        renderSpecsList();
         saveSpecsToStorage();
         if (typeof refreshSpecOwners === 'function') refreshSpecOwners();
         if (window._toastSaved) _toastSaved();
@@ -398,7 +380,7 @@
         // Express original do canvas -- cancelar o formulário no meio do
         // caminho nunca chega até aqui, então o Express original permanece
         // intacto nesse caso.
-        if (typeof _quickSpecFinishPendingConversion === 'function') _quickSpecFinishPendingConversion();
+        if (typeof _quickSpecFinishPendingConversion === 'function') _quickSpecFinishPendingConversion(newSpec);
       }
 
       if (msg.type === "spec-locked") {
@@ -721,17 +703,18 @@
         window._pendingTokensFichaInsert = false;
         window._pendingCreateHandoff = false;
 
-        const _proceed = (includeAllFrames) => {
-          if (_pendingTokens && typeof _sendInsertFichaSection === 'function') _sendInsertFichaSection('tokens', includeAllFrames);
-          else if (_pendingCreate && typeof _sendCreateHandoff === 'function') _sendCreateHandoff(includeAllFrames);
+        const _proceed = (includeAllFrames, excludeFrameIds) => {
+          if (_pendingTokens && typeof _sendInsertFichaSection === 'function') _sendInsertFichaSection('tokens', includeAllFrames, excludeFrameIds || []);
+          else if (_pendingCreate && typeof _sendCreateHandoff === 'function') _sendCreateHandoff(includeAllFrames, excludeFrameIds || []);
         };
 
-        if (!msg.hasAnyFrame || msg.hasRelevantFrame) {
-          _proceed(false);
-        } else if (typeof openFramesRelevanceModal === 'function') {
-          openFramesRelevanceModal(_proceed);
+        // 2026-10-08: pergunta, frame a frame, se os frames sem nada a
+        // construir entram na Ficha (ver openFramesRelevanceModal, handoff.js).
+        const _optional = typeof _framesWithoutBuild === 'function' ? _framesWithoutBuild() : [];
+        if (!msg.hasAnyFrame || _optional.length === 0 || typeof openFramesRelevanceModal !== 'function') {
+          _proceed(false, []);
         } else {
-          _proceed(false);
+          openFramesRelevanceModal(_proceed, _optional);
         }
         return;
       }
@@ -743,7 +726,7 @@
       // insertSectionInFicha (handoff.js).
       if (msg.type === 'ficha-section-inserted' || msg.type === 'ficha-section-insert-error' || msg.type === 'ficha-section-needs-full-create') {
         const _btnKeyMap = { tokens: 'tokens', specs: 'specs', medidas: 'measurements', fluxos: 'flows' };
-        const _labelMap = { tokens: 'Tokens', specs: 'Especificações', medidas: 'Medidas', fluxos: 'Fluxos' };
+        const _labelMap = { tokens: 'Tokens', specs: 'Fluxos/Jornadas', medidas: 'Medidas', fluxos: 'Conexões entre telas' };
         const btnKey = _btnKeyMap[msg.section] || msg.section;
         const btn = document.getElementById('btn-insert-ficha-' + btnKey);
         const _restoreButton = () => {
@@ -778,7 +761,24 @@
         return;
       }
 
+      if (msg.type === 'storage-saved') {
+        if (window._setAutosaveState) _setAutosaveState('saved');
+        return;
+      }
+
+      // Registro antigo migrado (ou recusado) -- recarrega o estado deste
+      // arquivo/designer pelo mesmo caminho da abertura do plugin.
+      if (msg.type === 'legacy-project-answered') {
+        if (msg.accepted) {
+          showToast('Projeto restaurado neste arquivo.', 'success');
+          parent.postMessage({ pluginMessage: { type: 'ui-ready' } }, '*');
+        }
+        return;
+      }
+
       if (msg.type === 'storage-save-failed') {
+        window._autosaveFailedAt = Date.now();
+        if (window._setAutosaveState) _setAutosaveState('error');
         const _now = Date.now();
         if (!window._lastStorageFailToast || _now - window._lastStorageFailToast > 15000) {
           window._lastStorageFailToast = _now;

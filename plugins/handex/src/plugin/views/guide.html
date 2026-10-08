@@ -37,7 +37,7 @@
           </div>
         </div>
 
-        <!-- 2. Escanear Tokens -->
+        <!-- 2. Escanear Frames -->
         <div class="border border-gray-100 dark:border-dark-line rounded-2xl overflow-hidden shadow-sm">
           <button onclick="var b=this.nextElementSibling;b.classList.toggle('hidden');var c=this.querySelector('.acc-chev');c.classList.toggle('rotate-180');c.classList.toggle('text-[#005ca9]');c.classList.toggle('dark:text-blue-300')"
             class="w-full flex items-center justify-between p-3.5 bg-white dark:bg-dark-surface hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors text-left">
@@ -45,19 +45,19 @@
               <div class="w-6 h-6 rounded-xl bg-ceu-50 dark:bg-ceu-900/20 flex items-center justify-center shrink-0">
                 <i data-lucide="scan-line" class="w-3.5 h-3.5 text-ceu-600 dark:text-ceu-400" aria-hidden="true"></i>
               </div>
-              <span class="text-[12px] font-bold text-slate-800 dark:text-white">Escanear Tokens</span>
+              <span class="text-[12px] font-bold text-slate-800 dark:text-white">Escanear Frames</span>
             </div>
             <i data-lucide="chevron-down" class="acc-chev w-3.5 h-3.5 text-slate-500 dark:text-dark-muted transition-transform duration-200 shrink-0" aria-hidden="true"></i>
           </button>
           <div class="hidden px-4 pb-4 pt-2 bg-white dark:bg-dark-surface border-t border-gray-50 dark:border-dark-line">
-            <p class="text-[11px] text-slate-700 dark:text-white leading-relaxed">Escaneia o frame e compara cores, tipografia e componentes com o Design System CAIXA. Você revisa os desvios e marca o que o dev precisa construir.</p>
+            <p class="text-[11px] text-slate-700 dark:text-white leading-relaxed">Escaneei sua estrutura: revise os tokens e amplie o alinhamento com o DSC. O plugin lê os tokens das camadas internas do frame e mostra o que vem pronto da lib, o que está fora do padrão e o que precisa de revisão. Você justifica os desvios e marca o que o dev precisa construir.</p>
             <a href="https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=117-342" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 mt-2 text-[10px] font-bold text-ceu-600 dark:text-ceu-400">
               <i data-lucide="book-open" class="w-3 h-3 shrink-0" aria-hidden="true"></i> Ver documentação completa
             </a>
           </div>
         </div>
 
-        <!-- 3. Inserir Anotações -->
+        <!-- 3. Detalhar UI (antes "Inserir Anotações") -->
         <div class="border border-gray-100 dark:border-dark-line rounded-2xl overflow-hidden shadow-sm">
           <button onclick="var b=this.nextElementSibling;b.classList.toggle('hidden');var c=this.querySelector('.acc-chev');c.classList.toggle('rotate-180');c.classList.toggle('text-[#005ca9]');c.classList.toggle('dark:text-blue-300')"
             class="w-full flex items-center justify-between p-3.5 bg-white dark:bg-dark-surface hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors text-left">
@@ -65,17 +65,17 @@
               <div class="w-6 h-6 rounded-xl bg-turquesa-50 dark:bg-turquesa-900/20 flex items-center justify-center shrink-0">
                 <i data-lucide="zap" class="w-3.5 h-3.5 text-turquesa-600 dark:text-turquesa-400" aria-hidden="true"></i>
               </div>
-              <span class="text-[12px] font-bold text-slate-800 dark:text-white">Inserir Anotações</span>
+              <span class="text-[12px] font-bold text-slate-800 dark:text-white">Detalhar UI</span>
             </div>
             <i data-lucide="chevron-down" class="acc-chev w-3.5 h-3.5 text-slate-500 dark:text-dark-muted transition-transform duration-200 shrink-0" aria-hidden="true"></i>
           </button>
           <div class="hidden px-4 pb-4 pt-2 bg-white dark:bg-dark-surface border-t border-gray-50 dark:border-dark-line">
-            <p class="text-[11px] text-slate-700 dark:text-white leading-relaxed">Mostra os valores reais de um elemento (cor, espaçamento, tipografia, medidas) para o dev sem DevMode. É consulta pontual e não entra na Ficha. A Observação de cada elemento fica só no card; para levá-la à Ficha, converta em Especificação. Para componentes compostos, ligue "Incluir filhos diretos" no item: lê só o 1º nível, até 8 filhos.</p>
-            <p class="text-[11px] text-slate-700 dark:text-white leading-relaxed mt-2"><strong>Quando usar:</strong> se o dev também precisa de regra, comportamento ou exceção, use Inserir Especificações (dá para converter uma anotação em especificação depois).</p>
+            <p class="text-[11px] text-slate-700 dark:text-white leading-relaxed">Reúne toda a informação visual da interface de um elemento (cores, espaçamentos, auto layout, tipografia, efeitos, tokens e até o CSS, tudo o que o Dev Mode mostra) em cards no canvas, para o dev que não tem Dev Mode. A informação visual fica só nesses cards e não entra na Ficha. A Observação de cada elemento fica só no card; para levá-la à Ficha, use "Levar para Detalhar Fluxos/Jornadas". Para componentes compostos, ligue "Incluir camadas internas" no item: lê as camadas internas diretas; quando há muitas, o plugin lista todas as camadas encontradas e pergunta se você quer a leitura Padrão ou a Completa.</p>
+            <p class="text-[11px] text-slate-700 dark:text-white leading-relaxed mt-2"><strong>Quando usar:</strong> tudo o que for informação visual da interface (valores, tokens, propriedades do Dev Mode) fica aqui. Se o dev também precisa de regra de negócio, comportamento, dados da API ou exceção, use Detalhar Fluxos/Jornadas (dá para levar um card de UI para lá depois).</p>
           </div>
         </div>
 
-        <!-- 3.5. Inserir Especificações -->
+        <!-- 3.5. Detalhar Fluxos/Jornadas (antes "Inserir Especificações") -->
         <div class="border border-gray-100 dark:border-dark-line rounded-2xl overflow-hidden shadow-sm">
           <button onclick="var b=this.nextElementSibling;b.classList.toggle('hidden');var c=this.querySelector('.acc-chev');c.classList.toggle('rotate-180');c.classList.toggle('text-[#005ca9]');c.classList.toggle('dark:text-blue-300')"
             class="w-full flex items-center justify-between p-3.5 bg-white dark:bg-dark-surface hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors text-left">
@@ -83,13 +83,13 @@
               <div class="w-6 h-6 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0">
                 <i data-lucide="tag" class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" aria-hidden="true"></i>
               </div>
-              <span class="text-[12px] font-bold text-slate-800 dark:text-white">Inserir Especificações</span>
+              <span class="text-[12px] font-bold text-slate-800 dark:text-white">Detalhar Fluxos/Jornadas</span>
             </div>
             <i data-lucide="chevron-down" class="acc-chev w-3.5 h-3.5 text-slate-500 dark:text-dark-muted transition-transform duration-200 shrink-0" aria-hidden="true"></i>
           </button>
           <div class="hidden px-4 pb-4 pt-2 bg-white dark:bg-dark-surface border-t border-gray-50 dark:border-dark-line">
-            <p class="text-[11px] text-slate-700 dark:text-white leading-relaxed">Registra o que o dev precisa saber e implementar sobre um elemento: regra, comportamento, exceção. Entra na Ficha e fica ancorada no elemento do canvas.</p>
-            <p class="text-[11px] text-slate-700 dark:text-white leading-relaxed mt-2"><strong>Quando usar:</strong> se o dev só precisa dos valores do elemento, use Inserir Anotações.</p>
+            <p class="text-[11px] text-slate-700 dark:text-white leading-relaxed">Registra toda a informação técnica do projeto que o dev precisa saber e implementar: regra de negócio, comportamento, dados da API, informação extra, exceções e links. Entra na Ficha e fica ancorada no elemento do canvas.</p>
+            <p class="text-[11px] text-slate-700 dark:text-white leading-relaxed mt-2"><strong>Quando usar:</strong> se o dev só precisa dos valores visuais do elemento (cores, medidas, tokens), use Detalhar UI.</p>
             <a href="https://www.figma.com/design/SEBfJKxHu2SvLHnpw0FUVp/Handex---Handoff-Expresso?node-id=117-431" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 mt-2 text-[10px] font-bold text-blue-600 dark:text-blue-400">
               <i data-lucide="book-open" class="w-3 h-3 shrink-0" aria-hidden="true"></i> Ver documentação completa
             </a>
@@ -116,7 +116,7 @@
           </div>
         </div>
 
-        <!-- 5. Fluxos de Tela -->
+        <!-- 5. Conectar Telas (antes "Fluxos de Tela") -->
         <div class="border border-gray-100 dark:border-dark-line rounded-2xl overflow-hidden shadow-sm">
           <button onclick="var b=this.nextElementSibling;b.classList.toggle('hidden');var c=this.querySelector('.acc-chev');c.classList.toggle('rotate-180');c.classList.toggle('text-[#005ca9]');c.classList.toggle('dark:text-blue-300')"
             class="w-full flex items-center justify-between p-3.5 bg-white dark:bg-dark-surface hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors text-left">
@@ -124,7 +124,7 @@
               <div class="w-6 h-6 rounded-xl bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center shrink-0">
                 <i data-lucide="git-branch" class="w-3.5 h-3.5 text-orange-700 dark:text-orange-400" aria-hidden="true"></i>
               </div>
-              <span class="text-[12px] font-bold text-slate-800 dark:text-white">Fluxos de Tela</span>
+              <span class="text-[12px] font-bold text-slate-800 dark:text-white">Conectar Telas</span>
             </div>
             <i data-lucide="chevron-down" class="acc-chev w-3.5 h-3.5 text-slate-500 dark:text-dark-muted transition-transform duration-200 shrink-0" aria-hidden="true"></i>
           </button>
@@ -171,13 +171,13 @@
           <div class="hidden px-4 pb-4 pt-2 bg-white dark:bg-dark-surface border-t border-gray-50 dark:border-dark-line">
             <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Exportar</p>
             <ol class="space-y-2 text-[11px] text-slate-600 dark:text-slate-300 leading-snug list-none mb-3">
-              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">→</span><span>O botão <strong>Baixar</strong>, no rodapé da home, exporta o <strong>JSON</strong> completo a qualquer momento, sem precisar sair da tela em que você está.</span></li>
-              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">→</span><span>Para exportar em <strong>Markdown</strong> ou o <strong>Briefing</strong> em separado, acesse <strong>Gerar Ficha de Handoff</strong> → use os botões de exportação na tela de resumo.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">→</span><span>No <strong>menu de backup</strong> do topo (ícone de disco), <strong>Baixar backup (.json)</strong> exporta o projeto completo a qualquer momento, de qualquer tela.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">→</span><span>Para exportar a Ficha em PDF, o <strong>Markdown</strong>, o <strong>Briefing</strong> ou o contexto para IA, use <strong>Outras exportações</strong> no mesmo menu.</span></li>
               <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">→</span><span>O <strong>JSON</strong> é a fonte completa de dados — contém specs, medidas, fluxos, propriedades e tokens escaneados. Ideal para integrações com outros sistemas.</span></li>
             </ol>
             <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Importar</p>
             <ol class="space-y-2 text-[11px] text-slate-600 dark:text-slate-300 leading-snug list-none">
-              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">→</span><span>Clique em <strong>Importar JSON</strong> na home e selecione um arquivo exportado anteriormente. O plugin restaura todos os dados e incrementa a versão automaticamente.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">→</span><span>No menu de backup do topo, clique em <strong>Restaurar backup (.json)</strong> e selecione um arquivo exportado anteriormente. O plugin restaura todos os dados e incrementa a versão automaticamente.</span></li>
               <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">→</span><span>Após importar, escolha o que recriar no canvas: <strong>Ficha Técnica</strong>, <strong>Cards de Spec</strong>, <strong>Medidas</strong> e/ou <strong>Fluxos</strong>.</span></li>
               <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">→</span><span>Fluxos só são recriáveis se o backup foi gerado nesta versão do plugin ou mais recente — backups mais antigos não salvavam o vínculo com os elementos conectados, e o fluxo aparece como não recriável.</span></li>
             </ol>
@@ -199,7 +199,7 @@
           <div class="hidden px-4 pb-4 pt-2 bg-white dark:bg-dark-surface border-t border-gray-50 dark:border-dark-line">
             <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Antes de apagar</p>
             <ol class="space-y-2 text-[11px] text-slate-600 dark:text-slate-300 leading-snug list-none mb-3">
-              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">→</span><span>O botão <strong>Baixar</strong>, no rodapé da home, exporta um backup completo em JSON a qualquer momento — recomendado antes de qualquer uma das ações abaixo, já que nenhuma delas pode ser desfeita. O mesmo botão também aparece no topo do modal de limpeza, como lembrete.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">→</span><span>Os dados são salvos sozinhos, por arquivo do Figma e por designer (veja <strong>Salvamento automático</strong> no rodapé do plugin). Para limpar, abra <strong>Como funciona</strong> no rodapé e escolha <strong>Limpar cache</strong> ou <strong>Limpar tudo (cache + canvas)</strong>. Antes, baixe um backup pelo menu de backup do topo: nenhuma limpeza pode ser desfeita.</span></li>
             </ol>
             <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Apagar dados do plugin</p>
             <ol class="space-y-2 text-[11px] text-slate-600 dark:text-slate-300 leading-snug list-none mb-3">
@@ -208,7 +208,7 @@
             <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Apagar conteúdo do canvas</p>
             <ol class="space-y-2 text-[11px] text-slate-600 dark:text-slate-300 leading-snug list-none">
               <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">→</span><span>Remove de verdade os elementos que o Handex criou no canvas desta página — marque só o que quer apagar: <strong>Ficha de Handoff</strong>, <strong>Specs</strong>, <strong>Medidas</strong> e/ou <strong>Fluxos</strong> (ou "Selecionar tudo").</span></li>
-              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">→</span><span>Se apagou algo por engano, um backup em JSON baixado antes permite trazer de volta via <strong>Importar JSON</strong>.</span></li>
+              <li class="flex gap-2"><span class="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">→</span><span>Se apagou algo por engano, um backup em JSON baixado antes permite trazer de volta via <strong>Restaurar backup</strong>.</span></li>
             </ol>
           </div>
         </div>

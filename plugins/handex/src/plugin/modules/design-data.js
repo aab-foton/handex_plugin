@@ -185,7 +185,7 @@
             biblioteca: p.libName || null
           })),
           ...(el.includeChildren && Array.isArray(el.children) && el.children.length > 0 ? {
-            filhosDiretos: el.children.map(ch => ({
+            camadasInternas: el.children.map(ch => ({
               nome: ch.name,
               tipoNode: ch.nodeType,
               propriedades: (ch.properties || []).map(p => ({
@@ -208,7 +208,7 @@
         jornadas,
         padroesCategorizacao,
         especificacoesRapidas: especificacoesRapidas.length > 0 ? {
-          _note: 'Achados brutos e pontuais das Anotações -- propriedades reais sem conformidade DSC avaliada. Não confundir com telasDocumentadas.itensEscaneados (scan de auditoria completo).',
+          _note: 'Achados brutos e pontuais de Detalhar UI -- propriedades reais sem conformidade DSC avaliada. Não confundir com telasDocumentadas.itensEscaneados (scan de auditoria completo).',
           itens: especificacoesRapidas
         } : null
       };
@@ -274,15 +274,15 @@
       }
 
       if (ctx.especificacoesRapidas) {
-        lines.push('', '## Consultas rápidas (Anotações) — achados pontuais sem conformidade DSC avaliada');
+        lines.push('', '## Detalhar UI (consultas rápidas) — achados pontuais sem conformidade DSC avaliada');
         lines.push('(propriedades reais de elementos consultados pontualmente pelo designer, sem scan sistemático de frame — não confundir com "Telas já documentadas" acima)');
         ctx.especificacoesRapidas.itens.forEach(item => {
           const props = item.propriedades.map(p => `${p.propriedade}: ${p.valor}${p.token ? ` (token: ${p.token}${p.biblioteca ? `, ${p.biblioteca}` : ''})` : ''}`).join(' | ');
           lines.push(`- [${item.tag}] ${item.nome} (${item.tipoNode})${props ? ` — ${props}` : ''}`);
           if (item.observacao) lines.push(`  Observação: ${item.observacao}`);
-          (item.filhosDiretos || []).forEach(ch => {
+          (item.camadasInternas || []).forEach(ch => {
             const cp = ch.propriedades.map(p => `${p.propriedade}: ${p.valor}${p.token ? ` (token: ${p.token}${p.biblioteca ? `, ${p.biblioteca}` : ''})` : ''}`).join(' | ');
-            lines.push(`  - filho ${ch.nome} (${ch.tipoNode})${cp ? ` — ${cp}` : ''}`);
+            lines.push(`  - camada interna ${ch.nome} (${ch.tipoNode})${cp ? ` — ${cp}` : ''}`);
           });
         });
       }
@@ -315,7 +315,7 @@
       }
 
       if (ctx.jornadas.length > 0) {
-        lines.push('', '## Jornadas / fluxos de tela');
+        lines.push('', '## Jornadas / conexões entre telas');
         ctx.jornadas.forEach(j => {
           lines.push(`- ${j.nome}:`);
           j.conexoes.forEach(c => lines.push(`  - ${c.de} → ${c.para}${c.decisao ? ` (${c.decisao})` : ''}`));
@@ -934,7 +934,7 @@
       const specsCount = frames.reduce((sum, f) => sum + (f.createdSpecs || []).length, 0)
         + (handoffData.specs || []).length;
 
-      const measurementsCount = frames.reduce((sum, f) => sum + (f.measurements || []).length, 0)
+      const measurementsCount = (typeof _specMeasurements === 'function' ? _specMeasurements().length : 0) + frames.reduce((sum, f) => sum + (f.measurements || []).length, 0)
         + (handoffData.measurements || []).length;
 
       const flowsCount = (handoffData.createdFlows || []).length;
@@ -951,11 +951,11 @@
 
       return {
         'dados-projeto': { done: hasDadosProjeto, label: 'Informações salvas' },
-        'quick-spec': { done: annotationsCount > 0, label: _withCount('Anotações inseridas', annotationsCount) },
-        'tokens': { done: scannedFramesCount > 0, label: _withCount('Tokens escaneados', scannedFramesCount) },
+        'quick-spec': { done: annotationsCount > 0, label: _withCount('Detalhes de UI inseridos', annotationsCount) },
+        'tokens': { done: scannedFramesCount > 0, label: _withCount('Frames escaneados', scannedFramesCount) },
         'specs': { done: specsCount > 0, label: _withCount('Especificações criadas', specsCount) },
         'measurement': { done: measurementsCount > 0, label: _withCount('Medidas inseridas', measurementsCount) },
-        'flows': { done: flowsCount > 0, label: _withCount('Fluxos mapeados', flowsCount) }
+        'flows': { done: flowsCount > 0, label: _withCount('Conexões mapeadas', flowsCount) }
       };
     }
     window.getHomeCardsDocumentedState = getHomeCardsDocumentedState;
@@ -1083,6 +1083,7 @@
 
     function confirmClearEverything() {
       _clearingEverything = true;
+      if (typeof startCanvasLoading === 'function') startCanvasLoading('Apagando do canvas o que o Handex criou...', ['canvas-content-deleted'], 120000);
       parent.postMessage({
         pluginMessage: { type: 'delete-canvas-content', ficha: true, specs: true, medidas: true, fluxos: true, quickspec: true }
       }, '*');
@@ -1104,7 +1105,7 @@
       if (c.spec) parts.push(`${c.spec} ${c.spec > 1 ? 'especificações' : 'especificação'}`);
       if (c.medida) parts.push(`${c.medida} medida${c.medida > 1 ? 's' : ''}`);
       if (c.fluxo) parts.push(`${c.fluxo} fluxo${c.fluxo > 1 ? 's' : ''}`);
-      if (c.quickspec) parts.push(`${c.quickspec} card${c.quickspec > 1 ? 's' : ''} de Anotações`);
+      if (c.quickspec) parts.push(`${c.quickspec} card${c.quickspec > 1 ? 's' : ''} de Detalhar UI`);
       const canvasMsg = parts.length ? `, ${parts.join(', ')} removido(s) do canvas` : '';
       showToast(`Registro do plugin apagado${canvasMsg}.`);
     }
@@ -1135,6 +1136,7 @@
 
       if (!ficha && !specs && !medidas && !fluxos && !quickspec) return;
 
+      if (typeof startCanvasLoading === 'function') startCanvasLoading('Apagando do canvas o que o Handex criou...', ['canvas-content-deleted'], 120000);
       parent.postMessage({
         pluginMessage: { type: 'delete-canvas-content', ficha, specs, medidas, fluxos, quickspec }
       }, '*');

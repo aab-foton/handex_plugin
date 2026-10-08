@@ -581,37 +581,72 @@ function quickSpecToggleHideElement(idx) {
 }
 window.quickSpecToggleHideElement = quickSpecToggleHideElement;
 
+// Seções de exibição (2026-10-08). Espelha _QS_GROUP_* de code.js; dado antigo
+// sem `group` cai em "Propriedades".
+const _QS_GROUP_ORDER = ['componente', 'layout', 'espacamento', 'aparencia', 'texto', 'devmode', 'css', 'outros'];
+const _QS_GROUP_TITLE = { componente: 'Componente', layout: 'Layout', espacamento: 'Espaçamento', aparencia: 'Aparência', texto: 'Texto', devmode: 'Extras do Dev Mode', css: 'Código CSS', outros: 'Propriedades' };
+
+function _quickSpecPropRowHtml(p) {
+  const label = `<span class="shrink-0 w-[34%] text-slate-500 dark:text-dark-muted">${escapeHtml(_vocabLabel(p.label))}</span>`;
+  if (p.tokenName) {
+    return `
+      <div class="flex gap-2 text-[10px] leading-snug">
+        ${label}
+        <div class="min-w-0 flex-1">
+          <div class="break-words"><strong class="${p.libName ? 'text-[#005ca9] dark:text-blue-400' : 'text-slate-700 dark:text-white'}">${escapeHtml(p.tokenName)}</strong>${p.libName ? ` <span class="text-slate-400 dark:text-slate-500 font-normal">· ${escapeHtml(p.libName)}</span>` : ''}</div>
+          <div class="text-slate-400 dark:text-slate-500 whitespace-pre-line break-words">valor bruto: ${escapeHtml(String(_vocabValue(p.value)))}</div>
+        </div>
+      </div>`;
+  }
+  return `
+      <div class="flex gap-2 text-[10px] leading-snug">
+        ${label}
+        <strong class="min-w-0 flex-1 font-semibold text-slate-700 dark:text-white whitespace-pre-line break-words">${escapeHtml(String(_vocabValue(p.value)))}</strong>
+      </div>`;
+}
+
 function _quickSpecPropsHtml(props) {
-  return (props || []).map(p => {
-        if (p.tokenName) {
-          return `
-      <div class="text-[10px] leading-snug">
-        <div>${escapeHtml(_vocabLabel(p.label))}: <strong class="${p.libName ? 'text-[#005ca9] dark:text-blue-400' : 'text-slate-700 dark:text-white'}">${escapeHtml(p.tokenName)}</strong>${p.libName ? ` <span class="text-slate-400 dark:text-slate-500 font-normal">· ${escapeHtml(p.libName)}</span>` : ''}</div>
-        <div class="pl-3 text-slate-400 dark:text-slate-500">↳ valor bruto: ${escapeHtml(String(p.value))}</div>
-      </div>
-    `;
-        }
-        return `
-      <div class="text-[10px] text-slate-500 dark:text-dark-muted leading-snug">
-        <span>${escapeHtml(_vocabLabel(p.label))}: <strong class="text-slate-700 dark:text-white">${escapeHtml(String(_vocabValue(p.value)))}</strong></span>
-      </div>
-    `;
-      }).join('');
+  const buckets = {};
+  (props || []).forEach(p => {
+    const g = p && _QS_GROUP_TITLE[p.group] ? p.group : 'outros';
+    (buckets[g] = buckets[g] || []).push(p);
+  });
+  return _QS_GROUP_ORDER.filter(g => buckets[g]).map(g => {
+    const title = _QS_GROUP_TITLE[g];
+    if (g === 'css') {
+      const code = buckets[g].map(p => String(p.value)).join('\n');
+      return `
+      <details class="pt-1.5">
+        <summary class="cursor-pointer text-[9.5px] font-bold text-[#005ca9] dark:text-blue-400 uppercase tracking-wider select-none">${title}</summary>
+        <pre class="mt-1 max-h-40 overflow-auto rounded-xl bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-line px-2 py-1.5 text-[10px] leading-snug font-mono text-slate-700 dark:text-dark-text whitespace-pre">${escapeHtml(code)}</pre>
+      </details>`;
+    }
+    return `
+      <section class="pt-1.5" aria-label="${title}">
+        <p class="text-[9.5px] font-bold text-[#005ca9] dark:text-blue-400 uppercase tracking-wider pb-0.5 mb-0.5 border-b border-gray-100 dark:border-dark-line">${title}</p>
+        <div class="space-y-1">${buckets[g].map(_quickSpecPropRowHtml).join('')}</div>
+      </section>`;
+  }).join('');
 }
 
 function _quickSpecChildrenHtml(el) {
   if (!el.includeChildren) return '';
-  if (el.childrenLoading) return `<p class="text-[10px] text-slate-400 dark:text-slate-500 italic pt-2">Lendo filhos diretos...</p>`;
+  if (el.childrenLoading) return `<p class="text-[10px] text-slate-400 dark:text-slate-500 italic pt-2">Lendo camadas internas...</p>`;
   if (!Array.isArray(el.children)) return '';
   const items = el.children.length === 0
-    ? `<p class="text-[10px] text-slate-400 dark:text-slate-500 italic">Nenhum filho direto com propriedade nas categorias marcadas.</p>`
+    ? `<p class="text-[10px] text-slate-400 dark:text-slate-500 italic">Nenhuma camada interna com propriedade nas categorias marcadas.</p>`
     : el.children.map(ch => `
-      <div class="border-l-2 border-gray-200 dark:border-dark-line pl-2 space-y-0.5">
-        <p class="text-[10px] font-bold text-slate-700 dark:text-white">${escapeHtml(ch.name)} <span class="font-normal text-slate-400 dark:text-slate-500">· ${escapeHtml(ch.nodeType || '')}</span></p>
+      <div class="ml-2 rounded-xl border border-gray-100 dark:border-dark-line border-l-2 border-l-[#005ca9] bg-gray-50/60 dark:bg-dark-bg px-2.5 py-2">
+        <div class="flex items-center gap-1.5 min-w-0">
+          <i data-lucide="corner-down-right" class="w-3 h-3 shrink-0 text-slate-400 dark:text-slate-500"></i>
+          <p class="text-[10.5px] font-bold text-slate-700 dark:text-white truncate min-w-0" title="${escapeHtml(ch.name)}">${escapeHtml(ch.name)}</p>
+          <span class="shrink-0 text-[9px] font-bold text-slate-500 dark:text-slate-400 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-line px-1.5 py-0.5 rounded">${escapeHtml(ch.nodeType || '')}</span>
+        </div>
         ${_quickSpecPropsHtml(ch.properties)}
       </div>`).join('');
-  const more = el.childrenMore > 0 ? `<p class="text-[10px] text-slate-400 dark:text-slate-500">+${el.childrenMore} filho(s) não lido(s): o limite é 8. Para ver outro filho, anote-o separadamente.</p>` : '';
-  return `<div class="pt-2 space-y-2"><p class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Filhos diretos</p>${items}${more}</div>`;
+  const more = el.childrenMore > 0 ? `<p class="text-[10px] text-slate-400 dark:text-slate-500">+${el.childrenMore} camada(s) interna(s) não lida(s). Para ver outra camada, anote-a separadamente.</p>` : '';
+  const count = el.children.length;
+  return `<div class="mt-3 pt-3 border-t border-dashed border-gray-200 dark:border-dark-line space-y-2"><p class="text-[11px] font-bold text-slate-700 dark:text-white flex items-center gap-1.5"><i data-lucide="layers" class="w-3.5 h-3.5 text-[#005ca9] dark:text-blue-400"></i>Camadas internas (${count}${el.childrenMore > 0 ? ' de ' + (count + el.childrenMore) : ''})</p>${items}${more}</div>`;
 }
 
 function _quickSpecRenderList() {
@@ -659,7 +694,7 @@ function _quickSpecRenderList() {
               <i data-lucide="crosshair" class="w-3.5 h-3.5"></i>
             </button>
             ${el.insertedCardId ? `
-            <button onclick="focusNode('${el.insertedCardId}')" title="Focar no card da anotação" aria-label="Focar no card da anotação no canvas"
+            <button onclick="focusNode('${el.insertedCardId}')" title="Focar no card de Detalhar UI" aria-label="Focar no card de Detalhar UI no canvas"
               class="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-[#005ca9] dark:text-slate-500 dark:hover:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors">
               <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
             </button>` : ''}
@@ -681,12 +716,12 @@ function _quickSpecRenderList() {
           <div class="px-3 pt-2">
             <div class="flex items-center justify-between gap-3">
               <div class="min-w-0">
-                <p class="text-[12px] font-medium text-slate-700 dark:text-white">Incluir filhos diretos</p>
-                <p class="text-[10px] text-slate-500 dark:text-dark-muted">Lê só o 1º nível, até 8 filhos.</p>
+                <p class="text-[12px] font-medium text-slate-700 dark:text-white">Incluir camadas internas</p>
+                <p class="text-[10px] text-slate-500 dark:text-dark-muted">Lê as camadas internas diretas. Com muitas camadas, lista todas e pergunta se a leitura é Padrão ou Completa.</p>
               </div>
               <label class="relative inline-flex items-center cursor-pointer shrink-0">
                 <input type="checkbox" class="sr-only peer" ${el.includeChildren ? 'checked' : ''} ${el.childrenLoading ? 'disabled' : ''}
-                  aria-label="Incluir filhos diretos de ${escapeHtml(el.name)}"
+                  aria-label="Incluir camadas internas de ${escapeHtml(el.name)}"
                   onchange="quickSpecToggleChildren('${escapeHtml(el.tag)}', this.checked)">
                 <div class="w-9 h-5 bg-gray-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#005ca9]"></div>
               </label>
@@ -712,7 +747,7 @@ function _quickSpecRenderList() {
             <button onclick="quickSpecConvertToDetailedSpec(${idx})"
               class="w-full py-2 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line hover:bg-gray-50 dark:hover:bg-slate-800 text-[#005ca9] dark:text-blue-400 text-[11px] font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5">
               <i data-lucide="file-plus-2" class="w-3.5 h-3.5"></i>
-              Converter em Especificação
+              Levar para Detalhar Fluxos/Jornadas
             </button>`}
             <button onclick="quickSpecRemoveElement(${idx})"
               class="w-full py-2 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line hover:bg-gray-50 dark:hover:bg-slate-800 text-red-500 text-[11px] font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5">
@@ -829,13 +864,39 @@ function quickSpecToggleChildren(tag, on) {
   el.childrenLoading = true;
   _quickSpecRenderList();
   _quickSpecReopenItem(tag);
-  parent.postMessage({ pluginMessage: { type: 'quick-spec-read-children', tag, nodeId: el.nodeId, categories: el.categories || null } }, '*');
+  _quickSpecRequestChildren(el, null);
 }
 window.quickSpecToggleChildren = quickSpecToggleChildren;
+
+// limit null = o backend decide: até 8 lê direto; acima disso devolve
+// needsDecision e o designer escolhe no modal de aprofundamento.
+function _quickSpecRequestChildren(el, limit) {
+  parent.postMessage({ pluginMessage: { type: 'quick-spec-read-children', tag: el.tag, nodeId: el.nodeId, categories: el.categories || null, limit } }, '*');
+}
 
 function handleQuickSpecChildrenRead(msg) {
   const el = _quickSpecSessionResults.find(e => e.tag === msg.tag);
   if (!el) return;
+  if (msg.needsDecision) {
+    const total = msg.total || 0, max = msg.max || 30, def = msg.defaultLimit || 8;
+    const all = Math.min(total, max);
+    openDepthDecision({
+      title: 'Como ler as camadas internas?',
+      message: `"${el.name}" tem ${total} camadas internas. Escolha a leitura: Padrão, só as primeiras camadas, ou Completo, todas as listadas abaixo.`,
+      note: total > max ? `O Completo lê até ${max} camadas: acima disso o card fica longo demais. Para ver as outras, anote-as separadamente.` : 'Cada camada lida aumenta o card no canvas.',
+      moreLabel: 'Completo',
+      moreSub: total > max ? `${all} camadas (as ${total - all} restantes ficam de fora)` : `todas as ${total} camadas`,
+      defaultLabel: 'Padrão',
+      defaultSub: `${def} camadas`,
+      layers: Array.isArray(msg.layers) ? msg.layers.map(l => ({ n: l.n, t: l.t, std: l.std, out: !l.full })) : [],
+      layersMore: msg.layersMore || 0,
+      layersTitle: `Camadas internas encontradas (${total})`,
+      onMore: () => _quickSpecRequestChildren(el, all),
+      onDefault: () => _quickSpecRequestChildren(el, def),
+      onCancel: () => { el.childrenLoading = false; el.includeChildren = false; _quickSpecRenderList(); _quickSpecReopenItem(msg.tag); }
+    });
+    return;
+  }
   el.childrenLoading = false;
   if (msg.error) {
     el.includeChildren = false;
@@ -915,7 +976,7 @@ window.quickSpecConvertToDetailedSpec = quickSpecConvertToDetailedSpec;
 // caminho de exclusão já usado no botão "Excluir da lista", sem confirmação
 // window.confirm: a criação da Especificação JÁ é a confirmação explícita
 // do designer) e tira o item da lista da sessão.
-function _quickSpecFinishPendingConversion() {
+function _quickSpecFinishPendingConversion(newSpec) {
   const tag = window._quickSpecPendingConversionTag;
   window._quickSpecPendingConversionTag = null;
   if (!tag) return;
@@ -927,8 +988,44 @@ function _quickSpecFinishPendingConversion() {
   if (el.insertedCardId) {
     parent.postMessage({ pluginMessage: { type: 'quick-spec-delete-canvas-cards', cardIds: [el.insertedCardId] } }, '*');
   }
+  _quickSpecAskAfterConversion(tag, newSpec);
 }
 window._quickSpecFinishPendingConversion = _quickSpecFinishPendingConversion;
+
+// Depois de converter uma anotação em especificação, pergunta para onde ir
+// (2026-10-08, pedido do Augusto): Detalhar Fluxos/Jornadas ou continuar em Detalhar UI.
+// Espera outro modal do fluxo da especificação fechar antes de abrir.
+let _quickSpecConvertedSpecId = null;
+function _quickSpecAskAfterConversion(tag, spec) {
+  _quickSpecConvertedSpecId = spec && spec.id ? spec.id : null;
+  const msgEl = document.getElementById('quick-spec-converted-msg');
+  if (msgEl) {
+    const specTxt = spec ? `${spec.letter ? spec.letter + ' · ' : ''}${spec.name || ''}` : '';
+    msgEl.textContent = `O detalhe de UI ${tag} foi levado para Detalhar Fluxos/Jornadas como ${specTxt}. Quer ir para Detalhar Fluxos/Jornadas ou continuar em Detalhar UI?`;
+  }
+  let tries = 0;
+  const tryOpen = () => {
+    const busy = Array.from(document.querySelectorAll('[role="dialog"]')).some(d => d.id !== 'quick-spec-converted-modal' && !d.classList.contains('hidden'));
+    if (busy && tries++ < 120) { setTimeout(tryOpen, 500); return; }
+    if (typeof openModal === 'function') openModal('quick-spec-converted-modal');
+  };
+  setTimeout(tryOpen, 300);
+}
+
+function quickSpecGoToConvertedSpec() {
+  if (typeof closeModal === 'function') closeModal('quick-spec-converted-modal');
+  const id = _quickSpecConvertedSpecId;
+  _quickSpecConvertedSpecId = null;
+  if (id && typeof goToSpecDetail === 'function') goToSpecDetail(id);
+  else if (typeof navigate === 'function') navigate('view-specifications');
+}
+window.quickSpecGoToConvertedSpec = quickSpecGoToConvertedSpec;
+
+function quickSpecStayInAnnotations() {
+  _quickSpecConvertedSpecId = null;
+  if (typeof closeModal === 'function') closeModal('quick-spec-converted-modal');
+}
+window.quickSpecStayInAnnotations = quickSpecStayInAnnotations;
 
 // Insere todos os elementos NÃO ocultos da sessão de uma vez -- ação de
 // lote equivalente ao antigo "Inserir todos os cards no canvas" por frame,

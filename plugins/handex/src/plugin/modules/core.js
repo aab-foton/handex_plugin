@@ -471,6 +471,7 @@ const MINI_H = 44;
 
 function toggleCollapse() {
   isCollapsed = !isCollapsed;
+  document.body.classList.toggle('hx-collapsed', isCollapsed);
   const mainContent = document.querySelector('body > div.flex-1');
   const collapseBtn = document.getElementById('btn-collapse');
   const btnTop = document.getElementById('btn-top');
@@ -1571,7 +1572,7 @@ function exportChecklistMd() {
   } else {
     md += `_Nenhum frame registrado._\n\n`;
   }
-  md += `## Fluxos Mapeados (${flows.length})\n`;
+  md += `## Conexões entre telas (${flows.length})\n`;
   flows.forEach((fl, i) => { md += `${i + 1}. ${fl.name || fl.type} — ${fl.type}\n`; });
   if (flows.length === 0) md += `_Nenhum fluxo mapeado._\n`;
   md += `\n## Regras de Negócio (${regras.length})\n`;
@@ -1809,9 +1810,110 @@ function updateFooterButtons() {
 }
 
 // ── Storage ────────────────────────────────────────────────────────────
+// Rodapé de salvamento automático (2026-10-08, mesmo padrão do hac). Estado
+// real: 'saving' ao enviar; 'saved'/'error' quando o backend responde
+// ('storage-saved'/'storage-save-failed', messages.js). O texto visível não
+// é região viva; o leitor de tela ouve #hx-autosave-live no máximo a cada 15 s.
+let _hxAutosaveLastAnnounce = 0;
+function _hxAutosaveAnnounce(text, force) {
+  const live = document.getElementById('hx-autosave-live');
+  if (!live) return;
+  const now = Date.now();
+  if (!force && now - _hxAutosaveLastAnnounce < 15000) return;
+  _hxAutosaveLastAnnounce = now;
+  live.textContent = '';
+  setTimeout(() => { live.textContent = text; }, 50);
+}
+
+function _setAutosaveState(state) {
+  const icon = document.getElementById('hx-autosave-icon');
+  const text = document.getElementById('hx-autosave-text');
+  if (!icon || !text) return;
+  const hhmm = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const cfg = {
+    saving: { ico: 'loader-2', cls: 'text-slate-400 dark:text-dark-muted', txt: 'Salvando…' },
+    saved: { ico: 'cloud-check', cls: 'text-green-600 dark:text-green-400', txt: `Salvo automaticamente · ${hhmm}` },
+    error: { ico: 'cloud-alert', cls: 'text-red-600 dark:text-red-400', txt: 'Não foi possível salvar' }
+  }[state];
+  if (!cfg) return;
+  icon.className = `shrink-0 flex items-center ${cfg.cls}`;
+  icon.innerHTML = `<i data-lucide="${cfg.ico}" class="w-3.5 h-3.5${state === 'saving' ? ' motion-safe:animate-spin' : ''}"></i>`;
+  text.textContent = cfg.txt;
+  if (state === 'error') _hxAutosaveAnnounce('Não foi possível salvar o projeto.', true);
+  _refreshIcons();
+}
+window._setAutosaveState = _setAutosaveState;
+
 function saveToStorage() {
+  _setAutosaveState('saving');
   parent.postMessage({ pluginMessage: { type: 'save-storage', data: handoffData } }, '*');
 }
+
+// Menu de backup do header (2026-10-08): Baixar/Restaurar saíram do rodapé
+// da home. force: true abre, false fecha, omitido alterna.
+function toggleHxBackupMenu(force) {
+  const menu = document.getElementById('hx-backup-menu');
+  const btn = document.getElementById('btn-hx-backup-menu');
+  if (!menu) return;
+  const willOpen = typeof force === 'boolean' ? force : menu.classList.contains('hidden');
+  menu.classList.toggle('hidden', !willOpen);
+  if (btn) btn.setAttribute('aria-expanded', String(willOpen));
+  if (willOpen) { const first = menu.querySelector('button'); if (first) first.focus(); }
+}
+window.toggleHxBackupMenu = toggleHxBackupMenu;
+
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('hx-backup-menu');
+  if (!menu || menu.classList.contains('hidden')) return;
+  const btn = document.getElementById('btn-hx-backup-menu');
+  if (menu.contains(e.target) || (btn && btn.contains(e.target))) return;
+  toggleHxBackupMenu(false);
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  const menu = document.getElementById('hx-backup-menu');
+  if (!menu || menu.classList.contains('hidden')) return;
+  e.stopPropagation();
+  toggleHxBackupMenu(false);
+  const btn = document.getElementById('btn-hx-backup-menu');
+  if (btn) btn.focus();
+}, true);
+
+// Limpezas oferecidas pelo modal de salvamento (2026-10-08): abrem a
+// confirmação de sempre (confirm-clear-modal, com backup e "APAGAR") já no
+// passo certo.
+function hxClearCache() {
+  closeModal('autosave-modal');
+  if (typeof clearAllData === 'function') clearAllData();
+  if (typeof requestClearAllData === 'function') requestClearAllData();
+}
+window.hxClearCache = hxClearCache;
+
+function hxClearEverything() {
+  closeModal('autosave-modal');
+  if (typeof clearAllData === 'function') clearAllData();
+  if (typeof requestClearEverything === 'function') requestClearEverything();
+}
+window.hxClearEverything = hxClearEverything;
+
+// Registro anterior à persistência por arquivo e designer (2026-10-08): o
+// plugin só oferece; o designer diz se o projeto é deste arquivo.
+function openLegacyProjectModal(candidate) {
+  const msg = document.getElementById('legacy-project-msg');
+  if (msg) {
+    const nome = candidate && candidate.titulo ? `"${candidate.titulo}"` : 'sem título';
+    const frames = candidate && candidate.frames ? ` com ${candidate.frames} frame(s) escaneado(s)` : '';
+    msg.textContent = `Encontramos um projeto salvo antes da atualização do Handex: ${nome}${frames}. Ele é deste arquivo?`;
+  }
+  openModal('legacy-project-modal');
+}
+window.openLegacyProjectModal = openLegacyProjectModal;
+
+function answerLegacyProject(accept) {
+  closeModal('legacy-project-modal');
+  parent.postMessage({ pluginMessage: { type: 'legacy-project-answer', accept: !!accept } }, '*');
+}
+window.answerLegacyProject = answerLegacyProject;
 
 function saveAndReturn() {
   saveToStorage();
@@ -1820,9 +1922,11 @@ function saveAndReturn() {
 }
 window.saveAndReturn = saveAndReturn;
 
-// Mostra toast de salvo ao adicionar qualquer item relevante
+// Antes era um toast "Salvo automaticamente" a cada ação. Desde 2026-10-08 o
+// rodapé de salvamento mostra o estado sempre; o toast virou ruído. Fica só o
+// anúncio ao leitor de tela, no máximo a cada 15 s.
 function _toastSaved() {
-  showToast('Salvo automaticamente', 'success');
+  _hxAutosaveAnnounce('Salvo automaticamente.');
 }
 window._toastSaved = _toastSaved;
 
@@ -1941,6 +2045,11 @@ function openModal(id) {
 function closeModal(id) {
   const el = document.getElementById(id);
   if (el) el.classList.add("hidden");
+  if (id === 'depth-decision-modal' && _depthDecisionPending) {
+    const cb = _depthDecisionPending.onCancel;
+    _depthDecisionPending = null;
+    if (typeof cb === 'function') setTimeout(cb, 0);
+  }
   updateFABVisibility(false);
   const returnEl = _modalReturnFocus[id];
   if (returnEl && document.contains(returnEl)) returnEl.focus();
@@ -1952,6 +2061,105 @@ function closeModal(id) {
     parent.postMessage({ pluginMessage: { type: 'track-flow-anchor-preview', active: false } }, '*');
   }
 }
+
+// Aprofundamento da leitura (2026-10-08): pergunta antes de ler além do
+// padrão no Escanear Frames e nas Anotações. Duas opções nomeadas, "Padrão"
+// (default) e "Completo" (more). opts: { title, message, note, moreLabel,
+// moreSub, defaultLabel, defaultSub, onMore, onDefault, onCancel, layers:
+// [{ n, d?, t?, std }], layersMore, groupByLevel, layersTitle }. `std` = a
+// camada entra no Padrão; sem `std` = só no Completo. Fechar = cancelar.
+let _depthDecisionPending = null;
+function _depthDecisionBtn(id, label, sub) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = '';
+  const a = document.createElement('span');
+  a.className = 'block';
+  a.textContent = label || '';
+  el.appendChild(a);
+  if (sub) {
+    const b = document.createElement('span');
+    b.className = 'block text-[10.5px] font-normal opacity-80 mt-0.5';
+    b.textContent = sub;
+    el.appendChild(b);
+  }
+}
+function _depthDecisionRenderLayers(opts) {
+  const wrap = document.getElementById('depth-decision-layers-wrap');
+  const box = document.getElementById('depth-decision-layers');
+  const title = document.getElementById('depth-decision-layers-title');
+  if (!wrap || !box) return;
+  const layers = Array.isArray(opts.layers) ? opts.layers : [];
+  box.textContent = '';
+  wrap.classList.toggle('hidden', layers.length === 0);
+  if (layers.length === 0) return;
+  if (title) title.textContent = opts.layersTitle || `Camadas encontradas (${layers.length}${opts.layersMore ? '+' : ''})`;
+  let lastLevel = null;
+  const addRow = (l) => {
+    const row = document.createElement('div');
+    row.setAttribute('role', 'listitem');
+    row.className = 'flex items-center gap-1.5 text-[10.5px] leading-snug text-slate-700 dark:text-dark-text';
+    const nm = document.createElement('span');
+    nm.className = 'truncate min-w-0 flex-1';
+    nm.textContent = l.n;
+    nm.title = l.n;
+    row.appendChild(nm);
+    if (l.t) {
+      const t = document.createElement('span');
+      t.className = 'shrink-0 text-[9.5px] text-slate-400 dark:text-slate-500';
+      t.textContent = l.t;
+      row.appendChild(t);
+    }
+    if (!l.std) {
+      const tag = document.createElement('span');
+      tag.className = l.out
+        ? 'shrink-0 text-[9px] font-bold text-slate-500 dark:text-slate-400 bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded'
+        : 'shrink-0 text-[9px] font-bold text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 px-1.5 py-0.5 rounded';
+      tag.textContent = l.out ? 'fora da leitura' : 'só no Completo';
+      row.appendChild(tag);
+    }
+    box.appendChild(row);
+  };
+  layers.forEach(l => {
+    if (opts.groupByLevel && l.d !== lastLevel) {
+      lastLevel = l.d;
+      const h = document.createElement('p');
+      h.className = 'text-[9.5px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider pt-1';
+      h.textContent = l.d === 0 ? 'Seleção' : `Nível ${l.d}`;
+      box.appendChild(h);
+    }
+    addRow(l);
+  });
+  if (opts.layersMore > 0) {
+    const m = document.createElement('p');
+    m.className = 'text-[10px] italic text-slate-400 dark:text-slate-500 pt-1';
+    m.textContent = `+${opts.layersMore} camada(s) não listada(s)`;
+    box.appendChild(m);
+  }
+}
+function openDepthDecision(opts) {
+  _depthDecisionPending = opts || {};
+  const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt || ''; };
+  set('depth-decision-title', opts.title || 'Como ler as camadas?');
+  set('depth-decision-msg', opts.message);
+  _depthDecisionBtn('depth-decision-more', opts.moreLabel || 'Completo', opts.moreSub);
+  _depthDecisionBtn('depth-decision-default', opts.defaultLabel || 'Padrão', opts.defaultSub);
+  const note = document.getElementById('depth-decision-note');
+  if (note) { note.textContent = opts.note || ''; note.classList.toggle('hidden', !opts.note); }
+  _depthDecisionRenderLayers(opts);
+  openModal('depth-decision-modal');
+}
+window.openDepthDecision = openDepthDecision;
+
+function _depthDecisionResolve(choice) {
+  const p = _depthDecisionPending;
+  _depthDecisionPending = null;
+  closeModal('depth-decision-modal');
+  if (!p) return;
+  const cb = choice === 'more' ? p.onMore : p.onDefault;
+  if (typeof cb === 'function') cb();
+}
+window._depthDecisionResolve = _depthDecisionResolve;
 
 // Modal genérica de loading (2026-09-25) -- padrão único pra qualquer etapa
 // do Handex que precise de feedback bloqueante de progresso, evitando cada
@@ -1982,6 +2190,29 @@ function hideLoadingModal() {
   closeModal('generic-loading-modal');
 }
 window.hideLoadingModal = hideLoadingModal;
+
+// Loading de ações que criam/alteram coisas no canvas (2026-10-08): abre o
+// modal genérico e fecha quando chega uma das respostas esperadas do backend
+// (ver _canvasLoadingCheck no topo de window.onmessage, messages.js). Rede de
+// segurança: fecha sozinho depois de `timeoutMs` (padrão 90 s).
+let _canvasLoading = null;
+function startCanvasLoading(text, doneTypes, timeoutMs) {
+  clearTimeout(_canvasLoading && _canvasLoading.timer);
+  _canvasLoading = {
+    done: new Set(doneTypes || []),
+    timer: setTimeout(() => { _canvasLoading = null; hideLoadingModal(); }, timeoutMs || 90000)
+  };
+  showLoadingModal(text, { title: 'Processando', icon: 'loader-2' });
+}
+window.startCanvasLoading = startCanvasLoading;
+
+function _canvasLoadingCheck(type) {
+  if (!_canvasLoading || !_canvasLoading.done.has(type)) return;
+  clearTimeout(_canvasLoading.timer);
+  _canvasLoading = null;
+  hideLoadingModal();
+}
+window._canvasLoadingCheck = _canvasLoadingCheck;
 
 function _topmostVisibleModal() {
   const visibleModals = Array.from(document.querySelectorAll('[id$="-modal"]:not(.hidden)'));
@@ -2090,7 +2321,69 @@ function openDadosProjetoModal() {
   if (qpObjetivo) { qpObjetivo.value = s1.objetivo || ''; _updateCharCount(qpObjetivo, 500); }
   const qpStatus = document.getElementById('qp-status');
   if (qpStatus) qpStatus.value = s1.status || 'rascunho';
+  const d = _qpDesignerMember();
+  const qpNome = document.getElementById('qp-designer-nome');
+  const qpEmail = document.getElementById('qp-designer-email');
+  const prefillHint = document.getElementById('qp-designer-prefill-hint');
+  let prefilled = false;
+  if (qpNome) {
+    qpNome.value = (d && d.nome) || '';
+    // Sem designer nomeado: sugere o nome da pessoa logada no Figma (visível
+    // e editável no campo), e grava -- é o mínimo para gerar a Ficha.
+    if (!qpNome.value.trim() && handoffData.currentUser && handoffData.currentUser.name) {
+      qpNome.value = handoffData.currentUser.name.slice(0, 80);
+      qpUpdateDesigner('nome', qpNome.value);
+      prefilled = true;
+    }
+    _updateCharCount(qpNome, 80);
+  }
+  if (qpEmail) qpEmail.value = (d && d.email) || '';
+  if (prefillHint) prefillHint.classList.toggle('hidden', !prefilled);
   openModal('quick-project-modal');
+}
+
+// Membro "Designer" da equipe editado pela modal rápida: o 1º com papel
+// Designer (o mesmo que o Resumo e a revisão do frame já usam).
+function _qpDesignerMember() {
+  return (handoffData.step1.equipe || []).find(m => (m.papel || '').toLowerCase() === 'designer') || null;
+}
+
+function qpUpdateDesigner(field, value) {
+  if (!handoffData.step1.equipe) handoffData.step1.equipe = [];
+  let m = _qpDesignerMember();
+  if (!m) {
+    if (!String(value || '').trim()) return;
+    m = { id: 'team-' + Date.now() + Math.floor(Math.random() * 1000), papel: 'Designer', nome: '', email: '' };
+    handoffData.step1.equipe.unshift(m);
+  }
+  m[field] = value;
+  if (field === 'nome') { const h = document.getElementById('qp-designer-prefill-hint'); if (h && document.activeElement && document.activeElement.id === 'qp-designer-nome') h.classList.add('hidden'); }
+  _syncTeamListFromState();
+  validateStep1();
+  saveToStorage();
+}
+window.qpUpdateDesigner = qpUpdateDesigner;
+
+// Mantém a lista da tela completa (Informações do Projeto) igual ao estado
+// depois de uma edição pela modal rápida.
+function _syncTeamListFromState() {
+  const list = document.getElementById('list-equipe');
+  if (!list) return;
+  const equipe = handoffData.step1.equipe || [];
+  const allRendered = equipe.every(m => document.getElementById('item-' + m.id));
+  if (allRendered && list.children.length === equipe.length) {
+    equipe.forEach(m => {
+      const nome = document.getElementById('team-nome-' + m.id);
+      if (nome && nome !== document.activeElement) { nome.value = m.nome || ''; _updateCharCount(nome, 80); }
+      const email = document.querySelector('#item-' + m.id + ' input[type="email"]');
+      if (email && email !== document.activeElement) email.value = m.email || '';
+    });
+    return;
+  }
+  const snapshot = equipe.slice();
+  list.innerHTML = '';
+  handoffData.step1.equipe = [];
+  snapshot.forEach(m => addTeamMember(m.papel || 'Designer', m.nome || '', m.email || '', true));
 }
 
 // Habilita/desabilita "Baixar" e "Limpar" no rodapé da home conforme haver
@@ -2207,6 +2500,8 @@ function navigate(viewId) {
 }
 
 function populateFrameSelector(selectId) {
+  // Seletor "Documentando" removido da UI (2026-10-07).
+  return;
   const sel = document.getElementById(selectId);
   if (!sel) return;
   const frames = handoffData.frames || [];
@@ -2346,7 +2641,7 @@ function updateHandoffSummary() {
   // criadas sem frame associado ficavam de fora da contagem, mesmo existindo
   // de verdade e aparecendo na Ficha gerada (achado real, 2026-09-11).
   set('hs-count-specs', frames.reduce((s, f) => s + (f.createdSpecs?.length || 0), 0) + (handoffData.specs?.length || 0));
-  set('hs-count-measures', frames.reduce((s, f) => s + (f.measurements?.length || 0), 0) + (handoffData.measurements?.length || 0));
+  set('hs-count-measures', frames.reduce((s, f) => s + (f.measurements?.length || 0), 0) + (handoffData.measurements?.length || 0) + _specMeasurements().length);
   set('hs-count-flows', (handoffData.createdFlows || []).length);
   const fullN = _collectMarkedCustomItems().filter(e => _normUiDepth(e.item.uiDepth) === 'full').length;
   set('hs-count-full-detail', fullN);
@@ -2357,10 +2652,30 @@ function updateHandoffSummary() {
 
 // ── Aggregated view renderers ──────────────────────────────────────────
 
+// Medidas vinculadas a especificações (2026-10-07, decisão do Augusto: "você
+// aplica medida numa spec, não num token escaneado"). Ficam em
+// spec.measurements; lista única das especificações, sem duplicar por id.
+function _allSpecsUnique() {
+  const seen = new Set();
+  const out = [];
+  [...(handoffData.specs || []), ...(handoffData.frames || []).flatMap(f => f.createdSpecs || [])].forEach(s => {
+    if (!s || (s.id && seen.has(s.id))) return;
+    if (s.id) seen.add(s.id);
+    out.push(s);
+  });
+  return out;
+}
+function _specMeasurements() {
+  return _allSpecsUnique().flatMap(s => (s.measurements || []).map(m => Object.assign({}, m, { _specId: s.id })));
+}
+window._allSpecsUnique = _allSpecsUnique;
+window._specMeasurements = _specMeasurements;
+
 function renderAllMeasurements() {
   const all = [
     ...(handoffData.measurements || []),
-    ...(handoffData.frames || []).flatMap(f => f.measurements || [])
+    ...(handoffData.frames || []).flatMap(f => f.measurements || []),
+    ..._specMeasurements()
   ];
   if (typeof renderMeasurementsResults === 'function') renderMeasurementsResults(all);
 }
@@ -2469,6 +2784,9 @@ function _specOwnersOfItem(itemKey) {
 }
 
 function refreshSpecOwners(frameId) {
+  // Desligado em 2026-10-07: o selo "Veio do scan" e a área "Vindos do scan"
+  // saíram da tela; nenhum outro consumidor usa _specOwners.
+  return;
   const frames = frameId ? [getFrame(frameId)] : (handoffData.frames || []);
   frames.forEach(f => {
     if (f && f.id && !_specOwnersQueue.includes(f.id) && !(_specOwnersPending && _specOwnersPending.frameId === f.id)) {
@@ -3021,7 +3339,7 @@ window.addEventListener('DOMContentLoaded', () => {
   if (typeof _quickSpecCaptureResetOnBoot === 'function') _quickSpecCaptureResetOnBoot();
   parent.postMessage({ pluginMessage: { type: 'ui-ready' } }, '*');
   if (typeof initResizable === 'function') initResizable();
-  if (handoffData && handoffData.uiScale) setUiScale(handoffData.uiScale);
+  setUiScale(_hxSavedUiScale(), { silent: true });
 });
 
 // ── Accessibility & UX ─────────────────────────────────────────────────
@@ -3053,15 +3371,23 @@ function initResizable() {
 }
 
 window.currentUiScale = 1;
-function setUiScale(scale) {
+// Escala da interface (2026-10-08, antes "Tamanho da interface"): preferência da PESSOA, por instalação
+// (localStorage), como o tema e o espaçamento de texto -- antes ia em
+// handoffData.uiScale e viajava no JSON exportado do projeto. Valor antigo
+// salvo no projeto ainda é lido uma vez como ponto de partida.
+function _hxSavedUiScale() {
+  let v = null;
+  try { v = parseFloat(localStorage.getItem('hx-ui-scale')); } catch (e) { }
+  if (!v && typeof handoffData !== 'undefined' && handoffData && handoffData.uiScale) v = handoffData.uiScale;
+  return _ZOOM_STEPS.includes(v) ? v : 1;
+}
+
+function setUiScale(scale, opts) {
   window.currentUiScale = scale;
   document.documentElement.style.setProperty('--ui-scale', scale);
   document.body.classList.toggle('scale-high', scale > 1.1);
-  if (typeof handoffData !== 'undefined') { handoffData.uiScale = scale; saveToStorage(); }
-  const btnOut = document.getElementById('btn-zoom-out');
-  const btnIn  = document.getElementById('btn-zoom-in');
-  if (btnOut) btnOut.classList.toggle('hidden', scale <= 1);
-  if (btnIn)  btnIn.classList.toggle('hidden', scale >= 1.3);
+  if (!(opts && opts.silent)) { try { localStorage.setItem('hx-ui-scale', String(scale)); } catch (e) { } }
+  if (typeof _hxRenderPersonalizeMenu === 'function') _hxRenderPersonalizeMenu();
 }
 
 const _ZOOM_STEPS = [1, 1.15, 1.3];
@@ -3081,6 +3407,70 @@ function zoomOut() {
 }
 
 function toggleUiScale() { zoomIn(); }
+
+// ── Personalização (2026-10-08, mesmo padrão do hac) ───────────────────
+function toggleHxPersonalizeMenu(force) {
+  const menu = document.getElementById('hx-personalize-menu');
+  const btn = document.getElementById('btn-hx-personalize');
+  if (!menu) return;
+  const willOpen = typeof force === 'boolean' ? force : menu.classList.contains('hidden');
+  menu.classList.toggle('hidden', !willOpen);
+  if (btn) btn.setAttribute('aria-expanded', String(willOpen));
+  if (willOpen) {
+    _hxRenderPersonalizeMenu();
+    const first = menu.querySelector('[aria-pressed="true"]') || menu.querySelector('button, input');
+    if (first) first.focus();
+  }
+}
+window.toggleHxPersonalizeMenu = toggleHxPersonalizeMenu;
+
+function _hxRenderPersonalizeMenu() {
+  const isDark = document.documentElement.classList.contains('dark');
+  document.querySelectorAll('#hx-personalize-menu [data-hx-scale]').forEach(b => {
+    b.setAttribute('aria-pressed', String(Math.abs(parseFloat(b.dataset.hxScale) - (window.currentUiScale || 1)) < 0.01));
+  });
+  document.querySelectorAll('#hx-personalize-menu [data-hx-theme]').forEach(b => {
+    b.setAttribute('aria-pressed', String((b.dataset.hxTheme === 'dark') === isDark));
+  });
+  const ts = document.getElementById('hx-pz-text-spacing');
+  if (ts) ts.checked = document.documentElement.classList.contains('hx-text-spacing');
+}
+window._hxRenderPersonalizeMenu = _hxRenderPersonalizeMenu;
+
+function setHxTheme(theme) {
+  const isDark = document.documentElement.classList.contains('dark');
+  if ((theme === 'dark') !== isDark) toggleTheme();
+  _hxRenderPersonalizeMenu();
+}
+window.setHxTheme = setHxTheme;
+
+// Espaçamento de texto (WCAG 2.2, critério 1.4.12): entrelinha 1,5, 2em após
+// parágrafos, 0,12em entre letras e 0,16em entre palavras -- ver
+// .hx-text-spacing em styles/plugin.css. Preferência por instalação.
+function setHxTextSpacing(on) {
+  document.documentElement.classList.toggle('hx-text-spacing', !!on);
+  try { localStorage.setItem('hx-text-spacing', on ? '1' : '0'); } catch (e) { }
+  _hxRenderPersonalizeMenu();
+}
+window.setHxTextSpacing = setHxTextSpacing;
+try { if (localStorage.getItem('hx-text-spacing') === '1') document.documentElement.classList.add('hx-text-spacing'); } catch (e) { }
+
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('hx-personalize-menu');
+  const btn = document.getElementById('btn-hx-personalize');
+  if (!menu || menu.classList.contains('hidden')) return;
+  if (menu.contains(e.target) || (btn && btn.contains(e.target))) return;
+  toggleHxPersonalizeMenu(false);
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  const menu = document.getElementById('hx-personalize-menu');
+  if (!menu || menu.classList.contains('hidden')) return;
+  e.stopPropagation();
+  toggleHxPersonalizeMenu(false);
+  const btn = document.getElementById('btn-hx-personalize');
+  if (btn) btn.focus();
+}, true);
 
 window.toggleUiScale = toggleUiScale;
 window.setUiScale = setUiScale;

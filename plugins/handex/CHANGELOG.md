@@ -4,6 +4,73 @@
 
 ---
 
+## v6.35.0 — 2026-10-08
+
+Ainda não publicada na Figma Community. Nada desta versão foi testado no Figma.
+
+### Alterado — Detalhar UI, Detalhar Fluxos/Jornadas, salvamento e loading (2026-10-08)
+
+- Detalhar Fluxos/Jornadas sem propriedades visuais: a etapa "Propriedades" saiu do fluxo (Formulário → Posição → Exceção); informação visual fica só em Detalhar UI. A Ficha no canvas deixou de desenhar propriedades de especificações antigas.
+- Detalhar UI organizado em seções (Componente, Layout, Espaçamento, Aparência, Texto, Extras do Dev Mode, Código CSS), na lista e no card do canvas; camadas internas em sub-cards sob "Camadas internas (N)".
+- Modal de aprofundamento com opções **Padrão** e **Completo**, listando os nomes de todas as camadas encontradas e marcando as que só entram no Completo, em Escanear Frames e em Detalhar UI. Os textos não citam mais "8 níveis".
+- Salvamento por arquivo e por designer (mesmo modelo do hac): cópia dentro do arquivo do Figma por usuário + reserva local; corrige o registro único que fazia um projeto aparecer em outros arquivos. Projeto salvo antes disso: o plugin pergunta, ao abrir um arquivo sem documentação, se ele é daquele arquivo.
+- Rodapé "Salvamento automático" com estado real e "Como funciona" (explicação + Limpar cache / Limpar tudo); o ícone de nuvem do header e o toast "Salvo automaticamente" saíram.
+- Menu de backup no header (Baixar backup, Outras exportações, Restaurar backup); os botões Baixar, Importar e Limpar saíram do rodapé da home.
+- Loading em ações que criam ou apagam coisas no canvas (especificação, medidas, conexões, limpar canvas, inserir seção na Ficha), com fechamento automático em caso de erro.
+- Ficha: a coluna "Contato" da Equipe mostra o e-mail real.
+
+### Alterado — Renomeação das ferramentas e novo critério de uso (2026-10-08)
+
+- **"Inserir Anotações" virou "Detalhar UI"**: tudo o que for informação visual da interface (valores, tokens, propriedades do Dev Mode) entra apenas nos cards de Detalhar UI. A ação "Converter em Especificação" virou "Levar para Detalhar Fluxos/Jornadas" (e o modal pós-conversão foi reescrito com os novos nomes).
+- **"Inserir Especificações" virou "Detalhar Fluxos/Jornadas"**: tudo o que for informação técnica do projeto (regra de negócio, comportamento, dados da API, informação extra, exceções, links) entra aqui. O item da lista continua se chamando "especificação". Botão da Ficha: "Inserir/Atualizar Fluxos/Jornadas na Ficha".
+- **"Fluxos de Tela" virou "Conectar Telas"**. Na Ficha (canvas, HTML e Markdown) a seção passou a se chamar "Conexões entre telas"; Fichas já geradas com a seção "Fluxos de Tela" são atualizadas no lugar, sem duplicar. Botão: "Inserir/Atualizar Conexões na Ficha".
+- Sections do canvas renomeadas (achadas por pluginData, sem perda): "Handex | Detalhar UI", "Handex | Fluxos e Jornadas", "Handex | Conexões".
+- Menu Personalização: "Tamanho da interface" virou "Escala da interface".
+- Escanear Frames: removida a palavra "CAIXA" da descrição ("... alinhamento com o DSC"); texto do toggle Novo Componente: "Frame documenta um componente não existente no DSC."
+- Nomes internos de código não mudaram (`quick-spec.js`, `view-quick-spec`, `specifications.js`, `view-specifications`, `view-flows`, `createdSpecs`, `createdFlows`, `data-home-card-id`, `handexQuickSpecTag`, `quickspec`/`spec`/`fluxo` em `handexCategorySection`). Mapa completo no CLAUDE.md.
+
+### Corrigido — Personalização só contra referências da lib (2026-10-08)
+
+- Diferença em campo onde o componente da lib não usa token/estilo deixou de ser reportada como personalização (ex.: `[dsc] Header` com largura 1920px × 1200px na lib, ambos sem token). Re-escaneie os frames para atualizar.
+
+### Adicionado — Confirmar frames sem nada a construir (2026-10-08)
+
+- Ao inserir os frames na Ficha (ou gerar a Ficha), os frames sem Novo Componente e sem item a construir aparecem num modal com checkbox, com o status de revisão; só os marcados entram. A escolha fica salva no frame.
+
+### Adicionado — Modal de aprofundamento (2026-10-08)
+
+- Escanear Frames: com camadas além do nível 8, pergunta antes de escanear (até 8 ou tudo, até 20). Escolha salva no frame (`scanDepth`); antes, o que passava do nível 8 era ignorado sem aviso.
+- Anotações: com mais de 8 camadas internas, pergunta quantas ler (8 ou todas, até 30).
+
+### Alterado — Preview da Anatomia e do Espaçamento em tamanho real (2026-10-08)
+
+- Imagem a 100% (reduz só se não couber), com a escala informada ao lado da tag Preview.
+- Marcadores da Anatomia pela direção do elemento (coluna à direita em vertical; acima/abaixo em horizontal), com linhas em cotovelo que não atravessam o elemento.
+- Alinhamento do Espaçamento vira legenda abaixo da imagem.
+- Anatomia: até 24 partes (antes 8); partes com as mesmas propriedades viram uma coluna só ("Partes 2–12"), cada uma com seu número no Preview.
+
+### Adicionado — Designer na modal "Dados do Projeto" (2026-10-08)
+
+- Campo "Designer responsável" na modal rápida do header, ligado ao membro Designer da equipe.
+- O nome vem da conta de quem usa o plugin no Figma; também é preenchido ao abrir o arquivo quando a equipe não tem Designer nomeado.
+
+### Adicionado — Menu de Personalização (2026-10-08)
+
+- Botão "Personalização" no header, no padrão do hac: Tamanho da interface (100/115/130%), Tema (Claro/Escuro) e Espaçamento de texto (WCAG 2.2, 1.4.12). Substitui os botões de zoom e tema.
+- Espaçamento e tamanho combinados sem cortar texto: o que truncava quebra linha, botões de altura fixa crescem, a home rola.
+- Tamanho da interface passou a ser preferência por instalação (antes ia no projeto e viajava no JSON exportado).
+
+### Alterado — Anotações trazem tudo o que o Dev Mode mostra (2026-10-08)
+
+- Leitura completa: gradiente/imagem, todas as bordas com position e dash, radius por canto, auto layout com alinhamento e wrap, min/max, posição absoluta, opacity, blend, texto completo e layout grids.
+- Novas categorias no filtro: Layout, Opacity e Blend mode, Extras do Dev Mode (anotações nativas, descrição e documentação do componente, dev resources, modo de variável, export) e Código CSS (opcional, igual ao painel Code).
+
+### Alterado — "Escanear Tokens" vira "Escanear Frames"; revisão completa na Ficha (2026-10-08)
+
+- Nome novo da ferramenta e descrição nova (home, onboarding, "Como usar o plugin" e documentação).
+- Ficha: todo frame escaneado entra em "Frames Escaneados", com Revisão DSC (check de revisado + status + quem declarou), Reaproveitado do DSC, Fora do padrão, Precisa de revisão (com motivo), Justificativa do designer e A construir.
+- Markdown: "Tokens Escaneados" vira "Camadas escaneadas".
+
 ## v6.34.0 — 2026-10-01
 
 Ainda não publicada na Figma Community (a versão publicada é a 6.32.1). Mudanças das fases 2 a 5 de conformidade e a detecção de personalização ainda aguardam validação final no Figma.
@@ -14,6 +81,14 @@ Ainda não publicada na Figma Community (a versão publicada é a 6.32.1). Mudan
 - Sections do canvas renomeadas para "Handex | Anotações" e "Handex | Especificações" (achadas por pluginData; camadas antigas continuam reconhecidas).
 - Cards de Anotações no canvas: um por elemento, numa coluna ao lado do frame e na altura do próprio elemento, sem Auto Layout; a modal de grade saiu. Tag no ponto de saída da linha, em cinza sólido. As linhas de um lote nunca se cruzam.
 - Ficha: fonte Roboto (fonte vigente da lib DSC) no lugar da CAIXA Std; células das tabelas com altura igual por linha.
+- Anotações: ao desligar camadas internas (ou apagar a observação), o card encolhe e volta, com os de baixo, à posição original na coluna.
+- Anotações: ao converter em especificação, modal pergunta se vai para Especificações ou continua em Anotações. Termo "filhos diretos" trocado por "camadas internas".
+- Fluxos: diagrama da Ficha segue o tipo da conexão (Sequência, Mensagem, Decisão, Decisão opcional); nomes dos tipos iguais aos do modal; cor de linha branca.
+- Ficha: Frames Escaneados separa prontos × a construir; cards de construção com partes e variantes empilhadas (sem sobreposição); Documentação Visual sem nome repetido, Tag em destaque e medida do mesmo elemento dentro do card da especificação.
+- Medidas: vinculadas a especificações (botão "Inserir medida" no card da especificação ou lista no modal de Anotar Medidas), nunca a frame escaneado.
+- Inserir Especificações: independente do Escanear Tokens; especificação nova nunca é vinculada a frame; na Ficha, bloco "Especificações" (antes "Especificações avulsas").
+- Inserir Especificações e Anotar Medidas: seletor "Documentando" removido das duas telas.
+- Inserir Especificações: removidos a área "Vindos do scan", o selo "Veio do scan" e o chip de categoria do card; na Ficha, a especificação não é mais anexada ao card do item escaneado.
 - Ficha: Novo Componente vira o card a construir (com Interações do protótipo); tabela de camadas trocada por Reutilizar/Ícones/Construir; instância do DSC sem personalização não aparece como "construir".
 - **Corrigido (grave):** inserir medidas/especificações na Ficha podia apagar o frame principal; o snapshot agora usa cópias e nunca mexe no frame original.
 - Escanear Tokens: escaneamento de tela inteira não trava mais (miniaturas a 64px em lotes de 8, prévia do frame limitada a 1200px, erro sempre devolvido à UI e limite de 3 min no loading).
@@ -26,7 +101,7 @@ Ainda não publicada na Figma Community (a versão publicada é a 6.32.1). Mudan
 - Home: o card de Anotações mostra "Anotações inseridas (N)", contando os cards no canvas.
 - Anotações: tags, lista e coluna de cards na ordem dos cliques; incluir/excluir filhos não muda a ordem.
 - Anotações: o que já está selecionado no canvas ao iniciar a captura entra direto na lista.
-- Anotações: interruptor "Incluir filhos diretos" por elemento (desligado por padrão): lê o 1º nível, até 8 filhos, e mostra na lista, no card do canvas e no contexto para IA.
+- Anotações: interruptor "Incluir camadas internas" por elemento (desligado por padrão): lê o 1º nível, até 8 filhos, e mostra na lista, no card do canvas e no contexto para IA.
 
 ### Corrigido — Status do frame: uma regra só, cores da marca e legenda completa
 O status do frame ("Pendente", "Conforme"…) era calculado em dois lugares com resultados diferentes: o primeiro desenho do card só conhecia 4 estados e mostrava "Não Conforme" para um desvio já justificado, que só virava o estado certo depois de uma edição. Agora há uma função única (`_getFrameStatusView`, `core.js`) para o desenho inicial e para toda atualização. O estado antes chamado "Em revisão" passa a se chamar **Desvio justificado**, para não se confundir com o marcador de item "Necessita revisão".

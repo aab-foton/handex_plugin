@@ -132,19 +132,23 @@ export function hdFlowDiagramLayout(flows, nameOf, maxWidth) {
         });
       }
       out.forEach((ed, i) => {
-        if (ed.decision) decisions.push({ n: ed.decision.n, from: nameOf(edges[i].sourceId), to: nameOf(edges[i].targetId), text: ed.decision.text || '' });
+        if (ed.decision) decisions.push({ n: ed.decision.n, type: edges[i].type, from: nameOf(edges[i].sourceId), to: nameOf(edges[i].targetId), text: ed.decision.text || '' });
       });
       return { title, orient, width, height, boxes, events: ev, edges: out, decisions };
     };
 
-    // Decisão vira losango NUMERADO no meio da seta; o texto completo fica na
-    // lista abaixo do diagrama (texto dentro do diagrama não cabe no vão).
+    // O desenho segue o TIPO escolhido no plugin (2026-10-08, pedido do
+    // Augusto): Sequência = seta contínua; Mensagem = seta tracejada; Decisão =
+    // losango; Decisão (opcional) = losango com linha tracejada. O texto da
+    // conexão vira um marcador NUMERADO no meio da seta (losango só em
+    // Decisão, etiqueta nos demais) e o texto completo vai para a lista abaixo.
     let decN = 0;
     const edgeOf = (e, pts) => {
       const dashed = e.type === 'line_dashed' || e.type === 'diamond_dashed';
-      const isDecision = e.type === 'diamond' || e.type === 'diamond_dashed' || !!(e.decisionText && String(e.decisionText).trim());
+      const isDecision = e.type === 'diamond' || e.type === 'diamond_dashed';
+      const hasText = !!(e.decisionText && String(e.decisionText).trim());
       let mid = null;
-      if (isDecision) {
+      if (isDecision || hasText) {
         let best = 0, bi = 0;
         for (let i = 0; i < pts.length - 1; i++) {
           const l = Math.abs(pts[i + 1].x - pts[i].x) + Math.abs(pts[i + 1].y - pts[i].y);
@@ -153,7 +157,7 @@ export function hdFlowDiagramLayout(flows, nameOf, maxWidth) {
         mid = { x: (pts[bi].x + pts[bi + 1].x) / 2, y: (pts[bi].y + pts[bi + 1].y) / 2 };
       }
       const text = e.decisionText ? String(e.decisionText).trim() : '';
-      return { points: pts, color: e.color || '#22292e', dashed, decision: mid ? { x: mid.x, y: mid.y, n: ++decN, text } : null };
+      return { points: pts, color: e.color || '#22292e', dashed, type: e.type, decision: mid ? { x: mid.x, y: mid.y, n: ++decN, text, kind: isDecision ? 'decision' : 'label' } : null };
     };
 
     if (n === 0) return;

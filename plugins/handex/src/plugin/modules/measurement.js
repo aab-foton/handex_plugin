@@ -192,6 +192,7 @@
           // limpa -- a medida de um frame "voltava" no próximo render.
           const _keep = m => m && m.nodeId !== item.nodeId;
           (handoffData.frames || []).forEach(fr => { if (Array.isArray(fr.measurements)) fr.measurements = fr.measurements.filter(_keep); });
+          (typeof _allSpecsUnique === 'function' ? _allSpecsUnique() : []).forEach(sp => { if (Array.isArray(sp.measurements)) sp.measurements = sp.measurements.filter(_keep); });
           handoffData.measurements = (handoffData.measurements || []).filter(_keep);
           lastMeasurements = handoffData.measurements;
           saveToStorage();
@@ -223,7 +224,7 @@
     function _getAllMeasurements() {
       const standalone = handoffData.measurements || [];
       const perFrame = (handoffData.frames || []).flatMap(f => f.measurements || []);
-      return [...standalone, ...perFrame];
+      return [...standalone, ...perFrame, ...(typeof _specMeasurements === 'function' ? _specMeasurements() : [])];
     }
 
     function updateHideAllMeasuresButtonState() {
@@ -292,11 +293,30 @@
 
     let _specsHidden = false;
 
-    function openMeasureModal(frameId) {
-      if (frameId) activeFrameId = frameId;
+    // Medida pode ser vinculada a uma especificação (2026-10-07): pelo botão
+    // "Inserir medida" do card da especificação (já vem escolhida) ou pela
+    // lista do modal. Sem escolha = medida solta. Nunca vincula a frame
+    // escaneado.
+    function _populateMeasureSpecSelect(selectedId) {
+      const sel = document.getElementById('measure-spec-select');
+      if (!sel) return;
+      const specs = typeof _allSpecsUnique === 'function' ? _allSpecsUnique() : [];
+      sel.innerHTML = '<option value="">Sem especificação (medida solta)</option>' +
+        specs.map(s => `<option value="${escapeHtml(s.id || '')}">${escapeHtml(`${s.letter ? s.letter + ' · ' : ''}${s.name || 'Especificação'}`)}</option>`).join('');
+      sel.value = selectedId || '';
+    }
+    function openMeasureModal(_ignored, specId) {
       resetMeasureSelection();
+      _populateMeasureSpecSelect(specId || '');
       openModal('measure-form-modal');
     }
+    function openMeasureForSpec(specId) {
+      const spec = (typeof _allSpecsUnique === 'function' ? _allSpecsUnique() : []).find(s => s.id === specId);
+      if (!spec) return;
+      if (spec.targetNodeId && typeof focusNode === 'function') focusNode(spec.targetNodeId);
+      openMeasureModal(null, specId);
+    }
+    window.openMeasureForSpec = openMeasureForSpec;
     function closeMeasureModal() {
       closeModal('measure-form-modal');
     }
@@ -374,8 +394,10 @@
         return;
       }
       const storeInParent = document.getElementById('chk-store-parent').checked;
-      const frame = activeFrameId ? getFrame(activeFrameId) : null;
-      const startNum = frame ? (frame.nextMeasurementNumber || 1) : nextMeasurementNumber;
+      const specSel = document.getElementById('measure-spec-select');
+      window._measureTargetSpecId = specSel && specSel.value ? specSel.value : null;
+      const startNum = nextMeasurementNumber;
+      if (typeof startCanvasLoading === 'function') startCanvasLoading('Inserindo medidas no canvas...', ['measurements-applied', 'canvas-action-failed'], 60000);
       parent.postMessage({
         pluginMessage: {
           type: 'measure-nodes-custom',

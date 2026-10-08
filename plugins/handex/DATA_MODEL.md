@@ -460,6 +460,8 @@ Versão atual: `_schemaVersion: 3`
   figmaId:        string,   // ID do nó Figma
   nome:           string,
   isNewComponent: boolean,
+  scanDepth?:     number,   // OPCIONAL (2026-10-08): níveis lidos pelo scan, escolhidos no modal de aprofundamento (8 = padrão; até 20). Ausente = 8 e pergunta se houver camadas mais fundas. Sem bump de schema
+  fichaInclude?:  boolean,  // OPCIONAL (2026-10-08): false = o designer tirou este frame (sem nada a construir) da Ficha no modal "Incluir estes frames na Ficha?". Ausente = incluir. Sem bump de schema
 
   specs:   null | ScanResult,   // resultado do scan de tokens DSC — ver 5.4.1
   audit: {
@@ -512,7 +514,7 @@ Versão atual: `_schemaVersion: 3`
   customizations:      { layer, campo, atual, padrao }[] | null,   // Fase 5b: o que difere do componente principal da lib (só INSTANCE com vínculo próprio, components/icons); [] = avaliado e sem diferença; null = não aplicável/não avaliado
   customizationsStatus:'evaluated' | 'not-evaluated' | null,   // Fase 5b; not-evaluated = padrão da lib ilegível, nunca verde nem âmbar. Com customizations não vazio: isDS "warning" + matchedBy 'customized'
   isMarkedCustom:      boolean,  // DECLARADO pelo designer (toggle "Componente Personalizado"
-                                 // no card do item, tela Escanear Tokens) — ver nota abaixo
+                                 // no card do item, tela Escanear Frames) — ver nota abaixo
   uiDepth:             'essential' | 'full',   // OPCIONAL (2026-10-01): nível de detalhe do card "User Interface" na Ficha. Gravado pelo frontend (checkbox "Detalhamento completo" / modal "Revisar detalhamento"); ausente ou desconhecido = 'essential'. Só vale com isMarkedCustom=true (ao desmarcar, o valor fica guardado e é ignorado). Sem bump de schema
   customDecided:       boolean,  // OPCIONAL (2026-10-01, default false/ausente): true = o designer mexeu no toggle "Vai para a Ficha" deste item (ligou OU desligou). Usado só pela regra de padrão do "Novo Componente" (frame.isNewComponent): itens novos com isCustomComponent=true entram com isMarkedCustom=true enquanto customDecided não for true. Preservado no re-scan por nodeId. Sem bump de schema
   nodeIds:             string[],  // OPCIONAL (2026-10-02, Fase A do card de elemento único): ids de todos os nós do mesmo item deduplicado (limite ~50), calculado pelo backend no scan. Usado só para casar spec ↔ item (resolve-spec-owners); ausente em scans antigos = tratar como [nodeId]
@@ -522,7 +524,7 @@ Versão atual: `_schemaVersion: 3`
 }
 ```
 
-**Estado derivado spec ↔ item (2026-10-02, NÃO persistido):** o mapa `specId ↔ itemKey` (`window._specOwners.bySpec`, `itemKey = frameId|categoria|nodeId`) vive só em memória no frontend. É recalculado ao abrir Escanear Tokens/Especificações, após escanear e após criar/excluir spec, via `resolve-spec-owners` (UI→backend) / `spec-owners-resolved` (backend→UI, `results: [{ specId, itemKey|null, via: 'exact'|'ancestor'|'none' }]`). Nunca entra em `handoffData`, export ou import; em dúvida, a spec fica sem item dono.
+**Estado derivado spec ↔ item (2026-10-02, NÃO persistido):** o mapa `specId ↔ itemKey` (`window._specOwners.bySpec`, `itemKey = frameId|categoria|nodeId`) vive só em memória no frontend. É recalculado ao abrir Escanear Frames/Especificações, após escanear e após criar/excluir spec, via `resolve-spec-owners` (UI→backend) / `spec-owners-resolved` (backend→UI, `results: [{ specId, itemKey|null, via: 'exact'|'ancestor'|'none' }]`). Nunca entra em `handoffData`, export ou import; em dúvida, a spec fica sem item dono.
 
 **Pré-criações "Vindos do scan" (2026-10-02, DERIVADAS, NÃO persistidas):** a lista no topo de Inserir Especificações é recalculada a cada render a partir de `frames[].specs` (itens com `isDS === false`, `isDS === 'warning'`, `isCustomComponent` ou `customizations` não vazio), excluindo os que já têm spec casada (`_specOwners`) e os com `specDismissed`. Só `specDismissed` é gravado (no item do scan). Pré-criação não é spec: não entra em `createdSpecs`, contadores, Ficha, Markdown, Ficha HTML nem `_aiContext`; só vira spec quando o designer conclui o fluxo da Especificação.
 
@@ -534,7 +536,7 @@ Versão atual: `_schemaVersion: 3`
   por simples limitação de detecção, sem ser genuinamente um componente
   novo.
 - `isMarkedCustom` é **declarado manualmente pelo designer** (2026-09-16),
-  via toggle no card do item na tela Escanear Tokens. É a única fonte de
+  via toggle no card do item na tela Escanear Frames. É a única fonte de
   verdade sobre "isto precisa ser construído pelo dev" — controla o que
   entra no Card 3 "User Interface" da Ficha de Handoff (ver 4.10). Itens
   em conformidade ou "necessita revisão" nunca entram na Ficha
@@ -694,7 +696,7 @@ Canvas (Figma)                                  Persistência (localStorage)
 ### 6.1 Inserção incremental por subseção (2026-09-15)
 
 Além do fluxo global "Gerar Ficha" (`create-handoff`, sempre remove e
-reconstrói a Ficha inteira), cada uma das 4 telas (Escanear Tokens, Anotar
+reconstrói a Ficha inteira), cada uma das 4 telas (Escanear Frames, Anotar
 Specs, Anotar Medidas, Fluxos de Tela) tem um botão próprio **"Inserir [X]
 na Ficha"** (`insertSectionInFicha()`, `modules/handoff.js`) que sincroniza
 **só a subseção correspondente** no canvas, preservando as demais como
@@ -762,3 +764,7 @@ Para adicionar novos tipos de artefato, seguir sempre:
 ```
 
 Incrementar `_schemaVersion` e adicionar migrador em `code.js` a cada mudança estrutural incompatível.
+
+**2026-10-08:** propriedades lidas em Detalhar UI (gravadas no card do canvas em pluginData `handexQuickSpecProperties`) ganharam o campo `group` (`componente` | `layout` | `espacamento` | `aparencia` | `texto` | `devmode` | `css`); cards antigos sem `group` são exibidos numa seção "Propriedades". Especificações novas (Detalhar Fluxos/Jornadas) nascem com `properties: []` — a captura de propriedades visuais saiu do fluxo. Sem bump de schema.
+
+**Persistência (2026-10-08):** `handoffData` é salvo por arquivo e por designer: cópia no documento (`figma.root.getPluginData('handoffData@<userId>:<n>')`, privado do Handex, com `:count` e `:savedAt`; sem `frames[].specs.framePreview`, `_history` e `previousSnapshot`) e reserva em `figma.clientStorage` (`handoffData:<fileId>:<userId>`, `fileId` = root pluginData `handexFileId`). Chave antiga `handoffData_0:0` só migra quando o designer confirma.

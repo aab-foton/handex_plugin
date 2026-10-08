@@ -142,7 +142,7 @@ ${framesList.map(f => {
       { label: 'Vetores',            items: f.specs.vectors     },
     ].filter(c => c.items && c.items.length > 0);
     if (cats.length > 0) {
-      tokensMD = '\n\n#### Tokens Escaneados\n' +
+      tokensMD = '\n\n#### Camadas escaneadas\n' +
         cats.map(c => `- **${c.label}** (${c.items.length}): ` +
           c.items.slice(0, 10).map(it => (it.name || it.label || '—') + (window._handexLegacyLibHint && it.legacyLib ? ' *(lib legada — precisa migrar)*' : '')).join(', ') +
           (c.items.length > 10 ? ` +${c.items.length - 10} mais` : '')
@@ -188,7 +188,7 @@ ${(() => {
   const framesWithSpecs = framesList.filter(f => (f.createdSpecs || []).length > 0);
   const looseSpecs = _looseSpecsOf(handoffData);
   if (framesWithSpecs.length === 0 && looseSpecs.length === 0) return 'Nenhuma especificação anotada.';
-  const looseMD = looseSpecs.length === 0 ? [] : [`### Especificações avulsas\n` + looseSpecs.map(s => {
+  const looseMD = looseSpecs.length === 0 ? [] : [`### Especificações\n` + looseSpecs.map(s => {
     const cat = s.type || s.categoryLabel || s.category || 'Geral';
     const props = (s.properties || []).length > 0
       ? '\n' + s.properties.map(p => `  - **${_vocabLabel(p.label, p.key)}**${p.token ? ` \`${p.token}\`` : ''}${p.value ? ` → ${_vocabValue(p.value)}` : ''}`).join('\n')
@@ -196,7 +196,8 @@ ${(() => {
     const excs = (s.excecoes || []).length > 0
       ? '\n' + s.excecoes.map(e => `  - [${_excTipoInfo(e.tipo).label}] **${e.titulo || ''}**${e.obs ? ': ' + e.obs : ''}`).join('\n')
       : '';
-    return `- **${s.name || 'Spec'}** [${cat}]${s.note ? ': ' + s.note : ''}${s.link ? ` — [DSC](${s.link})` : ''}${props}${excs}`;
+    return `- **${s.name || 'Spec'}** [${cat}]${s.note ? ': ' + s.note : ''}${s.link ? ` — [DSC](${s.link})` : ''}${props}${excs}${(s.measurements || []).flatMap(m => m.details || []).map(d => `
+  - Medida: ${d}`).join('')}`;
   }).join('\n')];
   return framesWithSpecs.map(f => {
     const groupNames = f.specGroupNames || {};
@@ -220,7 +221,8 @@ ${(() => {
         const excs = (s.excecoes || []).length > 0
           ? '\n' + s.excecoes.map(e => `  - [${_excTipoInfo(e.tipo).label}] **${e.titulo || ''}**${e.obs ? ': ' + e.obs : ''}`).join('\n')
           : '';
-        return `- **${s.name || 'Spec'}** [${cat}]${s.note ? ': ' + s.note : ''}${s.link ? ` — [DSC](${s.link})` : ''}${nodeRef}${props}${excs}`;
+        return `- **${s.name || 'Spec'}** [${cat}]${s.note ? ': ' + s.note : ''}${s.link ? ` — [DSC](${s.link})` : ''}${nodeRef}${props}${excs}${(s.measurements || []).flatMap(m => m.details || []).map(d => `
+  - Medida: ${d}`).join('')}`;
       });
       return `#### Grupo ${letter}${groupName}\n${specLines.join('\n')}`;
     }).filter(Boolean);
@@ -228,7 +230,7 @@ ${(() => {
   }).concat(looseMD).join('\n\n');
 })()}
 
-## Fluxos de Tela (${(handoffData.createdFlows || []).length})
+## Conexões entre telas (${(handoffData.createdFlows || []).length})
 ${(handoffData.createdFlows || []).length === 0
   ? 'Nenhum fluxo mapeado.'
   : (typeof computeFlowJourneys === 'function' ? computeFlowJourneys(handoffData.createdFlows) : []).map(journey => {
@@ -325,8 +327,8 @@ ${(handoffData.createdFlows || []).length === 0
       });
     }
 
-    function _sendCreateHandoff(includeAllFrames = false) {
-      parent.postMessage({ pluginMessage: _withRefSkeleton({ type: 'create-handoff', data: _dataForCreateHandoff(), includeAllFrames }) }, '*');
+    function _sendCreateHandoff(includeAllFrames = false, excludeFrameIds = []) {
+      parent.postMessage({ pluginMessage: _withRefSkeleton({ type: 'create-handoff', data: _dataForCreateHandoff(), includeAllFrames, excludeFrameIds }) }, '*');
       showHandoffLoading();
     }
     window._sendCreateHandoff = _sendCreateHandoff;
@@ -336,18 +338,55 @@ ${(handoffData.createdFlows || []).length === 0
     // escaneados mas nenhum é relevante (sem Novo Componente, sem item
     // marcado Personalizado). onDecision recebe true/false conforme a
     // escolha do designer.
+    // 2026-10-08 (pedido do Augusto): frames escaneados sem nada a construir
+    // (sem Novo Componente, sem item "precisa ser construído") só entram na
+    // Ficha se o designer confirmar, frame a frame. A escolha fica em
+    // frame.fichaInclude e volta marcada na próxima vez (padrão: incluir).
+    function _framesWithoutBuild() {
+      return (handoffData.frames || []).filter(f => f && f.specs && !f.isNewComponent &&
+        !HX_BUILDABLE_CATS.some(cat => (f.specs[cat] || []).some(it => _isBuildItem(it, cat))));
+    }
+    window._framesWithoutBuild = _framesWithoutBuild;
+
     let _framesRelevanceDecisionCallback = null;
-    function openFramesRelevanceModal(onDecision) {
+    let _framesRelevanceCandidates = [];
+    function openFramesRelevanceModal(onDecision, candidates) {
       _framesRelevanceDecisionCallback = onDecision;
+      _framesRelevanceCandidates = candidates || [];
+      const list = document.getElementById('frames-relevance-list');
+      if (list) {
+        list.innerHTML = _framesRelevanceCandidates.map(f => {
+          const key = typeof _getFrameStatusKey === 'function' ? _getFrameStatusKey(f) : 'pendente';
+          const view = (typeof FRAME_STATUS_VIEW !== 'undefined' && FRAME_STATUS_VIEW[key]) || { label: '', cls: '' };
+          const reviewed = !!(f.audit && f.audit.checkDone);
+          const checked = f.fichaInclude !== false ? 'checked' : '';
+          return `<label class="flex items-start gap-2.5 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
+            <input type="checkbox" data-frames-include="${escapeHtml(f.id)}" ${checked} class="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-400 shrink-0">
+            <span class="min-w-0">
+              <span class="block text-[12px] font-bold text-slate-700 dark:text-white truncate">${escapeHtml(f.nome || 'Frame')}</span>
+              <span class="block text-[10px] ${view.cls}">${reviewed ? 'Revisado · ' : ''}${escapeHtml(view.label)}</span>
+            </span>
+          </label>`;
+        }).join('');
+      }
       openModal('frames-relevance-modal');
     }
     window.openFramesRelevanceModal = openFramesRelevanceModal;
 
-    function _resolveFramesRelevanceModal(includeAllFrames) {
+    function _resolveFramesRelevanceModal(confirmed) {
       closeModal('frames-relevance-modal');
       const cb = _framesRelevanceDecisionCallback;
       _framesRelevanceDecisionCallback = null;
-      if (typeof cb === 'function') cb(includeAllFrames);
+      if (!confirmed) { _framesRelevanceCandidates = []; return; }
+      const exclude = [];
+      document.querySelectorAll('#frames-relevance-list [data-frames-include]').forEach(box => {
+        const f = (handoffData.frames || []).find(x => x.id === box.dataset.framesInclude);
+        if (f) f.fichaInclude = box.checked;
+        if (!box.checked) exclude.push(box.dataset.framesInclude);
+      });
+      _framesRelevanceCandidates = [];
+      saveToStorage();
+      if (typeof cb === 'function') cb(false, exclude);
     }
     window._resolveFramesRelevanceModal = _resolveFramesRelevanceModal;
 
@@ -401,7 +440,7 @@ ${(handoffData.createdFlows || []).length === 0
       );
       const totalSpecs = (handoffData.frames || []).reduce((n, f) => n + (f.createdSpecs || []).length, 0)
                        + ((typeof createdSpecs !== 'undefined' ? createdSpecs : []).length);
-      const totalMeasures = (handoffData.frames || []).reduce((n, f) => n + (f.measurements || []).length, 0)
+      const totalMeasures = (typeof _specMeasurements === 'function' ? _specMeasurements().length : 0) + (handoffData.frames || []).reduce((n, f) => n + (f.measurements || []).length, 0)
                            + (handoffData.measurements || []).length;
       const totalFlows = (handoffData.createdFlows || []).length;
 
@@ -447,7 +486,7 @@ ${(handoffData.createdFlows || []).length === 0
         }
         if (stateEmpty) stateEmpty.classList.remove('hidden');
       } else if (filled.length === 1) {
-        const labels = { info: 'Informações do Projeto', specs: 'Especificações', measures: 'Medidas', flows: 'Fluxos de Tela' };
+        const labels = { info: 'Informações do Projeto', specs: 'Detalhar Fluxos/Jornadas', measures: 'Medidas', flows: 'Conectar Telas' };
         const msgEl = document.getElementById('inject-single-msg');
         if (msgEl) msgEl.textContent = `Você preencheu apenas ${labels[filled[0].key]}. Deseja gerar a ficha com o que tem, ou continuar documentando?`;
         if (stateSingle) stateSingle.classList.remove('hidden');
@@ -610,7 +649,7 @@ ${(handoffData.createdFlows || []).length === 0
     // salvava e voltava pra home sem tocar o canvas — removido: inserir na
     // ficha já chama collectHandoffData()+saveToStorage(), então já cobre
     // a mesma persistência sem precisar de uma segunda ação.
-    const _FICHA_SECTION_BTN_LABEL = { tokens: 'Tokens', specs: 'Specs', measurements: 'Medidas', flows: 'Fluxos' };
+    const _FICHA_SECTION_BTN_LABEL = { tokens: 'Frames', specs: 'Fluxos/Jornadas', measurements: 'Medidas', flows: 'Conexões' };
     function _updateInsertFichaButtonLabel(sectionKey) {
       const btn = document.getElementById('btn-insert-ficha-' + sectionKey);
       if (!btn) return;
@@ -633,7 +672,7 @@ ${(handoffData.createdFlows || []).length === 0
     // measurements/flows); traduzido para o nome de seção esperado pelo
     // backend (tokens/specs/medidas/fluxos) via _FICHA_SECTION_BACKEND_KEY.
     const _FICHA_SECTION_BACKEND_KEY = { tokens: 'tokens', specs: 'specs', measurements: 'medidas', flows: 'fluxos' };
-    const _FICHA_SECTION_LABEL = { tokens: 'Tokens', specs: 'Specs', measurements: 'Medidas', flows: 'Fluxos' };
+    const _FICHA_SECTION_LABEL = { tokens: 'Frames', specs: 'Fluxos/Jornadas', measurements: 'Medidas', flows: 'Conexões' };
     function insertSectionInFicha(sectionKey) {
       collectHandoffData();
 
@@ -679,7 +718,7 @@ ${(handoffData.createdFlows || []).length === 0
     }
     window.insertSectionInFicha = insertSectionInFicha;
 
-    function _sendInsertFichaSection(sectionKey, includeAllFrames = false) {
+    function _sendInsertFichaSection(sectionKey, includeAllFrames = false, excludeFrameIds = []) {
       const btn = document.getElementById('btn-insert-ficha-' + sectionKey);
       if (btn) {
         btn.disabled = true;
@@ -687,11 +726,13 @@ ${(handoffData.createdFlows || []).length === 0
         _refreshIcons();
       }
 
+      if (typeof startCanvasLoading === 'function') startCanvasLoading('Atualizando a Ficha no canvas...', ['ficha-section-inserted', 'ficha-section-insert-error', 'ficha-section-needs-full-create'], 300000);
       parent.postMessage({ pluginMessage: _withRefSkeleton({
         type: 'insert-ficha-section',
         section: _FICHA_SECTION_BACKEND_KEY[sectionKey] || sectionKey,
         data: handoffData,
-        includeAllFrames
+        includeAllFrames,
+        excludeFrameIds
       }) }, '*');
     }
     window._sendInsertFichaSection = _sendInsertFichaSection;
@@ -1467,7 +1508,7 @@ ${(handoffData.createdFlows || []).length === 0
       // 7.2 Especificações Anotadas (seção independente, agrupada por frame e grupo)
       const _looseAnnot = _looseSpecsOf(handoffData);
       const _framesWithAnnot = (_allFrames).filter(f => (f.createdSpecs || []).length > 0)
-        .concat(_looseAnnot.length > 0 ? [{ nome: 'Especificações avulsas', createdSpecs: _looseAnnot }] : []);
+        .concat(_looseAnnot.length > 0 ? [{ nome: 'Especificações', createdSpecs: _looseAnnot }] : []);
       if (_framesWithAnnot.length > 0) {
         const totalAnnot = _framesWithAnnot.reduce((n, f) => n + f.createdSpecs.length, 0);
         const annotContent = `
@@ -1562,14 +1603,14 @@ ${(handoffData.createdFlows || []).length === 0
                 <div class="overflow-x-auto">${_flowDiagramSvg(lay)}</div>
                 ${lay.decisions.length > 0 ? `
                 <table class="w-full mt-2 text-[11px] border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
-                  <thead><tr class="bg-slate-100 dark:bg-slate-800 text-left"><th class="p-2 w-8">#</th><th class="p-2">Caminho</th><th class="p-2">Decisão</th></tr></thead>
-                  <tbody>${lay.decisions.map(d => `<tr class="border-t border-slate-200 dark:border-slate-700"><td class="p-2 font-bold">${d.n}</td><td class="p-2">${escapeHtml(d.from)} → ${escapeHtml(d.to)}</td><td class="p-2">${escapeHtml(d.text || '—')}</td></tr>`).join('')}</tbody>
+                  <thead><tr class="bg-slate-100 dark:bg-slate-800 text-left"><th class="p-2 w-8">#</th><th class="p-2">Tipo</th><th class="p-2">Caminho</th><th class="p-2">Texto</th></tr></thead>
+                  <tbody>${lay.decisions.map(d => `<tr class="border-t border-slate-200 dark:border-slate-700"><td class="p-2 font-bold">${d.n}</td><td class="p-2">${({ line_solid: 'Sequência', line_dashed: 'Mensagem', diamond: 'Decisão', diamond_dashed: 'Decisão (opcional)' })[d.type] || '—'}</td><td class="p-2">${escapeHtml(d.from)} → ${escapeHtml(d.to)}</td><td class="p-2">${escapeHtml(d.text || '—')}</td></tr>`).join('')}</tbody>
                 </table>` : ''}
               </div>
             `).join('')}
           </div>
         `;
-        accordionsHTML += buildAccordionHTML("acc-flows", `Fluxos de Tela · ${_allFlows.length}`, "git-branch", flowsContent, false);
+        accordionsHTML += buildAccordionHTML("acc-flows", `Conexões entre telas · ${_allFlows.length}`, "git-branch", flowsContent, false);
       }
 
       // 9. "Especificações Visuais" (specs a partir de handoffData.specs, nível
@@ -2588,7 +2629,9 @@ function _flowDiagramSvg(lay) {
   lay.edges.forEach(e => {
     if (!e.decision) return;
     const d = e.decision, h = 11;
-    out += `<path d="M ${d.x} ${d.y - h} L ${d.x + h} ${d.y} L ${d.x} ${d.y + h} L ${d.x - h} ${d.y} Z" fill="#ffffff" stroke="${e.color}" stroke-width="1.5"/>`;
+    out += d.kind === 'label'
+      ? `<rect x="${d.x - 10}" y="${d.y - 9}" width="20" height="18" rx="4" fill="#ffffff" stroke="${e.color}" stroke-width="1.5"/>`
+      : `<path d="M ${d.x} ${d.y - h} L ${d.x + h} ${d.y} L ${d.x} ${d.y + h} L ${d.x - h} ${d.y} Z" fill="#ffffff" stroke="${e.color}" stroke-width="1.5"/>`;
     out += `<text x="${d.x}" y="${d.y + 3.5}" text-anchor="middle" font-size="10" font-weight="700" fill="${e.color}">${d.n}</text>`;
   });
   return out + '</svg>';

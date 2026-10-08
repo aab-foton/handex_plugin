@@ -25,10 +25,15 @@
       return true;
     }
 
-    function scanFrame(frameId, categories = null, selectedLibSlugs = null) {
+    function scanFrame(frameId, categories = null, selectedLibSlugs = null, scanDepth = null) {
       if (frameId) activeFrameId = frameId;
 
       const frame = activeFrameId ? getFrame(activeFrameId) : null;
+      // Profundidade escolhida no modal de aprofundamento fica no frame: o
+      // re-scan usa a mesma, sem perguntar de novo (2026-10-08).
+      if (typeof scanDepth === 'number' && frame) { frame.scanDepth = scanDepth; saveToStorage(); }
+      const _depth = typeof scanDepth === 'number' ? scanDepth : (frame && typeof frame.scanDepth === 'number' ? frame.scanDepth : null);
+      window._lastScanArgs = { frameId: activeFrameId, categories, selectedLibSlugs };
 
       // Loading visual — overlay de scan + spinner discreto no frame
       if (typeof showScanLoading === 'function') showScanLoading();
@@ -55,11 +60,40 @@
           selectedLibSlugs: selectedLibSlugs,
           categories: categories,
           previousSpecs: frame ? frame.specs : (handoffData.step2 && handoffData.step2.specs) || null,
-          isNewComponent: !!(frame && frame.isNewComponent)
+          isNewComponent: !!(frame && frame.isNewComponent),
+          scanDepth: _depth
         })
       }, "*");
     }
 
+
+    // Backend contou camadas além do padrão e pediu decisão antes de escanear.
+    function handleScanDepthCheck(msg) {
+      clearTimeout(window._scanWatchdog);
+      if (typeof hideScanLoading === 'function') hideScanLoading();
+      if (msg.frameId) { const sp = document.getElementById(`sub-spinner-tokens-${msg.frameId}`); if (sp) sp.classList.add('hidden'); }
+      const a = window._lastScanArgs || { frameId: msg.frameId };
+      const frame = msg.frameId ? getFrame(msg.frameId) : null;
+      const all = Math.min(msg.maxDepth, msg.hardMax);
+      const stdN = msg.standardCount || 0, fullN = msg.fullCount || 0, outN = msg.beyondFull || 0;
+      openDepthDecision({
+        title: 'Como escanear as camadas?',
+        message: `${frame ? `"${frame.nome}"` : 'Este frame'} tem ${fullN + outN} camadas. O Padrão escaneia ${stdN} e o Completo escaneia ${fullN}; as ${msg.deeper} camadas mais internas só entram no Completo.`,
+        note: (outN > 0 ? `${outN} camada(s) ficam fora mesmo no Completo, por serem muito profundas. ` : '') + 'O Completo leva mais tempo em frames grandes. A escolha fica salva neste frame para os próximos re-scans.',
+        moreLabel: 'Completo',
+        moreSub: `${fullN} camadas`,
+        defaultLabel: 'Padrão',
+        defaultSub: `${stdN} camadas`,
+        layers: Array.isArray(msg.layers) ? msg.layers.map(l => ({ n: l.n, d: l.d, std: l.std })) : [],
+        layersMore: (msg.stdMore || 0) + (msg.extraMore || 0),
+        groupByLevel: true,
+        layersTitle: `Camadas encontradas (${fullN + outN})`,
+        onMore: () => scanFrame(a.frameId, a.categories, a.selectedLibSlugs, all),
+        onDefault: () => scanFrame(a.frameId, a.categories, a.selectedLibSlugs, msg.defaultDepth),
+        onCancel: () => showToast('Escaneamento cancelado.')
+      });
+    }
+    window.handleScanDepthCheck = handleScanDepthCheck;
 
     function renderSpecs(data, frameId) {
       const containerId = frameId ? `scan-results-${frameId}` : "scan-results";
@@ -258,7 +292,7 @@
               </div>
               <div>
                 <p class="text-[12px] font-bold text-slate-700 dark:text-white">Novo Componente</p>
-                <p class="text-[10px] text-slate-500 dark:text-dark-muted">Frame introduz um componente inédito no DSC</p>
+                <p class="text-[10px] text-slate-500 dark:text-dark-muted">Frame documenta um componente não existente no DSC.</p>
               </div>
             </div>
             <label class="relative inline-flex items-center cursor-pointer shrink-0">
@@ -289,7 +323,7 @@
               <div class="w-6 h-6 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-lg shrink-0">
                 <i data-lucide="scan-line" class="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted"></i>
               </div>
-              <span class="flex-1 text-[12px] font-bold text-slate-700 dark:text-white truncate">Tokens Escaneados</span>
+              <span class="flex-1 text-[12px] font-bold text-slate-700 dark:text-white truncate">Camadas escaneadas</span>
               <span id="sub-count-tokens-${fid}" class="text-[10px] text-slate-500 dark:text-dark-muted mr-1 shrink-0"></span>
               <span id="sub-spinner-tokens-${fid}" class="hidden mr-0.5 shrink-0">
                 <i data-lucide="loader-2" class="w-3 h-3 text-[#005ca9] animate-spin"></i>
@@ -1435,9 +1469,12 @@
     }
     window.dismissScanItem = dismissScanItem;
 
+    // Área "Vindos do scan" removida da tela (2026-10-07, decisão do Augusto:
+    // desnecessária). Função mantida vazia porque ainda é chamada após o scan.
     function _renderScanPrecreations() {
       const host = document.getElementById('specs-scan-precreations');
-      if (!host) return;
+      if (host) host.innerHTML = '';
+      return;
       const { pending, dismissed } = _scanPrecreations();
       if (pending.length + dismissed.length === 0) { host.innerHTML = ''; return; }
 
@@ -1737,6 +1774,7 @@
           mainComponent: chk('ann-main-component'),
         }
       };
+      if (typeof startCanvasLoading === 'function') startCanvasLoading('Criando a especificação no canvas...', ['spec-created', 'canvas-action-failed'], 30000);
       parent.postMessage({ pluginMessage: { type: 'create-unified-spec', opts } }, '*');
     }
 
@@ -1948,9 +1986,14 @@
       };
     }
 
+    // 2026-10-08 (decisão do Augusto): Detalhar Fluxos/Jornadas guarda só
+    // informação técnica do projeto; informação visual vive apenas em
+    // Detalhar UI. A etapa "Propriedades" saiu: do formulário a especificação
+    // vai direto para Posição, sem propriedades visuais.
     function requestSpecProperties() {
       if (!validateSpecLetterInput()) return;
-      parent.postMessage({ pluginMessage: _withRefSkeleton({ type: 'request-spec-properties', targetNodeId: window._pendingSpecTargetNodeId || undefined }) }, '*');
+      window._pendingSpecOpts = _collectSpecPropertiesOpts();
+      openSpecPositionModal();
     }
 
     function closeSpecPropertiesModal() {
@@ -2004,15 +2047,6 @@
         opts.pinnedPosition = window._pendingSpecPosition;
       }
 
-      const checkboxes = document.querySelectorAll('#spec-properties-list input[type="checkbox"]:checked');
-      checkboxes.forEach(chk => {
-        const propKey = chk.value;
-        const propData = currentScannedProps.find(p => p.key === propKey);
-        if (propData) {
-          opts.properties.push(propData);
-        }
-      });
-
       return opts;
     }
 
@@ -2041,10 +2075,10 @@
       }
     }
 
+    // Voltar da Posição leva ao formulário (a etapa Propriedades saiu).
     function backToSpecPropertiesFromPosition() {
       closeSpecPositionModal();
-      document.getElementById('spec-properties-modal').classList.remove('hidden');
-      { const _f = document.querySelector('#spec-properties-modal ' + FOCUSABLE_SELECTOR); if (_f) _f.focus(); }
+      { const _f = document.querySelector('#spec-form-modal ' + FOCUSABLE_SELECTOR); if (_f) _f.focus(); }
     }
     window.backToSpecPropertiesFromPosition = backToSpecPropertiesFromPosition;
 
@@ -2124,6 +2158,7 @@
       closeSpecNewExceptionModal();
       closeSpecFormModal();
       window._quickSpecPendingConversionTag = _pendingConversionTag;
+      if (typeof startCanvasLoading === 'function') startCanvasLoading('Criando a especificação no canvas...', ['spec-created', 'canvas-action-failed'], 30000);
       parent.postMessage({ pluginMessage: { type: 'create-unified-spec', opts } }, '*');
 
       window._pendingSpecOpts = null;
@@ -2155,7 +2190,7 @@
               <i data-lucide="file-text" class="w-16 h-16 text-slate-200 dark:text-slate-700" style="opacity:0.25"></i>
             </div>
             <p class="text-[12px] font-bold text-slate-600 dark:text-dark-muted text-center px-4 mb-1">Nenhuma especificação criada ainda</p>
-            <p class="text-[10px] text-slate-600 dark:text-dark-muted text-center px-6 mb-3">Selecione um elemento no canvas para registrar decisões, regras e exceções. Só precisa dos valores? Use Inserir Anotações.</p>
+            <p class="text-[10px] text-slate-600 dark:text-dark-muted text-center px-6 mb-3">Selecione um elemento no canvas para registrar decisões, regras e exceções. Só precisa dos valores visuais? Use Detalhar UI.</p>
             <button onclick="openSpecFormModal()" class="fab-inline" title="Criar especificação" aria-label="Criar especificação">
               <i data-lucide="plus" class="w-4 h-4 shrink-0"></i>
               <span>Nova spec</span>
@@ -2480,12 +2515,11 @@
           // lado do título (spec.type é sempre igual a categoryLabel, ver
           // backend em create-unified-spec) e de novo embaixo em texto
           // plano.
-          const _ccSpec = spec.category ? _getCatColor(spec.category) : null;
+          // Só o nome do elemento como título do card (2026-10-07): chip de
+          // categoria e selo "Veio do scan" saíram da lista.
           btn.innerHTML = `
-            <div class="flex flex-col overflow-hidden min-w-0 text-left gap-0.5">
+            <div class="flex flex-col overflow-hidden min-w-0 text-left">
               <span class="text-[12px] font-bold text-slate-800 dark:text-white truncate" title="${spec.name}">${spec.name}</span>
-              ${spec.category && _ccSpec ? `<span class="shrink-0 self-start text-[9px] font-bold px-1.5 py-0.5 rounded-full border" style="background-color:${_ccSpec.fill};border-color:${_ccSpec.stroke};color:${_ccSpec.stroke};">${spec.categoryLabel || spec.category}</span>` : ''}
-              <span data-spec-origin-slot class="self-start">${_specOriginBadgeHtml(spec.id)}</span>
             </div>
           `;
 
@@ -2694,6 +2728,20 @@
             </button>
           `;
           content.appendChild(actionsRow);
+
+          // Medidas da especificação (2026-10-07): botão para medir o elemento
+          // dela e lista das medidas já vinculadas.
+          const measureRow = document.createElement('div');
+          measureRow.className = 'pt-1 space-y-1';
+          const _sm = spec.measurements || [];
+          measureRow.innerHTML = `
+            <button type="button" onclick="event.stopPropagation(); openMeasureForSpec('${spec.id}')"
+              class="w-full flex items-center justify-center gap-1.5 py-2 text-[11px] font-bold text-[#004d8d] dark:text-[#6dbafa] bg-white dark:bg-dark-surface border border-blue-200 dark:border-blue-800/30 rounded-2xl hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+              <i data-lucide="ruler" class="w-3.5 h-3.5"></i> Inserir medida${_sm.length > 0 ? ` (${_sm.length})` : ''}
+            </button>
+            ${_sm.map(m => (m.details || []).map(d => `<div class="text-[10px] text-slate-600 dark:text-dark-text bg-white dark:bg-dark-bg p-1.5 rounded border border-gray-100 dark:border-dark-line font-mono">${escapeHtml(d)}</div>`).join('')).join('')}
+          `;
+          content.appendChild(measureRow);
 
           const specExcs = spec.excecoes || [];
           if (specExcs.length > 0) {
@@ -3484,7 +3532,8 @@
       { hex: '#a65e00', name: 'Laranja escuro', hint: 'alerta' },
       { hex: '#216e62', name: 'Turquesa', hint: 'alternativa' },
       { hex: '#026273', name: 'Informação', hint: 'informação' },
-      { hex: '#64747a', name: 'Cinza médio', hint: 'secundário' }
+      { hex: '#64747a', name: 'Cinza médio', hint: 'secundário' },
+      { hex: '#ffffff', name: 'Branco', hint: 'sobre fundo escuro' }
     ];
     const FLOW_LINE_DEFAULT_COLOR = '#22292e';
     let _flowColorSel = FLOW_LINE_DEFAULT_COLOR;
@@ -3504,7 +3553,7 @@
         return `<button type="button" role="radio" aria-checked="${on}" tabindex="${on ? 0 : -1}" data-color="${c.hex}"
           aria-label="${c.name}" title="${c.name}: ${c.hint}"
           class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all ${on ? 'ring-2 ring-offset-2 ring-offset-white dark:ring-offset-dark-bg' : ''}"
-          style="background-color:${c.hex};${on ? `--tw-ring-color:${c.hex};` : ''}">${on ? '<i data-lucide="check" class="w-4 h-4 text-white pointer-events-none"></i>' : ''}</button>`;
+          style="background-color:${c.hex};${c.hex === '#ffffff' ? 'box-shadow: inset 0 0 0 1px #9eb2b8;' : ''}${on ? `--tw-ring-color:${c.hex === '#ffffff' ? '#9eb2b8' : c.hex};` : ''}">${on ? `<i data-lucide="check" class="w-4 h-4 ${c.hex === '#ffffff' ? 'text-slate-800' : 'text-white'} pointer-events-none"></i>` : ''}</button>`;
       }).join('');
       const pick = (hex, focus) => {
         onPick(hex);
@@ -3636,6 +3685,7 @@
       const autoMarkInput = document.getElementById('flow-auto-mark-endpoints');
       const autoMarkEndpoints = autoMarkInput ? autoMarkInput.checked : false;
 
+      if (typeof startCanvasLoading === 'function') startCanvasLoading('Desenhando as conexões no canvas...', ['flow-created', 'flow-batch-created', 'canvas-action-failed'], 60000);
       parent.postMessage({
         pluginMessage: {
           type: 'create-flow-connection',
@@ -3718,10 +3768,10 @@
       if (typeof _moveHeaderHelpIcons === 'function') _moveHeaderHelpIcons('flows-header-help-icons', '#view-flows .subheader-brand > div:last-child', true);
 
       const FLOW_TYPE_LABELS = {
-        'line_solid': 'Linha Sólida',
-        'line_dashed': 'Linha Tracejada',
-        'diamond': 'Ponto de Decisão',
-        'diamond_dashed': 'Decisão Tracejada',
+        'line_solid': 'Sequência',
+        'line_dashed': 'Mensagem',
+        'diamond': 'Decisão',
+        'diamond_dashed': 'Decisão (opcional)',
         'gateway_parallel': 'Gateway Paralelo',
         'event_start': 'Início de Fluxo',
         'event_end': 'Fim de Fluxo'
@@ -3735,7 +3785,7 @@
       const journeys = computeFlowJourneys(handoffData.createdFlows);
       if (sectionTitle) {
         sectionTitle.classList.remove('hidden');
-        sectionTitle.textContent = `Fluxos Desenhados (${journeys.length})`;
+        sectionTitle.textContent = `Conexões desenhadas (${journeys.length})`;
       }
 
       const html = journeys.map(journey => {
@@ -4200,8 +4250,8 @@ function toggleLinkInput(show) {
       _refreshIcons();
     }
 
-    function openSpecFormModal(frameId) {
-      if (frameId) activeFrameId = frameId;
+    function openSpecFormModal() {
+      // Independente do Escanear Tokens (2026-10-07): não usa frame ativo.
       // Modo criação: limpa campos e reseta estado
       document.getElementById('spec-form-modal').dataset.editIdx = '';
       // Captura o elemento vinculado JÁ na abertura do modal (não no envio
@@ -4212,7 +4262,7 @@ function toggleLinkInput(show) {
       if (!window._pendingSpecTargetNodeId) {
         parent.postMessage({ pluginMessage: { type: 'get-selection-id-for-spec' } }, '*');
       }
-      document.getElementById('spec-letter-input').value = typeof _suggestNextSpecTag === 'function' ? _suggestNextSpecTag(activeFrameId) : 'A';
+      document.getElementById('spec-letter-input').value = typeof _suggestNextSpecTag === 'function' ? _suggestNextSpecTag(null) : 'A';
       document.getElementById('spec-color-input').value = '#004d8d';
       if (typeof validateSpecLetterInput === 'function') validateSpecLetterInput();
       document.getElementById('ann-category').value = '';

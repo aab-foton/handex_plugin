@@ -562,7 +562,7 @@
           </div>
           <div>
             <span class="text-[11px] font-bold text-st-info dark:text-st-info-dark">Novo Componente</span>
-            <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed mt-0.5">Frame marcado como um componente inédito, ainda fora do DSC.</p>
+            <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed mt-0.5">Frame documenta um componente não existente no DSC.</p>
           </div>
           <div>
             <span class="text-[11px] font-bold text-st-neutral dark:text-dark-muted">Pendente</span>
@@ -583,7 +583,7 @@
 
           <div class="border-t border-gray-100 dark:border-dark-line pt-3.5">
             <p class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-dark-muted">Marcadores dos itens escaneados</p>
-            <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed mt-0.5">Aparecem em cada elemento da lista Tokens Escaneados. São o resultado automático do escaneamento, item a item, e alimentam o status do frame.</p>
+            <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed mt-0.5">Aparecem em cada elemento da lista Camadas escaneadas. São o resultado automático do escaneamento, item a item, e alimentam o status do frame.</p>
           </div>
           <div>
             <span class="text-[11px] font-bold text-st-ok dark:text-st-ok-dark">Em conformidade</span>
@@ -939,7 +939,7 @@
       </div>
       <div class="p-4 border-t border-gray-100 dark:border-dark-line flex gap-2 shrink-0">
         <button onclick="closeSpecFormModal()" class="flex-1 py-2.5 text-[12px] font-bold text-slate-600 dark:text-dark-muted bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line hover:bg-gray-50 dark:hover:bg-slate-800 rounded-2xl transition-colors">Cancelar</button>
-        <button id="btn-spec-form-confirm" onclick="requestSpecProperties()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-blue-500 hover:bg-blue-600 rounded-2xl transition-colors shadow-lg shadow-blue-500/20">Ir para Propriedades</button>
+        <button id="btn-spec-form-confirm" onclick="requestSpecProperties()" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-blue-500 hover:bg-blue-600 rounded-2xl transition-colors shadow-lg shadow-blue-500/20">Continuar</button>
       </div>
     </div>
   </div>
@@ -1196,6 +1196,9 @@
         <p class="text-[10px] text-slate-500 dark:text-dark-muted text-center mb-6">
           Dica: Você pode selecionar múltiplos tipos de medida simultaneamente.
         </p>
+
+        <label for="measure-spec-select" class="block text-[11px] font-bold text-slate-600 dark:text-dark-muted mb-1.5">Vincular a uma especificação <span class="font-medium text-slate-500">(opcional)</span></label>
+        <select id="measure-spec-select" class="w-full px-3 py-2 mb-2 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-2xl text-[12px] text-slate-700 dark:text-dark-text outline-none focus:ring-2 focus:ring-blue-100"></select>
 
         <!-- DORMANT: chk-store-parent — frame auxiliar (ver code.js) -->
         <input type="checkbox" id="chk-store-parent" class="hidden" />
@@ -1491,7 +1494,7 @@
       </div>
       <div class="bg-orange-50 dark:bg-orange-900/20 rounded-xl p-2.5 text-center">
         <p id="import-count-flows" class="text-[18px] font-extrabold text-orange-800 dark:text-orange-400 leading-none">0</p>
-        <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-0.5 uppercase tracking-wide">Fluxos</p>
+        <p class="text-[10px] text-slate-500 dark:text-dark-muted mt-0.5 uppercase tracking-wide">Conexões</p>
       </div>
     </div>
 
@@ -1526,8 +1529,8 @@
       <label id="import-opt-flows-label" class="flex items-start gap-3 p-3 border-2 border-gray-100 dark:border-dark-line rounded-xl cursor-pointer hover:border-orange-300/60 transition-colors has-[:checked]:border-orange-500 has-[:checked]:bg-orange-50/50 dark:has-[:checked]:bg-orange-900/10">
         <input type="checkbox" id="import-opt-flows" class="mt-0.5 w-4 h-4 accent-orange-700 shrink-0">
         <div class="flex-1">
-          <p class="text-[12px] font-bold text-slate-800 dark:text-white leading-tight">Recriar Fluxos</p>
-          <p id="import-flows-hint" class="text-[10px] text-slate-500 dark:text-dark-muted leading-snug mt-0.5">Recria as conexões de fluxo no canvas, ligando novamente os elementos de origem e destino.</p>
+          <p class="text-[12px] font-bold text-slate-800 dark:text-white leading-tight">Recriar Conexões entre telas</p>
+          <p id="import-flows-hint" class="text-[10px] text-slate-500 dark:text-dark-muted leading-snug mt-0.5">Recria as conexões entre telas no canvas, ligando novamente os elementos de origem e destino.</p>
         </div>
       </label>
     </div>
@@ -1552,27 +1555,28 @@
      item marcado Personalizado, nenhum frame com Novo Componente). Aberto
      por openFramesRelevanceModal (handoff.js), disparado a partir da
      resposta de check-frames-relevance (messages.js). -->
-<div id="frames-relevance-modal" role="dialog" aria-modal="true" aria-labelledby="frames-relevance-modal-title" class="modal-overlay hidden fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-  <div class="modal-content bg-white dark:bg-dark-surface rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col gap-4">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0">
-        <i data-lucide="check-circle-2" class="w-5 h-5 text-[#005ca9] dark:text-blue-400"></i>
+<div id="frames-relevance-modal" role="dialog" aria-modal="true" aria-labelledby="frames-relevance-modal-title" aria-describedby="frames-relevance-modal-desc" class="modal-overlay hidden fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+  <div class="modal-content bg-white dark:bg-dark-surface rounded-2xl shadow-2xl w-full max-w-sm max-h-[85vh] flex flex-col">
+    <div class="p-6 pb-3 flex flex-col gap-3 shrink-0">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0">
+          <i data-lucide="list-checks" class="w-5 h-5 text-[#005ca9] dark:text-blue-400"></i>
+        </div>
+        <p id="frames-relevance-modal-title" class="text-[13px] font-bold text-slate-800 dark:text-white">Incluir estes frames na Ficha?</p>
       </div>
-      <div>
-        <p id="frames-relevance-modal-title" class="text-[13px] font-bold text-slate-800 dark:text-white">Tudo parece estar dentro do DSC</p>
-      </div>
+      <p id="frames-relevance-modal-desc" class="text-[11.5px] text-slate-600 dark:text-dark-muted leading-relaxed">
+        Estes frames não têm nada a construir. Marque só os que o dev ainda precisa ver na Ficha. Frames com Novo Componente ou com itens a construir entram sempre.
+      </p>
     </div>
-    <p class="text-[11.5px] text-slate-600 dark:text-dark-muted leading-relaxed">
-      Nenhum item foi marcado como personalizado e nenhum frame é Novo Componente. A Ficha pode seguir sem a lista de frames. Quer incluí-la mesmo assim?
-    </p>
-    <div class="flex flex-col gap-2">
+    <div id="frames-relevance-list" class="px-6 overflow-y-auto flex-1 min-h-0 space-y-1"></div>
+    <div class="p-6 pt-4 flex flex-col gap-2 shrink-0">
       <button onclick="_resolveFramesRelevanceModal(true)"
-        class="w-full py-2.5 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white text-[11px] font-bold transition-colors">
-        Incluir lista de frames mesmo assim
+        class="w-full py-2.5 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white text-[12px] font-bold transition-colors">
+        Continuar
       </button>
       <button onclick="_resolveFramesRelevanceModal(false)"
-        class="w-full py-2.5 rounded-2xl bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line text-slate-600 dark:text-dark-muted text-[11px] font-bold hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
-        Não incluir
+        class="w-full py-2.5 rounded-2xl bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line text-slate-600 dark:text-dark-muted text-[12px] font-bold hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
+        Cancelar
       </button>
     </div>
   </div>
@@ -1664,11 +1668,11 @@
         </label>
         <label class="flex items-center gap-2 text-[11px] text-slate-700 dark:text-white cursor-pointer">
           <input type="checkbox" id="clear-canvas-quickspec" onchange="updateClearCanvasButtonState()" class="w-4 h-4 rounded accent-red-500">
-          Anotações
+          Detalhar UI
         </label>
         <label class="flex items-center gap-2 text-[11px] text-slate-700 dark:text-white cursor-pointer">
           <input type="checkbox" id="clear-canvas-specs" onchange="updateClearCanvasButtonState()" class="w-4 h-4 rounded accent-red-500">
-          Especificações
+          Fluxos/Jornadas (especificações)
         </label>
         <label class="flex items-center gap-2 text-[11px] text-slate-700 dark:text-white cursor-pointer">
           <input type="checkbox" id="clear-canvas-medidas" onchange="updateClearCanvasButtonState()" class="w-4 h-4 rounded accent-red-500">
@@ -1676,7 +1680,7 @@
         </label>
         <label class="flex items-center gap-2 text-[11px] text-slate-700 dark:text-white cursor-pointer">
           <input type="checkbox" id="clear-canvas-fluxos" onchange="updateClearCanvasButtonState()" class="w-4 h-4 rounded accent-red-500">
-          Fluxos
+          Conexões entre telas
         </label>
       </div>
 
@@ -1804,6 +1808,24 @@
           oninput="updateData('step1', 'objetivo', this.value); _updateCharCount(this, 500)"
           class="w-full px-3 py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-lg text-[12px] text-slate-800 dark:text-white min-h-[80px] focus:ring-2 focus:ring-[#005ca9]/20 outline-none transition-all resize-none placeholder:text-gray-300"></textarea>
       </div>
+      <!-- Designer responsável (2026-10-08, pedido do Augusto): título + designer
+           são o mínimo para gerar a Ficha. Edita o 1º membro "Designer" da
+           equipe (o mesmo da tela completa); cria um se não houver. -->
+      <div>
+        <div class="flex items-center justify-between mb-1.5">
+          <label for="qp-designer-nome" class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider">Designer responsável <span class="text-red-400">*</span></label>
+          <span id="qp-designer-nome-count" class="text-[9px] font-bold text-slate-400 dark:text-dark-muted">0/80</span>
+        </div>
+        <input type="text" id="qp-designer-nome" placeholder="Nome completo" maxlength="80"
+          oninput="qpUpdateDesigner('nome', this.value); _updateCharCount(this, 80)"
+          class="w-full px-3 py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-lg text-[13px] text-slate-800 dark:text-white focus:ring-2 focus:ring-[#005ca9]/20 outline-none transition-all placeholder:text-gray-300 dark:placeholder:text-gray-600" />
+        <input type="email" id="qp-designer-email" placeholder="Email institucional (opcional)" maxlength="120"
+          oninput="qpUpdateDesigner('email', this.value)" onblur="validateEmail(this)"
+          aria-label="Email institucional do designer (opcional)" aria-describedby="qp-designer-email-hint" aria-invalid="false"
+          class="mt-2 w-full px-3 py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-lg text-[12px] text-slate-800 dark:text-white focus:ring-2 focus:ring-[#005ca9]/20 outline-none transition-all placeholder:text-gray-300 dark:placeholder:text-gray-600" />
+        <p id="qp-designer-email-hint" class="hidden text-[10px] text-red-500 dark:text-red-400 mt-1" role="alert"></p>
+        <p id="qp-designer-prefill-hint" class="hidden text-[10px] text-slate-500 dark:text-dark-muted mt-1">Trazido da sua conta do Figma.</p>
+      </div>
     </div>
     <div class="p-5 pt-2 shrink-0">
       <button onclick="closeModal('quick-project-modal'); navigate('view-dados-projeto');"
@@ -1886,7 +1908,7 @@
             <i data-lucide="tag" class="w-3.5 h-3.5 text-blue-500"></i>
           </div>
           <div>
-            <p class="text-[12px] font-bold text-slate-800 dark:text-white">Especificações</p>
+            <p class="text-[12px] font-bold text-slate-800 dark:text-white">Detalhar Fluxos/Jornadas</p>
             <p id="inject-specs-count" class="text-[10px] text-slate-500 dark:text-dark-muted"></p>
           </div>
         </div>
@@ -1912,7 +1934,7 @@
             <i data-lucide="git-branch" class="w-3.5 h-3.5 text-orange-800"></i>
           </div>
           <div>
-            <p class="text-[12px] font-bold text-slate-800 dark:text-white">Fluxos de Tela</p>
+            <p class="text-[12px] font-bold text-slate-800 dark:text-white">Conectar Telas</p>
             <p id="inject-flows-count" class="text-[10px] text-slate-500 dark:text-dark-muted"></p>
           </div>
         </div>
@@ -2127,6 +2149,101 @@
         <i data-lucide="check" class="w-3.5 h-3.5"></i>
         Salvar
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: aprofundamento da leitura (2026-10-08, pedido do Augusto). Usado
+     pelo Escanear Frames (profundidade) e pelas Anotações (camadas internas)
+     quando o elemento tem muitas camadas: opções "Padrão" e "Completo" com a
+     lista das camadas encontradas. Textos vêm de openDepthDecision
+     (core.js). Fechar (X/Esc) cancela a ação. -->
+<div id="depth-decision-modal" role="dialog" aria-modal="true" aria-labelledby="depth-decision-title" aria-describedby="depth-decision-msg" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+  <div class="bg-white dark:bg-dark-bg w-full max-w-[360px] rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line overflow-hidden">
+    <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-line flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0">
+          <i data-lucide="layers" class="w-5 h-5 text-[#005ca9] dark:text-blue-400"></i>
+        </div>
+        <h3 id="depth-decision-title" class="text-[15px] font-extrabold text-slate-800 dark:text-white">Ler mais camadas?</h3>
+      </div>
+      <button onclick="closeModal('depth-decision-modal')" aria-label="Cancelar" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-800 rounded-2xl transition-colors text-slate-500 dark:text-dark-muted shrink-0">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+    <div class="px-5 py-4 space-y-2">
+      <p id="depth-decision-msg" class="text-[12px] text-slate-600 dark:text-dark-text leading-relaxed"></p>
+      <p id="depth-decision-note" class="hidden text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed"></p>
+      <div id="depth-decision-layers-wrap" class="hidden pt-1">
+        <p id="depth-decision-layers-title" class="text-[10px] font-bold text-slate-500 dark:text-dark-muted uppercase tracking-wider mb-1"></p>
+        <div id="depth-decision-layers" tabindex="0" role="list" aria-label="Camadas encontradas" class="max-h-44 overflow-y-auto rounded-xl border border-gray-100 dark:border-dark-line bg-gray-50 dark:bg-dark-surface px-2 py-1.5 space-y-0.5"></div>
+      </div>
+    </div>
+    <div class="px-5 pb-5 flex flex-col gap-2">
+      <button type="button" id="depth-decision-more" onclick="_depthDecisionResolve('more')" class="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-white text-[13px] font-bold rounded-2xl transition-colors"></button>
+      <button type="button" id="depth-decision-default" onclick="_depthDecisionResolve('default')" class="w-full py-2.5 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line hover:bg-gray-50 dark:hover:bg-slate-800 text-slate-700 dark:text-white text-[13px] font-bold rounded-2xl transition-colors"></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: SALVAMENTO AUTOMÁTICO (2026-10-08, mesmo padrão do hac) -- aberta
+     pelo rodapé #hx-autosave-bar (build.cjs). Persistência por arquivo e por
+     designer (code.js, _hxSaveState/_hxLoadState). As limpezas abrem a
+     confirmação de sempre (confirm-clear-modal) já no passo certo. -->
+<div id="autosave-modal" role="dialog" aria-modal="true" aria-labelledby="autosave-modal-title" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+  <div class="bg-white dark:bg-dark-bg w-full max-w-[380px] max-h-[90vh] flex flex-col rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line overflow-hidden">
+    <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-line flex items-center justify-between shrink-0">
+      <h3 id="autosave-modal-title" class="flex items-center gap-2 text-[15px] font-extrabold text-slate-800 dark:text-white">
+        <i data-lucide="cloud-check" class="w-4 h-4 text-green-600 dark:text-green-400" aria-hidden="true"></i> Salvamento automático
+      </h3>
+      <button onclick="closeModal('autosave-modal')" aria-label="Fechar modal" class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-800 rounded-2xl transition-colors text-slate-500 dark:text-dark-muted shrink-0">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+    <div class="px-5 py-4 space-y-3 overflow-y-auto min-h-0 text-[12px] text-slate-600 dark:text-dark-muted leading-relaxed">
+      <p>Seu trabalho é salvo sozinho, a cada alteração.</p>
+      <div class="rounded-2xl border border-gray-100 dark:border-dark-line p-3 space-y-1.5">
+        <p class="flex items-center gap-1.5 font-bold text-slate-800 dark:text-white"><i data-lucide="shield-check" class="w-3.5 h-3.5 text-[#005ca9] dark:text-blue-300" aria-hidden="true"></i> Só seu, neste arquivo</p>
+        <p>A documentação é salva por designer: outras pessoas que usam o Handex no mesmo arquivo não veem nem sobrescrevem a sua. Seguindo princípios da LGPD (finalidade e necessidade), os dados ficam no arquivo do Figma e neste computador, sem envio para outros serviços.</p>
+      </div>
+      <p><strong class="text-slate-700 dark:text-white">Passar para outra pessoa:</strong> Baixar backup, no menu do topo. Quem receber usa Restaurar backup.</p>
+      <p><strong class="text-slate-700 dark:text-white">Quando limpar:</strong> projeto novo no mesmo arquivo ou arquivo duplicado de outro projeto.</p>
+      <ul class="list-disc pl-4 space-y-1">
+        <li><strong class="text-slate-700 dark:text-white">Limpar cache:</strong> apaga a sua documentação deste arquivo. O canvas fica como está.</li>
+        <li><strong class="text-slate-700 dark:text-white">Limpar tudo:</strong> também remove desta página o que o Handex criou no canvas.</li>
+      </ul>
+      <p class="text-amber-700 dark:text-amber-400">Não dá para desfazer. <button type="button" onclick="exportHandoffData()" class="font-bold underline hover:no-underline text-[#005ca9] dark:text-blue-300">Baixe um backup antes</button>.</p>
+    </div>
+    <div class="px-5 py-4 border-t border-gray-100 dark:border-dark-line flex flex-col gap-2 shrink-0">
+      <button type="button" onclick="hxClearCache()" class="w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl border border-gray-200 dark:border-dark-line text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800 text-[12px] font-bold transition-colors">
+        <i data-lucide="trash-2" class="w-4 h-4 shrink-0" aria-hidden="true"></i> Limpar cache
+      </button>
+      <button type="button" onclick="hxClearEverything()" class="w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl border border-red-200 dark:border-red-800/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 text-[12px] font-bold transition-colors">
+        <i data-lucide="trash" class="w-4 h-4 shrink-0" aria-hidden="true"></i> Limpar tudo (cache + canvas)
+      </button>
+      <button type="button" onclick="closeModal('autosave-modal')" class="w-full py-2.5 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line hover:bg-gray-50 dark:hover:bg-slate-800 text-slate-700 dark:text-white text-[12px] font-bold rounded-2xl transition-colors">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: projeto salvo antes da persistência por arquivo e designer
+     (2026-10-08). Sem X de propósito: a resposta decide para onde o projeto
+     antigo vai (openLegacyProjectModal/answerLegacyProject, core.js). -->
+<div id="legacy-project-modal" role="dialog" aria-modal="true" aria-labelledby="legacy-project-title" aria-describedby="legacy-project-msg" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+  <div class="bg-white dark:bg-dark-bg w-full max-w-[360px] rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-line overflow-hidden">
+    <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-line flex items-center gap-3">
+      <div class="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0">
+        <i data-lucide="folder-input" class="w-5 h-5 text-[#005ca9] dark:text-blue-400"></i>
+      </div>
+      <h3 id="legacy-project-title" class="text-[15px] font-extrabold text-slate-800 dark:text-white">Projeto salvo encontrado</h3>
+    </div>
+    <div class="px-5 py-4 space-y-2">
+      <p id="legacy-project-msg" class="text-[12px] text-slate-600 dark:text-dark-text leading-relaxed"></p>
+      <p class="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">Agora cada arquivo do Figma guarda a própria documentação, por designer. Se o projeto for deste arquivo, ele passa a morar aqui. Se não for, ele continua disponível para o arquivo certo.</p>
+    </div>
+    <div class="px-5 pb-5 flex flex-col gap-2">
+      <button type="button" onclick="answerLegacyProject(true)" class="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-white text-[13px] font-bold rounded-2xl transition-colors">Sim, é deste arquivo</button>
+      <button type="button" onclick="answerLegacyProject(false)" class="w-full py-2.5 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-line hover:bg-gray-50 dark:hover:bg-slate-800 text-slate-700 dark:text-white text-[13px] font-bold rounded-2xl transition-colors">Não, começar vazio</button>
     </div>
   </div>
 </div>

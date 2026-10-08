@@ -195,6 +195,10 @@ body {
        specifications.js/measurement.js). Corrigido fixando o caso aqui,
        sem depender de reordenar os dois arquivos CSS. */
     .fab-inline.hidden { display: none; }
+    /* Rodapé de salvamento: some com o plugin recolhido e na captura do
+       Detalhar UI (a janela fica do tamanho da barra). */
+    body.hx-collapsed #hx-autosave-bar,
+    body.a11y-capture-mini-active #hx-autosave-bar { display: none; }
     .fab-inline > i, .fab-inline > svg { flex-shrink: 0; }
     .fab-inline span {
       font-size: 11px;
@@ -451,6 +455,59 @@ body {
     body.scale-high footer {
       padding: 8px 12px;
     }
+
+    /* --- Personalização (2026-10-08, mesmo padrão do hac) --- */
+    .hx-pz-opt {
+      min-height: 2rem; border-radius: 12px;
+      font-size: 12px; font-weight: 700;
+      border: 1px solid rgba(64, 75, 82, 0.2); color: #404b52; background: #fff;
+    }
+    .dark .hx-pz-opt { border-color: #334155; color: #b4c6d8; background: transparent; }
+    .hx-pz-opt[aria-pressed="true"] { background: #005ca9; border-color: #005ca9; color: #fff; }
+    .hx-pz-opt:focus-visible { outline: 2px solid #005ca9; outline-offset: 2px; }
+
+    /* Switch: checkbox nativo com role="switch" (teclado e leitor de tela
+       "ligado/desligado"), desenhado como trilho + botão. */
+    .hx-switch {
+      appearance: none; -webkit-appearance: none;
+      position: relative; width: 36px; height: 20px; flex: none;
+      border-radius: 999px; background: #737f87; cursor: pointer;
+      transition: background-color .15s ease;
+    }
+    .hx-switch::after {
+      content: ""; position: absolute; top: 2px; left: 2px;
+      width: 16px; height: 16px; border-radius: 999px; background: #fff;
+      box-shadow: 0 1px 2px rgba(0,0,0,.25); transition: transform .15s ease;
+    }
+    .hx-switch:checked { background: #005ca9; }
+    .hx-switch:checked::after { transform: translateX(16px); }
+    .hx-switch:focus-visible { outline: 2px solid #005ca9; outline-offset: 2px; }
+    .dark .hx-switch { background: #64748b; }
+    .dark .hx-switch:checked { background: #3b8fd9; }
+
+    /* Espaçamento de texto -- WCAG 2.2, 1.4.12 (Text Spacing), valores mínimos
+       do critério; !important para vencer leading-* e tracking-*. Em "em", então
+       acompanha o Tamanho da interface (zoom): os dois combinam sem conflito. */
+    html.hx-text-spacing body * {
+      line-height: 1.5 !important;
+      letter-spacing: 0.12em !important;
+      word-spacing: 0.16em !important;
+    }
+    html.hx-text-spacing body p + p { margin-top: 2em !important; }
+    /* Alinhamento com o Tamanho da interface: texto maior não pode ser cortado.
+       O que truncava passa a quebrar linha; botão com altura fixa vira altura
+       mínima e cresce com o texto; a grade da home deixa a linha crescer e a
+       tela rola (a altura útil já é 100vh / escala). */
+    html.hx-text-spacing body .truncate { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; }
+    html.hx-text-spacing body button.h-8 { height: auto !important; min-height: 2rem; }
+    html.hx-text-spacing body button.h-9 { height: auto !important; min-height: 2.25rem; }
+    html.hx-text-spacing body button.h-10 { height: auto !important; min-height: 2.5rem; }
+    html.hx-text-spacing body button.h-11 { height: auto !important; min-height: 2.75rem; }
+    html.hx-text-spacing body button.h-12 { height: auto !important; min-height: 3rem; }
+    html.hx-text-spacing #home-cards-grid,
+    body.scale-high #home-cards-grid { grid-template-rows: repeat(3, minmax(min-content, 1fr)); }
+    html.hx-text-spacing #hx-personalize-menu,
+    body.scale-high #hx-personalize-menu { max-height: calc(100vh / var(--ui-scale) - 64px); overflow-y: auto; }
 
     /* Ensure scroll container is always reachable */
     .flex-1.overflow-y-auto {

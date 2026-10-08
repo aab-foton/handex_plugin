@@ -195,7 +195,7 @@ Padrão usado por `detail-level-modal` ("Quanto detalhe cada item terá na Ficha
 
 ### Ponte spec ↔ elemento escaneado (2026-10-02; revisada no mesmo dia)
 
-Os botões de spec saíram do card do scan: Escanear Tokens volta a ter só toggles, propriedades e inativas. A ponte vive em Inserir Especificações:
+Os botões de spec saíram do card do scan: Escanear Frames volta a ter só toggles, propriedades e inativas. A ponte vive em Inserir Especificações:
 - **Área "Vindos do scan"** no topo da lista: accordion (`rounded-xl`, borda fina, ícone `scan-line`), aberto quando há itens, contador "N para revisar". Uma linha por item, sem cards internos: nome (clique localiza no canvas) + `Frame · motivo` (Fora do padrão, Personalizado, Necessita revisão), botão outline `rounded-2xl` "Especificar" (`text-[#005ca9]`) e botão `x` 40×40 com `title` "Não precisa de spec". Recolhida abaixo: "M dispensados" com "Restaurar". É derivada; não é spec e não entra na Ficha.
 - **Selo "Veio do scan"** no card da spec: ícone `scan-line` 12px + texto 9px bold `text-slate-600`/`dark:text-dark-muted`; `title` com o nome do item e "mesmo elemento" ou "dentro de um elemento escaneado". Spec sem casamento não tem selo.
 
@@ -215,6 +215,12 @@ Estado padrão: um accordion nasce **fechado**, salvo decisão explícita de UX 
 ### Toggle/Switch
 
 O **switch estilizado** (usado em Dados do Projeto) é o padrão oficial para escolha binária habilitado/desabilitado. Checkbox nativo (`accent-*`) continua sendo o padrão correto para seleção múltipla em listas (import/limpeza de dados), não para toggle liga/desliga — os dois componentes têm papéis diferentes, não é uma substituição 1:1.
+
+### Menu de Personalização (2026-10-08)
+
+**Menu de Personalização (2026-10-08, mesmo padrão do hac).** Botão `sliders-horizontal` no header (`#btn-hx-personalize`, `build.cjs`) abre um painel (`#hx-personalize-menu`, `role="dialog"`, fecha com clique fora e Escape, devolvendo o foco ao botão) com três controles: **Tamanho da interface** (100% / 115% / 130%, botões `.hx-pz-opt` com `aria-pressed`), **Tema** (Claro / Escuro, mesmos botões) e **Espaçamento de texto** (switch `.hx-switch`, checkbox nativo com `role="switch"`). Substitui os botões soltos de zoom − / zoom + e de tema do header. **Espaçamento de texto** segue os valores mínimos do WCAG 2.2, critério 1.4.12: entrelinha 1,5; 2em após parágrafos; 0,12em entre letras; 0,16em entre palavras (`html.hx-text-spacing`, `plugin.css`). **Alinhamento com o Tamanho da interface:** o espaçamento é em `em`, então escala junto com o zoom; com ele ligado (ou escala ≥ 115%) nada é cortado: texto com `.truncate` quebra linha, botão de altura fixa (`h-8` a `h-12`) passa a altura mínima e cresce, a grade da home deixa a linha crescer e a tela rola, e o próprio menu rola se faltar altura. **Preferências da pessoa, por instalação** (`localStorage`: `hx-ui-scale`, `theme`, `hx-text-spacing`): o tamanho da interface deixou de ir em `handoffData.uiScale` (viajava no JSON exportado do projeto); um valor antigo salvo no projeto é lido uma vez como ponto de partida. O switch `.hx-switch` é a forma em CSS puro do switch oficial (mesmo papel do switch de Dados do Projeto).
+
+**Atualização 2026-10-08:** rótulo "Tamanho da interface" virou **"Escala da interface"**. Salvamento automático: **rodapé** `#hx-autosave-bar` (altura 32px, borda superior, ícone de estado verde `cloud-check` / cinza `loader-2` girando / vermelho `cloud-alert`, texto do estado e link "Como funciona" em azul de marca) que abre o modal `#autosave-modal`; **menu de backup** no header (`hard-drive-download`, `#hx-backup-menu`, mesmo padrão de menu suspenso da Personalização: itens com ícone, título e linha de apoio). Mesmo padrão do hac. Novo componente: **modal de aprofundamento** (`#depth-decision-modal`) com dois botões nomeados "Completo" (primário) e "Padrão" (outline), cada um com subtítulo de contagem, e lista rolável de camadas (agrupada por nível no scan; marcador "só no Completo" em fundo laranja claro da marca, "fora da leitura" em cinza). Ícone `cloud-check` entra no catálogo (`import { CloudCheck } from 'lucide-react'`).
 
 ### Seletor de cor da linha (Fluxos de Tela, 2026-10-02)
 
@@ -257,7 +263,7 @@ Biblioteca exclusiva: **Lucide** (`data-lucide="nome"` no plugin, equivalente a 
 | `grip-vertical` | `import { GripVertical } from 'lucide-react'` | Alça de arrastar — reordenar cards da home. |
 | `clipboard-list` | `import { ClipboardList } from 'lucide-react'` | Card Informações do Projeto na home. |
 | `spline` | `import { Spline } from 'lucide-react'` | Estilo de linha Angular em conexões de fluxo. |
-| `scan-line` | `import { ScanLine } from 'lucide-react'` | Card Escanear Tokens na home. |
+| `scan-line` | `import { ScanLine } from 'lucide-react'` | Card Escanear Frames na home. |
 | `loader-2` | `import { Loader2 } from 'lucide-react'` | Spinner de carregamento (animação de rotação via CSS). |
 | `file-plus-2` | `import { FilePlus2 } from 'lucide-react'` | Criar novo documento/anexo. |
 | `check-circle` | `import { CheckCircle } from 'lucide-react'` | EM CONFORMIDADE — selo de auditoria DSC. |
@@ -276,7 +282,7 @@ Biblioteca exclusiva: **Lucide** (`data-lucide="nome"` no plugin, equivalente a 
 | `external-link` | `import { ExternalLink } from 'lucide-react'` | Abrir no Figma — deep link pro elemento no canvas. |
 | `corner-down-right` | `import { CornerDownRight } from 'lucide-react'` | Indicador de sub-item / resposta aninhada. |
 | `arrow-right` | `import { ArrowRight } from 'lucide-react'` | Avançar — navegação entre etapas, seta de fluxo. |
-| `zoom-in` | `import { ZoomIn } from 'lucide-react'` | Aumentar escala da interface do plugin. |
+| `zoom-in` | `import { ZoomIn } from 'lucide-react'` | "Clique para ampliar" na Ficha HTML. (Saiu do header em 2026-10-08: escala agora no menu de Personalização.) |
 | `upload` | `import { Upload } from 'lucide-react'` | Importar JSON — rodapé da home. |
 | `sticky-note` | `import { StickyNote } from 'lucide-react'` | Nota personalizada em spec. |
 | `search-x` | `import { SearchX } from 'lucide-react'` | Estado vazio de busca — nenhum resultado encontrado. |
@@ -299,12 +305,12 @@ Biblioteca exclusiva: **Lucide** (`data-lucide="nome"` no plugin, equivalente a 
 | `library` | `import { Library } from 'lucide-react'` | Referência de biblioteca DSC; também o indicador "LIB LEGADA — PRECISA MIGRAR" (Fase 4, 2026-09-30): texto 9px bold `slate-600` (dark `slate-300`), neutro de propósito — conforme, só um aviso, nem verde nem âmbar nem vermelho —, aparece sob o selo de conformidade no card do scan quando `item.legacyLib` e a auditoria do frame está ativa. **Desligado por flag (`LEGACY_LIB_MIGRATION_HINT_ENABLED = false`, 2026-10-01)** — badge não é renderizado; religar trocando a flag para `true`. |
 | `crosshair` | `import { Crosshair } from 'lucide-react'` | Ancoragem/mira — mini-mapa de conexão de fluxo. |
 | `chevron-right` | `import { ChevronRight } from 'lucide-react'` | Navegação — trilha de token (cor, primária, 500). |
-| `zoom-out` | `import { ZoomOut } from 'lucide-react'` | Diminuir escala da interface do plugin. |
-| `sun` | `import { Sun } from 'lucide-react'` | Tema claro — metade do par sun/moon. |
-| `sliders-horizontal` | `import { SlidersHorizontal } from 'lucide-react'` | Controles do grupo de specs — ocultar linhas/grupo, cadeado. |
+| `zoom-out` | `import { ZoomOut } from 'lucide-react'` | Fora de uso desde 2026-10-08 (escala no menu de Personalização). |
+| `sun` | `import { Sun } from 'lucide-react'` | Fora de uso desde 2026-10-08 (tema no menu de Personalização). |
+| `sliders-horizontal` | `import { SlidersHorizontal } from 'lucide-react'` | Botão Personalização do header (tamanho, tema, espaçamento de texto); controles do grupo de specs — ocultar linhas/grupo, cadeado. |
 | `package` | `import { Package } from 'lucide-react'` | Sobre o Handex — modal de informações do plugin. |
 | `more-vertical` | `import { MoreVertical } from 'lucide-react'` | Menu de mais ações — vertical. |
-| `moon` | `import { Moon } from 'lucide-react'` | Tema escuro — metade do par sun/moon. |
+| `moon` | `import { Moon } from 'lucide-react'` | Fora de uso desde 2026-10-08 (tema no menu de Personalização). |
 | `minus-circle` | `import { MinusCircle } from 'lucide-react'` | Remover (variante circular) — propriedade não aplicada/inativa, também em diffs de versão. |
 | `maximize-2` | `import { Maximize2 } from 'lucide-react'` | Expandir/restaurar tamanho do plugin. |
 | `lock-open` | `import { LockOpen } from 'lucide-react'` | Destravar spec/grupo — metade do par lock/lock-open. |
@@ -358,7 +364,7 @@ Estrutura única: ícone a 25% de opacidade + título + CTA inline sublinhado, g
 
 ## 6. Nomenclatura de tela
 
-A tela hoje referenciada por 3 nomes diferentes (card na home: "Escanear Tokens"; id: `view-frames`; arquivo: `handoff.html`) tem como **nome canônico "Handoff"** — reflete o papel real da tela como hub central do frame (scan + medidas + specs + conformidade), não só a ação de escanear. Card na home, título interno da view e qualquer documentação nova devem convergir para esse nome (dívida técnica, seção 9, item 9).
+A tela hoje referenciada por 3 nomes diferentes (card na home: "Escanear Frames"; id: `view-frames`; arquivo: `handoff.html`) tem como **nome canônico "Handoff"** — reflete o papel real da tela como hub central do frame (scan + medidas + specs + conformidade), não só a ação de escanear. Card na home, título interno da view e qualquer documentação nova devem convergir para esse nome (dívida técnica, seção 9, item 9).
 
 ---
 
@@ -439,7 +445,7 @@ Lista de prioridade — cada item é uma correção pontual, não um redesenho:
 6. **z-index de modal sem constante nomeada** — extrair `Z_MODAL_BASE`/`Z_MODAL_STACKED`/`Z_MODAL_LIGHT` (ou equivalente) em vez dos 3 valores mágicos hoje espalhados (seção 5).
 7. **4 dialetos de accordion → 1** — migrar `guide.html`, Briefing Estratégico e os chevrons próprios (`.journey-chevron`, `.group-chevron`) para `toggleAccordion` (seção 5).
 8. **Empty state do hub de Frames** — hoje é HTML estático (`handoff.html:66-72`) em vez de usar a função JS compartilhada das outras 3 ferramentas (seção 5).
-9. **Nomenclatura "Escanear Tokens/Frames/Handoff"** — convergir card, título interno e referências de doc para "Handoff" (seção 6).
+9. **Nomenclatura "Escanear Frames/Frames/Handoff"** — convergir card, título interno e referências de doc para "Handoff" (seção 6).
 10. **Hex de brand direto no HTML** — migrar `bg-[#005ca9]`/`hover:bg-[#004d8d]` para as classes nomeadas `bg-blue-500`/`hover:bg-blue-600` (seção 1). Maior volume de mudança da lista — não precisa ser feito de uma vez, mas todo código novo já nasce usando a classe nomeada.
 11. **`#1E293B` hardcoded** — substituir por `text-slate-800 dark:text-white` onde aparece como cor de título (é literalmente o mesmo hex).
 12. **Resolvido em 2026-08-26** — os 2 hovers isolados (`home.html:163`, `modals.html:1245`) que usavam `#004d8f`/`#005a8e` (azul institucional pré-Uau CAIXA) já convergiram para `blue-600` (`#004d8d`) como parte da reversão de marca — não é mais dívida.
@@ -465,6 +471,8 @@ Lista de prioridade — cada item é uma correção pontual, não um redesenho:
 - **2026-08-26** — peso visual dos ícones Lucide uniformizado. Todos já usavam o mesmo `stroke-width` nativo (2), mas o plugin usa ~7 tamanhos diferentes (`w-2.5` a `w-6`) no mesmo viewBox de 24px — o traço fixo de 2px parecia mais grosso nos ícones pequenos e mais fino nos grandes. Regra CSS global (`plugin.css`) compensa por faixa de tamanho (`stroke-width: 2.5` em `w-2.5`/`w-3`, `2.25` em `w-3.5`/`w-4`), herdada automaticamente por qualquer ícone novo sem precisar de atributo manual por instância.
 - **2026-08-26** — tamanho de ícones-irmãos revisado em todo o app, depois de a compensação de stroke-width acima não resolver um caso real (download `w-5` ao lado de lixeira `w-4.5` no rodapé da home, mesmo par de botões, mesma hierarquia). Convergido para `w-4.5`. Varredura sistemática encontrou e corrigiu mais 4 casos: botão de ajuda do header em 3 views (`w-5` → `w-4.5`, alinhando com as outras 4 views que já usavam `w-4.5`) e o chevron de expandir dentro da linha de ações de spec no hub de Frames (`w-3.5` → `w-3`, igualando aos 4 ícones de ação vizinhos). Regra nova documentada: ícones-irmãos (mesma linha, mesma hierarquia de ação) sempre usam o mesmo tamanho — exceção deliberada preservada para "voltar" (`w-5`) vs. botões de ajuda (`w-4.5`), que é hierarquia intencional, não inconsistência.
 - **2026-09-24** — catálogo de ícones passou de menção genérica ("biblioteca Lucide via `data-lucide`") para tabela nomeada de **97 ícones únicos**, cada um com a importação equivalente em `lucide-react` (conversão kebab-case → PascalCase, ex: `circle-help` → `CircleHelp`, dígito colado ao segmento anterior em `edit-3` → `Edit3`). Motivado por pedido do usuário de cobrir todos os ícones do plugin com referência de código React na documentação. Levantamento por grep real em todo `views/*.html`/`modules/*.js`, incluindo ícones resolvidos só via variável dinâmica (eixos do Briefing, categorias de spec, tipo de conexão de fluxo) — a estimativa anterior de "~70 ícones" (só existia na página navegável, nunca neste `.md`) estava desatualizada. Tabela espelhada 1:1 em `docs/site/design-system.html` §4, cujos SVGs também deixaram de ser desenhados à mão e passaram a usar o traço real de `lucide-static@1.47.0` (mesma versão fixada em `build.cjs`). Achado incidental: a Ficha HTML interativa exportada (`modules/handoff.js`) ainda usa `lucide@latest` sem versão fixada — divergência sinalizada, não corrigida nesta rodada de documentação.
+
+- **2026-10-08** — menu de Personalização no header (Tamanho da interface, Tema e Espaçamento de texto do WCAG 2.2, 1.4.12), no mesmo padrão do hac; substitui os botões de zoom e tema. Espaçamento e tamanho combinam sem corte de texto (ver seção 5, "Menu de Personalização"); as três preferências ficam por instalação.
 
 **Arquivos-fonte:** `src/plugin/styles/{tailwind.config.cjs,plugin.css}`, `src/plugin/modules/{core,messages,home-cards,onboarding,specifications,measurement,handoff}.js`, `src/plugin/views/*.html`, `src/plugin/ui.html`, `CLAUDE.md`.
 - **2026-10-01** — paleta restrita à lib "DSC | Fundamentos Visuais" em toda a UI e no canvas (seção 1, "Restrição de paleta"): escalas `slate`/`gray`/`red`/`green`/`amber` redefinidas, `ceu`/`turquesa`/`info` criadas, superfícies `light`/`dark` migradas, `code.js` e Ficha HTML alinhados. **Exceção explícita do Augusto: as cores das categorias de spec seguem a paleta já documentada e não foram alteradas** (a primeira rodada do dia as havia alterado para goiaba/lib; revertido). Contraste verificado por luminância relativa (texto >= 4,5:1, componentes >= 3:1).
