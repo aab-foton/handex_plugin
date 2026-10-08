@@ -4045,7 +4045,13 @@ function _finishA11ySpecConfirm() {
     }
     // Spec nova, simples: ao voltar spec-created, oferecer os elementos iguais
     // da tela (_offerA11ySimilarSpecs). Edição/lote/wizard não oferecem.
-    window._a11yOfferSimilarFor = (!editingSpecId && opts.a11yAreaId && opts.targetNodeId) ? { opts } : null;
+    // Oferta "Aplicar em elementos iguais" DESLIGADA (2026-10-08, pedido do
+    // usuário: "retire a modal de reconhecimento de itens similares — isso
+    // impacta em documentar itens que não estão corretos; mantenha só a
+    // possibilidade de especificar mais de um item por vez"). Vários itens de
+    // uma vez continuam pela seleção múltipla no canvas (_createA11ySpecBatch).
+    // _offerA11ySimilarSpecs fica no código, sem ponto de entrada.
+    window._a11yOfferSimilarFor = null;
     parent.postMessage({ pluginMessage: { type: 'create-unified-spec', opts } }, '*');
   }
 }
@@ -4205,6 +4211,10 @@ function _a11ySpecItemHtml(spec, showCategoryChip, group) {
       </div>` : '';
   const _normLabel = v => String(v || '').replace(/\s+/g, ' ').trim().toLowerCase();
   const cardLabel = _groupNames.length <= 1 && spec.targetText && _normLabel(spec.targetText) !== _normLabel(cardName) ? spec.targetText : null;
+  // Detalhes recolhidos por padrão (ver _toggleA11ySpecDetails).
+  const detailsKey = group ? group.ids[0] : (spec.id || '');
+  const detailsOpen = !!(window._a11yOpenSpecDetails && window._a11yOpenSpecDetails.has(detailsKey));
+  const hasDetails = visibleProps.length > 0 || !!(spec.a11yType === 'titulo' && cardLabel);
 
   const searchText = _normalizeSearchText(
     [spec.letter, spec.targetNodeName, spec.name, categoryLabel, spec.a11yType, spec.a11ySourceLib?.label, dscComponentLabel]
@@ -4223,6 +4233,8 @@ function _a11ySpecItemHtml(spec, showCategoryChip, group) {
         <div class="w-6 h-6 rounded-dsc-circ flex items-center justify-center text-dsc-label-tiny normal-case tracking-normal font-extrabold shrink-0" style="background-color:${color};color:${badgeTextColor}">${escapeHtml(spec.letter || 'A')}</div>
         <div class="flex-1 min-w-0">
           <p class="text-dsc-label-tiny normal-case tracking-normal font-semibold text-slate-700 dark:text-white truncate">${escapeHtml(cardName)}${group ? ` <span class="font-bold text-slate-500 dark:text-dark-muted">×${group.ids.length}</span>` : ''}</p>
+          ${hasDetails ? `<button type="button" onclick="_toggleA11ySpecDetails('${escapeHtml(detailsKey)}')" aria-expanded="${detailsOpen ? 'true' : 'false'}" aria-controls="a11y-spec-details-${escapeHtml(detailsKey)}"
+            class="text-dsc-label-tiny normal-case tracking-normal font-bold text-[#005ca9] dark:text-blue-300 underline hover:no-underline">${detailsOpen ? 'Ocultar detalhes' : 'Exibir detalhes'}</button>` : ''}
         </div>
         ${group ? `<button type="button" title="${groupOpen ? 'Recolher' : 'Ver cada elemento'}" aria-label="${groupOpen ? 'Recolher elementos do grupo' : 'Ver cada elemento do grupo'}" aria-expanded="${groupOpen ? 'true' : 'false'}"
           onclick="_toggleA11ySpecGroup('${escapeHtml(groupKey)}')"
@@ -4265,6 +4277,7 @@ function _a11ySpecItemHtml(spec, showCategoryChip, group) {
               <i data-lucide="alert-triangle" class="w-2.5 h-2.5"></i> Verificar
             </button>` : ''}
       </div>` : ''}
+      ${detailsOpen ? `<div id="a11y-spec-details-${escapeHtml(detailsKey)}">
       ${spec.a11yType === 'titulo' && cardLabel ? `
       <p class="px-2.5 pb-2.5 -mt-1 text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-slate-300 break-words">“${escapeHtml(cardLabel)}”</p>` : ''}
       ${visibleProps.length > 0 ? `
@@ -4286,10 +4299,26 @@ function _a11ySpecItemHtml(spec, showCategoryChip, group) {
           </div>`;
         }).join('')}
       </div>` : ''}
+      </div>` : ''}
       ${groupItemsHtml}
     </div>
   `;
 }
+
+// "Exibir detalhes" do card (2026-10-08, pedido do usuário: "os detalhes
+// internos dos componentes devem estar ocultos na interface do plugin — um
+// link abaixo do título e aí as descrições internas são exibidas", specs
+// avulsas e agrupadas, web e mobile). Estado aberto guardado por chave
+// estável (id da spec ou 1º id do grupo) — sobrevive aos re-renders.
+function _toggleA11ySpecDetails(key) {
+  if (!key) return;
+  window._a11yOpenSpecDetails = window._a11yOpenSpecDetails || new Set();
+  if (window._a11yOpenSpecDetails.has(key)) window._a11yOpenSpecDetails.delete(key);
+  else window._a11yOpenSpecDetails.add(key);
+  if (typeof _renderA11yWorkspaceTab === 'function') _renderA11yWorkspaceTab();
+  else if (typeof renderA11yGroupedList === 'function') renderA11yGroupedList();
+}
+window._toggleA11ySpecDetails = _toggleA11ySpecDetails;
 
 function _toggleA11ySpecGroup(key) {
   if (!key) return;

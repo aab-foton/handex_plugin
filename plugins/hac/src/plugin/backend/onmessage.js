@@ -6139,7 +6139,10 @@ figma.ui.onmessage = async (msg) => {
         const targetSection = itensFrame ? _findFichaSectionInFrame(itensFrame, sectionKey) : null;
         if (targetSection) {
           targetSection.setPluginData('hacFichaSectionStale', 'true');
-          targetSection.opacity = 0.5;
+          // Sem esmaecer o bloco (2026-10-08, pedido do usuário: "retirar a
+          // opacidade na hora de edição") — antes ficava com opacity 0.5 até
+          // ser reinserido. Blocos esmaecidos por versões anteriores voltam a 1.
+          targetSection.opacity = 1;
         }
       } catch (e) {
         console.error('[hac] prepare-ficha-section-edit: falha ao sinalizar o bloco final como desatualizado.', e && e.message);

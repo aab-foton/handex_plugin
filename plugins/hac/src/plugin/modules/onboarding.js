@@ -49,7 +49,7 @@ let onboardingSeen = {};
 const ONBOARDING_TOOLS = {
   web: {
     view: 'view-specifications',
-    title: 'Como utilizar o Plugin: Web',
+    title: 'Entenda as etapas de Handoff: Web',
     icon: 'monitor',
     color: '#005ca9',
     format: 'stepper',
@@ -58,7 +58,7 @@ const ONBOARDING_TOOLS = {
   },
   mobile: {
     view: 'view-specifications',
-    title: 'Como utilizar o Plugin: Mobile',
+    title: 'Entenda as etapas de Handoff: Mobile',
     icon: 'smartphone',
     color: '#005ca9',
     format: 'stepper',
@@ -137,7 +137,7 @@ function _onboardingKeyForCurrentOrigin() {
 
 // Ponto de entrada único pro onboarding — chamado tanto automaticamente
 // ao escolher a lib na Home (chooseA11yHomeOrigin, accessibility.js)
-// quanto pelo ícone de chapéu ("Como utilizar o Plugin") a qualquer
+// quanto pelo ícone de chapéu ("Entenda as etapas de Handoff") a qualquer
 // momento. SEMPRE abre a mesma jornada (web/mobile) da origem atual do
 // projeto, nunca conteúdos divergentes (bug real corrigido 2026-09-09).
 // Banner "Primeira vez aqui?" removido (2026-09-10, pedido do usuário) —
@@ -208,7 +208,7 @@ function _onboardingFichaStepsHTML(richContent, origin) {
         ${richContent.steps.map((s, i) => `
           <li class="flex gap-1.5 text-dsc-label-tiny normal-case tracking-normal text-slate-500 dark:text-dark-muted leading-snug">
             <span class="font-bold shrink-0">${i + 1}.</span>
-            <span>${s}</span>
+            <span>${escapeHtml(s)}</span>
           </li>
         `).join('')}
       </ol>

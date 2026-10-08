@@ -6,7 +6,7 @@
 // Regenerar via: node src/plugin/refs/build-a11y-constants.cjs
 //            ou: npm run refs:a11y-constants
 //
-// Gerado em: 2026-10-08T17:59:48.325Z
+// Gerado em: 2026-10-08T19:52:50.674Z
 //
 // Consumido via alias em src/plugin/modules/accessibility.js:
 //   const A11Y_MOBILE_LINK_COMPONENT_OPTIONS = A11Y_MOBILE_LINK_COMPONENT_OPTIONS_GENERATED;

@@ -34,17 +34,20 @@
             <button type="button" onclick="closeA11yMoreActionsMenu(); openOnboardingForCurrentOrigin()"
               class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] font-semibold text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-dark-line transition-colors text-left">
               <i data-lucide="graduation-cap" class="w-4 h-4 text-slate-500 dark:text-dark-muted shrink-0" aria-hidden="true"></i>
-              Como utilizar o Plugin
+              Entenda as etapas de Handoff
             </button>
             <button type="button" onclick="closeA11yMoreActionsMenu(); openModal('a11y-support-modal'); _refreshIcons()"
               class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] font-semibold text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-dark-line transition-colors text-left">
               <i data-lucide="life-buoy" class="w-4 h-4 text-slate-500 dark:text-dark-muted shrink-0" aria-hidden="true"></i>
               Canais de Suporte
             </button>
-            <button type="button" onclick="closeA11yMoreActionsMenu(); openA11yExistingDocsModal()"
-              class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] font-semibold text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-dark-line transition-colors text-left">
+            <!-- "Buscar Handoffs Realizados" (antes "Documentação existente") —
+                 OCULTO por enquanto (2026-10-08, pedido do usuário). Para reativar,
+                 basta tirar a classe `hidden` deste botão. -->
+            <button type="button" id="btn-a11y-search-done-handoffs" onclick="closeA11yMoreActionsMenu(); openA11yExistingDocsModal()"
+              class="hidden w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] font-semibold text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-dark-line transition-colors text-left">
               <i data-lucide="search" class="w-4 h-4 text-slate-500 dark:text-dark-muted shrink-0" aria-hidden="true"></i>
-              Documentação existente
+              Buscar Handoffs Realizados
             </button>
           </div>
         </div>
@@ -74,7 +77,7 @@
            este banner abria) agora dispara automaticamente ao escolher a
            lib na Home (chooseA11yHomeOrigin, accessibility.js), ficando
            redundante. Reabertura manual continua disponível pelo ícone de
-           chapéu ("Como utilizar o Plugin", openOnboardingForCurrentOrigin). -->
+           chapéu ("Entenda as etapas de Handoff", openOnboardingForCurrentOrigin). -->
 
       <div id="a11y-empty-state-block">
         <!-- pt-dsc-tiny (2026-09-11, pedido do usuário) — dá respiro entre o

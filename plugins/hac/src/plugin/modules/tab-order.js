@@ -265,11 +265,16 @@ function _renderA11yInstructionContent(feature, ids, reduced) {
   if (finalShiftStep) steps.push(finalShiftStep);
   if (stepsEl) {
     stepsEl.classList.add('list-decimal', 'list-inside');
+    // Texto dos passos SEMPRE escapado; só <strong> (dica de Shift, escrita
+    // pelo plugin) volta a ser formatação (2026-10-08, pedido do usuário: no
+    // web, "exemplos: <header>, <main>, <footer>" virava tags HTML invisíveis
+    // e quebrava a linha). Tags citadas no texto da lib aparecem como texto.
+    const safe = t => escapeHtml(t).replace(/&lt;(\/?)strong&gt;/g, '<$1strong>');
     stepsEl.innerHTML = steps.map(s => {
       const boldMatch = /^([^:]{1,80}):\s*(.*)$/s.exec(s);
       return boldMatch
-        ? `<li><strong>${escapeHtml(boldMatch[1])}:</strong> ${boldMatch[2].includes('<') ? boldMatch[2] : escapeHtml(boldMatch[2])}</li>`
-        : `<li>${s.includes('<') ? s : escapeHtml(s)}</li>`;
+        ? `<li><strong>${escapeHtml(boldMatch[1])}:</strong> ${safe(boldMatch[2])}</li>`
+        : `<li>${safe(s)}</li>`;
     }).join('');
   }
   const stepsBlockEl = ids.stepsBlock ? document.getElementById(ids.stepsBlock) : null;

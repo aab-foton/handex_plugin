@@ -26,7 +26,7 @@ import A11Y_HEURISTICS from '../refs/a11y-heuristics.generated.json';
 // (platform-profiles.js, 2026-10-01) — antes eram 4 imports + 2 tabelas
 // fixas aqui. A ordem de leitura é a mesma de sempre (ver comentários nas
 // funções abaixo), então o resultado do matching é idêntico.
-import { PLATFORM_PROFILES, getPlatformProfile } from './platform-profiles.js';
+import { PLATFORM_PROFILES, getPlatformProfile, normalizeRecognitionName } from './platform-profiles.js';
 
 // ============================================================
 // Matching DSC → categoria de a11y
@@ -186,13 +186,22 @@ export function _resolveDscComponentA11yMatch(componentKey) {
   if (!a11yMatch) {
     return { containingFrame, a11yCategory: null, confidence: null, isUnmapped: true, origin, sourceLib };
   }
+  // Componente da LIB é Elemento, não Estrutura (2026-10-08, usuário: "está
+  // sendo trazida sugestão errada — é um componente e está vindo como marco
+  // de navegação"; caso real: [dsc] Title Bar no web). O mapeamento curado
+  // marca Header/Footer/Title Bar/Toolbar/Top App Bar... como 'estrutura'
+  // (marco "header"), mas a lib nova os publica como opções do card
+  // "Elementos e imagens" da plataforma — a lib é a referência. Mobile não
+  // tem Estrutura da Página nenhuma (2026-10-07).
+  const _isLibComponent = (() => {
+    try {
+      const n = normalizeRecognitionName(containingFrame);
+      return !!n && (getPlatformProfile(origin).componentOptions || []).some(o => normalizeRecognitionName(o) === n);
+    } catch (e) { return false; }
+  })();
   return {
     containingFrame,
-    // Mobile não tem Estrutura da Página (sem marco de navegação/landmark —
-    // a lib mobile só publica Elementos, Títulos e Decorativos). O
-    // mapeamento curado ainda marca Top App Bar/Navigation Bar/Screen Footer
-    // como 'estrutura'; no mobile eles são Elementos (2026-10-07).
-    a11yCategory: (origin === 'mobile' && a11yMatch.shortName === 'estrutura') ? 'elemento' : a11yMatch.shortName,
+    a11yCategory: (a11yMatch.shortName === 'estrutura' && (origin === 'mobile' || _isLibComponent)) ? 'elemento' : a11yMatch.shortName,
     confidence: a11yMatch.confidence,
     origin,
     sourceLib

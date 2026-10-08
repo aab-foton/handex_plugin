@@ -635,10 +635,21 @@ function _fichaProjectCompletion() {
 
   const total = areas.length;
   const complete = total - pending.length;
+  // Finalizar NÃO exige mais o checklist fechado (2026-10-08, pedido do
+  // usuário: "existem designers que querem só fazer a ordem de tabulação,
+  // outros só o swipe, outros só as specs"). Basta haver ao menos uma tela com
+  // handoff gerado (alguma seção inserida no canvas) — o handoff sai com o que
+  // foi documentado. `generated` = telas com algo inserido.
+  const generated = areas.filter(area => keys.some(key => {
+    const state = _fichaSectionState(area, key);
+    return !!(state && state.insertedAt);
+  })).length;
   return {
     total,
     complete,
     pending,
+    generated,
+    canFinalize: generated > 0,
     // Um projeto sem nenhuma tela documentada não é "completo" — é vazio.
     isComplete: total > 0 && pending.length === 0,
   };
@@ -687,8 +698,8 @@ function _fichaRenderProjectSummary() {
         <p class="text-dsc-label-tiny normal-case tracking-normal ${corDoTexto}">${completion.complete} de ${completion.total} tela${completion.total === 1 ? '' : 's'} com o checklist fechado</p>
       </div>
       <button type="button" onclick="_fichaOpenFinalizeModal()"
-        ${completion.isComplete ? '' : 'data-tooltip="Todas as telas precisam ter o checklist fechado antes de finalizar"'}
-        class="shrink-0 inline-flex items-center gap-dsc-quark h-8 px-dsc-nano rounded-dsc-circ text-dsc-label-tiny normal-case tracking-normal font-bold transition-all ${completion.isComplete
+        ${completion.canFinalize ? '' : 'data-tooltip="Gere o handoff de ao menos uma tela para poder finalizar"'}
+        class="shrink-0 inline-flex items-center gap-dsc-quark h-8 px-dsc-nano rounded-dsc-circ text-dsc-label-tiny normal-case tracking-normal font-bold transition-all ${completion.canFinalize
           ? 'bg-[#005ca9] text-white hover:bg-blue-700 active:scale-95'
           : 'tooltip-bottom tooltip-left bg-gray-200 dark:bg-dark-line text-gray-400 dark:text-dark-muted cursor-not-allowed'}">
         <i data-lucide="flag" class="w-3.5 h-3.5"></i> Finalizar
@@ -707,10 +718,20 @@ window._fichaRenderProjectSummary = _fichaRenderProjectSummary;
 // técnico (o handoff já está completo antes de a modal abrir).
 function _fichaOpenFinalizeModal() {
   const completion = _fichaProjectCompletion();
-  if (!completion.isComplete) return;
+  if (!completion.canFinalize) return;
 
+  const leadEl = document.getElementById('a11y-finalize-handoff-lead');
+  if (leadEl) {
+    leadEl.textContent = completion.isComplete
+      ? 'Todas as telas do projeto têm o checklist de acessibilidade fechado.'
+      : 'O handoff será finalizado com o que já foi documentado — nem todas as telas têm o checklist fechado, e isso não impede a finalização.';
+  }
   const countEl = document.getElementById('a11y-finalize-handoff-count');
-  if (countEl) countEl.textContent = `${completion.total} tela${completion.total === 1 ? '' : 's'} documentada${completion.total === 1 ? '' : 's'}, checklist fechado em todas.`;
+  if (countEl) {
+    countEl.textContent = completion.isComplete
+      ? `${completion.total} tela${completion.total === 1 ? '' : 's'} documentada${completion.total === 1 ? '' : 's'}, checklist fechado em todas.`
+      : `${completion.generated} de ${completion.total} tela${completion.total === 1 ? '' : 's'} com handoff gerado · ${completion.complete} com checklist fechado.`;
+  }
 
   openModal('a11y-finalize-handoff-modal');
 }
@@ -868,11 +889,20 @@ async function _fichaGenerateCompleteHandoff(areaId) {
   const isMobile = isA11yMobileProject();
   const candidateKeys = ['tabulacao', 'swipe', 'leitor'].filter(key => key !== 'swipe' || isMobile);
 
+  // Só o que foi DOCUMENTADO entra no canvas (2026-10-08, pedido do usuário:
+  // "não precisamos replicar no canvas a estrutura completa da aba, deixe para
+  // criar apenas o que foi documentado"). Seção sem nenhum item fica de fora —
+  // nada de bloco vazio de Tabulação/Swipe/Leitor.
   const needsWork = key => {
+    if (_fichaCurrentSectionCount(area, key) === 0) return false;
     const state = _fichaSectionState(area, key);
     if (!state || !state.insertedAt) return true; // pendente, nunca inserida
     return _fichaSectionIsStale(area, key);
   };
+  if (candidateKeys.every(key => _fichaCurrentSectionCount(area, key) === 0)) {
+    showToast('Nada documentado nesta tela ainda — crie a Tabulação, o Swipe ou as especificações de Leitor de Tela antes de gerar o handoff.');
+    return;
+  }
 
   let pendingKeys = candidateKeys.filter(needsWork);
 
@@ -949,9 +979,9 @@ function _fichaOpenAfterHandoffModal() {
   const btn = document.getElementById('a11y-after-handoff-finalize');
   const hint = document.getElementById('a11y-after-handoff-finalize-hint');
   if (btn) {
-    btn.disabled = !completion.isComplete;
-    btn.classList.toggle('opacity-50', !completion.isComplete);
-    btn.classList.toggle('cursor-not-allowed', !completion.isComplete);
+    btn.disabled = !completion.canFinalize;
+    btn.classList.toggle('opacity-50', !completion.canFinalize);
+    btn.classList.toggle('cursor-not-allowed', !completion.canFinalize);
   }
   // "Fechar checklist desta tela" — só enquanto a tela ainda não está
   // fechada (automática ou manualmente).
@@ -964,7 +994,9 @@ function _fichaOpenAfterHandoffModal() {
     const faltam = completion.total - completion.complete;
     hint.textContent = completion.isComplete
       ? 'Marca esta geração do handoff como concluída e inicia uma nova versão.'
-      : `Disponível quando todas as telas estiverem prontas (faltam ${faltam}).`;
+      : completion.canFinalize
+        ? `Pode finalizar com o que já foi documentado (${faltam} tela${faltam === 1 ? '' : 's'} com checklist em aberto).`
+        : 'Gere o handoff de ao menos uma tela para poder finalizar.';
   }
   openModal('a11y-after-handoff-modal');
 }

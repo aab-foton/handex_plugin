@@ -3398,6 +3398,31 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-08 — Finalizar sem checklist completo; sugestão de componente; detalhes recolhidos (v0.1.0-beta.137)</h2>
+
+    <p>Rodada de oito pedidos do usuário, web e mobile:</p>
+    <ul>
+      <li><strong>Finalizar sem o checklist completo.</strong> Há designers que fazem só a Tabulação, só o Swipe ou só as specs.
+      "Finalizar" passa a exigir apenas uma tela com handoff gerado (<code>canFinalize</code>); a modal explica que o handoff sai
+      com o que foi documentado. "Gerar handoff" cria no canvas <strong>só as seções com conteúdo</strong> — nada de bloco vazio;
+      tela sem nada documentado só avisa.</li>
+      <li><strong>Modal do Leitor (web).</strong> O passo 3 ("exemplos: &lt;header&gt;, &lt;main&gt;, &lt;footer&gt;") era inserido
+      como HTML — as tags sumiam e quebravam a linha. Agora o texto é escapado (só o negrito do plugin continua formatação);
+      o mesmo no "passo a passo do template" do onboarding. Mobile não tinha tags.</li>
+      <li><strong>Sugestão de categoria.</strong> "[dsc] Title Bar" era sugerido como Estrutura da Página (marco "header") pelo
+      mapa curado antigo. Agora um componente DSC que existe como opção do card "Elementos e imagens" da plataforma é sugerido como
+      Elemento (Title Bar, Header e Footer no web; no mobile, Estrutura não existe).</li>
+      <li><strong>Sem a oferta "Aplicar em elementos iguais".</strong> Continua a especificação de vários itens de uma vez pela
+      seleção múltipla no canvas.</li>
+      <li><strong>Detalhes do card recolhidos.</strong> Campos internos (componente, Leitor de Tela, Nome Acessível, Observações,
+      Descrição…) ficam atrás de "Exibir detalhes", abaixo do título — specs avulsas e agrupadas.</li>
+      <li><strong>"Como utilizar o Plugin" → "Entenda as etapas de Handoff"</strong> (menu de Ajuda e título do tutorial).</li>
+      <li><strong>Sem opacidade na edição.</strong> "Editar" uma seção do handoff deixava o bloco no canvas com 50% de opacidade até
+      ser reinserido; não esmaece mais (e blocos já esmaecidos voltam ao normal).</li>
+      <li><strong>"Documentação existente" → "Buscar Handoffs Realizados"</strong>, oculto do menu por enquanto (basta tirar a classe
+      <code>hidden</code> de <code>#btn-a11y-search-done-handoffs</code>).</li>
+    </ul>
+
     <h2>2026-10-08 — Menus "Mais ações" abrem sem animação (v0.1.0-beta.136)</h2>
 
     <p>Pedido do usuário: o dropdown de "Mais ações" do card da tela "vinha de baixo pra cima". O JS não anima nada — a causa era
