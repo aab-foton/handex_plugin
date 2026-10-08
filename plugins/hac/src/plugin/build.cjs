@@ -324,7 +324,7 @@ ${modalsShared}
        qualquer .view), pra funcionar em qualquer tela sem precisar
        duplicar por view — mesmo padrão do Handex original. -->
   <button id="btn-top" onclick="scrollToTop()" title="Voltar ao topo" aria-label="Voltar ao topo"
-    class="fixed bottom-6 right-6 w-10 h-10 rounded-full flex items-center justify-center opacity-0 pointer-events-none translate-y-10 z-[100] transition-colors duration-200">
+    class="fixed bottom-12 right-6 w-10 h-10 rounded-full flex items-center justify-center opacity-0 pointer-events-none translate-y-10 z-[100] transition-colors duration-200">
     <i data-lucide="chevron-up" class="w-5 h-5"></i>
   </button>
 
@@ -411,6 +411,24 @@ ${modOnboard}
       if (typeof lucide !== 'undefined') lucide.createIcons();
     });
   </script>
+
+  <!-- Rodapé de salvamento automático (2026-10-08, pedido do usuário; posição
+       recomendada pelo agente de Design/UX): sempre visível, discreto, fora do
+       header (sem espaço) e longe de "Selecionar Tela". Mostra o estado REAL
+       do salvamento (resposta 'storage-saved' do backend) e, ao clicar, abre a
+       orientação sobre salvamento e limpeza de cache (hac-autosave-modal).
+       Oculto com o plugin recolhido e durante a barra de captura. Substitui o
+       toast "Salvo automaticamente" a cada ação (ver _toastSaved, core.js). -->
+  <footer id="hac-autosave-bar" class="shrink-0 h-8 border-t border-gray-100 dark:border-dark-line bg-white dark:bg-dark-surface">
+    <button type="button" id="hac-autosave-btn" onclick="openHacAutosaveInfo()" aria-haspopup="dialog"
+      aria-label="Salvamento automático ativo. Abrir orientações sobre salvamento e limpeza de cache"
+      class="w-full h-full flex items-center gap-1.5 px-4 text-dsc-label-tiny normal-case tracking-normal hover:bg-gray-50 dark:hover:bg-dark-line/40 transition-colors">
+      <span id="hac-autosave-icon" class="shrink-0 flex items-center text-green-600 dark:text-green-400" aria-hidden="true"><i data-lucide="cloud-check" class="w-3.5 h-3.5"></i></span>
+      <span id="hac-autosave-text" class="flex-1 min-w-0 text-left truncate font-semibold text-slate-600 dark:text-dark-muted">Salvamento automático ativo</span>
+      <span class="shrink-0 flex items-center gap-0.5 font-bold text-[#005ca9] dark:text-blue-300">Como funciona <i data-lucide="chevron-up" class="w-3 h-3" aria-hidden="true"></i></span>
+    </button>
+    <span id="hac-autosave-live" class="sr-only" role="status" aria-live="polite"></span>
+  </footer>
 
   <div id="toast-container" role="status" aria-live="polite" aria-atomic="true"></div>
   <div id="resize-handle"></div>

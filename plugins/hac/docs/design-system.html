@@ -777,6 +777,10 @@ li { margin: 4px 0; }
     elemento</strong>; a label (texto do elemento, entre aspas) só aparece dentro do card quando for
     <strong>diferente</strong> do nome — numa camada de texto do Figma o nome costuma ser o próprio texto,
     e repetir os dois era ruído. Vale para web e mobile.</p>
+    <p><strong>Rodapé de salvamento (2026-10-08, v0.1.0-beta.139).</strong> Faixa fixa <code>h-8</code> com borda superior,
+    último elemento do <code>&lt;body&gt;</code>: ícone de estado (cloud-check verde / loader / cloud-alert vermelho) + texto
+    <code>text-dsc-label-tiny</code> + "Como funciona". O estado nunca depende só da cor (texto muda junto). O botão "Voltar ao
+    topo" sobe para <code>bottom-12</code> para não cobrir o rodapé.</p>
     <p><strong>Clicável que não é &lt;button&gt; (2026-10-07, v0.1.0-beta.128).</strong> Todo cabeçalho de accordion, card ou item de
     lista clicável feito com <code>&lt;div&gt;</code>/<code>&lt;li&gt;</code> leva <code>role="button" tabindex="0" data-kbd-activate</code>
     (Enter/Espaço disparam o onclick, via <code>core.js</code>), e accordions levam também <code>aria-expanded</code> +

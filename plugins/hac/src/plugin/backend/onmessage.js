@@ -622,20 +622,23 @@ figma.ui.onmessage = async (msg) => {
     // _writeHacDataToDocument (code.js). Primeiro porque é o caminho que
     // funciona em mais cenários; clientStorage segue logo abaixo como cache
     // rápido de leitura.
-    _writeHacDataToDocument(msg.data);
+    const _docOk = _writeHacDataToDocument(msg.data);
 
+    // Resultado REAL do salvamento para o indicador de autosave do rodapé
+    // (2026-10-08) — salvo se gravou em pelo menos um dos dois lugares.
+    let _storeOk = false;
     const scopedKey = _getHacDataStorageKey();
-    if (!scopedKey) {
-      // Arquivo ainda não salvo: sem identidade estável, não há chave própria
-      // possível em clientStorage (ver _getHacDataStorageKey) — mas o backup
-      // no documento acima já garantiu a persistência.
-      return;
+    if (scopedKey) {
+      try {
+        await figma.clientStorage.setAsync(scopedKey, msg.data);
+        _storeOk = true;
+      } catch (err) {
+        console.warn("Storage save failed (possivelmente falta o plugin ID no manifest):", err);
+      }
     }
-    try {
-      await figma.clientStorage.setAsync(scopedKey, msg.data);
-    } catch (err) {
-      console.warn("Storage save failed (possivelmente falta o plugin ID no manifest):", err);
-    }
+    // Sem scopedKey (arquivo ainda não salvo): o backup no documento acima é
+    // a persistência (ver _getHacDataStorageKey).
+    figma.ui.postMessage({ type: 'storage-saved', ok: !!(_docOk || _storeOk) });
     return;
   }
 

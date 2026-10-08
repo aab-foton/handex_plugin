@@ -1575,6 +1575,55 @@
      preenchido em runtime por modules/messages.js a partir de
      msg.version (mensagem 'init-plugin' vinda de code.js / PLUGIN_VERSION,
      que por sua vez é injetada em build-time — ver scripts/bundle-code.cjs). -->
+<!-- MODAL: SALVAMENTO AUTOMÁTICO (2026-10-08, pedido do usuário; estrutura
+     recomendada pelo agente de Design/UX) — aberta pelo rodapé de autosave
+     (#hac-autosave-bar) e pela modal "Sobre". Explica que o trabalho é salvo
+     sozinho neste arquivo (clientStorage por arquivo + cópia no documento), quando
+     limpar o cache (novo projeto no mesmo arquivo; arquivo duplicado de outro
+     projeto) e o que cada limpeza faz. As duas ações mantêm confirmação
+     (clearPluginCache/clearPluginCanvasAndCache, core.js). -->
+<div id="hac-autosave-modal" role="dialog" aria-modal="true" aria-labelledby="hac-autosave-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-dsc-tiny">
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeModal('hac-autosave-modal')" aria-hidden="true"></div>
+  <div class="relative z-10 w-full max-w-sm max-h-[90%] min-h-0 flex flex-col rounded-dsc-large overflow-hidden shadow-dsc-elevation-2 bg-white dark:bg-dark-surface">
+    <div class="flex items-center justify-between p-dsc-tiny border-b border-gray-100 dark:border-dark-line shrink-0">
+      <h3 id="hac-autosave-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-dsc-nano">
+        <i data-lucide="cloud-check" class="w-4 h-4 text-green-600 dark:text-green-400" aria-hidden="true"></i> Salvamento automático
+      </h3>
+      <button onclick="closeModal('hac-autosave-modal')" title="Fechar" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+    <div class="p-dsc-smaller space-y-3 overflow-y-auto min-h-0 text-[12px] text-slate-600 dark:text-dark-muted leading-relaxed">
+      <p>Tudo o que você documenta — telas, especificações, tabulação e swipe — é salvo sozinho, a cada alteração. Não precisa salvar nem exportar para continuar de onde parou.</p>
+      <p>O salvamento vale para <strong class="text-slate-700 dark:text-white">este arquivo do Figma</strong>: cada arquivo tem a sua documentação, sem misturar projetos. Uma cópia também fica guardada dentro do próprio arquivo, por isso quem abre o arquivo vê a mesma documentação.</p>
+      <div class="rounded-dsc-medium border border-gray-100 dark:border-dark-line p-3 space-y-1.5">
+        <p class="font-bold text-slate-800 dark:text-white">Quando limpar o cache</p>
+        <ul class="list-disc pl-4 space-y-1">
+          <li>Ao começar um <strong class="text-slate-700 dark:text-white">projeto novo no mesmo arquivo</strong>.</li>
+          <li>Ao <strong class="text-slate-700 dark:text-white">duplicar o arquivo de outro projeto</strong> para usar de base — a documentação antiga vem junto na cópia.</li>
+        </ul>
+      </div>
+      <div class="space-y-1.5">
+        <p class="font-bold text-slate-800 dark:text-white">O que cada opção faz</p>
+        <p><strong class="text-slate-700 dark:text-white">Limpar cache:</strong> apaga a documentação salva deste arquivo, inclusive a cópia dentro dele. O que está no canvas permanece. Quem abrir o arquivo também deixa de ver a documentação.</p>
+        <p><strong class="text-slate-700 dark:text-white">Limpar tudo (cache + canvas):</strong> faz o mesmo e remove do canvas o que você criou com o hac (selos, réplicas e o handoff). O trabalho de outros designers não é afetado.</p>
+      </div>
+      <p class="text-amber-700 dark:text-amber-400">Não dá para desfazer. Se precisar guardar o trabalho, <button type="button" onclick="exportHacBackupJson()" class="font-bold underline hover:no-underline text-[#005ca9] dark:text-blue-300">baixe antes um backup</button>.</p>
+    </div>
+    <div class="p-dsc-tiny border-t border-gray-100 dark:border-dark-line flex flex-col gap-2 shrink-0">
+      <button type="button" onclick="clearPluginCache()"
+        class="w-full flex items-center justify-center gap-2 py-2.5 rounded-dsc-large border border-gray-200 dark:border-dark-line text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-dark-line text-[12px] font-bold transition-colors">
+        <i data-lucide="trash-2" class="w-4 h-4 shrink-0" aria-hidden="true"></i> Limpar cache
+      </button>
+      <button type="button" onclick="clearPluginCanvasAndCache()"
+        class="w-full flex items-center justify-center gap-2 py-2.5 rounded-dsc-large border border-red-200 dark:border-red-800/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 text-[12px] font-bold transition-colors">
+        <i data-lucide="trash" class="w-4 h-4 shrink-0" aria-hidden="true"></i> Limpar tudo (cache + canvas)
+      </button>
+      <button type="button" onclick="closeModal('hac-autosave-modal')" class="w-full py-2.5 text-[12px] font-bold text-slate-600 dark:text-dark-muted bg-gray-100 dark:bg-dark-line hover:bg-gray-200 rounded-dsc-large transition-colors">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <div id="about-hac-modal" role="dialog" aria-modal="true" aria-labelledby="about-hac-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-dsc-tiny">
   <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeModal('about-hac-modal')" aria-hidden="true"></div>
   <div class="relative z-10 w-full max-w-sm max-h-full min-h-0 flex flex-col rounded-dsc-large overflow-hidden shadow-dsc-elevation-2 bg-white dark:bg-dark-surface">
@@ -1613,25 +1662,15 @@
             class="shrink-0 px-dsc-micro py-1.5 text-dsc-label-tiny normal-case tracking-normal font-bold text-[#005ca9] bg-[#005ca9]/10 hover:bg-[#005ca9]/20 rounded-dsc-medium transition-colors">Trocar</button>
         </div>
       </dl>
-      <!-- Manutenção (2026-09-22, pedido do usuário: "temos que ter uma
-           funcionalidade pra limpeza do cache e para limpeza completa,
-           tanto do cache, como dos itens inseridos no canvas") — duas ações
-           de gravidade crescente, cada uma com sua própria confirmação
-           (window.confirm em clearPluginCache/clearPluginCanvasAndCache,
-           core.js). Separadas visualmente do resto da modal (borda
-           superior) por serem destrutivas, não informativas como o
-           conteúdo acima. -->
+      <!-- Manutenção: os botões de limpeza foram para a modal "Salvamento
+           automático" (hac-autosave-modal, 2026-10-08), aberta também pelo
+           rodapé de autosave. Aqui fica só o atalho. -->
       <div class="pt-3 border-t border-gray-100 dark:border-dark-line space-y-1.5">
         <p class="text-dsc-label-tiny font-bold text-slate-400 dark:text-dark-muted uppercase tracking-wider">Manutenção</p>
-        <button type="button" onclick="clearPluginCache()"
+        <button type="button" onclick="openHacAutosaveInfo()"
           class="w-full flex items-center gap-2.5 px-dsc-micro py-2.5 rounded-dsc-medium border border-gray-200 dark:border-dark-line text-slate-600 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-line text-dsc-label-tiny normal-case tracking-normal font-bold transition-colors text-left">
-          <i data-lucide="trash-2" class="w-4 h-4 shrink-0" aria-hidden="true"></i>
-          Limpar cache
-        </button>
-        <button type="button" onclick="clearPluginCanvasAndCache()"
-          class="w-full flex items-center gap-2.5 px-dsc-micro py-2.5 rounded-dsc-medium border border-red-200 dark:border-red-800/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 text-dsc-label-tiny normal-case tracking-normal font-bold transition-colors text-left">
-          <i data-lucide="trash" class="w-4 h-4 shrink-0" aria-hidden="true"></i>
-          Limpar tudo (cache + canvas)
+          <i data-lucide="cloud-check" class="w-4 h-4 shrink-0" aria-hidden="true"></i>
+          Salvamento e limpeza de cache
         </button>
       </div>
     </div>

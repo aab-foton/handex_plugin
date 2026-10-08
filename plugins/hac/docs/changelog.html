@@ -3398,6 +3398,26 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-08 — Rodapé de salvamento automático e orientação sobre limpeza de cache (v0.1.0-beta.139)</h2>
+
+    <p>Pedido do usuário; posição e conteúdo recomendados pelo agente de Design/UX. Esclarecimento registrado: a persistência
+    serve para <strong>não perder o trabalho no mesmo arquivo</strong> (fechar o plugin, trocar de máquina, outra pessoa abrir
+    o arquivo) — os dados ficam no clientStorage com chave por arquivo e numa cópia dentro do próprio documento. Ela não leva
+    dados de um projeto para outro; ao contrário, o isolamento por arquivo existe para que não vazem. O dado antigo só aparece
+    num projeto novo quando ele é feito no mesmo arquivo ou num arquivo duplicado de outro projeto — os casos em que é preciso
+    limpar o cache.</p>
+    <ul>
+      <li><strong>Rodapé fixo</strong> (<code>#hac-autosave-bar</code>, build.cjs): "Salvo automaticamente · HH:MM", "Salvando…" ou
+      "Não foi possível salvar", com o resultado REAL vindo do backend (<code>storage-saved {ok}</code>, novo). Oculto com o plugin
+      recolhido e na barra de captura. Leitor de tela: anúncio em região viva separada, no máximo a cada 15 s; erro sempre.</li>
+      <li><strong>Ao clicar</strong>: modal "Salvamento automático" (<code>hac-autosave-modal</code>) — o que é salvo e onde, quando
+      limpar o cache, o que cada limpeza faz, link para baixar backup e os botões "Limpar cache" e "Limpar tudo (cache + canvas)".
+      Os botões saíram da modal "Sobre", que ganhou um atalho "Salvamento e limpeza de cache".</li>
+      <li>As duas limpezas confirmam na modal do plugin (<code>openA11yConfirmModal</code>) em vez de <code>window.confirm</code>,
+      que pode ser bloqueado no iframe do Figma.</li>
+      <li>O toast "Salvo automaticamente" a cada ação saiu (o rodapé o substitui).</li>
+    </ul>
+
     <h2>2026-10-08 — Menu Personalização: "Escala da interface" (v0.1.0-beta.138)</h2>
 
     <p>Pedido do usuário: o rótulo "Tamanho da interface" passa a "Escala da interface" (também o nome do grupo de botões

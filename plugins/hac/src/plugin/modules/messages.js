@@ -408,6 +408,10 @@
         // Seleção de várias telas (2026-10-08): libera a próxima da fila.
         if (typeof window._a11yAreaCreatedWaiter === 'function') window._a11yAreaCreatedWaiter(area || null);
       }
+      // Rodapé de autosave (2026-10-08): resultado real do save-storage.
+      if (msg.type === "storage-saved") {
+        if (typeof _hacAutosaveHandleSaved === 'function') _hacAutosaveHandleSaved(msg);
+      }
       if (msg.type === "a11y-area-create-failed") {
         if (typeof window._a11yAreaCreatedWaiter === 'function') window._a11yAreaCreatedWaiter(null);
       }

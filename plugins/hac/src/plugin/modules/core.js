@@ -134,11 +134,19 @@ Object.assign(window, {
   clearPluginCanvasAndCache
 });
 
+// Confirmação na modal do próprio plugin (2026-10-08) — window.confirm pode
+// ser bloqueado no iframe do Figma; openA11yConfirmModal já é a confirmação
+// padrão das ações destrutivas do hac.
 function clearPluginCache() {
-  const confirmed = window.confirm(
-    'Limpar todo o cache do plugin?\n\nIsso removerá: telas selecionadas, especificações de acessibilidade e ordem de tabulação.\n\nEssa ação não pode ser desfeita.'
-  );
-  if (!confirmed) return;
+  closeModal('hac-autosave-modal');
+  openA11yConfirmModal({
+    title: 'Limpar cache deste arquivo?',
+    body: 'Apaga a documentação salva deste arquivo (telas, especificações, tabulação e swipe), inclusive a cópia guardada dentro dele — quem abrir o arquivo também deixa de vê-la. O que está no canvas permanece. Não dá para desfazer.',
+    confirmLabel: 'Limpar cache',
+    onConfirm: _clearPluginCacheNow,
+  });
+}
+function _clearPluginCacheNow() {
   // Loading (2026-09-24, pedido do usuário: "para o usuário não achar que
   // está travado") — reaproveita showA11yCanvasLoading/hideA11yCanvasLoading
   // (accessibility.js), o mesmo mecanismo já usado pro salvamento de spec
@@ -156,10 +164,15 @@ function clearPluginCache() {
 // mais explícita sobre o canvas ser afetado — é uma ação mais destrutiva
 // que "Limpar Cache" sozinho.
 function clearPluginCanvasAndCache() {
-  const confirmed = window.confirm(
-    'Limpar completamente o Handoff de Acessibilidade?\n\nIsso removerá o cache do plugin E os itens já inseridos no canvas (selos, réplicas e a Ficha de Handoff) criados por você nesta sessão.\n\nTrabalho de outros designers no mesmo arquivo não é afetado.\n\nEssa ação não pode ser desfeita.'
-  );
-  if (!confirmed) return;
+  closeModal('hac-autosave-modal');
+  openA11yConfirmModal({
+    title: 'Limpar tudo (cache + canvas)?',
+    body: 'Apaga a documentação salva deste arquivo e remove do canvas o que você criou com o hac (selos, réplicas e o handoff). O trabalho de outros designers no mesmo arquivo não é afetado. Não dá para desfazer.',
+    confirmLabel: 'Limpar tudo',
+    onConfirm: _clearPluginCanvasAndCacheNow,
+  });
+}
+function _clearPluginCanvasAndCacheNow() {
   // Loading (2026-09-24) — mesmo mecanismo de clearPluginCache acima. Esta
   // ação varre TODAS as páginas do documento em busca da Section de sessão
   // (_clearHacCanvasForCurrentUser, code.js) — pode demorar mais que o
@@ -171,6 +184,7 @@ function clearPluginCanvasAndCache() {
 
 // ── Storage ────────────────────────────────────────────────────────────
 function saveToStorage() {
+  _hacAutosaveSetState('saving');
   hacData.a11yAreas = a11yAreas;
   hacData.a11ySpecs = a11ySpecs;
   hacData.tabOrderItems = tabOrderItems;
@@ -427,11 +441,67 @@ function _handleHacBackupFileChosen(event) {
 }
 window._handleHacBackupFileChosen = _handleHacBackupFileChosen;
 
-// Mostra toast de salvo ao adicionar qualquer item relevante
+// Antes mostrava o toast "Salvo automaticamente" a cada ação. Desde
+// 2026-10-08 o rodapé de autosave (#hac-autosave-bar) mostra o estado sempre
+// visível — o toast virou ruído e sai. A função fica (vários pontos a chamam)
+// e só anuncia ao leitor de tela, no máximo a cada 15 s.
 function _toastSaved() {
-  showToast('Salvo automaticamente', 'success');
+  _hacAutosaveAnnounce('Salvo automaticamente.');
 }
 window._toastSaved = _toastSaved;
+
+// ── Rodapé de salvamento automático (2026-10-08) ─────────────────────────
+// Estados: 'saving' (saveToStorage disparou), 'saved' / 'error' (resposta
+// 'storage-saved' do backend, messages.js). O texto visível não fica em
+// região viva (não fala a cada clique); o anúncio vai para #hac-autosave-live.
+let _hacAutosaveLastAnnounce = 0;
+function _hacAutosaveAnnounce(text, force) {
+  const live = document.getElementById('hac-autosave-live');
+  if (!live) return;
+  const now = Date.now();
+  if (!force && now - _hacAutosaveLastAnnounce < 15000) return;
+  _hacAutosaveLastAnnounce = now;
+  live.textContent = '';
+  setTimeout(() => { live.textContent = text; }, 50);
+}
+function _hacAutosaveSetState(state) {
+  const icon = document.getElementById('hac-autosave-icon');
+  const text = document.getElementById('hac-autosave-text');
+  const btn = document.getElementById('hac-autosave-btn');
+  if (!icon || !text) return;
+  const hhmm = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const cfg = {
+    saving: { ico: 'loader-2', cls: 'text-slate-400 dark:text-dark-muted', txt: 'Salvando…' },
+    saved: { ico: 'cloud-check', cls: 'text-green-600 dark:text-green-400', txt: `Salvo automaticamente · ${hhmm}` },
+    error: { ico: 'cloud-alert', cls: 'text-red-600 dark:text-red-400', txt: 'Não foi possível salvar' },
+  }[state];
+  if (!cfg) return;
+  icon.className = `shrink-0 flex items-center ${cfg.cls}`;
+  icon.innerHTML = `<i data-lucide="${cfg.ico}" class="w-3.5 h-3.5${state === 'saving' ? ' motion-safe:animate-spin' : ''}"></i>`;
+  text.textContent = cfg.txt;
+  text.className = `flex-1 min-w-0 text-left truncate font-semibold ${state === 'error' ? 'text-red-600 dark:text-red-400' : 'text-slate-600 dark:text-dark-muted'}`;
+  if (btn) btn.setAttribute('aria-label', `${cfg.txt}. Abrir orientações sobre salvamento e limpeza de cache`);
+  if (state === 'error') _hacAutosaveAnnounce('Não foi possível salvar a documentação.', true);
+  if (typeof _refreshIcons === 'function') _refreshIcons();
+}
+window._hacAutosaveSetState = _hacAutosaveSetState;
+// Resposta do backend ao save-storage (messages.js).
+function _hacAutosaveHandleSaved(msg) {
+  _hacAutosaveSetState(msg && msg.ok === false ? 'error' : 'saved');
+}
+window._hacAutosaveHandleSaved = _hacAutosaveHandleSaved;
+// Rodapé visível só com o plugin aberto (não recolhido, sem barra de captura).
+function _hacAutosaveBarVisible(visible) {
+  const bar = document.getElementById('hac-autosave-bar');
+  if (bar) bar.classList.toggle('hidden', !visible);
+}
+window._hacAutosaveBarVisible = _hacAutosaveBarVisible;
+function openHacAutosaveInfo() {
+  if (typeof closeModal === 'function') closeModal('about-hac-modal');
+  openModal('hac-autosave-modal');
+  if (typeof _refreshIcons === 'function') _refreshIcons();
+}
+window.openHacAutosaveInfo = openHacAutosaveInfo;
 
 function removeA11ySpecById(specId) {
   if (!specId) return;
@@ -483,6 +553,7 @@ function toggleCollapse() {
   const mainContent = document.querySelector('body > div.flex-1');
   const collapseBtn = document.getElementById('btn-collapse');
   const btnTop = document.getElementById('btn-top');
+  _hacAutosaveBarVisible(!isCollapsed);
   if (isCollapsed) {
     if (mainContent) mainContent.classList.add('hidden');
     if (collapseBtn) collapseBtn.innerHTML = '<i data-lucide="maximize-2" class="w-4 h-4" aria-hidden="true"></i>';
@@ -547,6 +618,7 @@ function _a11yCaptureMiniBarEnter(feature) {
   else if (headerHome) headerHome.classList.add('hidden');
   if (miniBar) { miniBar.classList.remove('hidden'); miniBar.classList.add('flex'); }
   if (mainContent) mainContent.classList.add('hidden');
+  _hacAutosaveBarVisible(false);
   // Toast (showToast) é ancorado perto do rodapé da janela por padrão
   // (bottom: 20px, ver plugin.css) — na altura mini (~52px, estado
   // recolhido) isso deixava o toast quase todo fora da área visível. Esta
@@ -718,6 +790,7 @@ function _a11yCaptureMiniBarExit() {
   if (headerHome) headerHome.classList.remove('hidden');
   if (miniBar) { miniBar.classList.add('hidden'); miniBar.classList.remove('flex'); }
   if (mainContent) mainContent.classList.remove('hidden');
+  _hacAutosaveBarVisible(!isCollapsed);
   document.body.classList.remove('a11y-capture-mini-active');
   // Respeita o collapse manual: se o designer já estava com o plugin
   // colapsado ANTES de iniciar a captura, sair da captura devolve pro
