@@ -3398,6 +3398,23 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-08 — Selecionar uma ou mais telas de uma vez (v0.1.0-beta.134)</h2>
+
+    <p>Pedido do usuário, web e mobile: "Selecionar Tela" passa a aceitar <strong>várias telas</strong>, no mesmo comportamento
+    de seleção já conhecido da Tabulação. O plugin se recolhe na barra de captura, com a <strong>instrução sobre a seleção</strong>
+    ("Selecionar telas": clique numa tela; Shift+clique ou arrastar para marcar várias; clicar num elemento dentro da tela marca a
+    tela), o contador mostra "N telas marcadas" e "Concluir seleção" cria uma réplica de cada tela na estrutura do handoff, uma
+    de cada vez, na ordem em que foram marcadas (essa é a numeração). Rótulo = nome da tela. Uma tela que não pode ser copiada é
+    pulada (aviso no Figma) sem travar as demais. Substitui a modal de rótulo, que criava uma tela por vez.</p>
+    <ul>
+      <li>Backend: modo <code>start-screen-pick-mode</code>/<code>stop-screen-pick-mode</code>/<code>get-screen-pick-selection</code>
+      → <code>screen-pick-count-changed</code>/<code>screen-pick-selection</code>; cada clique vira a tela que o contém
+      (<code>_resolveScreenForPick</code>), recusando estruturas do hac e Sections. <code>create-a11y-area</code> avisa falha com
+      <code>a11y-area-create-failed</code>.</li>
+      <li>Frontend: <code>openA11yAreaModal</code> abre a captura (<code>_a11yCaptureMiniBarEnter('screens')</code>);
+      <code>_handleA11yScreenPickSelection</code> cria as Áreas em fila.</li>
+    </ul>
+
     <h2>2026-10-08 — Leitor de Tela sem mapeamento automático (v0.1.0-beta.133)</h2>
 
     <p>Pedido do usuário, web e mobile: "vamos tirar a proposta de mapeamento automático do leitor de tela — está trazendo coisas

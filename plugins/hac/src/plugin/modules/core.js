@@ -587,7 +587,33 @@ const A11Y_CAPTURE_BAR_INSTRUCTION_IDS = {
   steps: 'a11y-capture-bar-steps',
   stepsBlock: 'a11y-capture-bar-steps-block',
 };
+// Instrução da seleção de TELAS (2026-10-08, pedido do usuário: "lembre-se
+// de trazer a instrução sobre a seleção") — texto do próprio plugin (não há
+// card de instrução na lib para este passo).
+const A11Y_SCREEN_PICK_INSTRUCTION = {
+  title: 'Selecionar telas',
+  heading: 'Instruções sobre a seleção',
+  body: 'Marque no canvas as telas que você quer documentar, em qualquer página do arquivo. O plugin cria uma réplica de cada tela na estrutura do handoff, nessa mesma página — as telas originais não são alteradas.',
+  hint: 'Sugestão de uso: <strong>clique numa tela</strong> para marcá-la; para marcar várias, <strong>segure Shift e clique</strong> nas outras ou <strong>arraste uma seleção</strong> sobre elas. Clicar num elemento dentro da tela também marca a tela. A numeração segue a ordem em que você marcar.',
+};
+function _a11yCaptureBarRenderScreenPickInstructions() {
+  const set = (id, fn) => { const el = document.getElementById(id); if (el) fn(el); };
+  const ids = A11Y_CAPTURE_BAR_INSTRUCTION_IDS;
+  set(ids.title, el => { el.textContent = A11Y_SCREEN_PICK_INSTRUCTION.title; });
+  set(ids.instructionsBlock, el => el.classList.remove('hidden'));
+  set(ids.instructionsHeading, el => { el.textContent = A11Y_SCREEN_PICK_INSTRUCTION.heading; });
+  set(ids.instructionsBody, el => { el.textContent = A11Y_SCREEN_PICK_INSTRUCTION.body; });
+  set(ids.stepsHeading, el => el.classList.add('hidden'));
+  set(ids.steps, el => { el.classList.remove('list-decimal', 'list-inside'); el.innerHTML = `<li class="list-none">${A11Y_SCREEN_PICK_INSTRUCTION.hint}</li>`; });
+  set(ids.stepsBlock, el => el.classList.remove('hidden'));
+}
+
 function _a11yCaptureBarRenderInstructions(feature) {
+  if (feature === 'screens') {
+    _a11yCaptureBarRenderScreenPickInstructions();
+    if (typeof _refreshIcons === 'function') _refreshIcons();
+    return;
+  }
   const contentKey = feature === 'tabOrder' ? 'tabulacao' : 'swipe';
   if (typeof _renderA11yInstructionContent === 'function') {
     _renderA11yInstructionContent(contentKey, A11Y_CAPTURE_BAR_INSTRUCTION_IDS, true);
@@ -626,7 +652,8 @@ function _a11yCaptureBarMeasuredHeight() {
 // mesma distinção que _a11yCaptureMiniBarUpdateCount já faz no contador.
 function _a11yCaptureBarSyncTooltips() {
   const visible = window._a11yCaptureBarInstructionsVisible;
-  const noun = window._a11yCaptureMiniBarFeature === 'tabOrder' ? 'itens' : 'pontos';
+  const _f = window._a11yCaptureMiniBarFeature;
+  const noun = _f === 'tabOrder' ? 'itens' : _f === 'screens' ? 'telas' : 'pontos';
 
   const helpBtn = document.getElementById('a11y-capture-mini-bar-help');
   if (helpBtn) {
@@ -709,9 +736,12 @@ window._a11yCaptureMiniBarExit = _a11yCaptureMiniBarExit;
 function _a11yCaptureMiniBarUpdateCount(n) {
   const el = document.getElementById('a11y-capture-mini-bar-count');
   if (!el) return;
-  const noun = window._a11yCaptureMiniBarFeature === 'tabOrder'
+  const _f = window._a11yCaptureMiniBarFeature;
+  const noun = _f === 'tabOrder'
     ? (n === 1 ? 'item marcado' : 'itens marcados')
-    : (n === 1 ? 'ponto marcado' : 'pontos marcados');
+    : _f === 'screens'
+      ? (n === 1 ? 'tela marcada' : 'telas marcadas')
+      : (n === 1 ? 'ponto marcado' : 'pontos marcados');
   el.textContent = n + ' ' + noun;
 }
 window._a11yCaptureMiniBarUpdateCount = _a11yCaptureMiniBarUpdateCount;
@@ -721,6 +751,7 @@ function _a11yCaptureMiniBarFinish() {
   _a11yCaptureMiniBarExit();
   if (feature === 'tabOrder' && typeof finishTabOrderCapture === 'function') finishTabOrderCapture();
   if (feature === 'swipePath' && typeof finishSwipePathCapture === 'function') finishSwipePathCapture();
+  if (feature === 'screens' && typeof finishA11yScreenPick === 'function') finishA11yScreenPick();
 }
 window._a11yCaptureMiniBarFinish = _a11yCaptureMiniBarFinish;
 
@@ -729,6 +760,7 @@ function _a11yCaptureMiniBarCancel() {
   _a11yCaptureMiniBarExit();
   if (feature === 'tabOrder' && typeof cancelTabOrderReview === 'function') cancelTabOrderReview();
   if (feature === 'swipePath' && typeof cancelSwipePathReview === 'function') cancelSwipePathReview();
+  if (feature === 'screens' && typeof cancelA11yScreenPick === 'function') cancelA11yScreenPick();
 }
 window._a11yCaptureMiniBarCancel = _a11yCaptureMiniBarCancel;
 

@@ -226,6 +226,41 @@ let _a11yManualMatchDebounceTimer = null;
 // candidata a match/nome de camada.
 let _a11ySuppressNextSelectionChange = false;
 
+// Seleção de UMA OU MAIS telas (2026-10-08, pedido do usuário: "trazer a
+// funcionalidade de selecionar uma ou mais telas, como no comportamento de
+// seleção já conhecido pelo plugin") — mesmo modo de captura da Tabulação: o
+// plugin se recolhe na barra, o designer marca as telas no canvas e conclui.
+// Cada clique é resolvido para a TELA que o contém (_resolveScreenForPick);
+// a ordem de marcação vira a ordem de numeração.
+let _a11yScreenPickModeActive = false;
+let _a11yScreenPickSequence = [];
+let _a11yScreenPickCountTimer = null;
+
+// Tela = ancestral direto da página (ou de uma Section do designer). Recusa
+// o que é do próprio hac (Section de sessão, grupos, réplicas) e Sections.
+function _resolveScreenForPick(node) {
+  let n = node;
+  while (n && n.parent && n.parent.type !== 'PAGE' && n.parent.type !== 'SECTION') n = n.parent;
+  if (!n || n.type === 'SECTION' || n.type === 'PAGE') return null;
+  for (let p = n; p && p.type !== 'PAGE'; p = p.parent) {
+    if (_isHacOwnedNode(p)) return null;
+  }
+  return n;
+}
+function _screenPickScreens() {
+  const byId = new Map(figma.currentPage.selection.map(n => [n.id, n]));
+  const out = [];
+  const seen = new Set();
+  for (const id of _a11yScreenPickSequence) {
+    const node = byId.get(id);
+    const screen = node ? _resolveScreenForPick(node) : null;
+    if (!screen || seen.has(screen.id)) continue;
+    seen.add(screen.id);
+    out.push({ id: screen.id, name: screen.name });
+  }
+  return out;
+}
+
 // Última seleção REAL do designer conhecida enquanto o gate de "+ Nova
 // spec" está ativo (_a11yManualMatchModeActive) — id do node, não o objeto
 // (pode ter sido removido/mudado de página entre a leitura e o uso).
@@ -376,6 +411,15 @@ figma.on('selectionchange', () => {
   // seria indistinguível de um clique real do designer nos 3 modos abaixo.
   if (_a11ySuppressNextSelectionChange) {
     _a11ySuppressNextSelectionChange = false;
+    return;
+  }
+
+  if (_a11yScreenPickModeActive) {
+    _a11yScreenPickSequence = _reconcileClickSequence(_a11yScreenPickSequence, figma.currentPage.selection);
+    clearTimeout(_a11yScreenPickCountTimer);
+    _a11yScreenPickCountTimer = setTimeout(() => {
+      figma.ui.postMessage({ type: 'screen-pick-count-changed', count: _screenPickScreens().length });
+    }, 250);
     return;
   }
 
@@ -952,6 +996,7 @@ figma.ui.onmessage = async (msg) => {
       const original = await _getSceneNodeById(msg.targetNodeId);
       if (!original || !original.absoluteBoundingBox) {
         figma.notify("Elemento não encontrado no canvas — selecione novamente.");
+        figma.ui.postMessage({ type: 'a11y-area-create-failed', targetNodeId: msg.targetNodeId || null });
         return;
       }
       // Segunda camada de defesa (get-a11y-selection-info já filtra na
@@ -959,6 +1004,7 @@ figma.ui.onmessage = async (msg) => {
       // mesmo que o targetNodeId chegue de outra fonte no futuro.
       if (_isHacOwnedNode(original)) {
         figma.notify("Selecione um elemento do seu design, não uma estrutura criada pelo hac.");
+        figma.ui.postMessage({ type: 'a11y-area-create-failed', targetNodeId: msg.targetNodeId || null });
         return;
       }
       // A tela do handoff é uma CÓPIA (2026-10-08, pedido do usuário: tirar a
@@ -973,6 +1019,7 @@ figma.ui.onmessage = async (msg) => {
       // tem — _isHacOwnedNode acima).
       if (original.type === 'COMPONENT_SET') {
         figma.notify("Selecione uma tela (frame), não um conjunto de componentes.");
+        figma.ui.postMessage({ type: 'a11y-area-create-failed', targetNodeId: msg.targetNodeId || null });
         return;
       }
       const _section = _getOrCreateA11ySessionSection(msg.designerName, msg.designerId, original.parent === figma.currentPage ? original : null);
@@ -988,6 +1035,7 @@ figma.ui.onmessage = async (msg) => {
         console.error('[hac] create-a11y-area: cópia da tela falhou', e && e.message);
         try { if (node && !node.removed) node.remove(); } catch (e2) { }
         figma.notify("Não foi possível copiar a tela para o handoff.", { error: true });
+        figma.ui.postMessage({ type: 'a11y-area-create-failed', targetNodeId: msg.targetNodeId || null });
         return;
       }
       try { await figma.loadFontAsync({ family: "Inter", style: "Bold" }); } catch (e) { }
@@ -2392,6 +2440,27 @@ figma.ui.onmessage = async (msg) => {
   // (_tabOrderDrawPendingBadge). A origem não decide mais o componente do
   // selo de item (A11Y_ORDENACAO_ITEM_KEY serve web e mobile); segue sendo
   // propagada por compatibilidade de contrato.
+
+  // Seleção de telas (2026-10-08) — ver _a11yScreenPickModeActive. O que já
+  // estiver selecionado ao entrar conta como marcado.
+  if (msg.type === "start-screen-pick-mode") {
+    _a11yScreenPickModeActive = true;
+    _a11yScreenPickSequence = figma.currentPage.selection.map(n => n.id);
+    figma.ui.postMessage({ type: 'screen-pick-count-changed', count: _screenPickScreens().length });
+    return;
+  }
+  if (msg.type === "stop-screen-pick-mode") {
+    _a11yScreenPickModeActive = false;
+    _a11yScreenPickSequence = [];
+    return;
+  }
+  if (msg.type === "get-screen-pick-selection") {
+    const screens = _screenPickScreens();
+    _a11yScreenPickModeActive = false;
+    _a11yScreenPickSequence = [];
+    figma.ui.postMessage({ type: 'screen-pick-selection', screens });
+    return;
+  }
 
   if (msg.type === "start-tab-order-mode") {
     _tabOrderModeActive = true;

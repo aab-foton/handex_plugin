@@ -7953,20 +7953,67 @@ function _prefillA11ySpecForEdit(spec) {
 // agrupamento principal da aba: cada área é um accordion e toda spec de A11y
 // nasce dentro de uma área. Numeração sequencial por PROJETO inteiro (nunca
 // reaproveita número de área excluída).
+// "Selecionar Tela" agora seleciona UMA OU MAIS telas (2026-10-08, pedido do
+// usuário: "selecionar uma ou mais telas, como no comportamento de seleção já
+// conhecido pelo plugin"). Mesmo modo de captura da Tabulação: o plugin se
+// recolhe na barra (com a instrução da seleção), o designer marca as telas no
+// canvas e conclui. Cada tela vira uma Área com réplica (create-a11y-area),
+// criadas UMA DE CADA VEZ — a posição de cada réplica depende das anteriores
+// já estarem na Section. Rótulo = nome da tela; número = ordem de marcação.
+// Substitui a modal de rótulo (a11y-area-modal), que só criava uma tela.
+// Mantém o nome antigo da função: os 3 pontos de entrada (topo, lista vazia,
+// "Documentar outra tela") já a chamam.
 function openA11yAreaModal() {
-  const input = document.getElementById('a11y-area-label-input');
-  if (input) { input.value = ''; updateA11yCharCounter(input); }
-  openModal('a11y-area-modal');
-  setTimeout(() => { if (input) input.focus(); }, 50);
-  // Pré-preenche com o nome do frame/elemento selecionado no canvas — só
-  // cosmético, o designer pode sobrescrever antes de confirmar.
-  _getA11ySelectionInfo().then(sel => {
-    const modal = document.getElementById('a11y-area-modal');
-    if (!modal || modal.classList.contains('hidden')) return;
-    if (input && !input.value && sel && sel.name) { input.value = sel.name; updateA11yCharCounter(input); }
+  ensureA11yProjectOriginThen((origin) => {
+    window._a11yScreenPickOrigin = origin;
+    if (typeof _a11yCaptureMiniBarEnter === 'function') _a11yCaptureMiniBarEnter('screens');
+    parent.postMessage({ pluginMessage: { type: 'start-screen-pick-mode' } }, '*');
   });
 }
 window.openA11yAreaModal = openA11yAreaModal;
+
+function finishA11yScreenPick() {
+  parent.postMessage({ pluginMessage: { type: 'get-screen-pick-selection' } }, '*');
+}
+window.finishA11yScreenPick = finishA11yScreenPick;
+
+function cancelA11yScreenPick() {
+  parent.postMessage({ pluginMessage: { type: 'stop-screen-pick-mode' } }, '*');
+}
+window.cancelA11yScreenPick = cancelA11yScreenPick;
+
+// Resposta de get-screen-pick-selection: [{ id, name }] na ordem de marcação.
+async function _handleA11yScreenPickSelection(screens) {
+  const list = Array.isArray(screens) ? screens : [];
+  if (!list.length) {
+    showToast('Nenhuma tela marcada. Clique em "Selecionar Tela" e marque as telas no canvas.');
+    return;
+  }
+  const origin = window._a11yScreenPickOrigin || getA11yProjectOrigin();
+  if (typeof showA11yCanvasLoading === 'function') {
+    showA11yCanvasLoading(list.length === 1 ? 'Copiando a tela para o handoff…' : `Copiando ${list.length} telas para o handoff…`);
+  }
+  let ok = 0;
+  for (const sc of list) {
+    // eslint-disable-next-line no-await-in-loop
+    const area = await new Promise(resolve => {
+      const timer = setTimeout(() => { window._a11yAreaCreatedWaiter = null; resolve(null); }, 30000);
+      window._a11yAreaCreatedWaiter = (a) => { clearTimeout(timer); window._a11yAreaCreatedWaiter = null; resolve(a); };
+      parent.postMessage({ pluginMessage: {
+        type: 'create-a11y-area', targetNodeId: sc.id, label: sc.name, number: _nextA11yAreaNumber(), conector: 'superior', origin,
+        sectionName: getA11yActiveSectionName(), designerName: getA11yDesignerName(), designerId: getA11yDesignerId(),
+      } }, '*');
+    });
+    if (area) ok++;
+  }
+  if (typeof hideA11yCanvasLoading === 'function') hideA11yCanvasLoading();
+  if (ok === list.length) {
+    showToast(ok === 1 ? 'Tela copiada para o handoff.' : `${ok} telas copiadas para o handoff.`);
+  } else {
+    showToast(`${ok} de ${list.length} telas copiadas. As demais não puderam ser copiadas — veja o aviso no Figma.`);
+  }
+}
+window._handleA11yScreenPickSelection = _handleA11yScreenPickSelection;
 
 // A pergunta "Continuar na Section atual / Iniciar nova Section" dentro
 // deste modal foi REMOVIDA (2026-09-04-k, achado real reportado pelo

@@ -389,7 +389,8 @@
           window._a11yExpandedAreaIds.add(area.id);
           if (typeof renderA11yGroupedList === 'function') renderA11yGroupedList();
           saveToStorage();
-          if (window._toastSaved) _toastSaved();
+          // Em lote (várias telas, 2026-10-08) o aviso é um só, no fim.
+          if (window._toastSaved && !window._a11yAreaCreatedWaiter) _toastSaved();
           // Marcar Área não dispara mais detecção automaticamente
           // (2026-09-04-g) — `autoDetect` deixou de ser enviado por
           // confirmA11yArea, então `area.autoDetect` nunca é truthy aqui;
@@ -404,6 +405,20 @@
             openA11yPostAreaDetectModal(area);
           }
         }
+        // Seleção de várias telas (2026-10-08): libera a próxima da fila.
+        if (typeof window._a11yAreaCreatedWaiter === 'function') window._a11yAreaCreatedWaiter(area || null);
+      }
+      if (msg.type === "a11y-area-create-failed") {
+        if (typeof window._a11yAreaCreatedWaiter === 'function') window._a11yAreaCreatedWaiter(null);
+      }
+      // Modo de seleção de telas (2026-10-08): contador da barra e resultado.
+      if (msg.type === "screen-pick-count-changed") {
+        if (window._a11yCaptureMiniBarFeature === 'screens' && typeof _a11yCaptureMiniBarUpdateCount === 'function') {
+          _a11yCaptureMiniBarUpdateCount(msg.count || 0);
+        }
+      }
+      if (msg.type === "screen-pick-selection") {
+        if (typeof _handleA11yScreenPickSelection === 'function') _handleA11yScreenPickSelection(msg.screens);
       }
 
       // Resposta de update-a11y-area-conector (2026-09-04-l, "Editar
