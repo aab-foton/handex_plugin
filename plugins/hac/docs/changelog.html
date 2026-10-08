@@ -3398,6 +3398,25 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-08 — Documentação por designer (v0.1.0-beta.140)</h2>
+
+    <p>Decisão do usuário: cada designer tem a sua documentação no arquivo; para passá-la a outro designer, ele baixa o backup
+    (.json) e o colega usa "Restaurar backup" no mesmo arquivo. Antes, havia uma documentação só por arquivo — com dois designers
+    no mesmo arquivo, o último a salvar sobrescrevia a cópia do outro.</p>
+    <ul>
+      <li>Armazenamento: na máquina, chave <code>hacData:&lt;arquivo&gt;:&lt;usuário&gt;</code>; no documento, chave
+      <code>hacData@&lt;usuário&gt;</code> no documento inteiro (<code>figma.root</code>) — antes ficava na página aberta no momento do
+      salvamento, o que espalhava cópias quando o handoff passou a nascer na página de cada tela. Sem usuário identificado (raro), o
+      plugin segue com as chaves antigas, para nunca perder trabalho.</li>
+      <li>Migração: o cache antigo desta máquina passa a ser do designer que abrir; a cópia antiga compartilhada do documento só é
+      assumida por quem é dono da área do handoff na página (ou se ela não tiver dono) — nunca por outro designer — e então sai da
+      área compartilhada.</li>
+      <li>"Limpar cache" e "Limpar tudo" apagam só a documentação de quem clicou. Textos da modal "Salvamento automático", das
+      confirmações e do menu de backup atualizados.</li>
+      <li>Validado com Figma simulado: dois designers no mesmo arquivo não se sobrescrevem; limpar de um não afeta o outro; troca de
+      máquina recupera pela cópia do arquivo; migração respeita o dono.</li>
+    </ul>
+
     <h2>2026-10-08 — Rodapé de salvamento automático e orientação sobre limpeza de cache (v0.1.0-beta.139)</h2>
 
     <p>Pedido do usuário; posição e conteúdo recomendados pelo agente de Design/UX. Esclarecimento registrado: a persistência

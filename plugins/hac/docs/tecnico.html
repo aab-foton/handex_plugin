@@ -4959,6 +4959,12 @@ hr {
       (<code>openA11yExistingDocsModal</code>, modal <code>hac-existing-docs-modal</code>).</li>
     </ul>
 
+    <p><strong>Documentação por designer (beta.140).</strong> <code>_getHacDataStorageKey</code> = arquivo + usuário;
+    a cópia no documento usa <code>figma.root</code> com prefixo <code>hacData@&lt;userId&gt;</code> (<code>_hacDocSlot</code>).
+    No <code>ui-ready</code>, se o designer ainda não tem dado, migra o cache antigo da máquina e, se a área do handoff da página for
+    dele ou não tiver dono, a cópia antiga compartilhada (<code>_readSharedHacDataFromDocument</code>), apagando-a em seguida.
+    Passagem entre designers: exportar/restaurar backup (.json), que só exige o mesmo arquivo.</p>
+
     <p><strong>Várias telas de uma vez (beta.134).</strong> "Selecionar Tela" abre o modo de captura (barra recolhida, mesma
     da Tabulação) com a instrução da seleção; o backend acompanha os cliques (<code>_a11yScreenPickModeActive</code>,
     ordem por <code>_reconcileClickSequence</code>) e converte cada um na tela que o contém

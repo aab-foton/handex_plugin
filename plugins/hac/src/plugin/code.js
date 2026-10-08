@@ -5240,7 +5240,23 @@ export const PLUGIN_VERSION = (typeof __HAC_VERSION__ !== 'undefined') ? __HAC_V
 // silenciosamente os dados de outro projeto.
 export const HAC_DATA_LEGACY_KEY = 'hacData';
 
+// Documentação POR DESIGNER (2026-10-08, pedido do usuário: "não é melhor
+// ter uma documentação por designer? Se eu quero que outro designer veja, eu
+// extraio o backup e envio para ele"). A chave passa a ser arquivo + usuário
+// do Figma; sem usuário identificado (figma.currentUser indisponível, raro),
+// cai na chave só por arquivo — o comportamento anterior, para nunca perder
+// trabalho. Passagem de projeto entre designers = exportar/importar backup.
+export function _hacCurrentUserId() {
+  try { return (figma.currentUser && figma.currentUser.id) || null; } catch (e) { return null; }
+}
 export function _getHacDataStorageKey() {
+  if (!figma.fileKey) return null;
+  const uid = _hacCurrentUserId();
+  return uid ? `hacData:${figma.fileKey}:${uid}` : `hacData:${figma.fileKey}`;
+}
+// Chave anterior (só por arquivo, compartilhada por quem usasse esta
+// máquina) — lida uma vez para migrar para a chave por designer.
+export function _getHacDataSharedStorageKey() {
   return figma.fileKey ? `hacData:${figma.fileKey}` : null;
 }
 
@@ -5279,9 +5295,26 @@ const HAC_DOC_CHUNK_SIZE = 80 * 1024;
 // Grava hacData inteiro no documento, fatiado. Best-effort: nunca lança —
 // este é o caminho de BACKUP, jamais pode derrubar o save principal
 // (clientStorage) nem travar a UI. Retorna true só se gravou tudo.
+// Onde a cópia no documento vive (2026-10-08). POR DESIGNER: no documento
+// inteiro (figma.root), chave `hacData@<userId>` — antes ficava na PÁGINA
+// aberta no momento do save, e com a estrutura do handoff nascendo na página
+// de cada tela, a cópia podia se espalhar por páginas. SEM usuário
+// identificado: o lugar antigo (página atual, chave `hacData`), compartilhado.
+function _hacDocSlot() {
+  const uid = _hacCurrentUserId();
+  return uid ? { node: figma.root, prefix: `${HAC_DOC_KEY_PREFIX}@${uid}` } : _hacDocSharedSlot();
+}
+function _hacDocSharedSlot() {
+  return { node: figma.currentPage, prefix: HAC_DOC_KEY_PREFIX };
+}
+
 export function _writeHacDataToDocument(data) {
+  return _writeHacDataToSlot(_hacDocSlot(), data);
+}
+function _writeHacDataToSlot(slot, data) {
   try {
-    const page = figma.currentPage;
+    const page = slot && slot.node;
+    const HAC_DOC_KEY_PREFIX = slot.prefix;
     if (!page) return false;
     const json = JSON.stringify(data);
     const total = Math.ceil(json.length / HAC_DOC_CHUNK_SIZE) || 1;
@@ -5311,8 +5344,17 @@ export function _writeHacDataToDocument(data) {
 // conteúdo está corrompido/incompleto — quem chama trata como "sem backup"
 // e segue com o que tiver, nunca quebra a abertura do plugin.
 export function _readHacDataFromDocument() {
+  return _readHacDataFromSlot(_hacDocSlot());
+}
+// Cópia ANTIGA, compartilhada (página atual, chave `hacData`) — só para a
+// migração para a cópia por designer (ver ui-ready, onmessage.js).
+export function _readSharedHacDataFromDocument() {
+  return _readHacDataFromSlot(_hacDocSharedSlot());
+}
+function _readHacDataFromSlot(slot) {
   try {
-    const page = figma.currentPage;
+    const page = slot && slot.node;
+    const HAC_DOC_KEY_PREFIX = slot.prefix;
     if (!page) return null;
     const total = parseInt(page.getSharedPluginData(HAC_DOC_NS, `${HAC_DOC_KEY_PREFIX}:count`) || '0', 10) || 0;
     if (!total) return null;
@@ -5336,8 +5378,15 @@ export function _readHacDataFromDocument() {
 // apagaria só o clientStorage e veria tudo voltar na reabertura seguinte
 // (restaurado deste backup), parecendo um botão quebrado.
 export function _clearHacDataFromDocument() {
+  _clearHacDataFromSlot(_hacDocSlot());
+}
+export function _clearSharedHacDataFromDocument() {
+  _clearHacDataFromSlot(_hacDocSharedSlot());
+}
+function _clearHacDataFromSlot(slot) {
   try {
-    const page = figma.currentPage;
+    const page = slot && slot.node;
+    const HAC_DOC_KEY_PREFIX = slot.prefix;
     if (!page) return;
     const total = parseInt(page.getSharedPluginData(HAC_DOC_NS, `${HAC_DOC_KEY_PREFIX}:count`) || '0', 10) || 0;
     for (let i = 0; i < total; i++) {

@@ -85,9 +85,13 @@ import {
   _forEachSwipePathCopyCandidate,
   _forEachTabOrderCopyCandidate,
   _getHacDataStorageKey,
+  _getHacDataSharedStorageKey,
+  _hacCurrentUserId,
   _writeHacDataToDocument,
   _readHacDataFromDocument,
+  _readSharedHacDataFromDocument,
   _clearHacDataFromDocument,
+  _clearSharedHacDataFromDocument,
   _clearHacCanvasForCurrentUser,
   _hacDataWeight,
   _getSceneNodeById,
@@ -513,6 +517,46 @@ figma.ui.onmessage = async (msg) => {
       // maior garante que reabrir o plugin jamais apague trabalho — no pior
       // caso o designer reencontra algo que tinha apagado, o que é
       // recuperável; o contrário não é.
+      // Migração para a documentação POR DESIGNER (2026-10-08). Só quando o
+      // designer ainda não tem nada na chave nova:
+      //  (1) cache desta máquina na chave antiga (só por arquivo) → passa a
+      //      ser dele;
+      //  (2) cópia antiga COMPARTILHADA no documento → só é assumida se a
+      //      área do handoff desta página for dele ou não tiver dono — nunca
+      //      a documentação de outro designer. Assumida = copiada para a
+      //      chave dele e apagada da compartilhada (não é assumida de novo).
+      const _uid = _hacCurrentUserId();
+      if (_uid && !savedState) {
+        const sharedKey = _getHacDataSharedStorageKey();
+        if (sharedKey && sharedKey !== scopedKey) {
+          const old = await figma.clientStorage.getAsync(sharedKey);
+          if (old) {
+            savedState = old;
+            if (scopedKey) { try { await figma.clientStorage.setAsync(scopedKey, old); } catch (e) { } }
+            try { await figma.clientStorage.setAsync(sharedKey, null); } catch (e) { }
+          }
+        }
+      }
+      if (_uid && !_readHacDataFromDocument()) {
+        const sharedDoc = _readSharedHacDataFromDocument();
+        if (sharedDoc) {
+          const owners = new Set();
+          for (const n of figma.currentPage.children) {
+            try {
+              if (n.type === 'SECTION' && n.getPluginData('hacSessionSection') === 'true') {
+                const o = n.getPluginData('hacSessionOwnerId');
+                if (o) owners.add(o);
+              }
+            } catch (e) { }
+          }
+          if (owners.size === 0 || owners.has(_uid)) {
+            if (_hacDataWeight(sharedDoc) > _hacDataWeight(savedState)) savedState = sharedDoc;
+            _writeHacDataToDocument(savedState);
+            _clearSharedHacDataFromDocument();
+          }
+        }
+      }
+
       const docState = _readHacDataFromDocument();
       if (docState && _hacDataWeight(docState) > _hacDataWeight(savedState)) {
         savedState = docState;
@@ -662,6 +706,12 @@ figma.ui.onmessage = async (msg) => {
       if (scopedKey) {
         await figma.clientStorage.setAsync(scopedKey, null);
       }
+      // Só a documentação DESTE designer (2026-10-08). A chave antiga desta
+      // máquina também, para não voltar pela migração na próxima abertura.
+      const _sharedKey = _getHacDataSharedStorageKey();
+      if (_sharedKey && _sharedKey !== scopedKey) {
+        try { await figma.clientStorage.setAsync(_sharedKey, null); } catch (e) { }
+      }
       // Limpa TAMBÉM o backup no documento (2026-09-22) — sem isto, "Limpar
       // Cache" apagaria só o clientStorage e a reabertura seguinte
       // restauraria tudo a partir do documento, fazendo o botão parecer
@@ -695,6 +745,12 @@ figma.ui.onmessage = async (msg) => {
       const scopedKey = _getHacDataStorageKey();
       if (scopedKey) {
         await figma.clientStorage.setAsync(scopedKey, null);
+      }
+      // Só a documentação DESTE designer (2026-10-08). A chave antiga desta
+      // máquina também, para não voltar pela migração na próxima abertura.
+      const _sharedKey = _getHacDataSharedStorageKey();
+      if (_sharedKey && _sharedKey !== scopedKey) {
+        try { await figma.clientStorage.setAsync(_sharedKey, null); } catch (e) { }
       }
       _clearHacDataFromDocument();
       const result = await _clearHacCanvasForCurrentUser();
