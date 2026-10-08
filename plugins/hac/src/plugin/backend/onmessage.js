@@ -4639,6 +4639,62 @@ figma.ui.onmessage = async (msg) => {
     return null;
   }
 
+  // Card de instrução sempre na versão ATUAL da lib (2026-10-08, pedido do
+  // usuário: "tivemos modificações na estrutura dos cards de instruções —
+  // aplique nos cards que são injetados pelo plugin"). Antes, um card já no
+  // canvas era reaproveitado para sempre: telas documentadas antes de uma
+  // mudança na lib ficavam com a estrutura antiga. Agora, ao gerar/atualizar a
+  // seção, o card é comparado com o componente publicado (mesmo componente e
+  // mesmos textos visíveis, sem os números dos selos); diferente — ou um card
+  // que não é instância da lib — é trocado por uma instância nova no mesmo
+  // lugar, com as mesmas marcações. Falha de import: o card antigo fica.
+  function _instructionTextSignature(node) {
+    // Fora da comparação: textos DENTRO dos selos de categoria (instância
+    // filha de um frame "Title") — o plugin troca esses selos pelos dele
+    // (_swapInstructionCategoryBadges), então eles sempre diferem da lib.
+    const insideBadge = t => {
+      for (let p = t.parent; p && p !== node; p = p.parent) {
+        if (p.type === 'INSTANCE' && p.parent && p.parent.name === 'Title') return true;
+      }
+      return false;
+    };
+    try {
+      return node.findAll(n => n.type === 'TEXT' && n.visible !== false && !insideBadge(n))
+        .map(n => n.characters).join('|');
+    } catch (e) { return ''; }
+  }
+  function _fitInstrucoesToLegend(instrucoes, legend) {
+    if (instrucoes && legend && legend.type === 'INSTANCE' && legend.width > instrucoes.width) {
+      instrucoes.resizeWithoutConstraints(legend.width, instrucoes.height);
+      instrucoes.primaryAxisSizingMode = 'AUTO';
+    }
+  }
+  async function _refreshInstructionLegend(legend, sectionKey, cfg, a11yOrigin) {
+    const key = ((getPlatformProfile(a11yOrigin).instructionComponentKeys) || {})[sectionKey];
+    if (!key || !legend || legend.removed || !legend.parent) return legend;
+    try {
+      const comp = await figma.importComponentByKeyAsync(key);
+      if (legend.type === 'INSTANCE') {
+        const main = await legend.getMainComponentAsync();
+        if (main && main.key === comp.key && _instructionTextSignature(legend) === _instructionTextSignature(comp)) return legend;
+      }
+      const fresh = await _createFichaInstructionLegend(sectionKey, cfg, a11yOrigin);
+      if (!fresh) return legend;
+      const parent = legend.parent;
+      for (const k of ['hacCategory', 'hacLegendForArea']) {
+        const v = legend.getPluginData(k);
+        if (v) fresh.setPluginData(k, v);
+      }
+      parent.insertChild(parent.children.indexOf(legend), fresh);
+      if (!('layoutMode' in parent) || parent.layoutMode === 'NONE') { fresh.x = legend.x; fresh.y = legend.y; }
+      legend.remove();
+      return fresh;
+    } catch (e) {
+      console.error('[hac] instrução: atualização do card falhou, mantido o atual.', e && e.message);
+      return legend;
+    }
+  }
+
   // Remove o "Título do bloco" externo de blocos de instrução criados antes
   // de 2026-10-07 — o título repetia o que o card de instrução já mostra.
   function _removeFichaBlockTitle(instrucoes) {
@@ -4655,6 +4711,10 @@ figma.ui.onmessage = async (msg) => {
       try {
         if (child.getPluginData && child.getPluginData('hacFichaInstrucoes') === sectionKey) {
           _removeFichaBlockTitle(child);
+          const oldLegend = (child.children || []).find(n => {
+            try { return n.type === 'INSTANCE' || !!n.getPluginData('hacLegendForArea'); } catch (e) { return false; }
+          });
+          if (oldLegend) _fitInstrucoesToLegend(child, await _refreshInstructionLegend(oldLegend, sectionKey, cfg, a11yOrigin));
           return child;
         }
       } catch (e) { }
@@ -4705,6 +4765,7 @@ figma.ui.onmessage = async (msg) => {
     const existingLegend = areaId ? _findLegendForArea(areaId, sectionKey) : null;
     if (existingLegend) {
       instrucoes.appendChild(existingLegend);
+      _fitInstrucoesToLegend(instrucoes, await _refreshInstructionLegend(existingLegend, sectionKey, cfg, a11yOrigin));
     } else {
       // Web e mobile importam o componente de instrução PUBLICADO no arquivo
       // próprio (web 2026-10-05, mobile 2026-10-06) em vez de montar o texto —
@@ -4715,10 +4776,7 @@ figma.ui.onmessage = async (msg) => {
       if (areaId) legend.setPluginData('hacLegendForArea', `${areaId}::${sectionKey}`);
       instrucoes.appendChild(legend);
       // O componente web tem largura própria (683px); o frame acompanha.
-      if (legend.type === 'INSTANCE' && legend.width > instrucoes.width) {
-        instrucoes.resizeWithoutConstraints(legend.width, instrucoes.height);
-        instrucoes.primaryAxisSizingMode = 'AUTO';
-      }
+      _fitInstrucoesToLegend(instrucoes, legend);
     }
     return instrucoes;
   }

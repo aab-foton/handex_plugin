@@ -3398,6 +3398,16 @@ hr { border: none; border-top: 1px solid var(--line); margin: 32px 0; }
 
     <p>Ver <a href="tecnico.html#s8aa">tecnico.html, seção 8aa</a>.</p>
 
+    <h2>2026-10-08 — Cards de instrução sempre na versão atual da lib (v0.1.0-beta.132)</h2>
+
+    <p>Pedido do usuário: a lib mudou a estrutura dos cards de instrução (mobile: Ordem de Tabulação, Swipe — agora "Ordem de
+    Leitura Mobile (Basic Swipe)" —, Especificações; web: Ordem de Tabulação, Especificações), e os cards injetados pelo plugin
+    devem segui-la. Os cinco são componentes publicados que o plugin já importava, mas um card já no canvas era reaproveitado
+    para sempre — telas documentadas antes da mudança ficavam com a estrutura antiga. Agora, ao gerar ou atualizar uma seção,
+    o card é comparado com o componente publicado (mesmo componente e mesmos textos, sem contar os selos de categoria) e,
+    se estiver diferente, é trocado por uma instância nova no mesmo lugar. Também: o selo de título nos cards web passa a
+    mostrar "H1", como na lib (mobile continua "H").</p>
+
     <h2>2026-10-08 — Seleção de tela cria a réplica; sem "Personalizado"; agrupamento manual; fim da lib Angular (v0.1.0-beta.131)</h2>
 
     <p>Quatro pedidos do usuário, web e mobile:</p>

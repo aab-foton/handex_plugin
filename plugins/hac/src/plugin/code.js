@@ -4557,7 +4557,10 @@ export async function _swapInstructionCategoryBadges(inst, a11yOrigin) {
       const label = slot.parent.findOne(n => n.type === 'TEXT');
       const category = label ? _fichaLegendAssetCategory(/** @type {TextNode} */(label).characters) : null;
       if (!category) continue;
-      const badge = await _tryImportA11yConectorLinha({ a11yType: category, a11yOrigin, orientacao: 'desativado', letter: category === 'titulo' ? 'H' : null });
+      // Letra do selo de título como no componente da lib (2026-10-08): mobile
+      // "H" (sem níveis), web "H1" (o card web de Especificações mostra H1).
+      const tituloLetter = a11yOrigin === 'web' ? 'H1' : 'H';
+      const badge = await _tryImportA11yConectorLinha({ a11yType: category, a11yOrigin, orientacao: 'desativado', letter: category === 'titulo' ? tituloLetter : null });
       const main = await badge.getMainComponentAsync();
       const w = slot.width, h = slot.height;
       if (main) {
@@ -4565,9 +4568,9 @@ export async function _swapInstructionCategoryBadges(inst, a11yOrigin) {
         try { slot.resize(w, h); } catch (e) { }
         if (category === 'titulo') {
           const propKey = A11Y_AGRUPAMENTO_LETTER_PROP_KEY[category];
-          try { if (propKey) /** @type {InstanceNode} */(slot).setProperties({ [propKey]: 'H' }); } catch (e) {
+          try { if (propKey) /** @type {InstanceNode} */(slot).setProperties({ [propKey]: tituloLetter }); } catch (e) {
             const t = slot.findOne(n => n.type === 'TEXT' && n.name === 'Number');
-            if (t && t.type === 'TEXT' && t.fontName !== figma.mixed) { await figma.loadFontAsync(t.fontName); t.characters = 'H'; }
+            if (t && t.type === 'TEXT' && t.fontName !== figma.mixed) { await figma.loadFontAsync(t.fontName); t.characters = tituloLetter; }
           }
         }
         swapped++;
