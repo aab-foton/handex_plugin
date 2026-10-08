@@ -323,6 +323,10 @@ entre dois parágrafos de texto diferentes nas categorias "Nível de Título" e
 plataformas, só que diferente) — nunca mais os dois parágrafos/menções
 coexistindo no mesmo texto.
 
+> Histórico: a lib legada `web-angular-react` citada nesta fase e na Etapa 1b saiu do HAC em
+> 2026-10-06 (resíduos removidos em 2026-10-08); projetos antigos salvos com ela são lidos como
+> `super-dsc-web`.
+
 **Fase 5 (2026-09-04): `projectLib` — granularidade real por lib, não só
 web/mobile.** Motivo: o hac já reconhece e mapeia 4 libs de produto
 DISTINTAS internamente (`refs/_manifest.json`): `web-angular-react`
@@ -539,7 +543,6 @@ problema estrutural.
 **Libs de matching/detecção** (categorizam instâncias reais no canvas do
 designer — servem só como referência de nome/origem, nunca são a fonte
 do componente importado):
-- `web-angular-react` → origin `web`
 - `super-dsc-web` → origin `web`
 - `super-app` → origin `mobile`
 - `dsc-android` → origin `mobile` (recadastrada em 2026-09-02 após bug

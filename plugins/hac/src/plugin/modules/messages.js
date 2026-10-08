@@ -161,18 +161,6 @@
         }
       }
 
-      // Página dedicada do handoff pronta (2026-09-22) — resposta de
-      // 'ensure-hac-page', disparado ao escolher a lib. O designer já foi
-      // levado até a página pelo backend; aqui só abre a instrução de
-      // Ctrl+C/Ctrl+V. A própria função decide se deve abrir (página nova
-      // ou vazia) ou ficar quieta.
-      if (msg.type === 'hac-page-ready') {
-        if (typeof _openHacPageInstructionModal === 'function') {
-          _openHacPageInstructionModal(msg);
-        }
-        return;
-      }
-
       if (msg.type === 'cache-cleared') {
         // Esconde o loading disparado por clearPluginCache (core.js,
         // 2026-09-24) — mesmo par showA11yCanvasLoading/hideA11yCanvasLoading

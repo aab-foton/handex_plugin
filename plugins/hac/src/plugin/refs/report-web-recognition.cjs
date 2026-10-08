@@ -2,8 +2,7 @@
 // HAC — report-web-recognition.cjs
 //
 // Relatório de COBERTURA do reconhecimento web: quantas famílias de
-// componente das duas libs DSC web (Web Angular & React legada + Super DSC |
-// Web) batem com as opções da base "Componente" do arquivo próprio, e quais
+// componente da lib DSC web (Super DSC | Web) batem com as opções da base "Componente" do arquivo próprio, e quais
 // NÃO batem — com a opção mais provável SUGERIDA para um humano aprovar.
 //
 // ESTE RELATÓRIO NÃO É LIDO PELO PLUGIN. As sugestões são palpites de

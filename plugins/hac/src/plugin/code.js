@@ -1538,73 +1538,9 @@ export function _computeNextA11ySectionName() {
   return `${A11Y_SECTION_NAME} v${maxVersion + 1}`;
 }
 
-// ── Página dedicada do Handoff (2026-09-22) ─────────────────────────────
-// Jornada pedida pelo usuário: ao escolher a lib, o plugin cria (ou
-// reaproveita) uma página própria para o handoff e instrui o designer a
-// colar ali, com Ctrl+C/Ctrl+V, as telas que quer documentar. A partir daí
-// todo o trabalho de a11y acontece nessa página, não espalhado sobre a
-// página de produto.
-//
-// Identificação em DUAS camadas, nesta ordem:
-//   1. pluginData 'hacDedicatedPage' — sobrevive a um rename manual da
-//      página pelo designer. Mesma lição já aplicada em
-//      _getOrCreateA11ySessionSection ("identificada por pluginData, nunca
-//      por nome").
-//   2. nome exato — cobre páginas criadas antes desta versão, ou por outro
-//      designer num plugin desatualizado. Ao encontrar por nome, o
-//      pluginData é gravado (migração aditiva), então a busca 1 passa a
-//      valer dali em diante.
-//
-// figma.root.children é legível direto sob documentAccess "dynamic-page"
-// (só o CONTEÚDO de uma página é lazy, não a lista de páginas) — não
-// precisa de loadAllPagesAsync. Mas ler .children de uma página que NÃO é a
-// corrente exige page.loadAsync() antes; por isso esta função é async
-// mesmo quando só cria.
-//
-// HISTÓRICO: esta função existiu no commit 412588d (Fase 1 do plano de
-// seleção múltipla) e foi desfeita pelo revert b228343 junto com as Fases
-// 0-3, cujo teste manual falhou em cadeia — todas as 4 falhas no caminho de
-// CLONE AUTOMÁTICO em lote (reconciliação de seleção, COMPONENT_SET,
-// ComponentNode.clone, _isHacOwnedNode sobre o próprio clone), nenhuma na
-// criação da página. Reescrita aqui isolada, sem reintroduzir nada daquele
-// caminho: quem traz as telas para cá é o designer, com Ctrl+C/Ctrl+V.
-export const HAC_PAGE_NAME = '👐 | HAC - Handoff de Acessibilidade CAIXA';
-
-export async function _getOrCreateHacPage() {
-  let page = null;
-  let byName = null;
-
-  for (const p of figma.root.children) {
-    if (p.type !== 'PAGE') continue;
-    try {
-      if (p.getPluginData && p.getPluginData('hacDedicatedPage') === 'true') {
-        page = p;
-        break;
-      }
-      if (!byName && p.name === HAC_PAGE_NAME) byName = p;
-    } catch (e) { }
-  }
-
-  if (!page && byName) {
-    page = byName;
-    // Migração aditiva: passa a ser reconhecível por pluginData daqui em
-    // diante, mesmo que o designer renomeie a página depois.
-    try { page.setPluginData('hacDedicatedPage', 'true'); } catch (e) { }
-  }
-
-  if (page) {
-    // Obrigatório sob dynamic-page antes de qualquer leitura de .children
-    // por quem chamar esta função — a página encontrada quase nunca é a
-    // corrente neste fluxo.
-    try { await page.loadAsync(); } catch (e) { }
-    return { page, created: false };
-  }
-
-  page = figma.createPage();
-  page.name = HAC_PAGE_NAME;
-  page.setPluginData('hacDedicatedPage', 'true');
-  return { page, created: true };
-}
+// Página dedicada do handoff (_getOrCreateHacPage/HAC_PAGE_NAME) removida em
+// 2026-10-08: a estrutura do handoff nasce na página da tela selecionada, com
+// uma réplica da tela (create-a11y-area) — sem etapa de página nem Ctrl+C/V.
 
 // legacyName (opcional, 2026-09-09): usado só pela Section-mãe da Ficha
 // (renomeada de "hac — Ficha de Handoff" pra "hac — Handoff Completo",

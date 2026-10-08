@@ -766,9 +766,8 @@ function _buildA11yComponentDeepLink(profile, nodeId) {
 // pra resolver um nodeId com confiança: origem mobile + nome limpo batendo
 // EXATO contra A11Y_MOBILE_COMPONENT_LINK_NODE_IDS (mesmo critério/mesma
 // tabela usada em _autofillA11yMobileLinkUrlFromComponentName). A lib
-// desktop ("Web Angular & React"/"Super DSC Web") não
-// entra aqui: o dado extraído dela (refs/web-angular-react.json,
-// refs/super-dsc-web.json) não tem containingFrameNodeId, só componentKey de
+// desktop ("Super DSC Web") não
+// entra aqui: o dado extraído dela (refs/super-dsc-web.json) não tem containingFrameNodeId, só componentKey de
 // variante — sem nodeId real de component set não dá pra montar um deep-link
 // confiável, então cai sempre no texto puro (fallback seguro, sem link
 // quebrado). target="_blank" abre a lib publicada numa aba nova do
@@ -1997,21 +1996,16 @@ function _renderA11yElementoMobileFields() {
     // aprovados — o plugin web não adivinha (ver A11Y_UI_PROFILES).
     const uiProfile = _a11yUiProfileForModal();
     const autoMatchedOption = uiProfile.matchOption(modal ? modal.dataset.dscComponentName : '');
-    // "Personalizado" NÃO existe mais como opção real na lib nova (ver
-    // buildMobileLinkOptions em build-a11y-constants.cjs — decisão de
-    // produto: o catálogo real não tem opção de exceção). Mantido aqui como
-    // opção SINTÉTICA, fora do array gerado, só na renderização do <select>:
-    // é o equivalente mobile do "Outro (fora do catálogo)" desktop, preserva
-    // a mecânica de lock/autofill (_syncA11yMobileLinkUrlLockState,
-    // _autofillA11yMobileLinkUrlFromComponentName) e o dado histórico de
-    // specs antigas que salvaram linkComponenteNome:'Personalizado'
-    // (_restoreA11yElementoMobileToggles) sem exigir tocar nesses pontos.
-    const linkOptionsHtml = [uiProfile.linkOptions, ['Personalizado']].flat()
-      .map(name => {
-        const isSelected = autoMatchedOption ? name === autoMatchedOption : name === 'Personalizado';
-        return `<option value="${escapeHtml(name)}"${isSelected ? ' selected' : ''}>${escapeHtml(name)}</option>`;
-      })
-      .join('');
+    // Sem "Personalizado" (2026-10-08, usuário: "retire as specs
+    // personalizadas, não existe essa opção"). Só as opções reais da lib;
+    // sem componente reconhecido, o seletor nasce vazio ("Escolha o
+    // componente do DSC") e salvar exige escolher um — fora da lista não há
+    // card na lib, e o plugin avisa (openA11yNoCardAlert em
+    // _finishA11ySpecConfirm).
+    const linkOptionsHtml = `<option value=""${autoMatchedOption ? '' : ' selected'} disabled>Escolha o componente do DSC</option>` +
+      uiProfile.linkOptions
+        .map(name => `<option value="${escapeHtml(name)}"${name === autoMatchedOption ? ' selected' : ''}>${escapeHtml(name)}</option>`)
+        .join('');
     const linkRow = document.createElement('div');
     linkRow.className = 'bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-line rounded-dsc-medium p-3 space-y-2';
     linkRow.innerHTML = `
@@ -2671,7 +2665,9 @@ function _restoreA11yElementoMobileToggles(props) {
     }
     if (p.key === 'linkComponenteNome') {
       const linkSelect = document.getElementById('a11y-el-mobile-link-select');
-      if (linkSelect) linkSelect.value = p.value || 'Personalizado';
+      // Spec antiga salva como "Personalizado" (opção removida em 2026-10-08)
+      // reabre com o seletor vazio — o designer escolhe o componente da lib.
+      if (linkSelect) linkSelect.value = (p.value && p.value !== 'Personalizado') ? p.value : '';
     }
   });
   // Reconstrói o dropdown "Leitor de Tela" com as opções do componente já
@@ -3722,6 +3718,13 @@ function _finishA11ySpecConfirm() {
       ..._collectA11yElementoMobileToggleProperties(),
     ].filter(p => p.value);
 
+    // Componente da lib obrigatório (2026-10-08, sem "Personalizado"): fora da
+    // lista não há card na lib — alerta em modal, nenhuma spec criada.
+    const _compSelect = document.getElementById('a11y-el-mobile-link-select');
+    if (_compSelect && !_compSelect.value) {
+      openA11yNoCardAlert('Escolha na lista o componente do DSC deste elemento. Se ele não estiver na lista, a lib de acessibilidade não tem card para ele.');
+      return;
+    }
     if (isMobile) {
       // Mobile: a11ySubtype.componente fica null — o componente real documentado
       // é identificado por linkComponente/linkComponenteNome (coletados acima).
@@ -3734,7 +3737,7 @@ function _finishA11ySpecConfirm() {
       // aparecer no card da listagem/Ficha mesmo quando o componente não tem
       // deep-link (linkComponenteNome só é coletado quando há URL).
       const linkSelect = document.getElementById('a11y-el-mobile-link-select');
-      const componenteOpcao = linkSelect && linkSelect.value !== 'Personalizado' ? linkSelect.value : null;
+      const componenteOpcao = (linkSelect && linkSelect.value) || null;
       a11ySubtype = { componente: componenteOpcao, isOutro: !componenteOpcao, tipo: null, variant: mobileVariant };
       if (componenteOpcao && !properties.some(p => p.key === 'linkComponenteNome')) {
         properties.unshift({ key: 'componente', label: 'Componente', value: componenteOpcao });
@@ -4453,12 +4456,24 @@ function _a11yCategoryFixedTextsHtml(catKey, catSpecs) {
 // Wifi, Signal e Battery decorativos "em tese teriam de estar agrupados").
 // Specs com qualquer campo diferente NÃO se juntam. O grupo mostra os
 // detalhes uma vez; a seta abre cada elemento (foco/edição/remoção).
+// Só conta o que o CARD mostra (2026-10-08, usuário: "o agrupamento só está
+// funcionando no automático, não no manual"): na criação manual cada spec
+// grava o componente DSC do elemento selecionado (ícone Wifi ≠ ícone Signal),
+// enquanto o lote copia o mesmo para todas — mas o card de Títulos,
+// Decorativos e Estrutura não exibe componente, então ele não pode separar
+// specs dessas categorias. Também ignora campo vazio e a ordem das chaves do
+// subtipo, que variam entre os caminhos de criação sem mudar o card.
+const _A11Y_SIGNATURE_USES_COMPONENT = new Set(['elemento']);
 function _a11ySpecContentSignature(spec) {
   const props = (spec.properties || [])
-    .filter(p => p && p.key)
-    .map(p => [p.key, String(p.value == null ? '' : p.value).trim()])
+    .filter(p => p && p.key && String(p.value == null ? '' : p.value).trim())
+    .map(p => [p.key, String(p.value).trim()])
     .sort((x, y) => (x[0] + x[1]).localeCompare(y[0] + y[1]));
-  return JSON.stringify([spec.a11yDscComponentName || '', spec.a11ySubtype || null, props]);
+  const sub = spec.a11ySubtype && typeof spec.a11ySubtype === 'object'
+    ? Object.keys(spec.a11ySubtype).sort().filter(k => spec.a11ySubtype[k] != null && spec.a11ySubtype[k] !== '').map(k => [k, spec.a11ySubtype[k]])
+    : [];
+  const comp = _A11Y_SIGNATURE_USES_COMPONENT.has(spec.a11yType) ? (spec.a11yDscComponentName || '') : '';
+  return JSON.stringify([comp, sub, props]);
 }
 function _a11yGroupRepeatedSpecs(catKey, catSpecs) {
   const groups = new Map();
@@ -5728,7 +5743,7 @@ window.setA11yProjectOrigin = setA11yProjectOrigin;
 // de componente de selo A11Y_IDENTIFICACAO_TELA_KEYS, filtro de
 // categorias) — nada disso muda. projectLib é um campo MAIS granular,
 // adicionado por cima: qual das 3 libs de produto escolhíveis
-// (web-angular-react legado, super-dsc-web novo, super-app mobile) o
+// (super-dsc-web, super-app mobile) o
 // designer está de fato documentando. Motivo: o hac já reconhece e mapeia
 // as libs individualmente no matching de componente
 // (_resolveDscComponentA11yMatch, code.js, campo sourceLib) — só a UI
@@ -5816,84 +5831,34 @@ function chooseA11yHomeOrigin(lib) {
   // esperar nenhuma ação subsequente do usuário.
   parent.postMessage({ pluginMessage: { type: 'check-other-designers-sections', currentUserId: getA11yDesignerId() } }, '*');
   parent.postMessage({ pluginMessage: { type: 'check-my-prior-session', currentUserId: getA11yDesignerId() } }, '*');
-  // Página dedicada do handoff (2026-09-22, jornada pedida pelo usuário:
-  // "seleciona a lib, a página do HAC é criada e abre-se a modal para ctrl
-  // c e ctrl v das telas a serem documentadas"). O backend cria/reaproveita
-  // a página, leva o designer até ela e responde 'hac-page-ready' — só
-  // então a modal de instrução abre (ver _openHacPageInstructionModal
-  // abaixo e o handler em messages.js).
-  parent.postMessage({ pluginMessage: { type: 'ensure-hac-page' } }, '*');
+  // Sem etapa de página do handoff (removida em 2026-10-08): a estrutura nasce
+  // na página da tela selecionada, com uma réplica dela (create-a11y-area).
 }
 window.chooseA11yHomeOrigin = chooseA11yHomeOrigin;
 
-// Modal de instrução da página do handoff — aberta em resposta a
-// 'hac-page-ready' (messages.js), nunca direto daqui: só faz sentido
-// instruir "cole as telas aqui" depois que a página existe de fato e o
-// designer já foi levado até ela.
-//
-// Abre em DOIS casos (decisão 2026-09-22): página recém-criada (`created`)
-// ou página que já existia mas está VAZIA — reabrir o plugin num arquivo
-// onde a página foi criada mas nada foi colado ainda deve reinstruir, senão
-// o designer fica numa página vazia sem saber o que fazer. Página já com
-// telas dentro não interrompe: ele já passou por isso e está trabalhando.
-function _openHacPageInstructionModal(msg) {
-  if (!msg || msg.failed) return;
-
-  // Persiste qual página é a do handoff (2026-09-22) — a completude do
-  // PROJETO (_fichaProjectCompletion) usa isso pra contar só as telas
-  // documentadas DENTRO dela, ignorando Áreas avulsas no resto do arquivo.
-  // Gravado sempre que a página é resolvida, inclusive quando a modal não
-  // abre (página já existente e com telas) — o dado é necessário de
-  // qualquer forma.
-  if (msg.pageId && hacData.hacPageId !== msg.pageId) {
-    hacData.hacPageId = msg.pageId;
-    saveToStorage();
-    if (typeof renderA11yGroupedList === 'function') renderA11yGroupedList();
-  }
-
-  if (!msg.created && !msg.isEmpty) return;
-
-  // ENFILEIRA atrás do onboarding (bug real evitado, 2026-09-22): na
-  // primeira escolha de lib, chooseA11yHomeOrigin abre o onboarding
-  // SÍNCRONO e só depois chega a resposta assíncrona de 'ensure-hac-page'.
-  // Como openModal (core.js) fecha qualquer outro modal aberto antes de
-  // abrir o novo, esta modal MATARIA o onboarding no meio — repetindo o
-  // sintoma de "dois onboardings distintos pro mesmo momento" que já foi
-  // corrigido em 2026-09-09 (ver comentário em chooseA11yHomeOrigin). Com
-  // o onboarding aberto, guarda o payload e deixa closeOnboarding
-  // (onboarding.js) disparar esta mesma função no fim.
-  const onboardingEl = document.getElementById('onboarding-modal');
-  const onboardingOpen = !!onboardingEl && !onboardingEl.classList.contains('hidden');
-  if (onboardingOpen) {
-    window._pendingHacPageInstruction = msg;
-    return;
-  }
-  window._pendingHacPageInstruction = null;
-
-  const intro = document.getElementById('hac-page-instruction-intro');
-  if (intro) {
-    intro.textContent = msg.created
-      ? 'Criamos a página do handoff e levamos você até ela. Agora copie e cole aqui as telas que serão documentadas.'
-      : 'Esta é a página do handoff. Copie e cole aqui as telas que serão documentadas.';
-  }
-  openModal('hac-page-instruction-modal');
+// Modal "Documentação existente" (2026-10-08) — a busca vivia na modal de
+// instrução da página do handoff, removida junto com essa etapa. Aberta pelo
+// menu de Ajuda (specifications.html).
+function openA11yExistingDocsModal() {
+  const resultsEl = document.getElementById('hac-existing-docs-results');
+  if (resultsEl) { resultsEl.classList.add('hidden'); resultsEl.innerHTML = ''; }
+  openModal('hac-existing-docs-modal');
   if (typeof _refreshIcons === 'function') _refreshIcons();
 }
-window._openHacPageInstructionModal = _openHacPageInstructionModal;
+window.openA11yExistingDocsModal = openA11yExistingDocsModal;
 
 // ── Levantamento de documentação hac já existente no arquivo (2026-09-29) ──
 // Pedido do usuário: quando a página do handoff já existir (ou já houver
 // handoff de OUTRO designer em qualquer página), o plugin deve identificar,
 // levar até lá e detalhar o que existe (quem fez, quando, quantas telas).
 // Decisões de produto FIXAS:
-//   - roda SÓ SOB DEMANDA, por este botão — nunca no boot/ensure-hac-page,
+//   - roda SÓ SOB DEMANDA, por este botão — nunca no boot,
 //     pra nunca pesar em arquivo grande sem o designer pedir;
 //   - handoff de outro designer é só MOSTRADO — o trabalho do designer
 //     atual continua nascendo em Section própria (_getOrCreateA11ySessionSection
 //     não muda), nunca "documenta dentro da Section do colega".
-// Botão vive na própria modal de instrução da página do handoff
-// (hac-page-instruction-modal, modals.html) — é exatamente "a modal de
-// criar página" que o usuário pediu para avisar.
+// Botão vive na modal "Documentação existente" (hac-existing-docs-modal,
+// modals.html), aberta pelo menu de Ajuda desde 2026-10-08.
 function _triggerA11yExistingDocumentationSurvey() {
   const loadingEl = document.getElementById('hac-existing-docs-loading');
   const resultsEl = document.getElementById('hac-existing-docs-results');
@@ -7854,7 +7819,9 @@ function _restoreA11yWebComponenteSelection(sub, props) {
   if (option) {
     select.value = option;
   } else if (legacyName) {
-    select.value = 'Personalizado';
+    // Nome legado fora da lib: seletor vazio (sem "Personalizado" desde
+    // 2026-10-08) — o nome antigo fica no campo de texto só como referência.
+    select.value = '';
     const linkUrl = document.getElementById('a11y-el-mobile-link-url');
     if (linkUrl && !linkUrl.value.trim()) { linkUrl.value = legacyName; updateA11yCharCounter(linkUrl); }
   }

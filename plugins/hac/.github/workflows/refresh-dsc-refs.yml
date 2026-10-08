@@ -4,12 +4,11 @@
 # o skeleton + os mapeamentos DSC→a11y, e abre PR pra revisão humana —
 # nunca push direto em main.
 #
-# A lib legada web-angular-react saiu do HAC em 2026-10-06 (o texto abaixo é
-# histórico). Diferente do Handex, o hac busca QUATRO libs DSC (web-angular-react,
-# super-app, super-dsc-web, dsc-android — ver src/plugin/refs/_manifest.json)
-# e regenera os QUATRO mapeamentos de a11y correspondentes
-# (dsc-component-a11y-mapping.json para web-angular-react,
-# dsc-component-a11y-mapping-mobile.json para super-app/React Native,
+# A lib legada "Web Angular & React" saiu do HAC em 2026-10-06 e não é mais
+# buscada. Diferente do Handex, o hac busca as libs DSC de produção (super-app,
+# super-dsc-web, dsc-android, fundamentos-visuais — ver src/plugin/refs/_manifest.json)
+# e regenera os TRÊS mapeamentos de a11y correspondentes
+# (dsc-component-a11y-mapping-mobile.json para super-app/React Native,
 # dsc-component-a11y-mapping-superdscweb.json para super-dsc-web,
 # dsc-component-a11y-mapping-android.json para dsc-android — atualizado em
 # 2026-09-09, ver docs/auditoria-2026-09.html, seção 4/9; nomes de arquivo

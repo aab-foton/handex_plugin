@@ -89,7 +89,6 @@ import {
   _readHacDataFromDocument,
   _clearHacDataFromDocument,
   _clearHacCanvasForCurrentUser,
-  _getOrCreateHacPage,
   _hacDataWeight,
   _getSceneNodeById,
   _getOrCreateA11ySection,
@@ -644,42 +643,6 @@ figma.ui.onmessage = async (msg) => {
   // arquivo). `blocked: true` (figma.currentUser indisponível) ainda assim
   // limpa o dado — só a remoção de nós é abortada, nunca silenciosamente
   // ignorada: o frontend precisa saber pra avisar o designer.
-  // Página dedicada do Handoff (2026-09-22) — disparado logo após o
-  // designer escolher a lib na Home (chooseA11yHomeOrigin,
-  // accessibility.js). Cria ou reaproveita a página, LEVA o designer até
-  // ela (setCurrentPageAsync — única forma sob dynamic-page) e responde ao
-  // frontend, que então abre a modal instruindo o Ctrl+C/Ctrl+V das telas.
-  //
-  // Navegar ANTES de instruir é deliberado: a modal diz "cole aqui", e o
-  // designer precisa já estar "aqui" para que isso faça sentido. Diferente
-  // do plano original de clone em lote, onde a navegação vinha só no fim
-  // (depois das cópias prontas) — aqui não há cópia automática nenhuma,
-  // quem traz as telas é o próprio designer.
-  if (msg.type === 'ensure-hac-page') {
-    try {
-      const { page, created } = await _getOrCreateHacPage();
-      // isEmpty decide se a modal de instrução reabre numa página que já
-      // existia: página criada mas ainda sem nada colado deve reinstruir
-      // (o designer ficaria numa página vazia sem saber o que fazer),
-      // página já com telas não interrompe. _getOrCreateHacPage já fez o
-      // loadAsync obrigatório antes de .children ser legível aqui.
-      const isEmpty = page.children.length === 0;
-      await figma.setCurrentPageAsync(page);
-      // pageId vai junto (2026-09-22): o frontend guarda em
-      // hacData.hacPageId e a completude do projeto usa isso pra considerar
-      // só as telas documentadas DENTRO da página do handoff — ver
-      // _fichaAreasInScope (handoff-ficha.js).
-      figma.ui.postMessage({ type: 'hac-page-ready', created, isEmpty, pageId: page.id, pageName: page.name });
-    } catch (e) {
-      console.error('ensure-hac-page failed:', e);
-      // Falha aqui NÃO pode travar a jornada: o designer continua podendo
-      // documentar na página em que já está (comportamento de sempre). O
-      // frontend recebe ok:false e simplesmente não abre a modal.
-      figma.ui.postMessage({ type: 'hac-page-ready', created: false, isEmpty: false, pageId: null, pageName: null, failed: true });
-    }
-    return;
-  }
-
   if (msg.type === 'clear-canvas-and-cache') {
     try {
       const scopedKey = _getHacDataStorageKey();
@@ -958,18 +921,73 @@ figma.ui.onmessage = async (msg) => {
   // tela" (A11Y_IDENTIFICACAO_TELA_KEYS, arquivo próprio — web e mobile
   // idênticos), na variante escolhida pelo designer (msg.conector:
   // superior/inferior/esquerda/direita/desativado).
+  // Onde a réplica da tela nasce (2026-10-08). Section de handoff já com
+  // telas: abaixo de tudo o que ela tem, alinhada à esquerda (cada tela
+  // documentada vira uma "linha", com suas réplicas de Tabulação/Swipe/
+  // Leitor à direita). Primeira tela: à direita de todo o conteúdo da
+  // página, na altura da original — nunca por cima do design.
+  function _placeAreaScreenCopy(original, copy, section) {
+    const GAP = 400;
+    const ob = original.absoluteBoundingBox;
+    const kids = (section && !section.removed && Array.isArray(section.children)) ? section.children : [];
+    let minX = Infinity, maxY = -Infinity;
+    for (const c of kids) {
+      const b = c.absoluteBoundingBox;
+      if (!b) continue;
+      minX = Math.min(minX, b.x);
+      maxY = Math.max(maxY, b.y + b.height);
+    }
+    if (isFinite(minX)) return { x: Math.round(minX), y: Math.round(maxY + GAP) };
+    let maxX = -Infinity;
+    for (const c of figma.currentPage.children) {
+      if (c === section || c === copy) continue;
+      const b = c.absoluteBoundingBox;
+      if (b) maxX = Math.max(maxX, b.x + b.width);
+    }
+    return { x: Math.round((isFinite(maxX) ? maxX : ob.x + ob.width) + GAP), y: Math.round(ob.y) };
+  }
+
   if (msg.type === "create-a11y-area") {
     (async () => {
-      const node = await _getSceneNodeById(msg.targetNodeId);
-      if (!node || !node.absoluteBoundingBox) {
+      const original = await _getSceneNodeById(msg.targetNodeId);
+      if (!original || !original.absoluteBoundingBox) {
         figma.notify("Elemento não encontrado no canvas — selecione novamente.");
         return;
       }
       // Segunda camada de defesa (get-a11y-selection-info já filtra na
       // origem) — nunca cria Área apontando pra um artefato do próprio hac,
       // mesmo que o targetNodeId chegue de outra fonte no futuro.
-      if (_isHacOwnedNode(node)) {
+      if (_isHacOwnedNode(original)) {
         figma.notify("Selecione um elemento do seu design, não uma estrutura criada pelo hac.");
+        return;
+      }
+      // A tela do handoff é uma CÓPIA (2026-10-08, pedido do usuário: tirar a
+      // etapa da página do handoff + Ctrl+C/Ctrl+V; "no momento de selecionar
+      // a tela que vai pro handoff, o plugin copia essa tela e replica na
+      // estrutura de handoff" — na MESMA página, e o plugin leva até a
+      // cópia). A original fica intacta onde está; antes ela era MOVIDA para
+      // dentro do grupo da Área. Cuidados herdados da tentativa de clone
+      // automático revertida em b228343: COMPONENT vira instância (clone()
+      // de um componente criaria outro componente principal), COMPONENT_SET
+      // é recusado, e o clone não herda marcação do hac (a original nunca
+      // tem — _isHacOwnedNode acima).
+      if (original.type === 'COMPONENT_SET') {
+        figma.notify("Selecione uma tela (frame), não um conjunto de componentes.");
+        return;
+      }
+      const _section = _getOrCreateA11ySessionSection(msg.designerName, msg.designerId, original.parent === figma.currentPage ? original : null);
+      let node;
+      try {
+        node = original.type === 'COMPONENT' ? original.createInstance() : original.clone();
+        figma.currentPage.appendChild(node);
+        const _pos = _placeAreaScreenCopy(original, node, _section);
+        node.x = _pos.x;
+        node.y = _pos.y;
+        node.setPluginData('hacAreaSourceNodeId', original.id);
+      } catch (e) {
+        console.error('[hac] create-a11y-area: cópia da tela falhou', e && e.message);
+        try { if (node && !node.removed) node.remove(); } catch (e2) { }
+        figma.notify("Não foi possível copiar a tela para o handoff.", { error: true });
         return;
       }
       try { await figma.loadFontAsync({ family: "Inter", style: "Bold" }); } catch (e) { }
@@ -1038,18 +1056,9 @@ figma.ui.onmessage = async (msg) => {
         labelText.setPluginData('hacAreaBadge', 'true');
         badgeNodes.push(labelText);
       }
-      // O FRAME ORIGINAL entra no mesmo GROUP do selo (2026-09-11, pedido
-      // explícito do usuário: "mover o frame original de verdade" pra
-      // dentro da Section — antes ele nunca era movido, só fotografado via
-      // snapshot na hora de montar a Ficha, e ficava solto no canvas fora
-      // de qualquer Section). figma.group() reparenta preservando a
-      // posição visual absoluta automaticamente (não precisa de nenhum
-      // ajuste manual de x/y aqui, diferente de _reparentIntoSection/
-      // _reparentIntoAreaGroup) — mas TIRA o frame de onde quer que
-      // estivesse antes (raiz da página, ou aninhado dentro de outro
-      // frame/grupo do design). Efeito colateral aceito conscientemente
-      // pelo usuário: se o frame estava dentro de um pai com Auto Layout,
-      // esse pai perde o filho e pode realocar os demais.
+      // A CÓPIA da tela entra no mesmo GROUP do selo (desde 2026-10-08; antes
+      // era o frame original, movido — pedido de 2026-09-11). figma.group()
+      // reparenta preservando a posição visual absoluta.
       badgeNodes.push(node);
       // O selo SEMPRE nasce dentro de um GROUP próprio (2026-09-05), mesmo
       // no caminho normal em que ele é uma INSTANCE única — antes o "grupo"
@@ -1073,8 +1082,9 @@ figma.ui.onmessage = async (msg) => {
       // da área sendo processada no momento.
       group.setPluginData('hacAreaTargetNodeId', node.id);
 
-      _reparentIntoSection(group, () => _getOrCreateA11ySessionSection(msg.designerName, msg.designerId, node));
+      _reparentIntoSection(group, () => _section);
 
+      // Leva o designer até a cópia (pedido do usuário, 2026-10-08).
       figma.currentPage.selection = [group];
       figma.viewport.scrollAndZoomIntoView([group]);
 
@@ -1100,8 +1110,8 @@ figma.ui.onmessage = async (msg) => {
       });
 
       figma.notify(usedRealComponent
-        ? "Área marcada."
-        : 'Área marcada — não foi possível usar o selo real da lib "Design Acessível" (modo simplificado).');
+        ? "Tela copiada para o handoff. A original não foi alterada."
+        : 'Tela copiada para o handoff — não foi possível usar o selo real da lib "Design Acessível" (modo simplificado).');
     })();
     return;
   }

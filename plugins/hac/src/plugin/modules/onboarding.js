@@ -27,8 +27,7 @@ let onboardingSeen = {};
 // UMA jornada por origem — 'web' e 'mobile' (2026-09-09, decisão de
 // produto). Antes existiam 4 entradas: 'especificar' (7 passos gerais,
 // sem diferenciação de origem, aberta pelo banner "Primeira vez aqui?"
-// e pelo ícone de chapéu) + 'lib-web-angular-react'/'lib-super-dsc-web'/
-// 'lib-super-app' (3 passos cada, específicos de LIB, disparadas
+// e pelo ícone de chapéu) + uma por LIB (3 passos cada, específicos de LIB, disparadas
 // automaticamente e SEM ícone ao escolher a lib na Home). O designer via
 // dois onboardings diferentes pro mesmo momento de "sou novo aqui": o
 // automático (curto, específico) e o do banner/chapéu (mais longo,
@@ -39,9 +38,7 @@ let onboardingSeen = {};
 // ícone." Fundido numa jornada só por origem — banner, chapéu e a
 // escolha da lib na Home (que não abre mais modal sozinha, só o banner)
 // sempre convergem pra ESTA mesma fonte, nunca mais conteúdos
-// divergentes. As 2 libs web (Web Angular&React/Super DSC Web) tinham
-// texto quase idêntico e caem na mesma jornada 'web' (o hac já reconhece
-// as duas simultaneamente, sem precisar de conteúdo por lib individual).
+// divergentes. A web tem uma jornada só ('web').
 // Compilado por funcionalidade (2026-10-06, pedido do usuário): cada passo é
 // uma funcionalidade, com o MESMO texto dos frames de instrução do Figma
 // ("📱 | Template de Handoff Mobile" / "🖥️ | Template de Handoff Web"), lido de
@@ -362,14 +359,5 @@ function closeOnboarding() {
   closeModal('onboarding-modal');
   _onboardingCurrentTool = null;
   _onboardingCurrentStep = 0;
-  // Instrução da página do handoff que chegou enquanto o onboarding estava
-  // aberto (2026-09-22) — ver _openHacPageInstructionModal em
-  // accessibility.js: ela se enfileira em vez de fechar o onboarding no
-  // meio. Agora que o onboarding saiu, é a vez dela.
-  if (window._pendingHacPageInstruction && typeof _openHacPageInstructionModal === 'function') {
-    const pending = window._pendingHacPageInstruction;
-    window._pendingHacPageInstruction = null;
-    _openHacPageInstructionModal(pending);
-  }
 }
 window.closeOnboarding = closeOnboarding;

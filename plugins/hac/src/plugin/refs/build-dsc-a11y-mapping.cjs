@@ -20,8 +20,8 @@
 // {shortName, confidence} da Detecção Automática de a11y. Ver nota em
 // dsc-component-a11y-mapping.json.
 //
-// Para cada component set real de uma das 3 libs de produção
-// (refs/web-angular-react.json, refs/super-app.json, refs/super-dsc-web.json,
+// Para cada component set real de uma das libs de produção
+// (refs/super-app.json, refs/super-dsc-web.json, refs/dsc-android.json,
 // geradas por fetch-design-refs.cjs), tenta casar o nome com um dos 16
 // shortNames de acessibilidade já usados no formulário dinâmico (ver módulo
 // accessibility.js → A11Y_COMPONENTE_LABELS).
@@ -60,9 +60,10 @@ const path = require('path');
 
 const REFS_DIR = __dirname;
 
-// Parsing simples de argumentos — mantém o comportamento padrão (sem
-// argumentos = lib desktop web-angular-react) intacto pra não quebrar
-// npm run refs:a11y-mapping/refs:rebuild já em uso.
+// Parsing simples de argumentos. Sem argumento não há mais fonte padrão: o
+// default era a lib legada "Web Angular & React", que saiu do HAC
+// (2026-10-06; resíduos removidos em 2026-10-08). npm run refs:a11y-mapping
+// sempre passa --src/--out.
 const _argv = process.argv.slice(2);
 function _argVal(flag) {
   const i = _argv.indexOf(flag);
@@ -72,7 +73,11 @@ const _positional = _argv.find(a => !a.startsWith('--') && _argv[_argv.indexOf(a
 const _srcFlag = _argVal('--src');
 const _outFlag = _argVal('--out');
 
-const SRC_FILE = _srcFlag || (_positional ? `${_positional}.json` : 'web-angular-react.json');
+const SRC_FILE = _srcFlag || (_positional ? `${_positional}.json` : null);
+if (!SRC_FILE) {
+  console.error('Informe a lib: --src <lib>.json --out <saida>.json (ver npm run refs:a11y-mapping).');
+  process.exit(1);
+}
 const OUT_FILE = _outFlag || (_positional ? `dsc-component-a11y-mapping-${_positional}.json` : 'dsc-component-a11y-mapping.json');
 const SRC_PATH = path.join(REFS_DIR, SRC_FILE);
 const OUT_PATH = path.join(REFS_DIR, OUT_FILE);
@@ -96,8 +101,8 @@ const A11Y_SHORTNAMES = [
 ];
 
 // Prefixos REAIS de component set/família das 3 libs de produção — CONFIRMADO
-// nos dados reais (2026-09-01) via inspeção de containingFrame das 3 libs
-// (web-angular-react.json, super-app.json, super-dsc-web.json). Qualquer
+// nos dados reais (2026-09-01) via inspeção de containingFrame das libs
+// (super-app.json, super-dsc-web.json; dsc-android.json em 2026-09-02). Qualquer
 // containingFrame que não comece com um destes é ruído e NUNCA deve ser
 // submetido a matchShortName — é a causa raiz dos falsos positivos
 // comprovados (ícones soltos de icon-set genérico, sem relação com DSC, ex:
@@ -106,7 +111,6 @@ const A11Y_SHORTNAMES = [
 // em versão antiga deste comentário como candidato mas NÃO aparece nos dados
 // reais das 3 libs — removido daqui por não ter suporte empírico.
 // Confirmado por lib (contagem de families por prefixo, 2026-09-01):
-//   web-angular-react: [dsc]=47, [dsc-tc]=3, [dsc doc]=1, (sem prefixo)=10 (ruído: "Group 8", "componentes", etc.)
 //   super-app:         [dsc]=70, [dsc-tc]=23, [dsc-ts]=31, [dsc-ult]=8, [chart]=1, (sem prefixo)=1417 (ruído: ícones soltos)
 //   super-dsc-web:     [dsc]=80, [dsc-tc]=9, [dsc-ts]=4, (sem prefixo)=1413 (ruído: ícones soltos)
 // Confirmado também para a lib mobile/Android (dsc-android, adicionada
@@ -124,19 +128,18 @@ function hasDscPrefix(containingFrameName) {
 
 // Tabela de correspondência CURADA POR LIB — substitui o antigo A11Y_SYNONYMS
 // genérico (aplicado igualmente às 3 libs), que era exatamente o mecanismo do
-// falso positivo: um sinônimo pensado pra uma lib (ex: 'select' pra
-// web-angular-react) podia bater por substring solta em nomes de outra lib
+// falso positivo: um sinônimo pensado pra uma lib podia bater por substring solta em nomes de outra lib
 // sem relação nenhuma. Cada shortName aqui lista, PARA CADA LIB, os nomes reais
 // (sem o prefixo [dsc.../[dsc doc]) de containingFrame que representam aquele
-// componente — curado a partir da inspeção real de web-angular-react.json,
-// super-app.json e super-dsc-web.json (2026-09-01), não de suposição. Testado
+// componente — curado a partir da inspeção real de super-app.json,
+// super-dsc-web.json (2026-09-01) e dsc-android.json, não de suposição. Testado
 // por PALAVRA COMPLETA (ver wordMatch/tokensOf), não substring — normalize()
 // segue sendo a normalização de base, mas a comparação final exige token
 // inteiro batendo, não fragmento de string.
 //
 // slugs de lib usados como chave aqui = mesmo slug de refs/_manifest.json
-// (bate com o nome de arquivo sem .json): 'web-angular-react', 'super-app',
-// 'super-dsc-web', 'dsc-android'.
+// (bate com o nome de arquivo sem .json): 'super-app', 'super-dsc-web',
+// 'dsc-android'.
 //
 // Curadoria de 'dsc-android' (Material Design nativo, adicionada 2026-09-02)
 // feita a partir da inspeção real de dsc-android.json e
@@ -154,7 +157,6 @@ function hasDscPrefix(containingFrameName) {
 // correspondência sem base semântica sólida.
 const A11Y_LIB_COMPONENT_MAP = [
   { shortName: 'accordion', libs: {
-    'web-angular-react': ['Accordion'],
     'super-app': [
       'Accordion', 'List Accordion',
       // Ampliação (2026-09-22, varredura completa): confirmado via REST API
@@ -171,7 +173,6 @@ const A11Y_LIB_COMPONENT_MAP = [
     // dados reais desta lib (confirmado 2026-09-02).
   } },
   { shortName: 'breadcrumb', libs: {
-    'web-angular-react': ['Breadcrumb'],
     // super-app: SEM correspondência — nomenclatura mobile não usa breadcrumb
     // (padrão de navegação é próprio de desktop/web).
     'super-dsc-web': ['Breadcrumb'],
@@ -179,7 +180,6 @@ const A11Y_LIB_COMPONENT_MAP = [
     // (mesmo raciocínio de super-app).
   } },
   { shortName: 'button', libs: {
-    'web-angular-react': ['Button'],
     'super-app': ['Button', 'Icon Button', 'Icon Button Text', 'Segmented Button', 'Tile Button', 'Credit Card Button', 'Digital Wallet Button'],
     'super-dsc-web': ['Button', 'Icon Button', 'Icon Button Text', 'Toggle Button', 'Toggle Icon Button', 'Segmented Button', 'Tile Button', 'Batch Button'],
     // dsc-android: "Button" e "Icon Button" já batem por wordMatch direto
@@ -188,16 +188,11 @@ const A11Y_LIB_COMPONENT_MAP = [
     // não houve necessidade de correspondência indireta.
   } },
   { shortName: 'checkbox', libs: {
-    'web-angular-react': ['Checkbox'],
     'super-app': ['Checkbox'],
     'super-dsc-web': ['Checkbox'],
     // dsc-android: "Checkbox" já bate por wordMatch direto (ALTA confiança).
   } },
   { shortName: 'dialog', libs: {
-    // Ampliação (2026-09-22, varredura completa): "[dsc] Tooltip" (nomenclatura
-    // legada web-angular-react) é overlay de conteúdo sobreposto — mesmo
-    // critério já aplicado a "Tooltip" em super-app/super-dsc-web abaixo.
-    'web-angular-react': ['Dialog', 'Tooltip'],
     // super-app: nomenclatura mobile usa "Sheet"/"Tipkit Popover" em vez de
     // "Dialog" — equivalente semântico de plataforma (modal/overlay bloqueante),
     // decisão de curadoria explícita, não substring incidental.
@@ -208,7 +203,7 @@ const A11Y_LIB_COMPONENT_MAP = [
     // resto desta tabela indireta: o designer confirma no formulário.
     'super-app': ['Sheet', 'Popover', 'Tipkit Popover', 'Tooltip'],
     // super-dsc-web: usa "Modal" em vez de "Dialog" — mesmo padrão de
-    // equivalência semântica (Dialog do Angular Material ~ Modal do DSC web).
+    // equivalência semântica (Dialog ~ Modal do DSC web).
     'super-dsc-web': ['Modal', 'Popover', 'Tooltip', 'Drawer Panel'],
     // dsc-android: "Dialog" já bate por wordMatch direto (ALTA confiança).
     // Ampliação (2026-09-22): "Plain Tooltip" é o overlay de dica contextual
@@ -217,20 +212,13 @@ const A11Y_LIB_COMPONENT_MAP = [
     'dsc-android': ['Plain Tooltip'],
   } },
   { shortName: 'inputs', libs: {
-    'web-angular-react': [
-      'Input', 'Input Currency', 'Input File', 'Input Textarea', 'Input with Chips',
-      'Datepicker', 'Datepicker Calendar', 'Datepicker Range', 'Timepicker',
-      'Dropdown Input with Chips', 'Dropdown Select with Chips', 'Select', 'Select with Chips',
-      'Range Slider', 'Slider',
-    ],
     'super-app': [
       'Input Chat', 'Input Money', 'Input Pin', 'Input Slider', 'Input Stepper',
       'Text Field Form', 'Text Field Single', 'Date Picker', 'Date Picker Container',
       'Account Select', 'Search Bar',
       // Ampliação (2026-09-22): "Slider" (sem o prefixo "Input") e "Wheel
       // Picker" são controles de entrada por arrasto/rolagem — mesmo critério
-      // que já curou 'Range Slider'/'Slider' em web-angular-react e os 4
-      // sliders de dsc-android acima. "Chip" entra aqui por ser, nesta lib,
+      // que já curou os 4 sliders de dsc-android acima. "Chip" entra aqui por ser, nesta lib,
       // controle de filtro/seleção acionável (o comentário histórico no topo
       // desta tabela registrava dúvida entre button/input; a decisão de
       // 2026-09-22 é 'inputs' por ser seleção de valor, não ação/submit).
@@ -277,7 +265,6 @@ const A11Y_LIB_COMPONENT_MAP = [
     // desatualizado/incorreto sobre isso), e são navegação em lista de itens
     // percorridos em sequência — mesmo critério já usado para "Sidebar
     // Menu"/"Sidebar Menu Item" em super-dsc-web abaixo.
-    'web-angular-react': ['Menu item', 'Menu Lateral'],
     'super-app': [
       'List Item', 'List Heading', 'List Footer', 'List Accordion', 'Transaction List Item',
       // Ampliação de curadoria (2026-09-22, pedido do usuário: "as sugestões
@@ -356,7 +343,6 @@ const A11Y_LIB_COMPONENT_MAP = [
     'dsc-android': ['Menu', 'Navigation Drawer', 'Navigation Rail'],
   } },
   { shortName: 'paginator', libs: {
-    'web-angular-react': ['Paginator'],
     // super-app: não existe "Paginator" na lib mobile, MAS "Page Controller"
     // (2026-09-22) é o indicador de página de carrossel/onboarding (as
     // "bolinhas") — é navegação entre páginas de conteúdo, exatamente o que
@@ -369,13 +355,11 @@ const A11Y_LIB_COMPONENT_MAP = [
     // (mobile nativo não usa paginador de página).
   } },
   { shortName: 'radio button', libs: {
-    'web-angular-react': ['Radio Button'],
     'super-app': ['Radio'],
     'super-dsc-web': ['Radio'],
     // dsc-android: "Radio Button" já bate por wordMatch direto (ALTA confiança).
   } },
   { shortName: 'snackbar', libs: {
-    'web-angular-react': ['Snackbar'],
     // super-app: usa "Toast" em vez de "Snackbar" — equivalência semântica de
     // plataforma (mesma decisão de curadoria do par Dialog/Sheet acima).
     'super-app': ['Toast'],
@@ -384,7 +368,6 @@ const A11Y_LIB_COMPONENT_MAP = [
     // nem "Toast" nos dados reais desta lib (confirmado 2026-09-02).
   } },
   { shortName: 'stepper', libs: {
-    'web-angular-react': ['Horizontal Stepper', 'Vertical Stepper'],
     // super-app: "Input Stepper" é campo numérico incremental (não indicador
     // de progresso multi-etapas) — conceito DIFERENTE do Stepper de a11y
     // (que documenta navegação sequencial entre etapas), por isso NÃO
@@ -410,13 +393,11 @@ const A11Y_LIB_COMPONENT_MAP = [
     // dados reais desta lib.
   } },
   { shortName: 'switch', libs: {
-    'web-angular-react': ['Switch'],
     'super-app': ['Switch'],
     'super-dsc-web': ['Switch'],
     // dsc-android: "Switch" já bate por wordMatch direto (ALTA confiança).
   } },
   { shortName: 'table', libs: {
-    'web-angular-react': ['Table Cell', 'Table Header', 'Table Footer'],
     // super-app: SEM correspondência — não há componente de tabela tabular na
     // lib mobile (dados tabulares em mobile usam padrões de lista).
     'super-dsc-web': ['Table / Body Cell', 'Table / Header Cell', 'Table / Footer Cell', 'Table Desktop', 'Table Mobile'],
@@ -424,7 +405,6 @@ const A11Y_LIB_COMPONENT_MAP = [
     // (mobile nativo não usa tabela tabular).
   } },
   { shortName: 'tab group', libs: {
-    'web-angular-react': ['Tab Group'],
     // super-app: nomeia só "Tabs" (plural, sem "group") — confirmado nos
     // dados reais desta lib.
     'super-app': ['Tabs'],
@@ -435,7 +415,6 @@ const A11Y_LIB_COMPONENT_MAP = [
     'dsc-android': ['Tabs'],
   } },
   { shortName: 'imagem', libs: {
-    'web-angular-react': ['Logotipo'],
     'super-app': [
       'Image Media', 'Avatar', 'Avatar Hero', 'Logo CAIXA', 'Banking Logos', 'National Flags', 'Social Programs Logos',
       // Ampliação (2026-09-22): conteúdo gráfico que ou carrega significado
@@ -564,7 +543,7 @@ function wordMatch(needle, haystackName) {
 // do shortName) ou é um caso ambíguo tratado como baixa confiança de propósito
 // (ex: "[dsc] Tab" isolado, sem "Group" — pode ser aba individual).
 //
-// libSlug identifica de qual lib (web-angular-react/super-app/super-dsc-web)
+// libSlug identifica de qual lib (super-app/super-dsc-web/dsc-android)
 // veio containingFrameName — correção #3: a tabela curada é POR LIB, não mais
 // um sinônimo genérico global.
 function matchShortName(containingFrameName, libSlug) {
@@ -741,7 +720,7 @@ function main() {
 
   const out = {
     _meta: {
-      description: 'Mapa containingFrame -> categoria de a11y, ESSENCIAL EM RUNTIME no hac (consumido por _getDscFrameToA11yMap em code.js para a Detecção Automática de a11y). Gerado por build-dsc-a11y-mapping.cjs a partir de refs/web-angular-react.json (dados reais da REST API do Figma, sem valores inventados). Adaptação do Handex Beta (onde este mesmo formato de arquivo é descrito como "fundação de dados, não usado em runtime" — desatualizado lá, mas aqui no hac o consumo em runtime é o desenho intencional desde o início).',
+      description: `Mapa containingFrame -> categoria de a11y, ESSENCIAL EM RUNTIME no hac (consumido por _getDscFrameToA11yMap em code.js para a Detecção Automática de a11y). Gerado por build-dsc-a11y-mapping.cjs a partir de refs/${SRC_FILE} (dados reais da REST API do Figma, sem valores inventados). Adaptação do Handex Beta (onde este mesmo formato de arquivo é descrito como "fundação de dados, não usado em runtime" — desatualizado lá, mas aqui no hac o consumo em runtime é o desenho intencional desde o início).`,
       generatedAt: new Date().toISOString(),
       generator: 'build-dsc-a11y-mapping.cjs (hac)',
       sourceFile: SRC_FILE,

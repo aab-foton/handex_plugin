@@ -33,8 +33,8 @@ import { PLATFORM_PROFILES, getPlatformProfile } from './platform-profiles.js';
 // ============================================================
 
 // key (componentKey resolvido via getMainComponentAsync/mainComp.key) →
-// { containingFrame, origin, sourceLib } — origin é 'web' (libs "Web
-// Angular & React" e "Super DSC | Web", ambas desktop) ou 'mobile' (libs
+// { containingFrame, origin, sourceLib } — origin é 'web' (lib "Super DSC |
+// Web", desktop) ou 'mobile' (libs
 // "DSC | Super App" e "DSC | Android", ambas mobile — a segunda recadastrada
 // em 2026-09-02, ver nota abaixo). origin decide só qual FAMÍLIA de marcador
 // visual (A11Y_*_KEYS vs A11Y_*_KEYS_MOBILE) é instanciada — não confundir
@@ -53,8 +53,8 @@ import { PLATFORM_PROFILES, getPlatformProfile } from './platform-profiles.js';
 // sourceLib é um campo PARALELO e não-destrutivo a origin — carrega a
 // IDENTIDADE EXATA da lib de origem (não só a plataforma), para uso futuro
 // de UI (badge "Super DSC | Web" vs. "DSC Legado" vs. "DSC | Super App" vs.
-// "DSC | Android"). 'web-angular-react' e 'super-dsc-web' são as DUAS libs
-// desktop que coexistem hoje (migração de design system em andamento — ver
+// "DSC | Android"). A lib desktop legada ("Web Angular & React") saiu do
+// HAC em 2026-10-06 e não é mais buscada nem reconhecida; antes ela coexistia com a Super DSC Web (migração de design system em andamento — ver
 // refs/_manifest.json) e por isso compartilham origin: 'web', mas têm
 // sourceLib.id diferente — mesmo raciocínio vale para 'super-app' e
 // 'dsc-android', ambas origin: 'mobile' com sourceLib.id diferente (React
@@ -99,8 +99,7 @@ export function _getDscComponentKeyToFrameMap() {
 
 // containingFrame → { shortName, confidence } (só alta/baixa confiança;
 // famílias sem match não entram no mapa e resultam em dscComponentMatch: null).
-// Combina DSC_A11Y_MAPPING (desktop, "Web Angular & React"),
-// DSC_A11Y_MAPPING_MOBILE ("DSC | Super App"), DSC_A11Y_MAPPING_SUPERDSCWEB
+// Combina // DSC_A11Y_MAPPING_MOBILE ("DSC | Super App"), DSC_A11Y_MAPPING_SUPERDSCWEB
 // ("Super DSC | Web", curadoria adicionada em 2026-09-01 junto com a correção
 // de matching do build-dsc-a11y-mapping.cjs — filtro de prefixo + palavra
 // completa + tabela por lib, ver comentário de cabeçalho do script) e
@@ -158,7 +157,7 @@ function _getDscFrameToA11yMap(origin) {
 // Automática; ex: "[dsc] Card"/"[dsc] Tooltip"/"[dsc] Spinner" em qualquer
 // das 4 libs — componentes DSC reais que genuinamente não correspondem a
 // nenhum dos 16 shortNames de a11y, curadoria confirmada em 2026-09-01
-// (web-angular-react/super-app/super-dsc-web) e 2026-09-02 (dsc-android), ver
+// (super-app/super-dsc-web) e 2026-09-02 (dsc-android), ver
 // build-dsc-a11y-mapping.cjs) ou null (componentKey não corresponde a nenhum
 // componente DSC catalogado em nenhuma lib — não é caso de a11y). origin é 'web' ou
 // 'mobile', conforme a PLATAFORMA da lib de onde a componentKey resolvida

@@ -2,8 +2,7 @@
 // HAC — fetch-design-refs.cjs
 // Adaptação/redução de src/plugin/refs/fetch-design-refs.cjs do Handex Beta
 // (2026-08-24). Mesma lógica de busca via REST API do Figma, escopada ao
-// manifest enxuto do hac (hoje só a lib "web-angular-react" — ver
-// _manifest.json). Não porta a busca de "styles" resolvidos em hex/px:
+// manifest do hac (libs DSC de produção — ver _manifest.json). Não porta a busca de "styles" resolvidos em hex/px:
 // mantém o princípio do Handex de nunca embarcar valor resolvido no
 // artefato distribuído (só keys/nomes; os valores são resolvidos em
 // runtime via Plugin API dentro do Figma).
@@ -15,7 +14,7 @@
 //
 // Uso:
 //   FIGMA_TOKEN=xxx node src/plugin/refs/fetch-design-refs.cjs
-//   FIGMA_TOKEN=xxx node src/plugin/refs/fetch-design-refs.cjs --only web-angular-react
+//   FIGMA_TOKEN=xxx node src/plugin/refs/fetch-design-refs.cjs --only super-dsc-web
 //
 // Requer Node 18+ (usa fetch nativo).
 //
@@ -233,8 +232,7 @@ async function fetchLibrary(libMeta) {
   // 2.5. Component sets — em algumas libs (ex: "DSC | Super App", descoberta
   // em 2026-08-25) o próprio component set já carrega o nome "[dsc] X" e o
   // `containing_frame.name` de cada variante vem VAZIO (diferente da lib
-  // desktop "Web Angular & React", onde é o FRAME que envolve o set que tem
-  // o nome "[dsc] X"). Sem este mapa, o matching perderia 100% dos
+  // desktop antiga, onde era o FRAME que envolvia o set com o nome "[dsc] X"). Sem este mapa, o matching perderia 100% dos
   // componentes reais dessas libs — confirmado com "[dsc] Button" na lib
   // mobile: containing_frame.name === "" mas o set.name já é "[dsc] Button".
   // Chaveado por node_id do set (containing_frame.containingComponentSet.nodeId

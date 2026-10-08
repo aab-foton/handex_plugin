@@ -858,64 +858,23 @@
 
   </div></div>
 
-<!-- MODAL: PÁGINA DO HANDOFF CRIADA — instrução de Ctrl+C/Ctrl+V (2026-09-22)
-     Jornada pedida pelo usuário: "seleciona a lib, a página do HAC é criada
-     e abre-se a modal para ctrl c e ctrl v das telas a serem documentadas".
-     Aberta por _openHacPageInstructionModal (accessibility.js) em resposta a
-     'hac-page-ready', disparada logo após chooseA11yHomeOrigin.
-
-     Os dois blocos de conteúdo são RECOLHÍVEIS (data-accordion-toggle +
-     toggleAccordion de core.js, mesmo mecanismo dos accordions do resto do
-     plugin) — pedido explícito: "passível de ser recolhida". O primeiro
-     nasce aberto (é a instrução principal); o segundo, fechado.
-
-     Deliberadamente NÃO bloqueia nada: o designer pode fechar e trabalhar
-     como sempre. A página já foi criada e ele já está nela quando esta modal
-     aparece. -->
-<div id="hac-page-instruction-modal" role="dialog" aria-modal="true" aria-labelledby="hac-page-instruction-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-dsc-tiny">
-  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeModal('hac-page-instruction-modal')" aria-hidden="true"></div>
+<!-- MODAL: DOCUMENTAÇÃO EXISTENTE (2026-10-08) — a busca por handoffs já
+     iniciados no arquivo vivia na modal de instrução da página do handoff
+     ("Traga as telas para o handoff", Ctrl+C/Ctrl+V), removida com essa
+     etapa: a estrutura do handoff nasce na página da tela selecionada, com
+     uma réplica dela. Aberta pelo menu de Ajuda (openA11yExistingDocsModal). -->
+<div id="hac-existing-docs-modal" role="dialog" aria-modal="true" aria-labelledby="hac-existing-docs-title" class="hidden absolute inset-0 z-[1000] flex flex-col items-center justify-center p-dsc-tiny">
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeModal('hac-existing-docs-modal')" aria-hidden="true"></div>
   <div class="relative z-10 w-full max-w-sm max-h-[85%] min-h-0 flex flex-col rounded-dsc-large overflow-hidden shadow-dsc-elevation-2 bg-white dark:bg-dark-surface">
     <div class="flex items-center justify-between p-dsc-tiny border-b border-gray-100 dark:border-dark-line shrink-0">
-      <h3 id="hac-page-instruction-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-dsc-nano">
-        <i data-lucide="copy" class="w-4 h-4 text-[#005ca9]" aria-hidden="true"></i> Traga as telas para o handoff
+      <h3 id="hac-existing-docs-title" class="font-bold text-[14px] text-slate-800 dark:text-white flex items-center gap-dsc-nano">
+        <i data-lucide="search" class="w-4 h-4 text-[#005ca9]" aria-hidden="true"></i> Documentação existente
       </h3>
-      <button onclick="closeModal('hac-page-instruction-modal')" title="Fechar" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
+      <button onclick="closeModal('hac-existing-docs-modal')" title="Fechar" aria-label="Fechar" class="text-gray-500 dark:text-dark-muted hover:text-gray-600 dark:hover:text-gray-300">
         <i data-lucide="x" class="w-4 h-4"></i>
       </button>
     </div>
     <div class="p-dsc-smaller space-y-3 overflow-y-auto min-h-0">
-      <p id="hac-page-instruction-intro" class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed"></p>
-
-      <div class="rounded-dsc-medium border border-gray-100 dark:border-dark-line">
-        <button type="button" data-accordion-toggle onclick="toggleAccordion(this)" aria-expanded="true"
-          class="w-full flex items-center justify-between gap-dsc-nano p-3.5 text-left">
-          <span class="font-bold text-[12px] text-slate-800 dark:text-white">Como fazer</span>
-          <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 dark:text-dark-muted shrink-0 transition-transform" style="transform: rotate(180deg)" aria-hidden="true"></i>
-        </button>
-        <div data-accordion-content class="px-3.5 pb-3.5">
-          <ol class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed list-decimal list-inside space-y-2.5">
-            <li>Vá até a página onde estão as telas que você quer documentar.</li>
-            <li>Selecione as telas e copie com <strong>Ctrl&nbsp;+&nbsp;C</strong> (ou Cmd&nbsp;+&nbsp;C no Mac).</li>
-            <li>Volte para a página do handoff e cole com <strong>Ctrl&nbsp;+&nbsp;V</strong> (ou Cmd&nbsp;+&nbsp;V).</li>
-            <li>Repita para telas de outras páginas, se houver — pode colar todas aqui.</li>
-            <li>Com as telas já aqui, use <strong>Selecionar Tela</strong> para começar a documentar cada uma.</li>
-          </ol>
-        </div>
-      </div>
-
-      <div class="rounded-dsc-medium border border-gray-100 dark:border-dark-line">
-        <button type="button" data-accordion-toggle onclick="toggleAccordion(this)" aria-expanded="false"
-          class="w-full flex items-center justify-between gap-dsc-nano p-3.5 text-left">
-          <span class="font-bold text-[12px] text-slate-800 dark:text-white">Por que uma página separada?</span>
-          <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 dark:text-dark-muted shrink-0 transition-transform" aria-hidden="true"></i>
-        </button>
-        <div data-accordion-content class="hidden px-3.5 pb-3.5">
-          <p class="text-dsc-label-tiny normal-case tracking-normal text-slate-600 dark:text-dark-muted leading-relaxed">
-            O handoff de acessibilidade vira um material próprio, que o time de desenvolvimento consulta sem precisar navegar pelo arquivo de produto. Trabalhar sobre cópias também mantém as telas originais intactas: nada do que o hac desenha aqui — selos, réplicas, fichas — toca o design original.
-          </p>
-        </div>
-      </div>
-
       <!-- Levantamento de documentação hac já existente no arquivo
            (2026-09-29, pedido do usuário) — roda SÓ SOB DEMANDA, ao clicar
            neste botão (_triggerA11yExistingDocumentationSurvey,
@@ -937,9 +896,6 @@
         </div>
         <div id="hac-existing-docs-results" class="hidden"></div>
       </div>
-    </div>
-    <div class="p-dsc-tiny border-t border-gray-100 dark:border-dark-line flex gap-dsc-nano shrink-0">
-      <button onclick="closeModal('hac-page-instruction-modal')" class="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#005ca9] hover:bg-blue-700 rounded-dsc-large transition-colors shadow-lg shadow-blue-500/20">Entendi</button>
     </div>
   </div>
 </div>

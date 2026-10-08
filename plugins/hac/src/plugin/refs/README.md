@@ -7,13 +7,13 @@ Automática de a11y** (componente do canvas → categoria de acessibilidade).
 
 ## Estrutura
 
-> **Nota (2026-10-06)**: a lib legada `web-angular-react` ("DSC Web Angular & React") saiu do HAC — fora do manifest, do skeleton, do reconhecimento e do CI; os arquivos dela foram removidos. Menções abaixo são históricas.
+> **Nota (2026-10-06, completada em 2026-10-08)**: a lib legada `web-angular-react` ("DSC Web Angular & React") saiu do HAC — fora do manifest, do skeleton, do reconhecimento, do CI, dos scripts (`build-dsc-a11y-mapping.cjs` não a tem mais como fonte padrão nem nas listas curadas) e dos JSONs de revisão. Menções abaixo são históricas.
 
 > **Nota (2026-10-01)**: o hac tem agora PERFIS por plataforma (`backend/platform-profiles.js`) — ver a seção "Pipeline do perfil web" abaixo.
 
 > **Nota (2026-09-08)**: as seções abaixo ficaram desatualizadas em
 > alguns pontos — `_manifest.json` hoje tem **4 libs**
-> (`web-angular-react`, `super-app`, `super-dsc-web`, `dsc-android`),
+> (`super-app`, `super-dsc-web`, `dsc-android`),
 > não 1. A explicação de "por que só uma lib" na seção seguinte
 > descreve corretamente por que a lib "Design Acessível" (marcadores
 > visuais) não precisa de entrada no manifest — isso continua válido —

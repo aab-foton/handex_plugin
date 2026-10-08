@@ -11,7 +11,7 @@
       "fileKey": "epCGtlKQxedDxQVlK3lNcN",
       "file": "super-app.json",
       "resolveStyles": true,
-      "_note": "Lib mobile/React Native, adicionada em 2026-08-25 a pedido do usuário — investigar se os componentes reais (70 component sets [dsc], ex: Button/Card/Switch/Input) podem ser mapeados pra categoria de a11y como já feito pra web-angular-react. Ver dsc-component-a11y-mapping-mobile.json (gerado à parte, ainda não integrado ao runtime do hac).",
+      "_note": "Lib mobile/React Native, adicionada em 2026-08-25 a pedido do usuário — investigar se os componentes reais (70 component sets [dsc], ex: Button/Card/Switch/Input) podem ser mapeados pra categoria de a11y. Ver dsc-component-a11y-mapping-mobile.json (gerado à parte, ainda não integrado ao runtime do hac).",
       "counts": {
         "variables": 301,
         "colors": 0,
@@ -26,7 +26,7 @@
       "fileKey": "erkqbRKIbaFWbkHe51BeiZ",
       "file": "super-dsc-web.json",
       "resolveStyles": true,
-      "_note": "Lib desktop NOVA, adicionada em 2026-08-26 a pedido do usuário — é a versão sucessora do 'Web Angular & React' legado (fileKey 8QvOeTODSBi3PquJT5CISP acima), mas as duas COEXISTEM enquanto a migração de design system não termina: uma mesma tela pode ter componentes legado e novo misturados, então o hac precisa reconhecer as DUAS libs simultaneamente — esta entrada não substitui/desativa 'web-angular-react'. Estrutura confirmada via REST API (/v1/files/erkqbRKIbaFWbkHe51BeiZ?depth=1) como o MESMO padrão do legado: um CANVAS por componente (prefixo '⚙️ | Nome do Componente', ex: '⚙️ | Button', '⚙️ | Card', '⚙️ | Checkbox'), mais canvases de Tokens/Icons/Templates que não interessam ao mapeamento. Curadoria do matching componente→categoria de a11y (build-dsc-a11y-mapping.cjs) e a integração em code.js (_resolveDscComponentA11yMatch, A11Y_*_KEYS) foram concluídas em 2026-09-01 — ver dsc-component-a11y-mapping-superdscweb.json e DSC_A11Y_MAPPING_SUPERDSCWEB em code.js.",
+      "_note": "Lib desktop do HAC para web, adicionada em 2026-08-26. É a sucessora da lib legada 'Web Angular & React', que conviveu com ela durante a migração do design system e saiu do HAC em 2026-10-06 — não é mais buscada, cadastrada nem reconhecida (resíduos removidos em 2026-10-08).",
       "counts": {
         "variables": 405,
         "colors": 0,

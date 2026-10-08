@@ -294,6 +294,7 @@ hr {
         <li><a href="#s8ae">Rodada de 06/10: contrato de mensagens e regras novas (v0.1.0-beta.80–86)</a></li>
         <li><a href="#s8af">Só cards da lib; plataforma do projeto filtra tudo; checklist (v0.1.0-beta.97–110)</a></li>
         <li><a href="#s8ag">Rodada de 07/10: Ficha, Swipe, réplica, ícone × botão e contornos (v0.1.0-beta.87–111)</a></li>
+        <li><a href="#s8ah">Seleção de tela cria a réplica; lib nova; sem "Personalizado" nem Angular (v0.1.0-beta.129–131)</a></li>
         <li><a href="#s9">Contrato de mensagens (UI ↔ backend)</a></li>
         <li><a href="#s10">Escala da UI e <code>position</code> dos modais</a></li>
         <li><a href="#s10a">Onboarding — 1 jornada por origem</a></li>
@@ -580,6 +581,9 @@ hr {
     dropdown "Mais ações" (<code>toggleA11yMoreActionsMenu</code>) — só "Voltar" e
     "Marcar Área" continuam diretos no header.</p>
 
+    <p><em>Histórico: a lib legada <code>web-angular-react</code> citada nesta fase saiu do HAC em
+    2026-10-06 (resíduos removidos em 2026-10-08); projetos antigos salvos com ela são lidos como
+    <code>super-dsc-web</code>.</em></p>
     <p><strong>Fase 5 (2026-09-04): <code>hacData.projectLib</code>, granularidade real
     por lib.</strong> O hac já reconhece 4 libs de produto distintas
     (<code>refs/_manifest.json</code>): <code>web-angular-react</code> (legado),
@@ -669,7 +673,6 @@ hr {
     servem só como referência de nome/origem, nunca são a fonte do componente
     importado):</p>
     <ul>
-      <li><code>web-angular-react</code> → origin <code>web</code></li>
       <li><code>super-dsc-web</code> → origin <code>web</code></li>
       <li><code>super-app</code> → origin <code>mobile</code></li>
       <li><code>dsc-android</code> → origin <code>mobile</code></li>
@@ -2646,7 +2649,7 @@ hr {
     2026-09-22</strong>: ação explícita do designer ao <strong>finalizar o
     Handoff de Acessibilidade do projeto</strong> (botão "Finalizar" no bloco
     de completude, ao final da lista de telas, visível só quando todas as
-    telas da página do handoff têm o checklist fechado) →
+    telas têm o checklist fechado) →
     <code>_fichaConfirmFinalize</code> dispara
     <code>bump-a11y-session-version</code> com <code>kind: 'major'</code>,
     que sobe o maior e zera o menor — mesma semântica de
@@ -3995,7 +3998,7 @@ hr {
     <em>dentro da página corrente</em>), esta feature varre o
     <strong>arquivo inteiro</strong> (todas as páginas) e detalha o conteúdo
     (telas, não só a contagem), mas roda <strong>só sob demanda</strong>, por
-    um botão — nunca automaticamente no boot/<code>ensure-hac-page</code>,
+    um botão — nunca automaticamente no boot,
     decisão explícita de produto para nunca pesar em arquivo grande sem o
     designer pedir.</p>
 
@@ -4041,11 +4044,10 @@ hr {
     Nunca bloqueante, mesmo padrão de todo handler de detecção do hac.</p>
 
     <p><strong>Frontend</strong>: botão "Buscar documentação existente" vive
-    dentro da própria modal de instrução da página do handoff
-    (<code>hac-page-instruction-modal</code>, <code>modals.html</code>) — é
-    exatamente "a modal de criar página" mencionada no pedido do usuário, e
-    o lugar natural para avisar sobre documentação já existente antes de o
-    designer colar telas novas ali. <code>_triggerA11yExistingDocumentationSurvey()</code>
+    na modal "Documentação existente" (<code>hac-existing-docs-modal</code>,
+    <code>modals.html</code>), aberta pelo menu de Ajuda — até a beta.130
+    ficava na modal de instrução da página do handoff, removida com essa etapa
+    (seção 8ah). <code>_triggerA11yExistingDocumentationSurvey()</code>
     dispara a mensagem e mostra um loading (<code>#hac-existing-docs-loading</code>,
     padrão <code>loader-2</code> + <code>animate-spin</code> já usado no
     resto do plugin); <code>renderA11yExistingDocumentationSurvey(msg)</code>
@@ -4620,8 +4622,7 @@ hr {
     <p><code>backend/platform-profiles.js</code> declara dois perfis,
     <code>web</code> e <code>mobile</code>, cada um com: set de Box specs e keys
     por categoria (geradas), categorias que a plataforma tem (web 4, mobile 3),
-    libs de reconhecimento (web: <code>web-angular-react</code> +
-    <code>super-dsc-web</code>; mobile: <code>super-app</code> +
+    libs de reconhecimento (web: <code>super-dsc-web</code>; mobile: <code>super-app</code> +
     <code>dsc-android</code>) com seus mapeamentos componente→categoria, opções
     de <code>Componente</code>, keys dos marcadores (Agrupamento/Conectores) e dos
     selos (Identificação da tela/Ordenação). Quem decidia por
@@ -4936,6 +4937,45 @@ hr {
       <li><code>resolve-tab-order-narration</code> + <code>mode</code>; <code>delete-specs-for-area</code> + <code>everywhere</code>.</li>
       <li><code>docs/knowledge-graph.json</code> atualizado em 2026-10-07 (localizações e 11 mensagens que faltavam).</li>
     </ul>
+
+    <h2 id="s8ah">8ah. Seleção de tela cria a réplica; lib nova; sem "Personalizado" nem Angular (v0.1.0-beta.129–131)</h2>
+
+    <p><strong>Etapa da página do handoff removida (beta.131).</strong> Antes, ao escolher a lib o plugin criava a
+    página "👐 | HAC - Handoff de Acessibilidade CAIXA" (<code>ensure-hac-page</code> → <code>hac-page-ready</code>) e uma
+    modal pedia para copiar e colar as telas nela. Agora não há página nem modal: o designer seleciona a tela em
+    <strong>qualquer página</strong> e <code>create-a11y-area</code> cria a estrutura do handoff ali mesmo, com uma
+    <strong>réplica</strong> da tela — é ela que recebe o selo de numeração e tudo o que vem depois (specs, Tabulação,
+    Swipe, Ficha). A tela original não é tocada (antes ela era MOVIDA para o grupo da Área).</p>
+    <ul>
+      <li><code>_placeAreaScreenCopy</code>: primeira tela → à direita de todo o conteúdo da página, na altura da
+      original; seguintes → abaixo do que já está na Section de sessão. A réplica nunca nasce por cima do design.</li>
+      <li>Herdado da tentativa de clone automático revertida em <code>b228343</code>: COMPONENT vira instância
+      (<code>clone()</code> criaria outro componente principal); COMPONENT_SET é recusado com aviso; a réplica guarda a
+      origem em <code>hacAreaSourceNodeId</code> (não em <code>hacCategory</code>, para não virar "artefato do hac").</li>
+      <li>O plugin seleciona o grupo da Área e leva o viewport até a réplica.</li>
+      <li>A completude do projeto (<code>_fichaAreasInScope</code>) passa a contar todas as Áreas — não filtra mais por
+      <code>hacData.hacPageId</code>.</li>
+      <li>A busca "Documentação existente" (seção 8w) saiu da modal removida e virou item do menu de Ajuda
+      (<code>openA11yExistingDocsModal</code>, modal <code>hac-existing-docs-modal</code>).</li>
+    </ul>
+
+    <p><strong>Lib nova como única base (beta.129).</strong> Títulos e Decorativos (mobile e web) leem textos fixos e
+    campos opcionais do card real (<code>A11Y_FIXED_TEXTS_GENERATED</code>, <code>A11Y_MOBILE_FIXED_TOGGLES_GENERATED</code>);
+    o catálogo da lib antiga (<code>A11Y_COMPONENT_PROPERTIES</code>) saiu.</p>
+
+    <p><strong>Sem "Personalizado" (beta.131).</strong> O seletor "Componente do DSC" só tem opções reais da lib; sem
+    componente reconhecido nasce vazio ("Escolha o componente do DSC") e salvar sem escolher abre
+    <code>openA11yNoCardAlert</code>. Specs antigas salvas como "Personalizado" reabrem com o seletor vazio.</p>
+
+    <p><strong>Agrupamento manual (beta.131).</strong> <code>_a11ySpecContentSignature</code> só considera o que o card
+    mostra: o componente DSC conta apenas em Elementos (Títulos/Decorativos/Estrutura não o exibem), campos vazios e a
+    ordem das chaves do subtipo não contam. Antes, specs manuais iguais não se juntavam porque cada uma gravava o
+    componente do elemento selecionado.</p>
+
+    <p><strong>Lib legada "Web Angular &amp; React" (beta.131).</strong> Resíduos removidos: fonte padrão e listas curadas
+    de <code>build-dsc-a11y-mapping.cjs</code> (agora exige <code>--src</code>), teste de slug em
+    <code>build-skeleton.cjs</code>, entradas dos JSONs de revisão, notas do manifesto, comentários e instruções dos
+    agentes. Fica só a conversão de projetos antigos salvos com essa lib para <code>super-dsc-web</code>.</p>
 
     <h2 id="s9">9. Contrato de mensagens (UI ↔ backend)</h2>
 

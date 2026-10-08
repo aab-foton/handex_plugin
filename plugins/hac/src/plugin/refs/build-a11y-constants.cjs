@@ -649,8 +649,7 @@ const superDscWebJSON = readJSON(SUPER_DSC_WEB_SRC, 'super-dsc-web.json');
 const webOpts = { label: 'web', trimNames: true };
 const webWrapper = buildWebWrapper(mobileJSON);
 const webLinkOptions = buildLinkOptions(mobileJSON, WEB_ELEMENTOS_SET, 'web');
-// Deep-link: só a Super DSC | Web publica containingFrameNodeId (a lib legada
-// "Web Angular & React" não tem) — o nome casa pela mesma normalização usada
+// Deep-link: a Super DSC | Web publica containingFrameNodeId — o nome casa pela mesma normalização usada
 // no reconhecimento (exato sobre [a-z0-9]).
 const webComponentLinkNodeIds = buildComponentLinkNodeIds(superDscWebJSON, webLinkOptions, normalizeRecognitionName);
 const webComponentsWithNomeAcessivel = buildComponentsWithNomeAcessivel(mobileJSON, WEB_ELEMENTOS_SET, webOpts);

@@ -5,7 +5,7 @@
 // com styleTokens/variables/componentKeys de scan geral que o hac não
 // usa, já que não há aba "Escanear Tokens" nem conformidade DSC geral
 // aqui). O hac só precisa de "componentsDetailed" (key + name +
-// containingFrame) da lib "web-angular-react" — é o único dado consumido
+// containingFrame) das libs DSC de produção — é o único dado consumido
 // em runtime por _getDscComponentKeyToFrameMap (ver code.js), para
 // resolver instância do canvas -> containingFrame -> categoria de a11y
 // via dsc-component-a11y-mapping.json.
@@ -108,7 +108,7 @@ for (const libMeta of manifest.libraries) {
   // QUALQUER lib que participe do matching componente DSC → categoria de
   // a11y (ver refs/build-dsc-a11y-mapping.cjs e
   // refs/dsc-component-a11y-mapping*.json). Estendido em 2026-08-25 de
-  // "só web-angular-react" para também cobrir "super-app" (lib mobile/RN),
+  // a lib desktop original para também cobrir "super-app" (lib mobile/RN),
   // integrando a detecção automática de a11y mobile — ver
   // _getDscComponentKeyToFrameMap em code.js, que agora consulta as duas
   // libs e devolve a origem (web/mobile) junto do containingFrame. Estendido
@@ -125,7 +125,7 @@ for (const libMeta of manifest.libraries) {
   // confirmado: "[dsc] Icon Button" desta lib era classificado como
   // "Elemento Decorativo" pela Detecção Automática por a lib não ser
   // reconhecida — ver _manifest.json e dsc-component-a11y-mapping-android.json).
-  if ((libMeta.slug === 'web-angular-react' || libMeta.slug === 'super-app' || libMeta.slug === 'super-dsc-web' || libMeta.slug === 'dsc-android') && Array.isArray(lib.components)) {
+  if ((libMeta.slug === 'super-app' || libMeta.slug === 'super-dsc-web' || libMeta.slug === 'dsc-android') && Array.isArray(lib.components)) {
     entry.componentsDetailed = lib.components
       .filter(c => c && c.key)
       .map(c => ({ key: c.key, name: clean(c.name || ''), containingFrame: clean(c.containingFrame || '') }));

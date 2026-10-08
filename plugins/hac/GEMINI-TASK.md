@@ -14,9 +14,9 @@ abaixo** — nunca mais que isso, mesmo que pareça útil.
 **Não edite, crie, apague ou renomeie nenhum outro arquivo ou pasta** —
 isso inclui `code.js`, `code.bundle.js`, `ui.html`, qualquer arquivo em
 `src/plugin/modules/`, `src/plugin/views/`, `src/plugin/styles/`,
-`docs/`, `.github/`, este próprio `GEMINI-TASK.md`, os 4 arquivos-fonte
-`web-angular-react.json`/`super-app.json`/`super-dsc-web.json`/
-`dsc-android.json` (dados brutos da REST API, não mexa), ou os 4
+`docs/`, `.github/`, este próprio `GEMINI-TASK.md`, os 3 arquivos-fonte
+`super-app.json`/`super-dsc-web.json`/`dsc-android.json` (dados brutos da
+REST API, não mexa), ou os 3
 `dsc-component-a11y-mapping*.json` (são gerados por script, não por edição
 manual — sua saída vai para um arquivo NOVO e separado, descrito abaixo).
 
@@ -49,7 +49,6 @@ autoexplicativos, e o algoritmo não "olha" o componente, só o nome.
 
 | Lib | Arquivo de saída | Famílias com confiança BAIXA (candidato sugerido, precisa validar) |
 |---|---|---|
-| Web Angular & React | `dsc-component-a11y-mapping.json` | 19 |
 | DSC \| Super App (mobile) | `dsc-component-a11y-mapping-mobile.json` | 29 |
 | Super DSC \| Web | `dsc-component-a11y-mapping-superdscweb.json` | 30 |
 | DSC \| Android | `dsc-component-a11y-mapping-android.json` | 9 |
@@ -110,7 +109,7 @@ Estrutura sugerida do JSON (adapte livremente, mantendo a ideia geral):
     "status": "parcial ou completo",
     "scanDate": "AAAA-MM-DD",
     "libsCobertas": ["super-app", "super-dsc-web"],
-    "libsPendentes": ["web-angular-react", "dsc-android"],
+    "libsPendentes": ["dsc-android"],
     "contexto": "Revisão visual via MCP das famílias de baixa confiança geradas por build-dsc-a11y-mapping.cjs em 2026-09-14."
   },
   "revisao": [

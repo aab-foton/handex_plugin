@@ -5,8 +5,8 @@
 // QUALQUER uma das libs DSC cadastradas em refs/_manifest.json —
 // generalização de fetch-a11y-component-properties.cjs (Handex Beta,
 // escopado só à lib desktop "Design Acessível") para cobrir as 5
-// libs do hac: as 3 de produção (web-angular-react, super-app,
-// super-dsc-web) e as 2 de acessibilidade (design-acessivel,
+// libs do hac: as de produção (super-app, super-dsc-web,
+// dsc-android) e as 2 de acessibilidade (design-acessivel,
 // design-acessivel-mobile).
 //
 // ------------------------------------------------------------
@@ -28,7 +28,6 @@
 // variantes/ícones soltos contados em _manifest.json.
 //
 // Confirmado nos dados reais do repo (2026-09-01):
-//   web-angular-react  →   61 component sets reais (todo containingFrame já é 1:1 com um set)
 //   super-app          →   70 component sets "[dsc] *" (mais ~1420 ícones soltos, fora do escopo)
 //   super-dsc-web       →   93 component sets "[dsc] *"/"⚙️ *"
 //   design-acessivel     →   25 component sets "[NÃO UTILIZAR][a11y base] *"
@@ -92,7 +91,7 @@
 //   FIGMA_TOKEN=xxx node src/plugin/refs/fetch-component-properties.cjs --lib design-acessivel
 //   FIGMA_TOKEN=xxx node src/plugin/refs/fetch-component-properties.cjs --lib super-app --deep-scan
 //   FIGMA_TOKEN=xxx node src/plugin/refs/fetch-component-properties.cjs --all
-//   FIGMA_TOKEN=xxx node src/plugin/refs/fetch-component-properties.cjs --lib web-angular-react --batch-size 60 --delay-ms 1500
+//   FIGMA_TOKEN=xxx node src/plugin/refs/fetch-component-properties.cjs --lib super-app --batch-size 60 --delay-ms 1500
 //   FIGMA_TOKEN=xxx node src/plugin/refs/fetch-component-properties.cjs --lib super-dsc-web --finalize-partial
 //   FIGMA_TOKEN=xxx node src/plugin/refs/fetch-component-properties.cjs --lib design-acessivel --reset   (ignora checkpoint existente)
 //
@@ -194,7 +193,7 @@ const SCREEN_READER_INDEX_DEPTH = parseInt(flagVal('--screen-reader-depth', '6')
 
 if (!LIB_SLUG && !RUN_ALL) {
   console.error('⛔  Informe --lib <slug> ou --all.');
-  console.error('   Libs disponíveis: web-angular-react, super-app, super-dsc-web, design-acessivel, design-acessivel-mobile');
+  console.error('   Libs disponíveis: super-app, super-dsc-web, dsc-android, design-acessivel-mobile (ver _manifest.json)');
   process.exit(1);
 }
 

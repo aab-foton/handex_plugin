@@ -607,27 +607,12 @@ window._fichaAreaIsComplete = _fichaAreaIsComplete;
 // modal de finalização. `pending` traz as telas que faltam, já com o motivo
 // legível de cada uma (o designer precisa saber O QUE fazer, não só que
 // "falta algo").
-// Telas que CONTAM para a completude do projeto (2026-09-22, pedido do
-// usuário: "ele tem que verificar isso na página criada, não no arquivo
-// todo"). O handoff é o que está na página dedicada do HAC — uma Área
-// avulsa criada em outra página do arquivo (fluxo antigo, ou trabalho
-// paralelo do designer) não deve fazer o projeto parecer incompleto, nem
-// entrar na conta de "X de Y telas".
-//
-// Só filtra quando SABE qual é a página do handoff (hacData.hacPageId,
-// gravado por _openHacPageInstructionModal a partir de 'hac-page-ready').
-// Sem esse dado — arquivo que nunca passou pela jornada nova — devolve
-// todas as áreas, preservando o comportamento anterior.
-//
-// Área sem `pageId` (criada antes desta versão) CONTA mesmo com o filtro
-// ativo: excluí-la esconderia trabalho real já feito, que é pior do que
-// incluir uma tela que talvez esteja fora da página. Campo aditivo, mesma
-// política de migração do resto do schema.
+// Telas que CONTAM para a completude do projeto. Até 2026-10-08 filtrava
+// pela página dedicada do HAC (hacData.hacPageId); essa etapa saiu — a
+// estrutura do handoff nasce na página de cada tela selecionada —, então
+// todas as Áreas do arquivo contam.
 function _fichaAreasInScope() {
-  const areas = (a11yAreas || []).filter(Boolean);
-  const hacPageId = hacData && hacData.hacPageId;
-  if (!hacPageId) return areas;
-  return areas.filter(a => !a.pageId || a.pageId === hacPageId);
+  return (a11yAreas || []).filter(Boolean);
 }
 window._fichaAreasInScope = _fichaAreasInScope;
 
