@@ -151,7 +151,7 @@ ${css}
           <div id="hac-personalize-menu" role="dialog" aria-label="Personalização" class="hidden absolute right-0 top-full mt-1 w-64 p-3 space-y-3 bg-white dark:bg-dark-surface rounded-dsc-large shadow-2xl border border-gray-100 dark:border-dark-line z-[1100]">
             <p class="text-[12px] font-bold text-slate-800 dark:text-white">Personalização</p>
             <div>
-              <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted mb-1.5" id="hac-pz-scale-label">Tamanho da interface</p>
+              <p class="text-dsc-label-tiny font-bold text-slate-500 dark:text-dark-muted mb-1.5" id="hac-pz-scale-label">Escala da interface</p>
               <div class="grid grid-cols-3 gap-1" role="group" aria-labelledby="hac-pz-scale-label">
                 <button type="button" data-hac-scale="1" onclick="setUiScale(1); _hacRenderPersonalizeMenu()" class="hac-pz-opt">100%</button>
                 <button type="button" data-hac-scale="1.15" onclick="setUiScale(1.15); _hacRenderPersonalizeMenu()" class="hac-pz-opt">115%</button>
